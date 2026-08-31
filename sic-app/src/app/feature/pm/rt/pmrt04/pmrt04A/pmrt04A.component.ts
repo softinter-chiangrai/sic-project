@@ -22,6 +22,7 @@ import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { ContractModel } from './pmrt04A.model';
 import { Pmrt04AService } from './pmrt04A.service';
 import { Pmrt04AForm } from './pmrt04A.form';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 
 // ===== Component =====
@@ -52,7 +53,10 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
    private projectService = inject(Pmrt02Service); 
     private cdr = inject(ChangeDetectorRef); 
 
-  form!: FormGroup;
+  formData!: SicFromData<any>;
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
   isEdit = false;
   isView = false;
   contractId: string | null = null;
@@ -63,7 +67,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   customerId: string | null = null;
   projectId: string | null = null;
 
-  pageDirty = () => (this.isView ? false : (this.form?.dirty ?? false));
+  pageDirty = () => (this.isView ? false : (this.formData?.isChanged ?? false));
 
   // pmrt04A.component.ts
   ngOnInit(): void {
@@ -107,7 +111,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   }
 
   initForm(): void {
-    this.form = Pmrt04AForm.createForm(this.fb);
+    this.formData = new SicFromData<any>(Pmrt04AForm.createForm(this.fb));
   }
 
   loadContract(id: string) {
@@ -135,7 +139,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           if (this.isView) {
             this.form.disable();
           }
-          this.form.markAsPristine();
+          this.formData.resetModel(this.form.getRawValue());
           console.log('✅ โหลดข้อมูลสัญญาสำเร็จ:', data);
           this.cdr.detectChanges(); // ✅ อัปเดต View ทันที
         },

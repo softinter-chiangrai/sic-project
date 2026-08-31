@@ -82,6 +82,9 @@
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
               สถานะ
             </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
+              อนุมัติ
+            </th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[250px]">
               จัดการ
             </th>
@@ -128,6 +131,15 @@
                   {{ getStatusText(cr.status) }}
                 </span>
               </td>
+              <td class="px-4 py-3">
+                @if (cr.approvalStatus) {
+                  <span [class]="getApprovalStatusClass(cr.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                    {{ getApprovalStatusText(cr.approvalStatus) }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+              </td>
               <td class="px-4 py-3 text-center">
                 <div class="flex items-center justify-center gap-1 flex-wrap">
 
@@ -142,7 +154,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
+              <td colspan="7" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Change Request</p>

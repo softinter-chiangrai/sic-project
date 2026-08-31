@@ -63,7 +63,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
     this.formData = new SicFromData<PmTestScenarioModel>(Pmdt12BForm.createForm(this.fb));
@@ -198,7 +198,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
           ...data,
           status: data.status || 'Active',
         });
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
         this.isLoading.set(false);
       },
       error: () => {

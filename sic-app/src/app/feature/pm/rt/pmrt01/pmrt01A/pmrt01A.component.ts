@@ -122,7 +122,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: (data) => {
           this.formCustomerData.formGroup.patchValue(data);
           this.formCustomerData.formGroup.updateValueAndValidity();
-          this.formCustomerData.markAsPristine();
+          this.formCustomerData.resetModel(this.formCustomerData.formGroup.getRawValue() as any);
 
           // ✅ บังคับให้ view อัปเดตทันทีที่ข้อมูลใหม่เข้ามา
           this.cdr.detectChanges();

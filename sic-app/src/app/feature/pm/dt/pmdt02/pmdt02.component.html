@@ -321,12 +321,12 @@
                     </h4>
                     @if (item.subtitle) {
                       <p class="text-xs text-[var(--text-muted)] mt-1 truncate">
-                        {{ item.subtitle }}
+                        {{ item.subtitle | sicStripHtml }}
                       </p>
                     }
                     @if (item.description && item.description !== item.subtitle) {
                       <p class="text-[0.7rem] text-[var(--text-muted)] opacity-80 line-clamp-2 mt-0.5">
-                        {{ item.description }}
+                        {{ item.description | sicStripHtml }}
                       </p>
                     }
                   </div>

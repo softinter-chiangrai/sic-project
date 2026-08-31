@@ -52,21 +52,13 @@
                 </button>
             }
 
-            <!-- Export & Print Buttons -->
-            <div class="flex gap-1">
-                <button
-                    (click)="printSpecification()"
-                    [disabled]="isLoading || form.invalid"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-slate-600 hover:bg-slate-700 disabled:opacity-50 transition-all cursor-pointer"
-                    title="พิมพ์เอกสาร (JasperReports)">
-                    <i class="bi bi-printer"></i>
-                    พิมพ์
-                </button>
+            <!-- Export PDF Button -->
+            <div>
                 <button
                     (click)="exportSpecification()"
                     [disabled]="isLoading || form.invalid"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-all cursor-pointer"
-                    title="ส่งออก PDF (JasperReports)">
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                    title="เปิดเอกสาร PDF (JasperReports)">
                     <i class="bi bi-filetype-pdf"></i>
                     PDF
                 </button>
@@ -137,7 +129,7 @@
                                 [clearable]="true"
                                 [multiple]="true">
                             </sic-combobox>
-                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0"></sic-number>
+                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0" [decimal]="0"></sic-number>
                         </div>
 
 
@@ -281,7 +273,7 @@
                         </p>
                     </div>
 
-                    <!-- Diagram Selection (Optional) -->
+                    <!-- Diagram Selection (Multiple) -->
                     <div>
                         <sic-combobox
                             label="อ้างอิงจาก Diagram (ถ้ามี)"
@@ -289,12 +281,13 @@
                             [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
                             valueField="id"
                             textField="name"
-                            placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
-                            [(ngModel)]="aiAssistDiagramId"
+                            placeholder="-- ไม่ระบุ หรือเลือกหลายแผนภาพ --"
+                            [(ngModel)]="aiAssistDiagramIds"
+                            [multiple]="true"
                             [clearable]="true">
                         </sic-combobox>
                         <p class="text-[11px] text-[var(--text-muted)] mt-1">
-                            💡 หากเลือก Diagram ระบบจะนำโครงสร้างแผนภาพและ Data Model มาวิเคราะห์สร้างเนื้อหา Specification
+                            💡 สามารถเลือก Diagram ได้หลายแผนภาพ (เช่น ER Diagram + Use Case + Sequence) เพื่อให้ AI ประมวลผลร่วมกัน
                         </p>
                     </div>
 

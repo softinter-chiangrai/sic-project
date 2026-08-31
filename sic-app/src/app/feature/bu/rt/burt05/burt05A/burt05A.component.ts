@@ -113,7 +113,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     this.service.getProgram(id).subscribe({
       next: (program: Program) => {
         this.formData.formGroup.patchValue(program);
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
         this.isLoading.set(false);
       },
       error: (err: any) => {
@@ -141,7 +141,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     }).subscribe({
       next: ({ program, rolePrograms }) => {
         this.formData.formGroup.patchValue(program);
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
         this.programId.set(id);
 
         this.service.getRoles(businessId).subscribe({

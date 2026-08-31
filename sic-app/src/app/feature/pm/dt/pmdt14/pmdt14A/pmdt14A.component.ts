@@ -74,7 +74,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     { label: 'Confirmed (ลูกค้ายืนยันรับมอบ)', value: 'CONFIRMED' },
   ];
 
-  pageDirty = () => this.isView() ? false : (this.formData?.dirty ?? false);
+  pageDirty = () => this.isView() ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
     const rawForm = Pmdt14AForm.createForm(this.fb);
@@ -113,7 +113,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         if (data.checklists) {
           this.checklists.set(data.checklists);
         }
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
         if (data.projectId) {
           this.runGateCheck(data.projectId, id);
         }

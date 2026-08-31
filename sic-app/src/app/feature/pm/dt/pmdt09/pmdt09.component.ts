@@ -7,8 +7,7 @@ import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Pmdt09Service } from './pmdt09.service';
 import { DesignReview, ReviewComment } from './pmdt09.model';
-
-
+import { ApprovalService } from '../pmdt03/approval.service';
 
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
@@ -18,7 +17,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
   imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt09Component implements OnInit {
   private router = inject(Router);
@@ -26,6 +25,7 @@ export class Pmdt09Component implements OnInit {
   private service = inject(Pmdt09Service);
   private sanitizer = inject(DomSanitizer);
   private dialog = inject(DialogService);
+  private approvalService = inject(ApprovalService);
 
   @ViewChild('modalFigmaIframe') modalFigmaIframe?: ElementRef<HTMLIFrameElement>;
 
@@ -147,14 +147,34 @@ export class Pmdt09Component implements OnInit {
       size: this.pageSize(),
     }).subscribe({
       next: (res) => {
-        this.reviews.set(res.data || []);
+        const data = res.data || [];
+        this.reviews.set(data);
         this.totalElements.set(res.total || 0);
         this.isLoading.set(false);
+        this.loadApprovalStatuses(data);
       },
       error: (err) => {
         console.error('Error loading design reviews:', err);
         this.isLoading.set(false);
       }
+    });
+  }
+
+  loadApprovalStatuses(reviews: DesignReview[]) {
+    reviews.forEach((review) => {
+      if (!review.id) return;
+      this.approvalService.getDocumentStatus('DESIGN_REVIEW', review.id).subscribe({
+        next: (approval) => {
+          this.reviews.update((list) =>
+            list.map((r) =>
+              r.id === review.id ? { ...r, approvalStatus: approval.status } : r
+            )
+          );
+        },
+        error: () => {
+          // ไม่มีสถานะอนุมัติ ปล่อย null
+        },
+      });
     });
   }
 
@@ -379,6 +399,28 @@ export class Pmdt09Component implements OnInit {
       Closed: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700',
     };
     return map[status] || map['Open'];
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400 border border-yellow-200 dark:border-yellow-800/40',
+      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800/40',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800/40',
+      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800/40',
+      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400 border border-gray-200 dark:border-gray-700',
+    };
+    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status] || '-' : '-';
   }
 
   getSeverityClass(severity: string): string {

@@ -24,6 +24,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { Pmdt07Service } from '../pmdt07.service';
 import { PmSpecificationModel } from '../pmdt07.model';
 import { Pmdt07AForm } from './pmdt07A.form';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmdt07PreviewComponent } from '../pmdt07-preview/pmdt07-preview.component';
 import { SpecificationExportService } from '../specification-export.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
@@ -59,6 +60,12 @@ import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox
             gap: 1.5rem;
             height: calc(100vh - 200px);
             min-height: 600px;
+        }
+        .pmdt08-layout--edit-only {
+            grid-template-columns: 1fr;
+        }
+        .pmdt08-layout--preview-only {
+            grid-template-columns: 1fr;
         }
         .pmdt08-panel {
             overflow-y: auto;
@@ -136,7 +143,10 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     businessId: string | null = null;
 
     // Form
-    form!: FormGroup;
+    formData!: SicFromData<PmSpecificationModel>;
+    get form(): FormGroup {
+        return this.formData?.formGroup;
+    }
     isEdit = false;
     isViewOnly = false;
     specId: string | null = null;
@@ -157,7 +167,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     showAiAssistModal = false;
     isGeneratingAiAssist = false;
     aiAssistRequirementId = '';
-    aiAssistDiagramId = '';
+    aiAssistDiagramIds: string[] = [];
     aiAssistPrompt = '';
 
     // Auto-save
@@ -166,7 +176,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     private autoSaveEnabled = true;
     private autoSaveInterval = 30000;
 
-    pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
+    pageDirty = () => this.isViewOnly ? false : (this.formData?.isChanged ?? false);
 
     ngOnInit(): void {
         this.initForm();
@@ -186,7 +196,10 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         const isViewRoute = this.router.url.includes('/view');
-        if (isViewRoute) this.isViewOnly = true;
+        if (isViewRoute) {
+            this.isViewOnly = true;
+            this.viewMode = 'preview';
+        }
 
         // Check if navigated with AI Draft State
         const aiDraft = history.state?.aiDraft;
@@ -237,6 +250,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     if (aiDraft.projectId) this.fetchProjectName(aiDraft.projectId);
                     this.form.markAsDirty();
                     this.cdr.markForCheck();
+                } else {
+                    this.formData.resetModel(this.form.getRawValue() as any);
+                    this.cdr.markForCheck();
                 }
             }
         });
@@ -248,7 +264,12 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     openAiAssist(): void {
         const formVal = this.form.value;
         this.aiAssistRequirementId = formVal.requirementId || formVal.generatedFromRequirementId || '';
-        this.aiAssistDiagramId = formVal.generatedFromDiagramId || '';
+        const currentDiagId = formVal.generatedFromDiagramId;
+        if (currentDiagId) {
+            this.aiAssistDiagramIds = typeof currentDiagId === 'string' ? currentDiagId.split(',').map((s: string) => s.trim()).filter(Boolean) : (Array.isArray(currentDiagId) ? currentDiagId : [String(currentDiagId)]);
+        } else {
+            this.aiAssistDiagramIds = [];
+        }
         this.aiAssistPrompt = '';
         this.showAiAssistModal = true;
         this.cdr.markForCheck();
@@ -263,7 +284,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         const formVal = this.form.value;
         const projectId = formVal.projectId || this.customerState.getProjectId();
         const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
-        const diagramId = this.aiAssistDiagramId || formVal.generatedFromDiagramId;
+        const diagramIds = Array.isArray(this.aiAssistDiagramIds) ? this.aiAssistDiagramIds : (this.aiAssistDiagramIds ? [this.aiAssistDiagramIds] : []);
         const specType = formVal.specificationType || 'UI Specification';
 
         this.isGeneratingAiAssist = true;
@@ -272,7 +293,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.service.generateDraft({
             projectId: projectId || undefined,
             requirementId: requirementId || undefined,
-            diagramId: diagramId || undefined,
+            diagramIds: diagramIds.length > 0 ? diagramIds : undefined,
+            diagramId: diagramIds.length === 1 ? diagramIds[0] : undefined,
             specificationType: specType,
             prompt: this.aiAssistPrompt || undefined,
         }).pipe(finalize(() => {
@@ -295,9 +317,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                         generatedFromRequirementId: requirementId
                     });
                 }
-                if (diagramId) {
+                if (diagramIds.length > 0) {
                     this.form.patchValue({
-                        generatedFromDiagramId: diagramId
+                        generatedFromDiagramId: diagramIds.join(',')
                     });
                 }
                 if (draft.specificationType) {
@@ -329,7 +351,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     ];
 
     initForm(): void {
-        this.form = Pmdt07AForm.createForm(this.fb);
+        this.formData = new SicFromData<PmSpecificationModel>(Pmdt07AForm.createForm(this.fb));
     }
 
     loadSpecification(id: string) {
@@ -341,10 +363,6 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     const owners = data.owner.split(',').map((s: string) => s.trim()).filter(Boolean);
                     this.form.patchValue({ owner: owners });
                 }
-                this.isLoading = false;
-                this.form.markAsPristine();
-                if (this.isViewOnly) this.form.disable();
-
                 if (!data.projectName && data.projectId) {
                     this.fetchProjectName(data.projectId);
                 }
@@ -352,6 +370,10 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     const userName = this.getUserNameFromToken();
                     if (userName) this.form.patchValue({ createdBy: userName });
                 }
+                this.isLoading = false;
+                if (this.isViewOnly) this.form.disable();
+
+                this.formData.resetModel(this.form.getRawValue() as any);
                 this.cdr.markForCheck();
             },
             error: () => {
@@ -371,6 +393,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     const name = project.projectName || project.name || project.text;
                     if (name) {
                         this.form.patchValue({ projectName: name });
+                        this.formData.resetModel(this.form.getRawValue() as any);
                         this.cdr.markForCheck();
                     }
                 }
@@ -578,18 +601,17 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 next: (blob) => {
                     const pdfBlob = new Blob([blob], { type: 'application/pdf' });
                     const pdfUrl = URL.createObjectURL(pdfBlob);
-                    const a = document.createElement('a');
-                    a.href = pdfUrl;
-                    a.download = `Specification_${this.form.getRawValue().specificationCode || id}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    a.remove();
-                    URL.revokeObjectURL(pdfUrl);
-                    this.dialog.success('ส่งออกสำเร็จ', 'ไฟล์ PDF จาก JasperReports ถูกดาวน์โหลดเรียบร้อย');
+                    const printWindow = window.open(pdfUrl, '_blank');
+                    if (!printWindow) {
+                        const a = document.createElement('a');
+                        a.href = pdfUrl;
+                        a.target = '_blank';
+                        a.click();
+                    }
                 },
                 error: (err) => {
                     console.error('Export specification error:', err);
-                    this.dialog.error('ส่งออกไฟล์ไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+                    this.dialog.error('เปิดเอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
                 },
             });
     }
@@ -670,11 +692,6 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     onBack(): void {
         const projectId = this.form.get('projectId')?.value;
-        if (this.form.dirty) {
-            this.dialog.confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
-                .then(ok => ok && this.navigateBack(projectId));
-        } else {
-            this.navigateBack(projectId);
-        }
+        this.navigateBack(projectId);
     }
 }

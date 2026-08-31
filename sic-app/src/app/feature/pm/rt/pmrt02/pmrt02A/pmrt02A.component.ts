@@ -17,6 +17,7 @@ import { Pmrt02AService } from './pmrt02A.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 
 import { ProjectModel } from './pmrt02A.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 
 @Component({
@@ -47,7 +48,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   private navigation = inject(NavigationService);
   private cdr = inject(ChangeDetectorRef);
 
-  form!: FormGroup;
+  formData!: SicFromData<any>;
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
   isEdit = false;
   isViewOnly = false;
   projectId: string | null = null;
@@ -55,6 +59,8 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   isSaving = false; // ✅ เพิ่ม property
 
   customerName = signal<string>('');
+
+  pageDirty = () => this.isViewOnly ? false : (this.formData?.isChanged ?? false);
 
   statusOptions = [
     { value: 'Prospect', text: 'Prospect' },
@@ -114,7 +120,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   }
 
   initForm(): void {
-    this.form = this.fb.group({
+    this.formData = new SicFromData<any>(this.fb.group({
       id: [null],
       projectCode: [null, [Validators.required, Validators.maxLength(30)]],
       projectName: [null, [Validators.required, Validators.maxLength(255)]],
@@ -130,7 +136,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       priority: ['Medium', [Validators.required]],
       description: [null],
       isActive: [true],
-    });
+    }));
   }
 
   loadProject(id: string) {
@@ -142,7 +148,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       if (this.isViewOnly) {
         this.form.disable();
       }
-      this.form.markAsPristine();
+      this.formData.resetModel(this.form.getRawValue());
       this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
     }))
       .subscribe({
@@ -151,7 +157,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
           if (data.customerName) {
             this.customerName.set(data.customerName);
           }
-          this.form.markAsPristine();
+          this.formData.resetModel(this.form.getRawValue());
         },
         error: (err) => {
           console.error('Load project error:', err);
@@ -207,6 +213,4 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       },
     });
   }
-
-  pageDirty = () => this.isViewOnly ? false : (this.form?.dirty ?? false);
 }

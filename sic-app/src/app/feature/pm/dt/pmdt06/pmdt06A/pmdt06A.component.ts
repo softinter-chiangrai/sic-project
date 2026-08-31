@@ -30,6 +30,7 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { ChangeRequestFormModel } from './pmdt06A.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 @Component({
     selector: 'app-pmdt06a',
@@ -89,7 +90,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     showImpactSection = signal(false);
 
     // ===== Form =====
-    form: FormGroup = this.fb.group({
+    formData: SicFromData<any> = new SicFromData<any>(this.fb.group({
         id: [null],
         projectId: [null],
         targetType: ['REQUIREMENT', Validators.required],
@@ -100,7 +101,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         assigneeId: [null],
         assigneeIds: [[], Validators.required],
         rowVersion: [null],
-    });
+    }));
+
+    get form(): FormGroup {
+        return this.formData.formGroup;
+    }
 
     selectedTargetType = signal('REQUIREMENT');
     readonly targetTypeOptions = [
@@ -113,7 +118,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     documenttypeapiUrl = environment.apiBaseUrl + '/api/pm/approvals/flows/document-type/CHANGE_REQUEST';
 
-    pageDirty = () => this.isView ? false : (this.form?.dirty ?? false);
+    pageDirty = () => this.isView ? false : (this.formData?.isChanged ?? false);
 
     // ===== Methods =====
 
@@ -232,7 +237,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     if (this.isView) {
                         this.form.disable();
                     }
-                    this.form.markAsPristine();
+                    this.formData.resetModel(this.form.getRawValue());
                     this.isLoading = false;
                 },
                 error: () => {

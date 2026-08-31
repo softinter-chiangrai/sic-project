@@ -148,7 +148,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
         this.taskCode = data.taskCode;
         this.taskName = data.taskName;
         this.formData.formGroup.patchValue(data);
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
         this.isLoading = false;
         this.cdr.detectChanges();
       },

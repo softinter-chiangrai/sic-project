@@ -82,9 +82,20 @@ export class SicFromData<TModel extends object & SicStateModel> {
     }
   }
 
-  markAsPristine(): void {
+  markAsPristine(newModel?: TModel): void {
     this.sourceFormGroup.markAsPristine();
-    this.currentState = SicEntityState.Detached;
+    if (newModel) {
+      this.sourceFormGroup.patchValue(newModel, { emitEvent: false });
+    }
+    const currentModel = (newModel || this.sourceFormGroup.getRawValue()) as TModel;
+    (this as any).initialModel = this.cloneValue(currentModel);
+    this.currentState = this.resolveInitialState(currentModel);
+    (this as any).initialComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
+    this.writeState(this.currentState);
+  }
+
+  resetModel(model?: TModel): void {
+    this.markAsPristine(model);
   }
 
   destroy(): void {

@@ -42,6 +42,7 @@ export class Pmdt07Service {
         projectId?: string;
         requirementId?: string;
         diagramId?: string;
+        diagramIds?: string[];
         specificationType?: string;
         prompt?: string;
     }): Observable<any> {

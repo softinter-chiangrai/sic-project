@@ -233,6 +233,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             reviewableId: queryParams['requirementId'],
           });
         }
+        this.formData.markAsPristine();
       }
     });
 
@@ -303,7 +304,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           formData.assignedTo = formData.assignedTo.split(',').map((s: string) => s.trim());
         }
         this.form.patchValue(formData);
-        this.form.markAsPristine();
+        this.formData.resetModel(this.form.getRawValue() as any);
         this.isLoading = false;
         this.updateEmbedUrl();
         this.loadApprovalFlowForReview(id);

@@ -75,7 +75,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       : `${environment.apiBaseUrl}/api/business/combobox-members`;
   });
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.isView() ? false : (this.formData?.isChanged ?? false);
 
   priorityOptions = [
     { value: 'High', text: 'High' },
@@ -128,6 +128,9 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       const scenarioId = queryParams['scenarioId'];
       if (scenarioId && !this.testCaseId) {
         this.formData.form.patchValue({ scenarioId });
+      }
+      if (!this.testCaseId) {
+        this.formData.markAsPristine();
       }
     });
   }
@@ -387,7 +390,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
         } else {
           this.testerValues.set([]);
         }
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
         this.isLoading.set(false);
       },
       error: () => {

@@ -71,7 +71,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/lov`;
   apiProjectCombobox = `${apiBaseUrl}/api/pm/projects/lov`;
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit() {
     const rawForm = Pmdt17AForm.createForm(this.fb);
@@ -98,7 +98,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     this.service.getById(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
         this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถโหลดข้อมูลตั๋วได้');

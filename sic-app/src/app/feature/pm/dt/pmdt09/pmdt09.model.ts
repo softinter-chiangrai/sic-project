@@ -33,6 +33,7 @@ export interface DesignReview extends SicBaseStateModel {
   createdDate?: string;
   createdBy?: string;
   comments?: ReviewComment[];
+  approvalStatus?: string;
 }
 
 export interface PaginationResponse<T> {

@@ -250,6 +250,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           }
         }
 
+        this.formData.resetModel(this.form.getRawValue());
         console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
       },
       error: (error) => {
@@ -273,6 +274,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           console.log('🔍 [fetchProjectName] Matched project:', project, 'Resolved Name:', name);
           if (name) {
             this.form.patchValue({ projectName: name });
+            this.formData.resetModel(this.form.getRawValue());
             this.cdr.markForCheck();
           }
         } else {
@@ -524,17 +526,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // ===== CRUD Actions =====
   onBack(): void {
     const projectId = this.form.get('projectId')?.value;
-    if (this.form.dirty) {
-      this.dialog
-        .confirm('ยืนยัน', 'ข้อมูลยังไม่ได้บันทึก ต้องการออกใช่หรือไม่?')
-        .then((confirmed) => {
-          if (confirmed) {
-            this.navigateBack(projectId);
-          }
-        });
-    } else {
-      this.navigateBack(projectId);
-    }
+    this.navigateBack(projectId);
   }
 
   private navigateBack(projectId?: string): void {

@@ -42,12 +42,14 @@ public class SpecificationGeneratorService {
             requirement = requirementRepository.findById(request.getRequirementId()).orElse(null);
         }
 
-        PmDiagramTab diagram = null;
-        if (request.getDiagramId() != null) {
-            diagram = diagramRepository.findById(request.getDiagramId()).orElse(null);
+        List<PmDiagramTab> diagrams = new java.util.ArrayList<>();
+        if (request.getDiagramIds() != null && !request.getDiagramIds().isEmpty()) {
+            diagrams.addAll(diagramRepository.findAllById(request.getDiagramIds()));
+        } else if (request.getDiagramId() != null) {
+            diagramRepository.findById(request.getDiagramId()).ifPresent(diagrams::add);
         }
 
-        String prompt = buildPrompt(requirement, diagram, request.getPrompt(), request.getSpecificationType());
+        String prompt = buildPrompt(requirement, diagrams, request.getPrompt(), request.getSpecificationType());
         String systemPrompt = """
                 You are a Lead Software Architect and Senior System Analyst with 15+ years of experience.
                 Your task is to analyze requirements, diagrams, and user descriptions to generate a comprehensive, highly accurate Software Specification Document in JSON format.
@@ -66,7 +68,7 @@ public class SpecificationGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmRequirement req, PmDiagramTab diagram, String customPrompt, String specType) {
+    private String buildPrompt(PmRequirement req, List<PmDiagramTab> diagrams, String customPrompt, String specType) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed Software Specification Document.\n\n");
 
@@ -83,13 +85,14 @@ public class SpecificationGeneratorService {
               .append("- Priority: ").append(req.getPriority() != null ? req.getPriority() : "Medium").append("\n\n");
         }
 
-        if (diagram != null) {
-            String diagramType = diagram.getDiagramType() != null ? diagram.getDiagramType() : "Diagram";
-            String script = diagram.getMermaidScript() != null ? diagram.getMermaidScript() : "";
-            sb.append("**Diagram Information:**\n")
-              .append("- Name: ").append(diagram.getName() != null ? diagram.getName() : "").append("\n")
-              .append("- Type: ").append(diagramType).append("\n")
-              .append("- Script (Mermaid):\n").append(script).append("\n\n");
+        if (diagrams != null && !diagrams.isEmpty()) {
+            sb.append("**Diagram Information:**\n");
+            for (PmDiagramTab diagram : diagrams) {
+                String diagramType = diagram.getDiagramType() != null ? diagram.getDiagramType() : "Diagram";
+                String script = diagram.getMermaidScript() != null ? diagram.getMermaidScript() : "";
+                sb.append("--- Diagram: ").append(diagram.getName() != null ? diagram.getName() : "Untitled").append(" (").append(diagramType).append(") ---\n")
+                  .append("Script (Mermaid):\n").append(script).append("\n\n");
+            }
         }
 
         if (customPrompt != null && !customPrompt.isBlank()) {

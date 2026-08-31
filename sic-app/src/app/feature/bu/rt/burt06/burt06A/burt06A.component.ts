@@ -27,6 +27,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { UserOption } from './burt06A.model';
 import { ApprovalFlowStep, ApprovalFlow } from '../burt06.model';
 import { Burt06Service } from '../burt06.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 @Component({
   selector: 'app-burt06a',
@@ -62,23 +63,29 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   isLoading = signal(false);
   isSaving = signal(false);
 
-  form = this.fb.group({
-    id: [null],
-    flowCode: ['', [Validators.required, Validators.maxLength(50)]],
-    flowName: ['', [Validators.required, Validators.maxLength(255)]],
-    documentType: [null as string | null, [Validators.required]],
-    approvalMode: ['CHAIN', [Validators.required]],
-    description: [''],
-    isActive: [true],
-    steps: this.fb.array<FormGroup>([], [this.stepValidator()]),
-    rowVersion: [null],
-  });
+  formData = new SicFromData<any>(
+    this.fb.group({
+      id: [null],
+      flowCode: ['', [Validators.required, Validators.maxLength(50)]],
+      flowName: ['', [Validators.required, Validators.maxLength(255)]],
+      documentType: [null as string | null, [Validators.required]],
+      approvalMode: ['CHAIN', [Validators.required]],
+      description: [''],
+      isActive: [true],
+      steps: this.fb.array<FormGroup>([], [this.stepValidator()]),
+      rowVersion: [null],
+    })
+  );
+
+  get form() {
+    return this.formData.formGroup;
+  }
 
   get steps() {
     return this.form.get('steps') as FormArray;
   }
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   stepValidator(): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
@@ -125,7 +132,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
             this.steps.push(this.createStepForm(step));
           });
           this.reorderSteps();
-          this.form.markAsPristine();
+          this.formData.resetModel(this.form.getRawValue());
           this.isLoading.set(false);
           this.cdr.detectChanges();
         },
@@ -247,17 +254,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   }
 
   cancel(): void {
-    if (this.form.dirty) {
-      this.dialog
-        .confirm('ยืนยัน', 'คุณยังไม่ได้บันทึกข้อมูล ต้องการออกใช่หรือไม่?')
-        .then((confirmed) => {
-          if (confirmed) {
-            this.router.navigate(['/feature/bu/approval-flow']);
-          }
-        });
-    } else {
-      this.router.navigate(['/feature/bu/approval-flow']);
-    }
+    this.router.navigate(['/feature/bu/approval-flow']);
   }
 
   save(): void {

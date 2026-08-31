@@ -60,7 +60,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     { label: 'User Manual (คู่มือการใช้งาน)', value: 'MANUAL' },
   ];
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
     const rawForm = Pmdt19AForm.createForm(this.fb);
@@ -91,7 +91,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     this.service.getVersion(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
         this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลเวอร์ชันได้');

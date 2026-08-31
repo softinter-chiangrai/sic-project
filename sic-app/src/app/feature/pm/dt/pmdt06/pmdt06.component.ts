@@ -9,6 +9,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 
 import { ChangeRequestService } from './change-request.service';
+import { ApprovalService } from '../pmdt03/approval.service';
 
 import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt06.model';
 
@@ -28,7 +29,7 @@ import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
     SicComboboxComponent,
     SicStripHtmlPipe,
   ],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',
 })
 export class Pmdt06Component implements OnInit {
@@ -38,6 +39,7 @@ export class Pmdt06Component implements OnInit {
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
   private crService = inject(ChangeRequestService);
+  private approvalService = inject(ApprovalService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
   // ใช้ Math ใน template
@@ -95,12 +97,32 @@ export class Pmdt06Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          this.changeRequests.set(res.data || []);
+          const data = res.data || [];
+          this.changeRequests.set(data);
           this.totalItems.set(res.pageable?.totalElements || 0);
+          this.loadApprovalStatuses(data);
         },
         error: () =>
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้'),
       });
+  }
+
+  loadApprovalStatuses(crs: ChangeRequestItem[]) {
+    crs.forEach((cr) => {
+      if (!cr.id) return;
+      this.approvalService.getDocumentStatus('CHANGE_REQUEST', cr.id).subscribe({
+        next: (approval) => {
+          this.changeRequests.update((list) =>
+            list.map((item) =>
+              item.id === cr.id ? { ...item, approvalStatus: approval.status } : item
+            )
+          );
+        },
+        error: () => {
+          // ไม่มีสถานะอนุมัติ ปล่อย null
+        },
+      });
+    });
   }
 
   onSearch(event: Event) {
@@ -263,5 +285,27 @@ export class Pmdt06Component implements OnInit {
       CANCELLED: 'ยกเลิก',
     };
     return map[status] || status;
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+    };
+    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status] || '-' : '-';
   }
 }

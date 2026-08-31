@@ -31,5 +31,6 @@ export interface PmSpecificationModel {
     createdDate?: string;
     updatedAt?: string;
     updatedDate?: string;
+    approvalStatus?: string;
 }
 

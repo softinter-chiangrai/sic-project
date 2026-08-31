@@ -101,7 +101,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
             roleIds: member.roleIds || [],
             isActive: member.isActive,
           });
-          this.formData.markAsPristine();
+          this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
         },
         error: (err: any) => {
           console.error('Load member error', err);

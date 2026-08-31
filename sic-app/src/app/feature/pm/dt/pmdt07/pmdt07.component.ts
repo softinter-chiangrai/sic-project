@@ -10,7 +10,9 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { Pmdt07Service } from './pmdt07.service';
 import { PmSpecificationModel } from './pmdt07.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { ApprovalService } from '../pmdt03/approval.service';
 
+import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
@@ -19,7 +21,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     standalone: true,
     imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent],
     templateUrl: './pmdt07.component.html',
-    changeDetection: ChangeDetectionStrategy.OnPush,
+    changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt07Component implements OnInit {
     private route = inject(ActivatedRoute);
@@ -28,6 +30,7 @@ export class Pmdt07Component implements OnInit {
     private dialog = inject(DialogService);
     private navigation = inject(NavigationService);
     public customerState = inject(CustomerStateService);
+    private approvalService = inject(ApprovalService);
     private http = inject(HttpClient);
 
     isLoading = signal(false);
@@ -59,8 +62,10 @@ export class Pmdt07Component implements OnInit {
     ngOnInit(): void {
         const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
         if (resolved && resolved.data) {
-            this.specs.set(resolved.data || []);
-            this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
+            const data = resolved.data || [];
+            this.specs.set(data);
+            this.totalItems.set(resolved.pageable?.totalElements || data.length || 0);
+            this.loadApprovalStatuses(data);
         } else {
             this.loadData();
         }
@@ -85,8 +90,10 @@ export class Pmdt07Component implements OnInit {
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({
                 next: (res: PaginationResponse<PmSpecificationModel>) => {
-                    this.specs.set(res.data || []);
+                    const data = res.data || [];
+                    this.specs.set(data);
                     this.totalItems.set(res.pageable?.totalElements || 0);
+                    this.loadApprovalStatuses(data);
                 },
                 error: () => {
                     this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
@@ -94,6 +101,24 @@ export class Pmdt07Component implements OnInit {
                     this.totalItems.set(0);
                 },
             });
+    }
+
+    loadApprovalStatuses(specifications: PmSpecificationModel[]): void {
+        specifications.forEach((spec) => {
+            if (!spec.id) return;
+            this.approvalService.getDocumentStatus('SPECIFICATION', spec.id).subscribe({
+                next: (approval) => {
+                    this.specs.update((list) =>
+                        list.map((item) =>
+                            item.id === spec.id ? { ...item, approvalStatus: approval.status } : item
+                        )
+                    );
+                },
+                error: () => {
+                    // ไม่มีสถานะอนุมัติ ปล่อย null
+                },
+            });
+        });
     }
 
     onSearch(event: Event): void {
@@ -166,7 +191,7 @@ export class Pmdt07Component implements OnInit {
         }
 
         this.isLoading.set(true);
-        const url = `${this.service.apiGetLovPriority.replace('/lov?group=PM&parameterCode=PRIORITY', '')}/${spec.id}/export-pdf`;
+        const url = `${environment.apiBaseUrl}/api/pm/specifications/${spec.id}/export-pdf`;
         this.http.get(url, { responseType: 'blob' })
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({
@@ -223,6 +248,28 @@ export class Pmdt07Component implements OnInit {
             Released: 'เผยแพร่',
         };
         return map[status] || status;
+    }
+
+    getApprovalStatusClass(status?: string): string {
+        const map: Record<string, string> = {
+            PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+            APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+            REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+            NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
+            CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+        };
+        return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+    }
+
+    getApprovalStatusText(status?: string): string {
+        const map: Record<string, string> = {
+            PENDING: 'รออนุมัติ',
+            APPROVED: 'อนุมัติแล้ว',
+            REJECTED: 'ปฏิเสธ',
+            NEED_REVISION: 'ต้องแก้ไข',
+            CANCELLED: 'ยกเลิก',
+        };
+        return status ? map[status] || '-' : '-';
     }
 
     formatDate(dateStr: string): string {

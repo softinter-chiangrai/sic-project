@@ -207,7 +207,7 @@ export class Pmdt13AComponent implements OnInit, CanComponentDeactivate {
     this.service.getBug(id).subscribe({
       next: (data) => {
         this.formData.formGroup.patchValue(data);
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.formGroup.getRawValue() as any);
         this.isLoading = false;
         this.cdr.detectChanges();
         console.log('✅ โหลดข้อมูล Bug สำเร็จ:', data);

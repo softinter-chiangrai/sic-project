@@ -121,6 +121,7 @@ export class Pmdt10AComponent implements OnInit {
       color: task.color || '#3B82F6',
       assigneeIds: task.assigneeIds || [],
     });
+    this.form.markAsPristine();
   }
 
   onAssigneeSelectionChanged(items: any[]) {

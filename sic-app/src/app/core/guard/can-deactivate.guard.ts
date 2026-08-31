@@ -38,14 +38,18 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
 
   if (typeof component.pageDirty === 'function') {
     isDirty = component.pageDirty();
-  } else if (component.formData && typeof component.formData.isChanged === 'boolean') {
-    isDirty = component.formData.isChanged;
-  } else if (component.formData && typeof component.formData.dirty === 'boolean') {
-    isDirty = component.formData.dirty;
-  } else if (component.formCustomerData && typeof component.formCustomerData.isChanged === 'boolean') {
-    isDirty = component.formCustomerData.isChanged;
-  } else if (component.formCustomerData && typeof component.formCustomerData.dirty === 'boolean') {
-    isDirty = component.formCustomerData.dirty;
+  } else if (component.formData) {
+    if (typeof component.formData.isChanged === 'boolean') {
+      isDirty = component.formData.isChanged;
+    } else if (typeof component.formData.dirty === 'boolean') {
+      isDirty = component.formData.dirty;
+    }
+  } else if (component.formCustomerData) {
+    if (typeof component.formCustomerData.isChanged === 'boolean') {
+      isDirty = component.formCustomerData.isChanged;
+    } else if (typeof component.formCustomerData.dirty === 'boolean') {
+      isDirty = component.formCustomerData.dirty;
+    }
   } else if (component.form && component.form instanceof FormGroup) {
     isDirty = component.form.dirty;
   } else if (component.formGroup && component.formGroup instanceof FormGroup) {

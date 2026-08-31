@@ -64,13 +64,13 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   );
 
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   constructor() {
     effect(() => {
       const data = this.dataResource.value();
       if (data) {
-        this.formData.form.patchValue(data);
+        this.formData.resetModel(data);
       }
     });
   }

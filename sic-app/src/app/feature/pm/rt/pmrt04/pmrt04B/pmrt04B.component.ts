@@ -23,6 +23,7 @@ import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt01AService } from '../../pmrt01/pmrt01A/pmrt01A.service';
 import { ContractModel } from '../pmrt04A/pmrt04A.model';
 import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 
 
@@ -56,7 +57,10 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone); // ✅ ใช้ NgZone เพื่อบังคับ Change Detection
 
-  form!: FormGroup;
+  formData!: SicFromData<any>;
+  get form(): FormGroup {
+    return this.formData?.formGroup;
+  }
   contractId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -80,7 +84,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   isLoadingFlows = false;
   documenttypeapiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/MA_RENEWAL`;
 
-  pageDirty = () => this.form?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
     this.initForm();
@@ -107,17 +111,19 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   }
 
   initForm(): void {
-    this.form = this.fb.group(
-      {
-        newContractNo: ['', Validators.required],
-        newStartDate: [null, Validators.required],
-        newEndDate: [null, Validators.required],
-        newContractValue: [null, [Validators.required, Validators.min(0)]],
-        renewalRemark: [''],
-        renewalStatus: ['ต่อแล้ว'],
-        approvalFlowId: [null],
-      },
-      { validators: this.dateRangeValidator.bind(this) },
+    this.formData = new SicFromData<any>(
+      this.fb.group(
+        {
+          newContractNo: ['', Validators.required],
+          newStartDate: [null, Validators.required],
+          newEndDate: [null, Validators.required],
+          newContractValue: [null, [Validators.required, Validators.min(0)]],
+          renewalRemark: [''],
+          renewalStatus: ['ต่อแล้ว'],
+          approvalFlowId: [null],
+        },
+        { validators: this.dateRangeValidator.bind(this) },
+      )
     );
   }
 
@@ -202,7 +208,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
             renewalStatus: 'ต่อแล้ว',
           });
 
-          this.form.markAsPristine();
+          this.formData.resetModel(this.form.getRawValue());
           // ✅ อัปเดต View หลังจาก patchValue
           this.ngZone.run(() => {
             this.cdr.detectChanges();
@@ -299,17 +305,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    if (this.form.dirty) {
-      this.dialog
-        .confirm('ยืนยัน', 'คุณยังไม่ได้บันทึกข้อมูล ต้องการออกจากหน้านี้ใช่หรือไม่?')
-        .then((confirmed) => {
-          if (confirmed) {
-            this.navigateBack();
-          }
-        });
-    } else {
-      this.navigateBack();
-    }
+    this.navigateBack();
   }
 
   submit(): void {

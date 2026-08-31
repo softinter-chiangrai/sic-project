@@ -1323,35 +1323,42 @@ export class Pmdt02Component implements OnInit {
     this.router.navigate(['/feature/pm/phase'], { queryParams: { projectId: this.projectId() } });
   }
 
-  // ===== UTILITIES =====
-  getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600',
-      'In Progress': 'bg-blue-100 text-blue-700',
-      Done: 'bg-emerald-100 text-emerald-700',
-      Delayed: 'bg-red-100 text-red-700',
-      Todo: 'bg-gray-100 text-gray-600',
-      'Waiting Review': 'bg-purple-100 text-purple-700',
-      'Waiting Fix': 'bg-orange-100 text-orange-700',
-      Blocked: 'bg-rose-100 text-rose-700',
-      Cancelled: 'bg-gray-300 text-gray-700',
-    };
-    return map[status] || 'bg-gray-100 text-gray-600';
+  getStatusClass(status?: string): string {
+    const s = (status || '').trim().toLowerCase();
+    if (['done', 'complete', 'completed', 'เสร็จสิ้น'].includes(s)) {
+      return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-500/20';
+    }
+    if (['in progress', 'in_progress', 'doing', 'กำลังดำเนินการ'].includes(s)) {
+      return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-500/20';
+    }
+    if (['waiting review', 'waiting_review', 'review', 'รอ review'].includes(s)) {
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-500/20';
+    }
+    if (['waiting fix', 'waiting_fix', 'รอแก้ไข'].includes(s)) {
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-500/20';
+    }
+    if (['blocked', 'delayed', 'ล่าช้า', 'ติดปัญหา'].includes(s)) {
+      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-500/20';
+    }
+    if (['cancelled', 'ยกเลิก'].includes(s)) {
+      return 'bg-gray-200 text-gray-700 dark:bg-gray-700/50 dark:text-gray-300 border border-gray-500/20';
+    }
+    return 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-500/20';
   }
 
-  getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      'Not Started': 'ยังไม่เริ่ม',
-      'In Progress': 'กำลังดำเนินการ',
-      Done: 'เสร็จสิ้น',
-      Delayed: 'ล่าช้า',
-      Todo: 'รอเริ่ม',
-      'Waiting Review': 'รอ Review',
-      'Waiting Fix': 'รอแก้ไข',
-      Blocked: 'ติดปัญหา',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
+  getStatusText(status?: string): string {
+    if (!status) return '-';
+    const s = status.trim().toLowerCase();
+    if (['not started', 'not_started'].includes(s)) return 'ยังไม่เริ่ม';
+    if (['in progress', 'in_progress', 'doing'].includes(s)) return 'กำลังดำเนินการ';
+    if (['done', 'complete', 'completed'].includes(s)) return 'เสร็จสิ้น';
+    if (['delayed'].includes(s)) return 'ล่าช้า';
+    if (['todo'].includes(s)) return 'รอเริ่ม';
+    if (['waiting review', 'waiting_review', 'review'].includes(s)) return 'รอ Review';
+    if (['waiting fix', 'waiting_fix'].includes(s)) return 'รอแก้ไข';
+    if (['blocked'].includes(s)) return 'ติดปัญหา';
+    if (['cancelled'].includes(s)) return 'ยกเลิก';
+    return status;
   }
 
   getTaskAssigneeDisplay(task: TaskResponse): string {

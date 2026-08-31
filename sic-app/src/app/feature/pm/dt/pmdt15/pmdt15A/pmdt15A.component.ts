@@ -65,7 +65,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     { label: 'Published (เผยแพร่แล้ว)', value: 'PUBLISHED' },
   ];
 
-  pageDirty = () => this.formData?.dirty ?? false;
+  pageDirty = () => this.formData?.isChanged ?? false;
 
   ngOnInit(): void {
     const rawForm = Pmdt15AForm.createForm(this.fb);
@@ -95,7 +95,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         } else {
           this.initDefaultSections();
         }
-        this.formData.markAsPristine();
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
         this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลได้');

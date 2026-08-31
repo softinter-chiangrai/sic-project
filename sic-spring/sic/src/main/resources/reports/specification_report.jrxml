@@ -28,7 +28,28 @@
                 COALESCE(s.version, '1.0')                           AS "version",
                 COALESCE(s.status, 'Draft')                          AS "status",
                 COALESCE(s.priority, 'Medium')                       AS "priority",
-                COALESCE(s.owner, '-')                               AS "owner",
+                COALESCE(
+                    NULLIF(
+                        (
+                            SELECT string_agg(
+                                TRIM(CONCAT(
+                                    COALESCE(NULLIF(TRIM(CONCAT(prof.first_name_local, ' ', prof.last_name_local)), ''), NULLIF(TRIM(CONCAT(prof.first_name_en, ' ', prof.last_name_en)), '')),
+                                    CASE 
+                                        WHEN COALESCE(NULLIF(TRIM(CONCAT(prof.first_name_local, ' ', prof.last_name_local)), ''), NULLIF(TRIM(CONCAT(prof.first_name_en, ' ', prof.last_name_en)), '')) IS NULL THEN u_id
+                                        ELSE ''
+                                    END
+                                )),
+                                ', '
+                            )
+                            FROM unnest(string_to_array(s.owner, ',')) AS raw_u_id
+                            CROSS JOIN LATERAL (SELECT TRIM(raw_u_id) AS u_id) l
+                            LEFT JOIN su_profile prof ON prof.user_id = l.u_id AND prof.is_delete = false
+                            WHERE l.u_id <> ''
+                        ),
+                        ''
+                    ),
+                    COALESCE(s.owner, '-')
+                )                                                    AS "owner",
                 COALESCE(CAST(s.estimated_manday AS VARCHAR), '0')   AS "estimatedManday",
                 COALESCE(p.project_name, '-')                        AS "projectName",
                 COALESCE(r.title, '-')                               AS "requirementTitle",
@@ -102,58 +123,58 @@
 			</element>
 
 			<!-- Row 1: Code & Status -->
-			<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" positionType="Float" x="10" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" positionType="Float" x="10" y="38" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["รหัส Spec:"]]></expression>
 			</element>
-			<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" positionType="Float" x="105" y="38" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" positionType="Float" x="120" y="38" width="135" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
 				<expression><![CDATA[$F{specificationCode} != null ? $F{specificationCode} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" positionType="Float" x="270" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" positionType="Float" x="268" y="38" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["สถานะ:"]]></expression>
 			</element>
-			<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" positionType="Float" x="365" y="38" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" positionType="Float" x="378" y="38" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
 				<expression><![CDATA[$F{status} != null ? $F{status} : "-"]]></expression>
 			</element>
 
 			<!-- Row 2: Project & Requirement -->
-			<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" positionType="Float" x="10" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" positionType="Float" x="10" y="56" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["โครงการ:"]]></expression>
 			</element>
-			<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" positionType="Float" x="105" y="56" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" positionType="Float" x="120" y="56" width="135" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{projectName} != null ? $F{projectName} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" positionType="Float" x="270" y="56" width="115" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" positionType="Float" x="268" y="56" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["อ้างอิง Requirement:"]]></expression>
 			</element>
-			<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" positionType="Float" x="390" y="56" width="118" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" positionType="Float" x="378" y="56" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{requirementTitle} != null ? $F{requirementTitle} : "-"]]></expression>
 			</element>
 
 			<!-- Row 3: Type & Priority -->
-			<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" positionType="Float" x="10" y="74" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" positionType="Float" x="10" y="74" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["ประเภท Spec:"]]></expression>
 			</element>
-			<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" positionType="Float" x="105" y="74" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" positionType="Float" x="120" y="74" width="135" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{specificationType} != null ? $F{specificationType} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" positionType="Float" x="270" y="74" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" positionType="Float" x="268" y="74" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["ความสำคัญ:"]]></expression>
 			</element>
-			<element kind="textField" uuid="62d1a3c7-2b3a-48ca-91b5-827a4192b0c5" positionType="Float" x="365" y="74" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="62d1a3c7-2b3a-48ca-91b5-827a4192b0c5" positionType="Float" x="378" y="74" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{priority} != null ? $F{priority} : "-"]]></expression>
 			</element>
 
 			<!-- Row 4: Owner & Estimated Manday -->
-			<element kind="textField" uuid="b13e9a72-2b3a-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="92" width="115" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="b13e9a72-2b3a-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="92" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["ผู้รับผิดชอบ (Owner):"]]></expression>
 			</element>
-			<element kind="textField" uuid="8ea6f8e7-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="130" y="92" width="123" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="8ea6f8e7-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="120" y="92" width="135" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{owner} != null ? $F{owner} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="270" y="92" width="115" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="268" y="92" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["ประมาณการ Manday:"]]></expression>
 			</element>
-			<element kind="textField" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" positionType="Float" x="390" y="92" width="118" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" positionType="Float" x="378" y="92" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[($F{estimatedManday} != null ? $F{estimatedManday} : "0") + " " + "วัน"]]></expression>
 			</element>
 

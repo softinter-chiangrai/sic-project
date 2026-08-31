@@ -129,6 +129,10 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
 
   // === Events ===
   onContentChange(html: string): void {
+    const current = this.content();
+    if (current === html || ((!current || current === '<p></p>') && (!html || html === '<p></p>'))) {
+      return;
+    }
     this.content.set(html);
     this.onChange(html);
   }
