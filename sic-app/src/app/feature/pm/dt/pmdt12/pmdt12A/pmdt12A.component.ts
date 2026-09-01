@@ -414,6 +414,17 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    if (this.isExecution() && this.formData.form.get('taskId')?.value) {
+      const taskStatus = (this.linkedTaskStatus() || '').toLowerCase();
+      if (taskStatus && taskStatus !== 'testing') {
+        this.dialog.warn(
+          'ไม่สามารถบันทึกผลการทดสอบได้',
+          'Task ที่ผูกกับ Test Case นี้ยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Testing)"'
+        );
+        return;
+      }
+    }
+
     const data = { ...this.formData.value };
     data.state = this.isEdit() || this.isExecution() ? 3 : 4;
     this.saveExecution(data);
@@ -551,7 +562,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/test-case']);
+    this.router.navigate(['/feature/pm/test-management']);
   }
 }
 

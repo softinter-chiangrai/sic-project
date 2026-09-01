@@ -4,17 +4,15 @@
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
       <div class="flex items-center gap-3">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--crm-primary)] to-indigo-600 text-white flex items-center justify-center shadow-md shadow-[var(--crm-primary)]/20">
-          <i class="bi bi-palette2 text-xl"></i>
-        </div>
         <div>
-          <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2.5">
+          <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-palette2 text-[var(--crm-primary)]"></i>
             ทบทวนการออกแบบ (Design Review)
             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
               Figma Ready
             </span>
           </h1>
-          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+          <p class="text-sm text-[var(--text-muted)] mt-0.5">
             ตรวจทานดีไซน์ UI/UX, Mockup, Flow Diagram และ Interactive Prototypes จาก Figma แบบเรียลไทม์
           </p>
         </div>
@@ -26,7 +24,7 @@
       <!-- Create Button -->
       <button
         (click)="goToAdd()"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-gradient-to-r from-[var(--crm-primary)] to-indigo-600 hover:from-[var(--crm-primary)]/90 hover:to-indigo-700 transition-all shadow-md shadow-[var(--crm-primary)]/20 active:scale-95"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md active:scale-95"
       >
         <i class="bi bi-plus-lg"></i>
         <span>สร้าง Design Review</span>
@@ -100,12 +98,12 @@
 
   <!-- ===== GALLERY CARDS VIEW (UI / FIGMA FOCUSED) ===== -->
   @if (!isLoading()) {
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
       @for (review of paginatedReviews(); track review.id) {
         <div class="group rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] hover:border-[var(--crm-primary)]/50 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden">
           
           <!-- Card Header / Figma Visual Preview Screen -->
-          <div class="relative w-full h-48 bg-neutral-900 overflow-hidden border-b border-[var(--border)]">
+          <div class="relative w-full h-56 bg-neutral-900 overflow-hidden border-b border-[var(--border)]">
             @if (review.figmaUrl) {
               <!-- Live Figma Embed Iframe Thumbnail -->
               <iframe
@@ -198,24 +196,26 @@
 
             <!-- Meta Details: Creator (CreatedBy), Reviewer, Severity -->
             <div class="pt-2 border-t border-[var(--border)]/60 space-y-2">
-              <div class="flex items-center justify-between text-xs text-[var(--text-muted)]">
+              <div class="flex items-center justify-between gap-2 text-xs text-[var(--text-muted)]">
                 <!-- Creator & Reviewer -->
-                <div class="flex items-center gap-2 flex-wrap">
-                  <span class="inline-flex items-center gap-1 text-[var(--text-active)] font-medium" title="ผู้สร้าง (Created By)">
-                    <i class="bi bi-person text-[var(--crm-primary)]"></i>
-                    {{ review.createdBy || 'ไม่ระบุผู้สร้าง' }}
-                  </span>
-                  @if (review.reviewer && review.reviewer !== review.createdBy) {
-                    <span class="text-[10px] text-[var(--text-muted)]">
-                      (ตรวจ: {{ review.reviewer }})
+                <div class="flex items-center gap-1.5 min-w-0 flex-1">
+                  <i class="bi bi-person-circle text-[var(--crm-primary)] text-sm shrink-0"></i>
+                  <div class="truncate">
+                    <span class="text-[var(--text-active)] font-medium" [title]="review.createdBy || 'ไม่ระบุผู้สร้าง'">
+                      {{ review.createdBy || 'ไม่ระบุผู้สร้าง' }}
                     </span>
-                  }
+                    @if (review.reviewer && review.reviewer !== review.createdBy) {
+                      <span class="text-[10px] text-[var(--text-muted)] ml-1" [title]="'ผู้ตรวจ: ' + review.reviewer">
+                        (ตรวจ: {{ review.reviewer }})
+                      </span>
+                    }
+                  </div>
                 </div>
 
                 <!-- Severity -->
-                <div class="flex items-center gap-1.5">
-                  <span class="text-[11px]">ระดับ:</span>
-                  <span [class]="getSeverityClass(review.severity) + ' px-2 py-0.5 rounded text-[11px] font-medium'">
+                <div class="flex items-center gap-1.5 shrink-0">
+                  <span class="text-[11px] text-[var(--text-muted)]">ระดับ:</span>
+                  <span [class]="getSeverityClass(review.severity) + ' px-2.5 py-0.5 rounded text-[11px] font-semibold'">
                     {{ review.severity }}
                   </span>
                 </div>
@@ -225,7 +225,7 @@
               <button
                 type="button"
                 (click)="toggleCardComments(review.id)"
-                class="w-full flex items-center justify-between text-xs text-[var(--crm-primary)] bg-[var(--crm-primary)]/5 hover:bg-[var(--crm-primary)]/10 px-3 py-1.5 rounded-lg border border-[var(--crm-primary)]/15 transition-all text-left"
+                class="w-full flex items-center justify-between text-xs text-[var(--crm-primary)] bg-[var(--crm-primary)]/5 hover:bg-[var(--crm-primary)]/10 px-3.5 py-2 rounded-xl border border-[var(--crm-primary)]/15 transition-all text-left"
               >
                 <span class="flex items-center gap-1.5 font-medium">
                   <i class="bi bi-chat-dots-fill"></i>

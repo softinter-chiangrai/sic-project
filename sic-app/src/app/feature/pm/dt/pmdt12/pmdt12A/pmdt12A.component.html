@@ -60,6 +60,19 @@
       </div>
     }
 
+    <!-- Warning Banner when linked Task is not in Testing status in Execution Mode -->
+    @if (isExecution() && formData.form.get('taskId')?.value && (linkedTaskStatus() || '').toLowerCase() !== 'testing') {
+      <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-start gap-3">
+        <i class="bi bi-exclamation-triangle-fill text-xl mt-0.5"></i>
+        <div>
+          <h4 class="font-semibold text-sm">Task ที่ผูกยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Testing)"</h4>
+          <p class="text-xs mt-0.5 text-amber-700/80 dark:text-amber-300/80">
+            สถานะปัจจุบันของ Task คือ <strong>{{ linkedTaskStatus() || 'ยังไม่เริ่มพัฒนา' }}</strong> ระบบกำหนดให้ทีมพัฒนาต้องย้าย Task ไปยังสถานะ Testing ก่อน จึงจะสามารถบันทึกผลการทดสอบได้
+          </p>
+        </div>
+      </div>
+    }
+
     <!-- Unified Single Card Form Container -->
     <div class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-8">
       
@@ -235,7 +248,7 @@
           <sic-button
             variant="primary"
             [type]="'submit'"
-            [disabled]="isSaving() || (isExecution() && !isTaskReadyForTest())"
+            [disabled]="isSaving() || (isExecution() && (!isTaskReadyForTest() || (formData.form.get('taskId')?.value && (linkedTaskStatus() || '').toLowerCase() !== 'testing')))"
           >
             @if (isSaving()) {
               <i class="bi bi-arrow-repeat animate-spin"></i>

@@ -158,7 +158,7 @@ export class Pmdt10AComponent implements OnInit {
       assignedTo: raw.assignedTo || undefined,
       startDate: this.buildISOString(raw.startDate, raw.startTime || '09:00'),
       endDate: this.buildISOString(raw.endDate, raw.endTime || '18:00'),
-      estimateManday: raw.estimateManday!,
+      estimateManday: Math.round(Number(raw.estimateManday || 1)),
       priority: raw.priority || 'Medium',
       status: raw.status || 'Todo',
       color: raw.color || undefined,

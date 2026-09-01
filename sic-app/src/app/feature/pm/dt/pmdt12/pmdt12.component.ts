@@ -14,6 +14,7 @@ export interface ScenarioGroup {
 }
 
 import { FormsModule } from '@angular/forms';
+import { environment } from '../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
@@ -41,6 +42,40 @@ export class Pmdt12Component implements OnInit {
   protected scenarios = signal<PmTestScenarioModel[]>([]);
   protected testCases = signal<PmTestCaseModel[]>([]);
   protected projectTasks = signal<any[]>([]);
+
+  // ===== Bug Modal State =====
+  protected showBugModal = signal(false);
+  protected isSubmittingBug = signal(false);
+  protected bugTestCase = signal<PmTestCaseModel | null>(null);
+  protected bugParentTask = signal<any | null>(null);
+  protected bugForm = signal<{
+    taskCode: string;
+    taskName: string;
+    priority: string;
+    description: string;
+    assignedTo: string | null;
+    estimateManday: number;
+    startDate: string;
+    endDate: string;
+  }>({
+    taskCode: '',
+    taskName: '',
+    priority: 'High',
+    description: '',
+    assignedTo: null,
+    estimateManday: 1,
+    startDate: '',
+    endDate: '',
+  });
+
+  // Business Member Combobox
+  protected businessId = signal<string | null>(null);
+  protected memberApiUrl = computed(() => {
+    const bId = this.businessId();
+    return bId
+      ? `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${bId}`
+      : `${environment.apiBaseUrl}/api/business/combobox-members`;
+  });
 
   // Track expanded accordion IDs ('unassigned' for null scenario)
   protected expandedScenarioIds = signal<Set<string>>(new Set());
@@ -174,6 +209,10 @@ export class Pmdt12Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
+    const bId = localStorage.getItem('businessId');
+    if (bId) {
+      this.businessId.set(bId);
+    }
     this.loadData();
   }
 
@@ -222,6 +261,31 @@ export class Pmdt12Component implements OnInit {
       });
   }
 
+  getBugsForTestCase(testCase: PmTestCaseModel): any[] {
+    const tcCode = (testCase.testCaseCode || '').trim().toUpperCase();
+    if (!tcCode) return [];
+
+    const tasks = this.projectTasks();
+    return tasks.filter((t: any) => {
+      if (t.isDelete) return false;
+      const code = (t.taskCode || '').toUpperCase();
+      const name = (t.taskName || '').toUpperCase();
+      const desc = (t.description || '').toUpperCase();
+      return (
+        (name.includes(tcCode) || desc.includes(tcCode)) &&
+        (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
+      );
+    });
+  }
+
+  getActiveBugsForTestCase(testCase: PmTestCaseModel): any[] {
+    const bugs = this.getBugsForTestCase(testCase);
+    return bugs.filter((t: any) => {
+      const status = (t.status || '').toLowerCase();
+      return status !== 'complete' && status !== 'completed';
+    });
+  }
+
   hasActiveBug(testCase: PmTestCaseModel): boolean {
     const tcCode = (testCase.testCaseCode || '').trim();
     if (!tcCode) return false;
@@ -230,20 +294,30 @@ export class Pmdt12Component implements OnInit {
     const ts = (testCase.taskStatus || '').toLowerCase();
     if (ts === 'bugfix') return true;
 
-    // Check against existing project tasks
-    const tasks = this.projectTasks();
-    return tasks.some((t: any) => {
-      if (t.isDelete) return false;
-      const status = (t.status || '').toLowerCase();
-      if (status === 'complete' || status === 'completed') return false; // Bug was resolved
-      const code = (t.taskCode || '').toUpperCase();
-      const name = (t.taskName || '').toUpperCase();
-      const desc = (t.description || '').toUpperCase();
-      return (
-        (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
-        (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
-      );
-    });
+    return this.getActiveBugsForTestCase(testCase).length > 0;
+  }
+
+  canExecuteTest(testCase: PmTestCaseModel): boolean {
+    if (this.hasActiveBug(testCase)) {
+      return false;
+    }
+    // If testCase has a linked task, it MUST be in 'Testing' status to be executed
+    if (testCase.taskId) {
+      const status = (testCase.taskStatus || '').toLowerCase();
+      return status === 'testing';
+    }
+    // If no task is linked, allow execution (general / regression test)
+    return true;
+  }
+
+  getExecuteButtonDisabledTitle(testCase: PmTestCaseModel): string {
+    if (this.hasActiveBug(testCase)) {
+      return 'ไม่สามารถทดสอบได้เนื่องจากมี Bug ที่กำลังรอการแก้ไข';
+    }
+    if (testCase.taskId && (testCase.taskStatus || '').toLowerCase() !== 'testing') {
+      return 'Task ยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Testing)"';
+    }
+    return 'บันทึกผลการทดสอบ';
   }
 
   // ===== Accordion Toggle =====
@@ -441,15 +515,16 @@ export class Pmdt12Component implements OnInit {
     });
   }
 
-  quickCreateBugTask(testCase: PmTestCaseModel, event: Event): void {
-    event.stopPropagation();
+  openBugModal(testCase: PmTestCaseModel, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
 
     if (!testCase.taskId) {
       this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
       return;
     }
 
-    // Check if parent task exists and check if a bug task already exists for this test case
     this.service.getTaskById(testCase.taskId).subscribe({
       next: (parentTask) => {
         if (!parentTask || !parentTask.workPackageId) {
@@ -457,43 +532,46 @@ export class Pmdt12Component implements OnInit {
           return;
         }
 
-        // Fetch tasks in the same work package to verify if bug already exists
-        this.service.getTasksByWorkPackageId(parentTask.workPackageId).subscribe({
-          next: (existingTasks) => {
-            const tcCode = (testCase.testCaseCode || '').trim();
-            const alreadyExists = (existingTasks || []).some((t: any) => {
-              const code = (t.taskCode || '').toUpperCase();
-              const name = (t.taskName || '').toUpperCase();
-              const desc = (t.description || '').toUpperCase();
-              return (
-                (name.includes(tcCode.toUpperCase()) || desc.includes(tcCode.toUpperCase())) &&
-                (code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]'))
-              );
-            });
+        this.bugTestCase.set(testCase);
+        this.bugParentTask.set(parentTask);
 
-            if (alreadyExists) {
-              this.dialog.info(
-                'สร้าง Bug Task แล้ว',
-                `Test Case "${testCase.testCaseCode}" ได้มีการสร้าง Bug Task เข้าสู่ระบบเรียบร้อยแล้ว`
-              );
-              return;
-            }
+        const todayStr = new Date().toISOString().split('T')[0];
+        const nextDayStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
+        const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
 
-            this.dialog
-              .confirm(
-                'สร้าง Bug Task',
-                `ต้องการสร้าง Bug Task สำหรับ Test Case "${testCase.testCaseCode}" ไปยังหน้ารายการงาน (Task Board) หรือไม่?`
-              )
-              .then((ok) => {
-                if (ok) {
-                  this.executeCreateBugTask(testCase, parentTask);
-                }
-              });
-          },
-          error: () => {
-            this.executeCreateBugTask(testCase, parentTask);
-          },
+        const cleanHtml = (htmlStr?: string | null): string => {
+          if (!htmlStr) return '-';
+          return htmlStr
+            .replace(/<br\s*[\/]?>/gi, '\n')
+            .replace(/<\/p>/gi, '\n')
+            .replace(/<[^>]+>/g, '')
+            .replace(/&nbsp;/g, ' ')
+            .replace(/&amp;/g, '&')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>')
+            .replace(/\n\s*\n/g, '\n')
+            .trim();
+        };
+
+        let desc = `[BUG จากผลการทดสอบ: ${testCase.testCaseCode || ''}]\n\n`;
+        if (testCase.title) desc += `• หัวข้อ Test Case: ${testCase.title}\n`;
+        if (testCase.testStep) desc += `• ขั้นตอนการทดสอบ:\n${cleanHtml(testCase.testStep)}\n\n`;
+        if (testCase.expectedResult) desc += `• ผลลัพธ์ที่คาดหวัง:\n${cleanHtml(testCase.expectedResult)}\n\n`;
+        if (testCase.actualResult) desc += `• ผลลัพธ์ที่พบจริง (ข้อผิดพลาด):\n${cleanHtml(testCase.actualResult)}\n\n`;
+        if (testCase.tester) desc += `• ผู้รายงาน: ${testCase.tester}\n`;
+
+        this.bugForm.set({
+          taskCode: bugCode,
+          taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
+          priority: testCase.priority === 'High' ? 'Critical' : (testCase.priority || 'High'),
+          description: desc.trim(),
+          assignedTo: parentTask.assignedTo || null,
+          estimateManday: 1,
+          startDate: todayStr,
+          endDate: nextDayStr,
         });
+
+        this.showBugModal.set(true);
       },
       error: () => {
         this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูล Task ที่ผูกไว้ได้');
@@ -501,35 +579,53 @@ export class Pmdt12Component implements OnInit {
     });
   }
 
-  private executeCreateBugTask(testCase: PmTestCaseModel, parentTask: any) {
-    const todayStr = new Date().toISOString().split('T')[0];
-    const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
+  closeBugModal(): void {
+    this.showBugModal.set(false);
+    this.bugTestCase.set(null);
+    this.bugParentTask.set(null);
+  }
 
-    let desc = `<b>[BUG จากผลการทดสอบ: ${testCase.testCaseCode || ''}]</b><br/><br/>`;
-    if (testCase.title) desc += `<b>หัวข้อ:</b> ${testCase.title}<br/>`;
-    if (testCase.testStep) desc += `<b>ขั้นตอนการทดสอบ:</b><br/>${testCase.testStep}<br/>`;
-    if (testCase.expectedResult) desc += `<b>ผลลัพธ์ที่คาดหวัง:</b><br/>${testCase.expectedResult}<br/>`;
-    if (testCase.actualResult) desc += `<b>ผลลัพธ์ที่พบจริง:</b><br/>${testCase.actualResult}<br/>`;
-    if (testCase.tester) desc += `<b>ผู้ทดสอบ:</b> ${testCase.tester}<br/>`;
+  updateBugFormField(field: string, value: any): void {
+    this.bugForm.update((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  }
 
-    // 1. Create Bug Task with status 'To Do'
+  submitBug(): void {
+    const form = this.bugForm();
+    const testCase = this.bugTestCase();
+    const parentTask = this.bugParentTask();
+
+    if (!form.taskName || !form.taskName.trim()) {
+      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณาระบุชื่อ / หัวข้อ Bug');
+      return;
+    }
+
+    if (!parentTask || !parentTask.workPackageId) {
+      this.dialog.error('ไม่สามารถบันทึกได้', 'ไม่พบข้อมูล Work Package สำหรับสร้าง Task');
+      return;
+    }
+
+    this.isSubmittingBug.set(true);
+
     const taskPayload: any = {
-      taskCode: bugCode,
-      taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
-      description: desc,
-      priority: testCase.priority === 'High' ? 'Critical' : (testCase.priority || 'High'),
-      status: 'To Do', // Bug starts in 'To Do' column for Dev to pick up
-      startDate: `${todayStr}T09:00:00Z`,
-      endDate: `${todayStr}T18:00:00Z`,
-      estimateManday: 1,
-      workPackageId: parentTask?.workPackageId || null,
-      specificationId: parentTask?.specificationId || null,
-      assignedTo: parentTask?.assignedTo || null,
-      assigneeIds: parentTask?.assigneeIds || [],
+      taskCode: form.taskCode,
+      taskName: form.taskName.trim(),
+      description: form.description,
+      priority: form.priority,
+      status: 'To Do', // Bug task starts in 'To Do' for dev to pick up
+      startDate: form.startDate ? `${form.startDate}T09:00:00Z` : new Date().toISOString(),
+      endDate: form.endDate ? `${form.endDate}T18:00:00Z` : new Date().toISOString(),
+      estimateManday: form.estimateManday || 1,
+      workPackageId: parentTask.workPackageId,
+      specificationId: parentTask.specificationId || null,
+      assignedTo: form.assignedTo || parentTask.assignedTo || null,
+      assigneeIds: form.assignedTo ? [form.assignedTo] : (parentTask.assigneeIds || []),
     };
 
-    // 2. If parentTask exists, move parent task to 'bugfix' column
-    if (parentTask && parentTask.id && parentTask.status !== 'bugfix') {
+    // 1. Move parent task to bugfix status if not already
+    if (parentTask.id && parentTask.status !== 'bugfix') {
       const updatedParent = {
         ...parentTask,
         status: 'bugfix',
@@ -540,19 +636,22 @@ export class Pmdt12Component implements OnInit {
       });
     }
 
-    if (taskPayload.workPackageId) {
-      this.service.createTask(taskPayload).subscribe({
-        next: () => {
-          this.dialog.success('สร้าง Bug สำเร็จ', `สร้าง Bug Task (${bugCode}) ในคอลัมน์ To Do และย้าย Task หลักไปที่คอลัมน์ Bugfix เรียบร้อยแล้ว`);
-          this.loadData();
-        },
-        error: (err) => {
-          this.dialog.error('สร้าง Bug ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการสร้าง Task');
-        },
-      });
-    } else {
-      this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task หรือ Work Package จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
-    }
+    // 2. Create the Bug Task
+    this.service.createTask(taskPayload).subscribe({
+      next: () => {
+        this.isSubmittingBug.set(false);
+        this.closeBugModal();
+        this.dialog.success(
+          'เปิด Bug สำเร็จ',
+          `สร้าง Bug Task (${form.taskCode}) ในคอลัมน์ To Do และปรับสถานะ Task หลักเป็น Bugfix เรียบร้อยแล้ว`
+        );
+        this.loadData();
+      },
+      error: (err) => {
+        this.isSubmittingBug.set(false);
+        this.dialog.error('สร้าง Bug ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการสร้าง Task');
+      },
+    });
   }
 
   // ===== Badges & Utilities =====

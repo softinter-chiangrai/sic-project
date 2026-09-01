@@ -147,6 +147,7 @@ export class SicKanbanComponent {
   selectedMilestoneFilter = signal<string | null>(null);
   selectedPriorityFilter = signal<string | null>(null);
   selectedAssigneeFilter = signal<string | null>(null);
+  readonly Math = Math;
 
   // ===== COLUMNS CONFIG (matching ClickUp style) =====
   readonly columns: KanbanColumnConfig[] = [
@@ -636,6 +637,36 @@ export class SicKanbanComponent {
     const code = (task.taskCode || '').toUpperCase();
     const name = (task.taskName || '').toUpperCase();
     return code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]') || name.includes('BUG');
+  }
+
+  isTodoStatus(status?: string | null): boolean {
+    if (!status) return true;
+    const s = status.trim().toLowerCase();
+    return s === 'todo' || s === 'to do' || s === 'not started' || s === 'draft';
+  }
+
+  isInProgressStatus(status?: string | null): boolean {
+    if (!status) return false;
+    const s = status.trim().toLowerCase();
+    return s === 'in progress' || s === 'doing';
+  }
+
+  isWaitingFixStatus(status?: string | null): boolean {
+    if (!status) return false;
+    const s = status.trim().toLowerCase();
+    return s === 'bugfix' || s === 'bug fixing' || s === 'bug' || s === 'fixing' || s === 'waiting fix' || s === 'blocked';
+  }
+
+  isTestingStatus(status?: string | null): boolean {
+    if (!status) return false;
+    const s = status.trim().toLowerCase();
+    return s === 'testing' || s === 'test' || s === 'in test' || s === 'uat' || s === 'waiting review' || s === 'review';
+  }
+
+  isCompletedStatus(status?: string | null): boolean {
+    if (!status) return false;
+    const s = status.trim().toLowerCase();
+    return s === 'complete' || s === 'completed' || s === 'done' || s === 'closed';
   }
 
   getPriorityClass(priority?: string): string {

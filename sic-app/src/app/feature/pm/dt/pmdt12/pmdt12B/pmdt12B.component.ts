@@ -242,7 +242,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/test-case']);
+    this.router.navigate(['/feature/pm/test-management']);
   }
 }
 

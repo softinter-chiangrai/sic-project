@@ -102,7 +102,7 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
-        <input type="number" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+        <input type="number" min="1" step="1" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
         @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
         }
