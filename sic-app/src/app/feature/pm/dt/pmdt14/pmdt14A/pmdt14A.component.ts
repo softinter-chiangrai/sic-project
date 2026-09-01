@@ -262,7 +262,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         this.router.navigate(['/feature/pm/specification']);
         break;
       case 'BUG':
-        this.router.navigate(['/feature/pm/bug/new']);
+        this.router.navigate(['/feature/pm/test-management']);
         break;
       case 'TEST':
         this.router.navigate(['/feature/pm/test-management']);

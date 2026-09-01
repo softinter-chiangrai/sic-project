@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/pm/specifications")
+@RequestMapping("/api/pm/specification")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Specification", description = "จัดการข้อมูลข้อกำหนด (Specification)")
@@ -59,8 +59,7 @@ public class PmSpecificationController {
     public ResponseEntity<PaginationResponse<PmSpecificationResponse>> getSpecifications(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable
-    ) {
+            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
@@ -72,8 +71,7 @@ public class PmSpecificationController {
                 pageResult.getContent(),
                 pageable.getPageNumber(),
                 pageable.getPageSize(),
-                pageResult.getTotalElements()
-        ));
+                pageResult.getTotalElements()));
     }
 
     @GetMapping("/{id}")
@@ -126,8 +124,7 @@ public class PmSpecificationController {
     public ResponseEntity<SpecificationDraft> generateDraft(
             @RequestBody(required = false) GenerateSpecDraftRequest bodyRequest,
             @RequestParam(required = false) UUID requirementId,
-            @RequestParam(required = false) UUID diagramId
-    ) {
+            @RequestParam(required = false) UUID diagramId) {
         GenerateSpecDraftRequest req = bodyRequest != null ? bodyRequest : new GenerateSpecDraftRequest();
         if (req.getRequirementId() == null && requirementId != null) {
             req.setRequirementId(requirementId);
@@ -143,8 +140,7 @@ public class PmSpecificationController {
     @GetMapping("/combobox")
     @Operation(summary = "Get specification combobox list")
     public ResponseEntity<List<ComboboxResponse>> getComboboxSpecifications(
-            @RequestParam(required = false) UUID projectId
-    ) {
+            @RequestParam(required = false) UUID projectId) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();

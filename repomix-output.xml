@@ -67658,7 +67658,7 @@ import { PmSpecificationModel } from './pmdt07.model';
 @Injectable({ providedIn: 'root' })
 export class Pmdt07Service {
     private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
+    private baseUrl = environment.apiBaseUrl + '/api/pm/specification';
 
     // Combobox endpoints
     apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
@@ -68230,7 +68230,7 @@ export class Pmdt12AService {
   }
 
   getSpecificationById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiBase}/api/pm/specifications/${id}`);
+    return this.http.get<any>(`${this.apiBase}/api/pm/specification/${id}`);
   }
 
   getTasksCombobox(projectId?: string | null): Observable<any[]> {
@@ -77325,7 +77325,7 @@ export class Pmdt10Service {
   private http = inject(HttpClient);
   private taskUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
   private projectUrl = `${environment.apiBaseUrl}/api/pm/projects`;
-  private specUrl = `${environment.apiBaseUrl}/api/pm/specifications`;
+  private specUrl = `${environment.apiBaseUrl}/api/pm/specification`;
   private phaseUrl = `${environment.apiBaseUrl}/api/pm/phases`;
 
   // ===== Tasks =====
@@ -79627,7 +79627,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/pm/specifications")
+@RequestMapping("/api/pm/specification")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Specification", description = "จัดการข้อมูลข้อกำหนด (Specification)")
@@ -84649,7 +84649,7 @@ export class Pmdt09AService {
   private readonly baseUrl = `${environment.apiBaseUrl}/api/pm/design-reviews`;
 
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/projects/combobox`;
-  apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/specifications/combobox`;
+  apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/specification/combobox`;
   apiGetUsers = `${environment.apiBaseUrl}/api/users/available`;
   apiGetApprovalFlows = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/DESIGN_REVIEW`;
 
@@ -101530,7 +101530,7 @@ export class Pmdt02CComponent implements OnInit {
 
   loadSpecifications(projectId: string) {
     this.http
-      .get<any>(`${environment.apiBaseUrl}/api/pm/specifications`, {
+      .get<any>(`${environment.apiBaseUrl}/api/pm/specification`, {
         params: { page: '0', size: '100' },
       })
       .subscribe({
@@ -103542,7 +103542,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         this.isLoading = true;
-        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
+        const url = `${this.apiBaseUrl}/api/pm/specification/${id}/export-pdf`;
         this.http.get(url, { responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;
@@ -103576,7 +103576,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         this.isLoading = true;
-        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
+        const url = `${this.apiBaseUrl}/api/pm/specification/${id}/export-pdf`;
         this.http.get(url, { responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;
@@ -106308,7 +106308,7 @@ export class Pmrt05Component implements OnInit {
           catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
         );
       case 'SPECIFICATION':
-        url = `${environment.apiBaseUrl}/api/pm/specifications/${id}`;
+        url = `${environment.apiBaseUrl}/api/pm/specification/${id}`;
         return this.http.get<any>(url).pipe(
           map((data) => ({
             code: data?.specificationCode || data?.specCode || 'SPEC',

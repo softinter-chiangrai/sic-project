@@ -9,7 +9,8 @@ import com.softinter.sicapi.entity.pm.PmTask;
 import com.softinter.sicapi.entity.pm.PmTaskAssignee;
 import com.softinter.sicapi.entity.pm.PmWorkPackage;
 import com.softinter.sicapi.entity.su.SuProfile;
-import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.entity.pm.PmTestCase;
+import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmPhaseRepository;
 import com.softinter.sicapi.repository.pm.PmTaskAssigneeRepository;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 public class TaskServiceImpl implements TaskService {
 
     private final PmTaskRepository taskRepository;
+    private final PmTestCaseRepository testCaseRepository;
     private final PmWorkPackageRepository wpRepository;
     private final PmSpecificationRepository specificationRepository;
     private final PmPhaseRepository phaseRepository;
@@ -273,9 +275,25 @@ public class TaskServiceImpl implements TaskService {
     public void deleteTask(UUID taskId) {
         PmTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
+        Instant now = Instant.now();
         task.setIsDelete(true);
-        task.setDeleteDate(Instant.now());
+        task.setDeleteDate(now);
         taskRepository.save(task);
+
+        // ✅ Cascade Soft Delete: ลบ Test Cases ทั้งหมดที่ผูกกับ Task นี้
+        try {
+            List<PmTestCase> linkedTestCases = testCaseRepository.findByTaskIdAndIsDeleteFalse(taskId);
+            for (PmTestCase tc : linkedTestCases) {
+                tc.setIsDelete(true);
+                tc.setDeleteDate(now);
+                tc.setDeleteBy("SYSTEM_CASCADE");
+                testCaseRepository.save(tc);
+                log.info("Cascade deleted Test Case {} associated with Task {}", tc.getId(), taskId);
+            }
+        } catch (Exception e) {
+            log.error("Error cascading delete for test cases of task {}", taskId, e);
+        }
+
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
     }
 

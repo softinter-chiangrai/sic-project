@@ -35,7 +35,7 @@ export class Pmdt12AService {
   }
 
   getSpecificationById(id: string): Observable<any> {
-    return this.http.get<any>(`${this.apiBase}/api/pm/specifications/${id}`);
+    return this.http.get<any>(`${this.apiBase}/api/pm/specification/${id}`);
   }
 
   getTasksCombobox(projectId?: string | null): Observable<any[]> {

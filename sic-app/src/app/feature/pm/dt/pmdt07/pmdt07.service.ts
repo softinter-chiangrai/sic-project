@@ -10,7 +10,7 @@ import { PmSpecificationModel } from './pmdt07.model';
 @Injectable({ providedIn: 'root' })
 export class Pmdt07Service {
     private http = inject(HttpClient);
-    private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
+    private baseUrl = environment.apiBaseUrl + '/api/pm/specification';
 
     // Combobox endpoints
     apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;

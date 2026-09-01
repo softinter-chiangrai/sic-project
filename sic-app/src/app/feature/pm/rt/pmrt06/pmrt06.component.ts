@@ -114,7 +114,7 @@ export class Pmrt06Component implements OnInit {
   // ===== Recent Activities =====
   activities = signal<RecentActivity[]>([
     { id: '1', type: 'approval', title: 'อนุมัติ Requirement REQ-001', user: 'สมชาย ใจดี', time: '2 ชั่วโมงที่แล้ว', icon: 'bi-check2-circle', color: 'var(--crm-success)', route: '/feature/pm/approval/1' },
-    { id: '2', type: 'bug', title: 'แจ้ง Bug BUG-003', user: 'สมศักดิ์ รุ่งเรือง', time: '5 ชั่วโมงที่แล้ว', icon: 'bi-bug', color: 'var(--crm-danger)', route: '/feature/pm/bug/3' },
+    { id: '2', type: 'bug', title: 'แจ้ง Bug BUG-003', user: 'สมศักดิ์ รุ่งเรือง', time: '5 ชั่วโมงที่แล้ว', icon: 'bi-bug', color: 'var(--crm-danger)', route: '/feature/pm/test-case/new' },
     { id: '3', type: 'task', title: 'สร้างงานใหม่ TASK-005', user: 'วิชัย พัฒนาชัย', time: '1 วันที่แล้ว', icon: 'bi-plus-circle', color: 'var(--crm-primary)', route: '/feature/pm/task/5' },
     { id: '4', type: 'delivery', title: 'ส่งมอบโครงการระบบ CRM', user: 'สมหญิง รักเรียน', time: '2 วันที่แล้ว', icon: 'bi-box-seam', color: 'var(--crm-success)', route: '/feature/pm/delivery/1' },
     { id: '5', type: 'ma', title: 'Ticket MA-002 ถูกปิด', user: 'มานี มีทรัพย์', time: '3 วันที่แล้ว', icon: 'bi-headset', color: 'var(--crm-warning)', route: '/feature/pm/ma-ticket/2' },
@@ -135,7 +135,7 @@ export class Pmrt06Component implements OnInit {
     { label: 'สร้างโครงการใหม่', icon: 'bi-plus-circle', route: '/feature/pm/project/new', color: 'primary' },
     { label: 'เพิ่ม Requirement', icon: 'bi-clipboard-plus', route: '/feature/pm/requirement/new', color: 'primary' },
     { label: 'สร้างงานใหม่', icon: 'bi-list-task', route: '/feature/pm/task/new', color: 'primary' },
-    { label: 'แจ้ง Bug', icon: 'bi-bug', route: '/feature/pm/bug/new', color: 'danger' },
+    { label: 'แจ้ง Bug / Test Case', icon: 'bi-bug', route: '/feature/pm/test-case/new', color: 'danger' },
     { label: 'ออกใบแจ้งหนี้', icon: 'bi-receipt', route: '/feature/pm/invoice/new', color: 'primary' },
     { label: 'แจ้ง MA Ticket', icon: 'bi-headset', route: '/feature/pm/ma-ticket/new', color: 'warning' },
     { label: 'สร้าง User', icon: 'bi-person-plus', route: '/feature/pm/user/new', color: 'primary' },

@@ -396,6 +396,38 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         return `${label}: ${count} รายการ`;
     }
 
+    openItemDetail(type: 'REQ' | 'SPEC' | 'DIAGRAM' | 'TASK' | 'TC' | 'BUG', id?: string) {
+        if (!id) return;
+        let url = '';
+        const base = '/feature/pm';
+        const projId = this.projectId || this.form.get('projectId')?.value || '';
+
+        switch (type) {
+            case 'REQ':
+                url = `${base}/requirement/${id}/edit`;
+                break;
+            case 'SPEC':
+                url = `${base}/specification/${id}/edit`;
+                break;
+            case 'DIAGRAM':
+                url = `${base}/diagram?tabId=${id}${projId ? '&projectId=' + projId : ''}`;
+                break;
+            case 'TASK':
+                url = `${base}/task/${id}/edit`;
+                break;
+            case 'TC':
+                url = `${base}/test-case/${id}/edit`;
+                break;
+            case 'BUG':
+                url = `${base}/task/${id}/edit`;
+                break;
+        }
+
+        if (url) {
+            window.open(url, '_blank');
+        }
+    }
+
     getImpactStatusClass(status?: string): string {
         if (status === 'AUTO') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';

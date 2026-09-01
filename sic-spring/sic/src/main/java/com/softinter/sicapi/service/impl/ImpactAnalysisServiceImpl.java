@@ -131,10 +131,13 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         Set<UUID> rawBugIds = new HashSet<>(impacted.getOrDefault("BUG", Set.of()));
 
         // ✅ แยก Task ออกเป็น Normal Task vs Bug Task (ที่สร้างเป็น task ไว้ใน Kanban)
-        // พร้อมทั้งค้นหา Test Case ที่ผูกกับ Task เหล่านี้
+        // พร้อมทั้งค้นหา Test Case ที่ผูกกับ Task เหล่านี้ (เฉพาะที่ยังไม่ถูกลบ)
         Set<UUID> normalTaskIds = new HashSet<>();
         for (UUID tId : rawTaskIds) {
             taskRepository.findById(tId).ifPresent(task -> {
+                if (Boolean.TRUE.equals(task.getIsDelete())) {
+                    return;
+                }
                 String code = task.getTaskCode() != null ? task.getTaskCode().toUpperCase() : "";
                 String name = task.getTaskName() != null ? task.getTaskName().toUpperCase() : "";
                 if (code.startsWith("BUG-") || code.startsWith("BUG") || name.startsWith("[BUG]") || name.contains("BUG")) {
@@ -144,18 +147,62 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 }
             });
 
-            // ค้นหา Test Cases ที่ผูกกับ Task นี้
+            // ค้นหา Test Cases ที่ผูกกับ Task นี้ (เฉพาะที่ยังไม่ถูกลบ)
             try {
                 List<PmTestCase> linkedCases = testCaseRepository.findByTaskIdAndIsDeleteFalse(tId);
                 for (PmTestCase tc : linkedCases) {
-                    rawTestCaseIds.add(tc.getId());
+                    if (!Boolean.TRUE.equals(tc.getIsDelete())) {
+                        rawTestCaseIds.add(tc.getId());
+                    }
                 }
             } catch (Exception ignored) {}
         }
 
+        // กรองเฉพาะ Test Case ที่ยังไม่ถูกลบ
+        Set<UUID> activeTestCaseIds = new HashSet<>();
+        for (UUID tcId : rawTestCaseIds) {
+            testCaseRepository.findById(tcId).ifPresent(tc -> {
+                if (!Boolean.TRUE.equals(tc.getIsDelete())) {
+                    activeTestCaseIds.add(tcId);
+                }
+            });
+        }
+
+        // กรองเฉพาะ Bug Task ที่ยังไม่ถูกลบ
+        Set<UUID> activeBugIds = new HashSet<>();
+        for (UUID bId : rawBugIds) {
+            taskRepository.findById(bId).ifPresent(task -> {
+                if (!Boolean.TRUE.equals(task.getIsDelete())) {
+                    activeBugIds.add(bId);
+                }
+            });
+        }
+
+        // กรองเฉพาะ Requirement ที่ยังไม่ถูกลบ
+        Set<UUID> activeReqIds = new HashSet<>();
+        for (UUID rId : reqIds) {
+            requirementRepository.findById(rId).ifPresent(r -> {
+                if (!Boolean.TRUE.equals(r.getIsDelete())) {
+                    activeReqIds.add(rId);
+                }
+            });
+        }
+
+        // กรองเฉพาะ Specification ที่ยังไม่ถูกลบ
+        Set<UUID> activeSpecIds = new HashSet<>();
+        for (UUID sId : specIds) {
+            specificationRepository.findById(sId).ifPresent(s -> {
+                if (!Boolean.TRUE.equals(s.getIsDelete())) {
+                    activeSpecIds.add(sId);
+                }
+            });
+        }
+
+        UUID[] filteredReqIds = activeReqIds.toArray(UUID[]::new);
+        UUID[] filteredSpecIds = activeSpecIds.toArray(UUID[]::new);
         UUID[] taskIds = normalTaskIds.toArray(UUID[]::new);
-        UUID[] testCaseIds = rawTestCaseIds.toArray(UUID[]::new);
-        UUID[] bugIds = rawBugIds.toArray(UUID[]::new);
+        UUID[] testCaseIds = activeTestCaseIds.toArray(UUID[]::new);
+        UUID[] bugIds = activeBugIds.toArray(UUID[]::new);
 
         // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
         Set<UUID> diagramSet = new java.util.HashSet<>();
@@ -172,8 +219,8 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 .orElse(new ChangeImpactAnalysis());
 
         analysis.setChangeRequest(changeRequest);
-        analysis.setImpactedRequirementIds(reqIds);
-        analysis.setImpactedSpecIds(specIds);
+        analysis.setImpactedRequirementIds(filteredReqIds);
+        analysis.setImpactedSpecIds(filteredSpecIds);
         analysis.setImpactedTaskIds(taskIds);
         analysis.setImpactedTestCaseIds(testCaseIds);
         analysis.setImpactedBugIds(bugIds);
@@ -182,7 +229,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
         if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
-            int calculatedManday = Math.max(1, (specIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+            int calculatedManday = Math.max(1, (filteredSpecIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5));
             analysis.setMandayImpact(calculatedManday);
         }
         if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
@@ -217,16 +264,15 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (entity.getImpactedRequirementIds() != null && entity.getImpactedRequirementIds().length > 0) {
             java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
             for (UUID reqId : entity.getImpactedRequirementIds()) {
-                ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
-                item.setId(reqId);
-                requirementRepository.findById(reqId).ifPresentOrElse(r -> {
-                    item.setCode(r.getRequirementCode());
-                    item.setName(r.getTitle());
-                }, () -> {
-                    item.setCode(reqId.toString().substring(0, 8));
-                    item.setName(reqId.toString().substring(0, 8));
+                requirementRepository.findById(reqId).ifPresent(r -> {
+                    if (!Boolean.TRUE.equals(r.getIsDelete())) {
+                        ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+                        item.setId(reqId);
+                        item.setCode(r.getRequirementCode());
+                        item.setName(r.getTitle());
+                        items.add(item);
+                    }
                 });
-                items.add(item);
             }
             dto.setImpactedRequirements(items);
         }
@@ -235,16 +281,15 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (entity.getImpactedSpecIds() != null && entity.getImpactedSpecIds().length > 0) {
             java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
             for (UUID specId : entity.getImpactedSpecIds()) {
-                ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
-                item.setId(specId);
-                specificationRepository.findById(specId).ifPresentOrElse(s -> {
-                    item.setCode(s.getSpecificationCode());
-                    item.setName(s.getTitle());
-                }, () -> {
-                    item.setCode(specId.toString().substring(0, 8));
-                    item.setName(specId.toString().substring(0, 8));
+                specificationRepository.findById(specId).ifPresent(s -> {
+                    if (!Boolean.TRUE.equals(s.getIsDelete())) {
+                        ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+                        item.setId(specId);
+                        item.setCode(s.getSpecificationCode());
+                        item.setName(s.getTitle());
+                        items.add(item);
+                    }
                 });
-                items.add(item);
             }
             dto.setImpactedSpecs(items);
         }
@@ -270,16 +315,15 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (entity.getImpactedTaskIds() != null && entity.getImpactedTaskIds().length > 0) {
             java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
             for (UUID taskId : entity.getImpactedTaskIds()) {
-                ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
-                item.setId(taskId);
-                taskRepository.findById(taskId).ifPresentOrElse(t -> {
-                    item.setCode(t.getTaskCode());
-                    item.setName(t.getTaskName());
-                }, () -> {
-                    item.setCode(taskId.toString().substring(0, 8));
-                    item.setName(taskId.toString().substring(0, 8));
+                taskRepository.findById(taskId).ifPresent(t -> {
+                    if (!Boolean.TRUE.equals(t.getIsDelete())) {
+                        ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+                        item.setId(taskId);
+                        item.setCode(t.getTaskCode());
+                        item.setName(t.getTaskName());
+                        items.add(item);
+                    }
                 });
-                items.add(item);
             }
             dto.setImpactedTasks(items);
         }
@@ -288,16 +332,15 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (entity.getImpactedTestCaseIds() != null && entity.getImpactedTestCaseIds().length > 0) {
             java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
             for (UUID tcId : entity.getImpactedTestCaseIds()) {
-                ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
-                item.setId(tcId);
-                testCaseRepository.findById(tcId).ifPresentOrElse(tc -> {
-                    item.setCode(tc.getTestCaseCode());
-                    item.setName(tc.getTitle());
-                }, () -> {
-                    item.setCode(tcId.toString().substring(0, 8));
-                    item.setName(tcId.toString().substring(0, 8));
+                testCaseRepository.findById(tcId).ifPresent(tc -> {
+                    if (!Boolean.TRUE.equals(tc.getIsDelete())) {
+                        ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+                        item.setId(tcId);
+                        item.setCode(tc.getTestCaseCode());
+                        item.setName(tc.getTitle());
+                        items.add(item);
+                    }
                 });
-                items.add(item);
             }
             dto.setImpactedTestCases(items);
         }
@@ -306,22 +349,26 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (entity.getImpactedBugIds() != null && entity.getImpactedBugIds().length > 0) {
             java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
             for (UUID bugId : entity.getImpactedBugIds()) {
-                ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
-                item.setId(bugId);
-                // พยายามหาใน bugRepository ก่อน ถ้าไม่เจอลองหาใน taskRepository (กรณีเป็น Bug Task)
-                bugRepository.findById(bugId).ifPresentOrElse(b -> {
-                    item.setCode(b.getBugCode());
-                    item.setName(b.getTitle());
-                }, () -> {
-                    taskRepository.findById(bugId).ifPresentOrElse(t -> {
+                // พยายามหาใน taskRepository (กรณีเป็น Bug Task) หรือ bugRepository
+                taskRepository.findById(bugId).ifPresentOrElse(t -> {
+                    if (!Boolean.TRUE.equals(t.getIsDelete())) {
+                        ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+                        item.setId(bugId);
                         item.setCode(t.getTaskCode());
                         item.setName(t.getTaskName());
-                    }, () -> {
-                        item.setCode(bugId.toString().substring(0, 8));
-                        item.setName(bugId.toString().substring(0, 8));
+                        items.add(item);
+                    }
+                }, () -> {
+                    bugRepository.findById(bugId).ifPresent(b -> {
+                        if (!Boolean.TRUE.equals(b.getIsDelete())) {
+                            ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+                            item.setId(bugId);
+                            item.setCode(b.getBugCode());
+                            item.setName(b.getTitle());
+                            items.add(item);
+                        }
                     });
                 });
-                items.add(item);
             }
             dto.setImpactedBugs(items);
         }

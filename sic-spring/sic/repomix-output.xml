@@ -4272,7 +4272,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/pm/specifications")
+@RequestMapping("/api/pm/specification")
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Specification", description = "จัดการข้อมูลข้อกำหนด (Specification)")
