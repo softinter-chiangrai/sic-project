@@ -158,7 +158,7 @@
                              [class.rotate-90]="isWorkPackageExpanded(wp.id)"></i>
                           <span class="text-sm font-medium text-[var(--text-active)] truncate">📦 {{ wp.packageName }}</span>
                           <span class="text-[0.7rem] px-1.5 py-0.5 rounded bg-[var(--sidebar)] text-[var(--text-muted)] border border-[var(--border)] font-normal flex-shrink-0">
-                            {{ wp.tasks?.length || 0 }} งาน
+                            {{ getWpRegularTasks(wp).length }} งาน
                           </span>
                         </div>
 
@@ -184,8 +184,9 @@
 
                       <!-- Level 3: Tasks List Container -->
                       @if (isWorkPackageExpanded(wp.id)) {
+                        @let wpTasks = getWpRegularTasks(wp);
                         <div class="border-t border-[var(--border)] px-3.5 py-2 bg-[var(--sidebar)]/40 space-y-1.5">
-                          @for (task of wp.tasks || []; track task.id) {
+                          @for (task of wpTasks; track task.id) {
                             <div class="flex items-center justify-between px-3 py-1.5 rounded-md bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] transition-all">
                               <div class="flex items-center gap-2.5 min-w-0">
                                 <i class="bi bi-circle text-[0.45rem] text-[var(--text-muted)]"></i>
@@ -211,7 +212,7 @@
                               </div>
                             </div>
                           }
-                          @if ((wp.tasks || []).length === 0) {
+                          @if (wpTasks.length === 0) {
                             <div class="text-xs text-[var(--text-muted)] py-2 text-center">
                               <i class="bi bi-journal-x mr-1"></i> ยังไม่มี Task ใน Work Package นี้
                             </div>

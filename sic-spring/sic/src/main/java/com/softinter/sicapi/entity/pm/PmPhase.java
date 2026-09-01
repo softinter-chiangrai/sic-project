@@ -27,8 +27,8 @@ public class PmPhase extends BaseEntity {
     @JoinColumn(name = "project_id", nullable = false)
     private PmCustomerProject project;
 
-    @Column(name = "business_id", nullable = false)
-    private UUID businessId;
+    @Column(name = "phase_code", length = 30)
+    private String phaseCode;
 
     @Column(name = "phase_name", nullable = false, length = 255)
     private String phaseName;

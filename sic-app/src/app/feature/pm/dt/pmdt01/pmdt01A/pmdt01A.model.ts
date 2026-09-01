@@ -5,6 +5,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 export interface Pmdt01AModel extends SicBaseStateModel {
   id: string;
   projectId: string;
+  phaseCode?: string;
   phaseName: string;
   description?: string;
   startDate: string;

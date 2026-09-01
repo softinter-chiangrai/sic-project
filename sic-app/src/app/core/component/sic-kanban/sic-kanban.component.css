@@ -283,6 +283,25 @@
   font-weight: 700 !important;
 }
 
+/* Bug Complete Card Styling (Emerald Border & Glow Accent) */
+.kanban-card--bug-complete {
+  border: 1.5px solid #10b981 !important;
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+  background: linear-gradient(to right, rgba(16, 185, 129, 0.06), transparent 45%), var(--bg, #0f172a);
+}
+
+.kanban-card--bug-complete:hover {
+  border-color: #34d399 !important;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.3) !important;
+}
+
+.kanban-card-code--bug-complete {
+  color: #10b981 !important;
+  background: rgba(16, 185, 129, 0.15) !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+  font-weight: 700 !important;
+}
+
 .kanban-card-header {
   display: flex;
   align-items: flex-start;

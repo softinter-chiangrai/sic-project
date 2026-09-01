@@ -183,7 +183,8 @@
             @for (task of colTasks; track task.id) {
               <div
                 class="kanban-card"
-                [class.kanban-card--bug]="isBugTask(task)"
+                [class.kanban-card--bug]="isBugTask(task) && !isCompletedStatus(task.status)"
+                [class.kanban-card--bug-complete]="isBugCompleteTask(task)"
                 cdkDrag
                 [cdkDragDisabled]="!canDrag"
                 (click)="onCardClick(task)"
@@ -191,7 +192,11 @@
                 <!-- Card Header: Code + Actions -->
                 <div class="kanban-card-header">
                   <div class="flex items-center gap-1.5 min-w-0">
-                    @if (isBugTask(task)) {
+                    @if (isBugCompleteTask(task)) {
+                      <span class="kanban-card-code kanban-card-code--bug-complete" title="Bug Complete">
+                        <i class="bi bi-check-circle-fill text-emerald-500 mr-0.5"></i>{{ task.taskCode || 'BUG' }}
+                      </span>
+                    } @else if (isBugTask(task)) {
                       <span class="kanban-card-code kanban-card-code--bug" title="Bug Task">
                         <i class="bi bi-bug-fill text-rose-500 mr-0.5"></i>{{ task.taskCode || 'BUG' }}
                       </span>
@@ -223,7 +228,13 @@
                 </div>
 
                 <!-- Card Title -->
-                <h4 class="kanban-card-title" [class.text-rose-600]="isBugTask(task)" [class.dark:text-rose-400]="isBugTask(task)">
+                <h4
+                  class="kanban-card-title"
+                  [class.text-rose-600]="isBugTask(task) && !isCompletedStatus(task.status)"
+                  [class.dark:text-rose-400]="isBugTask(task) && !isCompletedStatus(task.status)"
+                  [class.text-emerald-600]="isBugCompleteTask(task)"
+                  [class.dark:text-emerald-400]="isBugCompleteTask(task)"
+                >
                   {{ task.taskName }}
                 </h4>
 
@@ -330,6 +341,10 @@
                   } @else if (isTestingStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-amber-600 dark:text-amber-400 font-medium">
                       <i class="bi bi-hourglass-split"></i> รอผลทดสอบจาก QA
+                    </span>
+                  } @else if (isBugCompleteTask(task)) {
+                    <span class="w-full text-center py-0.5 text-[0.7rem] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
+                      <i class="bi bi-patch-check-fill text-xs"></i> แก้ไข & ปิดบั๊กเรียบร้อย
                     </span>
                   } @else if (isCompletedStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-emerald-600 dark:text-emerald-400 font-medium">

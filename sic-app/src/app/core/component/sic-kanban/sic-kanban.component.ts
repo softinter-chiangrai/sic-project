@@ -188,6 +188,15 @@ export class SicKanbanComponent {
       dotColor: '#ef4444',
     },
     {
+      id: 'BUG_COMPLETE',
+      name: 'BUG COMPLETE',
+      statuses: ['bug complete', 'bug completed', 'bug done', 'Bug Complete', 'Bug Completed', 'BUG COMPLETE'],
+      color: '#10b981',
+      textColor: '#6ee7b7',
+      bgLight: 'rgba(16, 185, 129, 0.15)',
+      dotColor: '#10b981',
+    },
+    {
       id: 'ON_HOLD',
       name: 'ON HOLD',
       statuses: ['On Hold', 'on hold', 'Delayed', 'ON_HOLD', 'Hold'],
@@ -398,8 +407,19 @@ export class SicKanbanComponent {
   getColumnTasks(column: KanbanColumnConfig): TaskResponse[] {
     const list = this.filteredTasks();
     return list.filter((t) => {
-      const s = (t.status || '').trim();
-      return column.statuses.some((status) => status.toLowerCase() === s.toLowerCase());
+      const s = (t.status || '').trim().toLowerCase();
+      const isBug = this.isBugTask(t);
+      const isCompleted = ['complete', 'completed', 'done', 'closed', 'bug complete', 'bug completed', 'bug done'].includes(s);
+
+      // Special handling for BUG_COMPLETE vs COMPLETE column
+      if (column.id === 'BUG_COMPLETE') {
+        return isBug && isCompleted;
+      }
+      if (column.id === 'COMPLETE') {
+        return !isBug && isCompleted;
+      }
+
+      return column.statuses.some((status) => status.toLowerCase() === s);
     });
   }
 
@@ -437,7 +457,10 @@ export class SicKanbanComponent {
       if (!task) return;
 
       const oldStatus = task.status;
-      const targetDefaultStatus = targetColumn.statuses[0];
+      let targetDefaultStatus = targetColumn.statuses[0];
+      if (targetColumn.id === 'BUG_COMPLETE') {
+        targetDefaultStatus = 'complete';
+      }
 
       transferArrayItem(
         event.previousContainer.data,
@@ -637,6 +660,10 @@ export class SicKanbanComponent {
     const code = (task.taskCode || '').toUpperCase();
     const name = (task.taskName || '').toUpperCase();
     return code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]') || name.includes('BUG');
+  }
+
+  isBugCompleteTask(task: TaskResponse): boolean {
+    return this.isBugTask(task) && this.isCompletedStatus(task.status);
   }
 
   isTodoStatus(status?: string | null): boolean {

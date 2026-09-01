@@ -1,16 +1,3 @@
-<!-- src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.html -->
-
-<!-- Breadcrumbs -->
-<div class="text-sm text-[var(--text-muted)] mb-4 flex items-center gap-1">
-  <a [routerLink]="['/feature/pm/phase']" [queryParams]="{ projectId: projectId }" class="hover:text-[var(--crm-primary)]">Phases</a>
-  <span>/</span>
-  @if (isEdit) {
-    <span>Edit Phase</span>
-  } @else {
-    <span>New Phase</span>
-  }
-</div>
-
 <div class="max-w-2xl mx-auto">
   <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
     {{ isEdit ? 'แก้ไข Phase' : 'สร้าง Phase ใหม่' }}
@@ -18,10 +5,26 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
-    <!-- Phase Name -->
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Phase <span class="text-red-500">*</span></label>
-      <input type="text" formControlName="phaseName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
+    <!-- Phase Code & Phase Name -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div>
+        <label class="block text-sm font-medium text-[var(--text)]">รหัส Phase<span class="text-red-500">*</span></label>
+        <input
+          type="text"
+          formControlName="phaseCode"
+          placeholder="PH-001"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] font-mono text-sm focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"
+        />
+      </div>
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Phase <span class="text-red-500">*</span></label>
+        <input
+          type="text"
+          formControlName="phaseName"
+          placeholder="ระบุชื่อ Phase"
+          class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"
+        />
+      </div>
     </div>
 
     <!-- Description -->

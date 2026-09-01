@@ -185,6 +185,11 @@ export class Pmdt02Component implements OnInit {
     return wps;
   });
 
+  getWpRegularTasks(wp: WorkPackageResponse): TaskResponse[] {
+    if (!wp.tasks) return [];
+    return wp.tasks.filter((t) => !this.isBugTask(t));
+  }
+
   // ===== HELPER: convert string | Date to YYYY-MM-DD =====
   private toDateString(value: string | Date | undefined | null): string {
     if (!value) return '';

@@ -211,16 +211,34 @@
                 }
               </div>
 
-              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length) {
+              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length || impact.impactedTestCaseIds?.length || impact.impactedBugIds?.length) {
                 <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
                   <p class="font-medium text-[var(--text-active)]">เอกสารที่ได้รับผลกระทบ</p>
                   <div class="flex flex-wrap gap-1 mt-1">
-                    @for (id of impact.impactedRequirementIds; track id) {
-                      <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
+                    @if (impact.impactedRequirements && impact.impactedRequirements.length > 0) {
+                      @for (req of impact.impactedRequirements; track req.id) {
+                        <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
+                          REQ: {{ req.name ? (req.code ? req.code + ' - ' + req.name : req.name) : (req.code || (req.id | slice:0:8)) }}
+                        </span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedRequirementIds; track id) {
+                        <span class="bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
+                      }
                     }
-                    @for (id of impact.impactedSpecIds; track id) {
-                      <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
+
+                    @if (impact.impactedSpecs && impact.impactedSpecs.length > 0) {
+                      @for (spec of impact.impactedSpecs; track spec.id) {
+                        <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
+                          SPEC: {{ spec.name ? (spec.code ? spec.code + ' - ' + spec.name : spec.name) : (spec.code || (spec.id | slice:0:8)) }}
+                        </span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedSpecIds; track id) {
+                        <span class="bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
+                      }
                     }
+
                     @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
                       @for (diag of impact.impactedDiagrams; track diag.id) {
                         <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400 font-medium">DIAGRAM: {{ diag.name }}</span>
@@ -230,14 +248,41 @@
                         <span class="bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">DIAGRAM: {{ id | slice:0:8 }}</span>
                       }
                     }
-                    @for (id of impact.impactedTaskIds; track id) {
-                      <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
+
+                    @if (impact.impactedTasks && impact.impactedTasks.length > 0) {
+                      @for (task of impact.impactedTasks; track task.id) {
+                        <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
+                          TASK: {{ task.name ? (task.code ? task.code + ' - ' + task.name : task.name) : (task.code || (task.id | slice:0:8)) }}
+                        </span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedTaskIds; track id) {
+                        <span class="bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
+                      }
                     }
-                    @for (id of impact.impactedTestCaseIds; track id) {
-                      <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
+
+                    @if (impact.impactedTestCases && impact.impactedTestCases.length > 0) {
+                      @for (tc of impact.impactedTestCases; track tc.id) {
+                        <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
+                          TC: {{ tc.name ? (tc.code ? tc.code + ' - ' + tc.name : tc.name) : (tc.code || (tc.id | slice:0:8)) }}
+                        </span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedTestCaseIds; track id) {
+                        <span class="bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
+                      }
                     }
-                    @for (id of impact.impactedBugIds; track id) {
-                      <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
+
+                    @if (impact.impactedBugs && impact.impactedBugs.length > 0) {
+                      @for (bug of impact.impactedBugs; track bug.id) {
+                        <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
+                          BUG: {{ bug.name ? (bug.code ? bug.code + ' - ' + bug.name : bug.name) : (bug.code || (bug.id | slice:0:8)) }}
+                        </span>
+                      }
+                    } @else {
+                      @for (id of impact.impactedBugIds; track id) {
+                        <span class="bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
+                      }
                     }
                   </div>
                 </div>

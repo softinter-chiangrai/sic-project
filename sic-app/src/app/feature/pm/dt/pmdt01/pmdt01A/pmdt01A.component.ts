@@ -56,11 +56,7 @@ export class Pmdt01AComponent implements OnInit {
       this.userApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
     }
 
-    this.route.queryParams.subscribe((params) => {
-      this.projectId = params['projectId'] || '';
-    });
-
-    // Check if resolver preloaded data
+    // 1. Check if resolver preloaded data
     const resolvedData: Pmdt01APageData = this.route.snapshot.data['form'];
     if (resolvedData?.phaseData?.formGroup) {
       this.form = resolvedData.phaseData.formGroup;
@@ -68,8 +64,19 @@ export class Pmdt01AComponent implements OnInit {
         this.data = resolvedData.phaseData.value;
         this.isEdit = true;
         this.phaseId = this.data.id || null;
-        this.patchForm(this.data);
       }
+    }
+
+    // 2. Query Params
+    this.route.queryParams.subscribe((params) => {
+      this.projectId = params['projectId'] || '';
+      if (this.projectId) {
+        this.form.patchValue({ projectId: this.projectId });
+      }
+    });
+
+    if (this.isEdit && this.data) {
+      this.patchForm(this.data);
     }
 
     this.route.paramMap.subscribe((params) => {
@@ -112,6 +119,8 @@ export class Pmdt01AComponent implements OnInit {
     }
 
     this.form.patchValue({
+      projectId: data.projectId || this.projectId,
+      phaseCode: data.phaseCode || '',
       phaseName: data.phaseName,
       description: data.description,
       startDate: startDate,
@@ -160,6 +169,7 @@ export class Pmdt01AComponent implements OnInit {
 
     const phasePayload: Partial<Pmdt01AModel> = {
       projectId: this.projectId,
+      phaseCode: raw.phaseCode || undefined,
       phaseName: raw.phaseName!,
       description: raw.description || undefined,
       startDate: this.buildISOString(raw.startDate, raw.startTime!),

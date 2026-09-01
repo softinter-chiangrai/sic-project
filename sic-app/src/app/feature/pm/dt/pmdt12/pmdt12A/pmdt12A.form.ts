@@ -22,7 +22,7 @@ export class Pmdt12AForm {
       relatedRequirement: fb.control(null),
       relatedSpec: fb.control(null),
       relatedTask: fb.control(null),
-      taskId: fb.control(null),
+      taskId: fb.control(null, [Validators.required]),
       taskCode: fb.control(null),
       taskName: fb.control(null),
       state: fb.control(null),

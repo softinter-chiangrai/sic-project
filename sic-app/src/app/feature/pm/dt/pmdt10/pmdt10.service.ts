@@ -71,6 +71,14 @@ export class Pmdt10Service {
     return this.http.get<any[]>(`${this.projectUrl}/${projectId}/phases`);
   }
 
+  // ===== Bugs =====
+  getBugsByProject(projectId: string): Observable<any[]> {
+    const params = new HttpParams().set('projectId', projectId).set('page', '0').set('size', '500');
+    return this.http.get<any>(`${environment.apiBaseUrl}/api/pm/bugs/paging`, { params }).pipe(
+      map((res) => res?.data || res?.content || (Array.isArray(res) ? res : []))
+    );
+  }
+
   // ===== Members Combobox =====
   getMembers(businessId: string): Observable<{ value: string; text: string }[]> {
     return this.http

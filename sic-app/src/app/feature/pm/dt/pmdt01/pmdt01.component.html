@@ -35,9 +35,16 @@
             (click)="goToDetail(phase.id)"
             class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm hover:shadow-md hover:border-[var(--crm-primary)]/30 cursor-pointer transition-all"
           >
-            <div class="flex justify-between items-start">
-              <h3 class="font-semibold text-[var(--text-active)] text-lg">{{ phase.phaseName }}</h3>
-              <span [class]="getStatusClass(phase.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            <div class="flex justify-between items-start gap-2">
+              <div>
+                @if (phase.phaseCode) {
+                  <span class="inline-block font-mono text-[11px] font-bold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/20 px-2 py-0.5 rounded mb-1">
+                    {{ phase.phaseCode }}
+                  </span>
+                }
+                <h3 class="font-semibold text-[var(--text-active)] text-lg leading-tight">{{ phase.phaseName }}</h3>
+              </div>
+              <span [class]="getStatusClass(phase.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium shrink-0'">
                 {{ getStatusText(phase.status) }}
               </span>
             </div>

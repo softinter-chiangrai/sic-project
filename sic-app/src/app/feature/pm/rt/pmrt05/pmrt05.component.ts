@@ -188,15 +188,6 @@ export class Pmrt05Component implements OnInit {
           })),
           catchError(() => of({ code: id.slice(0, 8), name: 'Test Case' }))
         );
-      case 'BUG':
-        url = `${environment.apiBaseUrl}/api/pm/bug/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({
-            code: data?.bugCode || 'BUG',
-            name: data?.title || 'Bug',
-          })),
-          catchError(() => of({ code: id.slice(0, 8), name: 'Bug' }))
-        );
       case 'DESIGN_REVIEW':
         url = `${environment.apiBaseUrl}/api/pm/design-review/${id}`;
         return this.http.get<any>(url).pipe(

@@ -69,6 +69,14 @@ public class PhaseServiceImpl implements PhaseService {
 
         PmPhase phase = new PmPhase();
         phase.setProject(project);
+
+        String phaseCode = request.getPhaseCode();
+        if (phaseCode == null || phaseCode.trim().isEmpty()) {
+            long count = phaseRepository.countByProjectId(request.getProjectId());
+            phaseCode = String.format("PH-%03d", count + 1);
+        }
+        phase.setPhaseCode(phaseCode);
+
         phase.setPhaseName(request.getPhaseName());
         phase.setDescription(request.getDescription());
         phase.setStartDate(request.getStartDate());
@@ -94,6 +102,9 @@ public class PhaseServiceImpl implements PhaseService {
         PmPhase phase = phaseRepository.findById(phaseId)
                 .orElseThrow(() -> new RuntimeException("Phase not found"));
 
+        if (request.getPhaseCode() != null && !request.getPhaseCode().trim().isEmpty()) {
+            phase.setPhaseCode(request.getPhaseCode().trim());
+        }
         phase.setPhaseName(request.getPhaseName());
         phase.setDescription(request.getDescription());
         phase.setStartDate(request.getStartDate());
@@ -128,6 +139,7 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setId(phase.getId());
         dto.setProjectId(phase.getProject().getId());
         dto.setProjectName(phase.getProject().getProjectName());
+        dto.setPhaseCode(phase.getPhaseCode());
         dto.setPhaseName(phase.getPhaseName());
         dto.setDescription(phase.getDescription());
         dto.setStartDate(phase.getStartDate());
@@ -175,6 +187,11 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setMilestoneCount(milestoneResponses.size());
         int progress = total == 0 ? 0 : (completed * 100 / total);
         dto.setProgress(progress);
+        
+        // คำนวณ dynamic status ตาม progress และวันที่
+        String computedStatus = calculatePhaseStatus(progress, total, phase.getStartDate(), phase.getEndDate());
+        dto.setStatus(computedStatus);
+        
         return dto;
     }
 
@@ -306,6 +323,28 @@ public class PhaseServiceImpl implements PhaseService {
         }
         int progress = total == 0 ? 0 : (done * 100 / total);
         phase.setProgress(progress);
+
+        // คำนวณ status ตาม progress และวันที่
+        String status = calculatePhaseStatus(progress, total, phase.getStartDate(), phase.getEndDate());
+        phase.setStatus(status);
+
         phaseRepository.save(phase);
+    }
+
+    private String calculatePhaseStatus(int progress, int totalTasks, java.time.Instant startDate, java.time.Instant endDate) {
+        if (progress >= 100 && totalTasks > 0) {
+            return "Done";
+        }
+        java.time.Instant now = java.time.Instant.now();
+        if (endDate != null && now.isAfter(endDate) && progress < 100) {
+            return "Delayed";
+        }
+        if (progress > 0) {
+            return "In Progress";
+        }
+        if (startDate != null && now.isAfter(startDate)) {
+            return "In Progress";
+        }
+        return "Not Started";
     }
 }

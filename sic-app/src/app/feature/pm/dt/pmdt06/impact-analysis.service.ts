@@ -10,6 +10,12 @@ export interface ImpactDiagramItem {
     diagramType?: string;
 }
 
+export interface ImpactNamedItem {
+    id: string;
+    code?: string;
+    name?: string;
+}
+
 export interface ImpactAnalysis {
     id?: string;
     changeRequestId: string;
@@ -22,10 +28,15 @@ export interface ImpactAnalysis {
     timelineImpact?: number;
     costImpact?: string;
     impactedRequirementIds?: string[];
+    impactedRequirements?: ImpactNamedItem[];
     impactedSpecIds?: string[];
+    impactedSpecs?: ImpactNamedItem[];
     impactedTaskIds?: string[];
+    impactedTasks?: ImpactNamedItem[];
     impactedTestCaseIds?: string[];
+    impactedTestCases?: ImpactNamedItem[];
     impactedBugIds?: string[];
+    impactedBugs?: ImpactNamedItem[];
     impactedDiagramIds?: string[];
     impactedDiagrams?: ImpactDiagramItem[];
     impactedTableNames?: string[];

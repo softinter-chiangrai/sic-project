@@ -89,14 +89,14 @@ export class Pmdt01Component implements OnInit {
 
   // ===== Utility Methods =====
   getStatusClass(status?: string): string {
-    if (!status) return 'bg-gray-100 text-gray-600';
+    if (!status) return 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
     const map: Record<string, string> = {
-      'Not Started': 'bg-gray-100 text-gray-600',
-      'In Progress': 'bg-blue-100 text-blue-700',
-      Done: 'bg-emerald-100 text-emerald-700',
-      Delayed: 'bg-red-100 text-red-700',
+      'Not Started': 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
+      'In Progress': 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+      Done: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+      Delayed: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
     };
-    return map[status] || 'bg-gray-100 text-gray-600';
+    return map[status] || 'bg-slate-500/10 text-slate-400 border border-slate-500/20';
   }
 
   getStatusText(status?: string): string {

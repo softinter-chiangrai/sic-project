@@ -8,6 +8,7 @@ export class Pmdt01AForm {
     return fb.group<ToForm<Pmdt01AModel>>({
       id: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
+      phaseCode: fb.control(null),
       phaseName: fb.control(null, [Validators.required]),
       description: fb.control(null),
       startDate: fb.control(null, [Validators.required]),

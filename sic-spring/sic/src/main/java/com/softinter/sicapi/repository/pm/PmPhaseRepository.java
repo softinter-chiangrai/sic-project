@@ -14,4 +14,5 @@ import com.softinter.sicapi.entity.pm.PmPhase;
 @Repository
 public interface PmPhaseRepository extends JpaRepository<PmPhase, UUID> {
     List<PmPhase> findByProjectIdAndIsDeleteFalseOrderByStartDateAsc(UUID projectId);
+    long countByProjectId(UUID projectId);
 }

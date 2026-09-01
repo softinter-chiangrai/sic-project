@@ -11,6 +11,7 @@ public class PhaseResponse {
     private UUID id;
     private UUID projectId;
     private String projectName;
+    private String phaseCode;
     private String phaseName;
     private String description;
     private Instant startDate;

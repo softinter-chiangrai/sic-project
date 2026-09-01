@@ -53,6 +53,7 @@ export class Pmdt10Component implements OnInit {
   // Data signals
   projectId = signal<string | null>(null);
   allTasks = signal<TaskResponse[]>([]);
+  allBugs = signal<any[]>([]);
   specifications = signal<SpecificationSummary[]>([]);
   workPackages = signal<WorkPackageOption[]>([]);
   businessMembers = signal<{ value: string; text: string }[]>([]);
@@ -220,12 +221,46 @@ export class Pmdt10Component implements OnInit {
   // Metrics
   metrics = computed(() => {
     const tasks = this.filteredTasks();
-    const total = tasks.length;
-    const done = tasks.filter((t) => ['done', 'completed'].includes((t.status || '').toLowerCase())).length;
-    const inProgress = tasks.filter((t) => ['in progress', 'doing', 'waiting review'].includes((t.status || '').toLowerCase())).length;
-    const todo = tasks.filter((t) => ['todo'].includes((t.status || '').toLowerCase())).length;
+
+    // 1. ตรวจสอบงานที่เป็น Bug
+    const bugStatuses = ['bugfix', 'bug fixing', 'bug', 'fixing', 'waiting fix', 'blocked'];
+    const isBugTask = (t: TaskResponse) =>
+      bugStatuses.includes((t.status || '').toLowerCase().trim()) ||
+      (t.taskCode || '').toLowerCase().startsWith('bug') ||
+      (t.taskName || '').toLowerCase().startsWith('bug');
+
+    // 2. งานปกติ (ไม่รวม Bug)
+    const normalTasks = tasks.filter((t) => !isBugTask(t));
+    const total = normalTasks.length;
+    const done = normalTasks.filter((t) =>
+      ['done', 'completed', 'complete', 'closed'].includes((t.status || '').toLowerCase().trim())
+    ).length;
+    const inProgress = normalTasks.filter((t) =>
+      ['in progress', 'doing', 'waiting review', 'review', 'testing', 'test', 'in test', 'uat'].includes((t.status || '').toLowerCase().trim())
+    ).length;
+    const todo = normalTasks.filter((t) =>
+      ['todo', 'to do', 'not started', 'draft'].includes((t.status || '').toLowerCase().trim())
+    ).length;
+    const onHold = normalTasks.filter((t) =>
+      ['on hold', 'delayed', 'hold'].includes((t.status || '').toLowerCase().trim())
+    ).length;
+
+    // 3. ข้อมูล Bug
+    const bugTasks = tasks.filter((t) => isBugTask(t));
+    const bugComplete = bugTasks.filter((t) =>
+      ['done', 'completed', 'complete', 'closed', 'bug complete', 'bug completed', 'bug done'].includes((t.status || '').toLowerCase().trim())
+    ).length;
+    const bugPendingTasks = bugTasks.filter((t) =>
+      !['done', 'completed', 'complete', 'closed', 'bug complete', 'bug completed', 'bug done'].includes((t.status || '').toLowerCase().trim())
+    ).length;
+
+    const bugEntityCount = this.allBugs().length;
+    const bug = Math.max(bugPendingTasks, bugEntityCount > 0 ? bugEntityCount - bugComplete : 0);
+
+    // 4. เปอร์เซ็นต์ความสำเร็จ (คิดจากงานปกติเท่านั้น)
     const progress = total > 0 ? Math.round((done / total) * 100) : 0;
-    return { total, done, inProgress, todo, progress };
+
+    return { total, done, inProgress, bug, bugComplete, todo, onHold, progress };
   });
 
   get currentSpec() {
@@ -309,6 +344,17 @@ export class Pmdt10Component implements OnInit {
         console.error('Load tasks error:', err);
         this.allTasks.set([]);
         this.isLoading.set(false);
+      },
+    });
+
+    // 4. Load Bugs
+    this.service.getBugsByProject(pId).subscribe({
+      next: (bugs) => {
+        this.allBugs.set(bugs || []);
+      },
+      error: (err) => {
+        console.error('Load bugs error:', err);
+        this.allBugs.set([]);
       },
     });
   }
@@ -469,10 +515,11 @@ export class Pmdt10Component implements OnInit {
 
   getStatusClass(status?: string): string {
     const s = (status || '').toLowerCase();
-    if (['done', 'completed'].includes(s)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+    if (['bug complete', 'bug completed', 'bug done'].includes(s)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300 ring-1 ring-emerald-500/30';
+    if (['done', 'completed', 'complete', 'closed'].includes(s)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
     if (['in progress', 'doing'].includes(s)) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
     if (['waiting review', 'review'].includes(s)) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
-    if (['waiting fix', 'blocked', 'delayed'].includes(s)) return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
+    if (['waiting fix', 'blocked', 'delayed', 'bugfix', 'bug fixing', 'bug'].includes(s)) return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-300';
     return 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300';
   }
 
