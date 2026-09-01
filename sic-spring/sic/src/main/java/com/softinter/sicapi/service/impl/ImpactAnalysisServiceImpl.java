@@ -109,6 +109,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     }
 
     @Override
+    @Transactional
     public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
         log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
 
@@ -194,6 +195,43 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             specificationRepository.findById(sId).ifPresent(s -> {
                 if (!Boolean.TRUE.equals(s.getIsDelete())) {
                     activeSpecIds.add(sId);
+                }
+            });
+        }
+
+        // ✅ Fallback / Enrichment: ตรวจสอบความสัมพันธ์โดยตรงจาก Entity Relations
+        if ("SPECIFICATION".equalsIgnoreCase(targetType) && targetId != null) {
+            specificationRepository.findById(targetId).ifPresent(spec -> {
+                if (spec.getRequirement() != null && !Boolean.TRUE.equals(spec.getRequirement().getIsDelete())) {
+                    activeReqIds.add(spec.getRequirement().getId());
+                }
+            });
+        } else if ("REQUIREMENT".equalsIgnoreCase(targetType) && targetId != null) {
+            // ค้นหา Specification ที่ผูกกับ Requirement นี้
+            List<com.softinter.sicapi.entity.pm.PmSpecification> specs = specificationRepository.findByRequirementIdAndIsDeleteFalse(targetId);
+            if (specs != null) {
+                for (com.softinter.sicapi.entity.pm.PmSpecification s : specs) {
+                    if (!Boolean.TRUE.equals(s.getIsDelete())) {
+                        activeSpecIds.add(s.getId());
+                    }
+                }
+            }
+        } else if ("TASK".equalsIgnoreCase(targetType) && targetId != null) {
+            taskRepository.findById(targetId).ifPresent(task -> {
+                if (task.getSpecification() != null && !Boolean.TRUE.equals(task.getSpecification().getIsDelete())) {
+                    activeSpecIds.add(task.getSpecification().getId());
+                    if (task.getSpecification().getRequirement() != null && !Boolean.TRUE.equals(task.getSpecification().getRequirement().getIsDelete())) {
+                        activeReqIds.add(task.getSpecification().getRequirement().getId());
+                    }
+                }
+            });
+        }
+
+        // เพิ่มเติม: สำหรับทุก Spec ที่ได้รับผลกระทบ ให้ดึง Requirement ที่ผูกอยู่ด้วย
+        for (UUID sId : new HashSet<>(activeSpecIds)) {
+            specificationRepository.findById(sId).ifPresent(spec -> {
+                if (spec.getRequirement() != null && !Boolean.TRUE.equals(spec.getRequirement().getIsDelete())) {
+                    activeReqIds.add(spec.getRequirement().getId());
                 }
             });
         }

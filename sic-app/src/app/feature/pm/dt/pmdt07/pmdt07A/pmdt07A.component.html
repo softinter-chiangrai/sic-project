@@ -110,7 +110,17 @@
                             </sic-input>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <sic-combobox
+                                label="ความต้องการ (Requirement)"
+                                formControlName="requirementId"
+                                [apiUrl]="service.apiGetComboboxRequirement"
+                                [params]="{ projectId: form.value.projectId || customerState.getProjectId() }"
+                                valueField="value"
+                                textField="text"
+                                placeholder="เลือก Requirement ที่เกี่ยวข้อง"
+                                [clearable]="true">
+                            </sic-combobox>
                             <sic-combobox
                                 label="ลำดับความสำคัญ"
                                 formControlName="priority"

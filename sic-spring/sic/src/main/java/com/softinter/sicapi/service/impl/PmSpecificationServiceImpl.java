@@ -159,8 +159,8 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
             UUID projectIdForTrace = saved.getProject() != null ? saved.getProject().getId() : request.getProjectId();
-            if (request.getGeneratedFromRequirementId() != null) {
-                UUID reqId = request.getGeneratedFromRequirementId();
+            UUID reqId = request.getRequirementId() != null ? request.getRequirementId() : request.getGeneratedFromRequirementId();
+            if (reqId != null) {
                 if (requirementRepository.existsById(reqId)) {
                     traceLinkService.createLink(
                             projectIdForTrace,
@@ -221,10 +221,29 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // Mapping ข้อมูล
             mapRequestToEntity(request, spec);
 
+            // ตั้งค่า Requirement (ถ้ามีการส่งมาในการแก้ไข)
+            UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId()
+                    : request.getGeneratedFromRequirementId();
+            if (targetReqId != null) {
+                PmRequirement requirement = requirementRepository.findById(targetReqId)
+                        .orElseThrow(() -> new RuntimeException("ไม่พบ Requirement"));
+                spec.setRequirement(requirement);
+            }
+
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             spec.setVersion(newVersion);
             spec = specificationRepository.save(spec);
+
+            // ✅ สร้าง/อัปเดต Trace Link กับ Requirement
+            UUID projectIdForTrace = spec.getProject() != null ? spec.getProject().getId() : request.getProjectId();
+            if (targetReqId != null && requirementRepository.existsById(targetReqId)) {
+                traceLinkService.createLink(
+                        projectIdForTrace,
+                        "REQUIREMENT", targetReqId,
+                        "SPECIFICATION", spec.getId(),
+                        TraceRelationship.DOCUMENTED_BY);
+            }
 
             // Snapshot data
             String snapshotJson = null;
