@@ -187,14 +187,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
 
-            // Edit Guard: ถ้าไม่ใช่ Draft และไม่มีสิทธิ์แก้ไข
-            if (!"DRAFT".equalsIgnoreCase(spec.getStatus())) {
-                if (!editSessionService.canEdit("SPECIFICATION", spec.getId(), userId)) {
-                    throw new IllegalStateException(
-                            "เอกสารนี้ถูกล็อกเนื่องจากไม่ใช่สถานะ Draft ต้องใช้ Change Request เพื่อแก้ไข");
-                }
-            }
-
             // ตรวจสอบ RowVersion
             if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");

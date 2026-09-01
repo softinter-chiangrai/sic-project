@@ -1,0 +1,222 @@
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6 -->
+<jasperReport name="ChangeRequestReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SDLC"/>
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="false"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
+
+	<parameter name="changeRequestId" class="java.lang.String"/>
+	<parameter name="exportDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="businessName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logoStream" class="java.io.InputStream">
+		<defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
+	</parameter>
+
+	<query language="sql"><![CDATA[SELECT 
+                SUBSTRING(CAST(cr.id AS text), 1, 8)          AS "crCode",
+                cr.title                                      AS "title",
+                COALESCE(p.project_name, '-')                 AS "projectName",
+                COALESCE(c.company_name_local, c.company_name_en, '-') AS "customerName",
+                COALESCE(cr.target_type, '-')                 AS "targetType",
+                COALESCE(cr.change_reason, '-')               AS "changeReason",
+                COALESCE(cr.target_version, '-')              AS "targetVersion",
+                COALESCE(cr.status, '-')                      AS "status",
+                COALESCE(cr.requester_id, '-')                AS "requesterId",
+                COALESCE(cr.assignee_id, '-')                 AS "assigneeId",
+                COALESCE(cr.approved_by, '-')                 AS "approvedBy",
+                TO_CHAR(cr.approved_at, 'DD/MM/YYYY HH24:MI') AS "approvedAt",
+                TO_CHAR(cr.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
+                COALESCE(cr.description, 'ไม่มีรายละเอียดเพิ่มเติม') AS "description"
+            FROM pm_change_request cr
+            LEFT JOIN pm_customer_project p ON cr.project_id = p.id
+            LEFT JOIN pm_customer c ON p.customer_id = c.id
+            WHERE cr.is_delete = false
+              AND ($P{changeRequestId} IS NULL OR $P{changeRequestId} = '' OR cr.id = CAST($P{changeRequestId} AS uuid))
+            ORDER BY cr.created_date DESC
+            LIMIT 1;]]></query>
+
+	<field name="crCode" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="projectName" class="java.lang.String"/>
+	<field name="customerName" class="java.lang.String"/>
+	<field name="targetType" class="java.lang.String"/>
+	<field name="changeReason" class="java.lang.String"/>
+	<field name="targetVersion" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="requesterId" class="java.lang.String"/>
+	<field name="assigneeId" class="java.lang.String"/>
+	<field name="approvedBy" class="java.lang.String"/>
+	<field name="approvedAt" class="java.lang.String"/>
+	<field name="createdDate" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+
+	<!-- TITLE BAND -->
+	<title height="105">
+		<element kind="image" uuid="7ba3a1e9-1b5b-48c2-a42e-8d9e262bb821" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="5fa74ce2-4e58-4560-aef2-bc3240e9d64f" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="6a24eb81-ef17-48f8-b3d9-95e2069b248a" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA["แบบฟอร์มคำขอเปลี่ยนแปลง (CR)"]]></expression>
+		</element>
+		<element kind="staticText" uuid="7cf4be27-31ef-481d-b52b-88a4e1cf6f2d" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[Change Request Form]]></text>
+		</element>
+		<element kind="textField" uuid="2a56bd1b-c741-477d-b6a9-83bc9e65fe2a" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
+		</element>
+		<element kind="line" uuid="bde5ec33-4f96-419b-a311-6ce9a1a2e7c1" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+		<element kind="rectangle" uuid="d6f9b1c7-c7ba-4b71-b847-1f41b4e287df" mode="Opaque" x="0" y="74" width="515" height="28" backcolor="#F8FAFC" radius="3">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+		<element kind="textField" uuid="a7f28df1-4a51-40ef-862d-0b73ea37ff91" x="10" y="76" width="65" height="22" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["รหัส CR:"]]></expression>
+		</element>
+		<element kind="textField" uuid="c246830a-208b-4b2a-a92c-569df5d2bb9e" x="78" y="76" width="427" height="22" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+			<expression><![CDATA[($F{crCode} != null ? "[CR-" + $F{crCode}.toUpperCase() + "] " : "") + ($F{title} != null ? $F{title} : "-")]]></expression>
+		</element>
+	</title>
+
+	<!-- DETAIL BAND -->
+	<detail>
+		<band height="340" splitType="Stretch">
+			<!-- SECTION 1: ข้อมูลทั่วไป -->
+			<element kind="textField" uuid="09fa0de8-6bc4-47c3-b452-f471cb78972f" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["1. ข้อมูลทั่วไปของคำขอเปลี่ยนแปลง (General Information)"]]></expression>
+			</element>
+
+			<!-- Column 1 -->
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000001" positionType="Float" x="10" y="32" width="110" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[โครงการ (Project):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000002" positionType="Float" x="125" y="32" width="140" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{projectName}]]></expression>
+			</element>
+
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000003" positionType="Float" x="10" y="54" width="110" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[ประเภทเป้าหมาย (Target):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000004" positionType="Float" x="125" y="54" width="140" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{targetType}]]></expression>
+			</element>
+
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000005" positionType="Float" x="10" y="76" width="110" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[สาเหตุการเปลี่ยน (Reason):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000006" positionType="Float" x="125" y="76" width="140" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{changeReason}]]></expression>
+			</element>
+
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000007" positionType="Float" x="10" y="98" width="110" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[เวอร์ชันเป้าหมาย (Version):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000008" positionType="Float" x="125" y="98" width="140" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{targetVersion}]]></expression>
+			</element>
+
+			<!-- Column 2 -->
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000009" positionType="Float" x="280" y="32" width="105" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[ลูกค้า (Customer):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000010" positionType="Float" x="390" y="32" width="125" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{customerName}]]></expression>
+			</element>
+
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000011" positionType="Float" x="280" y="54" width="105" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[สถานะ (Status):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000012" positionType="Float" x="390" y="54" width="125" height="20" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+				<expression><![CDATA[$F{status}]]></expression>
+			</element>
+
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000013" positionType="Float" x="280" y="76" width="105" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[ผู้ขอ (Requester):]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000014" positionType="Float" x="390" y="76" width="125" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{requesterId}]]></expression>
+			</element>
+
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000015" positionType="Float" x="280" y="98" width="105" height="20" vTextAlign="Bottom" style="Label">
+				<text><![CDATA[วันที่ยื่นคำขอ:]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000016" positionType="Float" x="390" y="98" width="125" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{createdDate}]]></expression>
+			</element>
+
+			<element kind="line" uuid="e3b0c442-98fc-1c14-9afb-000000000017" positionType="Float" x="0" y="126" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.5"/>
+			</element>
+
+			<!-- SECTION 2: รายละเอียดการเปลี่ยนแปลง -->
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000018" positionType="Float" x="0" y="134" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["2. รายละเอียดและขอบเขตการเปลี่ยนแปลง (Change Description)"]]></expression>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000019" positionType="Float" stretchType="RelativeToTallestObject" x="10" y="160" width="495" height="50" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
+				<expression><![CDATA[$F{description}.replaceAll("<[^>]*>", "")]]></expression>
+			</element>
+
+			<element kind="line" uuid="e3b0c442-98fc-1c14-9afb-000000000020" positionType="Float" x="0" y="220" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.5"/>
+			</element>
+
+			<!-- SECTION 3: ลายมือชื่อและการอนุมัติ -->
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000021" positionType="Float" x="0" y="230" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA["3. การพิจารณาและอนุมัติ (Review & Approval)"]]></expression>
+			</element>
+
+			<!-- Sign box 1: ผู้ขอเปลี่ยนแปลง -->
+			<element kind="rectangle" uuid="e3b0c442-98fc-1c14-9afb-000000000022" positionType="Float" mode="Transparent" x="20" y="258" width="220" height="70" radius="4">
+				<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+			</element>
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000023" positionType="Float" x="30" y="262" width="200" height="18" hTextAlign="Center" style="DocSubtitle">
+				<text><![CDATA[ลงชื่อ ผู้ยื่นคำขอเปลี่ยนแปลง]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000024" positionType="Float" x="30" y="290" width="200" height="18" blankWhenNull="true" hTextAlign="Center" style="ValueBold">
+				<expression><![CDATA["( " + $F{requesterId} + " )"]]></expression>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000025" positionType="Float" x="30" y="308" width="200" height="16" blankWhenNull="true" hTextAlign="Center" style="FooterText">
+				<expression><![CDATA["วันที่: " + $F{createdDate}]]></expression>
+			</element>
+
+			<!-- Sign box 2: ผู้อนุมัติคำขอ -->
+			<element kind="rectangle" uuid="e3b0c442-98fc-1c14-9afb-000000000026" positionType="Float" mode="Transparent" x="275" y="258" width="220" height="70" radius="4">
+				<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+			</element>
+			<element kind="staticText" uuid="e3b0c442-98fc-1c14-9afb-000000000027" positionType="Float" x="285" y="262" width="200" height="18" hTextAlign="Center" style="DocSubtitle">
+				<text><![CDATA[ลงชื่อ ผู้อนุมัติ (Project Manager / CCB)]]></text>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000028" positionType="Float" x="285" y="290" width="200" height="18" blankWhenNull="true" hTextAlign="Center" style="ValueBold">
+				<expression><![CDATA["( " + ($F{approvedBy}.equals("-") ? "......................................................" : $F{approvedBy}) + " )"]]></expression>
+			</element>
+			<element kind="textField" uuid="e3b0c442-98fc-1c14-9afb-000000000029" positionType="Float" x="285" y="308" width="200" height="16" blankWhenNull="true" hTextAlign="Center" style="FooterText">
+				<expression><![CDATA["วันที่: " + ($F{approvedAt} != null ? $F{approvedAt} : "......../......../........")]]></expression>
+			</element>
+		</band>
+	</detail>
+
+	<!-- PAGE FOOTER -->
+	<pageFooter height="30">
+		<element kind="line" uuid="94b9fdfb-50f6-4927-86c2-19e4871d3c0b" x="0" y="4" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+		<element kind="staticText" uuid="a710bf30-8c2f-488f-a773-a60232fb5b8a" x="0" y="10" width="260" height="16" style="FooterText">
+			<text><![CDATA[เอกสารควบคุมภายใน — SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="95d98fa5-0b0c-43f1-b9cb-1b918f6fbf0e" x="395" y="10" width="120" height="16" hTextAlign="Right" style="FooterText">
+			<expression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

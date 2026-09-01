@@ -178,6 +178,10 @@ export class Pmdt06Component implements OnInit {
     this.navigation.navigate(['/feature/pm/change-request', id, 'view']);
   }
 
+  exportPdf(id: string) {
+    window.open(`${this.baseUrl}/${id}/export-pdf`, '_blank');
+  }
+
   goToImpact(id: string) {
     this.navigation.navigate(['/feature/pm/change-request', id, 'edit'], {
       queryParams: { showImpact: true } // optional

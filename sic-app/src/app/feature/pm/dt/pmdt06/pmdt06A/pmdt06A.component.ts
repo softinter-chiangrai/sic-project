@@ -215,6 +215,13 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         this.selectedTargetType.set(data.targetType);
                     }
                     this.formData.patchValue(data);
+                    if (data.status === 'APPROVED' || data.status === 'REJECTED' || data.status === 'IMPLEMENTED') {
+                        this.isView = true;
+                        this.isEdit = false;
+                        this.form.disable();
+                    } else if (this.isView) {
+                        this.form.disable();
+                    }
                     if (data.assignees && data.assignees.length > 0) {
                         const assignees = data.assignees.map((a) => ({
                             userId: a.userId,
@@ -388,6 +395,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     cancel() {
         this.navigateBack();
+    }
+
+    exportPdf() {
+        if (!this.changeRequestId) return;
+        window.open(`${this.baseUrl}/${this.changeRequestId}/export-pdf`, '_blank');
     }
 
     // ===== Helper =====

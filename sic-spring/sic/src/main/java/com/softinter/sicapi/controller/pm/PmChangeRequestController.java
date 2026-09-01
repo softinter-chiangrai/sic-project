@@ -20,6 +20,7 @@ import java.util.UUID;
 public class PmChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
+    private final PmChangeRequestExportService changeRequestExportService;
 
     @PostMapping
     public ResponseEntity<ChangeRequestResponse> create(@Valid @RequestBody ChangeRequestRequest request) {
@@ -79,5 +80,20 @@ public class PmChangeRequestController {
             @RequestParam String userId,
             @RequestParam UUID targetId) {
         return ResponseEntity.ok(changeRequestService.markAssigneeComplete(id, userId, targetId));
+    }
+
+    @GetMapping("/{id}/export-pdf")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        byte[] pdfBytes = changeRequestExportService.exportChangeRequestPdf(id);
+
+        String filename = "CR_" + id.toString().substring(0, 8).toUpperCase() + ".pdf";
+        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
+        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        headers.setContentDispositionFormData("attachment", filename);
+        headers.setContentLength(pdfBytes.length);
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(pdfBytes);
     }
 }

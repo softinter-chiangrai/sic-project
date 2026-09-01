@@ -144,8 +144,11 @@
                 <div class="flex items-center justify-center gap-1 flex-wrap">
 
                   <sic-table-actions
-                    [showPrint]="false"
+                    [showPrint]="true"
+                    [showEdit]="cr.status === 'DRAFT' || cr.status === 'SUBMITTED'"
+                    [showDelete]="cr.status === 'DRAFT' || cr.status === 'SUBMITTED'"
                     (onView)="goToView(cr.id)"
+                    (onPrint)="exportPdf(cr.id)"
                     (onEdit)="goToEdit(cr.id)"
                     (onDelete)="deleteChangeRequest(cr.id)"
                   ></sic-table-actions>

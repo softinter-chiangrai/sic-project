@@ -203,10 +203,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         if (state == EntityState.MODIFIED) {
             String userId = currentUserService.getUserId();
-            String diagramType = tab.getDiagramType().toUpperCase();
-            if (!editSessionService.canEdit(diagramType, tab.getId(), userId)) {
-                throw new IllegalStateException("This diagram is locked. A Change Request is required to edit it.");
-            }
 
             if (request.getRowVersion() != null && request.getRowVersion() != 0
                     && !request.getRowVersion().equals(tab.getRowVersion())) {
