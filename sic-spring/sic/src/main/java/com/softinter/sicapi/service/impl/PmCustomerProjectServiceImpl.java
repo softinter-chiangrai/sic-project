@@ -123,6 +123,27 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         return page.map(this::toResponse);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmCustomerProjectResponse> findAllByBusinessId(UUID businessId, String keyword, Pageable pageable) {
+        Page<PmCustomerProject> page;
+        if (keyword != null && !keyword.isBlank()) {
+            if (businessId != null) {
+                page = projectRepository.findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(businessId, keyword, pageable);
+            } else {
+                page = projectRepository.findAll(pageable);
+            }
+        } else {
+            if (businessId != null) {
+                page = projectRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+            } else {
+                page = projectRepository.findAll(pageable);
+            }
+        }
+        return page.map(this::toResponse);
+    }
+
+
     private PmCustomerProjectResponse toResponse(PmCustomerProject project) {
         PmCustomerProjectResponse response = new PmCustomerProjectResponse();
         response.setId(project.getId());

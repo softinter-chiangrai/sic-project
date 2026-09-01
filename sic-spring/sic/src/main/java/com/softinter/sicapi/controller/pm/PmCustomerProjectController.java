@@ -39,21 +39,26 @@ public class PmCustomerProjectController {
     @GetMapping
     @Operation(summary = "รายการโครงการของลูกค้า (แบบแบ่งหน้า)")
     public ResponseEntity<PaginationResponse<PmCustomerProjectResponse>> getProjects(
-            @RequestParam UUID customerId,
+            @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) String keyword,
             @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.ASC) Pageable pageable) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
 
         Page<PmCustomerProjectResponse> pageResult;
-        if (keyword != null && !keyword.isBlank()) {
-            pageResult = projectService.searchByCustomerId(customerId, businessId, keyword, pageable);
+        if (customerId != null) {
+            if (keyword != null && !keyword.isBlank()) {
+                pageResult = projectService.searchByCustomerId(customerId, businessId, keyword, pageable);
+            } else {
+                pageResult = projectService.findByCustomerId(customerId, businessId, pageable);
+            }
         } else {
-            pageResult = projectService.findByCustomerId(customerId, businessId, pageable);
+            pageResult = projectService.findAllByBusinessId(businessId, keyword, pageable);
         }
 
         return ResponseEntity.ok(PaginationUtil.of(pageResult.getContent(), pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements()));
     }
+
 
     @GetMapping("/{id}")
     @Operation(summary = "ดึงข้อมูลโครงการโดย ID")

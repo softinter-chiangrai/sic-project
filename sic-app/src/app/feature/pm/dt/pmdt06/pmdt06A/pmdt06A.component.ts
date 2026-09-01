@@ -146,7 +146,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         if (type === 'REQUIREMENT') {
             return environment.apiBaseUrl + '/api/pm/requirement/combobox';
         } else if (type === 'SPECIFICATION') {
-            return environment.apiBaseUrl + '/api/pm/specification/combobox';
+            return environment.apiBaseUrl + '/api/pm/specifications/combobox';
         } else if (type === 'TASK') {
             return environment.apiBaseUrl + '/api/pm/tasks/combobox';
         }

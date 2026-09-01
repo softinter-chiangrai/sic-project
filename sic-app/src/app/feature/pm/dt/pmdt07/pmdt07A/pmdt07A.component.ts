@@ -558,7 +558,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         this.isLoading = true;
-        const url = `${this.apiBaseUrl}/api/pm/specification/${id}/export-pdf`;
+        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
         this.http.get(url, { responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;
@@ -592,7 +592,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         this.isLoading = true;
-        const url = `${this.apiBaseUrl}/api/pm/specification/${id}/export-pdf`;
+        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
         this.http.get(url, { responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;

@@ -9,7 +9,7 @@ export class Pmdt10Service {
   private http = inject(HttpClient);
   private taskUrl = `${environment.apiBaseUrl}/api/pm/tasks`;
   private projectUrl = `${environment.apiBaseUrl}/api/pm/projects`;
-  private specUrl = `${environment.apiBaseUrl}/api/pm/specification`;
+  private specUrl = `${environment.apiBaseUrl}/api/pm/specifications`;
   private phaseUrl = `${environment.apiBaseUrl}/api/pm/phases`;
 
   // ===== Tasks =====

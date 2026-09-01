@@ -44,6 +44,9 @@ Page<PmCustomerProject> findByCustomerIdAndBusinessIdWithCustomer(@Param("custom
     List<PmCustomerProject> findByContractIdAndIsDeleteFalse(UUID contractId);
 
     @Query("SELECT p FROM PmCustomerProject p WHERE p.businessId = :businessId AND p.isDelete = false AND p.isActive = true")
-List<PmCustomerProject> findByBusinessIdAndIsDeleteFalse(@Param("businessId") UUID businessId);
+    List<PmCustomerProject> findByBusinessIdAndIsDeleteFalse(@Param("businessId") UUID businessId);
 
+    Page<PmCustomerProject> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
+
+    Page<PmCustomerProject> findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(UUID businessId, String keyword, Pageable pageable);
 }

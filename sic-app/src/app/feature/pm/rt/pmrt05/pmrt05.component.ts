@@ -153,7 +153,7 @@ export class Pmrt05Component implements OnInit {
           catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
         );
       case 'SPECIFICATION':
-        url = `${environment.apiBaseUrl}/api/pm/specification/${id}`;
+        url = `${environment.apiBaseUrl}/api/pm/specifications/${id}`;
         return this.http.get<any>(url).pipe(
           map((data) => ({
             code: data?.specificationCode || data?.specCode || 'SPEC',

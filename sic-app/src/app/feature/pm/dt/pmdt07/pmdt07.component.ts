@@ -191,7 +191,7 @@ export class Pmdt07Component implements OnInit {
         }
 
         this.isLoading.set(true);
-        const url = `${environment.apiBaseUrl}/api/pm/specification/${spec.id}/export-pdf`;
+        const url = `${environment.apiBaseUrl}/api/pm/specifications/${spec.id}/export-pdf`;
         this.http.get(url, { responseType: 'blob' })
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({

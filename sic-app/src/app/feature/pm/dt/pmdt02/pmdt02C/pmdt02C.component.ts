@@ -118,7 +118,7 @@ export class Pmdt02CComponent implements OnInit {
 
   loadSpecifications(projectId: string) {
     this.http
-      .get<any>(`${environment.apiBaseUrl}/api/pm/specification`, {
+      .get<any>(`${environment.apiBaseUrl}/api/pm/specifications`, {
         params: { page: '0', size: '100' },
       })
       .subscribe({

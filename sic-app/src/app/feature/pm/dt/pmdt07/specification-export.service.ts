@@ -14,7 +14,7 @@ export class SpecificationExportService {
   private apiBaseUrl = environment.apiBaseUrl;
 
   async exportSpecification(data: PmSpecificationModel, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
-    const url = `${this.apiBaseUrl}/api/pm/specification/export`;
+    const url = `${this.apiBaseUrl}/api/pm/specifications/export`;
 
     const payload = {
       specificationId: data.id,
