@@ -519,9 +519,14 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     if (data.tester) desc += `<b>ผู้ทดสอบ:</b> ${data.tester}<br/>`;
 
     // 1. Create Bug Task with status 'To Do'
+    const rawTitle = (data.title || data.testCaseCode || '').trim();
+    const finalTaskName = rawTitle.toUpperCase().startsWith('[BUG]')
+      ? rawTitle
+      : `[BUG] ${rawTitle}`;
+
     const taskPayload: any = {
       taskCode: bugCode,
-      taskName: `[BUG] ${data.title || data.testCaseCode}`,
+      taskName: finalTaskName,
       description: desc,
       priority: data.priority === 'High' ? 'Critical' : (data.priority || 'High'),
       status: 'To Do', // Bug starts in 'To Do' column for Dev to pick up

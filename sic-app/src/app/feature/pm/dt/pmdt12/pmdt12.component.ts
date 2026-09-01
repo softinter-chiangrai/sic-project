@@ -609,9 +609,14 @@ export class Pmdt12Component implements OnInit {
 
     this.isSubmittingBug.set(true);
 
+    const rawName = (form.taskName || '').trim();
+    const finalTaskName = rawName.toUpperCase().startsWith('[BUG]')
+      ? rawName
+      : `[BUG] ${rawName}`;
+
     const taskPayload: any = {
       taskCode: form.taskCode,
-      taskName: form.taskName.trim(),
+      taskName: finalTaskName,
       description: form.description,
       priority: form.priority,
       status: 'To Do', // Bug task starts in 'To Do' for dev to pick up
