@@ -80,7 +80,8 @@ export class ChangeRequestService {
   markAssigneeComplete(id: string, userId: string, targetId: string): Observable<any> {
     return this.http.post(`${this.baseUrl}/${id}/assignees/complete`, {}, { params: { userId, targetId } });
   }
-  checkEditLock(targetType: string, targetId: string): Observable<any> {
-    return this.http.get(`${environment.apiBaseUrl}/api/pm/edit-sessions/check`, { params: { targetType, targetId } });
+
+  exportPdf(id: string): Observable<Blob> {
+    return this.http.get(`${this.baseUrl}/${id}/export-pdf`, { responseType: 'blob' });
   }
 }

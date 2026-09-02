@@ -14,7 +14,6 @@ import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.DocumentVersionService;
-import com.softinter.sicapi.service.EditSessionService;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
@@ -50,7 +49,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final SuProfileRepository profileRepository;
     private final TraceLinkService traceLinkService;
     private final CurrentUserService currentUserService;
-    private final EditSessionService editSessionService;
     private final DocumentVersionService documentVersionService;
 
     // ===== FIND ALL (with pagination) =====
@@ -120,7 +118,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec.setCreatedBy(userId);
             spec.setCreatedDate(Instant.now());
             spec.setIsDelete(false);
-            spec.setVersion("v0.1");
+            spec.setVersion("v1.0");
             spec.setStatus("Draft");
             spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -152,7 +150,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         saved.getId(),
                         saved.getProject().getId(),
                         saved.getSpecificationCode(),
-                        saved.getVersion() != null ? saved.getVersion() : "v0.1",
+                        saved.getVersion() != null ? saved.getVersion() : "v1.0",
                         "Initial specification version"
                 );
             }
@@ -225,6 +223,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             spec.setVersion(newVersion);
+            if ("Approved".equalsIgnoreCase(oldStatus)) {
+                spec.setStatus("Changed");
+            }
             spec = specificationRepository.save(spec);
 
             // ✅ สร้าง/อัปเดต Trace Link กับ Requirement

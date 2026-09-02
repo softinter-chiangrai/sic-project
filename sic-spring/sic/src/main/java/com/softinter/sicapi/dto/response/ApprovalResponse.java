@@ -15,6 +15,8 @@ public class ApprovalResponse {
     private UUID documentId;
     private String documentCode;
     private String documentTitle;
+    private UUID projectId;
+    private String projectName;
     private String version;
     private String requestedBy;
     private String requestedByName;

@@ -179,7 +179,27 @@ export class Pmdt06Component implements OnInit {
   }
 
   exportPdf(id: string) {
-    window.open(`${this.baseUrl}/${id}/export-pdf`, '_blank');
+    if (!id) return;
+    this.isLoading.set(true);
+    this.crService.exportPdf(id)
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Print change request error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
+        },
+      });
   }
 
   goToImpact(id: string) {
@@ -241,29 +261,45 @@ export class Pmdt06Component implements OnInit {
 
   // ===== Helper =====
 
-  getStatusClass(status: string): string {
-    if (!status) return 'bg-gray-100 text-gray-600';
+  getTargetTypeText(type?: string): string {
+    if (!type) return '-';
     const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600',
-      DRAFT: 'bg-gray-100 text-gray-600',
-      Submitted: 'bg-blue-100 text-blue-700',
-      SUBMITTED: 'bg-blue-100 text-blue-700',
-      'In Review': 'bg-blue-100 text-blue-700',
-      IN_REVIEW: 'bg-blue-100 text-blue-700',
-      Pending: 'bg-yellow-100 text-yellow-700',
-      PENDING: 'bg-yellow-100 text-yellow-700',
-      Approved: 'bg-emerald-100 text-emerald-700',
-      APPROVED: 'bg-emerald-100 text-emerald-700',
-      Rejected: 'bg-red-100 text-red-700',
-      REJECTED: 'bg-red-100 text-red-700',
-      Implemented: 'bg-purple-100 text-purple-700',
-      IMPLEMENTED: 'bg-purple-100 text-purple-700',
-      'Need Revision': 'bg-orange-100 text-orange-700',
-      NEED_REVISION: 'bg-orange-100 text-orange-700',
-      Cancelled: 'bg-gray-300 text-gray-700',
-      CANCELLED: 'bg-gray-300 text-gray-700',
+      REQUIREMENT: 'ความต้องการ (Requirement)',
+      SPECIFICATION: 'ข้อกำหนด (Specification)',
+      TASK: 'งาน (Task)',
+      DFD: 'DFD',
+      ER: 'ER Diagram',
     };
-    return map[status] || 'bg-gray-100 text-gray-600';
+    return map[type.toUpperCase()] || type;
+  }
+
+  getTargetTypeBadgeClass(type?: string): string {
+    if (!type) return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+    const map: Record<string, string> = {
+      REQUIREMENT: 'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20',
+      SPECIFICATION: 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-500/20',
+      TASK: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+    };
+    return map[type.toUpperCase()] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20';
+  }
+
+  getStatusClass(status: string): string {
+    if (!status) return 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20';
+    const s = status.toUpperCase();
+    const map: Record<string, string> = {
+      DRAFT: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/20',
+      SUBMITTED: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+      IN_REVIEW: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+      'IN REVIEW': 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+      PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+      REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      IMPLEMENTED: 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20',
+      NEED_REVISION: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+      'NEED REVISION': 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+      CANCELLED: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20',
+    };
+    return map[s] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20';
   }
 
   getStatusText(status: string): string {
@@ -292,14 +328,16 @@ export class Pmdt06Component implements OnInit {
   }
 
   getApprovalStatusClass(status?: string): string {
+    if (!status) return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+    const s = status.toUpperCase();
     const map: Record<string, string> = {
-      PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-      NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
-      CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
+      PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+      REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      NEED_REVISION: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+      CANCELLED: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20',
     };
-    return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+    return map[s] || 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
   }
 
   getApprovalStatusText(status?: string): string {

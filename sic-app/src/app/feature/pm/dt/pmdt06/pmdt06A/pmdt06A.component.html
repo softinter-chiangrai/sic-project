@@ -335,7 +335,15 @@
         </div>
 
         @if (changeRequestId) {
-          <div>
+          <div class="flex items-center gap-2">
+            <sic-button
+              type="button"
+              variant="danger"
+              (click)="deleteChangeRequest()"
+            >
+              <i class="bi bi-trash me-1"></i>
+              ลบ
+            </sic-button>
             <button
               type="button"
               (click)="exportPdf()"

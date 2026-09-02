@@ -20,7 +20,6 @@ import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
-import com.softinter.sicapi.service.EditSessionService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +45,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmRequirementRepository requirementRepository;
     private final TraceLinkService traceLinkService;
     private final PmTraceLinkRepository traceLinkRepository;
-    private final EditSessionService editSessionService;
     private final DocumentVersionService documentVersionService;
     private final ApprovalService approvalService;
 
@@ -465,11 +463,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     private String getCurrentVersion(PmDiagramTab tab) {
         if (tab.getId() == null)
-            return "v0.1";
+            return "v1.0";
         List<PmDiagramVersion> versions = versionRepository
                 .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
         if (versions.isEmpty())
-            return "v0.1";
+            return "v1.0";
         return "v" + versions.get(0).getVersionNumber();
     }
 

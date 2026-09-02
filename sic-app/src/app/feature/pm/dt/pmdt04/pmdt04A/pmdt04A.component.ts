@@ -107,7 +107,7 @@ export class Pmdt04AService {
   ],
   templateUrl: './pmdt04A.component.html',
   styleUrls: ['./pmdt04A.component.css'],
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   // ===== Dependencies =====
@@ -256,9 +256,11 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         }
 
         console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
+        this.cdr.detectChanges();
       },
       error: (error) => {
         this.isLoading = false;
+        this.cdr.detectChanges();
         console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
         this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Requirement รหัสนี้');
         this.navigation.navigate(['/feature/pm/requirement']);

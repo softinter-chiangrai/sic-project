@@ -190,8 +190,8 @@ export class Pmdt03Component implements OnInit {
       documentType: approval.documentType,
       documentCode: approval.documentCode,
       title: approval.documentTitle,
-      projectId: '', // ยังไม่มีจาก API
-      projectName: '-',
+      projectId: approval.projectId || '',
+      projectName: approval.projectName || '-',
       requester: approval.requestedByName,
       requestedDate: approval.requestedDate,
       dueDate: approval.currentStep?.timeoutDays

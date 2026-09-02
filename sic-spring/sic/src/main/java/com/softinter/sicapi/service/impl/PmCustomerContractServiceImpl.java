@@ -153,7 +153,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             contract.getId(),
             contract.getProjectId(),
             contract.getContractNo(),
-            isNew ? "v0.1" : "v0.2",
+            isNew ? "v1.0" : "v1.1",
             diffSummary,
             snapshotJson
     );

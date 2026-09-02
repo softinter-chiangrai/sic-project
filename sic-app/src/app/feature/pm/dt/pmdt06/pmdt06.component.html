@@ -76,6 +76,9 @@
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
               โครงการ
             </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[140px]">
+              ประเภทเอกสาร
+            </th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
               ผู้เกี่ยวข้อง / ผู้แก้ไข
             </th>
@@ -106,20 +109,37 @@
               </td>
               <td class="px-4 py-3">{{ cr.projectName || '-' }}</td>
               <td class="px-4 py-3">
-                <div class="space-y-1">
+                <span [class]="getTargetTypeBadgeClass(cr.targetType) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                  {{ getTargetTypeText(cr.targetType) }}
+                </span>
+              </td>
+              <td class="px-4 py-3">
+                <div class="space-y-1.5">
                   @for (assignee of cr.assignees; track assignee.id) {
-                    <div class="flex items-center gap-1.5 text-xs">
-                      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="assignee.status === 'COMPLETED' ? 'bg-emerald-500' : 'bg-amber-500'"></span>
-                      <span class="font-medium">{{ assignee.userName }}</span>
-                      <span class="text-[10px] text-[var(--text-muted)]">({{ assignee.targetType }})</span>
-                      @if (assignee.status !== 'COMPLETED' && cr.status === 'APPROVED') {
-                        <button
-                          (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
-                          class="px-1.5 py-0.5 rounded bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] text-[10px] hover:bg-[var(--crm-primary)]/20 transition-all ml-1"
-                        >
-                          แก้ไขเสร็จแล้ว
-                        </button>
-                      }
+                    <div class="flex items-center justify-between gap-2 text-xs py-0.5 border-b border-[var(--border)]/40 last:border-0">
+                      <div class="flex items-center gap-1.5">
+                        <span class="font-medium text-[var(--text-active)]">{{ assignee.userName }}</span>
+                      </div>
+                      <div class="flex items-center gap-1.5">
+                        @if (assignee.status === 'COMPLETED') {
+                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
+                            <i class="bi bi-check-circle-fill text-[9px]"></i> เสร็จแล้ว
+                          </span>
+                        } @else {
+                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-medium">
+                            <i class="bi bi-clock-history text-[9px]"></i> รอดำเนินการ
+                          </span>
+                          @if (cr.status === 'APPROVED') {
+                            <button
+                              (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
+                              title="คลิกเพื่อยืนยันว่าคุณแก้ไขเอกสารนี้เสร็จแล้ว"
+                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] hover:bg-blue-500/20 active:scale-95 transition-all"
+                            >
+                              <i class="bi bi-check2"></i> กดเมื่อทำเสร็จ
+                            </button>
+                          }
+                        }
+                      </div>
                     </div>
                   } @empty {
                     <span class="text-xs text-[var(--text-muted)]">-</span>
@@ -146,7 +166,7 @@
                   <sic-table-actions
                     [showPrint]="true"
                     [showEdit]="cr.status === 'DRAFT' || cr.status === 'SUBMITTED'"
-                    [showDelete]="cr.status === 'DRAFT' || cr.status === 'SUBMITTED'"
+                    [showDelete]="true"
                     (onView)="goToView(cr.id)"
                     (onPrint)="exportPdf(cr.id)"
                     (onEdit)="goToEdit(cr.id)"

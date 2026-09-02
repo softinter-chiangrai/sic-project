@@ -92,6 +92,8 @@ export interface Approval {
     documentId: string;
     documentCode: string;
     documentTitle: string;
+    projectId?: string;
+    projectName?: string;
     version: string;
     requestedBy: string;
     requestedByName: string;

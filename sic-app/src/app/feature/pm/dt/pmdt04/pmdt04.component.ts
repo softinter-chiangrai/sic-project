@@ -249,25 +249,23 @@ export class Pmdt04Component implements OnInit {
 
   // ===== Utility =====
   getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      'In Review': 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
-      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
-    };
-    return map[status] || map['Draft'];
+    const s = (status || '').trim().toLowerCase();
+    if (['draft', 'ร่าง'].includes(s)) return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+    if (['in review', 'in_review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+    if (['cancelled', 'ยกเลิก'].includes(s)) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
   }
 
   getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
+    const s = (status || '').trim().toLowerCase();
+    if (['draft', 'ร่าง'].includes(s)) return 'ร่าง';
+    if (['in review', 'in_review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'อยู่ระหว่างตรวจสอบ';
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
+    if (['cancelled', 'ยกเลิก'].includes(s)) return 'ยกเลิก';
+    return status || '-';
   }
 
   getPriorityClass(priority: string): string {

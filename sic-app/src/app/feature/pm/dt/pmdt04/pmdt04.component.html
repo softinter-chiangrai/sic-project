@@ -134,7 +134,15 @@
                 </span>
               </td>
               <td class="px-4 py-3">
-                @if (req.approvalStatus) {
+                @if (req.status?.toUpperCase() === 'CHANGED') {
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    รอส่งอนุมัติ
+                  </span>
+                } @else if (req.status?.toUpperCase() === 'DRAFT') {
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                    ยังไม่อนุมัติ
+                  </span>
+                } @else if (req.approvalStatus) {
                   <span [class]="getApprovalStatusClass(req.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
                     {{ getApprovalStatusText(req.approvalStatus) }}
                   </span>

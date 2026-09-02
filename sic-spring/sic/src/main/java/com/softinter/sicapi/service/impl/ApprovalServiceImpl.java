@@ -33,6 +33,7 @@ import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.entity.pm.PmApprovalLog;
 import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
 import com.softinter.sicapi.entity.pm.PmChangeRequest;
+import com.softinter.sicapi.entity.pm.PmCrAssignee;
 import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
@@ -41,7 +42,9 @@ import com.softinter.sicapi.repository.pm.PmApprovalLogRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalStepStatusRepository;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.repository.pm.PmCrAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
@@ -77,11 +80,13 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final CurrentUserService currentUserService;
     private final ApprovalNotificationService notificationService;
     private final PmChangeRequestRepository changeRequestRepository;
+    private final PmCrAssigneeRepository pmCrAssigneeRepository;
     private final PmRequirementRepository requirementRepository;
     private final PmSpecificationRepository specificationRepository;
     private final PmDesignReviewRepository designReviewRepository;
     private final PmDiagramTabRepository diagramTabRepository;
     private final PmCustomerContractRepository customerContractRepository;
+    private final PmCustomerProjectRepository customerProjectRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -729,7 +734,24 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "CHANGE_REQUEST":
                 changeRequestRepository.findById(docId).ifPresent(cr -> {
                     cr.setStatus("APPROVED");
+                    cr.setApprovedBy(approval.getFinalApprover());
+                    cr.setApprovedAt(Instant.now());
                     changeRequestRepository.save(cr);
+
+                    // ปรับสถานะเอกสารเป้าหมาย (เช่น Requirement / Spec) ให้เป็น Changed ทันทีที่ CR ผ่านการอนุมัติ
+                    if (cr.getTargetType() != null && cr.getTargetId() != null) {
+                        if ("REQUIREMENT".equalsIgnoreCase(cr.getTargetType())) {
+                            requirementRepository.findById(cr.getTargetId()).ifPresent(req -> {
+                                req.setStatus("Changed");
+                                requirementRepository.save(req);
+                            });
+                        } else if ("SPECIFICATION".equalsIgnoreCase(cr.getTargetType())) {
+                            specificationRepository.findById(cr.getTargetId()).ifPresent(spec -> {
+                                spec.setStatus("Changed");
+                                specificationRepository.save(spec);
+                            });
+                        }
+                    }
                 });
                 break;
             case "DESIGN_REVIEW":
@@ -746,6 +768,30 @@ public class ApprovalServiceImpl implements ApprovalService {
                 break;
             default:
                 break;
+        }
+
+        // Auto-complete any active Change Requests associated with this target document
+        if (!"CHANGE_REQUEST".equalsIgnoreCase(docType)) {
+            try {
+                List<PmChangeRequest> activeCrs = changeRequestRepository.findActiveByTarget(docType, docId);
+                for (PmChangeRequest cr : activeCrs) {
+                    cr.setStatus("IMPLEMENTED");
+                    cr.setImplementedAt(Instant.now());
+                    changeRequestRepository.save(cr);
+
+                    List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
+                    for (PmCrAssignee a : assignees) {
+                        if (!"COMPLETED".equalsIgnoreCase(a.getStatus())) {
+                            a.setStatus("COMPLETED");
+                            a.setCompletedAt(Instant.now());
+                            pmCrAssigneeRepository.save(a);
+                        }
+                    }
+                    log.info("Auto-implemented Change Request {} upon approval of target document {} - {}", cr.getId(), docType, docId);
+                }
+            } catch (Exception e) {
+                log.error("Error auto-completing Change Requests on document approval: {}", e.getMessage(), e);
+            }
         }
 
         // Auto Create Document Version on Approval
@@ -896,6 +942,9 @@ public class ApprovalServiceImpl implements ApprovalService {
         response.setStatusText(approval.getStatus().getThaiName());
         response.setComment(approval.getComment());
 
+        // Resolve Project Info from target document
+        resolveProjectInfo(approval.getDocumentType(), approval.getDocumentId(), response);
+
         if (approval.getFlow() != null) {
             response.setFlowCode(approval.getFlow().getFlowCode());
             response.setFlowName(approval.getFlow().getFlowName());
@@ -933,6 +982,93 @@ public class ApprovalServiceImpl implements ApprovalService {
         response.setLogs(logResponses);
 
         return response;
+    }
+
+    private void resolveProjectInfo(String documentType, UUID documentId, ApprovalResponse response) {
+        if (documentType == null || documentId == null) return;
+        try {
+            UUID projId = null;
+            String projName = null;
+
+            switch (documentType.toUpperCase()) {
+                case "REQUIREMENT":
+                    var reqOpt = requirementRepository.findById(documentId);
+                    if (reqOpt.isPresent()) {
+                        var req = reqOpt.get();
+                        if (req.getProject() != null) {
+                            projId = req.getProject().getId();
+                            projName = req.getProject().getProjectName();
+                        } else if (req.getProjectId() != null) {
+                            projId = req.getProjectId();
+                        }
+                    }
+                    break;
+                case "SPECIFICATION":
+                    var specOpt = specificationRepository.findById(documentId);
+                    if (specOpt.isPresent()) {
+                        var spec = specOpt.get();
+                        if (spec.getProject() != null) {
+                            projId = spec.getProject().getId();
+                            projName = spec.getProject().getProjectName();
+                        }
+                    }
+                    break;
+                case "CHANGE_REQUEST":
+                    var crOpt = changeRequestRepository.findById(documentId);
+                    if (crOpt.isPresent()) {
+                        var cr = crOpt.get();
+                        projId = cr.getProjectId();
+                        if (projId == null && cr.getTargetType() != null && cr.getTargetId() != null) {
+                            if ("REQUIREMENT".equalsIgnoreCase(cr.getTargetType())) {
+                                var targetReq = requirementRepository.findById(cr.getTargetId()).orElse(null);
+                                if (targetReq != null) {
+                                    projId = targetReq.getProject() != null ? targetReq.getProject().getId() : targetReq.getProjectId();
+                                    if (targetReq.getProject() != null) projName = targetReq.getProject().getProjectName();
+                                }
+                            } else if ("SPECIFICATION".equalsIgnoreCase(cr.getTargetType())) {
+                                var targetSpec = specificationRepository.findById(cr.getTargetId()).orElse(null);
+                                if (targetSpec != null) {
+                                    projId = targetSpec.getProject() != null ? targetSpec.getProject().getId() : null;
+                                    if (targetSpec.getProject() != null) projName = targetSpec.getProject().getProjectName();
+                                }
+                            }
+                        }
+                    }
+                    break;
+                case "DESIGN_REVIEW":
+                    var drOpt = designReviewRepository.findById(documentId);
+                    if (drOpt.isPresent()) {
+                        var dr = drOpt.get();
+                        if (dr.getProject() != null) {
+                            projId = dr.getProject().getId();
+                            projName = dr.getProject().getProjectName();
+                        }
+                    }
+                    break;
+                case "DIAGRAM":
+                case "DFD":
+                case "ER":
+                    var diagOpt = diagramTabRepository.findById(documentId);
+                    if (diagOpt.isPresent()) {
+                        projId = diagOpt.get().getProjectId();
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            if (projId != null) {
+                response.setProjectId(projId);
+                if (projName == null) {
+                    projName = customerProjectRepository.findById(projId)
+                            .map(p -> p.getProjectName())
+                            .orElse(null);
+                }
+                response.setProjectName(projName);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to resolve project info for approval docType={}, docId={}", documentType, documentId, e);
+        }
     }
 
     private ApprovalStepResponse toStepResponse(PmApprovalStepStatus stepStatus) {

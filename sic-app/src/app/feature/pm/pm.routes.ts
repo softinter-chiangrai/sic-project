@@ -5,7 +5,6 @@ import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 import { customerGuard } from '../../core/guard/customer.guard';
 import { projectGuard } from '../../core/guard/project.guard';
 import { requirementGuard } from '../../core/guard/requirement.guard';
-import { editGuard } from '../../core/guard/edit.guard';
 
 // PMDT Resolvers
 import { pmdt01Resolver } from './dt/pmdt01/pmdt01.resolver';
@@ -296,7 +295,7 @@ export const PM_ROUTES: Routes = [
     path: 'requirement/:id/edit',
     loadComponent: () =>
       import('./dt/pmdt04/pmdt04A/pmdt04A.component').then((m) => m.Pmdt04AComponent),
-    canActivate: [customerGuard, projectGuard, requirementGuard, editGuard],
+    canActivate: [customerGuard, projectGuard, requirementGuard],
     data: { targetType: 'REQUIREMENT' },
     resolve: { form: pmdt04AResolver },
     canDeactivate: [CanDeactivateGuard],

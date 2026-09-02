@@ -98,6 +98,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         title: [null, Validators.required],
         description: [null],
         changeReason: [null],
+        targetVersion: [null],
         assigneeId: [null],
         assigneeIds: [[], Validators.required],
         rowVersion: [null],
@@ -111,7 +112,6 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     readonly targetTypeOptions = [
         { value: 'REQUIREMENT', text: 'ความต้องการระบบ (Requirement)' },
         { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ (Specification)' },
-        { value: 'TASK', text: 'งาน (Task)' },
     ];
     selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
     selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
@@ -130,12 +130,10 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             return;
         }
 
-        const assignees = items
-            .filter(item => item && item.value)
-            .map(item => ({
-                userId: item.value,
-                userName: item.text || item.value
-            }));
+        const assignees = items.map(item => ({
+            userId: item.value || item.userId || item.id,
+            userName: item.text || item.userName || item.name || item.fullName
+        }));
 
         this.selectedAssignees.set(assignees);
         this.form.get('assigneeId')?.setValue(assignees[0]?.userId || null);
@@ -147,8 +145,6 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             return environment.apiBaseUrl + '/api/pm/requirement/combobox';
         } else if (type === 'SPECIFICATION') {
             return environment.apiBaseUrl + '/api/pm/specifications/combobox';
-        } else if (type === 'TASK') {
-            return environment.apiBaseUrl + '/api/pm/tasks/combobox';
         }
         return '';
     });
@@ -397,9 +393,59 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         this.navigateBack();
     }
 
+    deleteChangeRequest() {
+        const id = this.changeRequestId || this.form.get('id')?.value;
+        if (!id) return;
+
+        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
+            if (ok) {
+                this.isLoading = true;
+                this.http.delete(`${this.baseUrl}/${id}`)
+                    .pipe(finalize(() => { this.isLoading = false; }))
+                    .subscribe({
+                        next: () => {
+                            this.isSaved = true;
+                            this.form.markAsPristine();
+                            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว').then(() => {
+                                this.navigateBack();
+                            });
+                        },
+                        error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาดในการลบ Change Request'),
+                    });
+            }
+        });
+    }
+
     exportPdf() {
-        if (!this.changeRequestId) return;
-        window.open(`${this.baseUrl}/${this.changeRequestId}/export-pdf`, '_blank');
+        const id = this.changeRequestId || this.form.get('id')?.value;
+        if (!id) {
+            this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Change Request ก่อนพิมพ์เอกสาร');
+            return;
+        }
+
+        this.isLoading = true;
+        const url = `${this.baseUrl}/${id}/export-pdf`;
+        this.http.get(url, { responseType: 'blob' })
+            .pipe(finalize(() => {
+                this.isLoading = false;
+            }))
+            .subscribe({
+                next: (blob) => {
+                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    const printWindow = window.open(pdfUrl, '_blank');
+                    if (!printWindow) {
+                        const a = document.createElement('a');
+                        a.href = pdfUrl;
+                        a.target = '_blank';
+                        a.click();
+                    }
+                },
+                error: (err) => {
+                    console.error('Print change request error:', err);
+                    this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
+                },
+            });
     }
 
     // ===== Helper =====

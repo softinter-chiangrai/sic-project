@@ -180,7 +180,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     public String incrementVersion(String currentVersion) {
         if (currentVersion == null || currentVersion.isBlank()) {
-            return "v0.1";
+            return "v1.0";
         }
         try {
             boolean hasPrefix = currentVersion.startsWith("v") || currentVersion.startsWith("V");
@@ -198,8 +198,8 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
                 return (hasPrefix ? "v" : "") + major + ".1";
             }
         } catch (Exception e) {
-            log.warn("Could not increment version: {}, returning v0.1", currentVersion);
-            return "v0.1";
+            log.warn("Could not increment version: {}, returning v1.0", currentVersion);
+            return "v1.0";
         }
     }
 

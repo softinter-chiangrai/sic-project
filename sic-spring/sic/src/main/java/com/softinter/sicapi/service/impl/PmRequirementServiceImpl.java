@@ -16,7 +16,6 @@ import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.PmRequirementService;
-import com.softinter.sicapi.service.EditSessionService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
@@ -36,7 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 public class PmRequirementServiceImpl implements PmRequirementService {
 
     private final PmRequirementRepository requirementRepository;
-    private final EditSessionService editSessionService;
     private final SuUploadRepository uploadRepository;
     private final FileStorageService fileStorageService;
     private final DocumentVersionService documentVersionService;
@@ -84,7 +82,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setIsDelete(false);
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
-            requirement.setVersion("v0.1");
+            requirement.setVersion("v1.0");
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
             PmRequirement saved = requirementRepository.save(requirement);
@@ -95,7 +93,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                     saved.getId(),
                     saved.getProjectId(),
                     saved.getRequirementCode(),
-                    saved.getVersion() != null ? saved.getVersion() : "v0.1",
+                    saved.getVersion() != null ? saved.getVersion() : "v1.0",
                     "Initial requirement version"
             );
             requirement = saved;
@@ -112,7 +110,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
             String oldStatus = requirement.getStatus();
             String oldVersion = requirement.getVersion();
-            if (oldVersion == null) oldVersion = "v0.1";
+            if (oldVersion == null) oldVersion = "v1.0";
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
@@ -133,6 +131,9 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             requirement.setVersion(newVersion);
+            if ("Approved".equalsIgnoreCase(oldStatus)) {
+                requirement.setStatus("Changed");
+            }
             requirement = requirementRepository.save(requirement);
 
             // Snapshot data

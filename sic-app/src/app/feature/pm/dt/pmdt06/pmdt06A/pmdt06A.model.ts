@@ -30,5 +30,6 @@ export interface ChangeRequestFormModel {
   assigneeName?: string;
   assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
   status?: string;
+  targetVersion?: string;
   rowVersion?: number;
 }

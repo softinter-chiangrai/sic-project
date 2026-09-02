@@ -36,7 +36,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmSpecificationRepository specificationRepository;
     private final PmTaskRepository taskRepository;
     private final SuProfileRepository profileRepository;
-    private final EditSessionService editSessionService;
     private final CurrentUserService currentUserService;
     private final PmCrAssigneeRepository pmCrAssigneeRepository;
     private final PmChangeImpactRepository pmChangeImpactRepository;
@@ -55,15 +54,20 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             throw new IllegalStateException("Draft documents can be edited directly without a Change Request.");
         }
 
-        List<PmChangeRequest> activeCRs = changeRequestRepository.findActiveByTarget(
-                request.getTargetType(), request.getTargetId()
-        );
-        if (!activeCRs.isEmpty()) {
-            throw new IllegalStateException("There is already an active Change Request for this document.");
-        }
-
         PmChangeRequest cr = new PmChangeRequest();
-        cr.setProjectId(request.getProjectId());
+        UUID projId = request.getProjectId();
+        if (projId == null && request.getTargetType() != null && request.getTargetId() != null) {
+            if ("REQUIREMENT".equalsIgnoreCase(request.getTargetType())) {
+                projId = requirementRepository.findById(request.getTargetId())
+                        .map(r -> r.getProject() != null ? r.getProject().getId() : r.getProjectId())
+                        .orElse(null);
+            } else if ("SPECIFICATION".equalsIgnoreCase(request.getTargetType())) {
+                projId = specificationRepository.findById(request.getTargetId())
+                        .map(s -> s.getProject() != null ? s.getProject().getId() : null)
+                        .orElse(null);
+            }
+        }
+        cr.setProjectId(projId);
         cr.setTargetType(request.getTargetType());
         cr.setTargetId(request.getTargetId());
         cr.setTitle(request.getTitle());
@@ -71,7 +75,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setChangeReason(request.getChangeReason());
         cr.setRequesterId(currentUserService.getUserId());
         cr.setStatus("DRAFT");
-        cr.setTargetVersion(request.getTargetVersion());
+        cr.setTargetVersion(resolveTargetVersion(request.getTargetType(), request.getTargetId(), request.getTargetVersion()));
         cr.setAssigneeId(request.getAssigneeId());
         cr.setCreatedBy(currentUserService.getUserId());
         cr.setCreatedDate(Instant.now());
@@ -91,7 +95,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 cr.getId(),
                 cr.getProjectId(),
                 cr.getTitle(),
-                "v0.1",
+                "v1.0",
                 "สร้างคำขอเปลี่ยนแปลง (Initial change request)",
                 snapshotJson
         );
@@ -133,7 +137,24 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
         cr.setChangeReason(request.getChangeReason());
-        cr.setTargetVersion(request.getTargetVersion());
+        if (cr.getProjectId() == null) {
+            UUID projId = request.getProjectId();
+            if (projId == null && cr.getTargetType() != null && cr.getTargetId() != null) {
+                if ("REQUIREMENT".equalsIgnoreCase(cr.getTargetType())) {
+                    projId = requirementRepository.findById(cr.getTargetId())
+                            .map(r -> r.getProject() != null ? r.getProject().getId() : r.getProjectId())
+                            .orElse(null);
+                } else if ("SPECIFICATION".equalsIgnoreCase(cr.getTargetType())) {
+                    projId = specificationRepository.findById(cr.getTargetId())
+                            .map(s -> s.getProject() != null ? s.getProject().getId() : null)
+                            .orElse(null);
+                }
+            }
+            if (projId != null) {
+                cr.setProjectId(projId);
+            }
+        }
+        cr.setTargetVersion(resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), request.getTargetVersion()));
         cr.setAssigneeId(request.getAssigneeId());
         cr.setUpdatedBy(currentUserService.getUserId());
         cr.setUpdatedDate(Instant.now());
@@ -266,11 +287,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // สร้าง Edit Session ให้ Assignee
-        List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
-        for (PmCrAssignee assignee : assignees) {
-            editSessionService.createEditSession(cr.getId(), assignee.getTargetType(), assignee.getTargetId(), assignee.getUserId());
-        }
+        // ปรับสถานะเอกสารเป้าหมาย (เช่น Requirement / Spec) ให้เป็น Changed
+        updateDocumentStatus(cr.getTargetType(), cr.getTargetId(), "Changed");
 
         return toResponse(cr);
     }
@@ -307,15 +325,13 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // ปิด Edit Session สำหรับเอกสารเป้าหมายทั้งหมด และเปลี่ยนสถานะเอกสารเป็น CHANGED
+        // เปลี่ยนสถานะเอกสารเป้าหมายทั้งหมดเป็น CHANGED
         List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
         for (PmCrAssignee assignee : assignees) {
-            editSessionService.closeEditSession(assignee.getTargetType(), assignee.getTargetId());
             updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
         }
 
         // สำหรับ target หลักของ CR เอง
-        editSessionService.closeEditSession(cr.getTargetType(), cr.getTargetId());
         updateDocumentStatus(cr.getTargetType(), cr.getTargetId(), "CHANGED");
 
         return toResponse(cr);
@@ -331,8 +347,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         assignee.setCompletedAt(Instant.now());
         pmCrAssigneeRepository.save(assignee);
 
-        // ปิด Edit Session ของ Assignee คนนี้
-        editSessionService.closeEditSession(assignee.getTargetType(), assignee.getTargetId());
+        // เปลี่ยนสถานะเอกสารของ Assignee คนนี้เป็น CHANGED
         updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
 
         // ตรวจสอบว่าทุกคนทำเสร็จครบหรือยัง หากครบแล้วให้ปรับสถานะ CR เป็น IMPLEMENTED อัตโนมัติ
@@ -421,7 +436,11 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setAssigneeId(cr.getAssigneeId());
         response.setAssigneeName(getUserName(cr.getAssigneeId()));
         response.setStatus(cr.getStatus());
-        response.setTargetVersion(cr.getTargetVersion());
+        String targetVer = cr.getTargetVersion();
+        if (targetVer == null || targetVer.isBlank()) {
+            targetVer = resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), null);
+        }
+        response.setTargetVersion(targetVer != null ? targetVer : "-");
         response.setApprovedBy(cr.getApprovedBy());
         response.setApprovedAt(cr.getApprovedAt());
         response.setImplementedAt(cr.getImplementedAt());
@@ -434,6 +453,27 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setImpacts(impacts.stream().map(this::toImpactResponse).collect(Collectors.toList()));
 
         return response;
+    }
+
+    private String resolveTargetVersion(String targetType, UUID targetId, String requestedVersion) {
+        if (requestedVersion != null && !requestedVersion.isBlank()) {
+            return requestedVersion;
+        }
+        if (targetType == null || targetId == null) {
+            return null;
+        }
+        switch (targetType.toUpperCase()) {
+            case "REQUIREMENT":
+                return requirementRepository.findById(targetId)
+                        .map(r -> documentVersionService.incrementVersion(r.getVersion()))
+                        .orElse("v1.1");
+            case "SPECIFICATION":
+                return specificationRepository.findById(targetId)
+                        .map(s -> documentVersionService.incrementVersion(s.getVersion()))
+                        .orElse("v1.1");
+            default:
+                return null;
+        }
     }
 
     private CrAssigneeResponse toAssigneeResponse(PmCrAssignee a) {

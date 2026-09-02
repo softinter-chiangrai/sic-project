@@ -1330,17 +1330,17 @@ export class Pmdt02Component implements OnInit {
 
   getStatusClass(status?: string): string {
     const s = (status || '').trim().toLowerCase();
-    if (['done', 'complete', 'completed', 'เสร็จสิ้น'].includes(s)) {
+    if (['done', 'complete', 'completed', 'approved', 'อนุมัติแล้ว', 'เสร็จสิ้น'].includes(s)) {
       return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border border-emerald-500/20';
+    }
+    if (['changed', 'เปลี่ยนแปลง', 'waiting fix', 'waiting_fix', 'รอแก้ไข'].includes(s)) {
+      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-500/20';
     }
     if (['in progress', 'in_progress', 'doing', 'กำลังดำเนินการ'].includes(s)) {
       return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-500/20';
     }
-    if (['waiting review', 'waiting_review', 'review', 'รอ review'].includes(s)) {
+    if (['waiting review', 'waiting_review', 'review', 'in review', 'รอ review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) {
       return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-500/20';
-    }
-    if (['waiting fix', 'waiting_fix', 'รอแก้ไข'].includes(s)) {
-      return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-500/20';
     }
     if (['blocked', 'delayed', 'ล่าช้า', 'ติดปัญหา'].includes(s)) {
       return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-500/20';
@@ -1354,12 +1354,14 @@ export class Pmdt02Component implements OnInit {
   getStatusText(status?: string): string {
     if (!status) return '-';
     const s = status.trim().toLowerCase();
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
     if (['not started', 'not_started'].includes(s)) return 'ยังไม่เริ่ม';
     if (['in progress', 'in_progress', 'doing'].includes(s)) return 'กำลังดำเนินการ';
     if (['done', 'complete', 'completed'].includes(s)) return 'เสร็จสิ้น';
     if (['delayed'].includes(s)) return 'ล่าช้า';
     if (['todo'].includes(s)) return 'รอเริ่ม';
-    if (['waiting review', 'waiting_review', 'review'].includes(s)) return 'รอ Review';
+    if (['waiting review', 'waiting_review', 'review', 'in review'].includes(s)) return 'อยู่ระหว่างตรวจสอบ';
     if (['waiting fix', 'waiting_fix'].includes(s)) return 'รอแก้ไข';
     if (['blocked'].includes(s)) return 'ติดปัญหา';
     if (['cancelled'].includes(s)) return 'ยกเลิก';

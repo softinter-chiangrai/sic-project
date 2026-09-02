@@ -239,25 +239,23 @@ export class SicRequirementPreviewComponent implements OnChanges {
   }
 
   getStatusClass(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'draft',
-      'In Review': 'in-review',
-      Approved: 'approved',
-      Changed: 'changed',
-      Cancelled: 'cancelled',
-    };
-    return map[status] || 'draft';
+    const s = (status || '').trim().toLowerCase();
+    if (['draft', 'ร่าง'].includes(s)) return 'draft';
+    if (['in review', 'in_review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'in-review';
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'approved';
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'changed';
+    if (['cancelled', 'ยกเลิก'].includes(s)) return 'cancelled';
+    return 'draft';
   }
 
   getStatusText(status: string): string {
-    const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
-    };
-    return map[status] || status;
+    const s = (status || '').trim().toLowerCase();
+    if (['draft', 'ร่าง'].includes(s)) return 'ร่าง';
+    if (['in review', 'in_review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'อยู่ระหว่างตรวจสอบ';
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
+    if (['cancelled', 'ยกเลิก'].includes(s)) return 'ยกเลิก';
+    return status || '-';
   }
 
   getPriorityLabel(priority: string): string {
