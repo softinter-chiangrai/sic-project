@@ -74,7 +74,6 @@
               <th class="px-4 py-3 text-left">สรุปการเปลี่ยนแปลง (Change Summary)</th>
               <th class="px-4 py-3 text-left">ผู้บันทึก (Author)</th>
               <th class="px-4 py-3 text-left">วันที่บันทึก (Date)</th>
-              <th class="px-4 py-3 text-left">สถานะ (Status)</th>
               <th class="px-4 py-3 text-right">จัดการ (Actions)</th>
             </tr>
           </thead>
@@ -82,7 +81,14 @@
             @for (ver of filteredVersions(); track ver.id) {
               <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
                 <td class="px-4 py-3.5">
-                  <span class="font-mono font-bold text-[var(--text-active)]">{{ ver.versionNo }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <span class="font-mono font-bold text-[var(--text-active)]">{{ ver.versionNo }}</span>
+                    @if (ver.isActive) {
+                      <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                        Active
+                      </span>
+                    }
+                  </div>
                 </td>
                 <td class="px-4 py-3.5">
                   <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
@@ -104,23 +110,19 @@
                 <td class="px-4 py-3.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
                   {{ ver.createdDate ? (ver.createdDate | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}
                 </td>
-                <td class="px-4 py-3.5">
-                  @if (ver.isActive) {
-                    <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                      ★ Active
-                    </span>
-                  } @else {
-                    <span class="px-2 py-0.5 rounded-full text-[11px] text-[var(--text-muted)] bg-gray-100 dark:bg-gray-800">
-                      History
-                    </span>
-                  }
-                </td>
                 <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                  <div class="flex items-center justify-end gap-2">
+                  <div class="flex items-center justify-end gap-1.5">
+                    <button
+                      (click)="onViewContent(ver)"
+                      class="p-1.5 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 rounded-lg transition-all flex items-center gap-1 text-xs font-medium"
+                      title="เปิดดูเนื้อหาเอกสารเวอร์ชันนี้"
+                    >
+                      <i class="bi bi-eye text-base"></i>
+                    </button>
                     @if (!ver.isActive) {
                       <button
                         (click)="onActivate(ver.id)"
-                        class="p-1.5 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 rounded-lg transition-all"
+                        class="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-all"
                         title="ตั้งเป็น Active Version"
                       >
                         <i class="bi bi-check-circle text-base"></i>

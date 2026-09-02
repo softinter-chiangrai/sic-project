@@ -11,6 +11,8 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
+import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
+
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
@@ -104,6 +106,17 @@ export class Pmdt19Component implements OnInit {
   onDocIdChange(docId: string): void {
     this.filterDocId.set(docId);
     this.applyFilter();
+  }
+
+  onViewContent(ver: DocumentVersionModel): void {
+    this.dialog.open({
+      type: 'info',
+      title: 'เนื้อหาเอกสารเวอร์ชัน ' + ver.versionNo,
+      component: Pmdt19ViewDialogComponent,
+      componentInputs: {
+        version: ver,
+      },
+    });
   }
 
   onActivate(id: string): void {

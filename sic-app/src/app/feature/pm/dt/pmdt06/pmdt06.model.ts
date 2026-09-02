@@ -38,6 +38,7 @@ export interface ChangeImpact {
 
 export interface ChangeRequestItem {
   id: string;
+  crCode?: string;
   title: string;
   description: string;
   changeReason: string;

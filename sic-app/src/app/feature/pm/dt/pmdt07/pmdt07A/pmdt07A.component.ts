@@ -686,10 +686,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     private navigateBack(projectId?: string): void {
         if (projectId) {
-            this.navigation.navigate(['/feature/pm/specification'], { queryParams: { projectId } });
-        } else {
-            this.navigation.navigate(['/feature/pm/specification']);
+            this.customerState.setProject(projectId);
         }
+        this.navigation.navigate(['/feature/pm/specification']);
     }
 
     onBack(): void {

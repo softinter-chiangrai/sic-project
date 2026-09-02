@@ -13,6 +13,9 @@ import java.util.UUID;
 @Data
 @EqualsAndHashCode(callSuper = true)
 public class PmChangeRequest extends BaseEntity {
+    @Column(name = "cr_code", length = 50)
+    private String crCode;
+
     @Column(name = "target_type", nullable = false, length = 50)
     private String targetType; // REQUIREMENT, SPECIFICATION, ER, DFD, TASK
 

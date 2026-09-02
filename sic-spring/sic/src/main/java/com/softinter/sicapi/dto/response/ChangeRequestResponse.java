@@ -9,6 +9,7 @@ import java.util.UUID;
 @Data
 public class ChangeRequestResponse {
     private UUID id;
+    private String crCode;
     private UUID projectId;
     private String projectName;
     private String targetType;

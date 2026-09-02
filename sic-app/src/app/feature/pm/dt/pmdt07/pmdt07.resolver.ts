@@ -14,8 +14,13 @@ import { PmSpecificationModel } from './pmdt07.model';
 export const pmdt07Resolver: ResolveFn<PaginationResponse<PmSpecificationModel> | null> = (route) => {
     const service = inject(Pmdt07Service);
     const customerState = inject(CustomerStateService);
-    const projectId = route.queryParams['projectId'] || customerState.getProjectId();
-    const requirementId = route.queryParams['requirementId'] || customerState.getRequirementId();
+    const qProjectId = route.queryParams['projectId'];
+    const qRequirementId = route.queryParams['requirementId'];
+    if (qProjectId) customerState.setProject(qProjectId);
+    if (qRequirementId) customerState.setRequirement(qRequirementId);
+
+    const projectId = qProjectId || customerState.getProjectId();
+    const requirementId = qRequirementId || customerState.getRequirementId();
 
     return service.getList({ projectId, requirementId, page: 0, size: 10 }).pipe(
         catchError((err) => {

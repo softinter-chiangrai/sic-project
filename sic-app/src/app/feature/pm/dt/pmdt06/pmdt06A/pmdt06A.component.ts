@@ -93,6 +93,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     formData: SicFromData<any> = new SicFromData<any>(this.fb.group({
         id: [null],
         projectId: [null],
+        crCode: [null, Validators.required],
         targetType: ['REQUIREMENT', Validators.required],
         targetId: [null, Validators.required],
         title: [null, Validators.required],
@@ -345,7 +346,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         .submitForApproval({
                             documentType: 'CHANGE_REQUEST',
                             documentId: id,
-                            documentCode: 'CR-' + id.substring(0, 8).toUpperCase(),
+                            documentCode: data.crCode || ('CR-' + id.substring(0, 8).toUpperCase()),
                             documentTitle: data.title || 'คำขอเปลี่ยนแปลง',
                             flowId: this.selectedFlowId,
                             comment: 'ส่งขออนุมัติ Change Request',

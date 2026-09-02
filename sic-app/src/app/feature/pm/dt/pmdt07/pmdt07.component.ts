@@ -60,6 +60,23 @@ export class Pmdt07Component implements OnInit {
     Math = Math;
 
     ngOnInit(): void {
+        const qReqId = this.route.snapshot.queryParams['requirementId'];
+        const qProjId = this.route.snapshot.queryParams['projectId'];
+        if (qReqId) {
+            this.customerState.setRequirement(qReqId);
+        }
+        if (qProjId) {
+            this.customerState.setProject(qProjId);
+        }
+
+        if (qReqId || qProjId) {
+            this.router.navigate([], {
+                relativeTo: this.route,
+                queryParams: {},
+                replaceUrl: true,
+            });
+        }
+
         const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
         if (resolved && resolved.data) {
             const data = resolved.data || [];
@@ -73,8 +90,8 @@ export class Pmdt07Component implements OnInit {
 
     loadData(): void {
         this.isLoading.set(true);
-        const requirementId = this.route.snapshot.queryParams['requirementId'] || this.customerState.getRequirementId();
-        const projectId = this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
+        const requirementId = this.customerState.getRequirementId();
+        const projectId = this.customerState.getProjectId();
         const params = {
             projectId: projectId || undefined,
             requirementId: requirementId || undefined,
@@ -137,8 +154,9 @@ export class Pmdt07Component implements OnInit {
     readonly statusOptions = [
         { value: 'Draft', text: 'ร่าง' },
         { value: 'Review', text: 'ตรวจสอบ' },
-        { value: 'Approved', text: 'อนุมัติ' },
+        { value: 'Approved', text: 'อนุมัติแล้ว' },
         { value: 'Released', text: 'เผยแพร่' },
+        { value: 'Changed', text: 'เปลี่ยนแปลง' },
     ];
 
     onFilterChange(value: any): void {
@@ -155,33 +173,15 @@ export class Pmdt07Component implements OnInit {
     }
 
     goToAdd(): void {
-        const projectId = this.customerState.getProjectId();
-        const requirementId = this.customerState.getRequirementId();
-        const queryParams: any = {};
-        if (projectId) queryParams.projectId = projectId;
-        if (requirementId) queryParams.requirementId = requirementId;
-
-        this.navigation.navigate(['/feature/pm/specification/new'], { queryParams });
+        this.navigation.navigate(['/feature/pm/specification/new']);
     }
 
     goToEdit(id: string): void {
-        const projectId = this.customerState.getProjectId();
-        const requirementId = this.customerState.getRequirementId();
-        const queryParams: any = {};
-        if (projectId) queryParams.projectId = projectId;
-        if (requirementId) queryParams.requirementId = requirementId;
-
-        this.navigation.navigate(['/feature/pm/specification', id, 'edit'], { queryParams });
+        this.navigation.navigate(['/feature/pm/specification', id, 'edit']);
     }
 
     goToView(id: string): void {
-        const projectId = this.customerState.getProjectId();
-        const requirementId = this.customerState.getRequirementId();
-        const queryParams: any = {};
-        if (projectId) queryParams.projectId = projectId;
-        if (requirementId) queryParams.requirementId = requirementId;
-
-        this.navigation.navigate(['/feature/pm/specification', id, 'view'], { queryParams });
+        this.navigation.navigate(['/feature/pm/specification', id, 'view']);
     }
 
     printDocument(spec: PmSpecificationModel): void {
@@ -231,45 +231,51 @@ export class Pmdt07Component implements OnInit {
     }
 
     getStatusClass(status: string): string {
-        const map: Record<string, string> = {
-            Draft: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-            Review: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-            Approved: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-            Released: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-        };
-        return map[status] || 'bg-gray-100 text-gray-600';
+        const s = (status || '').trim().toLowerCase();
+        if (['draft', 'ร่าง'].includes(s)) return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+        if (['review', 'in review', 'in_review', 'ตรวจสอบ', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+        if (['approved', 'อนุมัติ', 'อนุมัติแล้ว'].includes(s)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+        if (['released', 'เผยแพร่'].includes(s)) return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
+        if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400';
+        if (['cancelled', 'ยกเลิก'].includes(s)) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+        return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     }
 
     getStatusText(status: string): string {
-        const map: Record<string, string> = {
-            Draft: 'ร่าง',
-            Review: 'ตรวจสอบ',
-            Approved: 'อนุมัติ',
-            Released: 'เผยแพร่',
-        };
-        return map[status] || status;
+        const s = (status || '').trim().toLowerCase();
+        if (['draft', 'ร่าง'].includes(s)) return 'ร่าง';
+        if (['review', 'in review', 'in_review', 'ตรวจสอบ', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'ตรวจสอบ';
+        if (['approved', 'อนุมัติ', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
+        if (['released', 'เผยแพร่'].includes(s)) return 'เผยแพร่';
+        if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
+        if (['cancelled', 'ยกเลิก'].includes(s)) return 'ยกเลิก';
+        return status || '-';
     }
 
     getApprovalStatusClass(status?: string): string {
+        const s = (status || '').trim().toUpperCase();
         const map: Record<string, string> = {
             PENDING: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+            IN_REVIEW: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
             APPROVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
             REJECTED: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
             NEED_REVISION: 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400',
             CANCELLED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
         };
-        return status ? map[status] || 'bg-gray-100 text-gray-600' : 'bg-gray-100 text-gray-600';
+        return map[s] || 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
     }
 
     getApprovalStatusText(status?: string): string {
+        const s = (status || '').trim().toUpperCase();
         const map: Record<string, string> = {
             PENDING: 'รออนุมัติ',
+            IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
             APPROVED: 'อนุมัติแล้ว',
             REJECTED: 'ปฏิเสธ',
             NEED_REVISION: 'ต้องแก้ไข',
             CANCELLED: 'ยกเลิก',
         };
-        return status ? map[status] || '-' : '-';
+        return map[s] || status || '-';
     }
 
     formatDate(dateStr: string): string {

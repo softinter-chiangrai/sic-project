@@ -68,6 +68,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             }
         }
         cr.setProjectId(projId);
+        if (request.getCrCode() != null && !request.getCrCode().isBlank()) {
+            cr.setCrCode(request.getCrCode().trim());
+        } else {
+            long count = projId != null ? changeRequestRepository.countByProjectIdAndIsDeleteFalse(projId) + 1 : 1;
+            cr.setCrCode("CR-" + String.format("%03d", count));
+        }
         cr.setTargetType(request.getTargetType());
         cr.setTargetId(request.getTargetId());
         cr.setTitle(request.getTitle());
@@ -128,12 +134,16 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         // ✅ Auto Diff Detection
         List<String> changes = new ArrayList<>();
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รหัสคำขอ (CR Code)", cr.getCrCode(), request.getCrCode());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อคำขอ (Title)", cr.getTitle(), request.getTitle());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", cr.getDescription(), request.getDescription());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เหตุผล (Reason)", cr.getChangeReason(), request.getChangeReason());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
         String diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
 
+        if (request.getCrCode() != null && !request.getCrCode().isBlank()) {
+            cr.setCrCode(request.getCrCode().trim());
+        }
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
         cr.setChangeReason(request.getChangeReason());
@@ -262,10 +272,13 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         // ค้นหาหรือระบุ flow สำหรับอนุมัติ Change Request (สมมติว่าใช้ flow ตัวแรกที่ผูกกับ Change Request หรือกำหนดดีฟอลต์)
         // เนื่องจาก ApprovalServiceImpl มี helper `updateDocumentStatusOnSubmit` ที่จะคอยอัปเดตเป็น SUBMITTED ให้เมื่อ submit สำเร็จ
         // เราทำการเรียก submitForApproval ไปที่ ApprovalService
+        String docCode = cr.getCrCode() != null && !cr.getCrCode().isBlank()
+                ? cr.getCrCode()
+                : "CR-" + cr.getId().toString().substring(0, 8).toUpperCase();
         com.softinter.sicapi.dto.request.ApprovalSubmitRequest submitReq = new com.softinter.sicapi.dto.request.ApprovalSubmitRequest();
         submitReq.setDocumentType("CHANGE_REQUEST");
         submitReq.setDocumentId(cr.getId());
-        submitReq.setDocumentCode("CR-" + cr.getId().toString().substring(0, 8).toUpperCase());
+        submitReq.setDocumentCode(docCode);
         submitReq.setDocumentTitle(cr.getTitle());
         submitReq.setComment("ส่งขออนุมัติ Change Request: " + cr.getTitle());
         
@@ -421,6 +434,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private ChangeRequestResponse toResponse(PmChangeRequest cr) {
         ChangeRequestResponse response = new ChangeRequestResponse();
         response.setId(cr.getId());
+        response.setCrCode(cr.getCrCode());
         response.setProjectId(cr.getProjectId());
         if (cr.getProjectId() != null) {
             projectRepository.findById(cr.getProjectId())

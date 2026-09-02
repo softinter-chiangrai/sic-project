@@ -25,4 +25,6 @@ public interface PmChangeRequestRepository
             "AND cr.status NOT IN ('REJECTED', 'CANCELLED', 'IMPLEMENTED')")
     List<PmChangeRequest> findActiveByTarget(@Param("targetType") String targetType,
             @Param("targetId") UUID targetId);
+
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
 }

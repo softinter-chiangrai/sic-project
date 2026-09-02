@@ -316,9 +316,13 @@ export class Pmrt05Component implements OnInit {
   createSpec() {
     const projId = this.projectId();
     if (!projId) return;
-    this.navigation.navigate(['/feature/pm/specification'], {
-      queryParams: { projectId: projId, requirementId: this.requirementId() },
-    });
+    if (this.requirementId()) {
+      this.customerState.setRequirement(this.requirementId()!, this.requirement()?.title);
+    }
+    if (projId) {
+      this.customerState.setProject(projId);
+    }
+    this.navigation.navigate(['/feature/pm/specification']);
   }
 
   createDiagram(): void {

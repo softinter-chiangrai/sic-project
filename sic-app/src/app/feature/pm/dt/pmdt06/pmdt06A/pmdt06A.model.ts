@@ -21,6 +21,7 @@ export interface Pmdt06APageData {
 export interface ChangeRequestFormModel {
   id?: string;
   projectId?: string;
+  crCode?: string;
   targetType: string;
   targetId: string;
   title: string;

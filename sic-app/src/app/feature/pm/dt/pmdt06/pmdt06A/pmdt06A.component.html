@@ -10,6 +10,17 @@
   }
   <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- CR Code -->
+        <div>
+          <sic-input
+            label="รหัสคำขอเปลี่ยนแปลง (CR Code)"
+            formControlName="crCode"
+            [required]="true"
+            placeholder="CR-001"
+            [errorMessages]="{ required: 'กรุณากรอกรหัสคำขอเปลี่ยนแปลง' }"
+          ></sic-input>
+        </div>
+
         <!-- Target Type Selection -->
         <div>
           <sic-combobox
@@ -22,7 +33,7 @@
         </div>
 
         <!-- Target Document Combobox -->
-        <div>
+        <div class="md:col-span-2">
           <sic-combobox
             label="เอกสารที่ขอเปลี่ยนแปลง"
             formControlName="targetId"

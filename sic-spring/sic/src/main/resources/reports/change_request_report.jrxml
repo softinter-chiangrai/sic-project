@@ -22,7 +22,7 @@
 	</parameter>
 
 	<query language="sql"><![CDATA[SELECT 
-                SUBSTRING(CAST(cr.id AS text), 1, 8)          AS "crCode",
+                COALESCE(cr.cr_code, SUBSTRING(CAST(cr.id AS text), 1, 8)) AS "crCode",
                 cr.title                                      AS "title",
                 COALESCE(p.project_name, '-')                 AS "projectName",
                 COALESCE(c.company_name_local, c.company_name_en, '-') AS "customerName",

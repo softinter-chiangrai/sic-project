@@ -11,6 +11,7 @@ import java.util.UUID;
 public class ChangeRequestRequest {
     private UUID id;
     private UUID projectId;
+    private String crCode;
     @NotBlank(message = "Target type is required")
     private String targetType;
     @NotNull(message = "Target ID is required")
