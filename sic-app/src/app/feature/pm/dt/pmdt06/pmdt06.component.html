@@ -165,7 +165,7 @@
 
                   <sic-table-actions
                     [showPrint]="true"
-                    [showEdit]="cr.status === 'DRAFT' || cr.status === 'SUBMITTED'"
+                    [showEdit]="cr.status === 'DRAFT' || cr.status === 'REJECTED'"
                     [showDelete]="true"
                     (onView)="goToView(cr.id)"
                     (onPrint)="exportPdf(cr.id)"

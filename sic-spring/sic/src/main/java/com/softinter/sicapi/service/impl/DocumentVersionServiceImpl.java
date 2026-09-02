@@ -156,6 +156,12 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     @Transactional
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData) {
+        createVersion(documentType, documentId, projectId, documentCode, versionNo, changeSummary, snapshotData, null, null);
+    }
+
+    @Override
+    @Transactional
+    public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData, UUID fileRefId, String filePath) {
         UUID previousVersionId = versionRepository
                 .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId)
                 .map(PmDocumentVersion::getId)
@@ -171,10 +177,12 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         version.setChangeSummary(changeSummary);
         version.setPreviousVersionId(previousVersionId);
         version.setSnapshotData(snapshotData);
+        version.setFileRefId(fileRefId);
+        version.setFilePath(filePath);
         version.setIsActive(true);
         versionRepository.save(version);
-        log.info("Document version created: {} - {} - Project: {} - Version: {} - PrevVersion: {}", 
-                documentType, documentId, projectId, versionNo, previousVersionId);
+        log.info("Document version created: {} - {} - Project: {} - Version: {} - FileRef: {} - PrevVersion: {}", 
+                documentType, documentId, projectId, versionNo, fileRefId, previousVersionId);
     }
 
     @Override

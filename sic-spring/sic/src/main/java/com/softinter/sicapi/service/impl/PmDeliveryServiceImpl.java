@@ -18,6 +18,7 @@ import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmDeliveryService;
 import com.softinter.sicapi.service.PmInvoiceService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -138,7 +139,8 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                     entity.getProjectId(),
                     entity.getDeliveryCode(),
                     "v" + entity.getDeliveryVersion(),
-                    "สร้างเอกสารส่งมอบงวดงาน (Initial delivery)"
+                    "สร้างเอกสารส่งมอบงวดงาน (Initial delivery)",
+                    JsonSnapshotHelper.toJson(toResponse(entity))
             );
 
             // Save checklists
@@ -181,11 +183,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity = deliveryRepository.save(entity);
 
             // Snapshot data for versioning
-            String snapshotJson = null;
-            try {
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                snapshotJson = mapper.writeValueAsString(entity);
-            } catch (Exception ignored) {}
+            String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
             String nextVersion = "v" + (entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "0.1");
             documentVersionService.createVersion(

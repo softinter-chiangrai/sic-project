@@ -31,6 +31,8 @@ public interface DocumentVersionService {
 
     void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData);
 
+    void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData, UUID fileRefId, String filePath);
+
     String incrementVersion(String currentVersion);
 
     String promoteToMajorVersion(String currentVersion);

@@ -2,16 +2,17 @@ import { Component, inject, Input, OnInit, ChangeDetectionStrategy, computed, si
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../../environments/environment';
 import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
-import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 
 @Component({
   selector: 'app-pmdt19-view-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent, SicDatePipe, SicUploadComponent],
+  imports: [CommonModule, FormsModule, SicButtonComponent, SicDatePipe],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="w-[min(92vw,48rem)] max-h-[85vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col" style="border-color: var(--border);">
@@ -158,20 +159,56 @@ import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-up
         }
 
         <!-- Attached File Section if any -->
-        @if (version.fileRefId || version.filePath) {
+        @if (attachedFiles().length > 0) {
+          <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-3">
+            <h4 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+              ไฟล์แนบประจำเวอร์ชัน (Attached Files) - {{ attachedFiles().length }} ไฟล์
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              @for (file of attachedFiles(); track file.id || file.fileUrl || $index) {
+                <div class="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg)] border border-[var(--border)] hover:border-[var(--crm-primary)] transition-colors group">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center bg-[var(--sidebar)] border border-[var(--border)] text-[var(--crm-primary)] shrink-0">
+                    <i class="bi text-lg" [class]="getFileIcon(file.fileName || file.name || '')"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="text-xs font-medium text-[var(--text-active)] truncate" [title]="file.fileName || file.name || 'ไฟล์แนบ'">
+                      {{ file.fileName || file.name || 'ไฟล์แนบ' }}
+                    </div>
+                    <div class="text-[10px] text-[var(--text-muted)]">
+                      {{ formatFileSize(file.fileSize || file.size) }}
+                    </div>
+                  </div>
+                  @if (file.fileUrl || file.accessUrl || file.downloadUrl) {
+                    <a [href]="file.fileUrl || file.accessUrl || file.downloadUrl" target="_blank" download class="p-1.5 rounded-md hover:bg-[var(--sidebar)] text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors" title="ดาวน์โหลด/เปิดไฟล์">
+                      <i class="bi bi-download"></i>
+                    </a>
+                  }
+                </div>
+              }
+            </div>
+          </div>
+        } @else if (version.fileRefId || parsedSnapshot()?.uploadGroupId) {
+          <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-2">
+            <h4 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+              ไฟล์แนบประจำเวอร์ชัน (Attached Files)
+            </h4>
+            <div class="text-xs text-[var(--text-muted)] flex items-center gap-2">
+              <i class="bi bi-info-circle"></i>
+              <span>ไม่มีไฟล์แนบในเวอร์ชันนี้</span>
+            </div>
+          </div>
+        } @else if (version.filePath) {
           <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-3">
             <h4 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
               <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
               ไฟล์แนบประจำเวอร์ชัน (Attached File)
             </h4>
-            @if (version.fileRefId) {
-              <sic-upload [ngModel]="version.fileRefId" [disabled]="true"></sic-upload>
-            } @else if (version.filePath) {
-              <div class="flex items-center gap-2 text-sm text-[var(--crm-primary)]">
-                <i class="bi bi-file-earmark"></i>
-                <a [href]="version.filePath" target="_blank" class="hover:underline">{{ version.filePath }}</a>
-              </div>
-            }
+            <div class="flex items-center gap-2 text-sm text-[var(--crm-primary)]">
+              <i class="bi bi-file-earmark"></i>
+              <a [href]="version.filePath" target="_blank" class="hover:underline">{{ version.filePath }}</a>
+            </div>
           </div>
         }
       </div>
@@ -220,9 +257,11 @@ export class Pmdt19ViewDialogComponent implements OnInit {
 
   private readonly dialogService = inject(DialogService);
   private readonly sanitizer = inject(DomSanitizer);
+  private readonly http = inject(HttpClient);
 
   parsedSnapshot = signal<any>(null);
   formattedJson = signal<string>('');
+  attachedFiles = signal<any[]>([]);
 
   ngOnInit(): void {
     if (this.version?.snapshotData) {
@@ -232,11 +271,67 @@ export class Pmdt19ViewDialogComponent implements OnInit {
           : this.version.snapshotData;
         this.parsedSnapshot.set(parsed);
         this.formattedJson.set(JSON.stringify(parsed, null, 2));
+
+        // Load files from snapshot
+        if (parsed.uploadReferences && Array.isArray(parsed.uploadReferences) && parsed.uploadReferences.length > 0) {
+          this.attachedFiles.set(parsed.uploadReferences);
+        } else if (parsed.uploadGroupData && Array.isArray(parsed.uploadGroupData) && parsed.uploadGroupData.length > 0) {
+          this.attachedFiles.set(parsed.uploadGroupData);
+        } else if (parsed.uploadGroupId || this.version.fileRefId) {
+          const gId = parsed.uploadGroupId || this.version.fileRefId;
+          this.fetchFilesByGroupId(gId);
+        }
       } catch (e) {
         this.parsedSnapshot.set(null);
         this.formattedJson.set(this.version.snapshotData);
+        if (this.version.fileRefId) {
+          this.fetchFilesByGroupId(this.version.fileRefId);
+        }
       }
+    } else if (this.version?.fileRefId) {
+      this.fetchFilesByGroupId(this.version.fileRefId);
     }
+  }
+
+  private fetchFilesByGroupId(groupId: string): void {
+    this.http.get<any>(`${environment.apiBaseUrl}/api/storage/group/${groupId}`).subscribe({
+      next: (res) => {
+        const list = Array.isArray(res) ? res : (res?.data || []);
+        this.attachedFiles.set(list);
+      },
+      error: (err) => {
+        console.warn('Could not fetch version files:', err);
+      }
+    });
+  }
+
+  getFileIcon(fileName: string): string {
+    const ext = fileName?.split('.').pop()?.toLowerCase() || '';
+    switch (ext) {
+      case 'pdf': return 'bi-filetype-pdf text-red-400';
+      case 'doc':
+      case 'docx': return 'bi-filetype-docx text-blue-400';
+      case 'xls':
+      case 'xlsx': return 'bi-filetype-xlsx text-emerald-400';
+      case 'ppt':
+      case 'pptx': return 'bi-filetype-pptx text-orange-400';
+      case 'jpg':
+      case 'jpeg':
+      case 'png':
+      case 'gif':
+      case 'webp': return 'bi-file-earmark-image text-purple-400';
+      case 'zip':
+      case 'rar': return 'bi-file-earmark-zip text-amber-400';
+      default: return 'bi-file-earmark-text text-gray-400';
+    }
+  }
+
+  formatFileSize(bytes?: number): string {
+    if (!bytes || bytes === 0) return '';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
   sanitize(html: string): SafeHtml {

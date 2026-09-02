@@ -212,10 +212,15 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         this.selectedTargetType.set(data.targetType);
                     }
                     this.formData.patchValue(data);
-                    if (data.status === 'APPROVED' || data.status === 'REJECTED' || data.status === 'IMPLEMENTED') {
+                    if (data.status === 'SUBMITTED' || data.status === 'APPROVED' || data.status === 'IMPLEMENTED') {
                         this.isView = true;
                         this.isEdit = false;
                         this.form.disable();
+                    } else if (data.status === 'REJECTED') {
+                        // If rejected, allow editing and re-submitting for approval
+                        this.isView = false;
+                        this.isEdit = true;
+                        this.form.enable();
                     } else if (this.isView) {
                         this.form.disable();
                     }

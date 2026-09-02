@@ -25,6 +25,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmCustomerContractService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
@@ -80,107 +81,103 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     @Override
     @Transactional
     public UUID saveContract(UUID businessId, PmCustomerContractRequest request) {
-    PmCustomerContract contract;
-    boolean isNew = (request.getId() == null);
-    String diffSummary = "สร้างสัญญาโครงการ (Initial contract)";
+        PmCustomerContract contract;
+        boolean isNew = (request.getId() == null);
+        String diffSummary = "สร้างสัญญาโครงการ (Initial contract)";
 
-    if (!isNew) {
-        contract = contractRepository.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + request.getId()));
-        contract.setRowVersion(request.getRowVersion());
+        if (!isNew) {
+            contract = contractRepository.findById(request.getId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + request.getId()));
+            contract.setRowVersion(request.getRowVersion());
 
-        // ✅ Auto Diff Detection
-        List<String> changes = new ArrayList<>();
-        DocumentDiffHelper.checkChange(changes, "เลขที่สัญญา (Contract No)", contract.getContractNo(), request.getContractNo());
-        DocumentDiffHelper.checkChange(changes, "ประเภทสัญญา (Type)", contract.getContractType(), request.getContractType());
-        DocumentDiffHelper.checkChange(changes, "สถานะลงนาม (Sign Status)", contract.getSignStatus(), request.getSignStatus());
-        DocumentDiffHelper.checkChange(changes, "มูลค่าสัญญา (Value)", contract.getContractValue(), request.getContractValue());
-        DocumentDiffHelper.checkChange(changes, "เงื่อนไขการชำระเงิน (Payment Terms)", contract.getPaymentTerms(), request.getPaymentTerms());
-        DocumentDiffHelper.checkChange(changes, "ขอบเขตงาน (Scope)", contract.getScopeSummary(), request.getScopeSummary());
-        diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตสัญญา " + (request.getContractNo() != null ? request.getContractNo() : ""));
-    } else {
-        contract = new PmCustomerContract();
-        contract.setBusinessId(businessId);
-        contract.setIsDelete(false);
+            // ✅ Auto Diff Detection
+            List<String> changes = new ArrayList<>();
+            DocumentDiffHelper.checkChange(changes, "เลขที่สัญญา (Contract No)", contract.getContractNo(), request.getContractNo());
+            DocumentDiffHelper.checkChange(changes, "ประเภทสัญญา (Type)", contract.getContractType(), request.getContractType());
+            DocumentDiffHelper.checkChange(changes, "สถานะลงนาม (Sign Status)", contract.getSignStatus(), request.getSignStatus());
+            DocumentDiffHelper.checkChange(changes, "มูลค่าสัญญา (Value)", contract.getContractValue(), request.getContractValue());
+            DocumentDiffHelper.checkChange(changes, "เงื่อนไขการชำระเงิน (Payment Terms)", contract.getPaymentTerms(), request.getPaymentTerms());
+            DocumentDiffHelper.checkChange(changes, "ขอบเขตงาน (Scope)", contract.getScopeSummary(), request.getScopeSummary());
+            diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตสัญญา " + (request.getContractNo() != null ? request.getContractNo() : ""));
+        } else {
+            contract = new PmCustomerContract();
+            contract.setBusinessId(businessId);
+            contract.setIsDelete(false);
+        }
+
+        contract.setCustomerId(request.getCustomerId());
+        contract.setProjectId(request.getProjectId());
+
+        contract.setContractNo(request.getContractNo());
+        contract.setContractType(request.getContractType());
+        contract.setStartDate(request.getStartDate());
+        contract.setEndDate(request.getEndDate());
+        contract.setContractValue(request.getContractValue());
+        contract.setPaymentTerms(request.getPaymentTerms());
+        contract.setScopeSummary(request.getScopeSummary());
+        contract.setSignStatus(request.getSignStatus());
+        contract.setRenewalStatus(request.getRenewalStatus());
+        contract.setParentContractId(request.getParentContractId());
+        contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+        contract = contractRepository.save(contract);
+
+        // ✅ ถ้าเป็นการสร้างสัญญาใหม่จากการต่อสัญญา (มี parentContractId) ให้อัปเดตสัญญาเดิมเป็น "ต่อแล้ว"
+        if (isNew && request.getParentContractId() != null) {
+            contractRepository.findById(request.getParentContractId()).ifPresent(parent -> {
+                parent.setRenewalStatus("ต่อแล้ว");
+                contractRepository.save(parent);
+
+                // บันทึก Version/Audit Log ให้สัญญาเดิมด้วย
+                documentVersionService.createVersion(
+                        "CONTRACT",
+                        parent.getId(),
+                        parent.getProjectId(),
+                        parent.getContractNo(),
+                        "v-renewed",
+                        "ต่อสัญญาฉบับใหม่: " + request.getContractNo(),
+                        null
+                );
+            });
+        }
+
+        // Snapshot data
+        String snapshotJson = JsonSnapshotHelper.toJson(toResponse(contract));
+
+        // ✅ Create document version
+        documentVersionService.createVersion(
+                "CONTRACT",
+                contract.getId(),
+                contract.getProjectId(),
+                contract.getContractNo(),
+                isNew ? "v1.0" : "v1.1",
+                diffSummary,
+                snapshotJson
+        );
+        
+        // ✅ เก็บ contractId ไว้ในตัวแปร final ก่อนใช้ใน Lambda
+        final UUID contractId = contract.getId();
+
+        if (request.getProjectId() != null) {
+            // เคลียร์ contractId ของโครงการเก่าที่เคยชี้มาที่สัญญานี้
+            projectRepository.findByContractIdAndIsDeleteFalse(contractId)
+                    .forEach(oldProject -> {
+                        if (!oldProject.getId().equals(request.getProjectId())) {
+                            oldProject.setContractId(null);
+                            projectRepository.save(oldProject);
+                        }
+                    });
+
+            // อัปเดต contractId ให้กับโครงการที่เลือก
+            projectRepository.findById(request.getProjectId())
+                    .ifPresent(newProject -> {
+                        newProject.setContractId(contractId);
+                        projectRepository.save(newProject);
+                    });
+        }
+
+        return contract.getId();
     }
-
-    contract.setCustomerId(request.getCustomerId());
-    contract.setProjectId(request.getProjectId());
-
-    contract.setContractNo(request.getContractNo());
-    contract.setContractType(request.getContractType());
-    contract.setStartDate(request.getStartDate());
-    contract.setEndDate(request.getEndDate());
-    contract.setContractValue(request.getContractValue());
-    contract.setPaymentTerms(request.getPaymentTerms());
-    contract.setScopeSummary(request.getScopeSummary());
-    contract.setSignStatus(request.getSignStatus());
-    contract.setRenewalStatus(request.getRenewalStatus());
-    contract.setParentContractId(request.getParentContractId());
-    contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
-
-    contract = contractRepository.save(contract);
-
-    // ✅ ถ้าเป็นการสร้างสัญญาใหม่จากการต่อสัญญา (มี parentContractId) ให้อัปเดตสัญญาเดิมเป็น "ต่อแล้ว"
-    if (isNew && request.getParentContractId() != null) {
-        contractRepository.findById(request.getParentContractId()).ifPresent(parent -> {
-            parent.setRenewalStatus("ต่อแล้ว");
-            contractRepository.save(parent);
-
-            // บันทึก Version/Audit Log ให้สัญญาเดิมด้วย
-            documentVersionService.createVersion(
-                    "CONTRACT",
-                    parent.getId(),
-                    parent.getProjectId(),
-                    parent.getContractNo(),
-                    "v-renewed",
-                    "ต่อสัญญาฉบับใหม่: " + request.getContractNo(),
-                    null
-            );
-        });
-    }
-
-    // Snapshot data
-    String snapshotJson = null;
-    try {
-        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-        snapshotJson = mapper.writeValueAsString(contract);
-    } catch (Exception ignored) {}
-
-    // ✅ Create document version
-    documentVersionService.createVersion(
-            "CONTRACT",
-            contract.getId(),
-            contract.getProjectId(),
-            contract.getContractNo(),
-            isNew ? "v1.0" : "v1.1",
-            diffSummary,
-            snapshotJson
-    );
-    
-    // ✅ เก็บ contractId ไว้ในตัวแปร final ก่อนใช้ใน Lambda
-    final UUID contractId = contract.getId();
-
-    if (request.getProjectId() != null) {
-        // เคลียร์ contractId ของโครงการเก่าที่เคยชี้มาที่สัญญานี้
-        projectRepository.findByContractIdAndIsDeleteFalse(contractId)
-                .forEach(oldProject -> {
-                    if (!oldProject.getId().equals(request.getProjectId())) {
-                        oldProject.setContractId(null);
-                        projectRepository.save(oldProject);
-                    }
-                });
-
-        // อัปเดต contractId ให้กับโครงการที่เลือก
-        projectRepository.findById(request.getProjectId())
-                .ifPresent(newProject -> {
-                    newProject.setContractId(contractId);
-                    projectRepository.save(newProject);
-                });
-    }
-
-    return contract.getId();
-}
 
     @Override
     public void deleteContract(UUID id) {

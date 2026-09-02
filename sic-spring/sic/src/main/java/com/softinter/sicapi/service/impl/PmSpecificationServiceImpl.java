@@ -19,6 +19,7 @@ import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -143,15 +144,19 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             PmSpecification saved = specificationRepository.save(spec);
 
-            // ✅ Create initial document version
-            if (saved.getProject() != null) {
+            // ✅ Create initial document version with snapshot & fileRefId
+            UUID projIdForVersion = saved.getProject() != null ? saved.getProject().getId() : request.getProjectId();
+            if (projIdForVersion != null) {
                 documentVersionService.createVersion(
                         "SPEC",
                         saved.getId(),
-                        saved.getProject().getId(),
+                        projIdForVersion,
                         saved.getSpecificationCode(),
                         saved.getVersion() != null ? saved.getVersion() : "v1.0",
-                        "Initial specification version"
+                        "สร้าง Specification เริ่มต้น (Initial specification)",
+                        JsonSnapshotHelper.toJson(toResponse(saved)),
+                        saved.getUploadGroupId(),
+                        null
                 );
             }
 
@@ -239,11 +244,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             }
 
             // Snapshot data
-            String snapshotJson = null;
-            try {
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                snapshotJson = mapper.writeValueAsString(spec);
-            } catch (Exception ignored) {}
+            String snapshotJson = JsonSnapshotHelper.toJson(toResponse(spec));
 
             documentVersionService.createVersion(
                     "SPEC",
@@ -252,7 +253,9 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                     spec.getSpecificationCode(),
                     newVersion,
                     diffSummary,
-                    snapshotJson
+                    snapshotJson,
+                    spec.getUploadGroupId(),
+                    null
             );
 
             return spec.getId();

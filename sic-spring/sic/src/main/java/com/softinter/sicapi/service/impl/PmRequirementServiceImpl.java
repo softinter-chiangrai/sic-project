@@ -24,6 +24,7 @@ import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -87,14 +88,22 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setUploadGroupId(finalUploadGroupId);
             PmRequirement saved = requirementRepository.save(requirement);
 
-            // ✅ Create initial document version
+            // Sync Uploads first before snapshot
+            if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
+                fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+            }
+
+            // ✅ Create initial document version with snapshot & fileRefId
             documentVersionService.createVersion(
                     "REQUIREMENT",
                     saved.getId(),
                     saved.getProjectId(),
                     saved.getRequirementCode(),
                     saved.getVersion() != null ? saved.getVersion() : "v1.0",
-                    "Initial requirement version"
+                    "สร้างข้อกำหนดเริ่มต้น (Initial requirement)",
+                    JsonSnapshotHelper.toJson(toResponse(saved)),
+                    finalUploadGroupId,
+                    null
             );
             requirement = saved;
 
@@ -136,12 +145,13 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             }
             requirement = requirementRepository.save(requirement);
 
+            // Sync Uploads first before snapshot
+            if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
+                fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+            }
+
             // Snapshot data
-            String snapshotJson = null;
-            try {
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                snapshotJson = mapper.writeValueAsString(requirement);
-            } catch (Exception ignored) {}
+            String snapshotJson = JsonSnapshotHelper.toJson(toResponse(requirement));
 
             documentVersionService.createVersion(
                     "REQUIREMENT",
@@ -150,7 +160,9 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                     requirement.getRequirementCode(),
                     newVersion,
                     diffSummary,
-                    snapshotJson
+                    snapshotJson,
+                    finalUploadGroupId,
+                    null
             );
 
         } else if (state == EntityState.DELETED) {
@@ -169,11 +181,6 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
         } else {
             throw new IllegalArgumentException("Invalid state: " + state);
-        }
-
-        // Sync Uploads
-        if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
-            fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
         }
 
         return toResponse(requirement);

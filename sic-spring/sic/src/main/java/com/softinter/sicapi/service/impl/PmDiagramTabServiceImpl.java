@@ -22,6 +22,7 @@ import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -163,7 +164,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getProjectId(),
                 saved.getName(),
                 "v0.1",
-                "Initial version");
+                "Initial version",
+                JsonSnapshotHelper.toJson(toResponse(saved)));
 
         return toResponse(saved);
     }
@@ -251,12 +253,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             PmDiagramTab saved = tabRepository.save(tab);
 
             // Snapshot data
-            String snapshotJson = null;
-            try {
-                com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-                snapshotJson = mapper.writeValueAsString(saved);
-            } catch (Exception ignored) {
-            }
+            String snapshotJson = JsonSnapshotHelper.toJson(toResponse(saved));
 
             // ✅ Create document version
             String newVersion = documentVersionService.incrementVersion(oldVersion);

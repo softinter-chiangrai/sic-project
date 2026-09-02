@@ -14,6 +14,7 @@ import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmMaTicketService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -104,11 +105,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         }
 
         // Snapshot data
-        String snapshotJson = null;
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            snapshotJson = mapper.writeValueAsString(entity);
-        } catch (Exception ignored) {}
+        String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
         // ✅ Create document version
         documentVersionService.createVersion(

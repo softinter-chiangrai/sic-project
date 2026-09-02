@@ -11,6 +11,7 @@ import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmTestCaseService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -118,11 +119,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         }
 
         // Snapshot data
-        String snapshotJson = null;
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            snapshotJson = mapper.writeValueAsString(entity);
-        } catch (Exception ignored) {}
+        String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
         // ✅ Create document version
         documentVersionService.createVersion(

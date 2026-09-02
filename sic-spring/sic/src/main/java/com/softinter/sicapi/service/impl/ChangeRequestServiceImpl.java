@@ -11,6 +11,7 @@ import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.service.*;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -89,11 +90,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr = changeRequestRepository.save(cr);
 
         // Snapshot data
-        String snapshotJson = null;
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            snapshotJson = mapper.writeValueAsString(cr);
-        } catch (Exception ignored) {}
+        String snapshotJson = JsonSnapshotHelper.toJson(toResponse(cr));
 
         // ✅ Create document version
         documentVersionService.createVersion(
@@ -170,11 +167,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
 
         // Snapshot data
-        String snapshotJson = null;
-        try {
-            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
-            snapshotJson = mapper.writeValueAsString(cr);
-        } catch (Exception ignored) {}
+        String snapshotJson = JsonSnapshotHelper.toJson(toResponse(cr));
 
         // ✅ Create document version
         documentVersionService.createVersion(
