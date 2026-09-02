@@ -17,6 +17,7 @@ import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.PmRequirementService;
 import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.entity.su.SuUpload;
@@ -40,6 +41,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final FileStorageService fileStorageService;
     private final DocumentVersionService documentVersionService;
     private final SuProfileRepository profileRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -107,6 +109,15 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             );
             requirement = saved;
 
+            // Audit Log
+            try {
+                auditLogService.log("CREATE_REQUIREMENT", "Requirement Management",
+                        "สร้าง Requirement: " + saved.getTitle() + " (" + saved.getRequirementCode() + ")",
+                        "REQUIREMENT", saved.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_REQUIREMENT: {}", e.getMessage(), e);
+            }
+
         } else if (state == EntityState.MODIFIED) {
             // ===== UPDATE EXISTING =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
@@ -165,6 +176,15 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                     null
             );
 
+            // Audit Log
+            try {
+                auditLogService.log("UPDATE_REQUIREMENT", "Requirement Management",
+                        "แก้ไข Requirement: " + requirement.getTitle() + " (" + requirement.getRequirementCode() + ")",
+                        "REQUIREMENT", requirement.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_REQUIREMENT: {}", e.getMessage(), e);
+            }
+
         } else if (state == EntityState.DELETED) {
             // ===== SOFT DELETE =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
@@ -177,6 +197,15 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
             // ✅ Soft delete all versions
             documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
+
+            // Audit Log
+            try {
+                auditLogService.log("DELETE_REQUIREMENT", "Requirement Management",
+                        "ลบ Requirement: " + requirement.getTitle() + " (" + requirement.getRequirementCode() + ")",
+                        "REQUIREMENT", requirement.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log DELETE_REQUIREMENT: {}", e.getMessage(), e);
+            }
             return toResponse(requirement);
 
         } else {

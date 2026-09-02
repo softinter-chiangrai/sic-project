@@ -9,6 +9,7 @@ import com.softinter.sicapi.entity.pm.*;
 import com.softinter.sicapi.repository.pm.*;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.service.*;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
@@ -43,6 +44,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmCustomerProjectRepository projectRepository;
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -116,7 +118,19 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             }
         }
 
+        logCrAudit("CREATE_CR", cr);
+
         return toResponse(cr);
+    }
+
+    private void logCrAudit(String action, PmChangeRequest cr) {
+        try {
+            auditLogService.log(action, "Change Request Management",
+                    action.replace("_", " ") + " CR: " + cr.getTitle() + " (" + cr.getCrCode() + ")",
+                    "CHANGE_REQUEST", cr.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log {}: {}", action, e.getMessage(), e);
+        }
     }
 
     @Override
@@ -200,6 +214,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
 
         cr = changeRequestRepository.save(cr);
+
+        logCrAudit("UPDATE_CR", cr);
+
         return toResponse(cr);
     }
 
@@ -250,6 +267,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setDeleteBy(currentUserService.getUserId());
         cr.setDeleteDate(Instant.now());
         changeRequestRepository.save(cr);
+
+        logCrAudit("DELETE_CR", cr);
     }
 
     @Override

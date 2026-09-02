@@ -20,6 +20,7 @@ import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.TaskService;
 import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,7 @@ public class TaskServiceImpl implements TaskService {
     private final SuUserBusinessRepository userBusinessRepository;
     private final SuProfileRepository profileRepository;
     private final TraceLinkService traceLinkService;
+    private final AuditLogService auditLogService;
 
     // ===== CREATE =====
     @Override
@@ -88,6 +90,15 @@ public class TaskServiceImpl implements TaskService {
         }
 
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+
+        try {
+            auditLogService.log("CREATE_TASK", "Task Management",
+                    "สร้าง Task: " + task.getTaskName() + " (" + task.getTaskCode() + ")",
+                    "TASK", task.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_TASK: {}", e.getMessage(), e);
+        }
+
         return toResponse(task);
     }
 
@@ -143,6 +154,15 @@ public class TaskServiceImpl implements TaskService {
         }
 
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
+
+        try {
+            auditLogService.log("UPDATE_TASK", "Task Management",
+                    "แก้ไข Task: " + task.getTaskName() + " (" + task.getTaskCode() + ")",
+                    "TASK", task.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_TASK: {}", e.getMessage(), e);
+        }
+
         return toResponse(task);
     }
 

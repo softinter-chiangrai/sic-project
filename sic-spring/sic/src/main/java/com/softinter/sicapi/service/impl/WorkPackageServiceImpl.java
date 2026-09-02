@@ -15,6 +15,7 @@ import com.softinter.sicapi.entity.pm.PmWorkPackage;
 import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
 import com.softinter.sicapi.repository.pm.PmWorkPackageRepository;
 import com.softinter.sicapi.service.WorkPackageService;
+import com.softinter.sicapi.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +27,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
 
     private final PmWorkPackageRepository wpRepository;
     private final PmMilestoneRepository milestoneRepository;
+    private final AuditLogService auditLogService;
 
     @Transactional(readOnly = true)
     @Override
@@ -57,6 +59,15 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setColor(request.getColor());
 
         wp = wpRepository.save(wp);
+
+        try {
+            auditLogService.log("CREATE_WORK_PACKAGE", "Project Management / Work Package",
+                    "สร้าง Work Package: " + wp.getPackageName(),
+                    "WORK_PACKAGE", wp.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_WORK_PACKAGE: {}", e.getMessage(), e);
+        }
+
         return toResponse(wp);
     }
 
@@ -76,6 +87,15 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         }
 
         wp = wpRepository.save(wp);
+
+        try {
+            auditLogService.log("UPDATE_WORK_PACKAGE", "Project Management / Work Package",
+                    "แก้ไข Work Package: " + wp.getPackageName(),
+                    "WORK_PACKAGE", wp.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_WORK_PACKAGE: {}", e.getMessage(), e);
+        }
+
         return toResponse(wp);
     }
 
@@ -86,6 +106,14 @@ public class WorkPackageServiceImpl implements WorkPackageService {
                 .orElseThrow(() -> new RuntimeException("Work Package not found"));
         wp.setIsDelete(true);
         wpRepository.save(wp);
+
+        try {
+            auditLogService.log("DELETE_WORK_PACKAGE", "Project Management / Work Package",
+                    "ลบ Work Package: " + wp.getPackageName(),
+                    "WORK_PACKAGE", wp.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_WORK_PACKAGE: {}", e.getMessage(), e);
+        }
     }
 
     private WorkPackageResponse toResponse(PmWorkPackage wp) {

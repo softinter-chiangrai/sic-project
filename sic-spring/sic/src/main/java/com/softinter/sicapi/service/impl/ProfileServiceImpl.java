@@ -26,6 +26,7 @@ import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.FileStorageService;
 import com.softinter.sicapi.service.ProfileService;
 import com.softinter.sicapi.service.VerifyService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.UniquenessValidator;
 
@@ -46,6 +47,7 @@ public class ProfileServiceImpl implements ProfileService {
     private final DbSubDistrictRepository subDistrictRepository;
     private final FileStorageService fileStorageService;
     private final VerifyService verifyService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -207,6 +209,16 @@ public class ProfileServiceImpl implements ProfileService {
         // 9. Sync Uploads
         if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
             fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+        }
+
+        try {
+            boolean isNew = (request.getState() == EntityState.ADDED.getEntityStateCode());
+            String action = isNew ? "CREATE_PROFILE" : "UPDATE_PROFILE";
+            auditLogService.log(action, "Profile Management",
+                    (isNew ? "สร้างโปรไฟล์: " : "แก้ไขโปรไฟล์: ") + userId,
+                    "PROFILE", profile.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log profile: {}", e.getMessage(), e);
         }
 
         return profile.getId();

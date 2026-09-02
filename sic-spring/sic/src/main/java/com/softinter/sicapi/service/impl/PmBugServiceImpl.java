@@ -10,6 +10,7 @@ import com.softinter.sicapi.repository.pm.PmBugRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
 import com.softinter.sicapi.service.PmBugService;
+import com.softinter.sicapi.service.AuditLogService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class PmBugServiceImpl implements PmBugService {
     private final PmBugRepository bugRepository;
     private final PmTaskRepository taskRepository;
     private final PmTestCaseRepository testCaseRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -99,6 +101,17 @@ public class PmBugServiceImpl implements PmBugService {
             entity = bugRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Bug/Issue"));
         }
+
+        // Audit Log
+        try {
+            String action = (state == EntityState.ADDED || request.getId() == null) ? "CREATE_BUG" : "UPDATE_BUG";
+            auditLogService.log(action, "Bug Management",
+                    action.replace("_", " ") + ": " + entity.getTitle() + " (" + entity.getBugCode() + ")",
+                    "BUG", entity.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log bug: {}", e.getMessage(), e);
+        }
+
         return entity.getId();
     }
 
@@ -111,6 +124,14 @@ public class PmBugServiceImpl implements PmBugService {
         bug.setDeleteBy(userId);
         bug.setDeleteDate(Instant.now());
         bugRepository.save(bug);
+
+        try {
+            auditLogService.log("DELETE_BUG", "Bug Management",
+                    "ลบ Bug: " + bug.getTitle() + " (" + bug.getBugCode() + ")",
+                    "BUG", bug.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_BUG: {}", e.getMessage(), e);
+        }
     }
 
     private void mapRequestToEntity(PmBugRequest req, PmBug entity) {

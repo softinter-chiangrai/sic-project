@@ -39,6 +39,7 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.FileStorageService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -64,6 +65,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     private final CurrentUserService currentUserService;
     private final FileStorageService fileStorageService;   
     private final SuUploadRepository uploadRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     public UUID getBusinessId() {
@@ -131,6 +133,15 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         response.setBusinessId(businessId);
         response.setBusinessName(businessName);
         response.setChanged(true);
+
+        try {
+            auditLogService.log("SWITCH_BUSINESS", "Business Management",
+                    "สลับไปยังธุรกิจ: " + businessName + " (" + business.getBusinessCode() + ")",
+                    "BUSINESS", businessId, null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log SWITCH_BUSINESS: {}", e.getMessage(), e);
+        }
+
         return response;
     }
 
@@ -271,6 +282,14 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
                 fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
             }
 
+            try {
+                auditLogService.log("CREATE_BUSINESS", "Business Management",
+                        "สร้างธุรกิจ: " + business.getBusinessCode(),
+                        "BUSINESS", business.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_BUSINESS: {}", e.getMessage(), e);
+            }
+
             // 6. เปลี่ยน business ที่ active
             changeBusiness(business.getId());
 
@@ -306,6 +325,14 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             // Sync uploads หลังจาก save
             if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
                 fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
+            }
+
+            try {
+                auditLogService.log("UPDATE_BUSINESS", "Business Management",
+                        "แก้ไขธุรกิจ: " + business.getBusinessCode(),
+                        "BUSINESS", business.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_BUSINESS: {}", e.getMessage(), e);
             }
 
             return business.getId();

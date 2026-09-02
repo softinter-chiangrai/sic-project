@@ -11,6 +11,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmMaRenewalRepository;
 import com.softinter.sicapi.service.PmMaRenewalService;
+import com.softinter.sicapi.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -33,6 +34,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
     private final PmCustomerContractRepository contractRepository;
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -70,6 +72,14 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
                 entity.setRenewalNo("MAR-" + System.currentTimeMillis());
             }
             entity = renewalRepository.save(entity);
+
+            try {
+                auditLogService.log("CREATE_MA_RENEWAL", "MA Renewal Management",
+                        "สร้างรายการต่อสัญญา MA: " + entity.getRenewalNo(),
+                        "MA_RENEWAL", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_MA_RENEWAL: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.MODIFIED) {
             entity = renewalRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการต่อสัญญา MA"));
@@ -80,6 +90,14 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = renewalRepository.save(entity);
+
+            try {
+                auditLogService.log("UPDATE_MA_RENEWAL", "MA Renewal Management",
+                        "แก้ไขรายการต่อสัญญา MA: " + entity.getRenewalNo(),
+                        "MA_RENEWAL", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_MA_RENEWAL: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -120,6 +138,14 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         renewal.setDeleteBy(userId);
         renewal.setDeleteDate(Instant.now());
         renewalRepository.save(renewal);
+
+        try {
+            auditLogService.log("DELETE_MA_RENEWAL", "MA Renewal Management",
+                    "ลบรายการต่อสัญญา MA: " + renewal.getRenewalNo(),
+                    "MA_RENEWAL", renewal.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_MA_RENEWAL: {}", e.getMessage(), e);
+        }
     }
 
     private void mapRequestToEntity(PmMaRenewalRequest req, PmMaRenewal entity) {

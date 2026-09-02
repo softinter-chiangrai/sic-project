@@ -28,6 +28,7 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.BusinessInviteService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.MailService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     private final SuBusinessRepository businessRepository;
     private final CurrentUserService currentUserService;
     private final MailService mailService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -112,6 +114,14 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             log.info("✅ Invite email sent to: {}", request.getInviteEmail());
         }
 
+        try {
+            auditLogService.log("CREATE_INVITE", "Business Management / Invite",
+                    "สร้างคำเชิญเข้าร่วมธุรกิจ: " + (request.getInviteEmail() != null ? request.getInviteEmail() : request.getInviteType()),
+                    "BUSINESS_INVITE", invite.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_INVITE: {}", e.getMessage(), e);
+        }
+
         return invite.getId();
     }
 
@@ -133,6 +143,14 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         invite.setDeleteBy(userId);
         invite.setDeleteDate(Instant.now());
         businessInviteRepository.save(invite);
+
+        try {
+            auditLogService.log("DELETE_INVITE", "Business Management / Invite",
+                    "ยกเลิกคำเชิญเข้าร่วมธุรกิจ",
+                    "BUSINESS_INVITE", invite.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_INVITE: {}", e.getMessage(), e);
+        }
     }
 
     @Override
@@ -244,6 +262,14 @@ public JoinBusinessResponse joinBusiness(String token) {
     String businessName = businessRepository.findById(businessId)
             .map(SuBusiness::getBusinessCode)
             .orElse("Unknown Business");
+
+    try {
+        auditLogService.log("ACCEPT_INVITE", "Business Management / Invite",
+                "ตอบรับคำเชิญเข้าร่วมธุรกิจ: " + businessName,
+                "BUSINESS_INVITE", invite.getId(), null, null, "Success", "User: " + userId);
+    } catch (Exception e) {
+        log.error("ผิดพลาด audit log ACCEPT_INVITE: {}", e.getMessage(), e);
+    }
 
     return JoinBusinessResponse.builder()
             .businessId(businessId)

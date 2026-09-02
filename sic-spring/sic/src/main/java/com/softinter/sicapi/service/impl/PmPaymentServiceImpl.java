@@ -12,6 +12,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
 import com.softinter.sicapi.repository.pm.PmPaymentRepository;
 import com.softinter.sicapi.service.PmPaymentService;
+import com.softinter.sicapi.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -34,6 +35,7 @@ public class PmPaymentServiceImpl implements PmPaymentService {
     private final PmInvoiceRepository invoiceRepository;
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -71,6 +73,14 @@ public class PmPaymentServiceImpl implements PmPaymentService {
                 entity.setPaymentNo("PAY-" + System.currentTimeMillis());
             }
             entity = paymentRepository.save(entity);
+
+            try {
+                auditLogService.log("CREATE_PAYMENT", "Payment Management",
+                        "สร้างรายการชำระเงิน: " + entity.getPaymentNo() + " (ยอดเงิน: " + entity.getAmount() + ")",
+                        "PAYMENT", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_PAYMENT: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.MODIFIED) {
             entity = paymentRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลรายการชำระเงิน"));
@@ -81,6 +91,14 @@ public class PmPaymentServiceImpl implements PmPaymentService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = paymentRepository.save(entity);
+
+            try {
+                auditLogService.log("UPDATE_PAYMENT", "Payment Management",
+                        "แก้ไขรายการชำระเงิน: " + entity.getPaymentNo() + " (ยอดเงิน: " + entity.getAmount() + ")",
+                        "PAYMENT", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_PAYMENT: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -103,6 +121,14 @@ public class PmPaymentServiceImpl implements PmPaymentService {
         payment.setDeleteBy(userId);
         payment.setDeleteDate(Instant.now());
         paymentRepository.save(payment);
+
+        try {
+            auditLogService.log("DELETE_PAYMENT", "Payment Management",
+                    "ลบรายการชำระเงิน: " + payment.getPaymentNo(),
+                    "PAYMENT", payment.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_PAYMENT: {}", e.getMessage(), e);
+        }
 
         recalculateInvoiceStatus(payment.getInvoiceId(), businessId, userId);
     }

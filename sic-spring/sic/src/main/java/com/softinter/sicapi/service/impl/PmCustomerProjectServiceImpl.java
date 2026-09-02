@@ -16,9 +16,12 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.service.PmCustomerProjectService;
+import com.softinter.sicapi.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
@@ -26,6 +29,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerRepository customerRepository;
     private final SuBusinessRepository businessRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional
@@ -52,6 +56,15 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         project.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
         project = projectRepository.save(project);
+
+        try {
+            auditLogService.log("CREATE_PROJECT", "Project Management",
+                    "สร้างโปรเจกต์: " + project.getProjectName() + " (" + project.getProjectCode() + ")",
+                    "PROJECT", project.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_PROJECT: {}", e.getMessage(), e);
+        }
+
         return toResponse(project);
     }
 
@@ -77,6 +90,15 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         }
 
         project = projectRepository.save(project);
+
+        try {
+            auditLogService.log("UPDATE_PROJECT", "Project Management",
+                    "แก้ไขโปรเจกต์: " + project.getProjectName() + " (" + project.getProjectCode() + ")",
+                    "PROJECT", project.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_PROJECT: {}", e.getMessage(), e);
+        }
+
         return toResponse(project);
     }
 
@@ -88,6 +110,14 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         project.setIsDelete(true);
         project.setIsActive(false);
         projectRepository.save(project);
+
+        try {
+            auditLogService.log("DELETE_PROJECT", "Project Management",
+                    "ลบโปรเจกต์: " + project.getProjectName() + " (" + project.getProjectCode() + ")",
+                    "PROJECT", project.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_PROJECT: {}", e.getMessage(), e);
+        }
     }
 
     @Override

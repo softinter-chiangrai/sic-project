@@ -11,6 +11,7 @@ import com.softinter.sicapi.repository.pm.PmUserManualRepository;
 import com.softinter.sicapi.repository.pm.PmUserManualSectionRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmUserManualService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     private final PmUserManualRepository manualRepository;
     private final PmUserManualSectionRepository sectionRepository;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -76,6 +78,14 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             entity = manualRepository.save(entity);
+
+            try {
+                auditLogService.log("CREATE_USER_MANUAL", "User Manual Management",
+                        "สร้างคู่มือผู้ใช้: " + entity.getManualTitle() + " (" + entity.getManualCode() + ")",
+                        "USER_MANUAL", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_USER_MANUAL: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.MODIFIED) {
             entity = manualRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลคู่มือผู้ใช้งาน"));
@@ -95,6 +105,14 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = manualRepository.save(entity);
+
+            try {
+                auditLogService.log("UPDATE_USER_MANUAL", "User Manual Management",
+                        "แก้ไขคู่มือผู้ใช้: " + entity.getManualTitle() + " (" + entity.getManualCode() + ")",
+                        "USER_MANUAL", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_USER_MANUAL: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -158,6 +176,14 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         manual.setDeleteBy(userId);
         manual.setDeleteDate(Instant.now());
         manualRepository.save(manual);
+
+        try {
+            auditLogService.log("DELETE_USER_MANUAL", "User Manual Management",
+                    "ลบคู่มือผู้ใช้: " + manual.getManualTitle() + " (" + manual.getManualCode() + ")",
+                    "USER_MANUAL", manual.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_USER_MANUAL: {}", e.getMessage(), e);
+        }
     }
 
     private void mapRequestToEntity(PmUserManualRequest req, PmUserManual entity) {

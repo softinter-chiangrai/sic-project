@@ -20,10 +20,13 @@ import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.SuBusinessService;
 import com.softinter.sicapi.service.SuUserBusinessService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper; // ✅ import
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SuUserBusinessServiceImpl implements SuUserBusinessService {
@@ -31,6 +34,7 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
     private final SuUserBusinessRepository userBusinessRepository;
     private final SuBusinessService businessService;
     private final SuProfileRepository profileRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     public List<UserBusinessResponse> findAll(String userId) {
@@ -80,6 +84,17 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
         }
 
         userBusinessRepository.save(ub);
+
+        try {
+            boolean isNew = (request.getId() == null);
+            String action = isNew ? "ASSIGN_USER_BUSINESS" : "UPDATE_USER_BUSINESS";
+            auditLogService.log(action, "User Management / Business Role",
+                    (isNew ? "กำหนดผู้ใช้เข้าสู่ธุรกิจ: " : "แก้ไขการเข้าถึงธุรกิจของผู้ใช้: ") + ub.getUserId(),
+                    "USER_BUSINESS", ub.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log user business: {}", e.getMessage(), e);
+        }
+
         return ub.getId();
     }
 
@@ -90,6 +105,14 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
         ub.setIsDelete(true);
         ub.setIsActive(false);
         userBusinessRepository.save(ub);
+
+        try {
+            auditLogService.log("DELETE_USER_BUSINESS", "User Management / Business Role",
+                    "ลบสิทธิ์การเข้าถึงธุรกิจของผู้ใช้: " + ub.getUserId(),
+                    "USER_BUSINESS", ub.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_USER_BUSINESS: {}", e.getMessage(), e);
+        }
     }
 
     @Override

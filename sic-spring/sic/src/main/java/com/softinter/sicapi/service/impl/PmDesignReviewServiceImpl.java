@@ -17,7 +17,9 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmReviewCommentRepository;
 import com.softinter.sicapi.service.PmDesignReviewService;
+import com.softinter.sicapi.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +37,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PmDesignReviewServiceImpl implements PmDesignReviewService {
@@ -47,6 +50,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final PmRequirementRepository requirementRepository;
     private final TaskService taskService;
     private final SuUserBusinessService userBusinessService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -94,8 +98,9 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     @Transactional
     public UUID save(PmDesignReviewRequest request, UUID businessId, String userId) {
         PmDesignReview entity;
+        boolean isNew = (request.getId() == null);
 
-        if (request.getId() != null) {
+        if (!isNew) {
             entity = designReviewRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Design review not found"));
             entity.setUpdatedBy(userId);
@@ -129,6 +134,16 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
         PmDesignReview saved = designReviewRepository.save(entity);
+
+        try {
+            String action = isNew ? "CREATE_DESIGN_REVIEW" : "UPDATE_DESIGN_REVIEW";
+            auditLogService.log(action, "Design Review Management",
+                    (isNew ? "สร้าง Design Review: " : "แก้ไข Design Review: ") + saved.getTitle() + " (" + saved.getReviewCode() + ")",
+                    "DESIGN_REVIEW", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log design review: {}", e.getMessage(), e);
+        }
+
         return saved.getId();
     }
 
@@ -142,6 +157,14 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setDeleteBy(userId);
         entity.setDeleteDate(Instant.now());
         designReviewRepository.save(entity);
+
+        try {
+            auditLogService.log("DELETE_DESIGN_REVIEW", "Design Review Management",
+                    "ลบ Design Review: " + entity.getTitle() + " (" + entity.getReviewCode() + ")",
+                    "DESIGN_REVIEW", entity.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_DESIGN_REVIEW: {}", e.getMessage(), e);
+        }
     }
 
     @Override

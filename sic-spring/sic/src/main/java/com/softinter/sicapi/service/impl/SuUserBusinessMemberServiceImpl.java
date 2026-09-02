@@ -25,6 +25,7 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.SuUserBusinessMemberService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;  // ✅ import
 import com.softinter.sicapi.util.PaginationUtil;
 
@@ -41,6 +42,7 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     private final SuBusinessRoleRepository businessRoleRepository;
     private final CurrentUserService currentUserService;
     private final SuProfileRepository profileRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -130,6 +132,14 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
             }
         }
 
+        try {
+            auditLogService.log("ADD_MEMBER", "User Management / Member",
+                    "เพิ่มสมาชิกเข้าสู่ธุรกิจ: " + userId,
+                    "USER_BUSINESS", userBusiness.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log ADD_MEMBER: {}", e.getMessage(), e);
+        }
+
         return toResponse(userBusiness);
     }
 
@@ -166,6 +176,14 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
             }
         }
 
+        try {
+            auditLogService.log("UPDATE_MEMBER", "User Management / Member",
+                    "แก้ไขข้อมูลสมาชิกในธุรกิจ: " + userBusiness.getUserId(),
+                    "USER_BUSINESS", userBusiness.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_MEMBER: {}", e.getMessage(), e);
+        }
+
         return toResponse(userBusiness);
     }
 
@@ -183,6 +201,14 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
 
         userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
         log.info("Member removed: {}", userBusinessId);
+
+        try {
+            auditLogService.log("REMOVE_MEMBER", "User Management / Member",
+                    "ลบสมาชิกออกจากธุรกิจ: " + userBusiness.getUserId(),
+                    "USER_BUSINESS", userBusiness.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log REMOVE_MEMBER: {}", e.getMessage(), e);
+        }
     }
 
     // ============================================================

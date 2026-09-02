@@ -10,6 +10,7 @@ import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
 import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmTestCaseService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import jakarta.persistence.criteria.Predicate;
@@ -35,6 +36,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     private final PmTestScenarioRepository scenarioRepository;
     private final PmTaskRepository taskRepository;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -92,6 +94,14 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             entity = testCaseRepository.save(entity);
+
+            try {
+                auditLogService.log("CREATE_TEST_CASE", "Test Management / Test Case",
+                        "สร้าง Test Case: " + entity.getTitle() + " (" + entity.getTestCaseCode() + ")",
+                        "TEST_CASE", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_TEST_CASE: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.MODIFIED) {
             entity = testCaseRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Test Case"));
@@ -110,6 +120,14 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = testCaseRepository.save(entity);
+
+            try {
+                auditLogService.log("UPDATE_TEST_CASE", "Test Management / Test Case",
+                        "แก้ไข Test Case: " + entity.getTitle() + " (" + entity.getTestCaseCode() + ")",
+                        "TEST_CASE", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_TEST_CASE: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -181,6 +199,14 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         testCase.setDeleteBy(userId);
         testCase.setDeleteDate(Instant.now());
         testCaseRepository.save(testCase);
+
+        try {
+            auditLogService.log("DELETE_TEST_CASE", "Test Management / Test Case",
+                    "ลบ Test Case: " + testCase.getTitle() + " (" + testCase.getTestCaseCode() + ")",
+                    "TEST_CASE", testCase.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_TEST_CASE: {}", e.getMessage(), e);
+        }
     }
 
     private void mapRequestToEntity(PmTestCaseRequest req, PmTestCase entity) {

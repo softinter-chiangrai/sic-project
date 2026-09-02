@@ -17,6 +17,7 @@ import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmDeliveryService;
 import com.softinter.sicapi.service.PmInvoiceService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
@@ -54,6 +55,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
     private final PmInvoiceService invoiceService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -202,6 +204,16 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
 
         } else {
             throw new IllegalArgumentException("Unsupported state: " + state);
+        }
+
+        // Audit Log
+        try {
+            String action = (state == EntityState.ADDED) ? "CREATE_DELIVERY" : "UPDATE_DELIVERY";
+            auditLogService.log(action, "Delivery Management",
+                    action.replace("_", " ") + ": " + entity.getDeliveryTitle() + " (" + entity.getDeliveryCode() + ")",
+                    "DELIVERY", entity.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log delivery: {}", e.getMessage(), e);
         }
 
         return entity.getId();

@@ -21,6 +21,7 @@ import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
@@ -48,6 +49,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final PmTraceLinkRepository traceLinkRepository;
     private final DocumentVersionService documentVersionService;
     private final ApprovalService approvalService;
+    private final AuditLogService auditLogService;
 
     // ===== CREATE =====
     @Override
@@ -167,6 +169,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 "Initial version",
                 JsonSnapshotHelper.toJson(toResponse(saved)));
 
+        try {
+            auditLogService.log("CREATE_DIAGRAM", "Diagram Management / " + diagramType,
+                    "สร้างไดอะแกรม: " + saved.getName() + " (" + diagramType + ")",
+                    "DIAGRAM", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_DIAGRAM: {}", e.getMessage(), e);
+        }
+
         return toResponse(saved);
     }
 
@@ -266,6 +276,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                     diffSummary,
                     snapshotJson);
 
+            try {
+                auditLogService.log("UPDATE_DIAGRAM", "Diagram Management / " + saved.getDiagramType(),
+                        "แก้ไขไดอะแกรม: " + saved.getName() + " (" + saved.getDiagramType() + ")",
+                        "DIAGRAM", saved.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_DIAGRAM: {}", e.getMessage(), e);
+            }
+
             return toResponse(saved);
 
         } else if (state == EntityState.DELETED) {
@@ -277,6 +295,15 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             documentVersionService.deleteVersionsByDocument(
                     tab.getDiagramType().toUpperCase(),
                     tab.getId());
+
+            try {
+                auditLogService.log("DELETE_DIAGRAM", "Diagram Management / " + tab.getDiagramType(),
+                        "ลบไดอะแกรม: " + tab.getName() + " (" + tab.getDiagramType() + ")",
+                        "DIAGRAM", tab.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log DELETE_DIAGRAM: {}", e.getMessage(), e);
+            }
+
             return toResponse(tab);
         }
 
@@ -323,6 +350,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         documentVersionService.deleteVersionsByDocument(
                 tab.getDiagramType().toUpperCase(),
                 tab.getId());
+
+        try {
+            auditLogService.log("DELETE_DIAGRAM", "Diagram Management / " + tab.getDiagramType(),
+                    "ลบไดอะแกรม: " + tab.getName() + " (" + tab.getDiagramType() + ")",
+                    "DIAGRAM", tab.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_DIAGRAM: {}", e.getMessage(), e);
+        }
     }
 
     // ===== DUPLICATE =====

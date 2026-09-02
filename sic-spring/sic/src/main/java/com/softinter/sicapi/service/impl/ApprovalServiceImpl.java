@@ -211,6 +211,19 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         notificationService.notifySubmitted(approval);
 
+        // Audit Log
+        try {
+            auditLogService.log(
+                    "SUBMIT_FOR_APPROVAL",
+                    "Approval Center / " + request.getDocumentType(),
+                    "ส่งเอกสาร " + (request.getDocumentCode() != null ? request.getDocumentCode() : request.getDocumentType()) + " เพื่อขออนุมัติ",
+                    request.getDocumentType(),
+                    request.getDocumentId(),
+                    null, null, "Success", "Requested by: " + userName);
+        } catch (Exception e) {
+            log.error("Error creating audit log on submit: {}", e.getMessage(), e);
+        }
+
         return toResponse(approval);
     }
 
@@ -425,6 +438,19 @@ public class ApprovalServiceImpl implements ApprovalService {
         updateDocumentStatusOnReject(approval);
         notificationService.notifyRejected(approval, pendingStep.getStep().getStepName());
 
+        // Audit Log
+        try {
+            auditLogService.log(
+                    "REJECT",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "ปฏิเสธเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Rejected by: " + userName + (comment != null ? " | หมายเหตุ: " + comment : ""));
+        } catch (Exception e) {
+            log.error("Error creating audit log on reject: {}", e.getMessage(), e);
+        }
+
         return toResponse(approval);
     }
 
@@ -468,6 +494,19 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         notificationService.notifyRevisionRequested(approval);
 
+        // Audit Log
+        try {
+            auditLogService.log(
+                    "REQUEST_REVISION",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "ส่งคืนให้แก้ไขเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Revision requested by: " + userName + (comment != null ? " | หมายเหตุ: " + comment : ""));
+        } catch (Exception e) {
+            log.error("Error creating audit log on request revision: {}", e.getMessage(), e);
+        }
+
         return toResponse(approval);
     }
 
@@ -497,6 +536,19 @@ public class ApprovalServiceImpl implements ApprovalService {
         createLog(approval, null, "CANCEL", userId, userName, reason, null, ApprovalStatus.CANCELLED);
 
         updateDocumentStatusOnCancel(approval);
+
+        // Audit Log
+        try {
+            auditLogService.log(
+                    "CANCEL_APPROVAL",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "ยกเลิกการขออนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Cancelled by: " + userName + (reason != null ? " | เหตุผล: " + reason : ""));
+        } catch (Exception e) {
+            log.error("Error creating audit log on cancel: {}", e.getMessage(), e);
+        }
 
         return toResponse(approval);
     }

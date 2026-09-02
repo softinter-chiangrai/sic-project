@@ -16,6 +16,7 @@ import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.TraceLinkService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.DocumentDiffHelper;
@@ -51,6 +52,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final TraceLinkService traceLinkService;
     private final CurrentUserService currentUserService;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     // ===== FIND ALL (with pagination) =====
     @Override
@@ -168,7 +170,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                     traceLinkService.createLink(
                             projectIdForTrace,
                             "REQUIREMENT", reqId,
-                            "SPECIFICATION", spec.getId(),
+                            "SPECIFICATION", saved.getId(),
                             TraceRelationship.DOCUMENTED_BY);
                 }
             }
@@ -178,11 +180,20 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 traceLinkService.createLink(
                         projectIdForTrace,
                         "DIAGRAM", request.getGeneratedFromDiagramId(),
-                        "SPECIFICATION", spec.getId(),
+                        "SPECIFICATION", saved.getId(),
                         TraceRelationship.DESIGNED_BY);
             }
 
-            return spec.getId();
+            // Audit Log
+            try {
+                auditLogService.log("CREATE_SPECIFICATION", "Specification Management",
+                        "สร้าง Specification: " + saved.getTitle() + " (" + saved.getSpecificationCode() + ")",
+                        "SPEC", saved.getId(), null, null, "Success", null);
+            } catch (Exception ex) {
+                log.error("ผิดพลาด audit log CREATE_SPECIFICATION: {}", ex.getMessage(), ex);
+            }
+
+            return saved.getId();
         }
 
         // ----- UPDATE EXISTING -----
@@ -258,6 +269,15 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                     null
             );
 
+            // Audit Log
+            try {
+                auditLogService.log("UPDATE_SPECIFICATION", "Specification Management",
+                        "แก้ไข Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
+                        "SPEC", spec.getId(), null, null, "Success", null);
+            } catch (Exception ex) {
+                log.error("ผิดพลาด audit log UPDATE_SPECIFICATION: {}", ex.getMessage(), ex);
+            }
+
             return spec.getId();
         }
 
@@ -277,6 +297,15 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             // ✅ Soft Delete Trace Links
             deleteTraceLinksForSpecification(spec.getId(), userId);
+
+            // Audit Log
+            try {
+                auditLogService.log("DELETE_SPECIFICATION", "Specification Management",
+                        "ลบ Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
+                        "SPEC", spec.getId(), null, null, "Success", null);
+            } catch (Exception ex) {
+                log.error("ผิดพลาด audit log DELETE_SPECIFICATION: {}", ex.getMessage(), ex);
+            }
 
             return spec.getId();
         }

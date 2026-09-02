@@ -19,6 +19,7 @@ import com.softinter.sicapi.entity.pm.PmWorkPackage;
 import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
 import com.softinter.sicapi.repository.pm.PmPhaseRepository;
 import com.softinter.sicapi.service.MilestoneService;
+import com.softinter.sicapi.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,7 @@ public class MilestoneServiceImpl implements MilestoneService {
 
     private final PmMilestoneRepository milestoneRepository;
     private final PmPhaseRepository phaseRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -61,6 +63,15 @@ public class MilestoneServiceImpl implements MilestoneService {
         ms.setColor(request.getColor());  
 
         ms = milestoneRepository.save(ms);
+
+        try {
+            auditLogService.log("CREATE_MILESTONE", "Project Management / Milestone",
+                    "สร้าง Milestone: " + ms.getMilestoneName(),
+                    "MILESTONE", ms.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_MILESTONE: {}", e.getMessage(), e);
+        }
+
         return toResponse(ms);
     }
 
@@ -78,6 +89,15 @@ public class MilestoneServiceImpl implements MilestoneService {
             ms.setStatus(request.getStatus());
         }
         ms = milestoneRepository.save(ms);
+
+        try {
+            auditLogService.log("UPDATE_MILESTONE", "Project Management / Milestone",
+                    "แก้ไข Milestone: " + ms.getMilestoneName(),
+                    "MILESTONE", ms.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_MILESTONE: {}", e.getMessage(), e);
+        }
+
         return toResponse(ms);
     }
 
@@ -88,6 +108,14 @@ public class MilestoneServiceImpl implements MilestoneService {
                 .orElseThrow(() -> new RuntimeException("Milestone not found"));
         ms.setIsDelete(true);
         milestoneRepository.save(ms);
+
+        try {
+            auditLogService.log("DELETE_MILESTONE", "Project Management / Milestone",
+                    "ลบ Milestone: " + ms.getMilestoneName(),
+                    "MILESTONE", ms.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_MILESTONE: {}", e.getMessage(), e);
+        }
     }
 
     private MilestoneResponse toResponse(PmMilestone ms) {

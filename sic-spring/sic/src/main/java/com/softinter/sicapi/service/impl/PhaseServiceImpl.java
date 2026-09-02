@@ -30,6 +30,7 @@ import com.softinter.sicapi.repository.pm.PmTaskAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.service.PhaseService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
@@ -46,6 +47,7 @@ public class PhaseServiceImpl implements PhaseService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmTaskAssigneeRepository taskAssigneeRepository;
     private final SuProfileRepository profileRepository;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -93,6 +95,15 @@ public class PhaseServiceImpl implements PhaseService {
         }
 
         phase = phaseRepository.save(phase);
+
+        try {
+            auditLogService.log("CREATE_PHASE", "Project Management / Phase",
+                    "สร้าง Phase: " + phase.getPhaseName() + " (" + phase.getPhaseCode() + ")",
+                    "PHASE", phase.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_PHASE: {}", e.getMessage(), e);
+        }
+
         return toResponse(phase);
     }
 
@@ -120,6 +131,15 @@ public class PhaseServiceImpl implements PhaseService {
 
         phase = phaseRepository.save(phase);
         updatePhaseProgress(phase);
+
+        try {
+            auditLogService.log("UPDATE_PHASE", "Project Management / Phase",
+                    "แก้ไข Phase: " + phase.getPhaseName() + " (" + phase.getPhaseCode() + ")",
+                    "PHASE", phase.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_PHASE: {}", e.getMessage(), e);
+        }
+
         return toResponse(phase);
     }
 
@@ -131,6 +151,14 @@ public class PhaseServiceImpl implements PhaseService {
         phase.setIsDelete(true);
         phase.setDeleteDate(Instant.now());
         phaseRepository.save(phase);
+
+        try {
+            auditLogService.log("DELETE_PHASE", "Project Management / Phase",
+                    "ลบ Phase: " + phase.getPhaseName() + " (" + phase.getPhaseCode() + ")",
+                    "PHASE", phase.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_PHASE: {}", e.getMessage(), e);
+        }
     }
 
     // ===== PRIVATE =====

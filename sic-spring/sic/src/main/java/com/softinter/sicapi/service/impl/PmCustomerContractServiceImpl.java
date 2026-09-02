@@ -24,6 +24,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmCustomerContractService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 
@@ -40,6 +41,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -176,7 +178,21 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                     });
         }
 
+        logContractAudit(isNew, contract);
+
         return contract.getId();
+    }
+
+    private void logContractAudit(boolean isNew, PmCustomerContract contract) {
+        try {
+            String action = isNew ? "CREATE_CONTRACT" : "UPDATE_CONTRACT";
+            String desc = isNew
+                    ? "สร้างสัญญา: " + contract.getContractNo()
+                    : "แก้ไขสัญญา: " + contract.getContractNo();
+            auditLogService.log(action, "Contract Management", desc, "CONTRACT", contract.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log contract: {}", e.getMessage(), e);
+        }
     }
 
     @Override
@@ -186,6 +202,14 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setIsDelete(true);
         contract.setIsActive(false);
         contractRepository.save(contract);
+
+        try {
+            auditLogService.log("DELETE_CONTRACT", "Contract Management",
+                    "ลบสัญญา: " + contract.getContractNo(),
+                    "CONTRACT", contract.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_CONTRACT: {}", e.getMessage(), e);
+        }
     }
 
     @Override

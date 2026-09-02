@@ -13,6 +13,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmMaTicketService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -77,6 +79,14 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             }
             calculateSlaDates(entity);
             entity = ticketRepository.save(entity);
+
+            try {
+                auditLogService.log("CREATE_MA_TICKET", "MA Ticket Management",
+                        "สร้างตั๋วปัญหา MA: " + entity.getTitle() + " (" + entity.getTicketNo() + ")",
+                        "MA_TICKET", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log CREATE_MA_TICKET: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.MODIFIED) {
             entity = ticketRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Ticket MA"));
@@ -96,6 +106,14 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = ticketRepository.save(entity);
+
+            try {
+                auditLogService.log("UPDATE_MA_TICKET", "MA Ticket Management",
+                        "แก้ไขตั๋วปัญหา MA: " + entity.getTitle() + " (" + entity.getTicketNo() + ")",
+                        "MA_TICKET", entity.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log UPDATE_MA_TICKET: {}", e.getMessage(), e);
+            }
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -130,6 +148,14 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         ticket.setDeleteBy(userId);
         ticket.setDeleteDate(Instant.now());
         ticketRepository.save(ticket);
+
+        try {
+            auditLogService.log("DELETE_MA_TICKET", "MA Ticket Management",
+                    "ลบตั๋วปัญหา MA: " + ticket.getTitle() + " (" + ticket.getTicketNo() + ")",
+                    "MA_TICKET", ticket.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_MA_TICKET: {}", e.getMessage(), e);
+        }
     }
 
     private void calculateSlaDates(PmMaTicket ticket) {

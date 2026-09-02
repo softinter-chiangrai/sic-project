@@ -10,6 +10,7 @@ import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmCommentRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.service.DiscussionService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,7 @@ public class DiscussionServiceImpl implements DiscussionService {
     private final PmCommentRepository commentRepository;
     private final SuProfileRepository profileRepository;
     private final com.softinter.sicapi.service.FileStorageService fileStorageService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -72,6 +74,15 @@ public class DiscussionServiceImpl implements DiscussionService {
         }
 
         PmComment saved = commentRepository.save(post);
+
+        try {
+            auditLogService.log("CREATE_POST", "Discussion",
+                    "สร้างโพสต์สนทนา: " + (saved.getSubject() != null ? saved.getSubject() : "ความคิดเห็น"),
+                    "DISCUSSION", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CREATE_POST: {}", e.getMessage(), e);
+        }
+
         return toPostResponse(saved);
     }
 
@@ -102,6 +113,15 @@ public class DiscussionServiceImpl implements DiscussionService {
         }
 
         PmComment saved = commentRepository.save(reply);
+
+        try {
+            auditLogService.log("REPLY_POST", "Discussion",
+                    "ตอบกลับโพสต์สนทนา: " + (parent.getSubject() != null ? parent.getSubject() : ""),
+                    "DISCUSSION", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log REPLY_POST: {}", e.getMessage(), e);
+        }
+
         return toReplyResponse(saved);
     }
 
@@ -113,6 +133,15 @@ public class DiscussionServiceImpl implements DiscussionService {
         comment.setUpdatedBy(userId);
         comment.setUpdatedDate(Instant.now());
         PmComment saved = commentRepository.save(comment);
+
+        try {
+            auditLogService.log("UPDATE_POST", "Discussion",
+                    "แก้ไขโพสต์สนทนา",
+                    "DISCUSSION", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_POST: {}", e.getMessage(), e);
+        }
+
         return toPostResponse(saved);
     }
 
@@ -124,6 +153,15 @@ public class DiscussionServiceImpl implements DiscussionService {
         comment.setUpdatedBy(userId);
         comment.setUpdatedDate(Instant.now());
         PmComment saved = commentRepository.save(comment);
+
+        try {
+            auditLogService.log("UPDATE_REPLY", "Discussion",
+                    "แก้ไขการตอบกลับสนทนา",
+                    "DISCUSSION", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log UPDATE_REPLY: {}", e.getMessage(), e);
+        }
+
         return toReplyResponse(saved);
     }
 
@@ -135,6 +173,14 @@ public class DiscussionServiceImpl implements DiscussionService {
         comment.setDeleteBy(userId);
         comment.setDeleteDate(Instant.now());
         commentRepository.save(comment);
+
+        try {
+            auditLogService.log("DELETE_COMMENT", "Discussion",
+                    "ลบความคิดเห็นหรือโพสต์สนทนา",
+                    "DISCUSSION", comment.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_COMMENT: {}", e.getMessage(), e);
+        }
     }
 
     @Override

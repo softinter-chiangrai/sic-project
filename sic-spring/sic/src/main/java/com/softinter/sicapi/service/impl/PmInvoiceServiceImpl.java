@@ -12,6 +12,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmInvoiceService;
+import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
     private final DocumentVersionService documentVersionService;
+    private final AuditLogService auditLogService;
 
     @Override
     @Transactional(readOnly = true)
@@ -77,6 +79,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 entity.setInvoiceNo("INV-" + System.currentTimeMillis());
             }
             entity = invoiceRepository.save(entity);
+            logInvoiceAudit("CREATE_INVOICE", entity);
         } else if (state == EntityState.MODIFIED) {
             entity = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้"));
@@ -96,6 +99,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = invoiceRepository.save(entity);
+            logInvoiceAudit("UPDATE_INVOICE", entity);
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -121,6 +125,16 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         return entity.getId();
     }
 
+    private void logInvoiceAudit(String action, PmInvoice entity) {
+        try {
+            auditLogService.log(action, "Invoice Management",
+                    action.replace("_", " ") + ": " + entity.getInvoiceNo(),
+                    "INVOICE", entity.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log invoice: {}", e.getMessage(), e);
+        }
+    }
+
     @Override
     @Transactional
     public void delete(UUID id, UUID businessId, String userId) {
@@ -130,6 +144,8 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         invoice.setDeleteBy(userId);
         invoice.setDeleteDate(Instant.now());
         invoiceRepository.save(invoice);
+
+        logInvoiceAudit("DELETE_INVOICE", invoice);
     }
 
     private void mapRequestToEntity(PmInvoiceRequest req, PmInvoice entity) {
