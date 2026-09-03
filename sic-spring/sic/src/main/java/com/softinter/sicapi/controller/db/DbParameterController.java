@@ -27,7 +27,8 @@ public class DbParameterController {
     @Operation(summary = "Get parameter LOV by group and optional parameterCode")
     public ResponseEntity<List<LovResponse>> getLov(
             @RequestParam(required = false, defaultValue = "COMMON") String group,
-            @RequestParam(required = false) String parameterCode) {
+            @RequestParam(required = false) String parameterCode,
+            @RequestParam(required = false) String keyword) {
         List<DbParameter> params;
         if (parameterCode != null && !parameterCode.isBlank()) {
             params = parameterRepository.findByModuleCodeAndParameterCodeAndIsActiveTrueOrderBySortOrder(group, parameterCode);
@@ -37,6 +38,12 @@ public class DbParameterController {
         List<LovResponse> lov = params.stream()
                 .map(p -> new LovResponse(p.getParameterValue(), LocalizationHelper.getParameterName(p)))
                 .collect(Collectors.toList());
+        if (keyword != null && !keyword.isBlank()) {
+            String lowerKeyword = keyword.toLowerCase();
+            lov = lov.stream()
+                    .filter(l -> l.getText() != null && l.getText().toLowerCase().contains(lowerKeyword))
+                    .collect(Collectors.toList());
+        }
         return ResponseEntity.ok(lov);
     }
 }

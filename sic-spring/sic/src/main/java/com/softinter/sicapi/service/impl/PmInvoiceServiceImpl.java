@@ -1,14 +1,18 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.dto.request.PmInvoiceItemRequest;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
+import com.softinter.sicapi.dto.response.PmInvoiceItemResponse;
 import com.softinter.sicapi.dto.response.PmInvoiceResponse;
 import com.softinter.sicapi.entity.enums.BillingType;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.enums.PaymentStatus;
 import com.softinter.sicapi.entity.pm.PmInvoice;
+import com.softinter.sicapi.entity.pm.PmInvoiceItem;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmInvoiceItemRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmInvoiceService;
@@ -29,6 +33,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -36,6 +41,7 @@ import java.util.UUID;
 public class PmInvoiceServiceImpl implements PmInvoiceService {
 
     private final PmInvoiceRepository invoiceRepository;
+    private final PmInvoiceItemRepository invoiceItemRepository;
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
@@ -59,7 +65,13 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     public PmInvoiceResponse findById(UUID id, UUID businessId) {
         PmInvoice invoice = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้"));
-        return toResponse(invoice);
+        PmInvoiceResponse response = toResponse(invoice);
+        response.setItems(invoiceItemRepository
+                .findByInvoiceIdAndIsDeleteFalseOrderBySortOrderAsc(invoice.getId())
+                .stream()
+                .map(this::toItemResponse)
+                .collect(Collectors.toList()));
+        return response;
     }
 
     @Override
@@ -68,6 +80,17 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmInvoice entity;
         String diffSummary = "สร้างใบแจ้งหนี้ (Initial invoice)";
+
+        // ยอดก่อนภาษี (Subtotal) คำนวณจากผลรวมของรายการสินค้า/บริการ (items) โดยอัตโนมัติ เมื่อมีรายการ
+        List<PmInvoiceItemRequest> activeItems = (request.getItems() == null) ? List.of() : request.getItems().stream()
+                .filter(it -> it.getState() == null || it.getState() != EntityState.DELETED.ordinal())
+                .collect(Collectors.toList());
+        if (!activeItems.isEmpty()) {
+            BigDecimal itemsSubtotal = activeItems.stream()
+                    .map(it -> it.getAmount() != null ? it.getAmount() : BigDecimal.ZERO)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            request.setSubtotalAmount(itemsSubtotal);
+        }
 
         if (state == EntityState.ADDED || request.getId() == null) {
             entity = new PmInvoice();
@@ -79,6 +102,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 entity.setInvoiceNo("INV-" + System.currentTimeMillis());
             }
             entity = invoiceRepository.save(entity);
+            saveInvoiceItems(entity.getId(), request.getItems(), userId);
             logInvoiceAudit("CREATE_INVOICE", entity);
         } else if (state == EntityState.MODIFIED) {
             entity = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
@@ -99,6 +123,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = invoiceRepository.save(entity);
+            saveInvoiceItems(entity.getId(), request.getItems(), userId);
             logInvoiceAudit("UPDATE_INVOICE", entity);
         } else if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
@@ -146,6 +171,55 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         invoiceRepository.save(invoice);
 
         logInvoiceAudit("DELETE_INVOICE", invoice);
+    }
+
+    private void saveInvoiceItems(UUID invoiceId, List<PmInvoiceItemRequest> items, String userId) {
+        if (items == null) return;
+        for (PmInvoiceItemRequest itemReq : items) {
+            EntityState itemState = itemReq.getState() != null ? EntityState.values()[itemReq.getState()] : EntityState.DETACHED;
+            if (itemState == EntityState.ADDED || itemReq.getId() == null) {
+                PmInvoiceItem item = new PmInvoiceItem();
+                item.setCreatedBy(userId);
+                item.setCreatedDate(Instant.now());
+                item.setIsDelete(false);
+                item.setInvoiceId(invoiceId);
+                mapItemRequestToEntity(itemReq, item);
+                invoiceItemRepository.save(item);
+            } else if (itemState == EntityState.MODIFIED) {
+                invoiceItemRepository.findById(itemReq.getId()).ifPresent(item -> {
+                    mapItemRequestToEntity(itemReq, item);
+                    item.setUpdatedBy(userId);
+                    item.setUpdatedDate(Instant.now());
+                    invoiceItemRepository.save(item);
+                });
+            } else if (itemState == EntityState.DELETED) {
+                invoiceItemRepository.findById(itemReq.getId()).ifPresent(item -> {
+                    item.setIsDelete(true);
+                    item.setDeleteBy(userId);
+                    item.setDeleteDate(Instant.now());
+                    invoiceItemRepository.save(item);
+                });
+            }
+        }
+    }
+
+    private void mapItemRequestToEntity(PmInvoiceItemRequest req, PmInvoiceItem entity) {
+        entity.setItemName(req.getItemName());
+        entity.setDescription(req.getDescription());
+        entity.setAmount(req.getAmount() != null ? req.getAmount() : BigDecimal.ZERO);
+        entity.setSortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0);
+    }
+
+    private PmInvoiceItemResponse toItemResponse(PmInvoiceItem entity) {
+        PmInvoiceItemResponse res = new PmInvoiceItemResponse();
+        res.setId(entity.getId());
+        res.setInvoiceId(entity.getInvoiceId());
+        res.setItemName(entity.getItemName());
+        res.setDescription(entity.getDescription());
+        res.setAmount(entity.getAmount());
+        res.setSortOrder(entity.getSortOrder());
+        res.setRowVersion(entity.getRowVersion());
+        return res;
     }
 
     private void mapRequestToEntity(PmInvoiceRequest req, PmInvoice entity) {

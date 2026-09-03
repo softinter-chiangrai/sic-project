@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.LovResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -142,18 +143,19 @@ public class ComboboxController {
     @GetMapping("/combobox-members")
     @Operation(summary = "Get business members for combobox ")
     public ResponseEntity<PaginationResponse<LovResponse>> getComboboxMembers(
-        @RequestParam UUID businessId,
+        @RequestParam(required = false) UUID businessId,
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) String value,
         @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,
         @RequestParam(name = "pageSize", defaultValue = "10") int pageSize) {
     int zeroBasedPage = pageNumber - 1;
+    UUID resolvedBusinessId = businessId != null ? businessId : BusinessContextHolder.getBusinessId();
 
     if (value != null && !value.isBlank()) {
-        LovResponse item = memberService.getComboboxMemberByValue(businessId, value);
+        LovResponse item = memberService.getComboboxMemberByValue(resolvedBusinessId, value);
         return ResponseEntity.ok(PaginationUtil.ofSingleItem(item, zeroBasedPage, pageSize));
     }
 
-    return ResponseEntity.ok(memberService.getComboboxMembers(businessId, keyword, zeroBasedPage, pageSize));
+    return ResponseEntity.ok(memberService.getComboboxMembers(resolvedBusinessId, keyword, zeroBasedPage, pageSize));
 }
 }

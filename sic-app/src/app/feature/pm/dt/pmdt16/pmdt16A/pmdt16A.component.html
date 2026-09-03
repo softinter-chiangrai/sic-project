@@ -64,6 +64,105 @@
           [required]="true"
           formControlName="dueDate"
         ></sic-datepicker>
+
+        <sic-combobox
+          label="สัญญาอ้างอิง (Linked Contract)"
+          placeholder="เลือกสัญญาที่เกี่ยวข้อง (ถ้ามี)"
+          [options]="contractOptions()"
+          valueField="value"
+          displayField="text"
+          [clearable]="true"
+          formControlName="contractId"
+        ></sic-combobox>
+      </div>
+    </div>
+
+    <!-- Section 1b: Invoice Items -->
+    <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+        <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-list-check text-[var(--crm-primary)]"></i>
+          รายการสินค้า/บริการ (Invoice Items)
+        </h2>
+        @if (!isView()) {
+          <button
+            type="button"
+            (click)="addItem()"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors"
+          >
+            <i class="bi bi-plus-lg"></i> เพิ่มรายการ
+          </button>
+        }
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-[var(--text-muted)] border-b border-[var(--border)]">
+              <th class="py-2 pr-2 font-medium">ชื่อรายการ (Item)</th>
+              <th class="py-2 pr-2 font-medium">คำอธิบาย (Description)</th>
+              <th class="py-2 pr-2 font-medium text-right w-40">ยอดเงิน (Amount)</th>
+              @if (!isView()) {
+                <th class="py-2 pl-2 w-10"></th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of items(); track $index) {
+              @if (item.state !== 2) {
+                <tr class="border-b border-[var(--border)] last:border-0">
+                  <td class="py-2 pr-2">
+                    <input
+                      type="text"
+                      [ngModel]="item.itemName"
+                      [ngModelOptions]="{standalone: true}"
+                      [disabled]="isView()"
+                      (ngModelChange)="onItemFieldChange($index, 'itemName', $event)"
+                      placeholder="เช่น ค่าพัฒนาระบบงวดที่ 1"
+                      class="w-full text-sm bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none"
+                    />
+                  </td>
+                  <td class="py-2 pr-2">
+                    <input
+                      type="text"
+                      [ngModel]="item.description"
+                      [ngModelOptions]="{standalone: true}"
+                      [disabled]="isView()"
+                      (ngModelChange)="onItemFieldChange($index, 'description', $event)"
+                      placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                      class="w-full text-sm bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none"
+                    />
+                  </td>
+                  <td class="py-2 pr-2 text-right">
+                    <input
+                      type="number"
+                      [ngModel]="item.amount"
+                      [ngModelOptions]="{standalone: true}"
+                      [disabled]="isView()"
+                      (ngModelChange)="onItemFieldChange($index, 'amount', $event)"
+                      min="0"
+                      class="w-full text-sm text-right bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none"
+                    />
+                  </td>
+                  @if (!isView()) {
+                    <td class="py-2 pl-2 text-right">
+                      <button type="button" (click)="removeItem($index)" class="text-[var(--crm-danger)] hover:opacity-80 p-1">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  }
+                </tr>
+              }
+            }
+            @if (!items().length) {
+              <tr>
+                <td colspan="4" class="py-4 text-center text-xs text-[var(--text-muted)]">
+                  ยังไม่มีรายการสินค้า/บริการ กดปุ่ม "เพิ่มรายการ" เพื่อเริ่มต้น
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
       </div>
     </div>
 
@@ -78,6 +177,7 @@
         <sic-input-number
           label="ยอดก่อนภาษี (Subtotal Amount)"
           [min]="0"
+          [readonly]="true"
           formControlName="subtotalAmount"
         ></sic-input-number>
 
@@ -191,28 +291,6 @@
             (selectionChanged)="selectedFlowId.set($event?.id || null)">
           </sic-combobox>
         </div>
-      </div>
-    }
-
-    <!-- Embedded Approval Center (View mode or when document exists) -->
-    @if (id()) {
-      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
-        <div class="border-b border-[var(--border)] pb-3">
-          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
-            สถานะและการอนุมัติใบแจ้งหนี้ (Invoice Approval Status)
-          </h3>
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            ติดตามสถานะการอนุมัติ ลำดับขั้นตอน และดำเนินการอนุมัติหรือปฏิเสธใบแจ้งหนี้
-          </p>
-        </div>
-
-        <sic-approval
-          [documentType]="'INVOICE'"
-          [documentId]="id()!"
-          [documentCode]="formData.form.controls['invoiceNo']?.value"
-          [documentTitle]="formData.form.controls['invoiceNo']?.value ? ('ใบแจ้งหนี้ ' + formData.form.controls['invoiceNo']?.value) : 'ใบแจ้งหนี้'">
-        </sic-approval>
       </div>
     }
 

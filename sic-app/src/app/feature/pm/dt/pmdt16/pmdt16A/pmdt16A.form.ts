@@ -11,7 +11,7 @@ export class Pmdt16AForm {
       contractId: fb.control(null),
       milestoneId: fb.control(null),
       invoiceNo: fb.control(null, [Validators.maxLength(50)]),
-      issueDate: fb.control(new Date().toISOString().split('T')[0], [Validators.required]),
+      issueDate: fb.control(new Date().toISOString(), [Validators.required]),
       dueDate: fb.control(null, [Validators.required]),
       billingType: fb.control('MILESTONE', [Validators.required]),
       subtotalAmount: fb.control(0, [Validators.required, Validators.min(0)]),

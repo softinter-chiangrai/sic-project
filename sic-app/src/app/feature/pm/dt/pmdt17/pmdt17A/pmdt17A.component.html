@@ -59,6 +59,7 @@
         <sic-combobox
           label="ผู้รับผิดชอบแก้ไข (Assigned To)"
           [apiUrl]="apiMembersCombobox"
+          [params]="{ businessId: businessId }"
           valueField="value"
           textField="text"
           placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."

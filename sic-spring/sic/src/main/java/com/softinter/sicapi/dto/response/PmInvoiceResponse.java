@@ -7,6 +7,7 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -35,6 +36,8 @@ public class PmInvoiceResponse {
     private String approvalStatus;
     private String receiptFileRef;
     private String remark;
+
+    private List<PmInvoiceItemResponse> items;
 
     private String createdBy;
     private Instant createdDate;

@@ -1,5 +1,16 @@
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
+export interface PmInvoiceItemModel {
+  id?: string;
+  invoiceId?: string;
+  itemName: string;
+  description?: string;
+  amount: number;
+  sortOrder?: number;
+  state?: SicEntityState | null;
+  rowVersion?: number | null;
+}
+
 export interface PmInvoiceModel {
   id?: string;
   projectId: string;
@@ -21,6 +32,7 @@ export interface PmInvoiceModel {
   receiptGroupId?: string;
   remark?: string;
   isActive?: boolean;
+  items?: PmInvoiceItemModel[];
   state?: SicEntityState | null;
   rowVersion?: number | null;
 }

@@ -15,6 +15,7 @@ import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { BusinessService } from '../../../../../core/services/business.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 import { Pmdt17AService } from './pmdt17A.service';
@@ -48,6 +49,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
+  private businessService = inject(BusinessService);
   private approvalService = inject(ApprovalService);
 
   formData!: SicFromData<PmMaTicketModel>;
@@ -85,6 +87,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;
+  businessId = this.businessService.getCurrentBusinessId();
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);

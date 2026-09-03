@@ -12,7 +12,6 @@ import { SicInputNumberComponent } from '../../../../../core/component/sic-input
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
-import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -22,7 +21,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 import { Pmdt16AForm } from './pmdt16A.form';
 import { Pmdt16AService } from './pmdt16A.service';
-import { PmInvoiceModel } from './pmdt16A.model';
+import { PmInvoiceModel, PmInvoiceItemModel } from './pmdt16A.model';
+import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 
 @Component({
@@ -40,7 +40,6 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicTiptapEditorComponent,
     SicDatepickerComponent,
     SicUploadComponent,
-    SicApprovalComponent,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],
@@ -62,6 +61,9 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   isEdit = signal(false);
   isView = signal(false);
   isPrinting = signal(false);
+
+  contractOptions = signal<Array<{ value: string; text: string }>>([]);
+  items = signal<PmInvoiceItemModel[]>([]);
 
   // Approval Flow
   approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/INVOICE`;
@@ -106,6 +108,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         ...(custId ? { customerId: custId } : {}),
       } as any);
     }
+    this.loadContractOptions(projId || undefined);
 
     // Auto calculate VAT & Total
     this.formData.form.get('subtotalAmount')?.valueChanges.subscribe(() => this.calculateTotals());
@@ -116,6 +119,64 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       this.id.set(paramId);
       this.isEdit.set(!this.isView());
       this.loadData(paramId);
+    }
+  }
+
+  loadContractOptions(projectId?: string): void {
+    this.service.getContractCombobox(projectId).subscribe({
+      next: (res) => this.contractOptions.set(res || []),
+      error: () => this.contractOptions.set([]),
+    });
+  }
+
+  private recalcSubtotalFromItems(): void {
+    const subtotal = this.items().reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    this.formData.form.get('subtotalAmount')?.setValue(subtotal);
+  }
+
+  addItem(): void {
+    if (this.isView()) return;
+    const list = [...this.items()];
+    list.push({
+      itemName: '',
+      description: '',
+      amount: 0,
+      sortOrder: list.length + 1,
+      state: SicEntityState.Added,
+    });
+    this.items.set(list);
+    this.formData.markAsDirty();
+    this.recalcSubtotalFromItems();
+  }
+
+  removeItem(index: number): void {
+    if (this.isView()) return;
+    const list = [...this.items()];
+    const item = list[index];
+    if (item) {
+      if (item.id) {
+        item.state = SicEntityState.Deleted;
+      } else {
+        list.splice(index, 1);
+      }
+      this.items.set(list);
+      this.formData.markAsDirty();
+      this.recalcSubtotalFromItems();
+    }
+  }
+
+  onItemFieldChange(index: number, field: 'itemName' | 'description' | 'amount', value: any): void {
+    const list = [...this.items()];
+    const item = list[index];
+    if (!item) return;
+    (item as any)[field] = field === 'amount' ? (Number(value) || 0) : value;
+    if (item.state !== SicEntityState.Added) {
+      item.state = SicEntityState.Modified;
+    }
+    this.items.set(list);
+    this.formData.markAsDirty();
+    if (field === 'amount') {
+      this.recalcSubtotalFromItems();
     }
   }
 
@@ -148,11 +209,33 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   loadData(id: string) {
     this.service.getById(id).subscribe({
       next: (data) => {
-        this.formData.form.patchValue(data);
-        if (this.isView()) {
-          this.formData.form.disable();
+        const applyData = () => {
+          this.formData.form.patchValue(data);
+          if (data.items) {
+            this.items.set(data.items);
+          }
+          if (this.isView()) {
+            this.formData.form.disable();
+          }
+          this.formData.resetModel(this.formData.form.getRawValue() as any);
+          // Force-resolve the combobox label now that its options are loaded
+          this.formData.form.get('contractId')?.setValue(data.contractId ?? null, { emitEvent: false });
+        };
+
+        if (data.projectId) {
+          this.service.getContractCombobox(data.projectId).subscribe({
+            next: (res) => {
+              this.contractOptions.set(res || []);
+              applyData();
+            },
+            error: () => {
+              this.contractOptions.set([]);
+              applyData();
+            },
+          });
+        } else {
+          applyData();
         }
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
         this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถโหลดข้อมูลใบแจ้งหนี้ได้');
@@ -174,7 +257,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    const formValue = this.formData.form.getRawValue();
+    const formValue = { ...this.formData.form.getRawValue(), items: this.items() };
     this.service.save(formValue).subscribe({
       next: (res: any) => {
         const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();

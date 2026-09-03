@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { PmInvoiceModel } from './pmdt16A.model';
@@ -18,5 +18,13 @@ export class Pmdt16AService {
 
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${apiBaseUrl}/api/pm/invoices/${id}`);
+  }
+
+  getContractCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let httpParams = new HttpParams();
+    if (projectId) {
+      httpParams = httpParams.set('projectId', projectId);
+    }
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/contracts/combobox`, { params: httpParams });
   }
 }

@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -47,4 +48,6 @@ public class PmInvoiceRequest {
 
     private Integer state;
     private Integer rowVersion;
+
+    private List<PmInvoiceItemRequest> items;
 }

@@ -55,17 +55,30 @@ public class SuBusinessRoleController {
     @GetMapping
     @Operation(summary = "Get all business roles")
     public ResponseEntity<List<BusinessRoleResponse>> getAll(
-            @RequestParam(required = false) UUID businessId) {
+            @RequestParam(required = false) UUID businessId,
+            @RequestParam(required = false) String keyword) {
         List<SuBusinessRole> roles;
         if (businessId != null) {
             roles = businessRoleRepository.findAllByBusinessId(businessId);
         } else {
             roles = businessRoleRepository.findAll();
         }
+        if (keyword != null && !keyword.isBlank()) {
+            String lowerKeyword = keyword.toLowerCase();
+            roles = roles.stream()
+                    .filter(r -> containsIgnoreCase(r.getRoleCode(), lowerKeyword)
+                            || containsIgnoreCase(r.getRoleNameEn(), lowerKeyword)
+                            || containsIgnoreCase(r.getRoleNameLocal(), lowerKeyword))
+                    .collect(Collectors.toList());
+        }
         List<BusinessRoleResponse> response = roles.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(response);
+    }
+
+    private boolean containsIgnoreCase(String value, String lowerKeyword) {
+        return value != null && value.toLowerCase().contains(lowerKeyword);
     }
 
     @GetMapping("/paging")
@@ -279,7 +292,8 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
     @Operation(summary = "Get users in a business that have a specific role")
     public ResponseEntity<List<LovResponse>> getUsersByRole(
             @PathVariable UUID businessId,
-            @RequestParam String roleCode) {
+            @RequestParam String roleCode,
+            @RequestParam(required = false) String keyword) {
         List<String> userIds = userBusinessRoleRepository.findUserIdsByBusinessIdAndRoleCode(businessId, roleCode);
         List<LovResponse> result = userIds.stream().map(uid -> {
             String displayName = profileRepository.findByUserId(uid)
@@ -290,6 +304,14 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
                     .orElse(uid);
             return new LovResponse(uid, displayName);
         }).collect(Collectors.toList());
+
+        if (keyword != null && !keyword.isBlank()) {
+            String lowerKeyword = keyword.toLowerCase();
+            result = result.stream()
+                    .filter(r -> r.getText() != null && r.getText().toLowerCase().contains(lowerKeyword))
+                    .collect(Collectors.toList());
+        }
+
         return ResponseEntity.ok(result);
     }
 }
