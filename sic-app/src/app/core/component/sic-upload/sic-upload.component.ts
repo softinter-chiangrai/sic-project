@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import {
   ChangeDetectorRef,
   Component,
@@ -6,9 +7,11 @@ import {
   HostBinding,
   Injector,
   Input,
+  OnChanges,
   OnDestroy,
   OnInit,
   PLATFORM_ID,
+  SimpleChanges,
   ViewChild,
   forwardRef,
   inject,
@@ -109,7 +112,7 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
     },
   ],
 })
-export class SicUploadComponent implements ControlValueAccessor, OnInit, OnDestroy {
+export class SicUploadComponent implements ControlValueAccessor, OnInit, OnChanges, OnDestroy {
   @Input() label?: string;
   @Input() hint?: string;
   @Input() disabled = false;
@@ -142,15 +145,43 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnDestr
   private readonly authService = inject(AuthService);
   private readonly validator = inject(SicValidator);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly http = inject(HttpClient);
   private ngControl: NgControl | null = null;
   private onChange: (value: StorageUploadReference[]) => void = () => {};
   private onTouched: () => void = () => {};
+  private loadedGroupId: string | null = null;
 
   ngOnInit(): void {
     this.ngControl = this.injector.get(NgControl, null);
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
+    // Load files if uploadGroupId was set before ngOnInit
+    if (this.uploadGroupId && this.items.length === 0) {
+      this.loadGroupFiles(this.uploadGroupId);
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['uploadGroupId']) {
+      const groupId = changes['uploadGroupId'].currentValue as string | null;
+      if (groupId && groupId !== this.loadedGroupId && this.items.length === 0) {
+        this.loadGroupFiles(groupId);
+      }
+    }
+  }
+
+  private loadGroupFiles(groupId: string): void {
+    this.loadedGroupId = groupId;
+    const url = `${environment.apiBaseUrl}/api/storage/group/${groupId}`;
+    this.http.get<StorageUploadReference[]>(url).subscribe({
+      next: (refs) => {
+        if (refs && Array.isArray(refs) && refs.length > 0) {
+          this.writeValue(refs);
+        }
+      },
+      error: () => { /* silently ignore */ },
+    });
   }
 
   ngOnDestroy(): void {
@@ -201,6 +232,18 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnDestr
   }
 
   writeValue(value: StorageUploadReference[] | null | undefined): void {
+    // Guard: if value is a string (e.g. UUID from patchValue), load group files instead of iterating chars
+    if (typeof value === 'string') {
+      const groupId = (value as string).trim();
+      if (groupId && groupId !== this.loadedGroupId) {
+        if (!this.uploadGroupId) {
+          this.uploadGroupId = groupId;
+        }
+        this.loadGroupFiles(groupId);
+      }
+      return;
+    }
+
     this.revokeAllPreviewUrls();
 
     for (const item of this.items) {
