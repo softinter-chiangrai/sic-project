@@ -4,10 +4,10 @@ import com.softinter.sicapi.entity.enums.MaTicketSeverity;
 import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.enums.MaTicketType;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -16,10 +16,8 @@ public class PmMaTicketRequest {
 
     private String ticketNo;
 
-    @NotNull(message = "Customer ID is required")
     private UUID customerId;
 
-    @NotNull(message = "Project ID is required")
     private UUID projectId;
 
     private UUID contractId;
@@ -35,13 +33,17 @@ public class PmMaTicketRequest {
     private MaTicketSeverity severity = MaTicketSeverity.MEDIUM;
     private MaTicketStatus status = MaTicketStatus.OPEN;
 
-    private String assignedTo;
+    private List<String> assignedToIds;
     private String reportedBy;
     private Instant reportedDate;
     private Instant targetResponseDate;
     private Instant targetResolveDate;
     private Instant resolvedDate;
     private Instant closedDate;
+    private Instant startDate;
+    private String startTime;
+    private Instant endDate;
+    private String endTime;
     private String resolutionSummary;
 
     private Integer state;

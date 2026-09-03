@@ -153,6 +153,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
       er: '/feature/pm/diagram',
       uat: '/feature/pm/uat',
       test_plan: '/feature/pm/test-plan',
+      user_manual: '/feature/pm/manual',
     };
 
     const baseRoute = routeMap[docType] || '/feature/pm/approval';

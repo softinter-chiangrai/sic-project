@@ -2,12 +2,14 @@ import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
+import { finalize } from 'rxjs';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicInputNumberComponent } from '../../../../../core/component/sic-input-number/sic-input-number.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
+import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
@@ -35,7 +37,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicComboboxComponent,
     SicInputComponent,
     SicInputNumberComponent,
-    SicInputAreaComponent,
+    SicTiptapEditorComponent,
     SicDatepickerComponent,
     SicUploadComponent,
     SicApprovalComponent,
@@ -52,12 +54,14 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
   private approvalService = inject(ApprovalService);
+  private http = inject(HttpClient);
 
   formData!: SicFromData<PmInvoiceModel>;
   id = signal<string | null>(null);
   isSaving = signal(false);
   isEdit = signal(false);
   isView = signal(false);
+  isPrinting = signal(false);
 
   // Approval Flow
   approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/INVOICE`;
@@ -79,9 +83,6 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     { value: 'PAID', label: 'Paid (ชำระครบถ้วน)' },
     { value: 'OVERDUE', label: 'Overdue (เกินกำหนดชำระ)' },
   ];
-
-  apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/lov`;
-  apiProjectCombobox = `${apiBaseUrl}/api/pm/projects/lov`;
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -216,5 +217,36 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   onBack() {
     this.router.navigate(['/feature/pm/invoice']);
+  }
+
+  printPdf(): void {
+    const invoiceId = this.id();
+    if (!invoiceId) {
+      this.dialog.warn('ไม่พบรหัสใบแจ้งหนี้', 'กรุณาบันทึกใบแจ้งหนี้ก่อนส่งออกเอกสาร');
+      return;
+    }
+
+    this.isPrinting.set(true);
+    const url = `${apiBaseUrl}/api/pm/invoices/${invoiceId}/export-pdf`;
+    this.http.get(url, { responseType: 'blob' })
+      .pipe(finalize(() => this.isPrinting.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.download = `invoice-${this.formData?.form?.controls['invoiceNo']?.value || invoiceId}.pdf`;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Export invoice PDF error:', err);
+          this.dialog.error('ส่งออกเอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้: ' + (err?.error?.message || err?.message || ''));
+        },
+      });
   }
 }

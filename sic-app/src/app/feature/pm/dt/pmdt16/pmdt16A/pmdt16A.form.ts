@@ -6,8 +6,8 @@ export class Pmdt16AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmInvoiceModel>> {
     return fb.group<ToForm<PmInvoiceModel>>({
       id: fb.control(null),
-      projectId: fb.control(null, [Validators.required]),
-      customerId: fb.control(null, [Validators.required]),
+      projectId: fb.control(null),
+      customerId: fb.control(null),
       contractId: fb.control(null),
       milestoneId: fb.control(null),
       invoiceNo: fb.control(null, [Validators.maxLength(50)]),

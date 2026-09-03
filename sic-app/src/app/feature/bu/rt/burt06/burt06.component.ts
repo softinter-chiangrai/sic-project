@@ -50,6 +50,7 @@ export class Burt06Component implements OnInit {
     CHANGE_REQUEST: 'Change Request',
     TEST_PLAN: 'Test Plan',
     UAT: 'UAT',
+    USER_MANUAL: 'User Manual',
   };
 
   readonly statusSelectOptions = [

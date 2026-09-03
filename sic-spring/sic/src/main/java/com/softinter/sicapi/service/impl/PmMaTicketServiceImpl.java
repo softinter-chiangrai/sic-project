@@ -7,9 +7,11 @@ import com.softinter.sicapi.entity.enums.MaTicketSeverity;
 import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.enums.MaTicketType;
 import com.softinter.sicapi.entity.pm.PmMaTicket;
+import com.softinter.sicapi.entity.pm.PmMaTicketAssignee;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmMaTicketAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmMaTicketService;
@@ -26,8 +28,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -35,6 +39,7 @@ import java.util.UUID;
 public class PmMaTicketServiceImpl implements PmMaTicketService {
 
     private final PmMaTicketRepository ticketRepository;
+    private final PmMaTicketAssigneeRepository ticketAssigneeRepository;
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
@@ -79,6 +84,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             }
             calculateSlaDates(entity);
             entity = ticketRepository.save(entity);
+            saveAssignees(entity, request.getAssignedToIds());
 
             try {
                 auditLogService.log("CREATE_MA_TICKET", "MA Ticket Management",
@@ -95,17 +101,22 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             }
 
             // ✅ Auto Diff Detection
+            List<String> oldAssigneeIds = ticketAssigneeRepository.findByMaTicketId(entity.getId()).stream()
+                    .map(PmMaTicketAssignee::getUserId)
+                    .collect(Collectors.toList());
             List<String> changes = new ArrayList<>();
             DocumentDiffHelper.checkChange(changes, "หัวข้อปัญหา (Title)", entity.getTitle(), request.getTitle());
             DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus(), request.getStatus());
             DocumentDiffHelper.checkChange(changes, "ระดับความรุนแรง (Severity)", entity.getSeverity(), request.getSeverity());
-            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", entity.getAssignedTo(), request.getAssignedTo());
+            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", oldAssigneeIds, request.getAssignedToIds());
             diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตตั๋วปัญหา " + (request.getTitle() != null ? request.getTitle() : entity.getTitle()));
 
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = ticketRepository.save(entity);
+            ticketAssigneeRepository.deleteByMaTicketId(entity.getId());
+            saveAssignees(entity, request.getAssignedToIds());
 
             try {
                 auditLogService.log("UPDATE_MA_TICKET", "MA Ticket Management",
@@ -199,9 +210,28 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             entity.setClosedDate(Instant.now());
         }
 
-        entity.setAssignedTo(req.getAssignedTo());
         entity.setReportedBy(req.getReportedBy() != null ? req.getReportedBy() : "Customer");
+        entity.setStartDate(req.getStartDate());
+        entity.setStartTime(req.getStartTime());
+        entity.setEndDate(req.getEndDate());
+        entity.setEndTime(req.getEndTime());
         entity.setResolutionSummary(req.getResolutionSummary());
+    }
+
+    private void saveAssignees(PmMaTicket ticket, List<String> assigneeIds) {
+        if (assigneeIds == null || assigneeIds.isEmpty()) {
+            return;
+        }
+        for (String userId : assigneeIds) {
+            if (userId == null || userId.isBlank()) {
+                continue;
+            }
+            PmMaTicketAssignee assignee = new PmMaTicketAssignee();
+            assignee.setMaTicket(ticket);
+            assignee.setBusinessId(ticket.getBusinessId());
+            assignee.setUserId(userId);
+            ticketAssigneeRepository.save(assignee);
+        }
     }
 
     private PmMaTicketResponse toResponse(PmMaTicket entity) {
@@ -218,12 +248,21 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         res.setSeverity(entity.getSeverity());
         res.setStatus(entity.getStatus());
         res.setAssignedTo(entity.getAssignedTo());
+        res.setAssignedToIds(entity.getId() != null
+                ? ticketAssigneeRepository.findByMaTicketId(entity.getId()).stream()
+                        .map(PmMaTicketAssignee::getUserId)
+                        .collect(Collectors.toList())
+                : Collections.emptyList());
         res.setReportedBy(entity.getReportedBy());
         res.setReportedDate(entity.getReportedDate());
         res.setTargetResponseDate(entity.getTargetResponseDate());
         res.setTargetResolveDate(entity.getTargetResolveDate());
         res.setResolvedDate(entity.getResolvedDate());
         res.setClosedDate(entity.getClosedDate());
+        res.setStartDate(entity.getStartDate());
+        res.setStartTime(entity.getStartTime());
+        res.setEndDate(entity.getEndDate());
+        res.setEndTime(entity.getEndTime());
         res.setResolutionSummary(entity.getResolutionSummary());
 
         if (entity.getCustomerId() != null) {

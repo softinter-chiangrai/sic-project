@@ -58,6 +58,11 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private http = inject(HttpClient);
   readonly apiBaseUrl = environment.apiBaseUrl;
 
+  readonly approvalModeComboboxConfig = {
+    apiUrl: `${environment.apiBaseUrl}/api/db/parameter/lov`,
+    params: { group: 'PM', parameterCode: 'APPROVAL_MODE' },
+  };
+
   isEdit = false;
   flowId: string | null = null;
   isLoading = signal(false);
@@ -316,10 +321,5 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     return `${environment.apiBaseUrl}/api/su/business-roles?businessId=${businessId}`;
   }
 
-  get approvalModeComboboxConfig() {
-    return {
-      apiUrl: `${this.apiBaseUrl}/api/db/parameter/lov`,
-      params: { group: 'PM', parameterCode: 'APPROVAL_MODE' },
-    };
-  }
+
 }

@@ -85,6 +85,7 @@ export class Pmdt03Component implements OnInit {
     { value: 'INVOICE', text: 'INVOICE' },
     { value: 'MA_RENEWAL', text: 'MA_RENEWAL' },
     { value: 'CONTRACT', text: 'CONTRACT' },
+    { value: 'USER_MANUAL', text: 'USER_MANUAL' },
   ];
 
   readonly statusSelectOptions = [
@@ -112,6 +113,7 @@ export class Pmdt03Component implements OnInit {
     'INVOICE',
     'MA_RENEWAL',
     'CONTRACT',
+    'USER_MANUAL',
   ];
 
   statusOptions = ['PENDING', 'APPROVED', 'REJECTED', 'NEED_REVISION', 'CANCELLED'];

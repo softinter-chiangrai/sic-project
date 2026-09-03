@@ -6,6 +6,8 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
 import { ApprovalService } from '../../pmdt03/approval.service';
@@ -30,6 +32,8 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicButtonComponent,
     SicComboboxComponent,
     SicInputComponent,
+    SicDatepickerComponent,
+    SicTimepickerComponent,
     SicTiptapEditorComponent,
     SicApprovalComponent,
   ],
@@ -80,8 +84,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     { value: 'CLOSED', label: 'Closed (ปิดตั๋ว)' },
   ];
 
-  apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/lov`;
-  apiProjectCombobox = `${apiBaseUrl}/api/pm/projects/lov`;
+  apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);

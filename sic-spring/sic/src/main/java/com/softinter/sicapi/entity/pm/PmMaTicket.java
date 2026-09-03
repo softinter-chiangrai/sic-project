@@ -20,10 +20,10 @@ public class PmMaTicket extends BaseBusinessEntity {
     @Column(name = "ticket_no", nullable = false, length = 50)
     private String ticketNo;
 
-    @Column(name = "customer_id", nullable = false)
+    @Column(name = "customer_id")
     private UUID customerId;
 
-    @Column(name = "project_id", nullable = false)
+    @Column(name = "project_id")
     private UUID projectId;
 
     @Column(name = "contract_id")
@@ -67,6 +67,18 @@ public class PmMaTicket extends BaseBusinessEntity {
 
     @Column(name = "closed_date")
     private Instant closedDate;
+
+    @Column(name = "start_date")
+    private Instant startDate;
+
+    @Column(name = "start_time", length = 5)
+    private String startTime;
+
+    @Column(name = "end_date")
+    private Instant endDate;
+
+    @Column(name = "end_time", length = 5)
+    private String endTime;
 
     @Column(name = "resolution_summary", columnDefinition = "TEXT")
     private String resolutionSummary;
