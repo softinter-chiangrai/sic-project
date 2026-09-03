@@ -11,7 +11,8 @@ public enum DocumentType {
     CONTRACT("Contract"),
     CHANGE_REQUEST("Change Request"),
     TEST_PLAN("Test Plan"),
-    UAT("UAT");
+    UAT("UAT"),
+    MA_TICKET("MA Ticket");
 
     private final String displayName;
 

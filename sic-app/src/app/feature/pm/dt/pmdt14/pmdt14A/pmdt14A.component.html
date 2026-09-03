@@ -244,6 +244,56 @@
       </sic-upload>
     </div>
 
+    <!-- Approval Flow Selection Card (New / Edit) -->
+    @if (!isView()) {
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <div class="border-b border-[var(--border)] pb-3">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+            กระบวนการอนุมัติ (Approval Flow)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            เลือกกระบวนการอนุมัติสำหรับเอกสารส่งมอบงาน เพื่อส่งให้ผู้มีอำนาจตรวจสอบและอนุมัติตามลำดับขั้นตอน
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            label="กระบวนการอนุมัติ (Approval Flow)"
+            [apiUrl]="approvalFlowsApi"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId.set($event?.id || null)">
+          </sic-combobox>
+        </div>
+      </div>
+    }
+
+    <!-- Embedded Approval Center (View mode or when document exists) -->
+    @if (id()) {
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <div class="border-b border-[var(--border)] pb-3">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
+            สถานะและการอนุมัติเอกสารส่งมอบ (Delivery Approval Status)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            ติดตามสถานะการอนุมัติ ลำดับขั้นตอน และดำเนินการอนุมัติหรือปฏิเสธเอกสารส่งมอบ
+          </p>
+        </div>
+
+        <sic-approval
+          [documentType]="'DELIVERY'"
+          [documentId]="id()!"
+          [documentCode]="formData.form.controls['deliveryCode']?.value"
+          [documentTitle]="formData.form.controls['deliveryTitle']?.value"
+          [version]="formData.form.controls['deliveryVersion']?.value">
+        </sic-approval>
+      </div>
+    }
+
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">

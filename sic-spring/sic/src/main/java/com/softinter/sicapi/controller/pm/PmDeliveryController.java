@@ -6,6 +6,9 @@ import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
 import com.softinter.sicapi.dto.response.PmDeliveryResponse;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDeliveryService;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.entity.pm.PmDelivery;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,7 +21,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -29,8 +34,31 @@ import java.util.UUID;
 public class PmDeliveryController {
 
     private final PmDeliveryService deliveryService;
+    private final PmDeliveryRepository deliveryRepository;
     private final com.softinter.sicapi.service.PmDeliveryExportService exportService;
     private final CurrentUserService currentUserService;
+
+    @GetMapping("/combobox")
+    @Operation(summary = "Get delivery combobox list for dropdowns")
+    public ResponseEntity<List<ComboboxResponse>> getCombobox(
+            @RequestParam(required = false) UUID projectId) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        List<PmDelivery> deliveries;
+        if (projectId != null) {
+            deliveries = deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(businessId, projectId);
+        } else {
+            deliveries = deliveryRepository.findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(businessId);
+        }
+        List<ComboboxResponse> list = deliveries.stream()
+                .map(d -> new ComboboxResponse(
+                        d.getId().toString(),
+                        (d.getDeliveryCode() != null ? d.getDeliveryCode() + " - " : "") +
+                        (d.getDeliveryTitle() != null ? d.getDeliveryTitle() : "เอกสารส่งมอบ") +
+                        (d.getDeliveryType() != null ? " (" + d.getDeliveryType() + ")" : "")
+                ))
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 
     @GetMapping("/paging")
     @Operation(summary = "Get delivery documents list with pagination")

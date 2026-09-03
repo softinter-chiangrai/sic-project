@@ -32,6 +32,14 @@ export class Pmdt15AService {
     return this.http.post<string>(`${apiBaseUrl}/api/pm/manual/save`, data);
   }
 
+  getDeliveryCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let httpParams = new HttpParams();
+    if (projectId) {
+      httpParams = httpParams.set('projectId', projectId);
+    }
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/delivery/combobox`, { params: httpParams });
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${apiBaseUrl}/api/pm/manual/${id}`);
   }

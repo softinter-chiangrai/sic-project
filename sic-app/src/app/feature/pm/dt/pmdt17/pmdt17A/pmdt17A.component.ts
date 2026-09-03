@@ -7,6 +7,9 @@ import { SicButtonComponent } from '../../../../../core/component/sic-button/sic
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
@@ -28,6 +31,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicComboboxComponent,
     SicInputComponent,
     SicTiptapEditorComponent,
+    SicApprovalComponent,
   ],
   templateUrl: './pmdt17A.component.html',
   styleUrls: ['./pmdt17A.component.css'],
@@ -40,11 +44,19 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
+  private approvalService = inject(ApprovalService);
 
   formData!: SicFromData<PmMaTicketModel>;
   id = signal<string | null>(null);
   isSaving = signal(false);
   isEdit = signal(false);
+  isView = signal(false);
+
+  // Approval Flow
+  approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/MA_TICKET`;
+  flows = signal<ApprovalFlow[]>([]);
+  selectedFlowId = signal<string | null>(null);
+  isLoadingFlows = signal(false);
 
   ticketTypeOptions = [
     { value: 'BUG_SUPPORT', label: 'Bug Support (แจ้งปัญหาระบบ)' },
@@ -78,6 +90,13 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     const rawForm = Pmdt17AForm.createForm(this.fb);
     this.formData = new SicFromData<PmMaTicketModel>(rawForm);
 
+    const isViewRoute = this.router.url.includes('/view');
+    if (isViewRoute) {
+      this.isView.set(true);
+    }
+
+    this.loadApprovalFlows();
+
     const projId = this.customerState.getProjectId();
     const custId = this.customerState.getCustomerId();
     if (projId || custId) {
@@ -90,21 +109,46 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     const paramId = this.route.snapshot.params['id'];
     if (paramId) {
       this.id.set(paramId);
-      this.isEdit.set(true);
+      this.isEdit.set(!this.isView());
       this.loadData(paramId);
     }
+  }
+
+  loadApprovalFlows(): void {
+    this.isLoadingFlows.set(true);
+    this.approvalService.getFlowsByDocumentType('MA_TICKET').subscribe({
+      next: (flows) => {
+        this.flows.set(flows);
+        this.isLoadingFlows.set(false);
+        if (flows.length === 1 && !this.selectedFlowId()) {
+          this.selectedFlowId.set(flows[0].id);
+        }
+      },
+      error: () => {
+        this.isLoadingFlows.set(false);
+      },
+    });
   }
 
   loadData(id: string) {
     this.service.getById(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
+        if (this.isView()) {
+          this.formData.form.disable();
+        }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
         this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถโหลดข้อมูลตั๋วได้');
       },
     });
+  }
+
+  goToEditMode(): void {
+    if (this.id()) {
+      this.router.navigate(['/feature/pm/ma-ticket', this.id(), 'edit']);
+    }
   }
 
   submit() {
@@ -115,13 +159,39 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    this.service.save(this.formData.form.getRawValue()).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.isSaved = true;
-        this.formData.markAsPristine();
-        this.dialog.success('สำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
-        this.router.navigate(['/feature/pm/ma-ticket']);
+    const formValue = this.formData.form.getRawValue();
+    this.service.save(formValue).subscribe({
+      next: (res: any) => {
+        const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();
+        if (this.selectedFlowId() && savedId) {
+          this.approvalService.submitForApproval({
+            documentType: 'MA_TICKET',
+            documentId: savedId,
+            documentCode: formValue.ticketNo,
+            documentTitle: formValue.title || (formValue.ticketNo ? ('MA Ticket ' + formValue.ticketNo) : 'MA Ticket'),
+            flowId: this.selectedFlowId()!,
+            comment: 'ส่งขออนุมัติปิดตั๋ว/ดำเนินงาน MA Ticket'
+          }).subscribe({
+            next: () => {
+              this.isSaving.set(false);
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติ MA Ticket เรียบร้อย');
+              this.router.navigate(['/feature/pm/ma-ticket']);
+            },
+            error: (err) => {
+              this.isSaving.set(false);
+              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              this.router.navigate(['/feature/pm/ma-ticket']);
+            }
+          });
+        } else {
+          this.isSaving.set(false);
+          this.isSaved = true;
+          this.formData.markAsPristine();
+          this.dialog.success('สำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
+          this.router.navigate(['/feature/pm/ma-ticket']);
+        }
       },
       error: (err) => {
         this.isSaving.set(false);

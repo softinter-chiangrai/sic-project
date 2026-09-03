@@ -358,8 +358,15 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 .build());
 
         // 5. Check User Manuals
-        List<PmUserManual> manuals = userManualRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
-        boolean manualPassed = !manuals.isEmpty() && manuals.stream().anyMatch(m -> "PUBLISHED".equalsIgnoreCase(m.getStatus()) || "APPROVED".equalsIgnoreCase(m.getStatus()));
+        List<PmUserManual> allManuals = userManualRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+        List<PmUserManual> manuals = (deliveryId != null)
+                ? allManuals.stream().filter(m -> deliveryId.equals(m.getDeliveryId())).toList()
+                : allManuals;
+        if (manuals.isEmpty() && !allManuals.isEmpty()) {
+            // Fallback to project-level manuals if none explicitly tagged to this delivery
+            manuals = allManuals;
+        }
+        boolean manualPassed = !manuals.isEmpty();
         if (manualPassed) passedCount++;
         items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
                 .category("MANUAL")

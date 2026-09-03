@@ -16,6 +16,11 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
+import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
+import { apiBaseUrl } from '../../../../../core/config/api.config';
+
 import { Pmdt14AForm } from './pmdt14A.form';
 import { Pmdt14AService } from './pmdt14A.service';
 import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse } from './pmdt14A.model';
@@ -35,6 +40,7 @@ import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse 
     SicDatepickerComponent,
     SicUploadComponent,
     SicTiptapEditorComponent,
+    SicApprovalComponent,
   ],
   templateUrl: './pmdt14A.component.html',
   styleUrls: ['./pmdt14A.component.css'],
@@ -47,12 +53,19 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   private readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
   private readonly customerState = inject(CustomerStateService);
+  private readonly approvalService = inject(ApprovalService);
 
   formData!: SicFromData<PmDeliveryModel>;
   id = signal<string | null>(null);
   isEdit = signal(false);
   isView = signal(false);
   isSaving = signal(false);
+
+  // Approval Flow
+  approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/DELIVERY`;
+  flows = signal<ApprovalFlow[]>([]);
+  selectedFlowId = signal<string | null>(null);
+  isLoadingFlows = signal(false);
 
   gateCheckData = signal<PmDeliveryGateCheckResponse | null>(null);
   isLoadingGateCheck = signal(false);
@@ -91,6 +104,8 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       this.formData.patchValue({ projectId: projId } as any);
     }
 
+    this.loadApprovalFlows();
+
     const paramId = this.route.snapshot.params['id'];
     if (paramId) {
       this.isEdit.set(!this.isView());
@@ -102,6 +117,22 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         this.runGateCheck(projId);
       }
     }
+  }
+
+  loadApprovalFlows(): void {
+    this.isLoadingFlows.set(true);
+    this.approvalService.getFlowsByDocumentType('DELIVERY').subscribe({
+      next: (flows) => {
+        this.flows.set(flows);
+        this.isLoadingFlows.set(false);
+        if (flows.length === 1 && !this.selectedFlowId()) {
+          this.selectedFlowId.set(flows[0].id);
+        }
+      },
+      error: () => {
+        this.isLoadingFlows.set(false);
+      }
+    });
   }
 
   loadData(id: string): void {
@@ -239,12 +270,38 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     };
 
     this.service.save(payload).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.isSaved = true;
-        this.formData.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารการส่งมอบเรียบร้อย');
-        this.router.navigate(['/feature/pm/delivery']);
+      next: (res: any) => {
+        const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();
+        if (this.selectedFlowId() && savedId) {
+          this.approvalService.submitForApproval({
+            documentType: 'DELIVERY',
+            documentId: savedId,
+            documentCode: payload.deliveryCode,
+            documentTitle: payload.deliveryTitle,
+            version: payload.deliveryVersion,
+            flowId: this.selectedFlowId()!,
+            comment: 'ส่งขออนุมัติเอกสารส่งมอบงาน (Delivery)'
+          }).subscribe({
+            next: () => {
+              this.isSaving.set(false);
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเอกสารส่งมอบงานเรียบร้อย');
+              this.router.navigate(['/feature/pm/delivery']);
+            },
+            error: (err) => {
+              this.isSaving.set(false);
+              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              this.router.navigate(['/feature/pm/delivery']);
+            }
+          });
+        } else {
+          this.isSaving.set(false);
+          this.isSaved = true;
+          this.formData.markAsPristine();
+          this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารการส่งมอบเรียบร้อย');
+          this.router.navigate(['/feature/pm/delivery']);
+        }
       },
       error: (err) => {
         this.isSaving.set(false);

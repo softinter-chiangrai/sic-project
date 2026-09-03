@@ -13,7 +13,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-headset text-[var(--crm-primary)]"></i>
-          {{ isEdit() ? 'แก้ไขตั๋วแจ้งปัญหา MA (Edit MA Ticket)' : 'สร้างตั๋วแจ้งปัญหาใหม่ (New MA Ticket)' }}
+          {{ isView() ? 'ดูตั๋วแจ้งปัญหา MA (View MA Ticket)' : (isEdit() ? 'แก้ไขตั๋วแจ้งปัญหา MA (Edit MA Ticket)' : 'สร้างตั๋วแจ้งปัญหาใหม่ (New MA Ticket)') }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           รับแจ้งปัญหาหลังการส่งมอบ ติดตามการแก้ไข และกำหนดระดับความเร่งด่วนตาม SLA
@@ -105,6 +105,7 @@
       ></sic-tiptap-editor>
     </div>
 
+    <!-- Section 3: Resolution Summary -->
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-check-circle text-[var(--crm-primary)]"></i>
@@ -118,14 +119,69 @@
       ></sic-tiptap-editor>
     </div>
 
+    <!-- Approval Flow Selection Card (New / Edit) -->
+    @if (!isView()) {
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <div class="border-b border-[var(--border)] pb-3">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+            กระบวนการอนุมัติ (Approval Flow)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            เลือกกระบวนการอนุมัติสำหรับตั๋วปัญหานี้ เพื่อส่งให้หัวหน้าทีมและลูกค้ายืนยันการปิดตั๋ว
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            label="กระบวนการอนุมัติ (Approval Flow)"
+            [apiUrl]="approvalFlowsApi"
+            valueField="id"
+            textField="flowName"
+            placeholder="เลือกกระบวนการอนุมัติ"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId.set($event?.id || null)">
+          </sic-combobox>
+        </div>
+      </div>
+    }
+
+    <!-- Embedded Approval Center (View mode or when document exists) -->
+    @if (id()) {
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <div class="border-b border-[var(--border)] pb-3">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
+            สถานะและการอนุมัติตั๋ว MA (MA Ticket Approval Status)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            ติดตามสถานะการอนุมัติ ลำดับขั้นตอน และดำเนินการอนุมัติหรือปฏิเสธการปิดตั๋ว
+          </p>
+        </div>
+
+        <sic-approval
+          [documentType]="'MA_TICKET'"
+          [documentId]="id()!"
+          [documentCode]="formData.form.controls['ticketNo']?.value"
+          [documentTitle]="formData.form.controls['title']?.value || (formData.form.controls['ticketNo']?.value ? ('MA Ticket ' + formData.form.controls['ticketNo']?.value) : 'MA Ticket')">
+        </sic-approval>
+      </div>
+    }
+
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> ยกเลิก
+        <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
       </sic-button>
-      <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
-        <i class="bi bi-check-lg"></i> บันทึกข้อมูล
-      </sic-button>
+      @if (isView()) {
+        <sic-button variant="primary" (click)="goToEditMode()">
+          <i class="bi bi-pencil"></i> แก้ไขข้อมูล
+        </sic-button>
+      } @else {
+        <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
+          <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+        </sic-button>
+      }
     </div>
   </form>
 </div>

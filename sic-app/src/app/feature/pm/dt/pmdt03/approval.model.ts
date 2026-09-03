@@ -26,7 +26,8 @@ export type DocumentType =
     | 'CONTRACT'
     | 'CHANGE_REQUEST'
     | 'TEST_PLAN'
-    | 'UAT';
+    | 'UAT'
+    | 'MA_TICKET';
 
 export interface ApprovalFlowStep {
     id: string;

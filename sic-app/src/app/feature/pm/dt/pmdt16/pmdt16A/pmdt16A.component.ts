@@ -10,6 +10,9 @@ import { SicInputNumberComponent } from '../../../../../core/component/sic-input
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
@@ -35,6 +38,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicInputAreaComponent,
     SicDatepickerComponent,
     SicUploadComponent,
+    SicApprovalComponent,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],
@@ -47,11 +51,19 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   private fb = inject(FormBuilder);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
+  private approvalService = inject(ApprovalService);
 
   formData!: SicFromData<PmInvoiceModel>;
   id = signal<string | null>(null);
   isSaving = signal(false);
   isEdit = signal(false);
+  isView = signal(false);
+
+  // Approval Flow
+  approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/INVOICE`;
+  flows = signal<ApprovalFlow[]>([]);
+  selectedFlowId = signal<string | null>(null);
+  isLoadingFlows = signal(false);
 
   billingTypeOptions = [
     { value: 'FIXED_PRICE', label: 'Fixed Price (งวดราคาคงที่)' },
@@ -78,6 +90,13 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     const rawForm = Pmdt16AForm.createForm(this.fb);
     this.formData = new SicFromData<PmInvoiceModel>(rawForm);
 
+    const isViewRoute = this.router.url.includes('/view');
+    if (isViewRoute) {
+      this.isView.set(true);
+    }
+
+    this.loadApprovalFlows();
+
     const projId = this.customerState.getProjectId();
     const custId = this.customerState.getCustomerId();
     if (projId || custId) {
@@ -94,9 +113,25 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     const paramId = this.route.snapshot.params['id'];
     if (paramId) {
       this.id.set(paramId);
-      this.isEdit.set(true);
+      this.isEdit.set(!this.isView());
       this.loadData(paramId);
     }
+  }
+
+  loadApprovalFlows(): void {
+    this.isLoadingFlows.set(true);
+    this.approvalService.getFlowsByDocumentType('INVOICE').subscribe({
+      next: (flows) => {
+        this.flows.set(flows);
+        this.isLoadingFlows.set(false);
+        if (flows.length === 1 && !this.selectedFlowId()) {
+          this.selectedFlowId.set(flows[0].id);
+        }
+      },
+      error: () => {
+        this.isLoadingFlows.set(false);
+      },
+    });
   }
 
   private calculateTotals(): void {
@@ -113,12 +148,21 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     this.service.getById(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
+        if (this.isView()) {
+          this.formData.form.disable();
+        }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
         this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถโหลดข้อมูลใบแจ้งหนี้ได้');
       },
     });
+  }
+
+  goToEditMode(): void {
+    if (this.id()) {
+      this.router.navigate(['/feature/pm/invoice', this.id(), 'edit']);
+    }
   }
 
   submit() {
@@ -129,13 +173,39 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    this.service.save(this.formData.form.getRawValue()).subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.isSaved = true;
-        this.formData.markAsPristine();
-        this.dialog.success('สำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
-        this.router.navigate(['/feature/pm/invoice']);
+    const formValue = this.formData.form.getRawValue();
+    this.service.save(formValue).subscribe({
+      next: (res: any) => {
+        const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();
+        if (this.selectedFlowId() && savedId) {
+          this.approvalService.submitForApproval({
+            documentType: 'INVOICE',
+            documentId: savedId,
+            documentCode: formValue.invoiceNo,
+            documentTitle: formValue.invoiceNo ? ('ใบแจ้งหนี้ ' + formValue.invoiceNo) : 'ใบแจ้งหนี้',
+            flowId: this.selectedFlowId()!,
+            comment: 'ส่งขออนุมัติใบแจ้งหนี้ (Invoice)'
+          }).subscribe({
+            next: () => {
+              this.isSaving.set(false);
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติใบแจ้งหนี้เรียบร้อย');
+              this.router.navigate(['/feature/pm/invoice']);
+            },
+            error: (err) => {
+              this.isSaving.set(false);
+              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              this.router.navigate(['/feature/pm/invoice']);
+            }
+          });
+        } else {
+          this.isSaving.set(false);
+          this.isSaved = true;
+          this.formData.markAsPristine();
+          this.dialog.success('สำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
+          this.router.navigate(['/feature/pm/invoice']);
+        }
       },
       error: (err) => {
         this.isSaving.set(false);

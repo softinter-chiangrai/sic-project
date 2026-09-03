@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -41,6 +41,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private readonly service = inject(Pmdt15AService);
   private readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   formData!: SicFromData<PmUserManualModel>;
   id = signal<string | null>(null);
@@ -58,12 +59,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     { label: 'Troubleshooting Guide (คู่มือการแก้ปัญหา)', value: 'TROUBLESHOOT' },
   ];
 
-  statusOptions = [
-    { label: 'Draft (ฉบับร่าง)', value: 'DRAFT' },
-    { label: 'Review (อยู่ระหว่างการตรวจสอบ)', value: 'REVIEW' },
-    { label: 'Approved (อนุมัติแล้ว)', value: 'APPROVED' },
-    { label: 'Published (เผยแพร่แล้ว)', value: 'PUBLISHED' },
-  ];
+  deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -72,34 +68,61 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     const rawForm = Pmdt15AForm.createForm(this.fb);
     this.formData = new SicFromData<PmUserManualModel>(rawForm);
 
-    const queryProj = this.route.snapshot.queryParams['projectId'];
-    if (queryProj) {
-      this.formData.patchValue({ projectId: queryProj } as any);
-    }
+    this.initDefaultSections();
 
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.isEdit.set(true);
-      this.id.set(paramId);
-      this.loadData(paramId);
-    } else {
-      this.initDefaultSections();
-    }
+    this.route.queryParams.subscribe((qParams) => {
+      const queryProj = qParams['projectId'];
+      if (queryProj) {
+        this.formData.patchValue({ projectId: queryProj } as any);
+        this.loadDeliveryOptions(queryProj);
+        this.cdr.markForCheck();
+      } else {
+        this.loadDeliveryOptions();
+      }
+    });
+
+    this.route.params.subscribe((params) => {
+      const paramId = params['id'];
+      if (paramId) {
+        this.isEdit.set(true);
+        this.id.set(paramId);
+        this.loadData(paramId);
+      }
+      this.cdr.markForCheck();
+    });
+  }
+
+  loadDeliveryOptions(projectId?: string): void {
+    this.service.getDeliveryCombobox(projectId).subscribe({
+      next: (res) => {
+        this.deliveryOptions.set(res || []);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.deliveryOptions.set([]);
+        this.cdr.markForCheck();
+      },
+    });
   }
 
   loadData(id: string): void {
     this.service.getById(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
+        if (data.projectId) {
+          this.loadDeliveryOptions(data.projectId);
+        }
         if (data.sections && data.sections.length > 0) {
           this.sections.set(data.sections);
         } else {
           this.initDefaultSections();
         }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลได้');
+        this.cdr.markForCheck();
       },
     });
   }
@@ -112,6 +135,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       { sectionCode: 'SEC-4', sectionTitle: '4. คำถามที่พบบ่อยและการแก้ปัญหาเบื้องต้น (FAQ & Troubleshooting)', content: 'รายการปัญหาที่อาจพบและวิธีแก้ไข...', sortOrder: 4 },
     ];
     this.sections.set(defaults);
+    this.cdr.markForCheck();
   }
 
   addSection(): void {
@@ -127,6 +151,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.sections.set(current);
     this.activeSectionIndex.set(current.length - 1);
     this.formData.markAsDirty();
+    this.cdr.markForCheck();
   }
 
   removeSection(index: number): void {
@@ -142,10 +167,12 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       this.activeSectionIndex.set(Math.max(0, current.length - 1));
     }
     this.formData.markAsDirty();
+    this.cdr.markForCheck();
   }
 
   selectSection(index: number): void {
     this.activeSectionIndex.set(index);
+    this.cdr.markForCheck();
   }
 
   updateActiveSectionContent(content: string): void {
@@ -158,6 +185,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       }
       this.sections.set(current);
       this.formData.markAsDirty();
+      this.cdr.markForCheck();
     }
   }
 
@@ -171,6 +199,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       }
       this.sections.set(current);
       this.formData.markAsDirty();
+      this.cdr.markForCheck();
     }
   }
 
@@ -193,7 +222,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.isSaved = true;
         this.dialog.success('สำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
         this.formData.markAsPristine();
-        this.router.navigate(['/feature/pm/manual']);
+        const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
+        this.router.navigate(['/feature/pm/manual'], {
+          queryParams: queryProj ? { projectId: queryProj } : undefined,
+        });
       },
       error: (err) => {
         this.dialog.error('ข้อผิดพลาด', err.message || 'บันทึกคู่มือไม่สำเร็จ');
@@ -203,7 +235,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onBack(): void {
-    this.router.navigate(['/feature/pm/manual']);
+    const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
+    this.router.navigate(['/feature/pm/manual'], {
+      queryParams: queryProj ? { projectId: queryProj } : undefined,
+    });
   }
 }
 

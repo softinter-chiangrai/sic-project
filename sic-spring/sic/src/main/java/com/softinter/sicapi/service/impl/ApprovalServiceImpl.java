@@ -27,6 +27,7 @@ import com.softinter.sicapi.dto.response.CancelApprovalResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.entity.enums.ApprovalMode;
 import com.softinter.sicapi.entity.enums.ApprovalStatus;
+import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.pm.PmApproval;
 import com.softinter.sicapi.entity.pm.PmApprovalFlow;
 import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
@@ -45,9 +46,13 @@ import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmCrAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
@@ -87,6 +92,9 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmDiagramTabRepository diagramTabRepository;
     private final PmCustomerContractRepository customerContractRepository;
     private final PmCustomerProjectRepository customerProjectRepository;
+    private final PmDeliveryRepository deliveryRepository;
+    private final PmInvoiceRepository invoiceRepository;
+    private final PmMaTicketRepository maTicketRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -717,6 +725,18 @@ public class ApprovalServiceImpl implements ApprovalService {
                 diagramTabRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Diagram not found: " + documentId));
                 break;
+            case "DELIVERY":
+                deliveryRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Delivery not found: " + documentId));
+                break;
+            case "INVOICE":
+                invoiceRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Invoice not found: " + documentId));
+                break;
+            case "MA_TICKET":
+                maTicketRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("MA Ticket not found: " + documentId));
+                break;
             default:
                 break;
         }
@@ -755,6 +775,24 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerContractRepository.findById(docId).ifPresent(contract -> {
                     contract.setSignStatus("Sent");
                     customerContractRepository.save(contract);
+                });
+                break;
+            case "DELIVERY":
+                deliveryRepository.findById(docId).ifPresent(del -> {
+                    del.setStatus("PREPARING");
+                    deliveryRepository.save(del);
+                });
+                break;
+            case "INVOICE":
+                invoiceRepository.findById(docId).ifPresent(inv -> {
+                    inv.setApprovalStatus("IN_REVIEW");
+                    invoiceRepository.save(inv);
+                });
+                break;
+            case "MA_TICKET":
+                maTicketRepository.findById(docId).ifPresent(ticket -> {
+                    ticket.setStatus(MaTicketStatus.IN_PROGRESS);
+                    maTicketRepository.save(ticket);
                 });
                 break;
             default:
@@ -816,6 +854,27 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerContractRepository.findById(docId).ifPresent(contract -> {
                     contract.setSignStatus("Signed");
                     customerContractRepository.save(contract);
+                });
+                break;
+            case "DELIVERY":
+                deliveryRepository.findById(docId).ifPresent(del -> {
+                    del.setStatus("CONFIRMED");
+                    del.setPmApprovedBy(approval.getFinalApprover());
+                    del.setPmApprovedDate(Instant.now());
+                    deliveryRepository.save(del);
+                });
+                break;
+            case "INVOICE":
+                invoiceRepository.findById(docId).ifPresent(inv -> {
+                    inv.setApprovalStatus("APPROVED");
+                    invoiceRepository.save(inv);
+                });
+                break;
+            case "MA_TICKET":
+                maTicketRepository.findById(docId).ifPresent(ticket -> {
+                    ticket.setStatus(MaTicketStatus.RESOLVED);
+                    ticket.setResolvedDate(Instant.now());
+                    maTicketRepository.save(ticket);
                 });
                 break;
             default:
@@ -917,6 +976,24 @@ public class ApprovalServiceImpl implements ApprovalService {
                     customerContractRepository.save(contract);
                 });
                 break;
+            case "DELIVERY":
+                deliveryRepository.findById(docId).ifPresent(del -> {
+                    del.setStatus("DRAFT");
+                    deliveryRepository.save(del);
+                });
+                break;
+            case "INVOICE":
+                invoiceRepository.findById(docId).ifPresent(inv -> {
+                    inv.setApprovalStatus("REJECTED");
+                    invoiceRepository.save(inv);
+                });
+                break;
+            case "MA_TICKET":
+                maTicketRepository.findById(docId).ifPresent(ticket -> {
+                    ticket.setStatus(MaTicketStatus.OPEN);
+                    maTicketRepository.save(ticket);
+                });
+                break;
             default:
                 break;
         }
@@ -955,6 +1032,24 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerContractRepository.findById(docId).ifPresent(contract -> {
                     contract.setSignStatus("Draft");
                     customerContractRepository.save(contract);
+                });
+                break;
+            case "DELIVERY":
+                deliveryRepository.findById(docId).ifPresent(del -> {
+                    del.setStatus("DRAFT");
+                    deliveryRepository.save(del);
+                });
+                break;
+            case "INVOICE":
+                invoiceRepository.findById(docId).ifPresent(inv -> {
+                    inv.setApprovalStatus("DRAFT");
+                    invoiceRepository.save(inv);
+                });
+                break;
+            case "MA_TICKET":
+                maTicketRepository.findById(docId).ifPresent(ticket -> {
+                    ticket.setStatus(MaTicketStatus.OPEN);
+                    maTicketRepository.save(ticket);
                 });
                 break;
             default:
@@ -1103,6 +1198,24 @@ public class ApprovalServiceImpl implements ApprovalService {
                     var diagOpt = diagramTabRepository.findById(documentId);
                     if (diagOpt.isPresent()) {
                         projId = diagOpt.get().getProjectId();
+                    }
+                    break;
+                case "DELIVERY":
+                    var delOpt = deliveryRepository.findById(documentId);
+                    if (delOpt.isPresent()) {
+                        projId = delOpt.get().getProjectId();
+                    }
+                    break;
+                case "INVOICE":
+                    var invOpt = invoiceRepository.findById(documentId);
+                    if (invOpt.isPresent()) {
+                        projId = invOpt.get().getProjectId();
+                    }
+                    break;
+                case "MA_TICKET":
+                    var ticketOpt = maTicketRepository.findById(documentId);
+                    if (ticketOpt.isPresent()) {
+                        projId = ticketOpt.get().getProjectId();
                     }
                     break;
                 default:
