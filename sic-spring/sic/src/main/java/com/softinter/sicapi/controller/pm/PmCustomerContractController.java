@@ -112,4 +112,15 @@ public class PmCustomerContractController {
         UUID businessId = businessAccessService.getBusinessId();
         return ResponseEntity.ok(contractService.getComboboxProjects(businessId, customerId));
     }
+
+    // ✅ Combobox Contract (กรองตาม customerId หรือ projectId หรือ businessId)
+    @GetMapping("/combobox")
+    @Operation(summary = "ดึงรายการสัญญาสำหรับ Combobox")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxContracts(
+            @RequestParam(required = false) UUID customerId,
+            @RequestParam(required = false) UUID projectId
+    ) {
+        UUID businessId = businessAccessService.getBusinessId();
+        return ResponseEntity.ok(contractService.getComboboxContracts(businessId, customerId, projectId));
+    }
 }

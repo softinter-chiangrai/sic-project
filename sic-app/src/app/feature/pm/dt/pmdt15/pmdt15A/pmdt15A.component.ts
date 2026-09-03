@@ -1,7 +1,9 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
@@ -12,6 +14,9 @@ import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
+import { apiBaseUrl } from '../../../../../core/config/api.config';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import { ApprovalFlow } from '../../pmdt03/approval.model';
 
 import { Pmdt15AForm } from './pmdt15A.form';
 import { Pmdt15AService } from './pmdt15A.service';
@@ -42,11 +47,20 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly approvalService = inject(ApprovalService);
+  private readonly http = inject(HttpClient);
 
   formData!: SicFromData<PmUserManualModel>;
   id = signal<string | null>(null);
   isEdit = signal(false);
   isSaving = signal(false);
+  isPrinting = signal(false);
+
+  // Approval Flow
+  approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/USER_MANUAL`;
+  flows = signal<ApprovalFlow[]>([]);
+  selectedFlowId = signal<string | null>(null);
+  isLoadingFlows = signal(false);
 
   sections = signal<PmUserManualSectionModel[]>([]);
   activeSectionIndex = signal<number>(0);
@@ -69,6 +83,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.formData = new SicFromData<PmUserManualModel>(rawForm);
 
     this.initDefaultSections();
+    this.loadApprovalFlows();
 
     this.route.queryParams.subscribe((qParams) => {
       const queryProj = qParams['projectId'];
@@ -89,6 +104,24 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.loadData(paramId);
       }
       this.cdr.markForCheck();
+    });
+  }
+
+  loadApprovalFlows(): void {
+    this.isLoadingFlows.set(true);
+    this.approvalService.getFlowsByDocumentType('USER_MANUAL').subscribe({
+      next: (flows) => {
+        this.flows.set(flows || []);
+        this.isLoadingFlows.set(false);
+        if (flows && flows.length === 1 && !this.selectedFlowId()) {
+          this.selectedFlowId.set(flows[0].id);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.isLoadingFlows.set(false);
+        this.cdr.markForCheck();
+      },
     });
   }
 
@@ -218,20 +251,85 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
     this.isSaving.set(true);
     this.service.save(payload).subscribe({
-      next: () => {
-        this.isSaved = true;
-        this.dialog.success('สำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
-        this.formData.markAsPristine();
-        const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
-        this.router.navigate(['/feature/pm/manual'], {
-          queryParams: queryProj ? { projectId: queryProj } : undefined,
-        });
+      next: (res: any) => {
+        const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();
+        const formVal = this.formData.form.getRawValue() as any;
+
+        if (this.selectedFlowId() && savedId) {
+          this.approvalService.submitForApproval({
+            documentType: 'USER_MANUAL',
+            documentId: savedId,
+            documentCode: formVal.manualCode || payload.manualCode,
+            documentTitle: formVal.manualTitle ? ('คู่มือการใช้งาน ' + formVal.manualTitle) : 'คู่มือการใช้งาน',
+            flowId: this.selectedFlowId()!,
+            comment: 'ส่งขออนุมัติคู่มือการใช้งาน (User Manual)'
+          }).subscribe({
+            next: () => {
+              this.isSaving.set(false);
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติคู่มือการใช้งานเรียบร้อยแล้ว');
+              const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
+              this.router.navigate(['/feature/pm/manual'], {
+                queryParams: queryProj ? { projectId: queryProj } : undefined,
+              });
+            },
+            error: (err) => {
+              this.isSaving.set(false);
+              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
+              this.router.navigate(['/feature/pm/manual'], {
+                queryParams: queryProj ? { projectId: queryProj } : undefined,
+              });
+            }
+          });
+        } else {
+          this.isSaved = true;
+          this.dialog.success('สำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
+          this.formData.markAsPristine();
+          const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
+          this.router.navigate(['/feature/pm/manual'], {
+            queryParams: queryProj ? { projectId: queryProj } : undefined,
+          });
+          this.isSaving.set(false);
+        }
       },
       error: (err) => {
         this.dialog.error('ข้อผิดพลาด', err.message || 'บันทึกคู่มือไม่สำเร็จ');
+        this.isSaving.set(false);
       },
-      complete: () => this.isSaving.set(false),
     });
+  }
+
+  printPdf(): void {
+    const manualId = this.id();
+    if (!manualId) {
+      this.dialog.warn('ไม่พบรหัสคู่มือ', 'กรุณาบันทึกคู่มือก่อนพิมพ์รายงาน');
+      return;
+    }
+
+    this.isPrinting.set(true);
+    const url = `${apiBaseUrl}/api/pm/manual/${manualId}/export-pdf`;
+    this.http.get(url, { responseType: 'blob' })
+      .pipe(finalize(() => this.isPrinting.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.download = `user-manual-${this.formData?.form?.controls['manualCode']?.value || manualId}.pdf`;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Print user manual error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้: ' + (err?.error?.message || err?.message || ''));
+        },
+      });
   }
 
   onBack(): void {

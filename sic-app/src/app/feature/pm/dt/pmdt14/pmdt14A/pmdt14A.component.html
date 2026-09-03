@@ -117,31 +117,20 @@
           displayField="label">
         </sic-combobox>
 
+        <sic-combobox
+          formControlName="contractId"
+          label="สัญญาที่เกี่ยวข้อง (Linked Contract)"
+          placeholder="เลือกสัญญาโครงการ (ถ้ามี)"
+          [options]="contractOptions()"
+          valueField="value"
+          displayField="text"
+          [clearable]="true">
+        </sic-combobox>
+
         <sic-datepicker
           formControlName="deliveryDate"
           label="วันที่ส่งมอบ (Delivery Date)">
         </sic-datepicker>
-
-        <!-- Auto Version Badge -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-[var(--text-muted)]">เวอร์ชัน (Version)</label>
-          <div class="h-10 px-3.5 flex items-center gap-2 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-sm font-medium text-[var(--text-active)]">
-            <span class="px-2 py-0.5 rounded text-xs font-bold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-              v{{ formData.form.controls['deliveryVersion']?.value || '1.0' }}
-            </span>
-            <span class="text-xs text-[var(--text-muted)]">(ระบบคุมเวอร์ชันอัตโนมัติ)</span>
-          </div>
-        </div>
-
-        <!-- Auto Status Badge -->
-        <div class="flex flex-col gap-1.5">
-          <label class="text-xs font-semibold text-[var(--text-muted)]">สถานะเอกสาร (Status)</label>
-          <div class="h-10 px-3.5 flex items-center gap-2 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-sm font-medium text-[var(--text-active)]">
-            <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-            <span>{{ formData.form.controls['status']?.value || 'DRAFT' }}</span>
-            <span class="text-xs text-[var(--text-muted)]">(จัดการตาม Workflow อัตโนมัติ)</span>
-          </div>
-        </div>
       </div>
 
       <!-- Rich Text Editors using Tiptap -->
@@ -268,29 +257,6 @@
             (selectionChanged)="selectedFlowId.set($event?.id || null)">
           </sic-combobox>
         </div>
-      </div>
-    }
-
-    <!-- Embedded Approval Center (View mode or when document exists) -->
-    @if (id()) {
-      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
-        <div class="border-b border-[var(--border)] pb-3">
-          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
-            สถานะและการอนุมัติเอกสารส่งมอบ (Delivery Approval Status)
-          </h3>
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            ติดตามสถานะการอนุมัติ ลำดับขั้นตอน และดำเนินการอนุมัติหรือปฏิเสธเอกสารส่งมอบ
-          </p>
-        </div>
-
-        <sic-approval
-          [documentType]="'DELIVERY'"
-          [documentId]="id()!"
-          [documentCode]="formData.form.controls['deliveryCode']?.value"
-          [documentTitle]="formData.form.controls['deliveryTitle']?.value"
-          [version]="formData.form.controls['deliveryVersion']?.value">
-        </sic-approval>
       </div>
     }
 

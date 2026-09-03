@@ -31,4 +31,7 @@ public interface PmCustomerContractService {
 
     // ✅ Combobox Project (กรองตาม customerId)
     List<ComboboxResponse> getComboboxProjects(UUID businessId, UUID customerId);
+
+    // ✅ Combobox Contract (กรองตาม customerId หรือ projectId หรือ businessId)
+    List<ComboboxResponse> getComboboxContracts(UUID businessId, UUID customerId, UUID projectId);
 }

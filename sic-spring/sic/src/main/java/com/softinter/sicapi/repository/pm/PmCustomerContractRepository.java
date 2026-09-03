@@ -14,4 +14,8 @@ public interface PmCustomerContractRepository
                 JpaSpecificationExecutor<PmCustomerContract> {
 
     List<PmCustomerContract> findByCustomerIdAndIsDeleteFalse(UUID customerId);
+
+    List<PmCustomerContract> findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId);
+
+    List<PmCustomerContract> findByBusinessIdAndCustomerIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId, UUID customerId);
 }

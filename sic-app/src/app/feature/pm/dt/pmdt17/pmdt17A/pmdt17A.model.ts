@@ -9,6 +9,7 @@ export interface PmMaTicketModel {
   ticketType: 'BUG_SUPPORT' | 'DATA_ISSUE' | 'USER_SUPPORT' | 'CHANGE_REQUEST';
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   status: 'OPEN' | 'IN_PROGRESS' | 'WAITING_CUSTOMER' | 'RESOLVED' | 'CLOSED';
+  approvalStatus?: string;
   assignedTo?: string;
   resolutionSummary?: string;
   isActive?: boolean;

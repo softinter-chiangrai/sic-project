@@ -81,6 +81,9 @@
               สถานะ
             </th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+              การอนุมัติ
+            </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
               จัดการ
             </th>
           </tr>
@@ -123,6 +126,15 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-center">
+                @if (item.approvalStatus) {
+                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(item.approvalStatus)">
+                    {{ getApprovalStatusText(item.approvalStatus) }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-center">
                 <sic-table-actions
                   [showView]="true"
                   [showEdit]="true"
@@ -137,7 +149,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
+              <td colspan="7" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-box-seam text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีรายการเอกสารส่งมอบ</p>

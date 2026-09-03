@@ -4,6 +4,7 @@ import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmUserManualRequest;
 import com.softinter.sicapi.dto.response.PmUserManualResponse;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.service.PmUserManualExportService;
 import com.softinter.sicapi.service.PmUserManualService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -28,6 +29,7 @@ import java.util.UUID;
 public class PmUserManualController {
 
     private final PmUserManualService manualService;
+    private final PmUserManualExportService exportService;
     private final CurrentUserService currentUserService;
 
     @GetMapping("/paging")
@@ -50,6 +52,17 @@ public class PmUserManualController {
     public ResponseEntity<PmUserManualResponse> getById(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         return ResponseEntity.ok(manualService.findById(id, businessId));
+    }
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export official User Manual Document as PDF using JasperReports")
+    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        byte[] pdfBytes = exportService.exportUserManualPdf(id, businessId);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"user-manual-" + id + ".pdf\"")
+                .body(pdfBytes);
     }
 
     @PostMapping("/save")

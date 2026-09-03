@@ -28,6 +28,7 @@ export interface PmUserManualModel extends SicBaseStateModel {
   relatedSpecId?: string;
   deliveryId?: string;
   status: string; // DRAFT, REVIEW, APPROVED, PUBLISHED
+  approvalStatus?: string;
   attachmentGroupId?: string;
   sections?: PmUserManualSectionModel[];
 }

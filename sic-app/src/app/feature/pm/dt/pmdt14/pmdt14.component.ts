@@ -11,6 +11,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { ApprovalService } from '../pmdt03/approval.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -28,6 +29,7 @@ export class Pmdt14Component implements OnInit {
   private readonly service = inject(Pmdt14AService);
   private readonly dialog = inject(DialogService);
   private readonly http = inject(HttpClient);
+  private readonly approvalService = inject(ApprovalService);
 
   deliveries = signal<PmDeliveryModel[]>([]);
   isLoading = signal(false);
@@ -84,13 +86,33 @@ export class Pmdt14Component implements OnInit {
     this.isLoading.set(true);
     this.service.getPaging({ page: this.page(), size: this.size() }).subscribe({
       next: (res) => {
-        this.deliveries.set(res.content || []);
+        const items = res.content || [];
+        this.deliveries.set(items);
         this.totalElements.set(res.totalElements || 0);
         this.isLoading.set(false);
+        this.loadApprovalStatuses(items);
       },
       error: () => {
         this.isLoading.set(false);
       },
+    });
+  }
+
+  loadApprovalStatuses(deliveries: PmDeliveryModel[]): void {
+    deliveries.forEach((delivery) => {
+      if (!delivery.id) return;
+      this.approvalService.getDocumentStatus('DELIVERY', delivery.id).subscribe({
+        next: (approval) => {
+          this.deliveries.update((list) =>
+            list.map((item) =>
+              item.id === delivery.id ? { ...item, approvalStatus: approval.status } : item
+            )
+          );
+        },
+        error: () => {
+          // No approval status or not submitted yet
+        },
+      });
     });
   }
 
@@ -199,6 +221,30 @@ export class Pmdt14Component implements OnInit {
       CONFIRMED: 'ลูกค้ายืนยันรับมอบแล้ว',
     };
     return map[status] || status;
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    if (!status) return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+    const s = status.toUpperCase();
+    const map: Record<string, string> = {
+      PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+      REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      NEED_REVISION: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+      CANCELLED: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20',
+    };
+    return map[s] || 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status.toUpperCase()] || status : '-';
   }
 }
 

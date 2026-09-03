@@ -52,8 +52,8 @@ import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
+import com.softinter.sicapi.repository.pm.PmUserManualRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.repository.su.SuUserBusinessRoleRepository;
 import com.softinter.sicapi.service.ApprovalFlowService;
@@ -95,6 +95,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmDeliveryRepository deliveryRepository;
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
+    private final PmUserManualRepository userManualRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
 
@@ -737,6 +738,11 @@ public class ApprovalServiceImpl implements ApprovalService {
                 maTicketRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("MA Ticket not found: " + documentId));
                 break;
+            case "USER_MANUAL":
+            case "MANUAL":
+                userManualRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("User Manual not found: " + documentId));
+                break;
             default:
                 break;
         }
@@ -793,6 +799,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                 maTicketRepository.findById(docId).ifPresent(ticket -> {
                     ticket.setStatus(MaTicketStatus.IN_PROGRESS);
                     maTicketRepository.save(ticket);
+                });
+                break;
+            case "USER_MANUAL":
+            case "MANUAL":
+                userManualRepository.findById(docId).ifPresent(man -> {
+                    man.setStatus("REVIEW");
+                    userManualRepository.save(man);
                 });
                 break;
             default:
@@ -875,6 +888,14 @@ public class ApprovalServiceImpl implements ApprovalService {
                     ticket.setStatus(MaTicketStatus.RESOLVED);
                     ticket.setResolvedDate(Instant.now());
                     maTicketRepository.save(ticket);
+                });
+                break;
+            case "USER_MANUAL":
+            case "MANUAL":
+                userManualRepository.findById(docId).ifPresent(man -> {
+                    man.setStatus("APPROVED");
+                    man.setVersion(majorVersion);
+                    userManualRepository.save(man);
                 });
                 break;
             default:
@@ -994,6 +1015,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                     maTicketRepository.save(ticket);
                 });
                 break;
+            case "USER_MANUAL":
+            case "MANUAL":
+                userManualRepository.findById(docId).ifPresent(man -> {
+                    man.setStatus("DRAFT");
+                    userManualRepository.save(man);
+                });
+                break;
             default:
                 break;
         }
@@ -1050,6 +1078,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                 maTicketRepository.findById(docId).ifPresent(ticket -> {
                     ticket.setStatus(MaTicketStatus.OPEN);
                     maTicketRepository.save(ticket);
+                });
+                break;
+            case "USER_MANUAL":
+            case "MANUAL":
+                userManualRepository.findById(docId).ifPresent(man -> {
+                    man.setStatus("DRAFT");
+                    userManualRepository.save(man);
                 });
                 break;
             default:
@@ -1216,6 +1251,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                     var ticketOpt = maTicketRepository.findById(documentId);
                     if (ticketOpt.isPresent()) {
                         projId = ticketOpt.get().getProjectId();
+                    }
+                    break;
+                case "USER_MANUAL":
+                case "MANUAL":
+                    var manualOpt = userManualRepository.findById(documentId);
+                    if (manualOpt.isPresent()) {
+                        projId = manualOpt.get().getProjectId();
                     }
                     break;
                 default:

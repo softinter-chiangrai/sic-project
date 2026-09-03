@@ -3,6 +3,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 export interface PmDeliveryModel {
   id?: string;
   projectId: string;
+  contractId?: string;
   deliveryCode: string;
   deliveryTitle: string;
   deliveryType: 'FINAL' | 'PARTIAL' | 'MILESTONE';
@@ -20,6 +21,7 @@ export interface PmDeliveryModel {
   checkedChecklistCount?: number;
   totalChecklistCount?: number;
   isActive?: boolean;
+  approvalStatus?: string;
   state?: SicEntityState | null;
   rowVersion?: number | null;
 }

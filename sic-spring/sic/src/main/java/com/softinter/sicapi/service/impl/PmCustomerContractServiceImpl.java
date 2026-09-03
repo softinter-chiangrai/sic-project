@@ -250,6 +250,38 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 .collect(Collectors.toList());
     }
 
+    // ✅ Combobox Contract (กรองตาม projectId หรือ customerId หรือ businessId)
+    @Override
+    @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxContracts(UUID businessId, UUID customerId, UUID projectId) {
+        List<PmCustomerContract> contracts;
+
+        // ถ้ามี projectId ให้ลองหา customerId หรือ contractId จากโปรเจกต์ก่อน
+        if (projectId != null) {
+            var projectOpt = projectRepository.findById(projectId);
+            if (projectOpt.isPresent()) {
+                PmCustomerProject project = projectOpt.get();
+                if (customerId == null && project.getCustomerId() != null) {
+                    customerId = project.getCustomerId();
+                }
+            }
+        }
+
+        if (customerId != null) {
+            contracts = contractRepository.findByBusinessIdAndCustomerIdAndIsDeleteFalseOrderByCreatedDateDesc(businessId, customerId);
+        } else {
+            contracts = contractRepository.findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(businessId);
+        }
+
+        return contracts.stream()
+                .map(c -> new ComboboxResponse(
+                        c.getId().toString(),
+                        (c.getContractNo() != null ? c.getContractNo() : "สัญญา") +
+                        (c.getContractType() != null && !c.getContractType().isBlank() ? " (" + c.getContractType() + ")" : "")
+                ))
+                .collect(Collectors.toList());
+    }
+
     // ===== แปลง Entity → DTO =====
     private PmCustomerContractResponse toResponse(PmCustomerContract contract) {
         PmCustomerContractResponse dto = new PmCustomerContractResponse();

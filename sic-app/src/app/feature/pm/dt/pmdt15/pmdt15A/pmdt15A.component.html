@@ -19,6 +19,14 @@
         </p>
       </div>
     </div>
+    @if (id()) {
+      <div class="flex items-center gap-2">
+        <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
+          <i class="bi bi-file-earmark-pdf text-red-500"></i>
+          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF (JasperReports)' }}
+        </sic-button>
+      </div>
+    }
   </div>
 
   <!-- Main Meta Form -->
@@ -163,11 +171,42 @@
       </div>
     </div>
 
+    <!-- Approval Flow Selection Card -->
+    <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+      <div class="border-b border-[var(--border)] pb-3">
+        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+          กระบวนการอนุมัติคู่มือการใช้งาน (Approval Flow)
+        </h3>
+        <p class="text-xs text-[var(--text-muted)] mt-1">
+          เลือกกระบวนการอนุมัติสำหรับคู่มือการใช้งานนี้ เพื่อส่งให้ผู้จัดการโครงการและลูกค้ายืนยันรับรอง
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <sic-combobox
+          label="กระบวนการอนุมัติ (Approval Flow)"
+          [apiUrl]="approvalFlowsApi"
+          valueField="id"
+          textField="flowName"
+          placeholder="เลือกกระบวนการอนุมัติ"
+          [clearable]="true"
+          (selectionChanged)="selectedFlowId.set($event?.id || null)">
+        </sic-combobox>
+      </div>
+    </div>
+
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> ยกเลิก
       </sic-button>
+      @if (id()) {
+        <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
+          <i class="bi bi-file-earmark-pdf text-red-500"></i>
+          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF' }}
+        </sic-button>
+      }
       <sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
         <i class="bi bi-check-lg"></i> {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึกคู่มือ' }}
       </sic-button>

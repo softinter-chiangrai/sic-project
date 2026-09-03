@@ -81,6 +81,9 @@
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
               สถานะ
             </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+              การอนุมัติ
+            </th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
               จัดการ
             </th>
@@ -113,6 +116,15 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
+                @if (approvalStatusMap()[item.id]) {
+                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[item.id])">
+                    {{ getApprovalStatusText(approvalStatusMap()[item.id]) }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-center">
                 <sic-table-actions
                   [showView]="true"
                   [showEdit]="true"
@@ -127,7 +139,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="px-4 py-12 text-center">
+              <td colspan="8" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-arrow-repeat text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีรายการเสนอต่อสัญญา MA</p>

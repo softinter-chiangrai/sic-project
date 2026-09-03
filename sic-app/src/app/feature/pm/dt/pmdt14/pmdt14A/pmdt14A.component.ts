@@ -16,14 +16,12 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
-import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
-import { ApprovalService } from '../../pmdt03/approval.service';
-import type { ApprovalFlow } from '../../pmdt03/approval.model';
-import { apiBaseUrl } from '../../../../../core/config/api.config';
-
 import { Pmdt14AForm } from './pmdt14A.form';
 import { Pmdt14AService } from './pmdt14A.service';
 import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse } from './pmdt14A.model';
+import { ApprovalService } from '../../pmdt03/approval.service';
+import { apiBaseUrl } from '../../../../../core/config/api.config';
+import { ApprovalFlow } from '../../pmdt03/approval.model';
 
 @Component({
   selector: 'app-pmdt14a',
@@ -40,7 +38,6 @@ import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse 
     SicDatepickerComponent,
     SicUploadComponent,
     SicTiptapEditorComponent,
-    SicApprovalComponent,
   ],
   templateUrl: './pmdt14A.component.html',
   styleUrls: ['./pmdt14A.component.css'],
@@ -71,6 +68,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   isLoadingGateCheck = signal(false);
 
   checklists = signal<PmDeliveryChecklistModel[]>([]);
+  contractOptions = signal<Array<{ value: string; text: string }>>([]);
 
   // Delivery options
   typeOptions = [
@@ -102,6 +100,9 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     const projId = this.customerState.getProjectId();
     if (projId) {
       this.formData.patchValue({ projectId: projId } as any);
+      this.loadContractOptions(projId);
+    } else {
+      this.loadContractOptions();
     }
 
     this.loadApprovalFlows();
@@ -117,6 +118,17 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         this.runGateCheck(projId);
       }
     }
+  }
+
+  loadContractOptions(projectId?: string): void {
+    this.service.getContractCombobox(projectId).subscribe({
+      next: (res) => {
+        this.contractOptions.set(res || []);
+      },
+      error: () => {
+        this.contractOptions.set([]);
+      }
+    });
   }
 
   loadApprovalFlows(): void {
@@ -147,6 +159,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
         if (data.projectId) {
+          this.loadContractOptions(data.projectId);
           this.runGateCheck(data.projectId, id);
         }
       },

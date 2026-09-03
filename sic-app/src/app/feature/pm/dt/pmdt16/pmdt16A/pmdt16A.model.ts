@@ -15,6 +15,7 @@ export interface PmInvoiceModel {
   vatAmount: number;
   totalAmount: number;
   paymentStatus: string;
+  approvalStatus?: string;
   paidAmount?: number;
   paidDate?: string;
   receiptGroupId?: string;

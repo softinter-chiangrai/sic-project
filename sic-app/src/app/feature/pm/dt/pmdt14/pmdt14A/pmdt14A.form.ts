@@ -7,6 +7,7 @@ export class Pmdt14AForm {
     return fb.group<ToForm<PmDeliveryModel>>({
       id: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
+      contractId: fb.control(null),
       deliveryCode: fb.control(null, [Validators.required, Validators.maxLength(50)]),
       deliveryTitle: fb.control(null, [Validators.required, Validators.maxLength(200)]),
       deliveryType: fb.control('FINAL', [Validators.required]),

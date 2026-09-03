@@ -34,4 +34,12 @@ export class Pmdt14AService {
     }
     return this.http.get<PmDeliveryGateCheckResponse>(`${apiBaseUrl}/api/pm/delivery/gate-check`, { params: httpParams });
   }
+
+  getContractCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let httpParams = new HttpParams();
+    if (projectId) {
+      httpParams = httpParams.set('projectId', projectId);
+    }
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/contracts/combobox`, { params: httpParams });
+  }
 }

@@ -122,6 +122,9 @@
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
               สถานะ
             </th>
+            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+              การอนุมัติ
+            </th>
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
               จัดการ
             </th>
@@ -153,14 +156,25 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
+                @if (item.approvalStatus) {
+                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(item.approvalStatus)">
+                    {{ getApprovalStatusText(item.approvalStatus) }}
+                  </span>
+                } @else {
+                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+              </td>
+              <td class="px-4 py-3 text-center">
                 <sic-table-actions
                   [showView]="true"
                   [showEdit]="true"
-                  [showPrint]="false"
+                  [showPrint]="true"
                   [showDelete]="true"
                   editTitle="แก้ไข / เขียนเนื้อหา"
+                  printTitle="ส่งออกเอกสารคู่มือ PDF (JasperReports)"
                   (onView)="goToView(item.id)"
                   (onEdit)="goToEdit(item.id)"
+                  (onPrint)="printManual(item)"
                   (onDelete)="onDelete(item.id)">
                 </sic-table-actions>
               </td>

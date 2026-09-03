@@ -1,14 +1,18 @@
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
 
 import { Pmdt15AService } from './pmdt15A/pmdt15A.service';
 import { PmUserManualModel } from './pmdt15A/pmdt15A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { apiBaseUrl } from '../../../../core/config/api.config';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { ApprovalService } from '../pmdt03/approval.service';
 
 @Component({
   selector: 'app-pmdt15',
@@ -24,6 +28,8 @@ export class Pmdt15Component implements OnInit {
   private readonly service = inject(Pmdt15AService);
   private readonly dialog = inject(DialogService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly http = inject(HttpClient);
+  private readonly approvalService = inject(ApprovalService);
 
   manuals = signal<PmUserManualModel[]>([]);
   isLoading = signal(false);
@@ -94,9 +100,11 @@ export class Pmdt15Component implements OnInit {
       })
       .subscribe({
         next: (res) => {
-          this.manuals.set(res.content || []);
+          const items = res.content || [];
+          this.manuals.set(items);
           this.totalElements.set(res.totalElements || 0);
           this.isLoading.set(false);
+          this.loadApprovalStatuses(items);
           this.cdr.markForCheck();
         },
         error: () => {
@@ -104,6 +112,25 @@ export class Pmdt15Component implements OnInit {
           this.cdr.markForCheck();
         },
       });
+  }
+
+  loadApprovalStatuses(manuals: PmUserManualModel[]): void {
+    manuals.forEach((manual) => {
+      if (!manual.id) return;
+      this.approvalService.getDocumentStatus('USER_MANUAL', manual.id).subscribe({
+        next: (approval) => {
+          this.manuals.update((list) =>
+            list.map((item) =>
+              item.id === manual.id ? { ...item, approvalStatus: approval.status } : item
+            )
+          );
+          this.cdr.markForCheck();
+        },
+        error: () => {
+          // No approval status yet
+        },
+      });
+    });
   }
 
   goToAdd(): void {
@@ -156,6 +183,36 @@ export class Pmdt15Component implements OnInit {
     });
   }
 
+  printManual(item: PmUserManualModel): void {
+    if (!item.id) {
+      this.dialog.warn('ไม่พบรหัสคู่มือ', 'ไม่สามารถพิมพ์เอกสารได้');
+      return;
+    }
+
+    this.isLoading.set(true);
+    const url = `${apiBaseUrl}/api/pm/manual/${item.id}/export-pdf`;
+    this.http.get(url, { responseType: 'blob' })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (blob) => {
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.download = `user-manual-${item.manualCode || item.id}.pdf`;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: (err) => {
+          console.error('Print user manual error:', err);
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้: ' + (err?.error?.message || err?.message || ''));
+        },
+      });
+  }
+
   getTypeLabel(type: string): string {
     const map: Record<string, string> = {
       USER: 'User Manual',
@@ -184,6 +241,30 @@ export class Pmdt15Component implements OnInit {
       PUBLISHED: 'เผยแพร่แล้ว (Published)',
     };
     return map[status] || status;
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    if (!status) return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+    const s = status.toUpperCase();
+    const map: Record<string, string> = {
+      PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+      REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      NEED_REVISION: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+      CANCELLED: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20',
+    };
+    return map[s] || 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status.toUpperCase()] || status : '-';
   }
 }
 

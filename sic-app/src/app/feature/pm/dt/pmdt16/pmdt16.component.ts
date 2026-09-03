@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -9,6 +9,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { ApprovalService } from '../pmdt03/approval.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -19,14 +20,17 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
   imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
-  changeDetection: ChangeDetectionStrategy.OnPush,
+  changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt16Component implements OnInit {
   private router = inject(Router);
   private service = inject(Pmdt16AService);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
+  private approvalService = inject(ApprovalService);
   isLoading = signal(false);
+
+  approvalStatusMap = signal<Record<string, string>>({});
 
   currentPage = signal(0);
   pageSize = signal(10);
@@ -38,6 +42,30 @@ export class Pmdt16Component implements OnInit {
   invoicesResource = httpResource<any>(
     () => `${apiBaseUrl}/api/pm/invoices/paging?page=${this.currentPage()}&size=${this.pageSize()}`
   );
+
+  constructor() {
+    effect(() => {
+      const res = this.invoicesResource.value();
+      const content = res?.content;
+      if (content && Array.isArray(content)) {
+        this.loadApprovalStatuses(content);
+      }
+    });
+  }
+
+  loadApprovalStatuses(items: any[]): void {
+    items.forEach((item) => {
+      if (!item.id) return;
+      this.approvalService.getDocumentStatus('INVOICE', item.id).subscribe({
+        next: (approval) => {
+          this.approvalStatusMap.update((map) => ({ ...map, [item.id]: approval.status }));
+        },
+        error: () => {
+          // No approval status
+        },
+      });
+    });
+  }
 
   totalItems = computed(() => this.invoicesResource.value()?.totalElements || 0);
 
@@ -183,6 +211,30 @@ export class Pmdt16Component implements OnInit {
       OVERDUE: 'เกินกำหนดชำระ',
     };
     return map[status] || status || '-';
+  }
+
+  getApprovalStatusClass(status?: string): string {
+    if (!status) return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+    const s = status.toUpperCase();
+    const map: Record<string, string> = {
+      PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
+      REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      NEED_REVISION: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
+      CANCELLED: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20',
+    };
+    return map[s] || 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+  }
+
+  getApprovalStatusText(status?: string): string {
+    const map: Record<string, string> = {
+      PENDING: 'รออนุมัติ',
+      APPROVED: 'อนุมัติแล้ว',
+      REJECTED: 'ปฏิเสธ',
+      NEED_REVISION: 'ต้องแก้ไข',
+      CANCELLED: 'ยกเลิก',
+    };
+    return status ? map[status.toUpperCase()] || status : '-';
   }
 }
 
