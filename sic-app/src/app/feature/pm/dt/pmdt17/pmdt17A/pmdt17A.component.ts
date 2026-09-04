@@ -111,12 +111,24 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       } as any);
     }
 
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.id.set(paramId);
-      this.isEdit.set(!this.isView());
-      this.loadData(paramId);
-    }
+    this.route.params.subscribe((params) => {
+      const paramId = params['id'];
+      if (paramId) {
+        this.id.set(paramId);
+      }
+      const isViewRoute = this.router.url.includes('/view');
+      const isEditRoute = this.router.url.includes('/edit');
+      this.isView.set(isViewRoute);
+      this.isEdit.set(isEditRoute || (!isViewRoute && !!paramId));
+      if (this.isView()) {
+        this.formData?.form.disable();
+      } else {
+        this.formData?.form.enable();
+      }
+      if (paramId) {
+        this.loadData(paramId);
+      }
+    });
   }
 
   loadApprovalFlows(): void {
@@ -138,6 +150,8 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         this.formData.form.patchValue(data);
         if (this.isView()) {
           this.formData.form.disable();
+        } else {
+          this.formData.form.enable();
         }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
@@ -149,6 +163,9 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
   goToEditMode(): void {
     if (this.id()) {
+      this.isView.set(false);
+      this.isEdit.set(true);
+      this.formData?.form.enable();
       this.router.navigate(['/feature/pm/ma-ticket', this.id(), 'edit']);
     }
   }
@@ -161,9 +178,13 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.id() || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit();
     const formValue = {
-      ...this.formData.form.getRawValue(),
-      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
     };
     this.service.save(formValue).subscribe({
       next: (res: any) => {

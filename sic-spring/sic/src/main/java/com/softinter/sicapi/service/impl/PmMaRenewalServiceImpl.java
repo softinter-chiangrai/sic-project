@@ -61,8 +61,12 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
     public UUID save(PmMaRenewalRequest request, UUID businessId, String userId) {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmMaRenewal entity;
+        boolean isNew = (request.getId() == null);
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmMaRenewal();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -80,7 +84,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log CREATE_MA_RENEWAL: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = renewalRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการต่อสัญญา MA"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -98,12 +102,6 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log UPDATE_MA_RENEWAL: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = renewalRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการต่อสัญญา MA"));
         }
 
         // Auto create new contract if CONFIRMED and newContractId is null

@@ -123,7 +123,9 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmDelivery entity;
 
-        if (state == EntityState.ADDED) {
+        boolean isNew = (request.getId() == null);
+
+        if (isNew) {
             entity = new PmDelivery();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -151,7 +153,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             // Save linked items
             saveDeliveryItems(entity.getId(), request.getItems(), userId);
 
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
 
@@ -202,13 +204,11 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             saveChecklists(entity.getId(), request.getChecklists(), userId);
             saveDeliveryItems(entity.getId(), request.getItems(), userId);
 
-        } else {
-            throw new IllegalArgumentException("Unsupported state: " + state);
         }
 
         // Audit Log
         try {
-            String action = (state == EntityState.ADDED) ? "CREATE_DELIVERY" : "UPDATE_DELIVERY";
+            String action = isNew ? "CREATE_DELIVERY" : "UPDATE_DELIVERY";
             auditLogService.log(action, "Delivery Management",
                     action.replace("_", " ") + ": " + entity.getDeliveryTitle() + " (" + entity.getDeliveryCode() + ")",
                     "DELIVERY", entity.getId(), null, null, "Success", null);
@@ -223,7 +223,17 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         if (checklists == null) return;
         for (PmDeliveryChecklistRequest chkReq : checklists) {
             EntityState chkState = chkReq.getState() != null ? EntityState.values()[chkReq.getState()] : EntityState.DETACHED;
-            if (chkState == EntityState.ADDED || chkReq.getId() == null) {
+            boolean isChkNew = (chkReq.getId() == null);
+            if (chkState == EntityState.DELETED) {
+                if (chkReq.getId() != null) {
+                    checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
+                        chk.setIsDelete(true);
+                        chk.setDeleteBy(userId);
+                        chk.setDeleteDate(Instant.now());
+                        checklistRepository.save(chk);
+                    });
+                }
+            } else if (isChkNew) {
                 PmDeliveryChecklist checklist = new PmDeliveryChecklist();
                 checklist.setCreatedBy(userId);
                 checklist.setCreatedDate(Instant.now());
@@ -231,18 +241,11 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 checklist.setDeliveryId(deliveryId);
                 mapChecklistRequestToEntity(chkReq, checklist);
                 checklistRepository.save(checklist);
-            } else if (chkState == EntityState.MODIFIED) {
+            } else {
                 checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
                     mapChecklistRequestToEntity(chkReq, chk);
                     chk.setUpdatedBy(userId);
                     chk.setUpdatedDate(Instant.now());
-                    checklistRepository.save(chk);
-                });
-            } else if (chkState == EntityState.DELETED) {
-                checklistRepository.findById(chkReq.getId()).ifPresent(chk -> {
-                    chk.setIsDelete(true);
-                    chk.setDeleteBy(userId);
-                    chk.setDeleteDate(Instant.now());
                     checklistRepository.save(chk);
                 });
             }
@@ -253,7 +256,17 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         if (items == null) return;
         for (PmDeliveryItemRequest itemReq : items) {
             EntityState itemState = itemReq.getState() != null ? EntityState.values()[itemReq.getState()] : EntityState.DETACHED;
-            if (itemState == EntityState.ADDED || itemReq.getId() == null) {
+            boolean isItemNew = (itemReq.getId() == null);
+            if (itemState == EntityState.DELETED) {
+                if (itemReq.getId() != null) {
+                    deliveryItemRepository.findById(itemReq.getId()).ifPresent(item -> {
+                        item.setIsDelete(true);
+                        item.setDeleteBy(userId);
+                        item.setDeleteDate(Instant.now());
+                        deliveryItemRepository.save(item);
+                    });
+                }
+            } else if (isItemNew) {
                 PmDeliveryItem item = new PmDeliveryItem();
                 item.setCreatedBy(userId);
                 item.setCreatedDate(Instant.now());
@@ -261,18 +274,11 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 item.setDeliveryId(deliveryId);
                 mapItemRequestToEntity(itemReq, item);
                 deliveryItemRepository.save(item);
-            } else if (itemState == EntityState.MODIFIED) {
+            } else {
                 deliveryItemRepository.findById(itemReq.getId()).ifPresent(item -> {
                     mapItemRequestToEntity(itemReq, item);
                     item.setUpdatedBy(userId);
                     item.setUpdatedDate(Instant.now());
-                    deliveryItemRepository.save(item);
-                });
-            } else if (itemState == EntityState.DELETED) {
-                deliveryItemRepository.findById(itemReq.getId()).ifPresent(item -> {
-                    item.setIsDelete(true);
-                    item.setDeleteBy(userId);
-                    item.setDeleteDate(Instant.now());
                     deliveryItemRepository.save(item);
                 });
             }

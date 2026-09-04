@@ -425,8 +425,14 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       }
     }
 
-    const data = { ...this.formData.value };
-    data.state = this.isEdit() || this.isExecution() ? 3 : 4;
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.testCaseId || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit() || this.isExecution();
+    const data = {
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? 3 : 4,
+    };
     this.saveExecution(data);
   }
 

@@ -557,11 +557,16 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     this.isSaving = true;
-    const data = this.formData.value as RequirementModel;
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.reqId || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit;
+    const data = {
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
+    } as RequirementModel;
 
-    // Set state
-    data.state = this.isEdit ? SicEntityState.Modified : SicEntityState.Added;
-    if (!this.isEdit) {
+    if (!isEditMode) {
       data.rowVersion = 0;
     }
 

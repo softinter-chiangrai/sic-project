@@ -240,10 +240,18 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.id() || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit();
+    const sectionsPayload = this.sections().map((s) => ({
+      ...s,
+      state: s.state !== undefined ? s.state : (s.id ? SicEntityState.Modified : SicEntityState.Added),
+    }));
     const payload = {
-      ...this.formData.value,
-      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
-      sections: this.sections(),
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
+      sections: sectionsPayload,
     };
 
     this.isSaving.set(true);

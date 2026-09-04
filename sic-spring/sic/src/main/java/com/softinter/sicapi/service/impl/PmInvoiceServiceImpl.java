@@ -92,7 +92,12 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             request.setSubtotalAmount(itemsSubtotal);
         }
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        boolean isNew = (request.getId() == null);
+
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmInvoice();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -104,7 +109,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             entity = invoiceRepository.save(entity);
             saveInvoiceItems(entity.getId(), request.getItems(), userId);
             logInvoiceAudit("CREATE_INVOICE", entity);
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -125,12 +130,6 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             entity = invoiceRepository.save(entity);
             saveInvoiceItems(entity.getId(), request.getItems(), userId);
             logInvoiceAudit("UPDATE_INVOICE", entity);
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้"));
         }
 
         // Snapshot data
@@ -177,7 +176,17 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         if (items == null) return;
         for (PmInvoiceItemRequest itemReq : items) {
             EntityState itemState = itemReq.getState() != null ? EntityState.values()[itemReq.getState()] : EntityState.DETACHED;
-            if (itemState == EntityState.ADDED || itemReq.getId() == null) {
+            boolean isItemNew = (itemReq.getId() == null);
+            if (itemState == EntityState.DELETED) {
+                if (itemReq.getId() != null) {
+                    invoiceItemRepository.findById(itemReq.getId()).ifPresent(item -> {
+                        item.setIsDelete(true);
+                        item.setDeleteBy(userId);
+                        item.setDeleteDate(Instant.now());
+                        invoiceItemRepository.save(item);
+                    });
+                }
+            } else if (isItemNew) {
                 PmInvoiceItem item = new PmInvoiceItem();
                 item.setCreatedBy(userId);
                 item.setCreatedDate(Instant.now());
@@ -185,18 +194,11 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 item.setInvoiceId(invoiceId);
                 mapItemRequestToEntity(itemReq, item);
                 invoiceItemRepository.save(item);
-            } else if (itemState == EntityState.MODIFIED) {
+            } else {
                 invoiceItemRepository.findById(itemReq.getId()).ifPresent(item -> {
                     mapItemRequestToEntity(itemReq, item);
                     item.setUpdatedBy(userId);
                     item.setUpdatedDate(Instant.now());
-                    invoiceItemRepository.save(item);
-                });
-            } else if (itemState == EntityState.DELETED) {
-                invoiceItemRepository.findById(itemReq.getId()).ifPresent(item -> {
-                    item.setIsDelete(true);
-                    item.setDeleteBy(userId);
-                    item.setDeleteDate(Instant.now());
                     invoiceItemRepository.save(item);
                 });
             }

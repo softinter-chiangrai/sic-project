@@ -79,12 +79,14 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   ngOnInit(): void {
     this.formData = new SicFromData<PmMaRenewalModel>(Pmdt18AForm.createForm(this.fb));
 
-    const idParam = this.route.snapshot.params['id'];
-    if (idParam) {
-      this.id.set(idParam);
-    } else {
-      this.formData.patchValue({ state: SicEntityState.Added } as any);
-    }
+    this.route.params.subscribe((params) => {
+      const idParam = params['id'];
+      if (idParam) {
+        this.id.set(idParam);
+      } else {
+        this.formData.patchValue({ state: SicEntityState.Added } as any);
+      }
+    });
   }
 
   onBack(): void {
@@ -99,10 +101,14 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    const val = this.formData.value;
-    if (!val.state) {
-      val.state = this.id() ? SicEntityState.Modified : SicEntityState.Added;
-    }
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.id() || rawVal.id;
+    const isEditMode = !!targetId;
+    const val = {
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
+    };
 
     this.service.save(val).subscribe({
       next: () => {

@@ -446,14 +446,20 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     this.isSaving = true;
-    const data = { ...this.formData.value };
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.reviewId || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit;
+    const data = {
+      ...rawVal,
+      id: targetId || undefined,
+    };
     if (!data.reviewableType) {
       data.reviewableType = 'Specification';
     }
     if (Array.isArray(data.assignedTo)) {
       data.assignedTo = (data.assignedTo as any[]).join(', ');
     }
-    data.state = this.isEdit ? SicEntityState.Modified : SicEntityState.Added;
+    data.state = isEditMode ? SicEntityState.Modified : SicEntityState.Added;
 
     this.service.save(data).subscribe({
       next: (response: any) => {

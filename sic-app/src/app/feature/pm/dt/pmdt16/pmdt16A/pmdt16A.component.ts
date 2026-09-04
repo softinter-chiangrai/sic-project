@@ -114,12 +114,24 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     this.formData.form.get('subtotalAmount')?.valueChanges.subscribe(() => this.calculateTotals());
     this.formData.form.get('vatRate')?.valueChanges.subscribe(() => this.calculateTotals());
 
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.id.set(paramId);
-      this.isEdit.set(!this.isView());
-      this.loadData(paramId);
-    }
+    this.route.params.subscribe((params) => {
+      const paramId = params['id'];
+      if (paramId) {
+        this.id.set(paramId);
+      }
+      const isViewRoute = this.router.url.includes('/view');
+      const isEditRoute = this.router.url.includes('/edit');
+      this.isView.set(isViewRoute);
+      this.isEdit.set(isEditRoute || (!isViewRoute && !!paramId));
+      if (this.isView()) {
+        this.formData?.form.disable();
+      } else {
+        this.formData?.form.enable();
+      }
+      if (paramId) {
+        this.loadData(paramId);
+      }
+    });
   }
 
   loadContractOptions(projectId?: string): void {
@@ -165,18 +177,19 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     }
   }
 
-  onItemFieldChange(index: number, field: 'itemName' | 'description' | 'amount', value: any): void {
+  onItemFieldChange(index: number, field: string, value: any): void {
+    if (this.isView()) return;
     const list = [...this.items()];
-    const item = list[index];
-    if (!item) return;
-    (item as any)[field] = field === 'amount' ? (Number(value) || 0) : value;
-    if (item.state !== SicEntityState.Added) {
-      item.state = SicEntityState.Modified;
-    }
-    this.items.set(list);
-    this.formData.markAsDirty();
-    if (field === 'amount') {
-      this.recalcSubtotalFromItems();
+    if (list[index]) {
+      (list[index] as any)[field] = field === 'amount' ? (Number(value) || 0) : value;
+      if (list[index].state !== SicEntityState.Added) {
+        list[index].state = SicEntityState.Modified;
+      }
+      this.items.set(list);
+      this.formData.markAsDirty();
+      if (field === 'amount') {
+        this.recalcSubtotalFromItems();
+      }
     }
   }
 
@@ -193,45 +206,33 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  private calculateTotals(): void {
+  calculateTotals(): void {
     const subtotal = Number(this.formData.form.get('subtotalAmount')?.value) || 0;
     const vatRate = Number(this.formData.form.get('vatRate')?.value) || 0;
-    const vatAmount = (subtotal * vatRate) / 100;
-    const totalAmount = subtotal + vatAmount;
+    const vatAmount = Math.round((subtotal * vatRate) / 100 * 100) / 100;
+    const total = Math.round((subtotal + vatAmount) * 100) / 100;
 
-    this.formData.form.get('vatAmount')?.setValue(vatAmount, { emitEvent: false });
-    this.formData.form.get('totalAmount')?.setValue(totalAmount, { emitEvent: false });
+    this.formData.form.patchValue({
+      vatAmount: vatAmount,
+      totalAmount: total,
+    }, { emitEvent: false });
   }
 
   loadData(id: string) {
     this.service.getById(id).subscribe({
       next: (data) => {
-        const applyData = () => {
-          this.formData.form.patchValue(data);
-          if (data.items) {
-            this.items.set(data.items);
-          }
-          if (this.isView()) {
-            this.formData.form.disable();
-          }
-          this.formData.resetModel(this.formData.form.getRawValue() as any);
-          // Force-resolve the combobox label now that its options are loaded
-          this.formData.form.get('contractId')?.setValue(data.contractId ?? null, { emitEvent: false });
-        };
-
-        if (data.projectId) {
-          this.service.getContractCombobox(data.projectId).subscribe({
-            next: (res) => {
-              this.contractOptions.set(res || []);
-              applyData();
-            },
-            error: () => {
-              this.contractOptions.set([]);
-              applyData();
-            },
-          });
+        this.formData.form.patchValue(data);
+        if (data.items) {
+          this.items.set(data.items);
+        }
+        if (this.isView()) {
+          this.formData.form.disable();
         } else {
-          applyData();
+          this.formData.form.enable();
+        }
+        this.formData.resetModel(this.formData.form.getRawValue() as any);
+        if (data.projectId) {
+          this.loadContractOptions(data.projectId);
         }
       },
       error: (err) => {
@@ -242,6 +243,9 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   goToEditMode(): void {
     if (this.id()) {
+      this.isView.set(false);
+      this.isEdit.set(true);
+      this.formData?.form.enable();
       this.router.navigate(['/feature/pm/invoice', this.id(), 'edit']);
     }
   }
@@ -254,10 +258,18 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.id() || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit();
+    const itemsPayload = this.items().map((item) => ({
+      ...item,
+      state: item.state !== undefined ? item.state : (item.id ? SicEntityState.Modified : SicEntityState.Added),
+    }));
     const formValue = {
-      ...this.formData.form.getRawValue(),
-      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
-      items: this.items(),
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
+      items: itemsPayload,
     };
     this.service.save(formValue).subscribe({
       next: (res: any) => {

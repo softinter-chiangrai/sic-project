@@ -76,7 +76,32 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();
         UUID finalUploadGroupId = resolveUploadGroupId(request.getUploadGroupId(), uploadRefs);
 
-        if (state == EntityState.ADDED) {
+        boolean isNew = (request.getId() == null);
+
+        if (state == EntityState.DELETED) {
+            // ===== SOFT DELETE =====
+            requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
+            requirement.setIsDelete(true);
+            requirement.setIsActive(false);
+            requirement.setDeleteBy(userId);
+            requirement.setDeleteDate(Instant.now());
+            requirementRepository.save(requirement);
+
+            // ✅ Soft delete all versions
+            documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
+
+            // Audit Log
+            try {
+                auditLogService.log("DELETE_REQUIREMENT", "Requirement Management",
+                        "ลบ Requirement: " + requirement.getTitle() + " (" + requirement.getRequirementCode() + ")",
+                        "REQUIREMENT", requirement.getId(), null, null, "Success", null);
+            } catch (Exception e) {
+                log.error("ผิดพลาด audit log DELETE_REQUIREMENT: {}", e.getMessage(), e);
+            }
+            return toResponse(requirement);
+
+        } else if (isNew) {
             // ===== CREATE NEW =====
             requirement = new PmRequirement();
             requirement.setBusinessId(businessId);
@@ -118,7 +143,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                 log.error("ผิดพลาด audit log CREATE_REQUIREMENT: {}", e.getMessage(), e);
             }
 
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             // ===== UPDATE EXISTING =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Requirement not found"));
@@ -138,32 +163,30 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", requirement.getDescription(), request.getDescription());
             DocumentDiffHelper.checkChange(changes, "ประเภท (Type)", requirement.getRequirementType(), request.getRequirementType());
             DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", requirement.getPriority(), request.getPriority());
-            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", requirement.getStatus(), request.getStatus());
-            DocumentDiffHelper.checkChange(changes, "คุณค่าทางธุรกิจ (Business Value)", requirement.getBusinessValue(), request.getBusinessValue());
-            DocumentDiffHelper.checkChange(changes, "เกณฑ์การยอมรับ (Acceptance Criteria)", requirement.getAcceptanceCriteria(), request.getAcceptanceCriteria());
+            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assignee)", requirement.getAssignee(), request.getAssignee());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", oldStatus, request.getStatus());
 
             String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, request.getTitle());
 
             requirement.setUpdatedBy(userId);
             requirement.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, requirement);
-            requirement.setUploadGroupId(finalUploadGroupId);
 
+            // Version increment logic
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             requirement.setVersion(newVersion);
-            if ("Approved".equalsIgnoreCase(oldStatus)) {
-                requirement.setStatus("Changed");
-            }
-            requirement = requirementRepository.save(requirement);
+            requirement.setUploadGroupId(finalUploadGroupId);
 
-            // Sync Uploads first before snapshot
+            requirementRepository.save(requirement);
+
+            // Sync Uploads after save
             if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
                 fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
             }
 
-            // Snapshot data
             String snapshotJson = JsonSnapshotHelper.toJson(toResponse(requirement));
 
+            // ✅ Create document version with diff summary & snapshot & fileRefId
             documentVersionService.createVersion(
                     "REQUIREMENT",
                     requirement.getId(),
@@ -184,32 +207,6 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log UPDATE_REQUIREMENT: {}", e.getMessage(), e);
             }
-
-        } else if (state == EntityState.DELETED) {
-            // ===== SOFT DELETE =====
-            requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
-            requirement.setIsDelete(true);
-            requirement.setIsActive(false);
-            requirement.setDeleteBy(userId);
-            requirement.setDeleteDate(Instant.now());
-            requirementRepository.save(requirement);
-
-            // ✅ Soft delete all versions
-            documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
-
-            // Audit Log
-            try {
-                auditLogService.log("DELETE_REQUIREMENT", "Requirement Management",
-                        "ลบ Requirement: " + requirement.getTitle() + " (" + requirement.getRequirementCode() + ")",
-                        "REQUIREMENT", requirement.getId(), null, null, "Success", null);
-            } catch (Exception e) {
-                log.error("ผิดพลาด audit log DELETE_REQUIREMENT: {}", e.getMessage(), e);
-            }
-            return toResponse(requirement);
-
-        } else {
-            throw new IllegalArgumentException("Invalid state: " + state);
         }
 
         return toResponse(requirement);

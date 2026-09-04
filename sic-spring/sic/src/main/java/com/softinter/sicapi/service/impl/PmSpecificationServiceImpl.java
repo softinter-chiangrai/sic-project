@@ -107,9 +107,39 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         EntityState state = request.getState() != null
                 ? EntityState.values()[request.getState()]
                 : EntityState.DETACHED;
+        boolean isNew = (request.getId() == null);
+
+        // ----- SOFT DELETE -----
+        if (state == EntityState.DELETED) {
+            spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+
+            spec.setIsDelete(true);
+            spec.setIsActive(false);
+            spec.setDeleteBy(userId);
+            spec.setDeleteDate(Instant.now());
+            specificationRepository.save(spec);
+
+            // ✅ Soft Delete Document Versions
+            documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
+
+            // ✅ Soft Delete Trace Links
+            deleteTraceLinksForSpecification(spec.getId(), userId);
+
+            // Audit Log
+            try {
+                auditLogService.log("DELETE_SPECIFICATION", "Specification Management",
+                        "ลบ Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
+                        "SPEC", spec.getId(), null, null, "Success", null);
+            } catch (Exception ex) {
+                log.error("ผิดพลาด audit log DELETE_SPECIFICATION: {}", ex.getMessage(), ex);
+            }
+
+            return spec.getId();
+        }
 
         // ----- CREATE NEW -----
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (isNew) {
             // ตรวจสอบรหัสซ้ำ
             if (specificationRepository.existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(
                     businessId, request.getSpecificationCode())) {
@@ -194,10 +224,8 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             }
 
             return saved.getId();
-        }
-
-        // ----- UPDATE EXISTING -----
-        if (state == EntityState.MODIFIED) {
+        } else {
+            // ----- UPDATE EXISTING -----
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
 
@@ -280,28 +308,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             return spec.getId();
         }
-
-        // ----- SOFT DELETE -----
-        if (state == EntityState.DELETED) {
-            spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
-
-            spec.setIsDelete(true);
-            spec.setIsActive(false);
-            spec.setDeleteBy(userId);
-            spec.setDeleteDate(Instant.now());
-            specificationRepository.save(spec);
-
-            // ✅ Soft Delete Document Versions
-            documentVersionService.deleteVersionsByDocument("SPECIFICATION", spec.getId());
-
-            // ✅ Soft Delete Trace Links
-            deleteTraceLinksForSpecification(spec.getId(), userId);
-
-            // Audit Log
-            try {
-                auditLogService.log("DELETE_SPECIFICATION", "Specification Management",
-                        "ลบ Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
                         "SPEC", spec.getId(), null, null, "Success", null);
             } catch (Exception ex) {
                 log.error("ผิดพลาด audit log DELETE_SPECIFICATION: {}", ex.getMessage(), ex);

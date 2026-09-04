@@ -54,15 +54,19 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()]
                 : EntityState.DETACHED;
         PmTestScenario entity;
+        boolean isNew = (request.getId() == null);
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmTestScenario();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             entity = scenarioRepository.save(entity);
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = scenarioRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Test Scenario"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -72,12 +76,6 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = scenarioRepository.save(entity);
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = scenarioRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบ Test Scenario"));
         }
 
         // ===== สร้าง Trace Link กับ Task =====

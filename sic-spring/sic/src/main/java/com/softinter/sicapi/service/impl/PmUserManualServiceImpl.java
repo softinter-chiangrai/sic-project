@@ -69,9 +69,13 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     public UUID save(PmUserManualRequest request, UUID businessId, String userId) {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmUserManual entity;
-
         String diffSummary = "สร้างคู่มือการใช้งาน (Initial user manual)";
-        if (state == EntityState.ADDED || request.getId() == null) {
+        boolean isNew = (request.getId() == null);
+
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmUserManual();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -86,7 +90,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log CREATE_USER_MANUAL: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = manualRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลคู่มือผู้ใช้งาน"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -113,12 +117,6 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log UPDATE_USER_MANUAL: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = manualRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลคู่มือผู้ใช้งาน"));
         }
 
         // Snapshot data
@@ -139,27 +137,30 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         if (request.getSections() != null) {
             for (PmUserManualSectionRequest secReq : request.getSections()) {
                 EntityState secState = secReq.getState() != null ? EntityState.values()[secReq.getState()] : EntityState.DETACHED;
-                if (secState == EntityState.ADDED || secReq.getId() == null) {
+                boolean isSecNew = (secReq.getId() == null);
+                if (secState == EntityState.DELETED) {
+                    if (secReq.getId() != null) {
+                        sectionRepository.findById(secReq.getId()).ifPresent(sec -> {
+                            sec.setIsDelete(true);
+                            sec.setDeleteBy(userId);
+                            sec.setDeleteDate(Instant.now());
+                            sectionRepository.save(sec);
+                        });
+                    }
+                } else if (isSecNew) {
                     PmUserManualSection sec = new PmUserManualSection();
                     sec.setManualId(entity.getId());
                     sec.setCreatedBy(userId);
                     sec.setCreatedDate(Instant.now());
                     mapSectionRequestToEntity(secReq, sec);
                     sectionRepository.save(sec);
-                } else if (secState == EntityState.MODIFIED) {
+                } else {
                     PmUserManualSection sec = sectionRepository.findById(secReq.getId())
                             .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Section คู่มือ"));
                     mapSectionRequestToEntity(secReq, sec);
                     sec.setUpdatedBy(userId);
                     sec.setUpdatedDate(Instant.now());
                     sectionRepository.save(sec);
-                } else if (secState == EntityState.DELETED) {
-                    sectionRepository.findById(secReq.getId()).ifPresent(sec -> {
-                        sec.setIsDelete(true);
-                        sec.setDeleteBy(userId);
-                        sec.setDeleteDate(Instant.now());
-                        sectionRepository.save(sec);
-                    });
                 }
             }
         }

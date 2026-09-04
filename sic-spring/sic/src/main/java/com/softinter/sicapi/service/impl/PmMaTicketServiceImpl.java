@@ -72,8 +72,12 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmMaTicket entity;
         String diffSummary = "สร้างตั๋วแจ้งปัญหา MA (Initial MA ticket)";
+        boolean isNew = (request.getId() == null);
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmMaTicket();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -93,7 +97,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log CREATE_MA_TICKET: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = ticketRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Ticket MA"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -125,12 +129,6 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log UPDATE_MA_TICKET: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = ticketRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Ticket MA"));
         }
 
         // Snapshot data

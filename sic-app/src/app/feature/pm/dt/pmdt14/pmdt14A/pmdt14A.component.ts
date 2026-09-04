@@ -92,11 +92,6 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     const rawForm = Pmdt14AForm.createForm(this.fb);
     this.formData = new SicFromData<PmDeliveryModel>(rawForm);
 
-    const isViewRoute = this.router.url.includes('/view');
-    if (isViewRoute) {
-      this.isView.set(true);
-    }
-
     const projId = this.customerState.getProjectId();
     if (projId) {
       this.formData.patchValue({ projectId: projId } as any);
@@ -107,17 +102,23 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
     this.loadApprovalFlows();
 
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.isEdit.set(!this.isView());
-      this.id.set(paramId);
-      this.loadData(paramId);
-    } else {
-      this.initDefaultChecklist();
-      if (projId) {
-        this.runGateCheck(projId);
+    this.route.params.subscribe((params) => {
+      const isViewUrl = this.router.url.includes('/view');
+      this.isView.set(isViewUrl);
+      const paramId = params['id'];
+      if (paramId) {
+        this.id.set(paramId);
+        this.isEdit.set(!isViewUrl);
+        this.loadData(paramId);
+      } else {
+        this.id.set(null);
+        this.isEdit.set(false);
+        this.initDefaultChecklist();
+        if (projId) {
+          this.runGateCheck(projId);
+        }
       }
-    }
+    });
   }
 
   loadContractOptions(projectId?: string): void {
@@ -147,9 +148,14 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   loadData(id: string): void {
     this.service.getById(id).subscribe({
       next: (data) => {
-        this.formData.form.patchValue(data);
+        this.formData.form.patchValue({
+          ...data,
+          id: id,
+        });
         if (this.isView()) {
           this.formData.form.disable();
+        } else {
+          this.formData.form.enable();
         }
         if (data.checklists) {
           this.checklists.set(data.checklists);
@@ -243,6 +249,9 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   goToEditMode(): void {
     if (this.id()) {
+      this.isView.set(false);
+      this.isEdit.set(true);
+      this.formData.form.enable();
       this.router.navigate(['/feature/pm/delivery', this.id(), 'edit']);
     }
   }
@@ -271,12 +280,15 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving.set(true);
     const rawForm = this.formData.form.getRawValue();
     const uploadGroupId = this.extractUploadGroupId(rawForm.attachmentGroupId);
+    const targetId = this.id() || rawForm.id;
+    const isEditMode = !!targetId || this.isEdit();
 
     const payload: Partial<PmDeliveryModel> = {
       ...rawForm,
+      id: targetId || undefined,
       attachmentGroupId: uploadGroupId || undefined,
       checklists: this.checklists(),
-      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
     };
 
     this.service.save(payload).subscribe({

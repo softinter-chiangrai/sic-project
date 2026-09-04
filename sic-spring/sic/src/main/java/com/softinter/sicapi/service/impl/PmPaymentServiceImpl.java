@@ -62,8 +62,12 @@ public class PmPaymentServiceImpl implements PmPaymentService {
     public UUID save(PmPaymentRequest request, UUID businessId, String userId) {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmPayment entity;
+        boolean isNew = (request.getId() == null);
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmPayment();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -81,7 +85,7 @@ public class PmPaymentServiceImpl implements PmPaymentService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log CREATE_PAYMENT: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = paymentRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลรายการชำระเงิน"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -99,12 +103,6 @@ public class PmPaymentServiceImpl implements PmPaymentService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log UPDATE_PAYMENT: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = paymentRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลรายการชำระเงิน"));
         }
 
         recalculateInvoiceStatus(entity.getInvoiceId(), businessId, userId);

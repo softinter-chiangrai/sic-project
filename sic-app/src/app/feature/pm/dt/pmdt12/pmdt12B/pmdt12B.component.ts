@@ -218,12 +218,15 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    const formVal: any = this.formData.value;
+    const formVal: any = this.formData.form.getRawValue();
+    const targetId = this.scenarioId || formVal.id;
+    const isEditMode = !!targetId || this.isEdit();
     const data = {
       ...formVal,
+      id: targetId || undefined,
       status: formVal.status || 'Active',
+      state: isEditMode ? 3 : 4,
     };
-    data.state = this.isEdit() ? 3 : 4;
 
     this.service.saveTestScenario(data).subscribe({
       next: () => {

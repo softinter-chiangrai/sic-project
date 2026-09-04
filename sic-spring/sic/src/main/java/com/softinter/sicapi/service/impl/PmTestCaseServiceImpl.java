@@ -86,8 +86,12 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmTestCase entity;
         String diffSummary = "สร้าง Test Case (Initial test case)";
+        boolean isNew = (request.getId() == null);
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmTestCase();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
@@ -102,7 +106,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log CREATE_TEST_CASE: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = testCaseRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Test Case"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -128,12 +132,6 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             } catch (Exception e) {
                 log.error("ผิดพลาด audit log UPDATE_TEST_CASE: {}", e.getMessage(), e);
             }
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = testCaseRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบ Test Case"));
         }
 
         // Snapshot data

@@ -76,15 +76,19 @@ public class PmBugServiceImpl implements PmBugService {
     public UUID save(PmBugRequest request, UUID businessId, String userId) {
         EntityState state = request.getState() != null ? EntityState.values()[request.getState()] : EntityState.DETACHED;
         PmBug entity;
+        boolean isNew = (request.getId() == null);
 
-        if (state == EntityState.ADDED || request.getId() == null) {
+        if (state == EntityState.DELETED) {
+            delete(request.getId(), businessId, userId);
+            return request.getId();
+        } else if (isNew) {
             entity = new PmBug();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             entity = bugRepository.save(entity);
-        } else if (state == EntityState.MODIFIED) {
+        } else {
             entity = bugRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Bug/Issue"));
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
@@ -94,17 +98,11 @@ public class PmBugServiceImpl implements PmBugService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = bugRepository.save(entity);
-        } else if (state == EntityState.DELETED) {
-            delete(request.getId(), businessId, userId);
-            return request.getId();
-        } else {
-            entity = bugRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("ไม่พบ Bug/Issue"));
         }
 
         // Audit Log
         try {
-            String action = (state == EntityState.ADDED || request.getId() == null) ? "CREATE_BUG" : "UPDATE_BUG";
+            String action = isNew ? "CREATE_BUG" : "UPDATE_BUG";
             auditLogService.log(action, "Bug Management",
                     action.replace("_", " ") + ": " + entity.getTitle() + " (" + entity.getBugCode() + ")",
                     "BUG", entity.getId(), null, null, "Success", null);
