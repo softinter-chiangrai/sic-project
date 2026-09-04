@@ -466,9 +466,13 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     try {
       if (this.form.dirty) {
         await new Promise<void>((resolve, reject) => {
+          const rawFormVal = this.form.getRawValue();
+          const targetId = this.reqId || rawFormVal.id || id;
+          const isEditMode = !!targetId || this.isEdit;
           const exportSaveData = {
-            ...this.form.value,
-            state: this.isEdit ? SicEntityState.Modified : SicEntityState.Added,
+            ...rawFormVal,
+            id: targetId || undefined,
+            state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
           };
           this.service.save(exportSaveData).subscribe({
             next: () => {

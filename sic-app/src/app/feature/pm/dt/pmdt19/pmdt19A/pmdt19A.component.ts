@@ -108,9 +108,13 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    const rawVal = this.formData.form.getRawValue();
+    const targetId = this.id() || rawVal.id;
+    const isEditMode = !!targetId || this.isEdit();
     const payload = {
-      ...this.formData.value,
-      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
+      ...rawVal,
+      id: targetId || undefined,
+      state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
     };
 
     this.isSaving.set(true);
