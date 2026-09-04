@@ -14,6 +14,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceItemRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmInvoiceService;
 import com.softinter.sicapi.service.AuditLogService;
@@ -47,6 +48,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     private final PmCustomerContractRepository contractRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -127,9 +129,14 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
 
             mapRequestToEntity(request, entity);
 
-            // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และขออนุมัติใหม่
-            if ("APPROVED".equalsIgnoreCase(oldApprovalStatus)) {
-                entity.setApprovalStatus("CHANGED");
+            // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่
+            // ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+            if (!changes.isEmpty()) {
+                boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                        "INVOICE", entity.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                if ("APPROVED".equalsIgnoreCase(oldApprovalStatus) || pendingInvalidated) {
+                    entity.setApprovalStatus("CHANGED");
+                }
             }
 
             entity.setUpdatedBy(userId);

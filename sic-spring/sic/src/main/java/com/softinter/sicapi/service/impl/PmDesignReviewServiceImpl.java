@@ -17,6 +17,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmReviewCommentRepository;
 import com.softinter.sicapi.service.PmDesignReviewService;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.entity.su.SuProfile;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import java.time.Instant;
@@ -51,6 +53,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final TaskService taskService;
     private final SuUserBusinessService userBusinessService;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -100,11 +103,22 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         PmDesignReview entity;
         boolean isNew = (request.getId() == null);
         String oldStatus = null;
+        List<String> changes = new ArrayList<>();
 
         if (!isNew) {
             entity = designReviewRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Design review not found"));
             oldStatus = entity.getStatus();
+
+            // ✅ Auto Diff Detection
+            DocumentDiffHelper.checkChange(changes, "หัวข้อ (Title)", entity.getTitle(), request.getTitle());
+            DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", entity.getDescription(), request.getDescription());
+            DocumentDiffHelper.checkChange(changes, "ผู้ตรวจสอบ (Reviewer)", entity.getReviewer(), request.getReviewer());
+            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", entity.getAssignedTo(), request.getAssignedTo());
+            DocumentDiffHelper.checkChange(changes, "ความรุนแรง (Severity)", entity.getSeverity(), request.getSeverity());
+            DocumentDiffHelper.checkChange(changes, "กำหนดเสร็จ (Due Date)", entity.getDueDate(), request.getDueDate());
+            DocumentDiffHelper.checkChange(changes, "Figma URL", entity.getFigmaUrl(), request.getFigmaUrl());
+
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
         } else {
@@ -135,9 +149,14 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setEmbedMode(request.getEmbedMode());
         entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
-        // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
-        if ("Resolved".equalsIgnoreCase(oldStatus)) {
-            entity.setStatus("Changed");
+        // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่
+        // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+        if (!isNew && !changes.isEmpty()) {
+            boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                    "DESIGN_REVIEW", entity.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+            if ("Resolved".equalsIgnoreCase(oldStatus) || pendingInvalidated) {
+                entity.setStatus("Changed");
+            }
         }
 
         PmDesignReview saved = designReviewRepository.save(entity);

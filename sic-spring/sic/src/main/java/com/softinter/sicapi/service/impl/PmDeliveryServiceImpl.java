@@ -185,10 +185,17 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 entity.setIsLocked(true);
             }
 
-            // แก้ไขเอกสารที่เคยอนุมัติแล้ว (CONFIRMED) ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และขออนุมัติใหม่
-            if ("CONFIRMED".equalsIgnoreCase(oldStatus)) {
-                entity.setStatus("CHANGED");
-                entity.setIsLocked(false);
+            // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว (CONFIRMED) หรือกำลังรออนุมัติอยู่
+            // ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" ปลดล็อก และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+            if (!changes.isEmpty()) {
+                boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                        "DELIVERY", entity.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                if ("CONFIRMED".equalsIgnoreCase(oldStatus) || pendingInvalidated) {
+                    entity.setStatus("CHANGED");
+                    entity.setIsLocked(false);
+                    entity.setPmApprovedBy(null);
+                    entity.setPmApprovedDate(null);
+                }
             }
 
             entity.setUpdatedBy(userId);

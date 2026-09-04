@@ -22,6 +22,7 @@ import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmCustomerContractService;
 import com.softinter.sicapi.service.AuditLogService;
@@ -42,6 +43,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     private final PmCustomerProjectRepository projectRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -87,6 +89,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         boolean isNew = (request.getId() == null);
         String diffSummary = "สร้างสัญญาโครงการ (Initial contract)";
         String oldSignStatus = null;
+        List<String> changes = new ArrayList<>();
 
         if (!isNew) {
             contract = contractRepository.findById(request.getId())
@@ -95,7 +98,6 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             oldSignStatus = contract.getSignStatus();
 
             // ✅ Auto Diff Detection
-            List<String> changes = new ArrayList<>();
             DocumentDiffHelper.checkChange(changes, "เลขที่สัญญา (Contract No)", contract.getContractNo(), request.getContractNo());
             DocumentDiffHelper.checkChange(changes, "ประเภทสัญญา (Type)", contract.getContractType(), request.getContractType());
             DocumentDiffHelper.checkChange(changes, "สถานะลงนาม (Sign Status)", contract.getSignStatus(), request.getSignStatus());
@@ -124,9 +126,14 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setParentContractId(request.getParentContractId());
         contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
-        // แก้ไขเอกสารที่เคยอนุมัติ/ลงนามแล้ว ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
-        if (!isNew && "Signed".equalsIgnoreCase(oldSignStatus)) {
-            contract.setSignStatus("Changed");
+        // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติ/ลงนามแล้ว หรือกำลังรออนุมัติอยู่
+        // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+        if (!isNew && !changes.isEmpty()) {
+            boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                    "CONTRACT", contract.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+            if ("Signed".equalsIgnoreCase(oldSignStatus) || pendingInvalidated) {
+                contract.setSignStatus("Changed");
+            }
         }
 
         contract = contractRepository.save(contract);

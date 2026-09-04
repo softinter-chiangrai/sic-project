@@ -13,6 +13,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketAssigneeRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmMaTicketService;
 import com.softinter.sicapi.service.AuditLogService;
@@ -45,6 +46,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     private final PmCustomerContractRepository contractRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -118,9 +120,15 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
 
             mapRequestToEntity(request, entity);
 
-            // แก้ไขเอกสารที่เคยอนุมัติแล้ว (RESOLVED) ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
-            if (oldStatus == MaTicketStatus.RESOLVED) {
-                entity.setStatus(MaTicketStatus.CHANGED);
+            // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว (RESOLVED) หรือกำลังรออนุมัติอยู่
+            // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+            if (!changes.isEmpty()) {
+                boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                        "MA_TICKET", entity.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                if (oldStatus == MaTicketStatus.RESOLVED || pendingInvalidated) {
+                    entity.setStatus(MaTicketStatus.CHANGED);
+                    entity.setResolvedDate(null);
+                }
             }
 
             entity.setUpdatedBy(userId);

@@ -12,6 +12,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmTraceLinkRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmSpecificationService;
@@ -51,6 +52,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final CurrentUserService currentUserService;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     // ===== FIND ALL (with pagination) =====
     @Override
@@ -265,8 +267,15 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             spec.setVersion(newVersion);
-            if ("Approved".equalsIgnoreCase(oldStatus)) {
-                spec.setStatus("Changed");
+
+            // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่
+            // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+            if (!changes.isEmpty()) {
+                boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                        "SPECIFICATION", spec.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                if ("Approved".equalsIgnoreCase(oldStatus) || pendingInvalidated) {
+                    spec.setStatus("Changed");
+                }
             }
             spec = specificationRepository.save(spec);
 

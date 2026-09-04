@@ -9,6 +9,7 @@ import com.softinter.sicapi.entity.pm.PmUserManual;
 import com.softinter.sicapi.entity.pm.PmUserManualSection;
 import com.softinter.sicapi.repository.pm.PmUserManualRepository;
 import com.softinter.sicapi.repository.pm.PmUserManualSectionRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmUserManualService;
 import com.softinter.sicapi.service.AuditLogService;
@@ -36,6 +37,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     private final PmUserManualSectionRepository sectionRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -108,9 +110,14 @@ public class PmUserManualServiceImpl implements PmUserManualService {
 
             mapRequestToEntity(request, entity);
 
-            // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และขออนุมัติใหม่
-            if ("APPROVED".equalsIgnoreCase(oldStatus)) {
-                entity.setStatus("CHANGED");
+            // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่
+            // ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+            if (!changes.isEmpty()) {
+                boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                        "USER_MANUAL", entity.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                if ("APPROVED".equalsIgnoreCase(oldStatus) || pendingInvalidated) {
+                    entity.setStatus("CHANGED");
+                }
             }
 
             entity.setUpdatedBy(userId);

@@ -24,6 +24,7 @@ import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import com.softinter.sicapi.util.LocalizationHelper;
@@ -42,6 +43,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final DocumentVersionService documentVersionService;
     private final SuProfileRepository profileRepository;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -173,9 +175,14 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, requirement);
 
-            // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
-            if ("Approved".equalsIgnoreCase(oldStatus)) {
-                requirement.setStatus("Changed");
+            // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่
+            // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
+            if (!changes.isEmpty()) {
+                boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                        "REQUIREMENT", requirement.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                if ("Approved".equalsIgnoreCase(oldStatus) || pendingInvalidated) {
+                    requirement.setStatus("Changed");
+                }
             }
 
             // Version increment logic

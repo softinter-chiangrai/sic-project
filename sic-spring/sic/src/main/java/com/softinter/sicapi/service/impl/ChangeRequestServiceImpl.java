@@ -152,6 +152,16 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
         String diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
 
+        // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่กำลังรออนุมัติอยู่ (SUBMITTED)
+        // ต้องยกเลิกคำขออนุมัติที่ค้างอยู่ และดึงกลับเป็น "DRAFT" เพื่อขออนุมัติใหม่
+        if (!changes.isEmpty() && "SUBMITTED".equals(cr.getStatus())) {
+            boolean pendingInvalidated = approvalService.invalidatePendingApproval(
+                    "CHANGE_REQUEST", cr.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+            if (pendingInvalidated) {
+                cr.setStatus("DRAFT");
+            }
+        }
+
         if (request.getCrCode() != null && !request.getCrCode().isBlank()) {
             cr.setCrCode(request.getCrCode().trim());
         }
