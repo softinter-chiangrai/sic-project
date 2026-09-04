@@ -35,7 +35,7 @@ export interface Contract {
   contractValue: number;
   paymentTerms: string;
   scopeSummary: string;
-  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
+  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Changed' | 'Expired';
   approvalStatus?: string;
   renewalStatus: string;
   parentContractId?: string;
