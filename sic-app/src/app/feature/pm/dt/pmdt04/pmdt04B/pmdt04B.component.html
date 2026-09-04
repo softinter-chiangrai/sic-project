@@ -139,7 +139,7 @@
           (selectionChanged)="selectedFlowId = $event?.id"
         ></sic-combobox>
         @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">* กรุณาเลือกกระบวนการอนุมัติ</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">* สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก</p>
         }
       </div>
 
@@ -151,7 +151,7 @@
           </sic-button>
         </div>
         <div class="flex-1">
-          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+          <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving || form.invalid">
             @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
             {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
           </sic-button>

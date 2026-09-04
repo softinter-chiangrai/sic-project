@@ -555,11 +555,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       return;
     }
 
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
-      return;
-    }
-
     this.isSaving = true;
     const data = this.formData.value as RequirementModel;
 
@@ -586,29 +581,36 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           this.isEdit = true;
         }
 
-        // Submit for approval automatically
-        this.approvalService
-          .submitForApproval({
-            documentType: 'REQUIREMENT',
-            documentId: savedId!,
-            documentCode: data.requirementCode,
-            documentTitle: data.title,
-            version: data.version,
-            flowId: this.selectedFlowId!,
-            comment: 'ส่งขออนุมัติ Requirement อัตโนมัติขณะบันทึก',
-          })
-          .subscribe({
-            next: () => {
-              this.isSaving = false;
-              this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว').then(() => {
-                this.navigateBack(data.projectId);
-              });
-            },
-            error: (err) => {
-              this.isSaving = false;
-              this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
-            },
+        if (this.selectedFlowId && savedId) {
+          // Submit for approval automatically
+          this.approvalService
+            .submitForApproval({
+              documentType: 'REQUIREMENT',
+              documentId: savedId,
+              documentCode: data.requirementCode,
+              documentTitle: data.title,
+              version: data.version,
+              flowId: this.selectedFlowId,
+              comment: 'ส่งขออนุมัติ Requirement อัตโนมัติขณะบันทึก',
+            })
+            .subscribe({
+              next: () => {
+                this.isSaving = false;
+                this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว').then(() => {
+                  this.navigateBack(data.projectId);
+                });
+              },
+              error: (err) => {
+                this.isSaving = false;
+                this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              },
+            });
+        } else {
+          this.isSaving = false;
+          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อยแล้ว').then(() => {
+            this.navigateBack(data.projectId);
           });
+        }
       },
       error: (error) => {
         this.isSaving = false;

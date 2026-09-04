@@ -256,8 +256,8 @@
           </label>
 
           @if (!selectedFlowId && flows.length > 0) {
-            <span class="text-xs text-amber-500 flex items-center gap-1">
-              <i class="bi bi-exclamation-triangle"></i> กรุณาเลือกกระบวนการอนุมัติก่อนบันทึก
+            <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
+              <i class="bi bi-info-circle"></i> สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก
             </span>
           }
         </div>
@@ -304,7 +304,7 @@
             <sic-button variant="outline" (click)="onBack()">
               <i class="bi bi-arrow-left"></i> ยกเลิก
             </sic-button>
-            <sic-button variant="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid || !selectedFlowId">
+            <sic-button variant="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
               <i class="bi bi-check-lg"></i> {{ isEdit ? 'บันทึกข้อมูล' : 'สร้างรายการ' }}
             </sic-button>
           </div>

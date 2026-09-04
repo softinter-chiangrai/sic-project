@@ -205,10 +205,6 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติก่อนบันทึก');
-      return;
-    }
 
     this.isSaving = true;
 

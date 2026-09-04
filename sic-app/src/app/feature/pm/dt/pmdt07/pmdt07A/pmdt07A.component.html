@@ -212,7 +212,7 @@
                                 <i class="bi bi-arrow-left"></i> ย้อนกลับ
                             </sic-button>
                             @if (!isViewOnly) {
-                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid">
                                     @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
                                     {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
                                 </sic-button>

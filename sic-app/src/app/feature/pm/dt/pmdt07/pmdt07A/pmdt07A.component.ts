@@ -623,13 +623,6 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             this.form.markAllAsTouched();
             this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
             return;
-        }
-
-        if (!this.selectedFlowId) {
-            this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติทุกครั้ง');
-            return;
-        }
-
         this.isSaving = true;
         const data = this.prepareSubmitData();
         if (this.specId || data.id) {
@@ -655,26 +648,34 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 }
 
                 this.isSaved = true;
-                this.approvalService.submitForApproval({
-                    documentType: 'SPECIFICATION',
-                    documentId: savedId!,
-                    documentCode: data.specificationCode,
-                    documentTitle: data.title,
-                    version: data.version,
-                    flowId: this.selectedFlowId!,
-                    comment: 'ส่งขออนุมัติ Specification'
-                }).subscribe({
-                    next: () => {
-                        this.isSaving = false;
-                        this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'Specification ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
-                            this.navigateBack(data.projectId);
-                        });
-                    },
-                    error: (err) => {
-                        this.isSaving = false;
-                        this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
-                    }
-                });
+
+                if (this.selectedFlowId && savedId) {
+                    this.approvalService.submitForApproval({
+                        documentType: 'SPECIFICATION',
+                        documentId: savedId,
+                        documentCode: data.specificationCode,
+                        documentTitle: data.title,
+                        version: data.version,
+                        flowId: this.selectedFlowId,
+                        comment: 'ส่งขออนุมัติ Specification'
+                    }).subscribe({
+                        next: () => {
+                            this.isSaving = false;
+                            this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'Specification ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
+                                this.navigateBack(data.projectId);
+                            });
+                        },
+                        error: (err) => {
+                            this.isSaving = false;
+                            this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                        }
+                    });
+                } else {
+                    this.isSaving = false;
+                    this.dialog.success('บันทึกสำเร็จ', 'Specification ถูกบันทึกเรียบร้อยแล้ว').then(() => {
+                        this.navigateBack(data.projectId);
+                    });
+                }
             },
             error: (error) => {
                 this.isSaving = false;

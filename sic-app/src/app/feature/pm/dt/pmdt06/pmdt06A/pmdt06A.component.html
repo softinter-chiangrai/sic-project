@@ -331,14 +331,14 @@
           @if (isView) {
             <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
           } @else {
-            <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid || !selectedFlowId">
+            <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid">
               @if (isSaving) {
                 <i class="bi bi-arrow-repeat animate-spin me-1"></i>
               }
               {{
                 isSaving
                   ? 'กำลังบันทึก...'
-                  : (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ')
+                  : (selectedFlowId ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ') : (isEdit ? 'บันทึก' : 'สร้าง'))
               }}
             </sic-button>
             <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>

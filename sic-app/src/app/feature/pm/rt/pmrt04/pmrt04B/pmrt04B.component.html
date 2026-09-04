@@ -221,7 +221,7 @@
               [fullWidth]="true"
               [type]="'submit'"
               variant="primary"
-              [disabled]="isSaving || form.invalid || !selectedFlowId"
+              [disabled]="isSaving || form.invalid"
             >
               @if (isSaving) {
                 <i class="bi bi-arrow-repeat animate-spin"></i>

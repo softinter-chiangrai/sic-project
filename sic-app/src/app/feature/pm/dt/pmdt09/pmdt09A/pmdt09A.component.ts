@@ -449,11 +449,6 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       return;
     }
 
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติก่อนบันทึก');
-      return;
-    }
-
     this.isSaving = true;
     const data = { ...this.formData.value };
     if (!data.reviewableType) {

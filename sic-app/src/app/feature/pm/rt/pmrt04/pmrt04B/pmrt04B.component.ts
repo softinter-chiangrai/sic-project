@@ -315,10 +315,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือกกระบวนการอนุมัติ', 'จำเป็นต้องเลือกกระบวนการอนุมัติก่อนยืนยันการต่อสัญญา');
-      return;
-    }
 
     const formValue = this.form.value;
     const original = this.originalContract;
