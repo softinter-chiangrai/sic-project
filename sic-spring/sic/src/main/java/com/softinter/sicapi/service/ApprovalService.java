@@ -52,6 +52,15 @@ public interface ApprovalService {
     void validateDocument(String documentType, UUID documentId);
 
     CancelApprovalResponse cancelByFlow(UUID flowId, String reason);
-    
+
     void processTimeouts();
+
+    /**
+     * ยกเลิกคำขออนุมัติที่ pending อยู่ของเอกสาร (ถ้ามี) โดยไม่แตะสถานะของเอกสารเอง —
+     * ใช้เมื่อเอกสารถูกแก้ไขระหว่างรอการอนุมัติ เพื่อป้องกันไม่ให้ผู้อนุมัติอนุมัติเนื้อหาที่ล้าสมัย
+     * ผู้เรียกเป็นคนกำหนดสถานะสุดท้ายของเอกสารเอง (เช่น "Changed")
+     *
+     * @return true ถ้ามีคำขออนุมัติที่ pending และถูกยกเลิกไป, false ถ้าไม่มี
+     */
+    boolean invalidatePendingApproval(String documentType, UUID documentId, String reason);
 }

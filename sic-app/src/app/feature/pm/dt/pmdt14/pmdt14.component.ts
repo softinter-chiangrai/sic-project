@@ -16,6 +16,8 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
@@ -30,16 +32,19 @@ export class Pmdt14Component implements OnInit {
   private readonly dialog = inject(DialogService);
   private readonly http = inject(HttpClient);
   private readonly approvalService = inject(ApprovalService);
+  private readonly customerState = inject(CustomerStateService);
 
   deliveries = signal<PmDeliveryModel[]>([]);
+  approvalStatusMap = signal<Record<string, string>>({});
   isLoading = signal(false);
   totalElements = signal(0);
   page = signal(0);
   size = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
+  projectId = signal<string | null>(null);
 
-  protected Math = Math;
+  readonly Math = Math;
 
   filteredDeliveries = computed(() => {
     let list = this.deliveries();
@@ -79,12 +84,15 @@ export class Pmdt14Component implements OnInit {
   });
 
   ngOnInit(): void {
+    const projId = this.customerState.getProjectId();
+    this.projectId.set(projId);
     this.loadData();
   }
 
   loadData(): void {
     this.isLoading.set(true);
-    this.service.getPaging({ page: this.page(), size: this.size() }).subscribe({
+    const projectId = this.customerState.getProjectId() || undefined;
+    this.service.getPaging({ page: this.page(), size: this.size(), projectId }).subscribe({
       next: (res) => {
         const items = res.content || [];
         this.deliveries.set(items);
@@ -103,11 +111,7 @@ export class Pmdt14Component implements OnInit {
       if (!delivery.id) return;
       this.approvalService.getDocumentStatus('DELIVERY', delivery.id).subscribe({
         next: (approval) => {
-          this.deliveries.update((list) =>
-            list.map((item) =>
-              item.id === delivery.id ? { ...item, approvalStatus: approval.status } : item
-            )
-          );
+          this.approvalStatusMap.update((map) => ({ ...map, [delivery.id!]: approval.status }));
         },
         error: () => {
           // No approval status or not submitted yet
@@ -131,6 +135,7 @@ export class Pmdt14Component implements OnInit {
     { value: 'READY', text: 'พร้อมส่งมอบ' },
     { value: 'DELIVERED', text: 'ส่งมอบแล้ว' },
     { value: 'CONFIRMED', text: 'ลูกค้ายืนยันรับมอบแล้ว' },
+    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ (Changed)' },
   ];
 
   onFilterChange(value: any): void {
@@ -144,15 +149,21 @@ export class Pmdt14Component implements OnInit {
     this.loadData();
   }
 
+  goBack(): void {
+    this.router.navigate(['/feature/pm/project']);
+  }
+
   goToAdd(): void {
     this.router.navigate(['/feature/pm/delivery/new']);
   }
 
-  goToView(id: string): void {
+  goToView(id?: string): void {
+    if (!id) return;
     this.router.navigate(['/feature/pm/delivery', id, 'view']);
   }
 
-  goToEdit(id: string): void {
+  goToEdit(id?: string): void {
+    if (!id) return;
     this.router.navigate(['/feature/pm/delivery', id, 'edit']);
   }
 
@@ -185,7 +196,8 @@ export class Pmdt14Component implements OnInit {
       });
   }
 
-  onDelete(id: string): void {
+  onDelete(id?: string): void {
+    if (!id) return;
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบเอกสารส่งมอบนี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
@@ -208,6 +220,7 @@ export class Pmdt14Component implements OnInit {
       READY: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
       DELIVERED: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       CONFIRMED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      CHANGED: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
     };
     return map[status] || 'bg-gray-100 text-gray-600';
   }
@@ -219,6 +232,7 @@ export class Pmdt14Component implements OnInit {
       READY: 'พร้อมส่งมอบ',
       DELIVERED: 'ส่งมอบแล้ว',
       CONFIRMED: 'ลูกค้ายืนยันรับมอบแล้ว',
+      CHANGED: 'แก้ไขหลังอนุมัติ (Changed)',
     };
     return map[status] || status;
   }
@@ -227,6 +241,7 @@ export class Pmdt14Component implements OnInit {
     if (!status) return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
     const s = status.toUpperCase();
     const map: Record<string, string> = {
+      DRAFT: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20',
       PENDING: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
       APPROVED: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20',
       REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
@@ -238,6 +253,7 @@ export class Pmdt14Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
+      DRAFT: 'ฉบับร่าง',
       PENDING: 'รออนุมัติ',
       APPROVED: 'อนุมัติแล้ว',
       REJECTED: 'ปฏิเสธ',

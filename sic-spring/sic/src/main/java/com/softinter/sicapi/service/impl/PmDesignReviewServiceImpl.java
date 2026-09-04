@@ -99,10 +99,12 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     public UUID save(PmDesignReviewRequest request, UUID businessId, String userId) {
         PmDesignReview entity;
         boolean isNew = (request.getId() == null);
+        String oldStatus = null;
 
         if (!isNew) {
             entity = designReviewRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Design review not found"));
+            oldStatus = entity.getStatus();
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
         } else {
@@ -132,6 +134,11 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setFigmaUrl(request.getFigmaUrl());
         entity.setEmbedMode(request.getEmbedMode());
         entity.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+        // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
+        if ("Resolved".equalsIgnoreCase(oldStatus)) {
+            entity.setStatus("Changed");
+        }
 
         PmDesignReview saved = designReviewRepository.save(entity);
 

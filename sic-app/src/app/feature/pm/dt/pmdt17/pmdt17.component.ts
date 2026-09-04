@@ -124,6 +124,7 @@ export class Pmdt17Component implements OnInit {
     { value: 'IN_PROGRESS', text: 'กำลังดำเนินการ (In Progress)' },
     { value: 'WAITING_CUSTOMER', text: 'รอลูกค้าตอบกลับ (Waiting)' },
     { value: 'RESOLVED', text: 'แก้ไขแล้ว (Resolved)' },
+    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ (Changed)' },
     { value: 'CLOSED', text: 'ปิดตั๋ว (Closed)' },
   ];
 
@@ -210,6 +211,7 @@ export class Pmdt17Component implements OnInit {
       IN_PROGRESS: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
       WAITING_CUSTOMER: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
       RESOLVED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      CHANGED: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       CLOSED: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
     };
     return map[status] || 'bg-gray-100 text-gray-600';
@@ -221,6 +223,7 @@ export class Pmdt17Component implements OnInit {
       IN_PROGRESS: 'กำลังดำเนินการ',
       WAITING_CUSTOMER: 'รอลูกค้าตอบกลับ',
       RESOLVED: 'แก้ไขแล้ว',
+      CHANGED: 'แก้ไขหลังอนุมัติ',
       CLOSED: 'ปิดตั๋ว',
     };
     return map[status] || status || '-';

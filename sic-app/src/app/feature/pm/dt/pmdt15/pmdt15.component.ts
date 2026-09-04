@@ -53,6 +53,7 @@ export class Pmdt15Component implements OnInit {
     { label: 'ฉบับร่าง (Draft)', value: 'DRAFT' },
     { label: 'รอตรวจสอบ (Review)', value: 'REVIEW' },
     { label: 'อนุมัติแล้ว (Approved)', value: 'APPROVED' },
+    { label: 'แก้ไขหลังอนุมัติ (Changed)', value: 'CHANGED' },
     { label: 'เผยแพร่แล้ว (Published)', value: 'PUBLISHED' },
   ];
 
@@ -228,6 +229,7 @@ export class Pmdt15Component implements OnInit {
       DRAFT: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300',
       REVIEW: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
       APPROVED: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400',
+      CHANGED: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       PUBLISHED: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
     };
     return map[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
@@ -238,6 +240,7 @@ export class Pmdt15Component implements OnInit {
       DRAFT: 'ฉบับร่าง (Draft)',
       REVIEW: 'รอตรวจสอบ (Review)',
       APPROVED: 'อนุมัติแล้ว (Approved)',
+      CHANGED: 'แก้ไขหลังอนุมัติ (Changed)',
       PUBLISHED: 'เผยแพร่แล้ว (Published)',
     };
     return map[status] || status;

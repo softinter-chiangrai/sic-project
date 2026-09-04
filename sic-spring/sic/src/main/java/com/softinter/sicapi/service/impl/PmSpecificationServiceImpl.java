@@ -34,8 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.persistence.criteria.Predicate;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -308,15 +306,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             return spec.getId();
         }
-                        "SPEC", spec.getId(), null, null, "Success", null);
-            } catch (Exception ex) {
-                log.error("ผิดพลาด audit log DELETE_SPECIFICATION: {}", ex.getMessage(), ex);
-            }
-
-            return spec.getId();
-        }
-
-        throw new IllegalArgumentException("Invalid state: " + state);
     }
 
     // ===== DELETE =====

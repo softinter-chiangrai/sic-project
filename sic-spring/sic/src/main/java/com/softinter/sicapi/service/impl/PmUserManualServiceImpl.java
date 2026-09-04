@@ -96,6 +96,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+            String oldStatus = entity.getStatus();
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
@@ -106,6 +107,12 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคู่มือ " + (request.getManualTitle() != null ? request.getManualTitle() : entity.getManualTitle()));
 
             mapRequestToEntity(request, entity);
+
+            // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และขออนุมัติใหม่
+            if ("APPROVED".equalsIgnoreCase(oldStatus)) {
+                entity.setStatus("CHANGED");
+            }
+
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = manualRepository.save(entity);

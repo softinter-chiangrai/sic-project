@@ -101,7 +101,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             int passed = (int) chks.stream().filter(c -> Boolean.TRUE.equals(c.getIsChecked())).count();
             res.setTotalChecklistCount(total);
             res.setCheckedChecklistCount(passed);
-            res.setIsChecklistPassed(total > 0 && total == passed);
+            res.setIsChecklistPassed(total == 0 || total == passed);
 
             if (delivery.getProjectId() != null) {
                 PmDeliveryGateCheckResponse gate = gateCheck(delivery.getId(), delivery.getProjectId(), businessId);
@@ -157,6 +157,8 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
 
+            String oldStatus = entity.getStatus();
+
             // Phase 2: Lock validation
             if (Boolean.TRUE.equals(entity.getIsLocked()) && !Boolean.TRUE.equals(request.getIsLocked())) {
                 // If attempting to edit a locked delivery without unlocking authorization
@@ -182,6 +184,13 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             if (shouldLock) {
                 entity.setIsLocked(true);
             }
+
+            // แก้ไขเอกสารที่เคยอนุมัติแล้ว (CONFIRMED) ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และขออนุมัติใหม่
+            if ("CONFIRMED".equalsIgnoreCase(oldStatus)) {
+                entity.setStatus("CHANGED");
+                entity.setIsLocked(false);
+            }
+
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = deliveryRepository.save(entity);
@@ -196,7 +205,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                     entity.getProjectId(),
                     entity.getDeliveryCode(),
                     nextVersion,
-                    diffSummary + (shouldLock ? " [LOCKED/FROZEN]" : ""),
+                    diffSummary + (Boolean.TRUE.equals(entity.getIsLocked()) ? " [LOCKED/FROZEN]" : ""),
                     snapshotJson
             );
 
@@ -386,14 +395,14 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         if (deliveryId != null) {
             List<PmDeliveryChecklist> checklists = checklistRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(deliveryId);
             long checkedCount = checklists.stream().filter(PmDeliveryChecklist::getIsChecked).count();
-            boolean chkPassed = !checklists.isEmpty() && checkedCount == checklists.size();
+            boolean chkPassed = checklists.isEmpty() || checkedCount == checklists.size();
             if (chkPassed) passedCount++;
             items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
                     .category("CHECKLIST")
                     .name("Delivery Checklist Verification")
                     .passed(chkPassed)
                     .status(chkPassed ? "OK" : "WARNING")
-                    .detail(String.format("ตรวจสอบแล้ว %d จาก %d รายการ", checkedCount, checklists.size()))
+                    .detail(checklists.isEmpty() ? "ไม่มีรายการ Checklist เพิ่มเติม" : String.format("ตรวจสอบแล้ว %d จาก %d รายการ", checkedCount, checklists.size()))
                     .build());
         }
 

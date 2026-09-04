@@ -606,6 +606,35 @@ public class ApprovalServiceImpl implements ApprovalService {
 
     @Override
     @Transactional
+    public boolean invalidatePendingApproval(String documentType, UUID documentId, String reason) {
+        return approvalRepository.findByDocumentAndStatus(documentType, documentId, ApprovalStatus.PENDING)
+                .map(approval -> {
+                    approval.setStatus(ApprovalStatus.CANCELLED);
+                    approval.setCurrentStep(null);
+                    approval.setIsActive(false);
+                    approval.setComment(reason);
+                    approvalRepository.save(approval);
+
+                    createLog(approval, null, "AUTO_CANCEL", "system", "System",
+                            reason, ApprovalStatus.PENDING, ApprovalStatus.CANCELLED);
+
+                    try {
+                        auditLogService.log(
+                                "AUTO_CANCEL_APPROVAL",
+                                "Approval Center / " + documentType,
+                                "ยกเลิกคำขออนุมัติอัตโนมัติ เนื่องจากเอกสารถูกแก้ไขระหว่างรอการอนุมัติ",
+                                documentType, documentId, null, null, "Success", reason);
+                    } catch (Exception e) {
+                        log.error("Error creating audit log on auto-cancel approval: {}", e.getMessage(), e);
+                    }
+
+                    return true;
+                })
+                .orElse(false);
+    }
+
+    @Override
+    @Transactional
     public ApprovalResponse delegate(UUID approvalId, String delegateToUserId, String comment) {
         String userId = currentUserService.getUserId();
         String userName = currentUserService.getUsername();

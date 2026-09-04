@@ -163,7 +163,8 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", requirement.getDescription(), request.getDescription());
             DocumentDiffHelper.checkChange(changes, "ประเภท (Type)", requirement.getRequirementType(), request.getRequirementType());
             DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", requirement.getPriority(), request.getPriority());
-            DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assignee)", requirement.getAssignee(), request.getAssignee());
+            DocumentDiffHelper.checkChange(changes, "คุณค่าทางธุรกิจ (Business Value)", requirement.getBusinessValue(), request.getBusinessValue());
+            DocumentDiffHelper.checkChange(changes, "เกณฑ์การยอมรับ (Acceptance Criteria)", requirement.getAcceptanceCriteria(), request.getAcceptanceCriteria());
             DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", oldStatus, request.getStatus());
 
             String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, request.getTitle());
@@ -171,6 +172,11 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setUpdatedBy(userId);
             requirement.setUpdatedDate(Instant.now());
             mapRequestToEntity(request, requirement);
+
+            // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
+            if ("Approved".equalsIgnoreCase(oldStatus)) {
+                requirement.setStatus("Changed");
+            }
 
             // Version increment logic
             String newVersion = documentVersionService.incrementVersion(oldVersion);

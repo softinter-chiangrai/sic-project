@@ -103,6 +103,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+            MaTicketStatus oldStatus = entity.getStatus();
 
             // ✅ Auto Diff Detection
             List<String> oldAssigneeIds = ticketAssigneeRepository.findByMaTicketId(entity.getId()).stream()
@@ -116,6 +117,12 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตตั๋วปัญหา " + (request.getTitle() != null ? request.getTitle() : entity.getTitle()));
 
             mapRequestToEntity(request, entity);
+
+            // แก้ไขเอกสารที่เคยอนุมัติแล้ว (RESOLVED) ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
+            if (oldStatus == MaTicketStatus.RESOLVED) {
+                entity.setStatus(MaTicketStatus.CHANGED);
+            }
+
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = ticketRepository.save(entity);

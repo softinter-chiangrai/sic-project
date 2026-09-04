@@ -5,7 +5,8 @@ public enum MaTicketStatus {
     IN_PROGRESS("In Progress"),
     WAITING_CUSTOMER("Waiting Customer"),
     RESOLVED("Resolved"),
-    CLOSED("Closed");
+    CLOSED("Closed"),
+    CHANGED("Changed");
 
     private final String displayName;
 

@@ -2,6 +2,15 @@
   <!-- Page Header -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
+      @if (projectId()) {
+        <button
+          (click)="goBack()"
+          class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+          title="กลับไปหน้ารายการโครงการ"
+        >
+          <i class="bi bi-arrow-left text-xl"></i>
+        </button>
+      }
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-box-seam text-[var(--crm-primary)]"></i>
         เอกสารการส่งมอบ (Delivery Documents)
@@ -111,11 +120,15 @@
                   <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(item.status)">
                     {{ getStatusText(item.status) }}
                   </span>
-                  @if (item.isGatePassed && item.isChecklistPassed) {
+                  @if (item.status === 'CONFIRMED') {
+                    <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
+                      <i class="bi bi-check-circle-fill text-emerald-500"></i> ยืนยันรับมอบสมบูรณ์
+                    </span>
+                  } @else if (item.isGatePassed && item.isChecklistPassed) {
                     <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
                       <i class="bi bi-check-circle-fill text-emerald-500"></i> ผ่านเกณฑ์สมบูรณ์
                     </span>
-                  } @else {
+                  } @else if (item.totalGateChecks || item.totalChecklistCount) {
                     <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" title="Delivery Gate Check หรือ Checklist ยังไม่ผ่านครบทั้งหมด">
                       <i class="bi bi-exclamation-triangle-fill text-amber-500"></i> ยังไม่เสร็จสมบูรณ์
                       @if (item.totalGateChecks) {
@@ -126,7 +139,11 @@
                 </div>
               </td>
               <td class="px-4 py-3 text-center">
-                @if (item.approvalStatus) {
+                @if (approvalStatusMap()[item.id!]) {
+                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[item.id!])">
+                    {{ getApprovalStatusText(approvalStatusMap()[item.id!]) }}
+                  </span>
+                } @else if (item.approvalStatus) {
                   <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(item.approvalStatus)">
                     {{ getApprovalStatusText(item.approvalStatus) }}
                   </span>
@@ -140,10 +157,10 @@
                   [showEdit]="true"
                   [showPrint]="true"
                   [showDelete]="true"
-                  (onView)="goToView(item.id!)"
+                  (onView)="goToView(item.id)"
                   (onPrint)="printDocument(item)"
-                  (onEdit)="goToEdit(item.id!)"
-                  (onDelete)="onDelete(item.id!)">
+                  (onEdit)="goToEdit(item.id)"
+                  (onDelete)="onDelete(item.id)">
                 </sic-table-actions>
               </td>
             </tr>

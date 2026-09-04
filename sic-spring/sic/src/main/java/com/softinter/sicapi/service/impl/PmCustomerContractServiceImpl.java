@@ -86,11 +86,13 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         PmCustomerContract contract;
         boolean isNew = (request.getId() == null);
         String diffSummary = "สร้างสัญญาโครงการ (Initial contract)";
+        String oldSignStatus = null;
 
         if (!isNew) {
             contract = contractRepository.findById(request.getId())
                     .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + request.getId()));
             contract.setRowVersion(request.getRowVersion());
+            oldSignStatus = contract.getSignStatus();
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
@@ -121,6 +123,11 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setRenewalStatus(request.getRenewalStatus());
         contract.setParentContractId(request.getParentContractId());
         contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+
+        // แก้ไขเอกสารที่เคยอนุมัติ/ลงนามแล้ว ต้องเปลี่ยนสถานะกลับเป็น "Changed" และขออนุมัติใหม่
+        if (!isNew && "Signed".equalsIgnoreCase(oldSignStatus)) {
+            contract.setSignStatus("Changed");
+        }
 
         contract = contractRepository.save(contract);
 

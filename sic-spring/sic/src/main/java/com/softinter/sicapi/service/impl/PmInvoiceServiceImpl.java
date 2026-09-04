@@ -115,6 +115,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+            String oldApprovalStatus = entity.getApprovalStatus();
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
@@ -125,6 +126,12 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตใบแจ้งหนี้ " + (request.getInvoiceNo() != null ? request.getInvoiceNo() : entity.getInvoiceNo()));
 
             mapRequestToEntity(request, entity);
+
+            // แก้ไขเอกสารที่เคยอนุมัติแล้ว ต้องเปลี่ยนสถานะกลับเป็น "CHANGED" และขออนุมัติใหม่
+            if ("APPROVED".equalsIgnoreCase(oldApprovalStatus)) {
+                entity.setApprovalStatus("CHANGED");
+            }
+
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = invoiceRepository.save(entity);
