@@ -223,6 +223,7 @@ export class Pmdt16Component implements OnInit {
       REJECTED: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
       NEED_REVISION: 'bg-orange-500/10 text-orange-600 dark:text-orange-400 border border-orange-500/20',
       CANCELLED: 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20',
+      CHANGED: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
     };
     return map[s] || 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
   }
@@ -235,6 +236,7 @@ export class Pmdt16Component implements OnInit {
       REJECTED: 'ปฏิเสธ',
       NEED_REVISION: 'ต้องแก้ไข',
       CANCELLED: 'ยกเลิก',
+      CHANGED: 'รอส่งอนุมัติ',
     };
     return status ? map[status.toUpperCase()] || status : '-';
   }

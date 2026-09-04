@@ -158,7 +158,11 @@
               <span [class]="getStatusClass(review.status) + ' text-[11px] px-2.5 py-0.5 rounded-full font-semibold shadow-sm backdrop-blur-md'">
                 {{ review.status }}
               </span>
-              @if (review.approvalStatus) {
+              @if (review.status?.toUpperCase() === 'CHANGED') {
+                <span class="text-[11px] px-2.5 py-0.5 rounded-full font-semibold shadow-sm backdrop-blur-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                  รอส่งอนุมัติ
+                </span>
+              } @else if (review.approvalStatus) {
                 <span [class]="getApprovalStatusClass(review.approvalStatus) + ' text-[11px] px-2.5 py-0.5 rounded-full font-semibold shadow-sm backdrop-blur-md'">
                   {{ getApprovalStatusText(review.approvalStatus) }}
                 </span>
@@ -423,7 +427,11 @@
                 <span [class]="getStatusClass(review.status) + ' text-[10px] px-2 py-0.2 rounded-full font-medium'">
                   {{ review.status }}
                 </span>
-                @if (review.approvalStatus) {
+                @if (review.status?.toUpperCase() === 'CHANGED') {
+                  <span class="text-[10px] px-2 py-0.2 rounded-full font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    รอส่งอนุมัติ
+                  </span>
+                } @else if (review.approvalStatus) {
                   <span [class]="getApprovalStatusClass(review.approvalStatus) + ' text-[10px] px-2 py-0.2 rounded-full font-medium'">
                     {{ getApprovalStatusText(review.approvalStatus) }}
                   </span>

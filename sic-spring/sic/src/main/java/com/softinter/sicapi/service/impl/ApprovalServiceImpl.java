@@ -607,8 +607,16 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional
     public boolean invalidatePendingApproval(String documentType, UUID documentId, String reason) {
-        return approvalRepository.findByDocumentAndStatus(documentType, documentId, ApprovalStatus.PENDING)
+        // มองหา approval record ล่าสุดที่ยัง active อยู่ (ไม่ว่าจะ PENDING หรือ APPROVED ไปแล้วก็ตาม)
+        // เพราะเมื่อ approve() สำเร็จ ระบบไม่เคยปิด isActive ของ record นั้น — ถ้าไม่ invalidate ตรงนี้
+        // getCurrentStatus()/getDocumentStatus() จะยังอ่านเจอสถานะ "APPROVED" เดิมค้างอยู่ ทั้งที่เอกสารถูกแก้ไขแล้ว
+        List<PmApproval> activeApprovals = approvalRepository.findActiveByDocument(documentType, documentId);
+
+        return activeApprovals.stream()
+                .findFirst()
+                .filter(a -> !a.getStatus().isFinal() || a.getStatus() == ApprovalStatus.APPROVED)
                 .map(approval -> {
+                    ApprovalStatus oldStatus = approval.getStatus();
                     approval.setStatus(ApprovalStatus.CANCELLED);
                     approval.setCurrentStep(null);
                     approval.setIsActive(false);
@@ -616,13 +624,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                     approvalRepository.save(approval);
 
                     createLog(approval, null, "AUTO_CANCEL", "system", "System",
-                            reason, ApprovalStatus.PENDING, ApprovalStatus.CANCELLED);
+                            reason, oldStatus, ApprovalStatus.CANCELLED);
 
                     try {
                         auditLogService.log(
                                 "AUTO_CANCEL_APPROVAL",
                                 "Approval Center / " + documentType,
-                                "ยกเลิกคำขออนุมัติอัตโนมัติ เนื่องจากเอกสารถูกแก้ไขระหว่างรอการอนุมัติ",
+                                "ยกเลิกสถานะอนุมัติเดิม (" + oldStatus + ") อัตโนมัติ เนื่องจากเอกสารถูกแก้ไขหลังอนุมัติ/ระหว่างรอการอนุมัติ",
                                 documentType, documentId, null, null, "Success", reason);
                     } catch (Exception e) {
                         log.error("Error creating audit log on auto-cancel approval: {}", e.getMessage(), e);

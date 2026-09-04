@@ -121,7 +121,11 @@
                 </span>
               </td>
               <td class="px-4 py-3 text-center">
-                @if (approvalStatusMap()[item.id]) {
+                @if (item.status?.toUpperCase() === 'CHANGED') {
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                    รอส่งอนุมัติ
+                  </span>
+                } @else if (approvalStatusMap()[item.id]) {
                   <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[item.id])">
                     {{ getApprovalStatusText(approvalStatusMap()[item.id]) }}
                   </span>
@@ -130,7 +134,9 @@
                     {{ getApprovalStatusText(item.approvalStatus) }}
                   </span>
                 } @else {
-                  <span class="text-xs text-[var(--text-muted)]">-</span>
+                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                    ยังไม่อนุมัติ
+                  </span>
                 }
               </td>
               <td class="px-4 py-3 text-xs text-[var(--text)]">
