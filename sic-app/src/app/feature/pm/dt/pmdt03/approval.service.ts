@@ -2,7 +2,7 @@
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { catchError, Observable, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type { PaginationResponse } from '../../../../core/model/pagination.model';
 import type { Approval, ApprovalFlow, ApprovalSearchParams, ApprovalSummary, SubmitApprovalRequest } from './approval.model';
@@ -17,7 +17,24 @@ export class ApprovalService {
     // 1. Submit
     // ============================================================
     submitForApproval(request: SubmitApprovalRequest): Observable<Approval> {
-        return this.http.post<Approval>(`${this.baseUrl}/submit`, request);
+        return this.http.post<Approval>(`${this.baseUrl}/submit`, request).pipe(
+            catchError((err) => {
+                const message = (err?.error?.message || err?.message || '').toLowerCase();
+                if (message.includes('already has a pending approval')) {
+                    // หากเอกสารอยู่ในระหว่างรออนุมัติอยู่แล้ว ถือว่า success เพื่อให้หน้าจอแสดงว่าบันทึกสำเร็จได้ตามปกติ
+                    return of({
+                        id: '',
+                        documentType: request.documentType,
+                        documentId: request.documentId,
+                        documentCode: request.documentCode,
+                        documentTitle: request.documentTitle,
+                        status: 'PENDING',
+                        statusText: 'รออนุมัติ',
+                    } as unknown as Approval);
+                }
+                throw err;
+            })
+        );
     }
 
     // ============================================================

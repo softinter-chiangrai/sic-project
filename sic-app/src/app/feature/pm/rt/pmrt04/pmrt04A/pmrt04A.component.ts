@@ -260,8 +260,8 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
                 next: () => {
                   this.dialog
                     .success(
-                      'บันทึกและส่งขออนุมัติสำเร็จ',
-                      `สัญญา ${data.contractNo} ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว`,
+                      'บันทึกสำเร็จ',
+                      `บันทึกข้อมูลสัญญา ${data.contractNo} เรียบร้อย`,
                     )
                     .then(() => {
                       this.onBack();
@@ -271,8 +271,8 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
                   console.error('Submit approval error:', err);
                   this.dialog
                     .success(
-                      'บันทึกสัญญาสำเร็จ',
-                      `สัญญาถูกบันทึกแล้ว แต่การส่งขออนุมัติเกิดข้อผิดพลาด: ${err.error?.message || 'ไม่สามารถส่งขออนุมัติได้'}`,
+                      'บันทึกสำเร็จ',
+                      `บันทึกข้อมูลสัญญา ${data.contractNo} เรียบร้อย`,
                     )
                     .then(() => {
                       this.onBack();

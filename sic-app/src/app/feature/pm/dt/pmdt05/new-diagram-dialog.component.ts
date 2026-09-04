@@ -172,11 +172,7 @@ export class NewDiagramDialogComponent implements OnInit {
 
   loadFlows(): void {
     this.approvalService.getFlowsByDocumentType('DIAGRAM').subscribe({
-      next: (flows) => {
-        if (flows.length === 1 && !this.selectedFlowId) {
-          this.selectedFlowId = flows[0].id;
-        }
-      },
+      next: () => {},
       error: () => {}
     });
   }

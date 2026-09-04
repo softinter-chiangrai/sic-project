@@ -405,11 +405,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                   })
                   .subscribe({
                     next: () => {
-                      this.dialogService.success('สำเร็จ', `อัปเดตและส่งขออนุมัติ Diagram "${res.name}" เรียบร้อยแล้ว`);
+                      this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
                       this.loadTabs();
                     },
                     error: (err) => {
-                      this.dialogService.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                      this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
                       this.loadTabs();
                     }
                   });

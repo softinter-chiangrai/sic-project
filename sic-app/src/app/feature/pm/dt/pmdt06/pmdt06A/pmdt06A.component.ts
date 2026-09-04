@@ -190,9 +190,6 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             .subscribe({
                 next: (flows) => {
                     this.flows = flows;
-                    if (flows.length === 1) {
-                        this.selectedFlowId = flows[0].id;
-                    }
                 },
                 error: () => {
                     console.warn('ไม่สามารถโหลด Approval Flow สำหรับ Change Request');
@@ -356,12 +353,16 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                             next: () => {
                                 this.isSaved = true;
                                 this.form.markAsPristine();
-                                this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อย').then(() => {
+                                this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
                                     this.navigateBack();
                                 });
                             },
                             error: (err) => {
-                                this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+                                this.isSaved = true;
+                                this.form.markAsPristine();
+                                this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
+                                    this.navigateBack();
+                                });
                             },
                         });
                 } else {

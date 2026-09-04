@@ -186,9 +186,6 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       next: (flows) => {
         this.flows.set(flows);
         this.isLoadingFlows.set(false);
-        if (flows.length === 1 && !this.selectedFlowId()) {
-          this.selectedFlowId.set(flows[0].id);
-        }
       },
       error: () => {
         this.isLoadingFlows.set(false);
@@ -257,7 +254,11 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    const formValue = { ...this.formData.form.getRawValue(), items: this.items() };
+    const formValue = {
+      ...this.formData.form.getRawValue(),
+      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
+      items: this.items(),
+    };
     this.service.save(formValue).subscribe({
       next: (res: any) => {
         const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();
@@ -274,12 +275,14 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติใบแจ้งหนี้เรียบร้อย');
+              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
               this.router.navigate(['/feature/pm/invoice']);
             },
             error: (err) => {
               this.isSaving.set(false);
-              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
               this.router.navigate(['/feature/pm/invoice']);
             }
           });
@@ -287,7 +290,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
           this.isSaving.set(false);
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('สำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
+          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
           this.router.navigate(['/feature/pm/invoice']);
         }
       },

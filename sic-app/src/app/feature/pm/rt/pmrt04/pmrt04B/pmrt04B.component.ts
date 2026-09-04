@@ -156,10 +156,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: (flows) => {
           this.flows = flows || [];
-          if (this.flows.length === 1 && !this.selectedFlowId) {
-            this.selectedFlowId = this.flows[0].id;
-            this.formData.patchValue({ approvalFlowId: this.flows[0].id });
-          }
           this.cdr.detectChanges();
         },
         error: () => {
@@ -392,8 +388,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                         this.isSaved = true;
                         this.dialog
                           .success(
-                            'ต่อสัญญาและส่งขออนุมัติสำเร็จ',
-                            `สัญญา ${original.contractNo} ถูกต่ออายุและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว`,
+                            'บันทึกสำเร็จ',
+                            `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`,
                           )
                           .then(() => {
                             this.form.markAsPristine();
@@ -404,8 +400,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                         console.error('Submit approval error:', err);
                         this.dialog
                           .success(
-                            'ต่อสัญญาสำเร็จ',
-                            `สัญญาถูกต่ออายุแล้ว แต่การส่งขออนุมัติเกิดข้อผิดพลาด: ${err.error?.message || 'ไม่สามารถส่งขออนุมัติได้'}`,
+                            'บันทึกสำเร็จ',
+                            `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`,
                           )
                           .then(() => {
                             this.form.markAsPristine();

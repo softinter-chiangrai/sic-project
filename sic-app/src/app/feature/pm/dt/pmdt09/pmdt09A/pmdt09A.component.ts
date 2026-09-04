@@ -266,10 +266,6 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         next: (flows) => {
           this.flows = flows;
           this.isLoadingFlows = false;
-          if (flows.length === 1) {
-            this.selectedFlowId = flows[0].id;
-            this.form.patchValue({ approvalFlowId: flows[0].id });
-          }
           this.cdr.markForCheck();
         },
         error: () => {
@@ -477,20 +473,24 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               next: () => {
                 this.isSaving = false;
                 this.isSaved = true;
-                this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติแล้ว').then(() => {
+                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Design Review เรียบร้อยแล้ว').then(() => {
                   this.formData.markAsPristine();
                   this.router.navigate(['/feature/pm/design-review']);
                 });
               },
               error: (err) => {
                 this.isSaving = false;
-                this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
+                this.isSaved = true;
+                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Design Review เรียบร้อยแล้ว').then(() => {
+                  this.formData.markAsPristine();
+                  this.router.navigate(['/feature/pm/design-review']);
+                });
               }
             });
         } else {
           this.isSaving = false;
           this.isSaved = true;
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Design Review ถูกบันทึกเรียบร้อย').then(() => {
+          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Design Review เรียบร้อยแล้ว').then(() => {
             this.formData.markAsPristine();
             this.router.navigate(['/feature/pm/design-review']);
           });

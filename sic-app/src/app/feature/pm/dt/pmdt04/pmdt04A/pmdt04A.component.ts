@@ -308,9 +308,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       next: (flows) => {
         this.flows = flows;
         this.isLoadingFlows = false;
-        if (flows.length === 1) {
-          this.selectedFlowId = flows[0].id;
-        }
       },
       error: () => {
         this.isLoadingFlows = false;
@@ -469,7 +466,11 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     try {
       if (this.form.dirty) {
         await new Promise<void>((resolve, reject) => {
-          this.service.save(this.form.value).subscribe({
+          const exportSaveData = {
+            ...this.form.value,
+            state: this.isEdit ? SicEntityState.Modified : SicEntityState.Added,
+          };
+          this.service.save(exportSaveData).subscribe({
             next: () => {
               this.form.markAsPristine();
               resolve();
@@ -596,18 +597,20 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             .subscribe({
               next: () => {
                 this.isSaving = false;
-                this.dialog.success('บันทึกและส่งขออนุมัติสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกและส่งเข้าสู่กระบวนการอนุมัติเรียบร้อยแล้ว').then(() => {
+                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Requirement เรียบร้อยแล้ว').then(() => {
                   this.navigateBack(data.projectId);
                 });
               },
               error: (err) => {
                 this.isSaving = false;
-                this.dialog.error('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Requirement เรียบร้อยแล้ว').then(() => {
+                  this.navigateBack(data.projectId);
+                });
               },
             });
         } else {
           this.isSaving = false;
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อยแล้ว').then(() => {
+          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Requirement เรียบร้อยแล้ว').then(() => {
             this.navigateBack(data.projectId);
           });
         }

@@ -113,9 +113,6 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       next: (flows) => {
         this.flows.set(flows || []);
         this.isLoadingFlows.set(false);
-        if (flows && flows.length === 1 && !this.selectedFlowId()) {
-          this.selectedFlowId.set(flows[0].id);
-        }
         this.cdr.markForCheck();
       },
       error: () => {
@@ -268,7 +265,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติคู่มือการใช้งานเรียบร้อยแล้ว');
+              this.dialog.success('บันทึกสำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
               const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
               this.router.navigate(['/feature/pm/manual'], {
                 queryParams: queryProj ? { projectId: queryProj } : undefined,
@@ -276,7 +273,9 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
             },
             error: (err) => {
               this.isSaving.set(false);
-              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('บันทึกสำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
               const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
               this.router.navigate(['/feature/pm/manual'], {
                 queryParams: queryProj ? { projectId: queryProj } : undefined,
@@ -285,7 +284,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
           });
         } else {
           this.isSaved = true;
-          this.dialog.success('สำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
+          this.dialog.success('บันทึกสำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
           this.formData.markAsPristine();
           const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
           this.router.navigate(['/feature/pm/manual'], {

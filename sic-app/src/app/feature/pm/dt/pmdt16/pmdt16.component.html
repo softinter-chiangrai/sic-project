@@ -126,6 +126,10 @@
                   <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[item.id])">
                     {{ getApprovalStatusText(approvalStatusMap()[item.id]) }}
                   </span>
+                } @else if (item.approvalStatus) {
+                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(item.approvalStatus)">
+                    {{ getApprovalStatusText(item.approvalStatus) }}
+                  </span>
                 } @else {
                   <span class="text-xs text-[var(--text-muted)]">-</span>
                 }

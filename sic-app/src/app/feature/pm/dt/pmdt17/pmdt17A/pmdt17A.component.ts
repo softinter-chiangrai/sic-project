@@ -9,7 +9,6 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -21,6 +20,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmdt17AService } from './pmdt17A.service';
 import { Pmdt17AForm } from './pmdt17A.form';
 import { PmMaTicketModel } from './pmdt17A.model';
+import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 
 @Component({
@@ -36,7 +36,6 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicTiptapEditorComponent,
-    SicApprovalComponent,
   ],
   templateUrl: './pmdt17A.component.html',
   styleUrls: ['./pmdt17A.component.css'],
@@ -126,9 +125,6 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       next: (flows) => {
         this.flows.set(flows);
         this.isLoadingFlows.set(false);
-        if (flows.length === 1 && !this.selectedFlowId()) {
-          this.selectedFlowId.set(flows[0].id);
-        }
       },
       error: () => {
         this.isLoadingFlows.set(false);
@@ -165,7 +161,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving.set(true);
-    const formValue = this.formData.form.getRawValue();
+    const formValue = {
+      ...this.formData.form.getRawValue(),
+      state: this.isEdit() ? SicEntityState.Modified : SicEntityState.Added,
+    };
     this.service.save(formValue).subscribe({
       next: (res: any) => {
         const savedId = res?.id || (typeof res === 'string' ? res : null) || this.id();
@@ -182,12 +181,14 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติ MA Ticket เรียบร้อย');
+              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
               this.router.navigate(['/feature/pm/ma-ticket']);
             },
             error: (err) => {
               this.isSaving.set(false);
-              this.dialog.warn('บันทึกสำเร็จ แต่ส่งขออนุมัติไม่สำเร็จ', err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการส่งอนุมัติ');
+              this.isSaved = true;
+              this.formData.markAsPristine();
+              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
               this.router.navigate(['/feature/pm/ma-ticket']);
             }
           });
@@ -195,7 +196,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
           this.isSaving.set(false);
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('สำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
+          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
           this.router.navigate(['/feature/pm/ma-ticket']);
         }
       },

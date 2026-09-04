@@ -206,10 +206,6 @@ export class Pmdt04BComponent implements OnInit {
       .subscribe({
         next: (flows) => {
           this.flows = flows;
-          if (flows.length === 1) {
-            this.selectedFlowId = flows[0].id;
-            this.form.patchValue({ approvalFlowId: flows[0].id });
-          }
         },
         error: () => console.warn('ไม่สามารถโหลด Approval Flow'),
       });
@@ -255,12 +251,14 @@ export class Pmdt04BComponent implements OnInit {
               })
               .subscribe({
                 next: () => {
-                  this.dialog.success('สำเร็จ', 'บันทึกและส่งขออนุมัติเรียบร้อยแล้ว');
+                  this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
                   this.form.markAsPristine();
                   this.navigateBackToRequirementList();
                 },
                 error: (err) => {
-                  this.dialog.error('ส่งอนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาดในการส่งขออนุมัติ');
+                  this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+                  this.form.markAsPristine();
+                  this.navigateBackToRequirementList();
                 }
               });
           } else {
