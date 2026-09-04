@@ -623,6 +623,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             this.form.markAllAsTouched();
             this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
             return;
+        }
+
         this.isSaving = true;
         const data = this.prepareSubmitData();
         if (this.specId || data.id) {
