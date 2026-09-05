@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmMaTicketRequest;
 import com.softinter.sicapi.dto.response.PmMaTicketResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmMaTicketService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +31,7 @@ public class PmMaTicketController {
     private final PmMaTicketService ticketService;
     private final com.softinter.sicapi.service.PmMaTicketExportService exportService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export MA Ticket Document as PDF using JasperReports")
@@ -61,6 +63,14 @@ public class PmMaTicketController {
     @Operation(summary = "Get MA ticket by ID")
     public ResponseEntity<PmMaTicketResponse> getById(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        return ResponseEntity.ok(ticketService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved MA ticket")
+    public ResponseEntity<PmMaTicketResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        approvalService.createRevision("MA_TICKET", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(ticketService.findById(id, businessId));
     }
 

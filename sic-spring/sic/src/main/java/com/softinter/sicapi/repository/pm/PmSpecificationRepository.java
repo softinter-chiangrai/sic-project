@@ -40,7 +40,8 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
     @Query("SELECT s FROM PmSpecification s WHERE s.id = :id AND s.businessId = :businessId AND s.isDelete = false")
     Optional<PmSpecification> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
 
-    boolean existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(UUID businessId, String code);
+    boolean existsByBusinessIdAndProjectIdAndSpecificationCodeAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String code);
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
 }

@@ -273,6 +273,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     public void deleteChangeRequest(UUID id) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Change Request not found"));
+        approvalService.assertNotApproved("CHANGE_REQUEST", cr.getId());
         cr.setIsDelete(true);
         cr.setDeleteBy(currentUserService.getUserId());
         cr.setDeleteDate(Instant.now());
@@ -322,8 +323,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // ปรับสถานะเอกสารเป้าหมาย (เช่น Requirement / Spec) ให้เป็น Changed
-        updateDocumentStatus(cr.getTargetType(), cr.getTargetId(), "Changed");
+        // ปลดล็อคเอกสารเป้าหมาย (bump เวอร์ชัน + ตั้งสถานะกลับเป็นแก้ไขได้)
+        approvalService.unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(),
+                "Change Request " + cr.getCrCode() + " approved");
 
         return toResponse(cr);
     }
@@ -360,14 +362,29 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // เปลี่ยนสถานะเอกสารเป้าหมายทั้งหมดเป็น CHANGED
+        // ปลดล็อคเอกสารเป้าหมายทั้งหมด: bump เวอร์ชัน, ตั้งสถานะกลับเป็นแก้ไขได้,
+        // และ deactivate PmApproval record เดิมที่ APPROVED อยู่
+        String unlockReason = "Change Request " + cr.getCrCode() + " implemented";
         List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
         for (PmCrAssignee assignee : assignees) {
-            updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
+            approvalService.unlockDocumentAfterChange(assignee.getTargetType(), assignee.getTargetId(), unlockReason);
         }
 
         // สำหรับ target หลักของ CR เอง
-        updateDocumentStatus(cr.getTargetType(), cr.getTargetId(), "CHANGED");
+        approvalService.unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), unlockReason);
+
+        try {
+            auditLogService.log(
+                    "IMPLEMENT_CHANGE_REQUEST",
+                    "Change Request / " + cr.getTargetType(),
+                    "ดำเนินการตาม Change Request " + cr.getCrCode() + " และปลดล็อคเอกสารเป้าหมายเรียบร้อยแล้ว",
+                    cr.getTargetType(),
+                    cr.getTargetId(),
+                    null, null, "Success",
+                    "Implemented by: " + currentUserService.getUsername());
+        } catch (Exception e) {
+            log.error("Error creating audit log on implement CR: {}", e.getMessage(), e);
+        }
 
         return toResponse(cr);
     }
@@ -382,8 +399,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         assignee.setCompletedAt(Instant.now());
         pmCrAssigneeRepository.save(assignee);
 
-        // เปลี่ยนสถานะเอกสารของ Assignee คนนี้เป็น CHANGED
-        updateDocumentStatus(assignee.getTargetType(), assignee.getTargetId(), "CHANGED");
+        // ปลดล็อคเอกสารของ Assignee คนนี้ (bump เวอร์ชัน + ตั้งสถานะกลับเป็นแก้ไขได้)
+        approvalService.unlockDocumentAfterChange(assignee.getTargetType(), assignee.getTargetId(),
+                "Change Request assignee completed their part");
 
         // ตรวจสอบว่าทุกคนทำเสร็จครบหรือยัง หากครบแล้วให้ปรับสถานะ CR เป็น IMPLEMENTED อัตโนมัติ
         List<PmCrAssignee> pending = pmCrAssigneeRepository.findByChangeRequestIdAndStatusAndIsDeleteFalse(changeRequestId, "PENDING");
@@ -408,23 +426,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 return specificationRepository.findById(targetId).map(PmSpecification::getStatus).orElse("DRAFT");
             default:
                 return "DRAFT";
-        }
-    }
-
-    private void updateDocumentStatus(String targetType, UUID targetId, String newStatus) {
-        switch (targetType.toUpperCase()) {
-            case "REQUIREMENT":
-                requirementRepository.findById(targetId).ifPresent(r -> {
-                    r.setStatus(newStatus);
-                    requirementRepository.save(r);
-                });
-                break;
-            case "SPECIFICATION":
-                specificationRepository.findById(targetId).ifPresent(s -> {
-                    s.setStatus(newStatus);
-                    specificationRepository.save(s);
-                });
-                break;
         }
     }
 
@@ -472,6 +473,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setAssigneeId(cr.getAssigneeId());
         response.setAssigneeName(getUserName(cr.getAssigneeId()));
         response.setStatus(cr.getStatus());
+        response.setIsLocked(approvalService.isApproved("CHANGE_REQUEST", cr.getId()));
         String targetVer = cr.getTargetVersion();
         if (targetVer == null || targetVer.isBlank()) {
             targetVer = resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), null);

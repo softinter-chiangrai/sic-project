@@ -17,6 +17,12 @@
         <p class="text-sm text-[var(--text-muted)]">
           จัดทำเอกสารคู่มือการใช้งาน ผู้ดูแลระบบ และขั้นตอนปฏิบัติงานโดยเชื่อมโยงจาก Specification
         </p>
+        @if (id()) {
+          <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
+            <span>รหัส: {{ formData?.form?.getRawValue()?.manualCode }}</span>
+            <sic-version-badge [version]="formData?.form?.getRawValue()?.version" [status]="formData?.form?.getRawValue()?.status" [isLocked]="isLocked()"></sic-version-badge>
+          </p>
+        }
       </div>
     </div>
     @if (id()) {
@@ -207,9 +213,22 @@
           {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF' }}
         </sic-button>
       }
-      <sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
-        <i class="bi bi-check-lg"></i> {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึกคู่มือ' }}
-      </sic-button>
+      @if (isLocked()) {
+        <sic-button variant="primary" (click)="requestChange()">
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+        </sic-button>
+      } @else {
+        <sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+          <i class="bi bi-check-lg"></i> {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึกคู่มือ' }}
+        </sic-button>
+      }
     </div>
+
+    @if (isLocked()) {
+      <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+        <i class="bi bi-lock-fill"></i>
+        เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+      </div>
+    }
   </form>
 </div>

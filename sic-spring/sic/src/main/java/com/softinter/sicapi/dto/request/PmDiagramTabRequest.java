@@ -16,6 +16,8 @@ public class PmDiagramTabRequest {
     @NotBlank(message = "Diagram name is required")
     private String name;
 
+    private String diagramCode;
+
     @NotBlank(message = "Diagram type is required")
     private String diagramType;  // "DFD", "ER", "Flowchart", etc.
 

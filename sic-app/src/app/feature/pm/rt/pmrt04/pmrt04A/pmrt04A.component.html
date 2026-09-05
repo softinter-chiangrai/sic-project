@@ -43,9 +43,12 @@
       </div>
 
       @if (form.get('contractNo')?.value) {
-        <span class="inline-block px-3 py-1.5 rounded-lg text-sm font-mono font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
-          {{ form.get('contractNo')?.value }}
-        </span>
+        <div class="flex items-center gap-2">
+          <span class="inline-block px-3 py-1.5 rounded-lg text-sm font-mono font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
+            {{ form.get('contractNo')?.value }}
+          </span>
+          <sic-version-badge [status]="form.get('signStatus')?.value" [isLocked]="isLocked"></sic-version-badge>
+        </div>
       }
     </div>
 
@@ -188,7 +191,17 @@
           ย้อนกลับ
         </sic-button>
 
-        @if (!isView) {
+        @if (isLocked) {
+          <sic-button
+            type="button"
+            variant="primary"
+            [fullWidth]="false"
+            (click)="requestChange()"
+          >
+            <i class="bi bi-pencil-square"></i>
+            ขอแก้ไข (Open Change Request)
+          </sic-button>
+        } @else if (!isView) {
           <sic-button
             type="submit"
             variant="primary"
@@ -205,6 +218,13 @@
           </sic-button>
         }
       </div>
+
+      @if (isLocked) {
+        <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+          <i class="bi bi-lock-fill"></i>
+          เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        </div>
+      }
     </form>
   </div>
 }

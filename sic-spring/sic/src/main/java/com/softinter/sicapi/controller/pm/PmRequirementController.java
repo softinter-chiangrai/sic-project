@@ -31,6 +31,7 @@ import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.repository.db.DbParameterRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmRequirementExportService;
 import com.softinter.sicapi.service.PmRequirementService;
@@ -55,6 +56,7 @@ public class PmRequirementController {
     private final DbParameterRepository parameterRepository;
     private final CurrentUserService currentUserService;
     private final PmRequirementRepository requirementRepository;
+    private final ApprovalService approvalService;
 
     @GetMapping
     @Operation(summary = "Get requirements with pagination and filters")
@@ -86,6 +88,17 @@ public class PmRequirementController {
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
+        return ResponseEntity.ok(requirementService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved requirement")
+    public ResponseEntity<PmRequirementResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        approvalService.createRevision("REQUIREMENT", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(requirementService.findById(id, businessId));
     }
 

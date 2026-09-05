@@ -37,6 +37,9 @@ public class PmDiagramTab extends BaseEntity {
     @Column(nullable = false, length = 255)
     private String name;
 
+    @Column(name = "diagram_code", length = 50)
+    private String diagramCode;
+
     @Column(name = "diagram_type", nullable = false, length = 50)
     private String diagramType;
 

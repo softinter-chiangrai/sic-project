@@ -108,6 +108,10 @@ export class Pmdt20Component implements OnInit {
     this.loadLogs();
   }
 
+  // ===== Server Pagination State =====
+  protected totalItems = signal(0);
+  protected totalPages = signal(1);
+
   loadLogs() {
     this.isLoading.set(true);
     this.auditLogService.getLogs({
@@ -121,7 +125,7 @@ export class Pmdt20Component implements OnInit {
       sortDir: this.sortDir(),
     }).subscribe({
       next: (res) => {
-        if (res && res.content && res.content.length > 0) {
+        if (res && res.content) {
           const mappedLogs: AuditLog[] = res.content.map(item => ({
             id: item.id,
             user: item.userFullname || item.username || 'System',
@@ -139,79 +143,40 @@ export class Pmdt20Component implements OnInit {
             details: item.details,
           }));
           this.logs.set(mappedLogs);
+          this.totalItems.set(res.totalElements ?? mappedLogs.length);
+          this.totalPages.set(res.totalPages && res.totalPages > 0 ? res.totalPages : 1);
+        } else {
+          this.logs.set([]);
+          this.totalItems.set(0);
+          this.totalPages.set(1);
         }
         this.isLoading.set(false);
       },
       error: (err) => {
         console.warn('Backend AuditLog API unavailable, falling back to mock data:', err);
         this.isLoading.set(false);
+        this.totalItems.set(MOCK_LOGS.length);
+        this.totalPages.set(Math.ceil(MOCK_LOGS.length / this.pageSize()));
       }
     });
   }
 
-  // ===== Computed =====
-  protected filteredLogs = computed(() => {
-    const term = this.searchTerm().toLowerCase().trim();
-    const module = this.filterModule();
-    const status = this.filterStatus();
-    const user = this.filterUser();
+  // Display logs from server response directly
+  protected paginatedLogs = computed(() => this.logs());
 
-    let result = this.logs();
-
-    if (term) {
-      result = result.filter(
-        (log) =>
-          log.user.toLowerCase().includes(term) ||
-          log.action.toLowerCase().includes(term) ||
-          log.description.toLowerCase().includes(term) ||
-          log.module.toLowerCase().includes(term)
-      );
-    }
-
-    if (module !== 'all') {
-      result = result.filter((log) => log.module === module);
-    }
-
-    if (status !== 'all') {
-      result = result.filter((log) => log.status === status);
-    }
-
-    if (user !== 'all') {
-      result = result.filter((log) => log.user === user);
-    }
-
-    const sortField = this.sortBy();
-    const direction = this.sortDir();
-    result = [...result].sort((a, b) => {
-      const aVal = a[sortField as keyof AuditLog] ?? '';
-      const bVal = b[sortField as keyof AuditLog] ?? '';
-      if (aVal < bVal) return direction === 'asc' ? -1 : 1;
-      if (aVal > bVal) return direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-
-    return result;
-  });
-
-  protected paginatedLogs = computed(() => {
-    const all = this.filteredLogs();
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return all.slice(start, start + this.pageSize());
-  });
-
-  protected totalItems = computed(() => this.filteredLogs().length);
-  protected totalPages = computed(() => Math.max(1, Math.ceil(this.totalItems() / this.pageSize())));
   protected hasPrevious = computed(() => this.currentPage() > 1);
   protected hasNext = computed(() => this.currentPage() < this.totalPages());
 
   protected pageNumbers = computed(() => {
     const total = this.totalPages();
-    return Array.from({ length: Math.min(total, 5) }, (_, i) => {
-      const page = this.currentPage() + i - Math.floor(Math.min(total, 5) / 2);
-      if (page < 1) return i + 1;
-      if (page > total) return total - Math.min(total, 5) + i + 1;
-      return page;
-    });
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(1, end - range + 1);
+    }
+    return Array.from({ length: Math.max(0, end - start + 1) }, (_, i) => start + i);
   });
 
   protected Math = Math;

@@ -21,6 +21,7 @@ public class PmCustomerContractResponse {
     private String paymentTerms;
     private String scopeSummary;
     private String signStatus;
+    private Boolean isLocked;
     private String renewalStatus;
     private UUID parentContractId;
     private String parentContractNo;

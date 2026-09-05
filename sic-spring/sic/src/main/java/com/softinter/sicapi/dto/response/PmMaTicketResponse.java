@@ -25,6 +25,7 @@ public class PmMaTicketResponse {
     private String description;
     private MaTicketSeverity severity;
     private MaTicketStatus status;
+    private Boolean isLocked;
     private String assignedTo;
     private List<String> assignedToIds;
     private String reportedBy;

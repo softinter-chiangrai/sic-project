@@ -86,7 +86,11 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             if (entity.getTicketNo() == null || entity.getTicketNo().isBlank()) {
-                entity.setTicketNo("TK-" + System.currentTimeMillis());
+                long count = ticketRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
+                entity.setTicketNo("TK-" + String.format("%03d", count));
+            } else if (ticketRepository.existsByBusinessIdAndProjectIdAndTicketNoAndIsDeleteFalse(
+                    businessId, entity.getProjectId(), entity.getTicketNo())) {
+                throw new RuntimeException("รหัสตั๋ว MA นี้มีอยู่แล้วในโครงการนี้: " + entity.getTicketNo());
             }
             calculateSlaDates(entity);
             entity = ticketRepository.save(entity);
@@ -102,6 +106,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         } else {
             entity = ticketRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Ticket MA"));
+            approvalService.assertNotApproved("MA_TICKET", entity.getId());
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
@@ -168,6 +173,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     public void delete(UUID id, UUID businessId, String userId) {
         PmMaTicket ticket = ticketRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Ticket MA"));
+        approvalService.assertNotApproved("MA_TICKET", ticket.getId());
         ticket.setIsDelete(true);
         ticket.setDeleteBy(userId);
         ticket.setDeleteDate(Instant.now());
@@ -260,6 +266,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         res.setDescription(entity.getDescription());
         res.setSeverity(entity.getSeverity());
         res.setStatus(entity.getStatus());
+        res.setIsLocked(approvalService.isApproved("MA_TICKET", entity.getId()));
         res.setAssignedTo(entity.getAssignedTo());
         res.setAssignedToIds(entity.getId() != null
                 ? ticketAssigneeRepository.findByMaTicketId(entity.getId()).stream()

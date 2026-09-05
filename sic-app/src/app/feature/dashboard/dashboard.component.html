@@ -124,20 +124,6 @@
           [routerLink]="prog.path"
           class="flex flex-col items-center justify-between p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/50 hover:shadow-md transition-all group cursor-pointer text-center relative overflow-hidden"
         >
-          <!-- Real Notification Badge -->
-          @if (prog.badgeCount) {
-            <span
-              class="absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-bold rounded-full shadow-sm"
-              [ngClass]="{
-                'bg-[var(--crm-danger)] text-white': prog.badgeType === 'danger',
-                'bg-[var(--crm-warning)] text-white': prog.badgeType === 'warning',
-                'bg-[var(--crm-primary)] text-white': prog.badgeType === 'info' || prog.badgeType === 'success'
-              }"
-              title="{{ prog.badgeCount }} รายการในระบบ"
-            >
-              {{ prog.badgeCount }}
-            </span>
-          }
 
           <div class="w-12 h-12 rounded-xl bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center mb-2.5 group-hover:scale-110 group-hover:bg-[var(--crm-primary)] group-hover:text-white transition-all shadow-sm">
             <i class="bi {{ prog.icon }} text-xl"></i>

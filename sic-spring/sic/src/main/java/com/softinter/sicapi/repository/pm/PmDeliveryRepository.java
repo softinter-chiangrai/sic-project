@@ -23,4 +23,9 @@ public interface PmDeliveryRepository extends JpaRepository<PmDelivery, UUID>, J
     Page<PmDelivery> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 
     List<PmDelivery> findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId);
+
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndDeliveryCodeAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String deliveryCode);
 }

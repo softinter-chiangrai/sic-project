@@ -22,6 +22,7 @@ public class ChangeRequestResponse {
     private String assigneeId;
     private String assigneeName;
     private String status;
+    private Boolean isLocked;
     private String targetVersion;
     private String approvedBy;
     private Instant approvedAt;

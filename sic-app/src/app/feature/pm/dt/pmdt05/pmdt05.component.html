@@ -151,15 +151,17 @@
           <i class="bi bi-pencil text-xs"></i>
         </button>
 
-        <!-- ปุ่มลบ Tab -->
-        <button
-          (click)="deleteTab(tab.id, $event)"
-          class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
-          [class.opacity-100]="currentTabId === tab.id"
-          title="ลบ Diagram"
-        >
-          <i class="bi bi-x text-sm"></i>
-        </button>
+        <!-- ปุ่มลบ Tab (ซ่อนถ้าผ่านการอนุมัติแล้ว) -->
+        @if (!tab.isApproved && tab.approvalStatus !== 'APPROVED') {
+          <button
+            (click)="deleteTab(tab.id, $event)"
+            class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
+            [class.opacity-100]="currentTabId === tab.id"
+            title="ลบ Diagram"
+          >
+            <i class="bi bi-x text-sm"></i>
+          </button>
+        }
       </div>
     }
 
@@ -190,7 +192,7 @@
       }
     </div>
     <div class="flex items-center gap-3">
-      <span>{{ tabs().length }} diagram(s)</span>
+      <span>{{ tabs().length }} diagram</span>
       <!-- ✅ แสดงสถานะ auto‑save / manual save -->
       <span class="text-xs text-[var(--text-muted)]">{{ autoSaveStatus }}</span>
     </div>
@@ -210,11 +212,28 @@
     }
     <iframe
       #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&spin=1&configure=1&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1"
+      src="https://embed.diagrams.net/?embed=1&proto=json&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1"
       class="block w-full h-full border-none bg-white"
+      [class.pointer-events-none]="currentTabLocked"
       frameborder="0"
       allowfullscreen
     ></iframe>
+
+    @if (currentTabLocked) {
+      <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 border-b border-amber-300 text-sm text-amber-800">
+        <div class="flex items-center gap-2">
+          <i class="bi bi-lock-fill"></i>
+          Diagram นี้ผ่านการอนุมัติแล้ว (Baseline Locked) ไม่สามารถแก้ไขได้โดยตรง
+        </div>
+        <button
+          (click)="requestChangeForCurrentTab()"
+          class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-600 text-white text-xs font-medium hover:bg-amber-700 transition-colors"
+        >
+          <i class="bi bi-pencil-square"></i>
+          ขอแก้ไข (Open Change Request)
+        </button>
+      </div>
+    }
   </div>
 
   <!-- ===== Chat Sidebar ===== -->

@@ -18,4 +18,9 @@ public interface PmCustomerContractRepository
     List<PmCustomerContract> findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId);
 
     List<PmCustomerContract> findByBusinessIdAndCustomerIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId, UUID customerId);
+
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String contractNo);
 }

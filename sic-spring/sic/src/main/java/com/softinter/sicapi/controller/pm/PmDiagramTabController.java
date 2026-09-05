@@ -4,6 +4,7 @@ import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.util.UUID;
 public class PmDiagramTabController {
 
     private final PmDiagramTabService tabService;
+    private final ApprovalService approvalService;
 
     @GetMapping
     public ResponseEntity<List<PmDiagramTabResponse>> getTabs(
@@ -42,6 +44,12 @@ public class PmDiagramTabController {
             @PathVariable UUID id,
             @Valid @RequestBody PmDiagramTabRequest request) {
         return ResponseEntity.ok(tabService.updateTab(id, request));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    public ResponseEntity<PmDiagramTabResponse> createRevision(@PathVariable UUID id) {
+        approvalService.createRevision("DIAGRAM", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
+        return ResponseEntity.ok(tabService.getTab(id));
     }
 
     @DeleteMapping("/{id}")

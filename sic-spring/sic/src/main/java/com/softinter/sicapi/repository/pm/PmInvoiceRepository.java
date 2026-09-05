@@ -17,4 +17,8 @@ public interface PmInvoiceRepository extends JpaRepository<PmInvoice, UUID>, Jpa
     Page<PmInvoice> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
     Page<PmInvoice> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);
     List<PmInvoice> findByBusinessIdAndCustomerIdAndIsDeleteFalse(UUID businessId, UUID customerId);
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndInvoiceNoAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String invoiceNo);
 }

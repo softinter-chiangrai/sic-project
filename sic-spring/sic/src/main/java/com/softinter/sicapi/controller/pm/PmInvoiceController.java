@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
 import com.softinter.sicapi.dto.response.PmInvoiceResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmInvoiceService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -30,6 +31,7 @@ public class PmInvoiceController {
     private final PmInvoiceService invoiceService;
     private final com.softinter.sicapi.service.PmInvoiceExportService exportService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export Invoice Document as PDF using JasperReports")
@@ -61,6 +63,14 @@ public class PmInvoiceController {
     @Operation(summary = "Get invoice by ID")
     public ResponseEntity<PmInvoiceResponse> getById(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        return ResponseEntity.ok(invoiceService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved invoice")
+    public ResponseEntity<PmInvoiceResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        approvalService.createRevision("INVOICE", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(invoiceService.findById(id, businessId));
     }
 

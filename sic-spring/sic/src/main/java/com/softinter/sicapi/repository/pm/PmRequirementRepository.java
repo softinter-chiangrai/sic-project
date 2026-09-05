@@ -64,4 +64,7 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
     Optional<PmRequirement> findByIdAndIsDeleteFalse(@Param("id") UUID id);
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndRequirementCodeAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String requirementCode);
 }

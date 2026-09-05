@@ -4,6 +4,7 @@ import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
@@ -32,6 +33,7 @@ import { ApprovalFlow } from '../../pmdt03/approval.model';
     FormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
@@ -56,6 +58,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   id = signal<string | null>(null);
   isEdit = signal(false);
   isView = signal(false);
+  isLocked = signal(false);
   isSaving = signal(false);
 
   // Approval Flow
@@ -152,6 +155,10 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
           ...data,
           id: id,
         });
+        if (data.isLocked) {
+          this.isLocked.set(true);
+          this.isView.set(true);
+        }
         if (this.isView()) {
           this.formData.form.disable();
         } else {
@@ -248,7 +255,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   }
 
   goToEditMode(): void {
-    if (this.id()) {
+    if (this.id() && !this.isLocked()) {
       this.isView.set(false);
       this.isEdit.set(true);
       this.formData.form.enable();
@@ -358,5 +365,17 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   onBack(): void {
     this.router.navigate(['/feature/pm/delivery']);
+  }
+
+  requestChange(): void {
+    const projectId = this.formData?.form.get('projectId')?.value;
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId,
+        targetType: 'DELIVERY',
+        targetId: this.id(),
+        targetTitle: this.formData?.form.get('deliveryTitle')?.value,
+      },
+    });
   }
 }

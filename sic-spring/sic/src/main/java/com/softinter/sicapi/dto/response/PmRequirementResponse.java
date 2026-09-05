@@ -23,6 +23,7 @@ public class PmRequirementResponse {
     private String createdBy;
     private String version;
     private String status;
+    private Boolean isLocked;
     private Boolean isActive;
     private Instant createdDate;
     private Instant updatedDate;

@@ -85,4 +85,11 @@ public class GlobalExceptionHandler {
         ErrorResponse response = new ErrorResponse(false, ex.getMessage(), HttpStatus.NOT_FOUND.value());
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+
+    @ExceptionHandler(DocumentLockedException.class)
+    public ResponseEntity<ErrorResponse> handleDocumentLockedException(DocumentLockedException ex) {
+        log.warn("Document locked: {}", ex.getMessage());
+        ErrorResponse response = new ErrorResponse(false, ex.getMessage(), HttpStatus.CONFLICT.value());
+        return new ResponseEntity<>(response, HttpStatus.CONFLICT);
+    }
 }

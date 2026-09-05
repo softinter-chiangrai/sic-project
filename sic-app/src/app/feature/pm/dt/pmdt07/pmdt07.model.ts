@@ -32,5 +32,6 @@ export interface PmSpecificationModel {
     updatedAt?: string;
     updatedDate?: string;
     approvalStatus?: string;
+    isLocked?: boolean;
 }
 

@@ -18,6 +18,7 @@ public class PmUserManualResponse {
     private UUID relatedSpecId;
     private UUID deliveryId;
     private String status;
+    private Boolean isLocked;
     private UUID attachmentGroupId;
     private List<PmUserManualSectionResponse> sections;
     private String createdBy;

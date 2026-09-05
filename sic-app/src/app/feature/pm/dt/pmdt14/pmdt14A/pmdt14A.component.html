@@ -18,6 +18,12 @@
         <p class="text-sm text-[var(--text-muted)]">
           จัดการรายการส่งมอบ ตรวจสอบเงื่อนไข Delivery Gate และแนบไฟล์เอกสารโครงการ
         </p>
+        @if (id()) {
+          <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
+            <span>รหัส: {{ formData?.form?.getRawValue()?.deliveryCode }}</span>
+            <sic-version-badge [version]="formData?.form?.getRawValue()?.deliveryVersion" [status]="formData?.form?.getRawValue()?.status" [isLocked]="isLocked()"></sic-version-badge>
+          </p>
+        }
       </div>
     </div>
   </div>
@@ -265,7 +271,11 @@
       <sic-button variant="outline" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
       </sic-button>
-      @if (isView()) {
+      @if (isLocked()) {
+        <sic-button variant="primary" (click)="requestChange()">
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+        </sic-button>
+      } @else if (isView()) {
         <sic-button variant="primary" (click)="goToEditMode()">
           <i class="bi bi-pencil"></i> แก้ไขเอกสาร
         </sic-button>
@@ -275,5 +285,12 @@
         </sic-button>
       }
     </div>
+
+    @if (isLocked()) {
+      <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+        <i class="bi bi-lock-fill"></i>
+        เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+      </div>
+    }
   </form>
 </div>

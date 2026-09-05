@@ -290,7 +290,7 @@ export class Pmrt05Component implements OnInit {
     switch (type) {
       case 'DFD':
       case 'ER':
-        return `${base}/diagram?tabId=${id}&projectId=${projectId || ''}`;
+        return `${base}/diagram?tabId=${id}`;
       case 'SPECIFICATION':
         return `${base}/pmdt08/${id}/edit`;
       case 'TASK':
@@ -333,11 +333,10 @@ export class Pmrt05Component implements OnInit {
       this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
       return;
     }
+    this.customerState.setProject(projId);
+    this.customerState.setRequirement(reqId, reqTitle);
     this.navigation.navigate(['/feature/pm/diagram'], {
       queryParams: {
-        projectId: projId,
-        requirementId: reqId,
-        requirementTitle: reqTitle,
         openCreate: 'true',
       },
     });

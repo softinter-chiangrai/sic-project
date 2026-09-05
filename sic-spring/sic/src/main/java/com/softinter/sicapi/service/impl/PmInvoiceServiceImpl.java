@@ -106,7 +106,11 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             if (entity.getInvoiceNo() == null || entity.getInvoiceNo().isBlank()) {
-                entity.setInvoiceNo("INV-" + System.currentTimeMillis());
+                long count = invoiceRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
+                entity.setInvoiceNo("INV-" + String.format("%03d", count));
+            } else if (invoiceRepository.existsByBusinessIdAndProjectIdAndInvoiceNoAndIsDeleteFalse(
+                    businessId, entity.getProjectId(), entity.getInvoiceNo())) {
+                throw new RuntimeException("เลขที่ใบแจ้งหนี้นี้มีอยู่แล้วในโครงการนี้: " + entity.getInvoiceNo());
             }
             entity = invoiceRepository.save(entity);
             saveInvoiceItems(entity.getId(), request.getItems(), userId);
@@ -114,6 +118,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         } else {
             entity = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้"));
+            approvalService.assertNotApproved("INVOICE", entity.getId());
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
@@ -178,6 +183,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     public void delete(UUID id, UUID businessId, String userId) {
         PmInvoice invoice = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้"));
+        approvalService.assertNotApproved("INVOICE", invoice.getId());
         invoice.setIsDelete(true);
         invoice.setDeleteBy(userId);
         invoice.setDeleteDate(Instant.now());
@@ -292,6 +298,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         res.setPaidAmount(entity.getPaidAmount());
         res.setPaymentStatus(entity.getPaymentStatus());
         res.setApprovalStatus(entity.getApprovalStatus());
+        res.setIsLocked(approvalService.isApproved("INVOICE", entity.getId()));
         res.setReceiptFileRef(entity.getReceiptFileRef());
         res.setRemark(entity.getRemark());
 

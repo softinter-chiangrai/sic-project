@@ -22,6 +22,7 @@ export interface PmDeliveryModel {
   totalChecklistCount?: number;
   isActive?: boolean;
   approvalStatus?: string;
+  isLocked?: boolean;
   state?: SicEntityState | null;
   rowVersion?: number | null;
 }

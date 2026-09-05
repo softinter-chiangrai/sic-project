@@ -16,8 +16,9 @@
           {{ isViewOnly ? 'ดูข้อมูล Requirement' : (isEdit ? 'แก้ไข Requirement' : 'สร้าง Requirement ใหม่') }}
         </h1>
         @if (isEdit || isViewOnly) {
-          <p class="text-xs text-[var(--text-muted)]">
-            รหัส: {{ form.value.requirementCode }} · เวอร์ชัน: {{ form.value.version }}
+          <p class="text-xs text-[var(--text-muted)] flex items-center gap-2">
+            <span>รหัส: {{ form.value.requirementCode }}</span>
+            <sic-version-badge [version]="form.value.version" [status]="form.value.status" [isLocked]="isLocked"></sic-version-badge>
           </p>
         }
       </div>
@@ -176,7 +177,17 @@
                 <i class="bi bi-arrow-left"></i>
                 ย้อนกลับ
               </sic-button>
-              @if (!isViewOnly) {
+              @if (isLocked) {
+                <sic-button
+                  [fullWidth]="true"
+                  type="button"
+                  variant="primary"
+                  (click)="requestChange()"
+                >
+                  <i class="bi bi-pencil-square"></i>
+                  ขอแก้ไข (Open Change Request)
+                </sic-button>
+              } @else if (!isViewOnly) {
                 <sic-button
                   [fullWidth]="true"
                   type="submit"
@@ -192,6 +203,13 @@
                 </sic-button>
               }
             </div>
+
+            @if (isLocked) {
+              <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+                <i class="bi bi-lock-fill"></i>
+                เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+              </div>
+            }
 
             <!-- Hidden fields -->
             <input type="hidden" formControlName="id" />

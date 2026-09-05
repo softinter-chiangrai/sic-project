@@ -4,6 +4,7 @@ import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
@@ -31,6 +32,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicDatepickerComponent,
@@ -56,6 +58,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   isSaving = signal(false);
   isEdit = signal(false);
   isView = signal(false);
+  isLocked = signal(false);
 
   // Approval Flow
   approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/MA_TICKET`;
@@ -148,6 +151,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     this.service.getById(id).subscribe({
       next: (data) => {
         this.formData.form.patchValue(data);
+        if (data.isLocked) {
+          this.isLocked.set(true);
+          this.isView.set(true);
+        }
         if (this.isView()) {
           this.formData.form.disable();
         } else {
@@ -162,12 +169,24 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   }
 
   goToEditMode(): void {
-    if (this.id()) {
+    if (this.id() && !this.isLocked()) {
       this.isView.set(false);
       this.isEdit.set(true);
       this.formData?.form.enable();
       this.router.navigate(['/feature/pm/ma-ticket', this.id(), 'edit']);
     }
+  }
+
+  requestChange(): void {
+    const projectId = this.formData?.form.get('projectId')?.value;
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId,
+        targetType: 'MA_TICKET',
+        targetId: this.id(),
+        targetTitle: this.formData?.form.get('title')?.value,
+      },
+    });
   }
 
   submit() {

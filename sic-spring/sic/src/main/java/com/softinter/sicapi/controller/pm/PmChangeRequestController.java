@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.dto.request.ChangeRequestRequest;
 import com.softinter.sicapi.dto.response.ChangeRequestResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.ChangeRequestService;
 import com.softinter.sicapi.service.PmChangeRequestExportService;
 
@@ -23,6 +24,7 @@ public class PmChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
     private final PmChangeRequestExportService changeRequestExportService;
+    private final ApprovalService approvalService;
 
     @PostMapping
     public ResponseEntity<ChangeRequestResponse> create(@Valid @RequestBody ChangeRequestRequest request) {
@@ -82,6 +84,12 @@ public class PmChangeRequestController {
             @RequestParam String userId,
             @RequestParam UUID targetId) {
         return ResponseEntity.ok(changeRequestService.markAssigneeComplete(id, userId, targetId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    public ResponseEntity<ChangeRequestResponse> createRevision(@PathVariable UUID id) {
+        approvalService.createRevision("CHANGE_REQUEST", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
+        return ResponseEntity.ok(changeRequestService.getChangeRequest(id));
     }
 
     @GetMapping("/{id}/export-pdf")

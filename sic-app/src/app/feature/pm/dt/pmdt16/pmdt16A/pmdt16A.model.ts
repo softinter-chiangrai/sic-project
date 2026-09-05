@@ -27,6 +27,7 @@ export interface PmInvoiceModel {
   totalAmount: number;
   paymentStatus: string;
   approvalStatus?: string;
+  isLocked?: boolean;
   paidAmount?: number;
   paidDate?: string;
   receiptGroupId?: string;

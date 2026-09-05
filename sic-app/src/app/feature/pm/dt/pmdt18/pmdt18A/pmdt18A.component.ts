@@ -5,6 +5,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { httpResource } from '@angular/common/http';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
@@ -28,6 +29,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
@@ -46,6 +48,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   formData!: SicFromData<PmMaRenewalModel>;
   id = signal<string | null>(null);
   isSaving = signal(false);
+  isLocked = signal(false);
 
   statusOptions = [
     { value: 'DRAFT', label: 'Draft (ร่างข้อเสนอ)' },
@@ -72,6 +75,10 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
       const data = this.dataResource.value();
       if (data) {
         this.formData.resetModel(data);
+        if (data.isLocked) {
+          this.isLocked.set(true);
+          this.formData.form.disable();
+        }
       }
     });
   }
@@ -93,7 +100,22 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     this.router.navigate(['/feature/pm/renewal']);
   }
 
+  requestChange(): void {
+    const rawVal = this.formData.form.getRawValue();
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId: rawVal.projectId,
+        targetType: 'MA_RENEWAL',
+        targetId: this.id(),
+        targetTitle: rawVal.renewalNo,
+      },
+    });
+  }
+
   submit(): void {
+    if (this.isLocked()) {
+      return;
+    }
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       this.dialog.warn('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');

@@ -4,6 +4,7 @@ import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmDesignReviewResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDesignReviewService;
 import com.softinter.sicapi.util.PaginationUtil;
@@ -31,6 +32,7 @@ public class PmDesignReviewController {
 
     private final PmDesignReviewService designReviewService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping
     @Operation(summary = "Get design reviews with pagination and filters")
@@ -121,6 +123,17 @@ public class PmDesignReviewController {
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
+        return ResponseEntity.ok(designReviewService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved design review")
+    public ResponseEntity<PmDesignReviewResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        approvalService.createRevision("DESIGN_REVIEW", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(designReviewService.findById(id, businessId));
     }
 

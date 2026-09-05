@@ -24,6 +24,7 @@ public class PmMaRenewalResponse {
     private Instant newEndDate;
     private BigDecimal proposedAmount;
     private MaRenewalStatus status;
+    private Boolean isLocked;
     private UUID newContractId;
     private String remark;
 

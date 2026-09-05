@@ -34,6 +34,7 @@ public class PmInvoiceResponse {
     private BigDecimal paidAmount;
     private PaymentStatus paymentStatus;
     private String approvalStatus;
+    private Boolean isLocked;
     private String receiptFileRef;
     private String remark;
 

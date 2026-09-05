@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
@@ -41,6 +42,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
         ReactiveFormsModule,
         RouterModule,
         SicButtonComponent,
+        SicVersionBadgeComponent,
         SicInputComponent,
         SicInputAreaComponent,
         SicComboboxComponent,
@@ -74,6 +76,8 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     isEdit = false;
     isView = false;
+    currentStatus: string | null = null;
+    currentIsLocked = false;
     changeRequestId: string | null = null;
     isLoading = false;
     isSaving = false;
@@ -172,6 +176,17 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 this.projectId = qParams['projectId'];
                 this.form.patchValue({ projectId: this.projectId });
             }
+
+            // มาจากปุ่ม "ขอแก้ไข (Open Change Request)" ของเอกสารที่ถูกล็อค — เติมค่า target ให้อัตโนมัติ
+            // (ใช้เฉพาะตอนสร้างใหม่ ไม่ใช่ตอนแก้ไข CR เดิม ซึ่งค่า targetType/targetId จะมาจาก loadChangeRequest แทน)
+            if (!this.changeRequestId && qParams['targetType'] && qParams['targetId']) {
+                this.selectedTargetType.set(qParams['targetType']);
+                this.form.patchValue({
+                    targetType: qParams['targetType'],
+                    targetId: qParams['targetId'],
+                    title: qParams['targetTitle'] ? `คำขอเปลี่ยนแปลง: ${qParams['targetTitle']}` : null,
+                });
+            }
         });
 
         this.form.get('targetType')?.valueChanges.subscribe((val) => {
@@ -208,6 +223,8 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     if (data.targetType) {
                         this.selectedTargetType.set(data.targetType);
                     }
+                    this.currentStatus = (data as any).status ?? null;
+                    this.currentIsLocked = !!(data as any).isLocked;
                     this.formData.patchValue(data);
                     if (data.status === 'SUBMITTED' || data.status === 'APPROVED' || data.status === 'IMPLEMENTED') {
                         this.isView = true;

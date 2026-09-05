@@ -8,6 +8,7 @@ import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmSpecificationResponse;
 import com.softinter.sicapi.dto.response.SpecificationDraft;
 import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.impl.SpecificationGeneratorService;
@@ -39,6 +40,7 @@ public class PmSpecificationController {
     private final com.softinter.sicapi.service.PmSpecificationExportService exportService;
     private final SpecificationGeneratorService generatorService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export Specification Document as PDF using JasperReports")
@@ -81,6 +83,17 @@ public class PmSpecificationController {
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
+        return ResponseEntity.ok(specificationService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved specification")
+    public ResponseEntity<PmSpecificationResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        approvalService.createRevision("SPECIFICATION", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(specificationService.findById(id, businessId));
     }
 

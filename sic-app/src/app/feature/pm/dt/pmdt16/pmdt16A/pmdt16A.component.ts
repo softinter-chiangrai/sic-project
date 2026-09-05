@@ -6,6 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicInputNumberComponent } from '../../../../../core/component/sic-input-number/sic-input-number.component';
@@ -34,6 +35,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     FormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicInputNumberComponent,
@@ -60,6 +62,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   isSaving = signal(false);
   isEdit = signal(false);
   isView = signal(false);
+  isLocked = signal(false);
   isPrinting = signal(false);
 
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
@@ -225,6 +228,10 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         if (data.items) {
           this.items.set(data.items);
         }
+        if (data.isLocked) {
+          this.isLocked.set(true);
+          this.isView.set(true);
+        }
         if (this.isView()) {
           this.formData.form.disable();
         } else {
@@ -242,12 +249,24 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   }
 
   goToEditMode(): void {
-    if (this.id()) {
+    if (this.id() && !this.isLocked()) {
       this.isView.set(false);
       this.isEdit.set(true);
       this.formData?.form.enable();
       this.router.navigate(['/feature/pm/invoice', this.id(), 'edit']);
     }
+  }
+
+  requestChange(): void {
+    const projectId = this.formData?.form.get('projectId')?.value;
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId,
+        targetType: 'INVOICE',
+        targetId: this.id(),
+        targetTitle: this.formData?.form.get('invoiceNo')?.value,
+      },
+    });
   }
 
   submit() {

@@ -683,7 +683,7 @@ export const PM_ROUTES: Routes = [
   {
     path: 'audit',
     loadComponent: () => import('./dt/pmdt20/pmdt20.component').then((m) => m.Pmdt20Component),
-    canActivate: [customerGuard],
+
     resolve: { pageData: pmdt20Resolver },
   },
 ];

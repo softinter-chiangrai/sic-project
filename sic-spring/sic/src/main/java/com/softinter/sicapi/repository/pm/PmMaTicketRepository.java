@@ -15,4 +15,8 @@ public interface PmMaTicketRepository extends JpaRepository<PmMaTicket, UUID>, J
     Optional<PmMaTicket> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
     Page<PmMaTicket> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
     Page<PmMaTicket> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndTicketNoAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String ticketNo);
 }

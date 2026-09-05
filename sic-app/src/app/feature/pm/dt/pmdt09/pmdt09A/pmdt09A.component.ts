@@ -11,6 +11,7 @@ import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
@@ -46,6 +47,7 @@ export interface DesignReviewModel {
   assignedTo?: string;
   severity: string;
   status: string;
+  isLocked?: boolean;
   dueDate: string;
   figmaUrl?: string;
   embedMode?: 'design' | 'prototype';
@@ -148,6 +150,7 @@ export class Pmdt09AService {
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicDatepickerComponent,
     SicInputComponent,
@@ -178,6 +181,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   isEdit = false;
+  isLocked = false;
   reviewId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -322,6 +326,10 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.form.patchValue(formData);
         this.formData.resetModel(this.form.getRawValue() as any);
         this.isLoading = false;
+        if (formData.isLocked) {
+          this.isLocked = true;
+          this.form.disable();
+        }
         this.updateEmbedUrl();
         this.loadApprovalFlowForReview(id);
         console.log('✅ โหลดข้อมูล Design Review สำเร็จ:', data);
@@ -415,7 +423,19 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.router.navigate(['/feature/pm/design-review']);
   }
 
+  requestChange(): void {
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId: this.form.get('projectId')?.value,
+        targetType: 'DESIGN_REVIEW',
+        targetId: this.reviewId,
+        targetTitle: this.form.get('title')?.value,
+      },
+    });
+  }
+
   submit() {
+    if (this.isLocked) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       
@@ -510,7 +530,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   onDelete(): void {
-    if (!this.reviewId) return;
+    if (!this.reviewId || this.isLocked) return;
     this.dialog.confirm(
       'ยืนยันการลบ',
       `คุณต้องการลบรายการ Design Review "${this.form.get('reviewCode')?.value} - ${this.form.get('title')?.value}" ใช่หรือไม่?`

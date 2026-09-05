@@ -27,6 +27,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 
 // Components
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
@@ -95,6 +96,7 @@ export class Pmdt04AService {
     FormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicInputAreaComponent,
@@ -133,6 +135,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   isEdit = false;
   isViewOnly = false;
+  isLocked = false;
   reqId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -225,6 +228,11 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       next: (data) => {
         this.formData.formGroup.patchValue(data);
         this.isLoading = false;
+
+        if (data.isLocked) {
+          this.isLocked = true;
+          this.isViewOnly = true;
+        }
 
         if (this.isViewOnly) {
           this.form.disable();
@@ -541,6 +549,18 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   onBack(): void {
     const projectId = this.form.get('projectId')?.value;
     this.navigateBack(projectId);
+  }
+
+  requestChange(): void {
+    const projectId = this.form.get('projectId')?.value;
+    this.navigation.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId,
+        targetType: 'REQUIREMENT',
+        targetId: this.reqId,
+        targetTitle: this.form.get('title')?.value,
+      },
+    });
   }
 
   private navigateBack(projectId?: string): void {

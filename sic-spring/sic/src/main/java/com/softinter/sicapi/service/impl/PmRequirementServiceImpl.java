@@ -84,6 +84,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             // ===== SOFT DELETE =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Requirement not found"));
+            approvalService.assertNotApproved("REQUIREMENT", requirement.getId());
             requirement.setIsDelete(true);
             requirement.setIsActive(false);
             requirement.setDeleteBy(userId);
@@ -112,7 +113,14 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setIsDelete(false);
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
-            requirement.setVersion("v1.0");
+            requirement.setVersion("v0.1");
+            if (request.getRequirementCode() == null || request.getRequirementCode().isBlank()) {
+                long count = requirementRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                request.setRequirementCode("REQ-" + String.format("%03d", count));
+            } else if (requirementRepository.existsByBusinessIdAndProjectIdAndRequirementCodeAndIsDeleteFalse(
+                    businessId, request.getProjectId(), request.getRequirementCode())) {
+                throw new RuntimeException("รหัส Requirement นี้มีอยู่แล้วในโครงการนี้: " + request.getRequirementCode());
+            }
             mapRequestToEntity(request, requirement);
             requirement.setUploadGroupId(finalUploadGroupId);
             PmRequirement saved = requirementRepository.save(requirement);
@@ -149,6 +157,8 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             // ===== UPDATE EXISTING =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Requirement not found"));
+
+            approvalService.assertNotApproved("REQUIREMENT", requirement.getId());
 
             // check rowVersion
             if (request.getRowVersion() != null && !request.getRowVersion().equals(requirement.getRowVersion())) {
@@ -292,6 +302,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         response.setCreatedBy(createdByName);
         response.setVersion(entity.getVersion());
         response.setStatus(entity.getStatus());
+        response.setIsLocked(approvalService.isApproved("REQUIREMENT", entity.getId()));
         response.setIsActive(entity.getIsActive());
         response.setCreatedDate(entity.getCreatedDate());
         response.setUpdatedDate(entity.getUpdatedDate());

@@ -15,4 +15,8 @@ public interface PmMaRenewalRepository extends JpaRepository<PmMaRenewal, UUID>,
     Optional<PmMaRenewal> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
     Page<PmMaRenewal> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
     Page<PmMaRenewal> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndRenewalNoAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String renewalNo);
 }

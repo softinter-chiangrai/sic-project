@@ -11,6 +11,7 @@ import java.util.UUID;
 public class PmDiagramTabResponse {
     private UUID id;
     private String name;
+    private String diagramCode;
     private String diagramType;
     private String mermaidScript;
 

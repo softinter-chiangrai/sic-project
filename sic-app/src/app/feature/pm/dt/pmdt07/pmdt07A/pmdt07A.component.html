@@ -14,8 +14,9 @@
                     {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
                 </h1>
                 @if (isEdit || isViewOnly) {
-                    <p class="text-xs text-[var(--text-muted)]">
-                        รหัส: {{ form.getRawValue().specificationCode || '-' }} · เวอร์ชัน: {{ form.getRawValue().version ? (form.getRawValue().version.startsWith('v') || form.getRawValue().version.startsWith('V') ? form.getRawValue().version : 'v' + form.getRawValue().version) : 'v1.0' }}
+                    <p class="text-xs text-[var(--text-muted)] flex items-center gap-2">
+                        <span>รหัส: {{ form.getRawValue().specificationCode || '-' }}</span>
+                        <sic-version-badge [version]="form.getRawValue().version" [status]="form.getRawValue().status" [isLocked]="isLocked"></sic-version-badge>
                     </p>
                 }
             </div>
@@ -211,13 +212,24 @@
                             <sic-button type="button" variant="secondary" (click)="onBack()">
                                 <i class="bi bi-arrow-left"></i> ย้อนกลับ
                             </sic-button>
-                            @if (!isViewOnly) {
+                            @if (isLocked) {
+                                <sic-button type="button" variant="primary" (click)="requestChange()">
+                                    <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+                                </sic-button>
+                            } @else if (!isViewOnly) {
                                 <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid">
                                     @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
                                     {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
                                 </sic-button>
                             }
                         </div>
+
+                        @if (isLocked) {
+                            <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+                                <i class="bi bi-lock-fill"></i>
+                                เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+                            </div>
+                        }
                     </form>
                 </div>
             }

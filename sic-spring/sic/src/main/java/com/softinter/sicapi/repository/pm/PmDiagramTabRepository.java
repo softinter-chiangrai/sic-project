@@ -24,4 +24,7 @@ public interface PmDiagramTabRepository extends JpaRepository<PmDiagramTab, UUID
     List<PmDiagramTab> findByProjectIdAndDiagramType(@Param("projectId") UUID projectId, @Param("type") String type);
 
     int countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndDiagramCodeAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String diagramCode);
 }

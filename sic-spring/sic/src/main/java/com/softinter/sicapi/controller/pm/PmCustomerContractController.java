@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.dto.request.PmCustomerContractRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PmCustomerContractResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.BusinessAccessService;
 import com.softinter.sicapi.service.PmCustomerContractService;
 
@@ -35,6 +36,7 @@ public class PmCustomerContractController {
     private final PmCustomerContractService contractService;
     private final com.softinter.sicapi.service.PmCustomerContractExportService exportService;
     private final BusinessAccessService businessAccessService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export Contract Document as PDF using JasperReports")
@@ -71,6 +73,13 @@ public class PmCustomerContractController {
     @GetMapping("/{id}")
     @Operation(summary = "ดึงข้อมูลสัญญาตาม ID")
     public ResponseEntity<PmCustomerContractResponse> getContract(@PathVariable UUID id) {
+        return ResponseEntity.ok(contractService.getContract(id));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "สร้าง Revision ใหม่จากสัญญาที่อนุมัติแล้ว")
+    public ResponseEntity<PmCustomerContractResponse> createRevision(@PathVariable UUID id) {
+        approvalService.createRevision("CONTRACT", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(contractService.getContract(id));
     }
 

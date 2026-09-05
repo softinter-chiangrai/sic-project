@@ -20,6 +20,7 @@ export interface PmMaRenewalModel extends SicBaseStateModel {
   proposedAmount: number;
   status: string;
   approvalStatus?: string;
+  isLocked?: boolean;
   newContractId?: string;
   remark?: string;
 }

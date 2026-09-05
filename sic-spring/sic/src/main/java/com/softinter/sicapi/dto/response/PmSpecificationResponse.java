@@ -15,6 +15,7 @@ public class PmSpecificationResponse {
     private String module;
     private String version;
     private String status;
+    private Boolean isLocked;
     private String priority;
     private String owner;
     private Integer estimatedManday;

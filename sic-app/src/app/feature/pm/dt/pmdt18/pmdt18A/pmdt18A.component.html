@@ -17,6 +17,12 @@
         <p class="text-sm text-[var(--text-muted)]">
           บริหารการต่อสัญญา MA ล่วงหน้าและเสนอราคาการดูแลระบบ
         </p>
+        @if (id()) {
+          <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
+            <span>เลขที่: {{ formData?.form?.getRawValue()?.renewalNo }}</span>
+            <sic-version-badge [status]="formData?.form?.getRawValue()?.status" [isLocked]="isLocked()"></sic-version-badge>
+          </p>
+        }
       </div>
     </div>
   </div>
@@ -126,12 +132,25 @@
       <!-- Bottom Action Bar -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
         <sic-button variant="outline" (click)="onBack()">
-          <i class="bi bi-arrow-left"></i> ยกเลิก
+          <i class="bi bi-arrow-left"></i> {{ isLocked() ? 'กลับ' : 'ยกเลิก' }}
         </sic-button>
-        <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
-          <i class="bi bi-check-lg"></i> บันทึกข้อมูล
-        </sic-button>
+        @if (isLocked()) {
+          <sic-button variant="primary" (click)="requestChange()">
+            <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+          </sic-button>
+        } @else {
+          <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
+            <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+          </sic-button>
+        }
       </div>
+
+      @if (isLocked()) {
+        <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+          <i class="bi bi-lock-fill"></i>
+          เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        </div>
+      }
     </form>
   }
 </div>

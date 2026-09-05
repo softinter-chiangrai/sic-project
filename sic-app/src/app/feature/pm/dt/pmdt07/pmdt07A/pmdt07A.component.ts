@@ -7,6 +7,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
@@ -41,6 +42,7 @@ import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox
         ReactiveFormsModule,
         RouterModule,
         SicButtonComponent,
+        SicVersionBadgeComponent,
         SicComboboxComponent,
         SicInputComponent,
         SicNumberComponent,
@@ -149,6 +151,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
     isEdit = false;
     isViewOnly = false;
+    isLocked = false;
     specId: string | null = null;
     isLoading = false;
     isSaving = false;
@@ -372,6 +375,10 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     if (userName) this.form.patchValue({ createdBy: userName });
                 }
                 this.isLoading = false;
+                if (data.isLocked) {
+                    this.isLocked = true;
+                    this.isViewOnly = true;
+                }
                 if (this.isViewOnly) this.form.disable();
 
                 this.formData.resetModel(this.form.getRawValue() as any);
@@ -698,5 +705,17 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     onBack(): void {
         const projectId = this.form.get('projectId')?.value;
         this.navigateBack(projectId);
+    }
+
+    requestChange(): void {
+        const projectId = this.form.get('projectId')?.value;
+        this.navigation.navigate(['/feature/pm/change-request/new'], {
+            queryParams: {
+                projectId,
+                targetType: 'SPECIFICATION',
+                targetId: this.specId,
+                targetTitle: this.form.get('title')?.value,
+            },
+        });
     }
 }

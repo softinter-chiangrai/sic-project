@@ -11,6 +11,7 @@ export interface PmMaTicketModel {
   severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   status?: 'OPEN' | 'IN_PROGRESS' | 'WAITING_CUSTOMER' | 'RESOLVED' | 'CLOSED';
   approvalStatus?: string;
+  isLocked?: boolean;
   assignedToIds?: string[];
   startDate?: string | null;
   startTime?: string | null;

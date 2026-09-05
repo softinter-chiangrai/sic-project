@@ -163,6 +163,16 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             return false;
         }
 
+        List<SuBusinessAudit> activeInSession = businessAuditRepository.findActiveByUserIdAndSessionId(userId, sessionId);
+        if (!activeInSession.isEmpty()) {
+            UUID activeBizId = activeInSession.get(0).getBusinessId();
+            if (userBusinessIds.contains(activeBizId)) {
+                log.info("Already has active business in session: {}", activeBizId);
+                log.info("=== getBusinessActivation END ===");
+                return true;
+            }
+        }
+
         List<UUID> recentBySession = businessAuditRepository.findRecentBusinessIdBySession(
                 sessionId, userId, clientIp, userBusinessIds
         );

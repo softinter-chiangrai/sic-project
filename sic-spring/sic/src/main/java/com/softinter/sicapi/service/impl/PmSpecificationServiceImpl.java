@@ -113,6 +113,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         if (state == EntityState.DELETED) {
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+            approvalService.assertNotApproved("SPECIFICATION", spec.getId());
 
             spec.setIsDelete(true);
             spec.setIsActive(false);
@@ -140,10 +141,15 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         // ----- CREATE NEW -----
         if (isNew) {
-            // ตรวจสอบรหัสซ้ำ
-            if (specificationRepository.existsByBusinessIdAndSpecificationCodeAndIsDeleteFalse(
-                    businessId, request.getSpecificationCode())) {
-                throw new RuntimeException("รหัส Specification นี้มีอยู่แล้ว: " + request.getSpecificationCode());
+            if (request.getSpecificationCode() == null || request.getSpecificationCode().isBlank()) {
+                long count = specificationRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                request.setSpecificationCode("SPEC-" + String.format("%03d", count));
+            }
+
+            // ตรวจสอบรหัสซ้ำ (ในโครงการเดียวกัน)
+            if (specificationRepository.existsByBusinessIdAndProjectIdAndSpecificationCodeAndIsDeleteFalse(
+                    businessId, request.getProjectId(), request.getSpecificationCode())) {
+                throw new RuntimeException("รหัส Specification นี้มีอยู่แล้วในโครงการนี้: " + request.getSpecificationCode());
             }
 
             spec = new PmSpecification();
@@ -151,7 +157,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec.setCreatedBy(userId);
             spec.setCreatedDate(Instant.now());
             spec.setIsDelete(false);
-            spec.setVersion("v1.0");
+            spec.setVersion("v0.1");
             spec.setStatus("Draft");
             spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -228,6 +234,8 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // ----- UPDATE EXISTING -----
             spec = specificationRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+
+            approvalService.assertNotApproved("SPECIFICATION", spec.getId());
 
             // ตรวจสอบ RowVersion
             if (request.getRowVersion() != null && !request.getRowVersion().equals(spec.getRowVersion())) {
@@ -402,6 +410,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         response.setTitle(spec.getTitle());
         response.setVersion(spec.getVersion());
         response.setStatus(spec.getStatus());
+        response.setIsLocked(approvalService.isApproved("SPECIFICATION", spec.getId()));
         response.setPriority(spec.getPriority());
         response.setOwner(spec.getOwner());
         response.setEstimatedManday(spec.getEstimatedManday());

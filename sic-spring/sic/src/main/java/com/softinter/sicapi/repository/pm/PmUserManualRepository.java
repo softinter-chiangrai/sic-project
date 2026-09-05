@@ -19,4 +19,9 @@ public interface PmUserManualRepository extends JpaRepository<PmUserManual, UUID
     java.util.List<PmUserManual> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
 
     Page<PmUserManual> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
+
+    long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByBusinessIdAndProjectIdAndManualCodeAndIsDeleteFalse(
+            UUID businessId, UUID projectId, String manualCode);
 }

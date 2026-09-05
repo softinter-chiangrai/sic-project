@@ -13,6 +13,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
@@ -37,6 +38,7 @@ import { Pmrt04AService } from './pmrt04A.service';
     ReactiveFormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicTiptapEditorComponent,
@@ -63,6 +65,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   isEdit = false;
   isView = false;
+  isLocked = false;
   contractId: string | null = null;
   isLoading = false;
   isSaving = false;
@@ -165,6 +168,10 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           }
           // ✅ ใช้ formData.patchValue() — patch + re-snapshot ในครั้งเดียว
           this.formData.patchValue(data);
+          if (data.isLocked) {
+            this.isLocked = true;
+            this.isView = true;
+          }
           if (this.isView) {
             this.form.disable();
           }
@@ -190,6 +197,17 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     } else {
       this.navigation.navigate(['/feature/pm/contract']);
     }
+  }
+
+  requestChange(): void {
+    this.navigation.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId: this.projectId,
+        targetType: 'CONTRACT',
+        targetId: this.contractId,
+        targetTitle: this.form.get('contractNo')?.value,
+      },
+    });
   }
 
   onApprovalStatusChange(event: any): void {

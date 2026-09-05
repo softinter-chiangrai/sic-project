@@ -6,6 +6,7 @@
         <i class="bi bi-info-circle-fill text-sm"></i>
         <span>คำขอเปลี่ยนแปลงนี้อยู่ในโหมด <b>อ่านอย่างเดียว (Read-Only)</b> เนื่องจากอยู่ในกระบวนการอนุมัติหรือผ่านการพิจารณาแล้ว</span>
       </div>
+      <sic-version-badge [status]="currentStatus" [isLocked]="currentIsLocked"></sic-version-badge>
     </div>
   }
   <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">

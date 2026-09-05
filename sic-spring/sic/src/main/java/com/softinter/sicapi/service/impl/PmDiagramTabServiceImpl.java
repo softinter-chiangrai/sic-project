@@ -80,6 +80,15 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setBusinessId(businessId);
         tab.setProjectId(request.getProjectId());
         tab.setName(request.getName());
+        if (request.getDiagramCode() == null || request.getDiagramCode().isBlank()) {
+            long count = tabRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+            tab.setDiagramCode("DIAG-" + String.format("%03d", count));
+        } else if (tabRepository.existsByBusinessIdAndProjectIdAndDiagramCodeAndIsDeleteFalse(
+                businessId, request.getProjectId(), request.getDiagramCode())) {
+            throw new RuntimeException("รหัส Diagram นี้มีอยู่แล้วในโครงการนี้: " + request.getDiagramCode());
+        } else {
+            tab.setDiagramCode(request.getDiagramCode());
+        }
         tab.setDiagramType(request.getDiagramType());
         tab.setMermaidScript(request.getMermaidScript() != null ? request.getMermaidScript() : "");
         tab.setMetadata(request.getMetadata());
@@ -187,6 +196,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
 
+        approvalService.assertNotApproved("DIAGRAM", tab.getId());
+
         // ตรวจสอบว่ามี requirementId หรือไม่ (ถ้ามีให้อัปเดต)
         if (request.getRequirementId() != null) {
             // ตรวจสอบว่า Requirement มีอยู่จริง
@@ -243,6 +254,14 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
             if (request.getName() != null) {
                 tab.setName(request.getName());
+            }
+            if (request.getDiagramCode() != null && !request.getDiagramCode().isBlank()
+                    && !request.getDiagramCode().equals(tab.getDiagramCode())) {
+                if (tabRepository.existsByBusinessIdAndProjectIdAndDiagramCodeAndIsDeleteFalse(
+                        tab.getBusinessId(), tab.getProjectId(), request.getDiagramCode())) {
+                    throw new RuntimeException("รหัส Diagram นี้มีอยู่แล้วในโครงการนี้: " + request.getDiagramCode());
+                }
+                tab.setDiagramCode(request.getDiagramCode());
             }
             if (request.getDiagramType() != null) {
                 tab.setDiagramType(request.getDiagramType());
@@ -316,6 +335,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     public void deleteTab(UUID id) {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
+
+        approvalService.assertNotApproved("DIAGRAM", tab.getId());
 
         // ✅ 1. Soft delete Trace Links ที่เกี่ยวข้องกับ Diagram นี้ (ทั้งที่เป็น source
         // และ target)
@@ -507,6 +528,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTabResponse dto = new PmDiagramTabResponse();
         dto.setId(tab.getId());
         dto.setName(tab.getName());
+        dto.setDiagramCode(tab.getDiagramCode());
         dto.setDiagramType(tab.getDiagramType());
         dto.setMermaidScript(tab.getMermaidScript() != null ? tab.getMermaidScript() : "");
         dto.setMetadata(tab.getMetadata());

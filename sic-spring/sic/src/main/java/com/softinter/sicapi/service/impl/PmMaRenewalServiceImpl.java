@@ -11,6 +11,7 @@ import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmMaRenewalRepository;
 import com.softinter.sicapi.service.PmMaRenewalService;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final AuditLogService auditLogService;
+    private final ApprovalService approvalService;
 
     @Override
     @Transactional(readOnly = true)
@@ -73,7 +75,11 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             if (entity.getRenewalNo() == null || entity.getRenewalNo().isBlank()) {
-                entity.setRenewalNo("MAR-" + System.currentTimeMillis());
+                long count = renewalRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
+                entity.setRenewalNo("MAR-" + String.format("%03d", count));
+            } else if (renewalRepository.existsByBusinessIdAndProjectIdAndRenewalNoAndIsDeleteFalse(
+                    businessId, entity.getProjectId(), entity.getRenewalNo())) {
+                throw new RuntimeException("รหัสข้อเสนอต่อสัญญานี้มีอยู่แล้วในโครงการนี้: " + entity.getRenewalNo());
             }
             entity = renewalRepository.save(entity);
 
@@ -87,6 +93,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         } else {
             entity = renewalRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการต่อสัญญา MA"));
+            approvalService.assertNotApproved("MA_RENEWAL", entity.getId());
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
@@ -132,6 +139,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
     public void delete(UUID id, UUID businessId, String userId) {
         PmMaRenewal renewal = renewalRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการต่อสัญญา MA"));
+        approvalService.assertNotApproved("MA_RENEWAL", renewal.getId());
         renewal.setIsDelete(true);
         renewal.setDeleteBy(userId);
         renewal.setDeleteDate(Instant.now());
@@ -173,6 +181,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         res.setNewEndDate(entity.getNewEndDate());
         res.setProposedAmount(entity.getProposedAmount());
         res.setStatus(entity.getStatus());
+        res.setIsLocked(approvalService.isApproved("MA_RENEWAL", entity.getId()));
         res.setNewContractId(entity.getNewContractId());
         res.setRemark(entity.getRemark());
 

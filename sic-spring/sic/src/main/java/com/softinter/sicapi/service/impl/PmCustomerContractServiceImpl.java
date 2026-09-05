@@ -94,6 +94,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         if (!isNew) {
             contract = contractRepository.findById(request.getId())
                     .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + request.getId()));
+            approvalService.assertNotApproved("CONTRACT", contract.getId());
             contract.setRowVersion(request.getRowVersion());
             oldSignStatus = contract.getSignStatus();
 
@@ -109,6 +110,14 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             contract = new PmCustomerContract();
             contract.setBusinessId(businessId);
             contract.setIsDelete(false);
+
+            if (request.getContractNo() == null || request.getContractNo().isBlank()) {
+                long count = contractRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                request.setContractNo("CTR-" + String.format("%03d", count));
+            } else if (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+                    businessId, request.getProjectId(), request.getContractNo())) {
+                throw new RuntimeException("เลขที่สัญญานี้มีอยู่แล้วในโครงการนี้: " + request.getContractNo());
+            }
         }
 
         contract.setCustomerId(request.getCustomerId());
@@ -308,6 +317,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         dto.setPaymentTerms(contract.getPaymentTerms());
         dto.setScopeSummary(contract.getScopeSummary());
         dto.setSignStatus(contract.getSignStatus());
+        dto.setIsLocked(approvalService.isApproved("CONTRACT", contract.getId()));
         dto.setRenewalStatus(contract.getRenewalStatus());
         dto.setParentContractId(contract.getParentContractId());
         if (contract.getParentContract() != null) {

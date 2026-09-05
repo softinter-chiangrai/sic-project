@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmMaRenewalRequest;
 import com.softinter.sicapi.dto.response.PmMaRenewalResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmMaRenewalExportService;
 import com.softinter.sicapi.service.PmMaRenewalService;
@@ -38,6 +39,7 @@ public class PmMaRenewalController {
     private final PmMaRenewalService renewalService;
     private final PmMaRenewalExportService exportService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export MA Renewal Proposal Document as PDF using JasperReports")
@@ -69,6 +71,14 @@ public class PmMaRenewalController {
     @Operation(summary = "Get MA renewal proposal by ID")
     public ResponseEntity<PmMaRenewalResponse> getById(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        return ResponseEntity.ok(renewalService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved MA renewal proposal")
+    public ResponseEntity<PmMaRenewalResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        approvalService.createRevision("MA_RENEWAL", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(renewalService.findById(id, businessId));
     }
 

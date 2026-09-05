@@ -24,6 +24,7 @@ import { SqlExportDialogComponent } from './sql-export-dialog.component';
 import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { DiagramModel } from './diagram.model';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 @Component({
   selector: 'app-pmdt05',
@@ -44,6 +45,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private router = inject(Router);
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private customerState = inject(CustomerStateService);
   private isCreateDialogOpened = false;
 
   // ===== State =====
@@ -55,15 +57,21 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   chatOpen = signal(false);
   unreadCount = 0;
   currentDiagram: DiagramModel | null = null;
+  private loadedDiagramTabId: string | null = null;
 
   // ===== Tabs =====
   tabs = signal<DiagramModel[]>([]);
   isLoadingTabs = false;
 
+  get currentTabLocked(): boolean {
+    const tab = this.tabs().find((t) => t.id === this.currentTabId);
+    return !!(tab?.isApproved || tab?.approvalStatus === 'APPROVED');
+  }
+
   private isLoadingDiagram = false;
   private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
 
-  // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบ)
+  // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบเพื่อความสะอาด)
   private requirementId: string | null = null;
   private requirementTitle: string = '';
 
@@ -76,108 +84,83 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   ngAfterViewInit(): void {
     this.drawioService.init(this.iframe.nativeElement);
 
-    let isFirstReady = true;
-
     this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready: any) => {
       this.drawioReady = ready;
       console.log('[Draw.io] Ready status:', ready);
-      if (ready && this.currentTabId && isFirstReady) {
-        isFirstReady = false;
+      if (ready && this.currentTabId && this.loadedDiagramTabId !== this.currentTabId) {
         this.loadExistingDiagram();
       }
     });
 
     setTimeout(() => {
       if (!this.drawioReady) {
-        console.warn('[Draw.io] Fallback: force ready after 7s');
+        console.warn('[Draw.io] Fallback: force ready after 5s');
         this.drawioReady = true;
-        if (this.currentTabId) {
+        if (this.currentTabId && this.loadedDiagramTabId !== this.currentTabId) {
           this.loadExistingDiagram();
         }
       }
-    }, 7000);
+    }, 5000);
 
     // รับ query params
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
-      const newTabId = params['tabId'] || params['diagramId'] || null;
-      const newProjectId = params['projectId'] || null;
+      const tabIdFromUrl = params['tabId'] || params['diagramId'] || null;
+      let projectIdFromUrl = params['projectId'] || null;
       const shouldOpenCreate = params['openCreate'] === 'true';
-      const reqId = params['requirementId'] || null;
-      const reqTitle = params['requirementTitle'] || '';
+      const reqIdFromUrl = params['requirementId'] || null;
+      const reqTitleFromUrl = params['requirementTitle'] || '';
 
-      // เก็บ requirementId/Title ไว้ในตัวแปร component
-      if (reqId) {
-        this.requirementId = reqId;
-        this.requirementTitle = reqTitle;
+      // เก็บ requirementId/Title ไว้ใน state และ component
+      if (reqIdFromUrl) {
+        this.requirementId = reqIdFromUrl;
+        this.requirementTitle = reqTitleFromUrl;
+        this.customerState.setRequirement(reqIdFromUrl, reqTitleFromUrl);
+      } else if (!this.requirementId) {
+        this.requirementId = this.customerState.getRequirementId();
+        this.requirementTitle = this.customerState.getRequirementTitle();
       }
 
-      if (!newProjectId) {
-        this.router.navigate(['/projects']);
+      if (!projectIdFromUrl) {
+        projectIdFromUrl = this.customerState.getProjectId();
+      }
+
+      if (!projectIdFromUrl) {
+        this.router.navigate(['/feature/pm/project']);
         return;
       }
 
-      // ถ้า projectId เปลี่ยน ให้โหลดใหม่
-      if (newProjectId !== this.projectId) {
-        this.projectId = newProjectId;
-        this.currentTabId = null;
+      const isNewProject = projectIdFromUrl !== this.projectId;
+      this.projectId = projectIdFromUrl;
+      this.customerState.setProject(projectIdFromUrl);
+
+      // เคลียร์ query params ที่ยาวเทอะทะออกจาก URL เพื่อให้ path สะอาด
+      const hasLongParams = !!(params['requirementTitle'] || params['requirementId'] || params['openCreate'] || (params['projectId'] && tabIdFromUrl));
+      if (hasLongParams) {
+        this.cleanUpUrl(tabIdFromUrl || this.currentTabId);
+      }
+
+      if (shouldOpenCreate && this.requirementId) {
+        this.pendingCreate = { requirementId: this.requirementId, requirementTitle: this.requirementTitle };
+      }
+
+      if (isNewProject) {
+        this.currentTabId = tabIdFromUrl;
         this.currentDiagram = null;
+        this.loadedDiagramTabId = null;
         this.loadProjectName();
-        this.loadTabs();
-        // ถ้ามี openCreate และ requirementId ให้เก็บไว้เปิดทีหลัง
-        if (shouldOpenCreate && reqId) {
-          this.pendingCreate = { requirementId: reqId, requirementTitle: reqTitle };
-          // ลบเฉพาะ openCreate ออกจาก URL (เก็บ requirementId ไว้)
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { openCreate: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
+        this.loadTabs(tabIdFromUrl, shouldOpenCreate);
         return;
       }
 
-      // ถ้ามี tabId ให้โหลด diagram
-      if (newTabId) {
-        if (newTabId !== this.currentTabId) {
-          this.currentTabId = newTabId;
-          this.currentDiagram = null;
-          if (this.drawioReady) {
-            this.loadExistingDiagram();
-          }
+      if (tabIdFromUrl && tabIdFromUrl !== this.currentTabId) {
+        this.currentTabId = tabIdFromUrl;
+        this.currentDiagram = null;
+        this.loadedDiagramTabId = null;
+        if (this.drawioReady) {
+          this.loadExistingDiagram();
         }
-        // ถ้ามี openCreate และ requirementId แต่มี tabId อยู่แล้ว
-        if (shouldOpenCreate && reqId) {
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { openCreate: null },
-            queryParamsHandling: 'merge',
-            replaceUrl: true,
-          });
-        }
-      } else {
-        // ถ้าไม่มี tabId ให้โหลด tabs
-        this.loadTabs();
-        // ถ้ามี openCreate และ requirementId และยังไม่มี tabs ให้เปิด dialog
-        if (shouldOpenCreate && reqId && !this.isCreateDialogOpened) {
-          if (this.tabs().length === 0) {
-            this.isCreateDialogOpened = true;
-            this.openCreateDialogWithRequirement(reqId, reqTitle);
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: { openCreate: null },
-              queryParamsHandling: 'merge',
-              replaceUrl: true,
-            });
-          } else {
-            this.router.navigate([], {
-              relativeTo: this.route,
-              queryParams: { openCreate: null },
-              queryParamsHandling: 'merge',
-              replaceUrl: true,
-            });
-          }
-        }
+      } else if (!this.currentTabId && this.tabs().length > 0) {
+        this.switchTab(this.tabs()[0].id);
       }
     });
 
@@ -189,7 +172,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
           this.drawioReady &&
           this.currentTabId &&
           !this.isLoading &&
-          !this.isLoadingDiagram
+          !this.isLoadingDiagram &&
+          !this.currentTabLocked
         ) {
           // ขอ XML จาก Draw.io เพื่อตรวจสอบการเปลี่ยนแปลง
           this.drawioService.requestXml();
@@ -225,8 +209,21 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     this.destroy$.complete();
   }
 
+  // ===== URL Cleanup Helper =====
+  private cleanUpUrl(tabId: string | null): void {
+    const queryParams: Record<string, any> = {};
+    if (tabId) {
+      queryParams['tabId'] = tabId;
+    }
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams,
+      replaceUrl: true,
+    });
+  }
+
   // ===== Tabs Management =====
-  loadTabs(): void {
+  loadTabs(preferredTabId?: string | null, openCreateAfterLoad: boolean = false): void {
     if (!this.projectId) return;
     this.isLoadingTabs = true;
 
@@ -235,32 +232,26 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         this.tabs.set(tabs);
         this.isLoadingTabs = false;
 
-        if (!this.currentTabId && tabs.length > 0) {
-          this.currentTabId = tabs[0].id;
-          this.router.navigate([], {
-            relativeTo: this.route,
-            queryParams: { tabId: this.currentTabId, projectId: this.projectId },
-            queryParamsHandling: 'merge',
-          });
-          if (this.drawioReady) {
+        if (tabs.length > 0) {
+          const targetTabId = (preferredTabId && tabs.some((t) => t.id === preferredTabId))
+            ? preferredTabId
+            : tabs[0].id;
+
+          this.currentTabId = targetTabId;
+          this.cleanUpUrl(this.currentTabId);
+
+          if (this.drawioReady && this.loadedDiagramTabId !== this.currentTabId) {
             this.loadExistingDiagram();
           }
-        }
-
-        if (tabs.length === 0) {
-          if (this.pendingCreate) {
-            this.openCreateDialogWithRequirement(
-              this.pendingCreate.requirementId,
-              this.pendingCreate.requirementTitle
-            );
+        } else {
+          this.currentTabId = null;
+          if (openCreateAfterLoad || this.pendingCreate) {
+            const reqId = this.pendingCreate?.requirementId || this.requirementId || '';
+            const reqTitle = this.pendingCreate?.requirementTitle || this.requirementTitle || '';
+            this.openCreateDialogWithRequirement(reqId, reqTitle);
             this.pendingCreate = null;
           } else {
             this.createDefaultTab();
-          }
-        } else {
-          if (this.pendingCreate) {
-            console.log('[Diagram] Tabs already exist, skip create dialog');
-            this.pendingCreate = null;
           }
         }
       },
@@ -429,14 +420,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   }
 
   switchTab(tabId: string): void {
-    if (this.currentTabId === tabId) return;
+    if (this.currentTabId === tabId && this.loadedDiagramTabId === tabId) return;
     this.currentTabId = tabId;
     this.currentDiagram = null;
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tabId: tabId, projectId: this.projectId },
-      queryParamsHandling: 'merge',
-    });
+    this.loadedDiagramTabId = null;
+    this.cleanUpUrl(tabId);
     if (this.drawioReady) {
       this.loadExistingDiagram();
     }
@@ -446,6 +434,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     event.stopPropagation();
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
+    if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
+      this.dialogService.warn('เอกสารถูกล็อค', 'Diagram นี้ผ่านการอนุมัติแล้ว ไม่สามารถลบได้ กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request');
+      return;
+    }
     this.dialogService
       .confirm('Delete Tab', `Delete diagram "${tab.name}"? This cannot be undone.`)
       .then((confirmed) => {
@@ -470,6 +462,19 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
           },
         });
       });
+  }
+
+  requestChangeForCurrentTab(): void {
+    const tab = this.tabs().find((t) => t.id === this.currentTabId);
+    if (!tab) return;
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId: this.projectId,
+        targetType: 'DIAGRAM',
+        targetId: tab.id,
+        targetTitle: tab.name,
+      },
+    });
   }
 
   // ===== Helpers =====
@@ -544,9 +549,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
     this.isLoadingDiagram = true;
     this.isLoading = true;
-    console.log('[Diagram] Loading diagram:', this.currentTabId);
+    const tabIdToLoad = this.currentTabId;
+    console.log('[Diagram] Loading diagram:', tabIdToLoad);
 
-    this.diagramService.getDiagram(this.currentTabId).subscribe({
+    this.diagramService.getDiagram(tabIdToLoad).subscribe({
       next: (diagram) => {
         console.log('[Diagram] Loaded diagram data:', diagram);
         if (this.projectId && diagram.projectId !== this.projectId) {
@@ -557,15 +563,21 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
           this.drawioService.loadXml('');
           return;
         }
+
+        if (this.currentTabId !== tabIdToLoad) {
+          this.isLoading = false;
+          this.isLoadingDiagram = false;
+          return;
+        }
+
         this.currentDiagram = diagram;
+        this.loadedDiagramTabId = tabIdToLoad;
         let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
         xml = this.ensureValidDrawioXml(xml);
         console.log('[Diagram] XML length after validation:', xml.length);
         // ตั้งค่า lastSavedXml เป็น XML ที่โหลดมา เพื่อป้องกัน auto‑save ซ้ำ
         this.lastSavedXml = xml;
-        setTimeout(() => {
-          this.drawioService.loadXml(xml, true);
-        }, 300);
+        this.drawioService.loadXml(xml, true);
         this.isLoading = false;
         this.isLoadingDiagram = false;
       },
@@ -573,9 +585,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         console.error('[Diagram] Failed to load diagram:', err);
         this.isLoading = false;
         this.isLoadingDiagram = false;
-        setTimeout(() => {
-          this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
-        }, 300);
+        this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
         this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
     });
@@ -611,6 +621,13 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     if (!this.currentTabId) {
+      return;
+    }
+
+    if (this.currentTabLocked) {
+      if (manual) {
+        this.dialogService.warn('เอกสารถูกล็อค', 'Diagram นี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request');
+      }
       return;
     }
 

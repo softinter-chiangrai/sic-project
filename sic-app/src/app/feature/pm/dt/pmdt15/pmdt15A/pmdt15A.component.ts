@@ -6,6 +6,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
@@ -31,6 +32,7 @@ import { PmUserManualModel, PmUserManualSectionModel } from './pmdt15A.model';
     FormsModule,
     RouterModule,
     SicButtonComponent,
+    SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
     SicTiptapEditorComponent,
@@ -55,6 +57,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   isEdit = signal(false);
   isSaving = signal(false);
   isPrinting = signal(false);
+  isLocked = signal(false);
 
   // Approval Flow
   approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/USER_MANUAL`;
@@ -147,6 +150,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         } else {
           this.initDefaultSections();
         }
+        if (data.isLocked) {
+          this.isLocked.set(true);
+          this.formData.form.disable();
+        }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
         this.cdr.markForCheck();
       },
@@ -169,6 +176,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   addSection(): void {
+    if (this.isLocked()) return;
     const current = [...this.sections()];
     const newSec: PmUserManualSectionModel = {
       sectionCode: `SEC-${current.length + 1}`,
@@ -185,6 +193,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   removeSection(index: number): void {
+    if (this.isLocked()) return;
     const current = [...this.sections()];
     const item = current[index];
     if (item.id) {
@@ -206,6 +215,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   updateActiveSectionContent(content: string): void {
+    if (this.isLocked()) return;
     const current = [...this.sections()];
     const idx = this.activeSectionIndex();
     if (current[idx]) {
@@ -220,6 +230,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   updateActiveSectionTitle(title: string): void {
+    if (this.isLocked()) return;
     const current = [...this.sections()];
     const idx = this.activeSectionIndex();
     if (current[idx]) {
@@ -234,6 +245,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onSubmit(): void {
+    if (this.isLocked()) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       this.dialog.warn('คำเตือน', 'กรุณากรอกข้อมูลคู่มือที่จำเป็นให้ครบถ้วน');
@@ -343,6 +355,18 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
     this.router.navigate(['/feature/pm/manual'], {
       queryParams: queryProj ? { projectId: queryProj } : undefined,
+    });
+  }
+
+  requestChange(): void {
+    const rawVal = this.formData.form.getRawValue() as any;
+    this.router.navigate(['/feature/pm/change-request/new'], {
+      queryParams: {
+        projectId: rawVal.projectId,
+        targetType: 'USER_MANUAL',
+        targetId: this.id(),
+        targetTitle: rawVal.manualTitle,
+      },
     });
   }
 }

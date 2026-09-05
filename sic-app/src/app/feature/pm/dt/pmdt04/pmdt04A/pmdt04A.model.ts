@@ -37,6 +37,7 @@ export interface RequirementModel {
   customerConfirmStatus: string;
   version: string;
   status: string;
+  isLocked?: boolean;
   isActive: boolean;
   state?: number;
   rowVersion?: number;

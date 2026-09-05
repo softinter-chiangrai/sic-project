@@ -29,7 +29,8 @@ export interface ContractModel {
   contractValue: number;
   paymentTerms: string;
   scopeSummary: string;
-  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired';
+  signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired' | 'Changed';
+  isLocked?: boolean;
   renewalStatus: string;
   parentContractId?: string;
   parentContractNo?: string;

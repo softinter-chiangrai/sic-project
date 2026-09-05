@@ -18,6 +18,12 @@
         <p class="text-sm text-[var(--text-muted)]">
           ตรวจทานการออกแบบ UI/UX, Prototype, และโครงสร้างระบบ พร้อมเชื่อมต่อ Figma Live Canvas
         </p>
+        @if (isEdit) {
+          <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
+            <span>รหัส: {{ form.getRawValue().reviewCode }}</span>
+            <sic-version-badge [status]="form.getRawValue().status" [isLocked]="isLocked"></sic-version-badge>
+          </p>
+        }
       </div>
     </div>
   </div>
@@ -294,7 +300,7 @@
         <!-- Bottom Action Bar -->
         <div class="pt-5 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-3">
           <div>
-            @if (isEdit) {
+            @if (isEdit && !isLocked) {
               <sic-button variant="danger" (click)="onDelete()" [disabled]="isLoading || isSaving">
                 <i class="bi bi-trash"></i> ลบ
               </sic-button>
@@ -302,13 +308,26 @@
           </div>
           <div class="flex items-center gap-3">
             <sic-button variant="outline" (click)="onBack()">
-              <i class="bi bi-arrow-left"></i> ยกเลิก
+              <i class="bi bi-arrow-left"></i> {{ isLocked ? 'กลับ' : 'ยกเลิก' }}
             </sic-button>
-            <sic-button variant="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
-              <i class="bi bi-check-lg"></i> {{ isEdit ? 'บันทึกข้อมูล' : 'สร้างรายการ' }}
-            </sic-button>
+            @if (isLocked) {
+              <sic-button variant="primary" (click)="requestChange()">
+                <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+              </sic-button>
+            } @else {
+              <sic-button variant="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
+                <i class="bi bi-check-lg"></i> {{ isEdit ? 'บันทึกข้อมูล' : 'สร้างรายการ' }}
+              </sic-button>
+            }
           </div>
         </div>
+
+        @if (isLocked) {
+          <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+            <i class="bi bi-lock-fill"></i>
+            เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+          </div>
+        }
       </div>
     </form>
   }

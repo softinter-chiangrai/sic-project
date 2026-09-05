@@ -164,30 +164,12 @@ export class DashboardComponent implements OnInit {
         const currentCategory = item.children?.length ? item.name : categoryName;
         if (item.path && item.path.trim().length > 0) {
           const code = (item.code || 'PROG').toUpperCase();
-          let badgeCount: number | undefined;
-          let badgeType: 'danger' | 'warning' | 'info' | 'success' = 'info';
-
-          // Assign real count badges
-          if (code === 'PMDT09' || code.includes('DESIGN') || code.includes('REVIEW')) {
-            if (pendingReviewsCount > 0) {
-              badgeCount = pendingReviewsCount;
-              badgeType = 'danger';
-            }
-          } else if (code === 'PMRT02' || code === 'PMDT01') {
-            if (activeProjectsCount > 0) {
-              badgeCount = activeProjectsCount;
-              badgeType = 'info';
-            }
-          }
-
           tiles.push({
             code: item.code || 'PROG',
             name: item.name,
             path: item.path.startsWith('/') ? item.path : `/feature/${item.path}`,
             icon: item.icon || this.getDefaultIcon(item.code),
             category: categoryName,
-            badgeCount,
-            badgeType,
           });
         }
         if (item.children && item.children.length > 0) {

@@ -82,6 +82,13 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
+            if (request.getManualCode() == null || request.getManualCode().isBlank()) {
+                long count = manualRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                request.setManualCode("MAN-" + String.format("%03d", count));
+            } else if (manualRepository.existsByBusinessIdAndProjectIdAndManualCodeAndIsDeleteFalse(
+                    businessId, request.getProjectId(), request.getManualCode())) {
+                throw new RuntimeException("รหัสคู่มือนี้มีอยู่แล้วในโครงการนี้: " + request.getManualCode());
+            }
             mapRequestToEntity(request, entity);
             entity = manualRepository.save(entity);
 
@@ -95,6 +102,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         } else {
             entity = manualRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลคู่มือผู้ใช้งาน"));
+            approvalService.assertNotApproved("USER_MANUAL", entity.getId());
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
@@ -187,6 +195,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     public void delete(UUID id, UUID businessId, String userId) {
         PmUserManual manual = manualRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลคู่มือผู้ใช้งาน"));
+        approvalService.assertNotApproved("USER_MANUAL", manual.getId());
         manual.setIsDelete(true);
         manual.setDeleteBy(userId);
         manual.setDeleteDate(Instant.now());
@@ -234,6 +243,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         res.setRelatedSpecId(entity.getRelatedSpecId());
         res.setDeliveryId(entity.getDeliveryId());
         res.setStatus(entity.getStatus());
+        res.setIsLocked(approvalService.isApproved("USER_MANUAL", entity.getId()));
         res.setAttachmentGroupId(entity.getAttachmentGroupId());
         res.setCreatedBy(entity.getCreatedBy());
         res.setCreatedDate(entity.getCreatedDate());

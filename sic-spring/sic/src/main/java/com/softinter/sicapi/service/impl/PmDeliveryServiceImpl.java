@@ -133,6 +133,13 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setIsDelete(false);
             entity.setIsLocked(false);
             entity.setDeliveryVersion("0.1");
+            if (request.getDeliveryCode() == null || request.getDeliveryCode().isBlank()) {
+                long count = deliveryRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                request.setDeliveryCode("DEL-" + String.format("%03d", count));
+            } else if (deliveryRepository.existsByBusinessIdAndProjectIdAndDeliveryCodeAndIsDeleteFalse(
+                    businessId, request.getProjectId(), request.getDeliveryCode())) {
+                throw new RuntimeException("รหัสเอกสารส่งมอบนี้มีอยู่แล้วในโครงการนี้: " + request.getDeliveryCode());
+            }
             mapRequestToEntity(request, entity);
             entity = deliveryRepository.save(entity);
 
@@ -156,6 +163,8 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         } else {
             entity = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+
+            approvalService.assertNotApproved("DELIVERY", entity.getId());
 
             String oldStatus = entity.getStatus();
 
@@ -306,6 +315,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     public void delete(UUID id, UUID businessId, String userId) {
         PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
+        approvalService.assertNotApproved("DELIVERY", delivery.getId());
         delivery.setIsDelete(true);
         delivery.setDeleteBy(userId);
         delivery.setDeleteDate(Instant.now());
@@ -557,7 +567,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         res.setCustomerSignedBy(entity.getCustomerSignedBy());
         res.setCustomerSignedDate(entity.getCustomerSignedDate());
         res.setAttachmentGroupId(entity.getAttachmentGroupId());
-        res.setIsLocked(entity.getIsLocked());
+        res.setIsLocked(approvalService.isApproved("DELIVERY", entity.getId()));
         res.setCreatedBy(entity.getCreatedBy());
         res.setCreatedDate(entity.getCreatedDate());
         res.setUpdatedBy(entity.getUpdatedBy());

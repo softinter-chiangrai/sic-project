@@ -60,7 +60,7 @@ export class DrawioConnectorService {
     if (!xml || xml.trim() === '') {
       xml = this.getEmptyDiagramXml();
     }
-    this.postMessage({ action: 'load', xml, autosave: false }, force);
+    this.postMessage({ action: 'load', xml, autosave: 1 }, force);
   }
 
   getEmptyDiagramXml(): string {
@@ -134,7 +134,7 @@ export class DrawioConnectorService {
         }
       };
       try {
-        event.source?.postMessage(JSON.stringify(reply), { targetOrigin: event.origin });
+        (event.source as Window)?.postMessage(JSON.stringify(reply), '*');
         console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok) with autosave: true');
       } catch (e) {
         console.error('[Draw.io] Configure response error:', e);

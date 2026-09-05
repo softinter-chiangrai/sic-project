@@ -3,6 +3,7 @@ package com.softinter.sicapi.controller.pm;
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmUserManualRequest;
 import com.softinter.sicapi.dto.response.PmUserManualResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmUserManualExportService;
 import com.softinter.sicapi.service.PmUserManualService;
@@ -31,6 +32,7 @@ public class PmUserManualController {
     private final PmUserManualService manualService;
     private final PmUserManualExportService exportService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/paging")
     @Operation(summary = "Get user manual list with pagination")
@@ -51,6 +53,14 @@ public class PmUserManualController {
     @Operation(summary = "Get user manual by ID")
     public ResponseEntity<PmUserManualResponse> getById(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        return ResponseEntity.ok(manualService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved user manual")
+    public ResponseEntity<PmUserManualResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        approvalService.createRevision("USER_MANUAL", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(manualService.findById(id, businessId));
     }
 

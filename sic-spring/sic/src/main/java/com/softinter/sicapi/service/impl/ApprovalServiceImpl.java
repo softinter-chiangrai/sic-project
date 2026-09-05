@@ -36,6 +36,7 @@ import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
 import com.softinter.sicapi.entity.pm.PmChangeRequest;
 import com.softinter.sicapi.entity.pm.PmCrAssignee;
 import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.exception.DocumentLockedException;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
 import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
@@ -50,6 +51,7 @@ import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.repository.pm.PmMaRenewalRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
@@ -95,6 +97,7 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmDeliveryRepository deliveryRepository;
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
+    private final PmMaRenewalRepository maRenewalRepository;
     private final PmUserManualRepository userManualRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
@@ -702,6 +705,111 @@ public class ApprovalServiceImpl implements ApprovalService {
         List<PmApproval> approvals = approvalRepository.findActiveByDocument(documentType, documentId);
         return approvals.stream()
                 .anyMatch(a -> a.getStatus() == ApprovalStatus.APPROVED);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public void assertNotApproved(String documentType, UUID documentId) {
+        if (isApproved(documentType, documentId)) {
+            throw new DocumentLockedException(
+                    "เอกสารนี้ได้รับการอนุมัติแล้วและถูกล็อกไม่ให้แก้ไข กรุณาดำเนินการผ่าน Change Request หรือสร้าง Revision ใหม่");
+        }
+    }
+
+    @Override
+    @Transactional
+    public void unlockDocumentAfterChange(String documentType, UUID documentId, String reason) {
+        if (documentType == null || documentId == null) {
+            return;
+        }
+
+        switch (documentType.toUpperCase()) {
+            case "REQUIREMENT":
+                requirementRepository.findById(documentId).ifPresent(req -> {
+                    req.setStatus("Changed");
+                    String newVersion = versionService.incrementVersion(req.getVersion());
+                    req.setVersion(newVersion);
+                    requirementRepository.save(req);
+                });
+                break;
+            case "SPECIFICATION":
+                specificationRepository.findById(documentId).ifPresent(spec -> {
+                    spec.setStatus("Changed");
+                    String newVersion = versionService.incrementVersion(spec.getVersion());
+                    spec.setVersion(newVersion);
+                    specificationRepository.save(spec);
+                });
+                break;
+            case "DESIGN_REVIEW":
+                designReviewRepository.findById(documentId).ifPresent(dr -> {
+                    dr.setStatus("Changed");
+                    designReviewRepository.save(dr);
+                });
+                break;
+            case "CONTRACT":
+                customerContractRepository.findById(documentId).ifPresent(contract -> {
+                    contract.setSignStatus("Changed");
+                    customerContractRepository.save(contract);
+                });
+                break;
+            case "DELIVERY":
+                deliveryRepository.findById(documentId).ifPresent(del -> {
+                    del.setStatus("CHANGED");
+                    del.setIsLocked(false);
+                    del.setPmApprovedBy(null);
+                    del.setPmApprovedDate(null);
+                    String newVersion = versionService.incrementVersion(del.getDeliveryVersion());
+                    del.setDeliveryVersion(newVersion);
+                    deliveryRepository.save(del);
+                });
+                break;
+            case "INVOICE":
+                invoiceRepository.findById(documentId).ifPresent(inv -> {
+                    inv.setApprovalStatus("CHANGED");
+                    invoiceRepository.save(inv);
+                });
+                break;
+            case "MA_TICKET":
+                maTicketRepository.findById(documentId).ifPresent(ticket -> {
+                    ticket.setStatus(MaTicketStatus.CHANGED);
+                    ticket.setResolvedDate(null);
+                    maTicketRepository.save(ticket);
+                });
+                break;
+            case "MA_RENEWAL":
+                // MaRenewalStatus ไม่มีค่า CHANGED และไม่เคย sync กับสถานะอนุมัติมาก่อน
+                // จึงไม่แก้ status ที่นี่ - ปลดล็อคด้วยการ invalidate PmApproval record เท่านั้น (ด้านล่าง)
+                break;
+            case "USER_MANUAL":
+            case "MANUAL":
+                userManualRepository.findById(documentId).ifPresent(man -> {
+                    man.setStatus("CHANGED");
+                    String newVersion = versionService.incrementVersion(man.getVersion());
+                    man.setVersion(newVersion);
+                    userManualRepository.save(man);
+                });
+                break;
+            case "DIAGRAM":
+            case "DFD":
+            case "ER":
+                // PmDiagramTab ไม่มี status field - เวอร์ชันจะถูกสร้างใหม่โดยอัตโนมัติในการแก้ไขครั้งถัดไป
+                break;
+            default:
+                break;
+        }
+
+        // Deactivate the stale APPROVED PmApproval record so isApproved()/assertNotApproved()
+        // reflect the unlocked state immediately - this is the load-bearing step for every type.
+        invalidatePendingApproval(documentType, documentId, reason);
+    }
+
+    @Override
+    @Transactional
+    public void createRevision(String documentType, UUID documentId, String reason) {
+        if (!isApproved(documentType, documentId)) {
+            throw new IllegalStateException("เอกสารนี้ยังไม่ได้รับการอนุมัติ ไม่สามารถสร้าง Revision ใหม่ได้");
+        }
+        unlockDocumentAfterChange(documentType, documentId, reason);
     }
 
     @Override

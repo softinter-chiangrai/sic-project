@@ -108,6 +108,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         if (!isNew) {
             entity = designReviewRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new RuntimeException("Design review not found"));
+            approvalService.assertNotApproved("DESIGN_REVIEW", entity.getId());
             oldStatus = entity.getStatus();
 
             // ✅ Auto Diff Detection
@@ -179,6 +180,8 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         PmDesignReview entity = designReviewRepository.findByIdAndBusinessId(id, businessId)
                 .orElseThrow(() -> new RuntimeException("Design review not found"));
 
+        approvalService.assertNotApproved("DESIGN_REVIEW", entity.getId());
+
         entity.setIsDelete(true);
         entity.setDeleteBy(userId);
         entity.setDeleteDate(Instant.now());
@@ -249,6 +252,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         dto.setAssignedTo(entity.getAssignedTo());
         dto.setSeverity(entity.getSeverity());
         dto.setStatus(entity.getStatus());
+        dto.setIsLocked(approvalService.isApproved("DESIGN_REVIEW", entity.getId()));
         dto.setDueDate(entity.getDueDate());
         dto.setFigmaUrl(entity.getFigmaUrl());
         dto.setEmbedMode(entity.getEmbedMode());

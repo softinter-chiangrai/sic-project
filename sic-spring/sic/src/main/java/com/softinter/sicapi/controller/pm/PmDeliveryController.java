@@ -4,6 +4,7 @@ import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDeliveryRequest;
 import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
 import com.softinter.sicapi.dto.response.PmDeliveryResponse;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDeliveryService;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
@@ -37,6 +38,7 @@ public class PmDeliveryController {
     private final PmDeliveryRepository deliveryRepository;
     private final com.softinter.sicapi.service.PmDeliveryExportService exportService;
     private final CurrentUserService currentUserService;
+    private final ApprovalService approvalService;
 
     @GetMapping("/combobox")
     @Operation(summary = "Get delivery combobox list for dropdowns")
@@ -79,6 +81,14 @@ public class PmDeliveryController {
     @Operation(summary = "Get delivery document by ID")
     public ResponseEntity<PmDeliveryResponse> getById(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        return ResponseEntity.ok(deliveryService.findById(id, businessId));
+    }
+
+    @PostMapping("/{id}/create-revision")
+    @Operation(summary = "Create a new draft revision from an approved delivery document")
+    public ResponseEntity<PmDeliveryResponse> createRevision(@PathVariable UUID id) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        approvalService.createRevision("DELIVERY", id, "สร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว");
         return ResponseEntity.ok(deliveryService.findById(id, businessId));
     }
 
