@@ -42,6 +42,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmCrAssigneeRepository pmCrAssigneeRepository;
     private final PmChangeImpactRepository pmChangeImpactRepository;
     private final PmCustomerProjectRepository projectRepository;
+    private final com.softinter.sicapi.repository.pm.PmDiagramTabRepository diagramTabRepository;
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
@@ -419,17 +420,26 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     // ============================ Helper Methods ============================
 
     private String getDocumentStatus(String targetType, UUID targetId) {
+        if (targetType == null || targetId == null) {
+            return "DRAFT";
+        }
         switch (targetType.toUpperCase()) {
             case "REQUIREMENT":
                 return requirementRepository.findById(targetId).map(PmRequirement::getStatus).orElse("DRAFT");
             case "SPECIFICATION":
                 return specificationRepository.findById(targetId).map(PmSpecification::getStatus).orElse("DRAFT");
+            case "DIAGRAM":
+                return approvalService.isApproved("DIAGRAM", targetId) ? "APPROVED" : "DRAFT";
             default:
-                return "DRAFT";
+                // สำหรับ CONTRACT, DESIGN_REVIEW, DELIVERY, USER_MANUAL, INVOICE, MA_TICKET, MA_RENEWAL ฯลฯ
+                return approvalService.isApproved(targetType.toUpperCase(), targetId) ? "APPROVED" : "DRAFT";
         }
     }
 
     private void validateTargetExists(String targetType, UUID targetId) {
+        if (targetType == null || targetId == null) {
+            throw new IllegalArgumentException("Target type and ID must not be null");
+        }
         switch (targetType.toUpperCase()) {
             case "REQUIREMENT":
                 if (!requirementRepository.existsById(targetId)) {
@@ -446,11 +456,26 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                     throw new RuntimeException("Task not found: " + targetId);
                 }
                 break;
+            case "DIAGRAM":
+                if (!diagramTabRepository.existsById(targetId)) {
+                    throw new RuntimeException("Diagram not found: " + targetId);
+                }
+                break;
+            case "CONTRACT":
+            case "DESIGN_REVIEW":
+            case "DELIVERY":
+            case "USER_MANUAL":
+            case "INVOICE":
+            case "MA_TICKET":
+            case "MA_RENEWAL":
             case "DFD":
             case "ER":
+                // เอกสารประเภทอื่น ๆ ที่ระบบรองรับ
                 break;
             default:
-                throw new IllegalArgumentException("Unsupported target type: " + targetType);
+                // ยอมรับประเภทเอกสารที่มีในระบบเพื่อความยืดหยุ่นของ Approval & CR Flow
+                log.warn("[ChangeRequest] Validating custom/dynamic targetType: {}", targetType);
+                break;
         }
     }
 
@@ -509,8 +534,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 return specificationRepository.findById(targetId)
                         .map(s -> documentVersionService.incrementVersion(s.getVersion()))
                         .orElse("v1.1");
+            case "DIAGRAM":
             default:
-                return null;
+                return "v1.1";
         }
     }
 

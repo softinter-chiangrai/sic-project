@@ -95,20 +95,21 @@ export class DiagramService {
       .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
   }
 
-  // ✅ แก้ไข: เพิ่ม requirementId
   createTab(
     projectId: string,
     name: string,
     type: DiagramType,
     script?: string,
-    requirementId?: string  // ✅ เพิ่มพารามิเตอร์
+    requirementId?: string,
+    diagramCode?: string
   ): Observable<DiagramModel> {
     const payload = {
       projectId,
       name,
       diagramType: type,
       mermaidScript: script || '',
-      requirementId: requirementId || null,  // ✅ ส่งไป Backend
+      requirementId: requirementId || null,
+      diagramCode: diagramCode?.trim() || null,
       metadata: {},
       sortOrder: this.tabsSubject.value.length + 1,
     };

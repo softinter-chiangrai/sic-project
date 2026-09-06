@@ -14,6 +14,7 @@ export interface DiagramEditData {
   id: string;
   name: string;
   type: string;
+  diagramCode?: string;
   rowVersion?: number;
   requirementId?: string;
   requirementTitle?: string;
@@ -42,6 +43,15 @@ export interface DiagramEditData {
       </div>
 
       <div class="space-y-4 px-5 py-4 max-h-[75vh] overflow-y-auto">
+        <!-- รหัส Diagram -->
+        <sic-input
+          label="รหัส Diagram"
+          [(ngModel)]="diagramCode"
+          [ngModelOptions]="{ standalone: true }"
+          placeholder="ป้อนรหัส diagram เช่น DIAG-001"
+          [required]="true"
+        ></sic-input>
+
         <!-- ชื่อ Diagram -->
         <sic-input
           label="ชื่อ Diagram"
@@ -128,12 +138,13 @@ export interface DiagramEditData {
   `
 })
 export class NewDiagramDialogComponent implements OnInit {
-  @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string, flowId?: string) => void;
+  @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string, flowId?: string, diagramCode?: string) => void;
   @Input() editData: DiagramEditData | null = null;
   @Input() projectId!: string;
   @Input() selectedRequirementId: string = '';
   @Input() requirementTitle: string = '';
 
+  diagramCode = '';
   name = '';
   type = 'DFD';
   selectedFlowId: string | null = null;
@@ -151,6 +162,7 @@ export class NewDiagramDialogComponent implements OnInit {
     }
 
     if (this.editData) {
+      this.diagramCode = this.editData.diagramCode || '';
       this.name = this.editData.name;
       this.type = this.editData.type;
       if (this.editData.requirementId) {
@@ -213,7 +225,7 @@ export class NewDiagramDialogComponent implements OnInit {
   }
 
   get canSave(): boolean {
-    return this.name.trim().length > 0 && this.type.length > 0;
+    return this.diagramCode.trim().length > 0 && this.name.trim().length > 0 && this.type.length > 0;
   }
 
   save(): void {
@@ -223,7 +235,8 @@ export class NewDiagramDialogComponent implements OnInit {
       this.type,
       this.editData || undefined,
       this.selectedRequirementId,
-      this.selectedFlowId || undefined
+      this.selectedFlowId || undefined,
+      this.diagramCode.trim()
     );
     this.dialogService.close(true);
   }

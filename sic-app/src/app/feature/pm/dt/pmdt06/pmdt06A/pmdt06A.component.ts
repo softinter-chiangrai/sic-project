@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import {
     FormBuilder,
     FormGroup,
@@ -65,6 +65,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     private approvalService = inject(ApprovalService);
     private businessService = inject(BusinessService);
     private impactService = inject(ImpactAnalysisService);
+    private cdr = inject(ChangeDetectorRef);
     private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
     get businessId() {
@@ -106,6 +107,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         targetVersion: [null],
         assigneeId: [null],
         assigneeIds: [[], Validators.required],
+        approvalFlowId: [null],
         rowVersion: [null],
     }));
 
@@ -117,7 +119,17 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     readonly targetTypeOptions = [
         { value: 'REQUIREMENT', text: 'ความต้องการระบบ (Requirement)' },
         { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ (Specification)' },
+        { value: 'DIAGRAM', text: 'แผนภาพระบบ (Diagram)' },
+        { value: 'CONTRACT', text: 'สัญญาโครงการ (Contract)' },
+        { value: 'DESIGN_REVIEW', text: 'การตรวจทานการออกแบบ (Design Review)' },
+        { value: 'DELIVERY', text: 'การส่งมอบงาน (Delivery)' },
+        { value: 'USER_MANUAL', text: 'คู่มือการใช้งาน (User Manual)' },
+        { value: 'INVOICE', text: 'ใบแจ้งหนี้ (Invoice)' },
+        { value: 'MA_TICKET', text: 'รายการแจ้งซ่อม / MA (MA Ticket)' },
+        { value: 'MA_RENEWAL', text: 'การต่ออายุสัญญา MA (MA Renewal)' },
     ];
+    targetDocumentOptions = signal<any[]>([]);
+    isTargetLocked = signal(false);
     selectedAssignees = signal<{ userId: string; userName: string }[]>([]);
     selectedAssigneeIds = computed(() => this.selectedAssignees().map(a => a.userId));
 
@@ -150,6 +162,22 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             return environment.apiBaseUrl + '/api/pm/requirement/combobox';
         } else if (type === 'SPECIFICATION') {
             return environment.apiBaseUrl + '/api/pm/specifications/combobox';
+        } else if (type === 'DIAGRAM') {
+            return environment.apiBaseUrl + '/api/diagram/tabs/combobox';
+        } else if (type === 'CONTRACT') {
+            return environment.apiBaseUrl + '/api/pm/contracts/combobox';
+        } else if (type === 'DESIGN_REVIEW') {
+            return environment.apiBaseUrl + '/api/pm/design-reviews/combobox-specification';
+        } else if (type === 'DELIVERY') {
+            return environment.apiBaseUrl + '/api/pm/delivery/combobox';
+        } else if (type === 'USER_MANUAL') {
+            return environment.apiBaseUrl + '/api/pm/manual/paging';
+        } else if (type === 'INVOICE') {
+            return environment.apiBaseUrl + '/api/pm/invoices/paging';
+        } else if (type === 'MA_TICKET') {
+            return environment.apiBaseUrl + '/api/pm/ma-tickets/paging';
+        } else if (type === 'MA_RENEWAL') {
+            return environment.apiBaseUrl + '/api/pm/ma-renewals/paging';
         }
         return '';
     });
@@ -171,27 +199,33 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             }
         });
 
+        this.form.get('targetType')?.valueChanges.subscribe((val) => {
+            this.selectedTargetType.set(val);
+            this.form.get('targetId')?.setValue(null);
+        });
+
         this.route.queryParams.subscribe((qParams) => {
             if (qParams['projectId']) {
                 this.projectId = qParams['projectId'];
                 this.form.patchValue({ projectId: this.projectId });
             }
 
-            // มาจากปุ่ม "ขอแก้ไข (Open Change Request)" ของเอกสารที่ถูกล็อค — เติมค่า target ให้อัตโนมัติ
+            // มาจากปุ่ม "ขอแก้ไข (Open Change Request)" ของเอกสารที่ถูกล็อค — เติมค่า target ให้อัตโนมัติและล็อคไม่ให้แก้ไข
             // (ใช้เฉพาะตอนสร้างใหม่ ไม่ใช่ตอนแก้ไข CR เดิม ซึ่งค่า targetType/targetId จะมาจาก loadChangeRequest แทน)
             if (!this.changeRequestId && qParams['targetType'] && qParams['targetId']) {
+                this.isTargetLocked.set(true);
                 this.selectedTargetType.set(qParams['targetType']);
+                this.form.get('targetType')?.setValue(qParams['targetType'], { emitEvent: false });
+                if (qParams['targetTitle']) {
+                    this.targetDocumentOptions.set([
+                        { value: qParams['targetId'], text: qParams['targetTitle'] }
+                    ]);
+                }
                 this.form.patchValue({
-                    targetType: qParams['targetType'],
                     targetId: qParams['targetId'],
                     title: qParams['targetTitle'] ? `คำขอเปลี่ยนแปลง: ${qParams['targetTitle']}` : null,
                 });
             }
-        });
-
-        this.form.get('targetType')?.valueChanges.subscribe((val) => {
-            this.selectedTargetType.set(val);
-            this.form.get('targetId')?.setValue(null);
         });
 
         this.loadFlows();
@@ -204,7 +238,12 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             .pipe(finalize(() => (this.isLoadingFlows = false)))
             .subscribe({
                 next: (flows) => {
-                    this.flows = flows;
+                    this.flows = flows || [];
+                    if (!this.selectedFlowId && this.flows.length > 0 && !this.changeRequestId) {
+                        this.selectedFlowId = this.flows[0].id;
+                        this.form.patchValue({ approvalFlowId: this.selectedFlowId });
+                    }
+                    this.cdr.detectChanges();
                 },
                 error: () => {
                     console.warn('ไม่สามารถโหลด Approval Flow สำหรับ Change Request');
@@ -212,11 +251,38 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             });
     }
 
+    onFlowChange(event: any) {
+        const flowId = event?.id ?? event?.value ?? event ?? null;
+        this.selectedFlowId = flowId;
+        this.form.patchValue({ approvalFlowId: flowId });
+        this.cdr.detectChanges();
+    }
+
+    loadApprovalFlowForCR(crId: string) {
+        this.approvalService.getDocumentStatus('CHANGE_REQUEST', crId).subscribe({
+            next: (approval) => {
+                let flowId: string | null = null;
+                if (approval && (approval as any).flowId) {
+                    flowId = (approval as any).flowId;
+                } else if (approval && (approval as any).flow?.id) {
+                    flowId = (approval as any).flow.id;
+                }
+                if (flowId) {
+                    this.selectedFlowId = flowId;
+                    this.form.patchValue({ approvalFlowId: flowId });
+                }
+                this.cdr.detectChanges();
+            },
+            error: () => {
+                // ไม่มี approval หรือ error
+            }
+        });
+    }
+
     loadChangeRequest(id: string) {
         this.isLoading = true;
         this.http
             .get<ChangeRequestFormModel>(`${this.baseUrl}/${id}`)
-
             .pipe(finalize(() => (this.isLoading = false)))
             .subscribe({
                 next: (data) => {
@@ -226,6 +292,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     this.currentStatus = (data as any).status ?? null;
                     this.currentIsLocked = !!(data as any).isLocked;
                     this.formData.patchValue(data);
+                    this.loadApprovalFlowForCR(id);
                     if (data.status === 'SUBMITTED' || data.status === 'APPROVED' || data.status === 'IMPLEMENTED') {
                         this.isView = true;
                         this.isEdit = false;
@@ -328,7 +395,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         }
 
         this.isSaving = true;
-        const data = { ...this.form.value };
+        const data = { ...this.form.getRawValue() };
 
         if (!data.projectId && this.projectId) {
             data.projectId = this.projectId;

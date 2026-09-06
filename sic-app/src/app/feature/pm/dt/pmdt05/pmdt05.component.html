@@ -87,7 +87,7 @@
     @for (tab of tabs(); track tab.id) {
       <div
         (click)="switchTab(tab.id)"
-        (dblclick)="editTab(tab.id)"
+        (dblclick)="(!tab.isApproved && tab.approvalStatus !== 'APPROVED') ? editTab(tab.id) : null"
         class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer select-none"
         [class.border-[var(--crm-primary)]]="currentTabId === tab.id"
         [class.bg-[var(--sidebar-hover)]]="currentTabId === tab.id"
@@ -101,6 +101,12 @@
         <span class="text-sm font-medium">
           {{ tab.name }}
         </span>
+
+        @if (tab.diagramCode) {
+          <span class="text-[0.68rem] px-1.5 py-0.5 rounded font-mono bg-[var(--border)] text-[var(--text-muted)]">
+            {{ tab.diagramCode }}
+          </span>
+        }
 
         <span class="text-[0.65rem] opacity-60 text-[var(--text-muted)]">
           {{ tab.diagramType }}
@@ -133,23 +139,25 @@
           </span>
         } @else {
           <span
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-normal bg-slate-500/10 text-[var(--text-muted)] border border-slate-500/20 opacity-75"
+            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-400 dark:text-sky-300 border border-sky-500/30"
             title="ยังไม่ส่งอนุมัติ (ฉบับร่าง)"
           >
-            <i class="bi bi-dash-circle text-[9px]"></i>
+            <i class="bi bi-file-earmark-text text-[9px] text-sky-400"></i>
             <span>ยังไม่อนุมัติ</span>
           </span>
         }
 
-        <!-- ปุ่มแก้ไขข้อมูล Tab (รูปดินสอ) -->
-        <button
-          (click)="editTab(tab.id); $event.stopPropagation()"
-          class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
-          [class.opacity-100]="currentTabId === tab.id"
-          title="แก้ไขข้อมูล / ส่ง Approve"
-        >
-          <i class="bi bi-pencil text-xs"></i>
-        </button>
+        <!-- ปุ่มแก้ไขข้อมูล Tab (รูปดินสอ) - ซ่อนเมื่ออนุมัติแล้ว -->
+        @if (!tab.isApproved && tab.approvalStatus !== 'APPROVED') {
+          <button
+            (click)="editTab(tab.id); $event.stopPropagation()"
+            class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
+            [class.opacity-100]="currentTabId === tab.id"
+            title="แก้ไขข้อมูล / ส่ง Approve"
+          >
+            <i class="bi bi-pencil text-xs"></i>
+          </button>
+        }
 
         <!-- ปุ่มลบ Tab (ซ่อนถ้าผ่านการอนุมัติแล้ว) -->
         @if (!tab.isApproved && tab.approvalStatus !== 'APPROVED') {

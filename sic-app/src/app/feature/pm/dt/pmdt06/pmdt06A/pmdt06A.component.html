@@ -29,6 +29,8 @@
             formControlName="targetType"
             [options]="targetTypeOptions"
             [required]="true"
+            [disabled]="isTargetLocked()"
+            [clearable]="!isTargetLocked()"
             placeholder="เลือกประเภทเอกสาร"
           ></sic-combobox>
         </div>
@@ -39,10 +41,13 @@
             label="เอกสารที่ขอเปลี่ยนแปลง"
             formControlName="targetId"
             [apiUrl]="targetDocumentApiUrl()"
+            [options]="targetDocumentOptions()"
             [params]="{ projectId: projectId }"
             valueField="value"
             textField="text"
             [required]="true"
+            [disabled]="isTargetLocked()"
+            [clearable]="!isTargetLocked()"
             [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
           ></sic-combobox>
         </div>
@@ -103,7 +108,7 @@
       <div class="border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
+          กระบวนการอนุมัติ (Approval Flow)
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -114,13 +119,14 @@
             textField="flowName"
             placeholder="เลือกกระบวนการอนุมัติ"
             [clearable]="true"
-            (selectionChanged)="selectedFlowId = $event?.id"
+            formControlName="approvalFlowId"
+            (selectionChanged)="onFlowChange($event)"
           ></sic-combobox>
         </div>
 
         @if (!selectedFlowId && flows.length > 0) {
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            * กรุณาเลือกกระบวนการอนุมัติ
+            * สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก
           </p>
         }
       </div>

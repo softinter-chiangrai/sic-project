@@ -27,4 +27,6 @@ public interface PmDiagramTabService {
     List<PmDiagramVersionResponse> getVersions(UUID tabId);
 
     PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId);
+
+    List<com.softinter.sicapi.dto.response.ComboboxResponse> getComboboxDiagrams(UUID projectId);
 }

@@ -275,8 +275,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: null,
         selectedRequirementId: reqId,
         requirementTitle: reqTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -304,8 +304,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: null,
         selectedRequirementId: reqId,
         requirementTitle: reqTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -331,8 +331,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: null,
         selectedRequirementId: requirementId,
         requirementTitle: requirementTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId).subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -358,6 +358,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       id: tab.id,
       name: tab.name,
       type: tab.diagramType,
+      diagramCode: tab.diagramCode,
       rowVersion: tab.rowVersion || 0,
       requirementId: tab.requirementId,
       requirementTitle: tab.requirementTitle,
@@ -372,12 +373,13 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: editData,
         selectedRequirementId: tab.requirementId || '',
         requirementTitle: tab.requirementTitle || '',
-        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string, flowId?: string) => {
+        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
           if (!data) return;
           const updatedTab = {
             ...tab,
             name: name,
             diagramType: type,
+            diagramCode: diagramCode || undefined,
             requirementId: reqId || undefined,
             state: 3,
             rowVersion: data.rowVersion || 0,
@@ -389,7 +391,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                   .submitForApproval({
                     documentType: 'DIAGRAM',
                     documentId: res.id,
-                    documentCode: 'DIAG-' + res.id.substring(0, 8).toUpperCase(),
+                    documentCode: res.diagramCode || ('DIAG-' + res.id.substring(0, 8).toUpperCase()),
                     documentTitle: res.name || 'Diagram Document',
                     flowId: flowId,
                     comment: 'ส่งขออนุมัติ Diagram จากการแก้ไขข้อมูล',
@@ -467,12 +469,19 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   requestChangeForCurrentTab(): void {
     const tab = this.tabs().find((t) => t.id === this.currentTabId);
     if (!tab) return;
+    let title = tab.name;
+    if (tab.diagramCode) {
+      title = `[${tab.diagramCode}] ${tab.name}`;
+    }
+    if (tab.diagramType) {
+      title += ` (${tab.diagramType})`;
+    }
     this.router.navigate(['/feature/pm/change-request/new'], {
       queryParams: {
         projectId: this.projectId,
         targetType: 'DIAGRAM',
         targetId: tab.id,
-        targetTitle: tab.name,
+        targetTitle: title,
       },
     });
   }

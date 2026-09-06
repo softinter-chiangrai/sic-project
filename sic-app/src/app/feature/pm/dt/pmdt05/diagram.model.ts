@@ -25,6 +25,7 @@ export interface DiagramModel {
   updatedAt: string;
   state?: number;
   rowVersion?: number;
+  diagramCode?: string;
   requirementId?: string;
   requirementTitle?: string;
   approvalStatus?: string;

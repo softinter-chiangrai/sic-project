@@ -29,6 +29,12 @@ public class PmDiagramTabController {
         return ResponseEntity.ok(tabService.getTabs(projectId));
     }
 
+    @GetMapping("/combobox")
+    public ResponseEntity<List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxDiagrams(
+            @RequestParam(required = false) UUID projectId) {
+        return ResponseEntity.ok(tabService.getComboboxDiagrams(projectId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<PmDiagramTabResponse> getTab(@PathVariable UUID id) {
         return ResponseEntity.ok(tabService.getTab(id));

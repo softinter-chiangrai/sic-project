@@ -582,6 +582,27 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         return dto;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.softinter.sicapi.dto.response.ComboboxResponse> getComboboxDiagrams(UUID projectId) {
+        if (projectId == null) {
+            return List.of();
+        }
+        List<PmDiagramTab> tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+        return tabs.stream()
+                .map(t -> {
+                    String label = t.getName();
+                    if (t.getDiagramCode() != null && !t.getDiagramCode().isBlank()) {
+                        label = "[" + t.getDiagramCode() + "] " + label;
+                    }
+                    if (t.getDiagramType() != null && !t.getDiagramType().isBlank()) {
+                        label = label + " (" + t.getDiagramType() + ")";
+                    }
+                    return new com.softinter.sicapi.dto.response.ComboboxResponse(t.getId().toString(), label);
+                })
+                .collect(Collectors.toList());
+    }
+
     private PmDiagramVersionResponse toVersionResponse(PmDiagramVersion version) {
         PmDiagramVersionResponse dto = new PmDiagramVersionResponse();
         dto.setId(version.getId());
