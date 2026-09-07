@@ -13,6 +13,13 @@ resources/
 drawio-dev/
 component/ 
 public/
+report-service/
+.agents/
+design/
+data/
+docker/
+.devcontainer/
+.mvn/
 
 
 # โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)

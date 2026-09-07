@@ -43,6 +43,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmChangeImpactRepository pmChangeImpactRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final com.softinter.sicapi.repository.pm.PmDiagramTabRepository diagramTabRepository;
+    private final PmDeliveryRepository deliveryRepository;
+    private final PmUserManualRepository userManualRepository;
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
@@ -68,6 +70,15 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             } else if ("SPECIFICATION".equalsIgnoreCase(request.getTargetType())) {
                 projId = specificationRepository.findById(request.getTargetId())
                         .map(s -> s.getProject() != null ? s.getProject().getId() : null)
+                        .orElse(null);
+            } else if ("DELIVERY".equalsIgnoreCase(request.getTargetType())) {
+                projId = deliveryRepository.findById(request.getTargetId())
+                        .map(PmDelivery::getProjectId)
+                        .orElse(null);
+            } else if ("USER_MANUAL".equalsIgnoreCase(request.getTargetType())
+                    || "MANUAL".equalsIgnoreCase(request.getTargetType())) {
+                projId = userManualRepository.findById(request.getTargetId())
+                        .map(PmUserManual::getProjectId)
                         .orElse(null);
             }
         }
@@ -534,6 +545,15 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 return specificationRepository.findById(targetId)
                         .map(s -> documentVersionService.incrementVersion(s.getVersion()))
                         .orElse("v1.1");
+            case "DELIVERY":
+                return deliveryRepository.findById(targetId)
+                        .map(d -> documentVersionService.incrementVersion(d.getDeliveryVersion()))
+                        .orElse("0.2");
+            case "USER_MANUAL":
+            case "MANUAL":
+                return userManualRepository.findById(targetId)
+                        .map(m -> documentVersionService.incrementVersion(m.getVersion()))
+                        .orElse("0.2");
             case "DIAGRAM":
             default:
                 return "v1.1";

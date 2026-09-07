@@ -283,9 +283,10 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
       this.isSaving.set(true);
       this.service.saveProgram(data).subscribe({
         next: () => {
+          this.isSaved = true;
+          this.formData.markAsPristine();
           this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
           this.isSaving.set(false);
-          this.programForm.markAsPristine();
           this.router.navigate(['/feature/bu/program']);
         },
         error: (err: any) => {
@@ -299,9 +300,10 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     this.isSaving.set(true);
     this.service.saveProgram(data).subscribe({
       next: () => {
+        this.isSaved = true;
+        this.formData.markAsPristine();
         this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
         this.isSaving.set(false);
-        this.programForm.markAsPristine();
         this.router.navigate(['/feature/bu/program']);
       },
       error: (err: any) => {
@@ -351,9 +353,10 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
       next: () => {
         this.service.bulkSaveRolePermissions(programId, modules).subscribe({
           next: () => {
+            this.isSaved = true;
+            this.formData.markAsPristine();
             this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
             this.isSaving.set(false);
-            this.programForm.markAsPristine();
             this.router.navigate(['/feature/bu/program']);
           },
           error: (err: any) => {

@@ -278,6 +278,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
             documentId: savedId,
             documentCode: formVal.manualCode || payload.manualCode,
             documentTitle: formVal.manualTitle ? ('คู่มือการใช้งาน ' + formVal.manualTitle) : 'คู่มือการใช้งาน',
+            version: res?.version || formVal.version,
             flowId: this.selectedFlowId()!,
             comment: 'ส่งขออนุมัติคู่มือการใช้งาน (User Manual)'
           }).subscribe({

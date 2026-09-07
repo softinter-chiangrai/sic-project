@@ -730,6 +730,8 @@ public class ApprovalServiceImpl implements ApprovalService {
                     String newVersion = versionService.incrementVersion(req.getVersion());
                     req.setVersion(newVersion);
                     requirementRepository.save(req);
+                    versionService.createVersion("REQUIREMENT", req.getId(), req.getProjectId(),
+                            req.getRequirementCode(), newVersion, reason);
                 });
                 break;
             case "SPECIFICATION":
@@ -738,6 +740,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                     String newVersion = versionService.incrementVersion(spec.getVersion());
                     spec.setVersion(newVersion);
                     specificationRepository.save(spec);
+                    UUID specProjectId = spec.getProject() != null ? spec.getProject().getId() : null;
+                    versionService.createVersion("SPEC", spec.getId(), specProjectId,
+                            spec.getSpecificationCode(), newVersion, reason);
                 });
                 break;
             case "DESIGN_REVIEW":
@@ -761,6 +766,8 @@ public class ApprovalServiceImpl implements ApprovalService {
                     String newVersion = versionService.incrementVersion(del.getDeliveryVersion());
                     del.setDeliveryVersion(newVersion);
                     deliveryRepository.save(del);
+                    versionService.createVersion("DELIVERY", del.getId(), del.getProjectId(),
+                            del.getDeliveryCode(), "v" + newVersion, reason);
                 });
                 break;
             case "INVOICE":
@@ -787,6 +794,8 @@ public class ApprovalServiceImpl implements ApprovalService {
                     String newVersion = versionService.incrementVersion(man.getVersion());
                     man.setVersion(newVersion);
                     userManualRepository.save(man);
+                    versionService.createVersion("MANUAL", man.getId(), man.getProjectId(),
+                            man.getManualCode(), newVersion, reason);
                 });
                 break;
             case "PROJECT":
@@ -900,6 +909,31 @@ public class ApprovalServiceImpl implements ApprovalService {
                 break;
             default:
                 break;
+        }
+    }
+
+    /**
+     * ApprovalService/PmApproval ทั้งระบบใช้ documentType กลาง (เช่น "SPECIFICATION", "USER_MANUAL", "DIAGRAM")
+     * แต่บาง ServiceImpl บันทึกประวัติเวอร์ชันของตัวเองด้วยชื่อย่อที่ต่างออกไป (เช่น "SPEC", "MANUAL", หรือ
+     * ชนิดไดอะแกรมจริงอย่าง "DFD"/"ER") ต้องแปลงให้ตรงกันก่อนเขียนลง pm_document_version มิฉะนั้นประวัติ
+     * ที่สร้างตอนอนุมัติจะแยกกลุ่มกับประวัติที่สร้างตอนบันทึกปกติ ทำให้หน้าจอ Document Version History
+     * (ซึ่งกรองด้วยชื่อย่อเหล่านี้) มองไม่เห็น record ที่สร้างตอนอนุมัติเลย
+     */
+    private String normalizeDocTypeForVersion(String docType, UUID docId) {
+        if (docType == null) {
+            return docType;
+        }
+        switch (docType.toUpperCase()) {
+            case "SPECIFICATION":
+                return "SPEC";
+            case "USER_MANUAL":
+                return "MANUAL";
+            case "DIAGRAM":
+                return diagramTabRepository.findById(docId)
+                        .map(t -> t.getDiagramType().toUpperCase())
+                        .orElse(docType);
+            default:
+                return docType;
         }
     }
 
@@ -1033,6 +1067,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "DELIVERY":
                 deliveryRepository.findById(docId).ifPresent(del -> {
                     del.setStatus("CONFIRMED");
+                    del.setIsLocked(true);
+                    del.setDeliveryVersion(majorVersion);
                     del.setPmApprovedBy(approval.getFinalApprover());
                     del.setPmApprovedDate(Instant.now());
                     deliveryRepository.save(del);
@@ -1096,7 +1132,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         // Auto Create Document Version on Approval
         try {
             DocumentVersionRequest versionReq = new DocumentVersionRequest();
-            versionReq.setDocumentType(docType);
+            versionReq.setDocumentType(normalizeDocTypeForVersion(docType, docId));
             versionReq.setDocumentId(docId);
             versionReq.setDocumentCode(approval.getDocumentCode());
             versionReq.setVersionNo(majorVersion);
