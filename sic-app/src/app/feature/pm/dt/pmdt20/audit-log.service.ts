@@ -24,6 +24,12 @@ export interface AuditLog {
   details?: string;
 }
 
+export interface AuditLogUser {
+  username: string;
+  userFullname?: string;
+  userId?: string;
+}
+
 export interface AuditLogPageResponse {
   content: AuditLog[];
   totalPages: number;
@@ -59,6 +65,14 @@ export class AuditLogService {
     if (queryParams.sortDir) params = params.set('sortDir', queryParams.sortDir);
 
     return this.http.get<AuditLogPageResponse>(this.apiUrl, { params });
+  }
+
+  getModules(): Observable<string[]> {
+    return this.http.get<string[]>(`${this.apiUrl}/modules`);
+  }
+
+  getUsers(): Observable<AuditLogUser[]> {
+    return this.http.get<AuditLogUser[]>(`${this.apiUrl}/users`);
   }
 
   recordLog(data: Partial<AuditLog>): Observable<void> {

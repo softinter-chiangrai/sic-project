@@ -2,8 +2,10 @@ package com.softinter.sicapi.service;
 
 import com.softinter.sicapi.dto.request.AuditLogRequest;
 import com.softinter.sicapi.dto.response.AuditLogResponse;
+import com.softinter.sicapi.dto.response.AuditLogUserResponse;
 import org.springframework.data.domain.Page;
 
+import java.util.List;
 import java.util.UUID;
 
 public interface AuditLogService {
@@ -14,4 +16,8 @@ public interface AuditLogService {
     void log(String action, String module, String description, String targetType, UUID targetId, String oldValue, String newValue, String status, String details);
 
     Page<AuditLogResponse> getLogs(String searchTerm, String module, String status, String username, int page, int size, String sortBy, String sortDir);
+
+    List<String> getDistinctModules();
+
+    List<AuditLogUserResponse> getDistinctUsers();
 }

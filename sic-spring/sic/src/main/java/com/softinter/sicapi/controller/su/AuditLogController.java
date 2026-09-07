@@ -2,6 +2,7 @@ package com.softinter.sicapi.controller.su;
 
 import com.softinter.sicapi.dto.request.AuditLogRequest;
 import com.softinter.sicapi.dto.response.AuditLogResponse;
+import com.softinter.sicapi.dto.response.AuditLogUserResponse;
 import com.softinter.sicapi.service.AuditLogService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/su/audit-logs")
@@ -34,6 +37,18 @@ public class AuditLogController {
             @RequestParam(defaultValue = "createdDate") String sortBy,
             @RequestParam(defaultValue = "desc") String sortDir) {
         return ResponseEntity.ok(auditLogService.getLogs(searchTerm, module, status, username, page, size, sortBy, sortDir));
+    }
+
+    @GetMapping("/modules")
+    @Operation(summary = "Get list of unique modules for filter")
+    public ResponseEntity<List<String>> getModules() {
+        return ResponseEntity.ok(auditLogService.getDistinctModules());
+    }
+
+    @GetMapping("/users")
+    @Operation(summary = "Get list of unique users for filter")
+    public ResponseEntity<List<AuditLogUserResponse>> getUsers() {
+        return ResponseEntity.ok(auditLogService.getDistinctUsers());
     }
 
     @PostMapping

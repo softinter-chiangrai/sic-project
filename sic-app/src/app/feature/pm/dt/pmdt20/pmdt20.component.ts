@@ -20,60 +20,6 @@ interface AuditLog {
   details?: string;
 }
 
-// ===== Mock Data =====
-const MOCK_LOGS: AuditLog[] = [
-  {
-    id: '1',
-    user: 'สมชาย ใจดี',
-    action: 'เข้าสู่ระบบ',
-    module: 'Authentication',
-    description: 'ผู้ใช้ login ด้วย Username: somchai',
-    ipAddress: '192.168.1.100',
-    timestamp: '2024-02-20 09:00:00',
-    status: 'Success',
-  },
-  {
-    id: '2',
-    user: 'สมหญิง รักเรียน',
-    action: 'อัปเดต Requirement',
-    module: 'Requirement Management',
-    description: 'แก้ไข Requirement REQ-002 (จัดการข้อมูลลูกค้า)',
-    ipAddress: '192.168.1.101',
-    timestamp: '2024-02-20 10:30:00',
-    status: 'Success',
-  },
-  {
-    id: '3',
-    user: 'วิชัย พัฒนาชัย',
-    action: 'สร้าง Bug',
-    module: 'Bug Management',
-    description: 'แจ้ง Bug BUG-003 (Tax ID ซ้ำ)',
-    ipAddress: '192.168.1.102',
-    timestamp: '2024-02-20 14:00:00',
-    status: 'Success',
-  },
-  {
-    id: '4',
-    user: 'มานี มีทรัพย์',
-    action: 'ลบ Project',
-    module: 'Project Management',
-    description: 'พยายามลบ Project PRJ-002 (ระบบ HR)',
-    ipAddress: '192.168.1.103',
-    timestamp: '2024-02-20 16:45:00',
-    status: 'Failed',
-  },
-  {
-    id: '5',
-    user: 'สมศักดิ์ รุ่งเรือง',
-    action: 'ส่งออกเอกสาร',
-    module: 'Delivery Management',
-    description: 'ส่งออก Delivery Document DEL-001',
-    ipAddress: '192.168.1.104',
-    timestamp: '2024-02-21 09:30:00',
-    status: 'Success',
-  },
-];
-
 import { FormsModule } from '@angular/forms';
 import { AuditLogService } from './audit-log.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -102,10 +48,53 @@ export class Pmdt20Component implements OnInit {
   protected isLoading = signal(false);
 
   // ===== Data =====
-  protected logs = signal<AuditLog[]>(MOCK_LOGS);
+  protected logs = signal<AuditLog[]>([]);
+
+  // ===== Options =====
+  protected moduleSelectOptions = signal<{ value: string; text: string }[]>([]);
+  protected userSelectOptions = signal<{ value: string; text: string }[]>([]);
+
+  readonly statusSelectOptions = [
+    { value: 'Success', text: 'Success' },
+    { value: 'Failed', text: 'Failed' },
+  ];
 
   ngOnInit() {
+    this.loadFilterOptions();
     this.loadLogs();
+  }
+
+  loadFilterOptions() {
+    this.auditLogService.getModules().subscribe({
+      next: (modules) => {
+        if (modules && modules.length > 0) {
+          this.moduleSelectOptions.set(modules.map((m) => ({ value: m, text: m })));
+        }
+      },
+      error: (err) => {
+        console.warn('Failed to load audit modules from backend:', err);
+      },
+    });
+
+    this.auditLogService.getUsers().subscribe({
+      next: (users) => {
+        if (users && users.length > 0) {
+          this.userSelectOptions.set(
+            users.map((u) => {
+              const val = u.username || u.userId || u.userFullname || '';
+              let text = u.userFullname || u.username || u.userId || '';
+              if (u.userFullname && u.username && u.userFullname !== u.username) {
+                text = `${u.userFullname} (${u.username})`;
+              }
+              return { value: val, text };
+            })
+          );
+        }
+      },
+      error: (err) => {
+        console.warn('Failed to load audit users from backend:', err);
+      },
+    });
   }
 
   // ===== Server Pagination State =====
@@ -153,10 +142,11 @@ export class Pmdt20Component implements OnInit {
         this.isLoading.set(false);
       },
       error: (err) => {
-        console.warn('Backend AuditLog API unavailable, falling back to mock data:', err);
+        console.warn('Backend AuditLog API error:', err);
         this.isLoading.set(false);
-        this.totalItems.set(MOCK_LOGS.length);
-        this.totalPages.set(Math.ceil(MOCK_LOGS.length / this.pageSize()));
+        this.logs.set([]);
+        this.totalItems.set(0);
+        this.totalPages.set(1);
       }
     });
   }
@@ -180,76 +170,6 @@ export class Pmdt20Component implements OnInit {
   });
 
   protected Math = Math;
-
-  // ===== Options =====
-  readonly moduleSelectOptions = [
-    'Authentication',
-    'Customer Management',
-    'Contract Management',
-    'Project Management',
-    'Requirement Management',
-    'Change Control',
-    'DFD Designer',
-    'ER Designer',
-    'Specification Management',
-    'Design Review',
-    'Planning & Task',
-    'Task Tracking',
-    'Test Management',
-    'Bug Management',
-    'Delivery Management',
-    'User Manual',
-    'Invoice & Payment',
-    'MA Support Ticket',
-    'Renewal / Extension',
-    'Approval Center',
-    'Dashboard & Report',
-    'Document Version Control',
-    'Audit Log',
-    'User Management',
-  ].map((m) => ({ value: m, text: m }));
-
-  readonly statusSelectOptions = [
-    { value: 'Success', text: 'Success' },
-    { value: 'Failed', text: 'Failed' },
-  ];
-
-  readonly userSelectOptions = [
-    'สมชาย ใจดี',
-    'สมหญิง รักเรียน',
-    'วิชัย พัฒนาชัย',
-    'มานี มีทรัพย์',
-    'สมศักดิ์ รุ่งเรือง',
-  ].map((u) => ({ value: u, text: u }));
-
-  moduleOptions = [
-    'Authentication',
-    'Customer Management',
-    'Contract Management',
-    'Project Management',
-    'Requirement Management',
-    'Change Control',
-    'DFD Designer',
-    'ER Designer',
-    'Specification Management',
-    'Design Review',
-    'Planning & Task',
-    'Task Tracking',
-    'Test Management',
-    'Bug Management',
-    'Delivery Management',
-    'User Manual',
-    'Invoice & Payment',
-    'MA Support Ticket',
-    'Renewal / Extension',
-    'Approval Center',
-    'Dashboard & Report',
-    'Document Version Control',
-    'Audit Log',
-    'User Management',
-  ];
-  statusOptions = ['Success', 'Failed'];
-  userOptions = ['สมชาย ใจดี', 'สมหญิง รักเรียน', 'วิชัย พัฒนาชัย', 'มานี มีทรัพย์', 'สมศักดิ์ รุ่งเรือง'];
 
   // ===== Actions =====
   onSearch(event: Event) {

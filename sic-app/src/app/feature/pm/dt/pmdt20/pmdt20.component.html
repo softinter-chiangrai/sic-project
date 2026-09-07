@@ -47,7 +47,7 @@
     <!-- Filter: Module -->
     <div class="min-w-[190px]">
       <sic-combobox
-        [options]="moduleSelectOptions"
+        [options]="moduleSelectOptions()"
         [ngModel]="filterModule()"
         (ngModelChange)="onModuleChange($event)"
         placeholder="📋 ทุกโมดูล"
@@ -69,7 +69,7 @@
     <!-- Filter: User -->
     <div class="min-w-[170px]">
       <sic-combobox
-        [options]="userSelectOptions"
+        [options]="userSelectOptions()"
         [ngModel]="filterUser()"
         (ngModelChange)="onUserChange($event)"
         placeholder="👤 ทุกคน"

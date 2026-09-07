@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -23,7 +24,7 @@ public interface SuAuditLogRepository extends JpaRepository<SuAuditLog, UUID>, J
            " LOWER(a.module) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
            "(:module IS NULL OR :module = '' OR :module = 'all' OR a.module = :module) AND " +
            "(:status IS NULL OR :status = '' OR :status = 'all' OR LOWER(a.status) = LOWER(:status)) AND " +
-           "(:username IS NULL OR :username = '' OR :username = 'all' OR a.username = :username OR a.userFullname = :username)")
+           "(:username IS NULL OR :username = '' OR :username = 'all' OR a.username = :username OR a.userFullname = :username OR a.userId = :username)")
     Page<SuAuditLog> searchLogs(
             @Param("searchTerm") String searchTerm,
             @Param("module") String module,
@@ -31,4 +32,10 @@ public interface SuAuditLogRepository extends JpaRepository<SuAuditLog, UUID>, J
             @Param("username") String username,
             Pageable pageable
     );
+
+    @Query("SELECT DISTINCT a.module FROM SuAuditLog a WHERE a.module IS NOT NULL AND a.module <> '' ORDER BY a.module ASC")
+    List<String> findDistinctModules();
+
+    @Query("SELECT DISTINCT a.username, a.userFullname, a.userId FROM SuAuditLog a WHERE (a.username IS NOT NULL AND a.username <> '') OR (a.userFullname IS NOT NULL AND a.userFullname <> '') ORDER BY a.username ASC")
+    List<Object[]> findDistinctUsers();
 }
