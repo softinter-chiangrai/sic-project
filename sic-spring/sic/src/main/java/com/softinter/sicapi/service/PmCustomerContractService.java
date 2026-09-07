@@ -19,6 +19,16 @@ public interface PmCustomerContractService {
             Pageable pageable
     );
 
+    Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Pageable pageable
+    );
+
     PmCustomerContractResponse getContract(UUID id);
 
     UUID saveContract(UUID businessId, PmCustomerContractRequest request);

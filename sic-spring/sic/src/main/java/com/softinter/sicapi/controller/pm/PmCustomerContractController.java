@@ -62,10 +62,12 @@ public class PmCustomerContractController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String contractType,
+            @RequestParam(required = false) UUID customerId,
+            @RequestParam(required = false) UUID projectId,
             @PageableDefault(size = 10, sort = "contractNo", direction = Sort.Direction.ASC) Pageable pageable
     ) {
         UUID businessId = businessAccessService.getBusinessId();
-        Page<PmCustomerContractResponse> pageResult = contractService.getContracts(businessId, keyword, status, contractType, pageable);
+        Page<PmCustomerContractResponse> pageResult = contractService.getContracts(businessId, customerId, projectId, keyword, status, contractType, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 

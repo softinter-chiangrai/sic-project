@@ -12,7 +12,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.Transient;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -68,9 +67,10 @@ public class PmCustomerContract extends BaseBusinessEntity {
     @JoinColumn(name = "parent_contract_id", insertable = false, updatable = false)
     private PmCustomerContract parentContract;
 
-    @Transient
+    @Column(name = "project_id")
     private UUID projectId;
 
-    @Transient
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "project_id", insertable = false, updatable = false)
     private PmCustomerProject project;
 }

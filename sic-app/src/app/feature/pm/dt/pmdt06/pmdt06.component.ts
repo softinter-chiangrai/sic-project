@@ -7,6 +7,7 @@ import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 import { ChangeRequestService } from './change-request.service';
 import { ApprovalService } from '../pmdt03/approval.service';
@@ -38,6 +39,7 @@ export class Pmdt06Component implements OnInit {
   private router = inject(Router);
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
   private crService = inject(ChangeRequestService);
   private approvalService = inject(ApprovalService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
@@ -75,7 +77,12 @@ export class Pmdt06Component implements OnInit {
 
   ngOnInit() {
     this.route.queryParams.subscribe((queryParams) => {
-      this.projectId.set(queryParams['projectId'] || null);
+      // ดึง projectId จาก queryParams ก่อน ถ้าไม่มีค่อย fallback ไป customerState
+      const projectId = queryParams['projectId'] || this.customerState.getProjectId();
+      this.projectId.set(projectId || null);
+      if (projectId) {
+        this.customerState.setProject(projectId);
+      }
       this.loadChangeRequests();
     });
   }

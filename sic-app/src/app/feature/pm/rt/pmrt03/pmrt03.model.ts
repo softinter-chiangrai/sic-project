@@ -65,3 +65,16 @@ export interface RecentTask {
   status: string;
   priority: string;
 }
+
+export interface ProjectHealthFactor {
+  name: string;
+  value: number;
+  weight: number;
+}
+
+export interface ProjectHealth {
+  score: number;
+  status: 'Green' | 'Yellow' | 'Red';
+  factors: ProjectHealthFactor[];
+}
+

@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt16AService } from './pmdt16A/pmdt16A.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
@@ -24,10 +25,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 })
 export class Pmdt16Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private service = inject(Pmdt16AService);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
   private approvalService = inject(ApprovalService);
+  private customerState = inject(CustomerStateService);
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});
@@ -36,12 +39,18 @@ export class Pmdt16Component implements OnInit {
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
+  filterProjectId = signal<string | null>(null);
 
   protected Math = Math;
 
-  invoicesResource = httpResource<any>(
-    () => `${apiBaseUrl}/api/pm/invoices/paging?page=${this.currentPage()}&size=${this.pageSize()}`
-  );
+  invoicesResource = httpResource<any>(() => {
+    const projectId = this.filterProjectId();
+    let url = `${apiBaseUrl}/api/pm/invoices/paging?page=${this.currentPage()}&size=${this.pageSize()}`;
+    if (projectId) {
+      url += `&projectId=${projectId}`;
+    }
+    return url;
+  });
 
   constructor() {
     effect(() => {
@@ -108,7 +117,15 @@ export class Pmdt16Component implements OnInit {
     return pages;
   });
 
-  ngOnInit() {}
+  ngOnInit(): void {
+    this.route.queryParams.subscribe((params) => {
+      const projectId = params['projectId'] || this.customerState.getProjectId();
+      if (projectId) {
+        this.filterProjectId.set(projectId);
+        this.customerState.setProject(projectId);
+      }
+    });
+  }
 
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
@@ -137,7 +154,10 @@ export class Pmdt16Component implements OnInit {
   }
 
   goToAdd() {
-    this.router.navigate(['/feature/pm/invoice/new']);
+    const projectId = this.filterProjectId();
+    this.router.navigate(['/feature/pm/invoice/new'], {
+      queryParams: projectId ? { projectId } : {},
+    });
   }
 
   goToView(id: string) {

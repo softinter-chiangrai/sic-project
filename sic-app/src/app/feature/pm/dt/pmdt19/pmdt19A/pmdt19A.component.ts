@@ -51,7 +51,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   docTypeOptions = [
     { label: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
     { label: 'Specification (ข้อกำหนดเชิงเทคนิค)', value: 'SPECIFICATION' },
-    { label: 'Diagram (DFD / ER)', value: 'DIAGRAM' },
+    { label: 'Diagram', value: 'DIAGRAM' },
     { label: 'Design Review', value: 'DESIGN_REVIEW' },
     { label: 'Change Request (คำขอเปลี่ยนแปลง)', value: 'CHANGE_REQUEST' },
     { label: 'Delivery Document (เอกสารส่งมอบ)', value: 'DELIVERY' },

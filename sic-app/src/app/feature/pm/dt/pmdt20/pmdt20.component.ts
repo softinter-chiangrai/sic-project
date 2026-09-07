@@ -81,11 +81,8 @@ export class Pmdt20Component implements OnInit {
         if (users && users.length > 0) {
           this.userSelectOptions.set(
             users.map((u) => {
-              const val = u.username || u.userId || u.userFullname || '';
-              let text = u.userFullname || u.username || u.userId || '';
-              if (u.userFullname && u.username && u.userFullname !== u.username) {
-                text = `${u.userFullname} (${u.username})`;
-              }
+              const val = u.userId || u.username || u.userFullname || '';
+              const text = u.userFullname || u.username || u.userId || '';
               return { value: val, text };
             })
           );

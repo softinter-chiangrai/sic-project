@@ -80,13 +80,7 @@
       </div>
 
       <div class="flex gap-2">
-        <button
-          (click)="goToGantt()"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-bar-chart"></i>
-          Gantt
-        </button>
+
         <button
           (click)="goToEdit()"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
@@ -146,6 +140,92 @@
       </div>
     </div>
 
+    <!-- ===== PROJECT HEALTH SCORE ===== -->
+    <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-heart-pulse text-[var(--crm-danger)]"></i>
+          สุขภาพโครงการ (Project Health Score)
+        </h3>
+        <span
+          [class]="
+            getHealthStatusClass(projectHealth().status) +
+            ' px-3 py-1 rounded-full text-sm font-medium'
+          "
+        >
+          {{ getHealthStatusText(projectHealth().status) }} ({{ projectHealth().score }}%)
+        </span>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+        <div
+          class="flex flex-col items-center justify-center p-5 bg-[var(--bg)] rounded-xl border border-[var(--border)]/50"
+        >
+          <!-- Project Health Score Circle -->
+          <div class="relative w-28 h-28">
+            <svg class="w-28 h-28 -rotate-90" viewBox="0 0 36 36">
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="none"
+                stroke="var(--border)"
+                stroke-width="3"
+              />
+              <circle
+                cx="18"
+                cy="18"
+                r="16"
+                fill="none"
+                [style.stroke]="getHealthStatusColor(projectHealth().status)"
+                stroke-width="3"
+                stroke-dasharray="100"
+                [attr.stroke-dashoffset]="100 - projectHealth().score"
+                stroke-linecap="round"
+              />
+            </svg>
+            <div class="absolute inset-0 flex flex-col items-center justify-center">
+              <span class="text-2xl font-bold text-[var(--text-active)]">
+                {{ projectHealth().score }}%
+              </span>
+              <span class="text-[0.65rem] font-medium uppercase tracking-wider text-[var(--text-muted)]">
+                {{ projectHealth().status }}
+              </span>
+            </div>
+          </div>
+          <p class="text-sm font-medium text-[var(--text-muted)] mt-2">คะแนนสุขภาพรวม</p>
+        </div>
+        <div class="md:col-span-2">
+          <div class="space-y-3">
+            @for (factor of projectHealth().factors; track factor.name) {
+              <div>
+                <div class="flex justify-between text-sm mb-1">
+                  <span class="text-[var(--text-muted)]">{{ factor.name }}</span>
+                  <span class="text-[var(--text-active)] font-medium"
+                    >{{ factor.value }}/{{ factor.weight }}</span
+                  >
+                </div>
+                <div
+                  class="w-full h-2 bg-[var(--bg)] rounded-full overflow-hidden border border-[var(--border)]/30"
+                >
+                  <div
+                    class="h-full rounded-full transition-all duration-500"
+                    [style.width.%]="(factor.value / factor.weight) * 100"
+                    [style.background]="
+                      factor.value / factor.weight >= 0.8
+                        ? 'var(--crm-success)'
+                        : factor.value / factor.weight >= 0.5
+                          ? 'var(--crm-warning)'
+                          : 'var(--crm-danger)'
+                    "
+                  ></div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ===== DESCRIPTION ===== -->
     @if (p.description) {
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
@@ -192,7 +272,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-file-earmark-text text-xl text-[var(--crm-primary)]"></i>
-          <span>สัญญา</span>
+          <span>Contract</span>
         </button>
         <!-- Delivery (PMDT18) -->
         <button
@@ -200,7 +280,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-box-seam text-xl text-[var(--crm-primary)]"></i>
-          <span>ส่งมอบ</span>
+          <span>Deliverie</span>
         </button>
         <!-- Manual (PMDT15) -->
         <button
@@ -208,7 +288,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-book text-xl text-[var(--crm-primary)]"></i>
-          <span>คู่มือ</span>
+          <span>Manual</span>
         </button>
         <!-- Invoice (PMDT20) -->
         <button
@@ -242,14 +322,7 @@
           <i class="bi bi-tags text-xl text-[var(--crm-primary)]"></i>
           <span>Version</span>
         </button>
-        <!-- Gantt -->
-        <button
-          (click)="goToGantt()"
-          class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
-        >
-          <i class="bi bi-bar-chart-fill text-xl text-[var(--crm-primary)]"></i>
-          <span>Gantt</span>
-        </button>
+
         <!-- Change Request -->
         <button
           (click)="goToChangeRequests()"

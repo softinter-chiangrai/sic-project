@@ -182,6 +182,11 @@ export class Pmrt04Component implements OnInit {
       .set('page', (this.currentPage() - 1).toString())
       .set('size', this.pageSize().toString());
 
+    const projectId = this.filterProjectId();
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
+
     const customerId = this.filterCustomerId();
     if (customerId) {
       params = params.set('customerId', customerId);

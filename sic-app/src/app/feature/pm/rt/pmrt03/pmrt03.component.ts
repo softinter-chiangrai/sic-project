@@ -1,14 +1,14 @@
 // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
-import { ProjectDashboard, RecentPhase, RecentTask } from './pmrt03.model';
+import { ProjectDashboard, ProjectHealth, RecentPhase, RecentTask } from './pmrt03.model';
 import { Pmrt03Service } from './pmrt03.service';
 
 @Component({
@@ -32,6 +32,101 @@ export class Pmrt03Component implements OnInit {
   protected project = signal<ProjectDashboard | null>(null);
   protected projectId = signal<string>('');
   protected error = signal<string | null>(null);
+
+  // ===== Project Health Score (คำนวณจากข้อมูลโครงการ) =====
+  protected projectHealth = computed<ProjectHealth>(() => {
+    const p = this.project();
+    if (!p) {
+      return {
+        score: 100,
+        status: 'Green',
+        factors: [
+          { name: 'ความคืบหน้างาน (Tasks)', value: 25, weight: 25 },
+          { name: 'การควบคุม Manday', value: 25, weight: 25 },
+          { name: 'คุณภาพ & Bug ที่ปิดแล้ว', value: 20, weight: 20 },
+          { name: 'ความคืบหน้า Phase', value: 15, weight: 15 },
+          { name: 'สถานะและกำหนดการ (Timeline)', value: 15, weight: 15 },
+        ],
+      };
+    }
+
+    // 1. ความคืบหน้างาน (Tasks Progress) - Weight 25
+    let taskScore = 25;
+    if (p.taskCount > 0) {
+      const taskRatio = p.taskCompletedCount / p.taskCount;
+      taskScore = Math.round(taskRatio * 25);
+    }
+
+    // 2. การควบคุม Manday (Manday Control) - Weight 25
+    let mandayScore = 25;
+    if (p.budgetManday > 0) {
+      const mandayRatio = p.usedManday / p.budgetManday;
+      if (mandayRatio <= 1.0) {
+        mandayScore = 25;
+      } else if (mandayRatio <= 1.2) {
+        mandayScore = 15;
+      } else if (mandayRatio <= 1.5) {
+        mandayScore = 8;
+      } else {
+        mandayScore = 0;
+      }
+    }
+
+    // 3. คุณภาพและ Bug ที่ปิดแล้ว (Bug & Quality) - Weight 20
+    let bugScore = 20;
+    if (p.bugCount > 0) {
+      const openRatio = p.bugOpenCount / p.bugCount;
+      bugScore = Math.max(0, Math.round((1 - openRatio) * 20));
+    }
+
+    // 4. ความคืบหน้า Phase (Phase Milestones) - Weight 15
+    let phaseScore = 15;
+    if (p.recentPhases && p.recentPhases.length > 0) {
+      const totalProgress = p.recentPhases.reduce((sum, phase) => sum + (phase.progress || 0), 0);
+      const avgProgress = totalProgress / p.recentPhases.length;
+      phaseScore = Math.round((avgProgress / 100) * 15);
+    }
+
+    // 5. สถานะและกำหนดการ (Timeline & Status) - Weight 15
+    let statusScore = 15;
+    if (p.status === 'Delayed') {
+      statusScore = 4;
+    } else if (p.status === 'Closed' || p.status === 'Delivered' || p.status === 'Done') {
+      statusScore = 15;
+    } else if (p.plannedEndDate) {
+      const now = new Date();
+      const end = new Date(p.plannedEndDate);
+      if (end < now && p.status !== 'Done' && p.status !== 'Delivered' && p.status !== 'Closed') {
+        statusScore = 5;
+      } else {
+        statusScore = 14;
+      }
+    }
+
+    const totalScore = Math.min(
+      100,
+      Math.max(0, taskScore + mandayScore + bugScore + phaseScore + statusScore)
+    );
+
+    let status: 'Green' | 'Yellow' | 'Red' = 'Green';
+    if (totalScore < 50) {
+      status = 'Red';
+    } else if (totalScore < 80) {
+      status = 'Yellow';
+    }
+
+    return {
+      score: totalScore,
+      status,
+      factors: [
+        { name: 'ความคืบหน้างาน (Tasks)', value: taskScore, weight: 25 },
+        { name: 'การควบคุม Manday', value: mandayScore, weight: 25 },
+        { name: 'คุณภาพ & Bug ที่ปิดแล้ว', value: bugScore, weight: 20 },
+        { name: 'ความคืบหน้า Phase', value: phaseScore, weight: 15 },
+        { name: 'สถานะและกำหนดการ (Timeline)', value: statusScore, weight: 15 },
+      ],
+    };
+  });
 
   // ===== Lifecycle =====
   ngOnInit() {
@@ -85,10 +180,6 @@ export class Pmrt03Component implements OnInit {
     this.navigation.navigate(['/feature/pm/requirement'], { queryParams: { projectId: id } });
   }
 
-  goToGantt() {
-    const id = this.projectId();
-    this.navigation.navigate(['/feature/pm/gantt'], { queryParams: { projectId: id } });
-  }
 
   goToContracts() {
     const id = this.projectId();
@@ -269,4 +360,32 @@ export class Pmrt03Component implements OnInit {
     if (project.budgetManday === 0) return 0;
     return Math.min(Math.round((project.usedManday / project.budgetManday) * 100), 100);
   }
+
+  getHealthStatusColor(status: string): string {
+    const map: Record<string, string> = {
+      Green: 'var(--crm-success)',
+      Yellow: 'var(--crm-warning)',
+      Red: 'var(--crm-danger)',
+    };
+    return map[status] || 'var(--crm-warning)';
+  }
+
+  getHealthStatusClass(status: string): string {
+    const map: Record<string, string> = {
+      Green: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
+      Yellow: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
+      Red: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+    };
+    return map[status] || 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300';
+  }
+
+  getHealthStatusText(status: string): string {
+    const map: Record<string, string> = {
+      Green: 'สุขภาพดี (Green)',
+      Yellow: 'เฝ้าระวัง (Yellow)',
+      Red: 'วิกฤต (Red)',
+    };
+    return map[status] || status;
+  }
 }
+

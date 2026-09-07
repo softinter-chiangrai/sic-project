@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
 import { Pmdt19AService } from './pmdt19A/pmdt19A.service';
@@ -7,6 +7,7 @@ import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { NavigationService } from '../../../../core/services/navigation.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -27,6 +28,10 @@ export class Pmdt19Component implements OnInit {
   private readonly service = inject(Pmdt19AService);
   private readonly dialog = inject(DialogService);
   private readonly customerState = inject(CustomerStateService);
+  private readonly navigation = inject(NavigationService);
+
+  // projectId ที่ active อยู่ในขณะนี้ (required)
+  activeProjectId = signal<string | null>(null);
 
   versions = signal<DocumentVersionModel[]>([]);
   isLoading = signal(false);
@@ -38,7 +43,7 @@ export class Pmdt19Component implements OnInit {
     { text: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
     { text: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
     { text: 'Specification (ข้อกำหนดเชิงเทคนิค)', value: 'SPECIFICATION' },
-    { text: 'Diagram (DFD / ER)', value: 'DIAGRAM' },
+    { text: 'Diagram', value: 'DIAGRAM' },
     { text: 'Design Review', value: 'DESIGN_REVIEW' },
     { text: 'Change Request', value: 'CHANGE_REQUEST' },
     { text: 'Delivery Document', value: 'DELIVERY' },
@@ -52,12 +57,57 @@ export class Pmdt19Component implements OnInit {
 
   filteredVersions = signal<DocumentVersionModel[]>([]);
 
+  // ===== Pagination State =====
+  currentPage = signal(0);
+  pageSize = signal(10);
+  readonly pageSizeOptions = [
+    { text: '10 รายการ / หน้า', value: 10 },
+    { text: '20 รายการ / หน้า', value: 20 },
+    { text: '50 รายการ / หน้า', value: 50 },
+    { text: '100 รายการ / หน้า', value: 100 },
+  ];
+
+  totalItems = computed(() => this.filteredVersions().length);
+  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
+
+  paginatedVersions = computed(() => {
+    const list = this.filteredVersions();
+    const start = this.currentPage() * this.pageSize();
+    return list.slice(start, start + this.pageSize());
+  });
+
+  pageNumbers = computed(() => {
+    const total = this.totalPages();
+    const current = this.currentPage();
+    const range = 5;
+    let start = Math.max(0, current - Math.floor(range / 2));
+    let end = Math.min(total - 1, start + range - 1);
+    if (end - start < range - 1) {
+      start = Math.max(0, end - range + 1);
+    }
+    const pages: number[] = [];
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    return pages;
+  });
+
+  Math = Math;
+
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
-      const qProjectId = params['projectId'];
-      if (qProjectId) {
-        this.customerState.setProject(qProjectId);
+      // ดึง projectId จาก queryParams ก่อน ถ้าไม่มีค่อยใช้จาก customerState
+      const projectId = params['projectId'] || this.customerState.getProjectId();
+
+      if (!projectId) {
+        this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาเข้าจากหน้าโครงการ');
+        this.navigation.navigate(['/feature/pm/project']);
+        return;
       }
+
+      this.activeProjectId.set(projectId);
+      this.customerState.setProject(projectId);
+
       const qType = params['documentType'];
       const qId = params['documentId'];
       if (qType) this.filterType.set(qType);
@@ -68,8 +118,10 @@ export class Pmdt19Component implements OnInit {
   }
 
   loadVersions(): void {
+    const projectId = this.activeProjectId();
+    if (!projectId) return; // guard: ต้องมี projectId เสมอ
+
     this.isLoading.set(true);
-    const projectId = this.customerState.getProjectId() || undefined;
     const docType = this.filterType();
     const docId = this.filterDocId() || undefined;
 
@@ -86,6 +138,7 @@ export class Pmdt19Component implements OnInit {
   }
 
   applyFilter(): void {
+    this.currentPage.set(0);
     const term = (this.filterDocId() || '').trim().toLowerCase();
     if (!term) {
       this.filteredVersions.set(this.versions());
@@ -103,12 +156,26 @@ export class Pmdt19Component implements OnInit {
   onTypeChange(type: any): void {
     const val = type !== undefined && type !== null ? (typeof type === 'object' && type.target ? type.target.value : type) : 'ALL';
     this.filterType.set(val || 'ALL');
+    this.currentPage.set(0);
     this.loadVersions();
   }
 
   onDocIdChange(docId: string): void {
     this.filterDocId.set(docId);
     this.applyFilter();
+  }
+
+  onPageChange(page: number): void {
+    if (page < 0 || page >= this.totalPages()) return;
+    this.currentPage.set(page);
+  }
+
+  onPageSizeChange(size: any): void {
+    const val = Number(size?.value ?? size?.target?.value ?? size);
+    if (val > 0) {
+      this.pageSize.set(val);
+      this.currentPage.set(0);
+    }
   }
 
   onViewContent(ver: DocumentVersionModel): void {
@@ -155,17 +222,20 @@ export class Pmdt19Component implements OnInit {
   }
 
   goToAdd(): void {
+    const projectId = this.activeProjectId();
     this.router.navigate(['/feature/pm/version/new'], {
       queryParams: {
         documentType: this.filterType(),
         documentId: this.filterDocId(),
+        ...(projectId ? { projectId } : {}),
       },
     });
   }
 
   goBack(): void {
+    const projectId = this.activeProjectId() || this.customerState.getProjectId();
     this.router.navigate(['/feature/pm/project-dashboard'], {
-      queryParams: { projectId: this.customerState.getProjectId() || undefined }
+      queryParams: { projectId: projectId || undefined }
     });
   }
 }

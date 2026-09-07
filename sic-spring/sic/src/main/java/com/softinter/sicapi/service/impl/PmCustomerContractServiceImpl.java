@@ -53,12 +53,31 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             String status,
             String contractType,
             Pageable pageable) {
+        return getContracts(businessId, null, null, keyword, status, contractType, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Pageable pageable) {
 
         Specification<PmCustomerContract> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
             predicates.add(cb.isFalse(root.get("isDelete")));
 
+            if (customerId != null) {
+                predicates.add(cb.equal(root.get("customerId"), customerId));
+            }
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
             if (keyword != null && !keyword.isBlank()) {
                 predicates.add(cb.like(cb.lower(root.get("contractNo")), "%" + keyword.toLowerCase() + "%"));
             }
@@ -121,6 +140,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         }
 
         contract.setCustomerId(request.getCustomerId());
+        // บันทึก projectId โดยตรงในสัญญา
         contract.setProjectId(request.getProjectId());
 
         contract.setContractNo(request.getContractNo());
@@ -352,12 +372,26 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             dto.setCustomerName(contract.getCustomer().getCompanyNameEn());
         } else if (contract.getCustomerId() != null) {
             dto.setCustomerId(contract.getCustomerId());
+            // fallback: โหลด customerName จาก repository
+            customerRepository.findById(contract.getCustomerId())
+                    .ifPresent(c -> dto.setCustomerName(c.getCompanyNameEn()));
         }
-        // ค้นหาโครงการที่ผูกกับสัญญา (รองรับทั้งสัญญาตั้งต้นและสัญญาที่มีการต่ออายุ)
-        PmCustomerProject project = findProjectForContract(contract);
-        if (project != null) {
-            dto.setProjectId(project.getId());
-            dto.setProjectName(project.getProjectName());
+
+        // ค้นหาโครงการ: ใช้ projectId จาก entity โดยตรง (เร็วกว่า findProjectForContract)
+        if (contract.getProject() != null) {
+            dto.setProjectId(contract.getProject().getId());
+            dto.setProjectName(contract.getProject().getProjectName());
+        } else if (contract.getProjectId() != null) {
+            dto.setProjectId(contract.getProjectId());
+            projectRepository.findById(contract.getProjectId())
+                    .ifPresent(p -> dto.setProjectName(p.getProjectName()));
+        } else {
+            // fallback เดิม: ค้นหาโครงการที่ผูกกับสัญญา (สำหรับข้อมูลเก่าที่ยังไม่มี projectId)
+            PmCustomerProject project = findProjectForContract(contract);
+            if (project != null) {
+                dto.setProjectId(project.getId());
+                dto.setProjectName(project.getProjectName());
+            }
         }
         return dto;
     }

@@ -5,8 +5,10 @@ import com.softinter.sicapi.dto.response.AuditLogResponse;
 import com.softinter.sicapi.dto.response.AuditLogUserResponse;
 import com.softinter.sicapi.entity.su.SuAuditLog;
 import com.softinter.sicapi.entity.su.SuProfile;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
 import com.softinter.sicapi.repository.su.SuAuditLogRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.util.LocalizationHelper;
@@ -31,6 +33,7 @@ public class AuditLogServiceImpl implements AuditLogService {
     private final SuAuditLogRepository auditLogRepository;
     private final CurrentUserService currentUserService;
     private final SuProfileRepository profileRepository;
+    private final SuUserBusinessRepository userBusinessRepository;
 
     @Override
     @Async
@@ -71,8 +74,10 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Transactional
     public void log(String action, String module, String description, String targetType, UUID targetId, String oldValue, String newValue, String status, String details) {
         AuditLogRequest request = new AuditLogRequest();
+        String currentUserId = null;
         try {
-            request.setUserId(currentUserService.getUserId());
+            currentUserId = currentUserService.getUserId();
+            request.setUserId(currentUserId);
         } catch (Exception e) {
             request.setUserId("system");
         }
@@ -82,7 +87,17 @@ public class AuditLogServiceImpl implements AuditLogService {
             request.setUsername("system");
         }
         try {
-            request.setUserFullname(currentUserService.getUsername());
+            if (currentUserId != null && !currentUserId.isBlank() && !"system".equalsIgnoreCase(currentUserId)) {
+                SuProfile profile = profileRepository.findByUserId(currentUserId).orElse(null);
+                if (profile != null) {
+                    String fullName = LocalizationHelper.getFullName(profile);
+                    request.setUserFullname((fullName != null && !fullName.isBlank()) ? fullName : currentUserService.getUsername());
+                } else {
+                    request.setUserFullname(currentUserService.getUsername());
+                }
+            } else {
+                request.setUserFullname(currentUserService.getUsername());
+            }
         } catch (Exception e) {
             request.setUserFullname("system");
         }
@@ -167,9 +182,49 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     @Transactional(readOnly = true)
     public List<AuditLogUserResponse> getDistinctUsers() {
+        UUID currentBusinessId = null;
+        try {
+            currentBusinessId = currentUserService.getBusinessId();
+        } catch (Exception ignored) {}
+
         Map<String, AuditLogUserResponse> userMap = new LinkedHashMap<>();
 
-        // 1. Distinct users from Audit Logs
+        // 1. ดึงสมาชิกจาก Team (SuUserBusiness) ของ Business ปัจจุบัน
+        if (currentBusinessId != null) {
+            try {
+                List<SuUserBusiness> members = userBusinessRepository.findByBusinessIdAndIsActiveTrue(currentBusinessId);
+                for (SuUserBusiness member : members) {
+                    String userId = member.getUserId();
+                    if (userId != null && !userId.isBlank()) {
+                        SuProfile profile = profileRepository.findByUserId(userId).orElse(null);
+                        String fullName = profile != null ? LocalizationHelper.getFullName(profile) : null;
+                        String displayName = (fullName != null && !fullName.isBlank()) ? fullName : userId;
+                        userMap.put(userId, new AuditLogUserResponse(userId, displayName, userId));
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load business team members for audit filter: {}", e.getMessage());
+            }
+        }
+
+        // 2. ถ้าใน business ยังไม่มี ให้ fallback ไปที่ SuProfile ทั้งหมด
+        if (userMap.isEmpty()) {
+            try {
+                List<SuProfile> profiles = profileRepository.findAll();
+                for (SuProfile profile : profiles) {
+                    if (profile.getUserId() != null && !profile.getUserId().isBlank()) {
+                        String fullName = LocalizationHelper.getFullName(profile);
+                        String userId = profile.getUserId();
+                        String displayName = (fullName != null && !fullName.isBlank()) ? fullName : userId;
+                        userMap.put(userId, new AuditLogUserResponse(userId, displayName, userId));
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to load profiles for audit log users: {}", e.getMessage());
+            }
+        }
+
+        // 3. เสริมรายชื่อจาก Audit Logs เพิ่มเติม (กรณีมี log เก่าจาก user/system อื่น)
         try {
             List<Object[]> distinctUsers = auditLogRepository.findDistinctUsers();
             if (distinctUsers != null) {
@@ -178,38 +233,21 @@ public class AuditLogServiceImpl implements AuditLogService {
                     String userFullname = row[1] != null ? (String) row[1] : "";
                     String userId = row[2] != null ? (String) row[2] : "";
 
-                    String key = !username.isBlank() ? username : (!userId.isBlank() ? userId : userFullname);
-                    if (!key.isBlank()) {
-                        userMap.put(key, new AuditLogUserResponse(username, userFullname, userId));
+                    if (!userId.isBlank()) {
+                        if (!userMap.containsKey(userId)) {
+                            SuProfile profile = profileRepository.findByUserId(userId).orElse(null);
+                            String fullName = profile != null ? LocalizationHelper.getFullName(profile) : userFullname;
+                            String displayName = (fullName != null && !fullName.isBlank()) ? fullName : (!username.isBlank() ? username : userId);
+                            userMap.put(userId, new AuditLogUserResponse(userId, displayName, userId));
+                        }
+                    } else if (!username.isBlank() && !userMap.containsKey(username)) {
+                        String displayName = !userFullname.isBlank() ? userFullname : username;
+                        userMap.put(username, new AuditLogUserResponse(username, displayName, username));
                     }
                 }
             }
         } catch (Exception e) {
             log.warn("Failed to load distinct users from audit logs: {}", e.getMessage());
-        }
-
-        // 2. Add or update with system registered profiles
-        try {
-            List<SuProfile> profiles = profileRepository.findAll();
-            for (SuProfile profile : profiles) {
-                if (profile.getUserId() != null && !profile.getUserId().isBlank()) {
-                    String fullName = LocalizationHelper.getFullName(profile);
-                    String userId = profile.getUserId();
-
-                    if (!userMap.containsKey(userId)) {
-                        userMap.put(userId, new AuditLogUserResponse(userId, fullName != null ? fullName : userId, userId));
-                    } else {
-                        AuditLogUserResponse existing = userMap.get(userId);
-                        if (fullName != null && !fullName.isBlank()) {
-                            if (existing.getUserFullname() == null || existing.getUserFullname().isBlank() || existing.getUserFullname().equals(existing.getUsername())) {
-                                existing.setUserFullname(fullName);
-                            }
-                        }
-                    }
-                }
-            }
-        } catch (Exception e) {
-            log.warn("Failed to load profiles for audit log users: {}", e.getMessage());
         }
 
         List<AuditLogUserResponse> list = new ArrayList<>(userMap.values());
@@ -225,7 +263,18 @@ public class AuditLogServiceImpl implements AuditLogService {
         response.setId(entity.getId());
         response.setUserId(entity.getUserId());
         response.setUsername(entity.getUsername());
-        response.setUserFullname(entity.getUserFullname());
+
+        String userFullname = entity.getUserFullname();
+        if (entity.getUserId() != null && !entity.getUserId().isBlank()) {
+            SuProfile profile = profileRepository.findByUserId(entity.getUserId()).orElse(null);
+            if (profile != null) {
+                String realName = LocalizationHelper.getFullName(profile);
+                if (realName != null && !realName.isBlank()) {
+                    userFullname = realName;
+                }
+            }
+        }
+        response.setUserFullname((userFullname != null && !userFullname.isBlank()) ? userFullname : entity.getUsername());
         response.setAction(entity.getAction());
         response.setModule(entity.getModule());
         response.setDescription(entity.getDescription());
