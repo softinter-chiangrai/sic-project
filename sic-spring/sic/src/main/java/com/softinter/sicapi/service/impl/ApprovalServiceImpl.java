@@ -789,6 +789,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     userManualRepository.save(man);
                 });
                 break;
+            case "PROJECT":
+                customerProjectRepository.findById(documentId).ifPresent(prj -> {
+                    prj.setStatus("Planning");
+                    customerProjectRepository.save(prj);
+                });
+                break;
             case "DIAGRAM":
             case "DFD":
             case "ER":
@@ -888,6 +894,10 @@ public class ApprovalServiceImpl implements ApprovalService {
                 userManualRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("User Manual not found: " + documentId));
                 break;
+            case "PROJECT":
+                customerProjectRepository.findById(documentId)
+                        .orElseThrow(() -> new ResourceNotFoundException("Project not found: " + documentId));
+                break;
             default:
                 break;
         }
@@ -951,6 +961,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 userManualRepository.findById(docId).ifPresent(man -> {
                     man.setStatus("REVIEW");
                     userManualRepository.save(man);
+                });
+                break;
+            case "PROJECT":
+                customerProjectRepository.findById(docId).ifPresent(prj -> {
+                    prj.setStatus("Contract Signed");
+                    customerProjectRepository.save(prj);
                 });
                 break;
             default:
@@ -1041,6 +1057,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     man.setStatus("APPROVED");
                     man.setVersion(majorVersion);
                     userManualRepository.save(man);
+                });
+                break;
+            case "PROJECT":
+                customerProjectRepository.findById(docId).ifPresent(prj -> {
+                    prj.setStatus("Planning");
+                    customerProjectRepository.save(prj);
                 });
                 break;
             default:
@@ -1167,6 +1189,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     userManualRepository.save(man);
                 });
                 break;
+            case "PROJECT":
+                customerProjectRepository.findById(docId).ifPresent(prj -> {
+                    prj.setStatus("Prospect");
+                    customerProjectRepository.save(prj);
+                });
+                break;
             default:
                 break;
         }
@@ -1205,6 +1233,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerContractRepository.findById(docId).ifPresent(contract -> {
                     contract.setSignStatus("Draft");
                     customerContractRepository.save(contract);
+                });
+                break;
+            case "PROJECT":
+                customerProjectRepository.findById(docId).ifPresent(prj -> {
+                    prj.setStatus("Prospect");
+                    customerProjectRepository.save(prj);
                 });
                 break;
             case "DELIVERY":
@@ -1403,6 +1437,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                     var manualOpt = userManualRepository.findById(documentId);
                     if (manualOpt.isPresent()) {
                         projId = manualOpt.get().getProjectId();
+                    }
+                    break;
+                case "PROJECT":
+                    var prjOpt = customerProjectRepository.findById(documentId);
+                    if (prjOpt.isPresent()) {
+                        projId = prjOpt.get().getId();
+                        projName = prjOpt.get().getProjectName();
                     }
                     break;
                 default:

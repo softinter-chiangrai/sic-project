@@ -30,4 +30,6 @@ public class PmCustomerProjectResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;
+    private String approvalStatus;
+    private Boolean isApproved;
 }

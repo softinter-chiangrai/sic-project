@@ -154,6 +154,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
       uat: '/feature/pm/uat',
       test_plan: '/feature/pm/test-plan',
       user_manual: '/feature/pm/manual',
+      project: '/feature/pm/project',
     };
 
     const baseRoute = routeMap[docType] || '/feature/pm/approval';
@@ -215,6 +216,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
       CHANGE_REQUEST: 'Change Request',
       TEST_PLAN: 'Test Plan',
       UAT: 'UAT',
+      PROJECT: 'Project',
     };
     return map[type] || type;
   }

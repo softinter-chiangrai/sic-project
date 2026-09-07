@@ -37,6 +37,8 @@ export interface PmCustomerProject {
   description?: string;
   isActive: boolean;
   rowVersion?: number;
+  approvalStatus?: string;
+  isApproved?: boolean;
   createdDate?: string;
   updatedDate?: string;
 }

@@ -16,9 +16,14 @@
 
     <!-- HEADER -->
     <div class="text-center space-y-1">
-      <h2 class="text-3xl font-bold text-[var(--text-active)]">
-        {{ isViewOnly ? 'รายละเอียดโครงการ' : (isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ') }}
-      </h2>
+      <div class="flex items-center justify-center gap-2 flex-wrap">
+        <h2 class="text-3xl font-bold text-[var(--text-active)]">
+          {{ isViewOnly && !isLocked ? 'รายละเอียดโครงการ' : (isLocked ? 'ข้อมูลโครงการ (อนุมัติแล้ว)' : (isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ')) }}
+        </h2>
+        @if (isEdit || isViewOnly) {
+          <sic-version-badge [status]="form.get('status')?.value" [isLocked]="isLocked"></sic-version-badge>
+        }
+      </div>
       @if (customerName()) {
         <p class="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1.5">
           <i class="bi bi-building"></i>
@@ -36,7 +41,7 @@
           formControlName="projectCode"
           placeholder="เช่น PRJ-001"
           [required]="true"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{
             required: 'กรุณากรอกรหัสโครงการ',
             maxlength: 'รหัสโครงการต้องไม่เกิน 30 ตัวอักษร'
@@ -51,7 +56,7 @@
           formControlName="projectName"
           placeholder="เช่น ระบบซื้อขายสินค้าออนไลน์"
           [required]="true"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{
             required: 'กรุณากรอกชื่อโครงการ',
             maxlength: 'ชื่อโครงการต้องไม่เกิน 255 ตัวอักษร'
@@ -68,7 +73,7 @@
           valueField="value"
           textField="text"
           [required]="true"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{ required: 'กรุณาเลือกสถานะ' }"
         ></sic-combobox>
       </div>
@@ -82,7 +87,7 @@
           valueField="value"
           textField="text"
           [required]="true"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{ required: 'กรุณาเลือกระดับความสำคัญ' }"
         ></sic-combobox>
       </div>
@@ -94,7 +99,7 @@
           formControlName="startDate"
           [required]="true"
           placeholder="เลือกวันที่เริ่ม"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{ required: 'กรุณาระบุวันที่เริ่ม' }"
         ></sic-datepicker>
       </div>
@@ -106,7 +111,7 @@
           formControlName="plannedEndDate"
           [required]="true"
           placeholder="เลือกวันที่สิ้นสุดตามแผน"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{ required: 'กรุณาระบุวันที่สิ้นสุดตามแผน' }"
         ></sic-datepicker>
       </div>
@@ -117,7 +122,7 @@
           label="วันที่สิ้นสุดจริง"
           formControlName="actualEndDate"
           placeholder="เลือกวันที่สิ้นสุดจริง (ถ้ามี)"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
         ></sic-datepicker>
       </div>
 
@@ -129,7 +134,7 @@
           [decimal]="0"
           placeholder="0"
           [required]="true"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
           [errorMessages]="{ required: 'กรุณาระบุ Manday ตามแผน' }"
         ></sic-number>
       </div>
@@ -141,7 +146,7 @@
           formControlName="usedManday"
           [decimal]="0"
           placeholder="0"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
         ></sic-number>
       </div>
 
@@ -152,7 +157,7 @@
           formControlName="description"
           placeholder="ระบุคำอธิบาย ขอบเขต หรือรายละเอียดเพิ่มเติมของโครงการ..."
           minHeight="140px"
-          [disabled]="isViewOnly"
+          [disabled]="isViewOnly || isLocked"
         ></sic-tiptap-editor>
       </div>
 
@@ -162,12 +167,41 @@
           <input
             type="checkbox"
             formControlName="isActive"
-            [disabled]="isViewOnly"
+            [disabled]="isViewOnly || isLocked"
             class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
           />
           <span class="text-[var(--text-active)]">เปิดใช้งานโครงการ</span>
         </label>
       </div>
+
+      <!-- Approval Flow Selection -->
+      @if (!isViewOnly && !isLocked) {
+        <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
+          <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+            <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+            กระบวนการอนุมัติ (Approval Flow)
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <sic-combobox
+              label="เลือกกระบวนการอนุมัติ"
+              [apiUrl]="documenttypeapiUrl"
+              valueField="id"
+              textField="flowName"
+              placeholder="เลือกกระบวนการอนุมัติโครงการ"
+              [clearable]="true"
+              formControlName="approvalFlowId"
+              (selectionChanged)="onFlowChange($event)"
+            ></sic-combobox>
+          </div>
+
+          @if (!selectedFlowId && flows.length > 0) {
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              * สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติโครงการไปยัง Approval Center หลังบันทึก
+            </p>
+          }
+        </div>
+      }
     </div>
 
     <!-- Buttons -->
@@ -181,22 +215,42 @@
         <i class="bi bi-arrow-left"></i> ย้อนกลับ
       </sic-button>
 
-      @if (!isViewOnly) {
+      @if (isLocked) {
+        <sic-button
+          [fullWidth]="true"
+          [type]="'button'"
+          variant="primary"
+          (click)="requestChange()"
+        >
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+        </sic-button>
+      } @else if (!isViewOnly) {
         <sic-button
           [fullWidth]="true"
           [type]="'submit'"
           variant="primary"
-          [disabled]="isSaving"
+          [disabled]="isSaving || form.invalid"
         >
           @if (isSaving) {
             <i class="bi bi-arrow-repeat animate-spin"></i>
           } @else {
             <i class="bi bi-floppy"></i>
           }
-          {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          {{
+            isSaving
+              ? 'กำลังบันทึก...'
+              : (selectedFlowId ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ') : (isEdit ? 'บันทึก' : 'สร้าง'))
+          }}
         </sic-button>
       }
     </div>
+
+    @if (isLocked) {
+      <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+        <i class="bi bi-lock-fill"></i>
+        โครงการนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+      </div>
+    }
 
   </form>
 }

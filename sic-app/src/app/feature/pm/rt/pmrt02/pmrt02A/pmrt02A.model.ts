@@ -33,6 +33,10 @@ export interface ProjectModel {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   description?: string;
   isActive: boolean;
+  approvalFlowId?: string;
+  approvalStatus?: string;
+  isApproved?: boolean;
+  isLocked?: boolean;
   createdAt?: string;
   rowVersion?: number;
 }

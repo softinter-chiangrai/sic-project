@@ -117,6 +117,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     selectedTargetType = signal('REQUIREMENT');
     readonly targetTypeOptions = [
+        { value: 'PROJECT', text: 'โครงการ (Project)' },
         { value: 'REQUIREMENT', text: 'ความต้องการระบบ (Requirement)' },
         { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ (Specification)' },
         { value: 'DIAGRAM', text: 'แผนภาพระบบ (Diagram)' },
@@ -158,7 +159,9 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     targetDocumentApiUrl = computed(() => {
         const type = this.selectedTargetType();
-        if (type === 'REQUIREMENT') {
+        if (type === 'PROJECT') {
+            return environment.apiBaseUrl + '/api/pm/requirement/combobox-project';
+        } else if (type === 'REQUIREMENT') {
             return environment.apiBaseUrl + '/api/pm/requirement/combobox';
         } else if (type === 'SPECIFICATION') {
             return environment.apiBaseUrl + '/api/pm/specifications/combobox';

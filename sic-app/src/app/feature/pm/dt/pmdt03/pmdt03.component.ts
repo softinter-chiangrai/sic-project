@@ -86,6 +86,7 @@ export class Pmdt03Component implements OnInit {
     { value: 'MA_RENEWAL', text: 'MA_RENEWAL' },
     { value: 'CONTRACT', text: 'CONTRACT' },
     { value: 'USER_MANUAL', text: 'USER_MANUAL' },
+    { value: 'PROJECT', text: 'PROJECT' },
   ];
 
   readonly statusSelectOptions = [
@@ -327,6 +328,7 @@ export class Pmdt03Component implements OnInit {
       INVOICE: 'bi-receipt',
       MA_RENEWAL: 'bi-clock-history',
       CONTRACT: 'bi-file-earmark-text',
+      PROJECT: 'bi-briefcase',
     };
     return map[type] || 'bi-file-earmark';
   }

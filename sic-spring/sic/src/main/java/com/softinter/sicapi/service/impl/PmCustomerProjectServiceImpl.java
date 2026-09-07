@@ -12,10 +12,12 @@ import com.softinter.sicapi.dto.response.PmCustomerProjectResponse;
 import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.su.SuBusiness;
+import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.service.PmCustomerProjectService;
+import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerRepository customerRepository;
     private final SuBusinessRepository businessRepository;
+    private final PmApprovalRepository approvalRepository;
+    private final ApprovalService approvalService;
     private final AuditLogService auditLogService;
 
     @Override
@@ -73,6 +77,9 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     public PmCustomerProjectResponse update(UUID id, PmCustomerProjectRequest request) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        // ✅ ป้องกันการแก้ไขโดยตรงหากผ่านการอนุมัติแล้ว (Baseline Locked)
+        approvalService.assertNotApproved("PROJECT", project.getId());
 
         project.setProjectCode(request.getProjectCode());
         project.setProjectName(request.getProjectName());
@@ -205,6 +212,22 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         response.setCreatedDate(project.getCreatedDate());
         response.setUpdatedDate(project.getUpdatedDate());
         response.setRowVersion(project.getRowVersion());
+
+        // ✅ ตรวจสอบสถานะการอนุมัติ (Approval Status)
+        try {
+            var approvals = approvalRepository.findByDocument("PROJECT", project.getId());
+            if (!approvals.isEmpty()) {
+                var latest = approvals.get(0);
+                response.setApprovalStatus(latest.getStatus() != null ? latest.getStatus().name() : null);
+                response.setIsApproved(latest.getStatus() == com.softinter.sicapi.entity.enums.ApprovalStatus.APPROVED);
+            } else {
+                response.setApprovalStatus(null);
+                response.setIsApproved(false);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to check approval status for project {}: {}", project.getId(), e.getMessage());
+        }
+
         return response;
     }
 }
