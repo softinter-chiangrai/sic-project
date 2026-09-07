@@ -29,4 +29,7 @@ public interface PmDesignReviewRepository extends JpaRepository<PmDesignReview, 
             @Param("keyword") String keyword,
             Pageable pageable
     );
+
+    @Query("SELECT COUNT(r) FROM PmDesignReview r WHERE r.project.id = :projectId AND r.isDelete = false")
+    long countByProjectIdAndIsDeleteFalse(@Param("projectId") UUID projectId);
 }

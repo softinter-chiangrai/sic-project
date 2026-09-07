@@ -131,7 +131,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             try {
                 auditLogService.log("DELETE_SPECIFICATION", "Specification Management",
                         "ลบ Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
-                        "SPEC", spec.getId(), null, null, "Success", null);
+                        "SPECIFICATION", spec.getId(), null, null, "Success", null);
             } catch (Exception ex) {
                 log.error("ผิดพลาด audit log DELETE_SPECIFICATION: {}", ex.getMessage(), ex);
             }
@@ -186,11 +186,11 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             UUID projIdForVersion = saved.getProject() != null ? saved.getProject().getId() : request.getProjectId();
             if (projIdForVersion != null) {
                 documentVersionService.createVersion(
-                        "SPEC",
+                        "SPECIFICATION",
                         saved.getId(),
                         projIdForVersion,
                         saved.getSpecificationCode(),
-                        saved.getVersion() != null ? saved.getVersion() : "v1.0",
+                        saved.getVersion() != null ? saved.getVersion() : "v0.1",
                         "สร้าง Specification เริ่มต้น (Initial specification)",
                         JsonSnapshotHelper.toJson(toResponse(saved)),
                         saved.getUploadGroupId(),
@@ -214,17 +214,17 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // ✅ สร้าง Trace Link กับ Diagram (ถ้ามี)
             if (request.getGeneratedFromDiagramId() != null) {
                 traceLinkService.createLink(
-                        projectIdForTrace,
-                        "DIAGRAM", request.getGeneratedFromDiagramId(),
-                        "SPECIFICATION", saved.getId(),
-                        TraceRelationship.DESIGNED_BY);
+                            projectIdForTrace,
+                            "DIAGRAM", request.getGeneratedFromDiagramId(),
+                            "SPECIFICATION", saved.getId(),
+                            TraceRelationship.DESIGNED_BY);
             }
 
             // Audit Log
             try {
                 auditLogService.log("CREATE_SPECIFICATION", "Specification Management",
                         "สร้าง Specification: " + saved.getTitle() + " (" + saved.getSpecificationCode() + ")",
-                        "SPEC", saved.getId(), null, null, "Success", null);
+                        "SPECIFICATION", saved.getId(), null, null, "Success", null);
             } catch (Exception ex) {
                 log.error("ผิดพลาด audit log CREATE_SPECIFICATION: {}", ex.getMessage(), ex);
             }
@@ -301,7 +301,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             String snapshotJson = JsonSnapshotHelper.toJson(toResponse(spec));
 
             documentVersionService.createVersion(
-                    "SPEC",
+                    "SPECIFICATION",
                     spec.getId(),
                     projId,
                     spec.getSpecificationCode(),
@@ -316,7 +316,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             try {
                 auditLogService.log("UPDATE_SPECIFICATION", "Specification Management",
                         "แก้ไข Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
-                        "SPEC", spec.getId(), null, null, "Success", null);
+                        "SPECIFICATION", spec.getId(), null, null, "Success", null);
             } catch (Exception ex) {
                 log.error("ผิดพลาด audit log UPDATE_SPECIFICATION: {}", ex.getMessage(), ex);
             }
@@ -332,6 +332,8 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         PmSpecification spec = specificationRepository.findByIdAndBusinessId(id, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
 
+        approvalService.assertNotApproved("SPECIFICATION", spec.getId());
+
         spec.setIsDelete(true);
         spec.setIsActive(false);
         spec.setDeleteBy(userId);
@@ -343,6 +345,15 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         // ✅ Soft Delete Trace Links
         deleteTraceLinksForSpecification(spec.getId(), userId);
+
+        // Audit Log
+        try {
+            auditLogService.log("DELETE_SPECIFICATION", "Specification Management",
+                    "ลบ Specification: " + spec.getTitle() + " (" + spec.getSpecificationCode() + ")",
+                    "SPECIFICATION", spec.getId(), null, null, "Success", null);
+        } catch (Exception ex) {
+            log.error("ผิดพลาด audit log DELETE_SPECIFICATION: {}", ex.getMessage(), ex);
+        }
     }
 
     private void deleteTraceLinksForSpecification(UUID specId, String userId) {

@@ -171,9 +171,14 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           if (data.isLocked) {
             this.isLocked = true;
             this.isView = true;
+          } else {
+            this.isLocked = false;
+            this.isView = this.router.url.includes('/view');
           }
           if (this.isView) {
             this.form.disable();
+          } else {
+            this.form.enable();
           }
           this.cdr.detectChanges();
         },

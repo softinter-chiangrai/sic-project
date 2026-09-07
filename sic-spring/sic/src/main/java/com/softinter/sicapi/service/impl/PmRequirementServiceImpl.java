@@ -136,7 +136,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                     saved.getId(),
                     saved.getProjectId(),
                     saved.getRequirementCode(),
-                    saved.getVersion() != null ? saved.getVersion() : "v1.0",
+                    saved.getVersion() != null ? saved.getVersion() : "v0.1",
                     "สร้างข้อกำหนดเริ่มต้น (Initial requirement)",
                     JsonSnapshotHelper.toJson(toResponse(saved)),
                     finalUploadGroupId,
@@ -240,6 +240,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     public void delete(UUID id, UUID businessId, String userId) {
         PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
                 .orElseThrow(() -> new RuntimeException("Requirement not found"));
+        approvalService.assertNotApproved("REQUIREMENT", requirement.getId());
         requirement.setIsDelete(true);
         requirement.setIsActive(false);
         requirement.setDeleteBy(userId);
@@ -248,6 +249,15 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
         // ✅ Soft delete all versions
         documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
+
+        // Audit Log
+        try {
+            auditLogService.log("DELETE_REQUIREMENT", "Requirement Management",
+                    "ลบ Requirement: " + requirement.getTitle() + " (" + requirement.getRequirementCode() + ")",
+                    "REQUIREMENT", requirement.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_REQUIREMENT: {}", e.getMessage(), e);
+        }
     }
 
     private void mapRequestToEntity(PmRequirementRequest request, PmRequirement entity) {

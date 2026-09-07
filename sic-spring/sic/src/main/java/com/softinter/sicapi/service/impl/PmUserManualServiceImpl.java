@@ -130,6 +130,12 @@ public class PmUserManualServiceImpl implements PmUserManualService {
 
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
+
+            String currentVer = entity.getVersion() != null ? entity.getVersion() : "0.1";
+            String newVer = documentVersionService.incrementVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
+            String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
+            entity.setVersion(cleanVer);
+
             entity = manualRepository.save(entity);
 
             try {
@@ -144,13 +150,15 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
+        String targetVer = entity.getVersion() != null ? (entity.getVersion().startsWith("v") ? entity.getVersion() : "v" + entity.getVersion()) : "v0.1";
+
         // ✅ Create document version
         documentVersionService.createVersion(
-                "MANUAL",
+                "USER_MANUAL",
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getManualCode(),
-                entity.getVersion() != null ? entity.getVersion() : "v0.1",
+                targetVer,
                 diffSummary,
                 snapshotJson
         );
@@ -200,6 +208,9 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         manual.setDeleteBy(userId);
         manual.setDeleteDate(Instant.now());
         manualRepository.save(manual);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("USER_MANUAL", manual.getId());
 
         try {
             auditLogService.log("DELETE_USER_MANUAL", "User Manual Management",

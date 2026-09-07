@@ -24,9 +24,11 @@ import com.softinter.sicapi.dto.response.ApprovalResponse;
 import com.softinter.sicapi.dto.response.ApprovalStepResponse;
 import com.softinter.sicapi.dto.response.ApprovalSummaryResponse;
 import com.softinter.sicapi.dto.response.CancelApprovalResponse;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.entity.enums.ApprovalMode;
 import com.softinter.sicapi.entity.enums.ApprovalStatus;
+import com.softinter.sicapi.entity.enums.MaRenewalStatus;
 import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.pm.PmApproval;
 import com.softinter.sicapi.entity.pm.PmApprovalFlow;
@@ -597,6 +599,18 @@ public class ApprovalServiceImpl implements ApprovalService {
 
             updateDocumentStatusOnCancel(approval);
 
+            try {
+                auditLogService.log(
+                        "CANCEL_APPROVAL",
+                        "Approval Center / " + approval.getDocumentType(),
+                        "ยกเลิกการขออนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()) + " (เนื่องจากการปรับปรุง Approval Flow)",
+                        approval.getDocumentType(),
+                        approval.getDocumentId(),
+                        null, null, "Success", "Cancelled by Flow update by: " + userName + (reason != null ? " | เหตุผล: " + reason : ""));
+            } catch (Exception e) {
+                log.error("Error creating audit log on cancelByFlow: {}", e.getMessage(), e);
+            }
+
             cancelledResponses.add(toResponse(approval));
         }
 
@@ -610,38 +624,42 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional
     public boolean invalidatePendingApproval(String documentType, UUID documentId, String reason) {
-        // มองหา approval record ล่าสุดที่ยัง active อยู่ (ไม่ว่าจะ PENDING หรือ APPROVED ไปแล้วก็ตาม)
-        // เพราะเมื่อ approve() สำเร็จ ระบบไม่เคยปิด isActive ของ record นั้น — ถ้าไม่ invalidate ตรงนี้
-        // getCurrentStatus()/getDocumentStatus() จะยังอ่านเจอสถานะ "APPROVED" เดิมค้างอยู่ ทั้งที่เอกสารถูกแก้ไขแล้ว
+        // มองหา approval records ทั้งหมดที่ยัง active อยู่ (ไม่ว่าจะ PENDING หรือ APPROVED ไปแล้วก็ตาม)
+        // เพื่อยกเลิกสถานะ active ทั้งหมดเมื่อเอกสารถูกปลดล็อคหรือแก้ไข
         List<PmApproval> activeApprovals = approvalRepository.findActiveByDocument(documentType, documentId);
+        if (activeApprovals == null || activeApprovals.isEmpty()) {
+            return false;
+        }
 
-        return activeApprovals.stream()
-                .findFirst()
-                .filter(a -> !a.getStatus().isFinal() || a.getStatus() == ApprovalStatus.APPROVED)
-                .map(approval -> {
-                    ApprovalStatus oldStatus = approval.getStatus();
-                    approval.setStatus(ApprovalStatus.CANCELLED);
-                    approval.setCurrentStep(null);
-                    approval.setIsActive(false);
-                    approval.setComment(reason);
-                    approvalRepository.save(approval);
+        boolean anyCancelled = false;
+        for (PmApproval approval : activeApprovals) {
+            if (!approval.getStatus().isFinal() || approval.getStatus() == ApprovalStatus.APPROVED) {
+                ApprovalStatus oldStatus = approval.getStatus();
+                approval.setStatus(ApprovalStatus.CANCELLED);
+                approval.setCurrentStep(null);
+                approval.setIsActive(false);
+                approval.setComment(reason);
+                approvalRepository.save(approval);
 
-                    createLog(approval, null, "AUTO_CANCEL", "system", "System",
-                            reason, oldStatus, ApprovalStatus.CANCELLED);
+                createLog(approval, null, "AUTO_CANCEL", "system", "System",
+                        reason, oldStatus, ApprovalStatus.CANCELLED);
+                anyCancelled = true;
+            }
+        }
 
-                    try {
-                        auditLogService.log(
-                                "AUTO_CANCEL_APPROVAL",
-                                "Approval Center / " + documentType,
-                                "ยกเลิกสถานะอนุมัติเดิม (" + oldStatus + ") อัตโนมัติ เนื่องจากเอกสารถูกแก้ไขหลังอนุมัติ/ระหว่างรอการอนุมัติ",
-                                documentType, documentId, null, null, "Success", reason);
-                    } catch (Exception e) {
-                        log.error("Error creating audit log on auto-cancel approval: {}", e.getMessage(), e);
-                    }
+        if (anyCancelled) {
+            try {
+                auditLogService.log(
+                        "AUTO_CANCEL_APPROVAL",
+                        "Approval Center / " + documentType,
+                        "ยกเลิกสถานะอนุมัติเดิม อัตโนมัติ เนื่องจากเอกสารถูกแก้ไขหลังอนุมัติ/ระหว่างรอการอนุมัติ",
+                        documentType, documentId, null, null, "Success", reason);
+            } catch (Exception e) {
+                log.error("Error creating audit log on auto-cancel approval: {}", e.getMessage(), e);
+            }
+        }
 
-                    return true;
-                })
-                .orElse(false);
+        return anyCancelled;
     }
 
     @Override
@@ -676,6 +694,18 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         notificationService.notifyDelegate(approval, delegateToUserId);
 
+        try {
+            auditLogService.log(
+                    "DELEGATE_APPROVAL",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "มอบหมายการอนุมัติเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()) + " ให้แก่ " + getUserName(delegateToUserId),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Delegated by: " + userName + (comment != null ? " | หมายเหตุ: " + comment : ""));
+        } catch (Exception e) {
+            log.error("Error creating audit log on delegate: {}", e.getMessage(), e);
+        }
+
         return toResponse(approval);
     }
 
@@ -702,9 +732,73 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(readOnly = true)
     public boolean isApproved(String documentType, UUID documentId) {
+        if (documentType == null || documentId == null) {
+            return false;
+        }
+
+        // ตรวจสอบสถานะของตัวเอกสารก่อน: ถ้าเอกสารมีสถานะเป็น Changed, Draft, etc. จะถือว่าไม่ถูกล็อค
+        if (!isDocumentStatusApproved(documentType, documentId)) {
+            return false;
+        }
+
         List<PmApproval> approvals = approvalRepository.findActiveByDocument(documentType, documentId);
         return approvals.stream()
                 .anyMatch(a -> a.getStatus() == ApprovalStatus.APPROVED);
+    }
+
+    private boolean isDocumentStatusApproved(String documentType, UUID documentId) {
+        switch (documentType.toUpperCase()) {
+            case "REQUIREMENT":
+                return requirementRepository.findById(documentId)
+                        .map(r -> "Approved".equalsIgnoreCase(r.getStatus()))
+                        .orElse(false);
+            case "SPECIFICATION":
+                return specificationRepository.findById(documentId)
+                        .map(s -> "Approved".equalsIgnoreCase(s.getStatus()))
+                        .orElse(false);
+            case "DESIGN_REVIEW":
+                return designReviewRepository.findById(documentId)
+                        .map(dr -> "Resolved".equalsIgnoreCase(dr.getStatus()))
+                        .orElse(false);
+            case "CONTRACT":
+                return customerContractRepository.findById(documentId)
+                        .map(c -> "Signed".equalsIgnoreCase(c.getSignStatus()))
+                        .orElse(false);
+            case "DELIVERY":
+                return deliveryRepository.findById(documentId)
+                        .map(d -> "CONFIRMED".equalsIgnoreCase(d.getStatus()) || Boolean.TRUE.equals(d.getIsLocked()))
+                        .orElse(false);
+            case "INVOICE":
+                return invoiceRepository.findById(documentId)
+                        .map(i -> "APPROVED".equalsIgnoreCase(i.getApprovalStatus()))
+                        .orElse(false);
+            case "MA_TICKET":
+                return maTicketRepository.findById(documentId)
+                        .map(t -> t.getStatus() == MaTicketStatus.RESOLVED)
+                        .orElse(false);
+            case "MA_RENEWAL":
+                return maRenewalRepository.findById(documentId)
+                        .map(r -> r.getStatus() == MaRenewalStatus.CONFIRMED)
+                        .orElse(false);
+            case "USER_MANUAL":
+            case "MANUAL":
+                return userManualRepository.findById(documentId)
+                        .map(m -> "APPROVED".equalsIgnoreCase(m.getStatus()))
+                        .orElse(false);
+            case "CHANGE_REQUEST":
+                return changeRequestRepository.findById(documentId)
+                        .map(cr -> "APPROVED".equalsIgnoreCase(cr.getStatus()))
+                        .orElse(false);
+            case "PROJECT":
+                return customerProjectRepository.findById(documentId)
+                        .map(p -> !"Planning".equalsIgnoreCase(p.getStatus()))
+                        .orElse(false);
+            case "DIAGRAM":
+            case "DFD":
+            case "ER":
+            default:
+                return true;
+        }
     }
 
     @Override
@@ -741,7 +835,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                     spec.setVersion(newVersion);
                     specificationRepository.save(spec);
                     UUID specProjectId = spec.getProject() != null ? spec.getProject().getId() : null;
-                    versionService.createVersion("SPEC", spec.getId(), specProjectId,
+                    versionService.createVersion("SPECIFICATION", spec.getId(), specProjectId,
                             spec.getSpecificationCode(), newVersion, reason);
                 });
                 break;
@@ -749,12 +843,20 @@ public class ApprovalServiceImpl implements ApprovalService {
                 designReviewRepository.findById(documentId).ifPresent(dr -> {
                     dr.setStatus("Changed");
                     designReviewRepository.save(dr);
+                    String curVer = versionService.getVersions("DESIGN_REVIEW", dr.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("DESIGN_REVIEW", dr.getId(), dr.getProject() != null ? dr.getProject().getId() : null,
+                            dr.getReviewCode(), newVersion, reason);
                 });
                 break;
             case "CONTRACT":
                 customerContractRepository.findById(documentId).ifPresent(contract -> {
                     contract.setSignStatus("Changed");
                     customerContractRepository.save(contract);
+                    String curVer = versionService.getVersions("CONTRACT", contract.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("CONTRACT", contract.getId(), contract.getProjectId(),
+                            contract.getContractNo(), newVersion, reason);
                 });
                 break;
             case "DELIVERY":
@@ -774,6 +876,10 @@ public class ApprovalServiceImpl implements ApprovalService {
                 invoiceRepository.findById(documentId).ifPresent(inv -> {
                     inv.setApprovalStatus("CHANGED");
                     invoiceRepository.save(inv);
+                    String curVer = versionService.getVersions("INVOICE", inv.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("INVOICE", inv.getId(), inv.getProjectId(),
+                            inv.getInvoiceNo(), newVersion, reason);
                 });
                 break;
             case "MA_TICKET":
@@ -781,11 +887,21 @@ public class ApprovalServiceImpl implements ApprovalService {
                     ticket.setStatus(MaTicketStatus.CHANGED);
                     ticket.setResolvedDate(null);
                     maTicketRepository.save(ticket);
+                    String curVer = versionService.getVersions("MA_TICKET", ticket.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("MA_TICKET", ticket.getId(), ticket.getProjectId(),
+                            ticket.getTicketNo(), newVersion, reason);
                 });
                 break;
             case "MA_RENEWAL":
-                // MaRenewalStatus ไม่มีค่า CHANGED และไม่เคย sync กับสถานะอนุมัติมาก่อน
-                // จึงไม่แก้ status ที่นี่ - ปลดล็อคด้วยการ invalidate PmApproval record เท่านั้น (ด้านล่าง)
+                maRenewalRepository.findById(documentId).ifPresent(ren -> {
+                    ren.setStatus(MaRenewalStatus.DRAFT);
+                    maRenewalRepository.save(ren);
+                    String curVer = versionService.getVersions("MA_RENEWAL", ren.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("MA_RENEWAL", ren.getId(), ren.getProjectId(),
+                            ren.getRenewalNo(), newVersion, reason);
+                });
                 break;
             case "USER_MANUAL":
             case "MANUAL":
@@ -794,7 +910,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                     String newVersion = versionService.incrementVersion(man.getVersion());
                     man.setVersion(newVersion);
                     userManualRepository.save(man);
-                    versionService.createVersion("MANUAL", man.getId(), man.getProjectId(),
+                    versionService.createVersion("USER_MANUAL", man.getId(), man.getProjectId(),
                             man.getManualCode(), newVersion, reason);
                 });
                 break;
@@ -802,12 +918,21 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerProjectRepository.findById(documentId).ifPresent(prj -> {
                     prj.setStatus("Planning");
                     customerProjectRepository.save(prj);
+                    String curVer = versionService.getVersions("PROJECT", prj.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("PROJECT", prj.getId(), prj.getId(),
+                            prj.getProjectCode(), newVersion, reason);
                 });
                 break;
             case "DIAGRAM":
             case "DFD":
             case "ER":
-                // PmDiagramTab ไม่มี status field - เวอร์ชันจะถูกสร้างใหม่โดยอัตโนมัติในการแก้ไขครั้งถัดไป
+                diagramTabRepository.findById(documentId).ifPresent(tab -> {
+                    String curVer = versionService.getVersions("DIAGRAM", tab.getId()).stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0");
+                    String newVersion = versionService.incrementVersion(curVer);
+                    versionService.createVersion("DIAGRAM", tab.getId(), tab.getProjectId(),
+                            tab.getName(), newVersion, reason);
+                });
                 break;
             default:
                 break;
@@ -830,6 +955,9 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(readOnly = true)
     public ApprovalStatus getCurrentStatus(String documentType, UUID documentId) {
+        if (!isDocumentStatusApproved(documentType, documentId)) {
+            return null;
+        }
         List<PmApproval> approvals = approvalRepository.findActiveByDocument(documentType, documentId);
         return approvals.stream()
                 .findFirst()
@@ -909,31 +1037,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 break;
             default:
                 break;
-        }
-    }
-
-    /**
-     * ApprovalService/PmApproval ทั้งระบบใช้ documentType กลาง (เช่น "SPECIFICATION", "USER_MANUAL", "DIAGRAM")
-     * แต่บาง ServiceImpl บันทึกประวัติเวอร์ชันของตัวเองด้วยชื่อย่อที่ต่างออกไป (เช่น "SPEC", "MANUAL", หรือ
-     * ชนิดไดอะแกรมจริงอย่าง "DFD"/"ER") ต้องแปลงให้ตรงกันก่อนเขียนลง pm_document_version มิฉะนั้นประวัติ
-     * ที่สร้างตอนอนุมัติจะแยกกลุ่มกับประวัติที่สร้างตอนบันทึกปกติ ทำให้หน้าจอ Document Version History
-     * (ซึ่งกรองด้วยชื่อย่อเหล่านี้) มองไม่เห็น record ที่สร้างตอนอนุมัติเลย
-     */
-    private String normalizeDocTypeForVersion(String docType, UUID docId) {
-        if (docType == null) {
-            return docType;
-        }
-        switch (docType.toUpperCase()) {
-            case "SPECIFICATION":
-                return "SPEC";
-            case "USER_MANUAL":
-                return "MANUAL";
-            case "DIAGRAM":
-                return diagramTabRepository.findById(docId)
-                        .map(t -> t.getDiagramType().toUpperCase())
-                        .orElse(docType);
-            default:
-                return docType;
         }
     }
 
@@ -1036,19 +1139,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                     cr.setApprovedAt(Instant.now());
                     changeRequestRepository.save(cr);
 
-                    // ปรับสถานะเอกสารเป้าหมาย (เช่น Requirement / Spec) ให้เป็น Changed ทันทีที่ CR ผ่านการอนุมัติ
+                    // ปรับสถานะเอกสารเป้าหมาย และปลดล็อคผ่าน unlockDocumentAfterChange ทันทีที่ CR ผ่านการอนุมัติ
                     if (cr.getTargetType() != null && cr.getTargetId() != null) {
-                        if ("REQUIREMENT".equalsIgnoreCase(cr.getTargetType())) {
-                            requirementRepository.findById(cr.getTargetId()).ifPresent(req -> {
-                                req.setStatus("Changed");
-                                requirementRepository.save(req);
-                            });
-                        } else if ("SPECIFICATION".equalsIgnoreCase(cr.getTargetType())) {
-                            specificationRepository.findById(cr.getTargetId()).ifPresent(spec -> {
-                                spec.setStatus("Changed");
-                                specificationRepository.save(spec);
-                            });
-                        }
+                        unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), "Change Request " + (cr.getCrCode() != null ? cr.getCrCode() : cr.getId()) + " approved");
                     }
                 });
                 break;
@@ -1132,7 +1225,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         // Auto Create Document Version on Approval
         try {
             DocumentVersionRequest versionReq = new DocumentVersionRequest();
-            versionReq.setDocumentType(normalizeDocTypeForVersion(docType, docId));
+            versionReq.setDocumentType(docType);
             versionReq.setDocumentId(docId);
             versionReq.setDocumentCode(approval.getDocumentCode());
             versionReq.setVersionNo(majorVersion);
@@ -1596,6 +1689,18 @@ public class ApprovalServiceImpl implements ApprovalService {
             createLog(approval, stepStatus, "AUTO_SKIP", "system", "System", "Auto-skipped due to timeout", ApprovalStatus.PENDING, ApprovalStatus.APPROVED);
         }
 
+        try {
+            auditLogService.log(
+                    "AUTO_SKIP",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "ข้ามขั้นตอนอนุมัติอัตโนมัติ (Timeout " + currentStep.getTimeoutDays() + " วัน): " + currentStep.getStepName() + " สำหรับเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Step: " + currentStep.getStepName());
+        } catch (Exception e) {
+            log.error("Error creating audit log on auto-skip: {}", e.getMessage(), e);
+        }
+
         advanceToNextStepOrComplete(approval, currentStep.getStepName());
     }
 
@@ -1612,6 +1717,18 @@ public class ApprovalServiceImpl implements ApprovalService {
             stepStatus.setApproverName("System (Auto-Approve)");
             stepStatusRepository.save(stepStatus);
             createLog(approval, stepStatus, "AUTO_APPROVE", "system", "System", "Auto-approved due to timeout", ApprovalStatus.PENDING, ApprovalStatus.APPROVED);
+        }
+
+        try {
+            auditLogService.log(
+                    "AUTO_APPROVE",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "อนุมัติขั้นตอนอัตโนมัติ (Timeout " + currentStep.getTimeoutDays() + " วัน): " + currentStep.getStepName() + " สำหรับเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Step: " + currentStep.getStepName());
+        } catch (Exception e) {
+            log.error("Error creating audit log on auto-approve: {}", e.getMessage(), e);
         }
 
         advanceToNextStepOrComplete(approval, currentStep.getStepName());
@@ -1641,6 +1758,18 @@ public class ApprovalServiceImpl implements ApprovalService {
         createLog(approval, null, "AUTO_REJECT", "system", "System", "Auto-rejected due to timeout", ApprovalStatus.PENDING, ApprovalStatus.REJECTED);
         updateDocumentStatusOnReject(approval);
         notificationService.notifyRejected(approval, currentStep.getStepName());
+
+        try {
+            auditLogService.log(
+                    "AUTO_REJECT",
+                    "Approval Center / " + approval.getDocumentType(),
+                    "ปฏิเสธเอกสารอัตโนมัติ (Timeout " + currentStep.getTimeoutDays() + " วัน): " + currentStep.getStepName() + " สำหรับเอกสาร " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                    approval.getDocumentType(),
+                    approval.getDocumentId(),
+                    null, null, "Success", "Step: " + currentStep.getStepName());
+        } catch (Exception e) {
+            log.error("Error creating audit log on auto-reject: {}", e.getMessage(), e);
+        }
     }
 
     private void advanceToNextStepOrComplete(PmApproval approval, String previousStepName) {

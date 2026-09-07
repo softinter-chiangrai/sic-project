@@ -20,6 +20,13 @@ data/
 docker/
 .devcontainer/
 .mvn/
+**/feature-backup/
+**/tutorial/
+**/main/index/
+**/ex/
+.cmd
+.repomixignore
+*.css
 
 
 # โฟลเดอร์และไฟล์คอนฟิกทั้งหมดในโปรเจกต์ (ไม่เอาเลย เหลือไว้แค่ไฟล์โค้ด)

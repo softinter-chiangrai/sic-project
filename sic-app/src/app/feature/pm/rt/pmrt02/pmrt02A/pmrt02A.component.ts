@@ -225,6 +225,14 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
           if (data.isApproved || data.isLocked || data.approvalStatus === 'APPROVED') {
             this.isLocked = true;
             this.isViewOnly = true;
+          } else {
+            this.isLocked = false;
+            this.isViewOnly = this.router.url.includes('/view');
+          }
+          if (this.isViewOnly) {
+            this.form.disable();
+          } else {
+            this.form.enable();
           }
           this.loadApprovalFlowForProject(id);
         },

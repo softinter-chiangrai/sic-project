@@ -169,13 +169,23 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(contract));
 
+        // ✅ Dynamic version calculation
+        String targetVersion;
+        if (isNew) {
+            targetVersion = "v0.1";
+        } else {
+            String currentVer = documentVersionService.getVersions("CONTRACT", contract.getId())
+                    .stream().findFirst().map(com.softinter.sicapi.dto.response.DocumentVersionResponse::getVersionNo).orElse("v0.1");
+            targetVersion = documentVersionService.incrementVersion(currentVer);
+        }
+
         // ✅ Create document version
         documentVersionService.createVersion(
                 "CONTRACT",
                 contract.getId(),
                 contract.getProjectId(),
                 contract.getContractNo(),
-                isNew ? "v1.0" : "v1.1",
+                targetVersion,
                 diffSummary,
                 snapshotJson
         );
@@ -222,9 +232,15 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     public void deleteContract(UUID id) {
         PmCustomerContract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));
+
+        approvalService.assertNotApproved("CONTRACT", contract.getId());
+
         contract.setIsDelete(true);
         contract.setIsActive(false);
         contractRepository.save(contract);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("CONTRACT", contract.getId());
 
         try {
             auditLogService.log("DELETE_CONTRACT", "Contract Management",

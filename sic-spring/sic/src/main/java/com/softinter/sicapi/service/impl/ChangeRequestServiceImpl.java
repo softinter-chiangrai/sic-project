@@ -4,6 +4,7 @@ import com.softinter.sicapi.dto.request.ChangeRequestRequest;
 import com.softinter.sicapi.dto.response.ChangeRequestResponse;
 import com.softinter.sicapi.dto.response.CrAssigneeResponse;
 import com.softinter.sicapi.dto.response.ChangeImpactResponse;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.entity.pm.*;
 import com.softinter.sicapi.repository.pm.*;
@@ -42,7 +43,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final PmCrAssigneeRepository pmCrAssigneeRepository;
     private final PmChangeImpactRepository pmChangeImpactRepository;
     private final PmCustomerProjectRepository projectRepository;
-    private final com.softinter.sicapi.repository.pm.PmDiagramTabRepository diagramTabRepository;
+    private final PmDiagramTabRepository diagramTabRepository;
     private final PmDeliveryRepository deliveryRepository;
     private final PmUserManualRepository userManualRepository;
     private final ApprovalService approvalService;
@@ -75,8 +76,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 projId = deliveryRepository.findById(request.getTargetId())
                         .map(PmDelivery::getProjectId)
                         .orElse(null);
-            } else if ("USER_MANUAL".equalsIgnoreCase(request.getTargetType())
-                    || "MANUAL".equalsIgnoreCase(request.getTargetType())) {
+            } else if ("USER_MANUAL".equalsIgnoreCase(request.getTargetType())) {
                 projId = userManualRepository.findById(request.getTargetId())
                         .map(PmUserManual::getProjectId)
                         .orElse(null);
@@ -84,7 +84,11 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
         cr.setProjectId(projId);
         if (request.getCrCode() != null && !request.getCrCode().isBlank()) {
-            cr.setCrCode(request.getCrCode().trim());
+            String code = request.getCrCode().trim();
+            if (projId != null && changeRequestRepository.existsByProjectIdAndCrCodeAndIsDeleteFalse(projId, code)) {
+                throw new RuntimeException("รหัส Change Request นี้มีอยู่แล้วในโครงการนี้: " + code);
+            }
+            cr.setCrCode(code);
         } else {
             long count = projId != null ? changeRequestRepository.countByProjectIdAndIsDeleteFalse(projId) + 1 : 1;
             cr.setCrCode("CR-" + String.format("%03d", count));
@@ -112,7 +116,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 cr.getId(),
                 cr.getProjectId(),
                 cr.getTitle(),
-                "v1.0",
+                "v0.1",
                 "สร้างคำขอเปลี่ยนแปลง (Initial change request)",
                 snapshotJson
         );
@@ -175,7 +179,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
 
         if (request.getCrCode() != null && !request.getCrCode().isBlank()) {
-            cr.setCrCode(request.getCrCode().trim());
+            String code = request.getCrCode().trim();
+            if (!code.equals(cr.getCrCode()) && cr.getProjectId() != null
+                    && changeRequestRepository.existsByProjectIdAndCrCodeAndIsDeleteFalse(cr.getProjectId(), code)) {
+                throw new RuntimeException("รหัส Change Request นี้มีอยู่แล้วในโครงการนี้: " + code);
+            }
+            cr.setCrCode(code);
         }
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
@@ -205,13 +214,18 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(cr));
 
+        // ✅ Dynamic version calculation
+        String currentVersion = documentVersionService.getVersions("CHANGE_REQUEST", cr.getId())
+                .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+        String nextVersion = documentVersionService.incrementVersion(currentVersion);
+
         // ✅ Create document version
         documentVersionService.createVersion(
                 "CHANGE_REQUEST",
                 cr.getId(),
                 cr.getProjectId(),
                 cr.getTitle(),
-                "v1.1",
+                nextVersion,
                 diffSummary,
                 snapshotJson
         );
@@ -290,6 +304,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setDeleteBy(currentUserService.getUserId());
         cr.setDeleteDate(Instant.now());
         changeRequestRepository.save(cr);
+
+        // Soft delete all document versions
+        documentVersionService.deleteVersionsByDocument("CHANGE_REQUEST", cr.getId());
 
         logCrAudit("DELETE_CR", cr);
     }
@@ -550,7 +567,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                         .map(d -> documentVersionService.incrementVersion(d.getDeliveryVersion()))
                         .orElse("0.2");
             case "USER_MANUAL":
-            case "MANUAL":
                 return userManualRepository.findById(targetId)
                         .map(m -> documentVersionService.incrementVersion(m.getVersion()))
                         .orElse("0.2");

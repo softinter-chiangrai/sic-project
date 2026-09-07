@@ -158,6 +158,9 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         if (data.isLocked) {
           this.isLocked.set(true);
           this.isView.set(true);
+        } else {
+          this.isLocked.set(false);
+          this.isView.set(this.router.url.includes('/view'));
         }
         if (this.isView()) {
           this.formData.form.disable();
@@ -355,6 +358,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       case 'TEST':
         this.router.navigate(['/feature/pm/test-management']);
         break;
+      case 'USER_MANUAL':
       case 'MANUAL':
         this.router.navigate(['/feature/pm/manual']);
         break;

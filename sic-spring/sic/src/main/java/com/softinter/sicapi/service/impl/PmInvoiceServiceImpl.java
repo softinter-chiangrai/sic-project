@@ -2,6 +2,7 @@ package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.request.PmInvoiceItemRequest;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.dto.response.PmInvoiceItemResponse;
 import com.softinter.sicapi.dto.response.PmInvoiceResponse;
 import com.softinter.sicapi.entity.enums.BillingType;
@@ -154,13 +155,23 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
+        // ✅ Dynamic version calculation
+        String targetVersion;
+        if (isNew) {
+            targetVersion = "v0.1";
+        } else {
+            String currentVer = documentVersionService.getVersions("INVOICE", entity.getId())
+                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+            targetVersion = documentVersionService.incrementVersion(currentVer);
+        }
+
         // ✅ Create document version
         documentVersionService.createVersion(
                 "INVOICE",
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getInvoiceNo(),
-                "v0.1",
+                targetVersion,
                 diffSummary,
                 snapshotJson
         );
@@ -188,6 +199,9 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         invoice.setDeleteBy(userId);
         invoice.setDeleteDate(Instant.now());
         invoiceRepository.save(invoice);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("INVOICE", invoice.getId());
 
         logInvoiceAudit("DELETE_INVOICE", invoice);
     }

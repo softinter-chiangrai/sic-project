@@ -19,6 +19,9 @@ import com.softinter.sicapi.repository.pm.PmReviewCommentRepository;
 import com.softinter.sicapi.service.PmDesignReviewService;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.AuditLogService;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
+import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import jakarta.persistence.criteria.Predicate;
@@ -54,6 +57,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final SuUserBusinessService userBusinessService;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -136,7 +140,12 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
                 .orElseThrow(() -> new RuntimeException("Project not found"));
 
         entity.setProject(project);
-        entity.setReviewCode(request.getReviewCode());
+        if (request.getReviewCode() == null || request.getReviewCode().isBlank()) {
+            long count = designReviewRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+            entity.setReviewCode("DR-" + String.format("%03d", count));
+        } else {
+            entity.setReviewCode(request.getReviewCode());
+        }
         entity.setTitle(request.getTitle());
         entity.setDescription(request.getDescription());
         entity.setReviewItemType(request.getReviewableType() != null && !request.getReviewableType().isBlank() ? request.getReviewableType() : "Specification");
@@ -162,6 +171,39 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
 
         PmDesignReview saved = designReviewRepository.save(entity);
 
+        // ✅ Create document version
+        try {
+            String snapshotJson = JsonSnapshotHelper.toJson(mapToResponse(saved));
+            UUID projId = saved.getProject() != null ? saved.getProject().getId() : null;
+            if (isNew) {
+                documentVersionService.createVersion(
+                        "DESIGN_REVIEW",
+                        saved.getId(),
+                        projId,
+                        saved.getReviewCode(),
+                        "v0.1",
+                        "สร้าง Design Review เริ่มต้น",
+                        snapshotJson
+                );
+            } else {
+                String currentVer = documentVersionService.getVersions("DESIGN_REVIEW", saved.getId())
+                        .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                String nextVer = documentVersionService.incrementVersion(currentVer);
+                String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไข Design Review: " + saved.getTitle());
+                documentVersionService.createVersion(
+                        "DESIGN_REVIEW",
+                        saved.getId(),
+                        projId,
+                        saved.getReviewCode(),
+                        nextVer,
+                        diffSummary,
+                        snapshotJson
+                );
+            }
+        } catch (Exception e) {
+            log.error("Error creating document version for Design Review: {}", e.getMessage(), e);
+        }
+
         try {
             String action = isNew ? "CREATE_DESIGN_REVIEW" : "UPDATE_DESIGN_REVIEW";
             auditLogService.log(action, "Design Review Management",
@@ -186,6 +228,9 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setDeleteBy(userId);
         entity.setDeleteDate(Instant.now());
         designReviewRepository.save(entity);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("DESIGN_REVIEW", entity.getId());
 
         try {
             auditLogService.log("DELETE_DESIGN_REVIEW", "Design Review Management",

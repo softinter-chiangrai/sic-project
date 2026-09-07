@@ -170,7 +170,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         // ✅ Create document version
         documentVersionService.createVersion(
-                diagramType,
+                "DIAGRAM",
                 saved.getId(),
                 saved.getProjectId(),
                 saved.getName(),
@@ -279,6 +279,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 tab.setIsActive(request.getIsActive());
             }
 
+            if (!changes.isEmpty()) {
+                approvalService.invalidatePendingApproval("DIAGRAM", tab.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+                approvalService.invalidatePendingApproval(tab.getDiagramType().toUpperCase(), tab.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+            }
+
             PmDiagramTab saved = tabRepository.save(tab);
 
             // Snapshot data
@@ -287,7 +292,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             // ✅ Create document version
             String newVersion = documentVersionService.incrementVersion(oldVersion);
             documentVersionService.createVersion(
-                    saved.getDiagramType().toUpperCase(),
+                    "DIAGRAM",
                     saved.getId(),
                     saved.getProjectId(),
                     saved.getName(),
@@ -312,7 +317,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
             // ✅ Soft delete all versions
             documentVersionService.deleteVersionsByDocument(
-                    tab.getDiagramType().toUpperCase(),
+                    "DIAGRAM",
                     tab.getId());
 
             try {
@@ -369,7 +374,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
         // ✅ 3. Soft delete all versions
         documentVersionService.deleteVersionsByDocument(
-                tab.getDiagramType().toUpperCase(),
+                "DIAGRAM",
                 tab.getId());
 
         try {
@@ -389,10 +394,13 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 .orElseThrow(() -> new RuntimeException("Tab not found: " + id));
 
         PmDiagramTab duplicate = new PmDiagramTab();
-        duplicate.setUserId(original.getUserId());
+        duplicate.setUserId(currentUserService.getUserId());
         duplicate.setBusinessId(original.getBusinessId());
         duplicate.setProjectId(original.getProjectId());
         duplicate.setName(original.getName() + " (Copy)");
+        if (original.getDiagramCode() != null && !original.getDiagramCode().isBlank()) {
+            duplicate.setDiagramCode(original.getDiagramCode() + "-COPY");
+        }
         duplicate.setDiagramType(original.getDiagramType());
         duplicate.setMermaidScript(original.getMermaidScript());
         duplicate.setMetadata(original.getMetadata());
@@ -403,14 +411,23 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab saved = tabRepository.save(duplicate);
         createVersion(saved, "Duplicated from " + original.getName());
 
-        // TODO: คัดลอก Trace Links จากต้นฉบับ (ถ้าต้องการ)
-
         // ✅ Create document version
         documentVersionService.createVersion(
-                saved.getDiagramType().toUpperCase(),
+                "DIAGRAM",
                 saved.getId(),
+                saved.getProjectId(),
+                saved.getName(),
                 "v0.1",
-                "Duplicated from " + original.getName());
+                "Duplicated from " + original.getName(),
+                JsonSnapshotHelper.toJson(toResponse(saved)));
+
+        try {
+            auditLogService.log("DUPLICATE_DIAGRAM", "Diagram Management / " + saved.getDiagramType(),
+                    "คัดลอกไดอะแกรมจาก " + original.getName(),
+                    "DIAGRAM", saved.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DUPLICATE_DIAGRAM: {}", e.getMessage(), e);
+        }
 
         return toResponse(saved);
     }

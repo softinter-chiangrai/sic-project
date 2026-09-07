@@ -378,8 +378,16 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 if (data.isLocked) {
                     this.isLocked = true;
                     this.isViewOnly = true;
+                } else {
+                    this.isLocked = false;
+                    const isViewRoute = this.router.url.includes('/view');
+                    this.isViewOnly = isViewRoute;
                 }
-                if (this.isViewOnly) this.form.disable();
+                if (this.isViewOnly) {
+                    this.form.disable();
+                } else {
+                    this.form.enable();
+                }
 
                 this.formData.resetModel(this.form.getRawValue() as any);
                 this.cdr.markForCheck();

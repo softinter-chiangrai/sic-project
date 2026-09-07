@@ -209,12 +209,18 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
 
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
+
+            String currentVer = entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "0.1";
+            String newVer = documentVersionService.incrementVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
+            String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
+            entity.setDeliveryVersion(cleanVer);
+
             entity = deliveryRepository.save(entity);
 
             // Snapshot data for versioning
             String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
-            String nextVersion = "v" + (entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "0.1");
+            String nextVersion = "v" + cleanVer;
             documentVersionService.createVersion(
                     "DELIVERY",
                     entity.getId(),
@@ -320,6 +326,18 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         delivery.setDeleteBy(userId);
         delivery.setDeleteDate(Instant.now());
         deliveryRepository.save(delivery);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("DELIVERY", delivery.getId());
+
+        // Audit Log
+        try {
+            auditLogService.log("DELETE_DELIVERY", "Delivery Management",
+                    "ลบเอกสารส่งมอบ: " + delivery.getDeliveryTitle() + " (" + delivery.getDeliveryCode() + ")",
+                    "DELIVERY", delivery.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log DELETE_DELIVERY: {}", e.getMessage(), e);
+        }
     }
 
     @Override
@@ -401,7 +419,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         boolean manualPassed = !manuals.isEmpty();
         if (manualPassed) passedCount++;
         items.add(PmDeliveryGateCheckResponse.GateCheckItem.builder()
-                .category("MANUAL")
+                .category("USER_MANUAL")
                 .name("User Manual Preparation Gate")
                 .passed(manualPassed)
                 .status(manualPassed ? "OK" : "WARNING")

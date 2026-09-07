@@ -50,14 +50,17 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
 
   docTypeOptions = [
     { label: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
-    { label: 'DFD Diagram (Data Flow Diagram)', value: 'DFD' },
-    { label: 'ER Diagram (Entity Relationship)', value: 'ER' },
-    { label: 'Specification (ข้อกำหนดเชิงเทคนิค)', value: 'SPEC' },
-    { label: 'Test Case (รายการทดสอบ)', value: 'TEST_CASE' },
+    { label: 'Specification (ข้อกำหนดเชิงเทคนิค)', value: 'SPECIFICATION' },
+    { label: 'Diagram (DFD / ER)', value: 'DIAGRAM' },
+    { label: 'Design Review', value: 'DESIGN_REVIEW' },
+    { label: 'Change Request (คำขอเปลี่ยนแปลง)', value: 'CHANGE_REQUEST' },
     { label: 'Delivery Document (เอกสารส่งมอบ)', value: 'DELIVERY' },
     { label: 'Contract (สัญญา)', value: 'CONTRACT' },
-    { label: 'Change Request (คำขอเปลี่ยนแปลง)', value: 'CHANGE_REQUEST' },
-    { label: 'User Manual (คู่มือการใช้งาน)', value: 'MANUAL' },
+    { label: 'Invoice (ใบแจ้งหนี้)', value: 'INVOICE' },
+    { label: 'MA Ticket', value: 'MA_TICKET' },
+    { label: 'MA Renewal', value: 'MA_RENEWAL' },
+    { label: 'User Manual (คู่มือการใช้งาน)', value: 'USER_MANUAL' },
+    { label: 'Project (โครงการ)', value: 'PROJECT' },
   ];
 
   isSaved = false;

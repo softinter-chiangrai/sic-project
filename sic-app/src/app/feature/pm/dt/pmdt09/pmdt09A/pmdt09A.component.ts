@@ -329,6 +329,14 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         if (formData.isLocked) {
           this.isLocked = true;
           this.form.disable();
+        } else {
+          this.isLocked = false;
+          const isViewRoute = this.router.url.includes('/view');
+          if (isViewRoute) {
+            this.form.disable();
+          } else {
+            this.form.enable();
+          }
         }
         this.updateEmbedUrl();
         this.loadApprovalFlowForReview(id);

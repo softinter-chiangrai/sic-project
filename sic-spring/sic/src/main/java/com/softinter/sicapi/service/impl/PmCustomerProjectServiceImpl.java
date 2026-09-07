@@ -20,6 +20,13 @@ import com.softinter.sicapi.service.PmCustomerProjectService;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.AuditLogService;
 
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
+import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,6 +41,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     private final PmApprovalRepository approvalRepository;
     private final ApprovalService approvalService;
     private final AuditLogService auditLogService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional
@@ -61,6 +69,21 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
 
         project = projectRepository.save(project);
 
+        // ✅ Create Initial Document Version
+        try {
+            documentVersionService.createVersion(
+                    "PROJECT",
+                    project.getId(),
+                    project.getId(),
+                    project.getProjectCode(),
+                    "v0.1",
+                    "สร้างโปรเจกต์เริ่มต้น (Initial project)",
+                    JsonSnapshotHelper.toJson(toResponse(project))
+            );
+        } catch (Exception e) {
+            log.error("Error creating document version on create project: {}", e.getMessage(), e);
+        }
+
         try {
             auditLogService.log("CREATE_PROJECT", "Project Management",
                     "สร้างโปรเจกต์: " + project.getProjectName() + " (" + project.getProjectCode() + ")",
@@ -81,6 +104,17 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         // ✅ ป้องกันการแก้ไขโดยตรงหากผ่านการอนุมัติแล้ว (Baseline Locked)
         approvalService.assertNotApproved("PROJECT", project.getId());
 
+        List<String> changes = new ArrayList<>();
+        DocumentDiffHelper.checkChange(changes, "รหัสโครงการ (Project Code)", project.getProjectCode(), request.getProjectCode());
+        DocumentDiffHelper.checkChange(changes, "ชื่อโครงการ (Project Name)", project.getProjectName(), request.getProjectName());
+        DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", project.getStatus(), request.getStatus());
+        DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", project.getPriority(), request.getPriority());
+        DocumentDiffHelper.checkChange(changes, "คำอธิบาย (Description)", project.getDescription(), request.getDescription());
+
+        if (!changes.isEmpty()) {
+            approvalService.invalidatePendingApproval("PROJECT", project.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+        }
+
         project.setProjectCode(request.getProjectCode());
         project.setProjectName(request.getProjectName());
         project.setContractId(request.getContractId());  // ✅ อัปเดต contractId
@@ -98,6 +132,25 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
 
         project = projectRepository.save(project);
 
+        // ✅ Dynamic Increment Version
+        try {
+            String currentVer = documentVersionService.getVersions("PROJECT", project.getId())
+                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+            String nextVer = documentVersionService.incrementVersion(currentVer);
+            String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไขโปรเจกต์: " + project.getProjectName());
+            documentVersionService.createVersion(
+                    "PROJECT",
+                    project.getId(),
+                    project.getId(),
+                    project.getProjectCode(),
+                    nextVer,
+                    diffSummary,
+                    JsonSnapshotHelper.toJson(toResponse(project))
+            );
+        } catch (Exception e) {
+            log.error("Error creating document version on update project: {}", e.getMessage(), e);
+        }
+
         try {
             auditLogService.log("UPDATE_PROJECT", "Project Management",
                     "แก้ไขโปรเจกต์: " + project.getProjectName() + " (" + project.getProjectCode() + ")",
@@ -114,9 +167,15 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     public void delete(UUID id) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
                 .orElseThrow(() -> new RuntimeException("Project not found"));
+
+        approvalService.assertNotApproved("PROJECT", project.getId());
+
         project.setIsDelete(true);
         project.setIsActive(false);
         projectRepository.save(project);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("PROJECT", project.getId());
 
         try {
             auditLogService.log("DELETE_PROJECT", "Project Management",

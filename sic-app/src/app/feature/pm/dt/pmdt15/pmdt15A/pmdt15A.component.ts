@@ -153,6 +153,14 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         if (data.isLocked) {
           this.isLocked.set(true);
           this.formData.form.disable();
+        } else {
+          this.isLocked.set(false);
+          const isViewRoute = this.router.url.includes('/view');
+          if (isViewRoute) {
+            this.formData.form.disable();
+          } else {
+            this.formData.form.enable();
+          }
         }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
         this.cdr.markForCheck();

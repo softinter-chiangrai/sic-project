@@ -13,6 +13,10 @@ import com.softinter.sicapi.repository.pm.PmMaRenewalRepository;
 import com.softinter.sicapi.service.PmMaRenewalService;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.AuditLogService;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
+import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -24,6 +28,8 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -37,6 +43,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
     private final PmCustomerProjectRepository projectRepository;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
+    private final DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -65,6 +72,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         PmMaRenewal entity;
         boolean isNew = (request.getId() == null);
 
+        List<String> changes = new ArrayList<>();
         if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
             return request.getId();
@@ -83,6 +91,21 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             }
             entity = renewalRepository.save(entity);
 
+            // ✅ Initial Version
+            try {
+                documentVersionService.createVersion(
+                        "MA_RENEWAL",
+                        entity.getId(),
+                        entity.getProjectId(),
+                        entity.getRenewalNo(),
+                        "v0.1",
+                        "สร้างรายการต่อสัญญา MA เริ่มต้น",
+                        JsonSnapshotHelper.toJson(toResponse(entity))
+                );
+            } catch (Exception e) {
+                log.error("Error creating document version on create MA renewal: {}", e.getMessage(), e);
+            }
+
             try {
                 auditLogService.log("CREATE_MA_RENEWAL", "MA Renewal Management",
                         "สร้างรายการต่อสัญญา MA: " + entity.getRenewalNo(),
@@ -97,10 +120,39 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+
+            DocumentDiffHelper.checkChange(changes, "รหัสต่อสัญญา (Renewal No)", entity.getRenewalNo(), request.getRenewalNo());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus() != null ? entity.getStatus().name() : null, request.getStatus() != null ? request.getStatus().name() : null);
+            DocumentDiffHelper.checkChange(changes, "ยอดเงินเสนอ (Proposed Amount)", entity.getProposedAmount() != null ? entity.getProposedAmount().toString() : null, request.getProposedAmount() != null ? request.getProposedAmount().toString() : null);
+            DocumentDiffHelper.checkChange(changes, "หมายเหตุ (Remark)", entity.getRemark(), request.getRemark());
+
+            if (!changes.isEmpty()) {
+                approvalService.invalidatePendingApproval("MA_RENEWAL", entity.getId(), "เอกสารถูกแก้ไขระหว่างรอการอนุมัติ");
+            }
+
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = renewalRepository.save(entity);
+
+            // ✅ Dynamic Increment Version
+            try {
+                String currentVer = documentVersionService.getVersions("MA_RENEWAL", entity.getId())
+                        .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                String nextVer = documentVersionService.incrementVersion(currentVer);
+                String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไขรายการต่อสัญญา: " + entity.getRenewalNo());
+                documentVersionService.createVersion(
+                        "MA_RENEWAL",
+                        entity.getId(),
+                        entity.getProjectId(),
+                        entity.getRenewalNo(),
+                        nextVer,
+                        diffSummary,
+                        JsonSnapshotHelper.toJson(toResponse(entity))
+                );
+            } catch (Exception e) {
+                log.error("Error creating document version on update MA renewal: {}", e.getMessage(), e);
+            }
 
             try {
                 auditLogService.log("UPDATE_MA_RENEWAL", "MA Renewal Management",
@@ -144,6 +196,9 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         renewal.setDeleteBy(userId);
         renewal.setDeleteDate(Instant.now());
         renewalRepository.save(renewal);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("MA_RENEWAL", renewal.getId());
 
         try {
             auditLogService.log("DELETE_MA_RENEWAL", "MA Renewal Management",

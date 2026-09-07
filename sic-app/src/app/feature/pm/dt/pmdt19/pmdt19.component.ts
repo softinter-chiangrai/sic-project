@@ -37,14 +37,17 @@ export class Pmdt19Component implements OnInit {
   readonly docTypeOptions = [
     { text: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
     { text: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
-    { text: 'DFD Diagram', value: 'DFD' },
-    { text: 'ER Diagram', value: 'ER' },
-    { text: 'Specification', value: 'SPEC' },
-    { text: 'Test Case', value: 'TEST_CASE' },
+    { text: 'Specification (ข้อกำหนดเชิงเทคนิค)', value: 'SPECIFICATION' },
+    { text: 'Diagram (DFD / ER)', value: 'DIAGRAM' },
+    { text: 'Design Review', value: 'DESIGN_REVIEW' },
+    { text: 'Change Request', value: 'CHANGE_REQUEST' },
     { text: 'Delivery Document', value: 'DELIVERY' },
     { text: 'Contract', value: 'CONTRACT' },
-    { text: 'Change Request', value: 'CHANGE_REQUEST' },
-    { text: 'User Manual', value: 'MANUAL' },
+    { text: 'Invoice', value: 'INVOICE' },
+    { text: 'MA Ticket', value: 'MA_TICKET' },
+    { text: 'MA Renewal', value: 'MA_RENEWAL' },
+    { text: 'User Manual (คู่มือการใช้งาน)', value: 'USER_MANUAL' },
+    { text: 'Project', value: 'PROJECT' },
   ];
 
   filteredVersions = signal<DocumentVersionModel[]>([]);

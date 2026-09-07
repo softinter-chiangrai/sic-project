@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.dto.request.PmMaTicketRequest;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.dto.response.PmMaTicketResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.enums.MaTicketSeverity;
@@ -154,13 +155,23 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
+        // ✅ Dynamic version calculation
+        String targetVersion;
+        if (isNew) {
+            targetVersion = "v0.1";
+        } else {
+            String currentVer = documentVersionService.getVersions("MA_TICKET", entity.getId())
+                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+            targetVersion = documentVersionService.incrementVersion(currentVer);
+        }
+
         // ✅ Create document version
         documentVersionService.createVersion(
                 "MA_TICKET",
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getTicketNo(),
-                "v0.1",
+                targetVersion,
                 diffSummary,
                 snapshotJson
         );
@@ -178,6 +189,9 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         ticket.setDeleteBy(userId);
         ticket.setDeleteDate(Instant.now());
         ticketRepository.save(ticket);
+
+        // ✅ Soft Delete Document Versions
+        documentVersionService.deleteVersionsByDocument("MA_TICKET", ticket.getId());
 
         try {
             auditLogService.log("DELETE_MA_TICKET", "MA Ticket Management",

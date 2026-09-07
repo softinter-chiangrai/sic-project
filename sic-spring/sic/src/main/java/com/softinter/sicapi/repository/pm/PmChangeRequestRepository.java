@@ -20,11 +20,16 @@ public interface PmChangeRequestRepository
     List<PmChangeRequest> findByAssigneeIdAndStatusIn(String assigneeId, List<String> statuses);
 
     @Query("SELECT cr FROM PmChangeRequest cr " +
-            "WHERE cr.targetType = :targetType AND cr.targetId = :targetId " +
+            "WHERE (UPPER(cr.targetType) = UPPER(:targetType) " +
+            "   OR (UPPER(:targetType) IN ('SPEC', 'SPECIFICATION') AND UPPER(cr.targetType) IN ('SPEC', 'SPECIFICATION')) " +
+            "   OR (UPPER(:targetType) IN ('MANUAL', 'USER_MANUAL') AND UPPER(cr.targetType) IN ('MANUAL', 'USER_MANUAL'))) " +
+            "AND cr.targetId = :targetId " +
             "AND cr.isDelete = false " +
             "AND cr.status NOT IN ('REJECTED', 'CANCELLED', 'IMPLEMENTED')")
     List<PmChangeRequest> findActiveByTarget(@Param("targetType") String targetType,
             @Param("targetId") UUID targetId);
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
+
+    boolean existsByProjectIdAndCrCodeAndIsDeleteFalse(UUID projectId, String crCode);
 }
