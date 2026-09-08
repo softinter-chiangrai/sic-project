@@ -110,19 +110,11 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
         response.setContractsNearExpiry(nearExpiry.size());
 
         // SDLC Funnel Counts
-        response.setStageRequirementsCount(requirementRepository.count(
-                (root, query, cb) -> cb.and(cb.equal(root.get("businessId"), businessId), cb.isFalse(root.get("isDelete")))
-        ));
-        response.setStageDesignReviewsCount(designReviewRepository.count(
-                (root, query, cb) -> cb.and(cb.equal(root.get("businessId"), businessId), cb.isFalse(root.get("isDelete")))
-        ));
-        response.setStageDevTasksCount(taskRepository.count(
-                (root, query, cb) -> cb.and(cb.equal(root.get("businessId"), businessId), cb.isFalse(root.get("isDelete")))
-        ));
+        response.setStageRequirementsCount(requirementRepository.countByBusinessIdAndIsDeleteFalse(businessId));
+        response.setStageDesignReviewsCount(designReviewRepository.countByBusinessIdAndIsDeleteFalse(businessId));
+        response.setStageDevTasksCount(taskRepository.countByBusinessIdAndIsDeleteFalse(businessId));
         response.setStageTestCasesCount(testCaseRepository.countByBusinessIdAndIsDeleteFalse(businessId));
-        response.setStageDeliveriesCount(deliveryRepository.count(
-                (root, query, cb) -> cb.and(cb.equal(root.get("businessId"), businessId), cb.isFalse(root.get("isDelete")))
-        ));
+        response.setStageDeliveriesCount(deliveryRepository.countByBusinessIdAndIsDeleteFalse(businessId));
 
         // Test Management Metrics
         long totalTestCases = testCaseRepository.countByBusinessIdAndIsDeleteFalse(businessId);

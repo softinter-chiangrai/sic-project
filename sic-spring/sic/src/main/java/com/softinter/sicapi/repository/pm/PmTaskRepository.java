@@ -24,6 +24,11 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
 
     List<PmTask> findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(UUID projectId);
 
+    @Query("SELECT COUNT(t) FROM PmTask t " +
+           "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph JOIN ph.project p " +
+           "WHERE p.businessId = :businessId AND t.isDelete = false AND p.isDelete = false")
+    long countByBusinessIdAndIsDeleteFalse(@Param("businessId") UUID businessId);
+
     @Query("SELECT t FROM PmTask t " +
            "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph JOIN ph.project p " +
            "WHERE p.businessId = :businessId AND t.isDelete = false AND p.isDelete = false " +
