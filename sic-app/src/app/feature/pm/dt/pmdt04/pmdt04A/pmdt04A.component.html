@@ -43,6 +43,19 @@
         </button>
       </div>
 
+      <!-- AI Assistant Button -->
+      @if (!isViewOnly) {
+        <button
+          type="button"
+          (click)="openAiAssist()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          title="สร้างเนื้อหาและรายละเอียด Requirement ด้วย AI"
+        >
+          <i class="bi bi-stars"></i>
+          สร้างเนื้อหาด้วย AI
+        </button>
+      }
+
       <!-- Export Buttons -->
       <div class="flex gap-1">
         <button
@@ -234,4 +247,94 @@
       }
     </div>
   }
-</div>
+
+  <!-- ===== AI ASSIST MODAL ===== -->
+  @if (showAiAssistModal) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden animate-scale-in">
+        
+        <!-- Modal Header -->
+        <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-transparent">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-purple-500/10 flex items-center justify-center text-purple-600 dark:text-purple-400">
+              <i class="bi bi-stars text-lg"></i>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-[var(--text-active)]">AI Assistant - ร่าง Requirement</h2>
+              <p class="text-xs text-[var(--text-muted)]">ให้ AI ช่วยวิเคราะห์และสร้าง Requirement พร้อม Acceptance Criteria อัตโนมัติ</p>
+            </div>
+          </div>
+          <button 
+            (click)="closeAiAssist()" 
+            [disabled]="isGeneratingAiAssist"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+            <i class="bi bi-x-lg"></i>
+          </button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+          <!-- Draft Title / Feature Idea -->
+          <div>
+            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+              ชื่อฟีเจอร์ หรือ หัวข้อ Requirement เบื้องต้น
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="aiAssistTitle"
+              placeholder="เช่น ระบบเข้าสู่ระบบด้วย Two-Factor Authentication (2FA) หรือ ระบบขออนุมัติโครงการ"
+              class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50"
+            />
+          </div>
+
+          <!-- Prompt Context -->
+          <div>
+            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+              คำสั่ง หรือ รายละเอียดความต้องการเพิ่มเติม (Prompt)
+            </label>
+            <textarea
+              [(ngModel)]="aiAssistPrompt"
+              rows="4"
+              placeholder="ระบุรายละเอียด เช่น 'ต้องการให้รองรับการส่ง OTP ทาง SMS และ Email พร้อมบันทึก Audit Log ทุกครั้งที่มีการ Login ล้มเหลวเกิน 5 ครั้ง'..."
+              class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none"
+            ></textarea>
+            <p class="text-[11px] text-[var(--text-muted)] mt-1">
+              💡 AI จะช่วยสร้างทั้ง Description (HTML), Acceptance Criteria, และ Business Value ให้ครบถ้วน
+            </p>
+          </div>
+
+          @if (isGeneratingAiAssist) {
+            <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
+              <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และร่างเนื้อหา Requirement...</p>
+            </div>
+          }
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
+          <button
+            (click)="closeAiAssist()"
+            [disabled]="isGeneratingAiAssist"
+            class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+            ยกเลิก
+          </button>
+
+          <button
+            (click)="generateWithAi()"
+            [disabled]="isGeneratingAiAssist || (!aiAssistTitle && !aiAssistPrompt)"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+            @if (isGeneratingAiAssist) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>กำลังประมวลผล...</span>
+            } @else {
+              <i class="bi bi-stars"></i>
+              <span>สร้างเนื้อหาลงฟอร์ม</span>
+            }
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+</div>

@@ -84,6 +84,22 @@ export class Pmdt04AService {
     delete data.projectName;
     return this.http.post(`${environment.apiBaseUrl}/api/pm/requirement/save`, data);
   }
+
+  generateAiDraft(payload: {
+    projectId?: string;
+    title?: string;
+    prompt?: string;
+    requirementType?: string;
+  }): Observable<{
+    title?: string;
+    description?: string;
+    acceptanceCriteria?: string;
+    businessValue?: string;
+    requirementType?: string;
+    priority?: string;
+  }> {
+    return this.http.post<any>(`${environment.apiBaseUrl}/api/pm/requirement/ai/generate`, payload);
+  }
 }
 
 // ===== Component =====
@@ -159,9 +175,72 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // ===== Source Options =====
   sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
 
+  // ===== AI Assistant =====
+  showAiAssistModal = false;
+  isGeneratingAiAssist = false;
+  aiAssistPrompt = '';
+  aiAssistTitle = '';
+  aiAssistType = 'FUNCTIONAL';
+
   // ===== CanDeactivate =====
   isSaved = false;
   pageDirty = () => this.isViewOnly ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
+
+  // ===== AI Assistant Modal Handlers =====
+  openAiAssist(): void {
+    const formVal = this.form.value;
+    this.aiAssistTitle = formVal.title || '';
+    this.aiAssistType = formVal.requirementType || 'FUNCTIONAL';
+    this.aiAssistPrompt = '';
+    this.showAiAssistModal = true;
+    this.cdr.markForCheck();
+  }
+
+  closeAiAssist(): void {
+    this.showAiAssistModal = false;
+    this.cdr.markForCheck();
+  }
+
+  generateWithAi(): void {
+    const formVal = this.form.value;
+    const projectId = formVal.projectId || this.customerState.getProjectId();
+
+    this.isGeneratingAiAssist = true;
+    this.cdr.markForCheck();
+
+    this.service.generateAiDraft({
+      projectId: projectId || undefined,
+      title: this.aiAssistTitle || formVal.title || undefined,
+      requirementType: this.aiAssistType || formVal.requirementType || undefined,
+      prompt: this.aiAssistPrompt || undefined,
+    }).pipe(finalize(() => {
+      this.isGeneratingAiAssist = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: (draft) => {
+        const currentTitle = this.form.value.title;
+        const titleToSet = (draft.title && draft.title.trim() !== '') 
+          ? draft.title 
+          : (this.aiAssistTitle || currentTitle);
+
+        this.form.patchValue({
+          title: titleToSet,
+          description: draft.description || this.form.value.description,
+          acceptanceCriteria: draft.acceptanceCriteria || this.form.value.acceptanceCriteria,
+          businessValue: draft.businessValue || this.form.value.businessValue,
+          priority: draft.priority || this.form.value.priority || 'MEDIUM',
+          requirementType: draft.requirementType || this.form.value.requirementType || 'FUNCTIONAL',
+        });
+
+        this.form.markAsDirty();
+        this.closeAiAssist();
+        this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลและรายละเอียด Requirement ลงในฟอร์มเรียบร้อยแล้ว');
+      },
+      error: (err) => {
+        this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+      }
+    });
+  }
 
   // ===== Lifecycle =====
   ngOnInit(): void {

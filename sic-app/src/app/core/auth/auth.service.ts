@@ -171,9 +171,25 @@ export class AuthService {
     if (!raw) return null;
 
     try {
-      return decodeURIComponent(raw);
+      let decoded = decodeURIComponent(raw);
+
+      // angular-oauth2-oidc stores state in the format: "<random_nonce>;<custom_state>"
+      if (decoded.includes(';')) {
+        const parts = decoded.split(';');
+        const pathPart = parts.find(p => p.startsWith('/'));
+        if (pathPart) {
+          return pathPart;
+        }
+        decoded = parts[parts.length - 1];
+      }
+
+      if (decoded.startsWith('/')) {
+        return decoded;
+      }
+
+      return null;
     } catch {
-      return raw;
+      return null;
     }
   }
 }

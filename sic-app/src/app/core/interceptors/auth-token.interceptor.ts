@@ -12,6 +12,9 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
   const savedLanguage = isPlatformBrowser(platformId)
     ? localStorage.getItem('app-lang')
     : null;
+  const businessId = isPlatformBrowser(platformId)
+    ? localStorage.getItem('businessId')
+    : null;
   const languageCode =
     savedLanguage === 'th' || savedLanguage === 'en'
       ? savedLanguage
@@ -22,6 +25,9 @@ export const authTokenInterceptor: HttpInterceptorFn = (req, next) => {
 
   if (isSicApiRequest) {
     setHeaders['X-Language-Code'] = languageCode;
+    if (businessId) {
+      setHeaders['X-Business-Id'] = businessId;
+    }
   }
 
   if (accessToken) {

@@ -21,7 +21,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.dto.request.GenerateRequirementDraftRequest;
 import com.softinter.sicapi.dto.request.PmRequirementRequest;
+import com.softinter.sicapi.dto.response.RequirementDraft;
+import com.softinter.sicapi.service.impl.RequirementGeneratorService;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmRequirementResponse;
@@ -57,6 +60,7 @@ public class PmRequirementController {
     private final CurrentUserService currentUserService;
     private final PmRequirementRepository requirementRepository;
     private final ApprovalService approvalService;
+    private final RequirementGeneratorService requirementGeneratorService;
 
     @GetMapping
     @Operation(summary = "Get requirements with pagination and filters")
@@ -280,5 +284,13 @@ public class PmRequirementController {
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(pdfBytes);
+    }
+
+    @PostMapping("/ai/generate")
+    @Operation(summary = "Generate requirement draft with AI")
+    public ResponseEntity<RequirementDraft> generateAiRequirementDraft(
+            @RequestBody GenerateRequirementDraftRequest request) {
+        RequirementDraft draft = requirementGeneratorService.generateDraft(request);
+        return ResponseEntity.ok(draft);
     }
 }

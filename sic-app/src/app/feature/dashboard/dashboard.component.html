@@ -43,45 +43,13 @@
           ยินดีต้อนรับ, {{ profile()?.name || 'ผู้ใช้งาน' }} 👋
         </h1>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          มีรายการตรวจแบบค้าง <strong class="text-[var(--crm-danger)] font-semibold">{{ pendingDesignReviews().length }} รายการ</strong> และโครงการที่ดำเนินงานอยู่ <strong class="text-[var(--crm-primary)] font-semibold">{{ realProjects().length }} โครงการ</strong>
+          ภาพรวมสถานะและโครงการที่ดำเนินงานอยู่ <strong class="text-[var(--crm-primary)] font-semibold">{{ realProjects().length }} โครงการ</strong>
         </p>
       </div>
     </div>
 
-    <!-- Perspective & Quick Refresh Button -->
-    <div class="flex flex-wrap items-center gap-2">
-      <!-- Perspective Pill Filter -->
-      <div class="flex items-center p-1 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-xs">
-        <button
-          (click)="activePerspective.set('ALL')"
-          class="px-2.5 py-1 rounded-lg font-medium transition-all"
-          [ngClass]="activePerspective() === 'ALL' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
-        >
-          ทั้งหมด (All)
-        </button>
-        <button
-          (click)="activePerspective.set('EXEC')"
-          class="px-2.5 py-1 rounded-lg font-medium transition-all"
-          [ngClass]="activePerspective() === 'EXEC' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
-        >
-          ผู้บริหาร (Exec)
-        </button>
-        <button
-          (click)="activePerspective.set('PM')"
-          class="px-2.5 py-1 rounded-lg font-medium transition-all"
-          [ngClass]="activePerspective() === 'PM' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
-        >
-          PM & Team
-        </button>
-        <button
-          (click)="activePerspective.set('DEV_QA')"
-          class="px-2.5 py-1 rounded-lg font-medium transition-all"
-          [ngClass]="activePerspective() === 'DEV_QA' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
-        >
-          Dev / QA
-        </button>
-      </div>
-
+    <!-- Quick Refresh Button -->
+    <div class="flex items-center gap-2">
       <button
         (click)="loadAllRealData()"
         class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all cursor-pointer"
@@ -138,115 +106,59 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 📊 TIER 2.5: SDLC QUALITY METRICS & MANDAY BURN RATE (Real Data)          -->
+  <!-- 📊 TIER 2.5: SDLC QUALITY METRICS (Real Data)                             -->
   <!-- ========================================================================= -->
   @if (activePerspective() === 'ALL' || activePerspective() === 'EXEC' || activePerspective() === 'DEV_QA') {
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Bug Severity & Defect Density -->
-      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-bug-fill text-[var(--crm-danger)]"></i>
-              คุณภาพซอฟต์แวร์ & ระดับความรุนแรงของ Defect (Quality Matrix)
-            </h3>
-            <p class="text-xs text-[var(--text-muted)] mt-0.5">
-              ติดตามสัดส่วน Bug ในระบบทั้งหมด {{ orgSummary()?.totalBugs || 0 }} รายการ
-            </p>
-          </div>
-          <a routerLink="/feature/pm/test-management" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
-            จัดการ Bug &rarr;
-          </a>
+    <!-- Bug Severity & Defect Density -->
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-bug-fill text-[var(--crm-danger)]"></i>
+            คุณภาพซอฟต์แวร์ & ระดับความรุนแรงของ Defect (Quality Matrix)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+            ติดตามสัดส่วน Bug ในระบบทั้งหมด {{ orgSummary()?.totalBugs || 0 }} รายการ
+          </p>
         </div>
+        <a routerLink="/feature/pm/test-management" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
+          จัดการ Bug &rarr;
+        </a>
+      </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-          <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 block">Critical</span>
-            <span class="text-xl font-black text-red-600 dark:text-red-400">{{ orgSummary()?.criticalOpenBugs || 0 }}</span>
-          </div>
-          <div class="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 block">High</span>
-            <span class="text-xl font-black text-orange-600 dark:text-orange-400">{{ orgSummary()?.highBugs || 0 }}</span>
-          </div>
-          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">Medium</span>
-            <span class="text-xl font-black text-amber-600 dark:text-amber-400">{{ orgSummary()?.mediumBugs || 0 }}</span>
-          </div>
-          <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Resolved / Closed</span>
-            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">{{ orgSummary()?.closedBugs || 0 }}</span>
-          </div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+        <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 block">Critical</span>
+          <span class="text-xl font-black text-red-600 dark:text-red-400">{{ orgSummary()?.criticalOpenBugs || 0 }}</span>
         </div>
-
-        <!-- Testing Pass Rate Bar -->
-        <div class="pt-3 border-t border-[var(--border)]">
-          <div class="flex items-center justify-between text-xs mb-1.5">
-            <span class="text-[var(--text-muted)] flex items-center gap-1.5">
-              <i class="bi bi-shield-check text-emerald-500"></i>
-              อัตราการผ่านการทดสอบ Test Case (Pass Rate)
-            </span>
-            <span class="font-bold text-[var(--text-active)]">{{ testPassRate() }}% ({{ orgSummary()?.passedTestCases || 0 }} / {{ orgSummary()?.totalTestCases || 0 }} ผ่าน)</span>
-          </div>
-          <div class="w-full bg-[var(--bg)] h-2.5 rounded-full overflow-hidden border border-[var(--border)]">
-            <div
-              class="h-full rounded-full transition-all duration-500 bg-emerald-500"
-              [style.width.%]="testPassRate()"
-            ></div>
-          </div>
+        <div class="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 block">High</span>
+          <span class="text-xl font-black text-orange-600 dark:text-orange-400">{{ orgSummary()?.highBugs || 0 }}</span>
+        </div>
+        <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">Medium</span>
+          <span class="text-xl font-black text-amber-600 dark:text-amber-400">{{ orgSummary()?.mediumBugs || 0 }}</span>
+        </div>
+        <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+          <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Resolved / Closed</span>
+          <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">{{ orgSummary()?.closedBugs || 0 }}</span>
         </div>
       </div>
 
-      <!-- Manday Utilization & Cost Burn Rate -->
-      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm flex flex-col justify-between">
-        <div>
-          <div class="flex items-center justify-between mb-4">
-            <div>
-              <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-hourglass-split text-[var(--crm-primary)]"></i>
-                การใช้ทรัพยากร Manday รวม (Manday Burn Rate)
-              </h3>
-              <p class="text-xs text-[var(--text-muted)] mt-0.5">
-                ติดตามการใช้ Manday ทั้งหมดเทียบกับงบประมาณที่ตกลงไว้
-              </p>
-            </div>
-            <span
-              class="text-xs font-bold px-2.5 py-1 rounded-full"
-              [ngClass]="mandayBurnRate() > 90 ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'"
-            >
-              {{ mandayBurnRate() }}% ใช้ไปแล้ว
-            </span>
-          </div>
-
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <div class="p-3.5 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
-              <span class="text-[11px] text-[var(--text-muted)] block">งบประมาณ Manday ทั้งหมด</span>
-              <span class="text-2xl font-black text-[var(--text-active)] mt-0.5 block">
-                {{ orgSummary()?.totalBudgetManday || 0 | number }} <span class="text-xs font-normal text-[var(--text-muted)]">Manday</span>
-              </span>
-            </div>
-            <div class="p-3.5 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
-              <span class="text-[11px] text-[var(--text-muted)] block">Manday ที่ใช้ไปจริง</span>
-              <span class="text-2xl font-black text-[var(--crm-primary)] mt-0.5 block">
-                {{ orgSummary()?.totalUsedManday || 0 | number }} <span class="text-xs font-normal text-[var(--text-muted)]">Manday</span>
-              </span>
-            </div>
-          </div>
+      <!-- Testing Pass Rate Bar -->
+      <div class="pt-3 border-t border-[var(--border)]">
+        <div class="flex items-center justify-between text-xs mb-1.5">
+          <span class="text-[var(--text-muted)] flex items-center gap-1.5">
+            <i class="bi bi-shield-check text-emerald-500"></i>
+            อัตราการผ่านการทดสอบ Test Case (Pass Rate)
+          </span>
+          <span class="font-bold text-[var(--text-active)]">{{ testPassRate() }}% ({{ orgSummary()?.passedTestCases || 0 }} / {{ orgSummary()?.totalTestCases || 0 }} ผ่าน)</span>
         </div>
-
-        <div>
-          <div class="flex items-center justify-between text-xs mb-1.5">
-            <span class="text-[var(--text-muted)]">สัดส่วนการใช้งบประมาณ</span>
-            <span class="font-mono text-xs text-[var(--text-muted)]">
-              เหลือ {{ (orgSummary()?.totalBudgetManday || 0) - (orgSummary()?.totalUsedManday || 0) }} Manday
-            </span>
-          </div>
-          <div class="w-full bg-[var(--bg)] h-3 rounded-full overflow-hidden border border-[var(--border)]">
-            <div
-              class="h-full rounded-full transition-all duration-500"
-              [style.width.%]="mandayBurnRate()"
-              [ngClass]="mandayBurnRate() > 85 ? 'bg-[var(--crm-danger)]' : mandayBurnRate() > 65 ? 'bg-[var(--crm-warning)]' : 'bg-[var(--crm-primary)]'"
-            ></div>
-          </div>
+        <div class="w-full bg-[var(--bg)] h-2.5 rounded-full overflow-hidden border border-[var(--border)]">
+          <div
+            class="h-full rounded-full transition-all duration-500 bg-emerald-500"
+            [style.width.%]="testPassRate()"
+          ></div>
         </div>
       </div>
     </div>
@@ -308,23 +220,9 @@
   }
 
   <!-- ========================================================================= -->
-  <!-- ⚡ QUICK ACTIONS                                                          -->
+  <!-- 🎯 ACTION QUEUE (Pending Approvals) & ⏰ UPCOMING DEADLINES              -->
   <!-- ========================================================================= -->
-  <div class="flex flex-wrap gap-2">
-    @for (action of quickActions; track action.label) {
-      <a
-        [routerLink]="action.route"
-        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all {{ getQuickActionColorClass(action.color) }}"
-      >
-        <i class="bi {{ action.icon }}"></i> {{ action.label }}
-      </a>
-    }
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- 🎯 ACTION QUEUE (Pending Approvals) & ⏰ UPCOMING DEADLINES & ⚠️ AT-RISK PROJECTS -->
-  <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
     <!-- Pending Approvals -->
     <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
       <div class="flex items-center justify-between mb-4">
@@ -392,39 +290,6 @@
           <div class="py-8 text-center text-xs text-[var(--text-muted)]">
             <i class="bi bi-calendar2-check text-2xl text-[var(--crm-primary)] mb-1 block"></i>
             ไม่มีงานใกล้ครบกำหนด
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- At-Risk Projects -->
-    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-heart-pulse text-[var(--crm-danger)]"></i>
-          โครงการที่ควรเฝ้าระวัง
-        </h3>
-      </div>
-      <div class="space-y-2.5">
-        @for (proj of orgProjectHealth(); track proj.projectId) {
-          <div
-            (click)="goToProjectDashboard(proj.projectId)"
-            class="p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer"
-          >
-            <div class="flex items-center justify-between gap-2">
-              <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-                {{ proj.projectCode }}
-              </span>
-              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full {{ getHealthStatusClass(proj.healthStatus) }}">
-                {{ proj.healthStatus }} ({{ proj.score }})
-              </span>
-            </div>
-            <h4 class="text-xs font-semibold text-[var(--text-active)] mt-1.5 line-clamp-1">{{ proj.projectName }}</h4>
-          </div>
-        } @empty {
-          <div class="py-8 text-center text-xs text-[var(--text-muted)]">
-            <i class="bi bi-shield-check text-2xl text-[var(--crm-primary)] mb-1 block"></i>
-            ยังไม่มีโครงการในระบบ
           </div>
         }
       </div>
@@ -519,168 +384,106 @@
 
 
   <!-- ========================================================================= -->
-  <!-- 🟣 REAL PROJECTS & 🟡 REAL DESIGN REVIEWS & AUDIT LOGS                    -->
+  <!-- 🟣 REAL PROJECTS & AUDIT LOGS                                             -->
   <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-    <!-- LEFT 2 COLUMNS: Real Customer Projects -->
-    <div class="lg:col-span-2 space-y-6">
-      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <div class="flex items-center justify-between mb-5">
-          <div>
-            <h3 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-kanban-fill text-[var(--crm-primary)]"></i>
-              โครงการในระบบจริง (Customer Projects)
-            </h3>
-            <p class="text-xs text-[var(--text-muted)] mt-0.5">
-              ดึงข้อมูลจากทะเบียนโครงการ (PMRT02)
-            </p>
-          </div>
-          <a routerLink="/feature/pm/rt/pmrt02" class="text-xs font-semibold text-[var(--crm-primary)] hover:underline flex items-center gap-1">
-            ดูทั้งหมด ({{ realProjects().length }}) <i class="bi bi-arrow-right"></i>
-          </a>
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Real Customer Projects -->
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <div class="flex items-center justify-between mb-5">
+        <div>
+          <h3 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-kanban-fill text-[var(--crm-primary)]"></i>
+            โครงการในระบบจริง (Customer Projects)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+            ดึงข้อมูลจากทะเบียนโครงการ (PMRT02)
+          </p>
         </div>
-
-        <div class="space-y-3.5">
-          @for (proj of realProjects().slice(0, 4); track proj.id) {
-            <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition-all">
-              <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
-                <div class="flex items-center gap-2">
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-                    {{ proj.projectCode }}
-                  </span>
-                  <span
-                    class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                    [ngClass]="{
-                      'bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]': proj.status === 'COMPLETED' || proj.status === 'ACTIVE',
-                      'bg-[var(--crm-secondary,#3b82f6)]/10 text-[var(--crm-secondary,#3b82f6)]': proj.status === 'IN_PROGRESS',
-                      'bg-[var(--crm-warning)]/10 text-[var(--crm-warning)]': proj.status === 'PLANNING' || proj.status === 'DRAFT'
-                    }"
-                  >
-                    {{ proj.status || 'ACTIVE' }}
-                  </span>
-                  <span class="text-xs text-[var(--text-muted)]">&bull; {{ proj.customerName || 'ลูกค้าทั่วไป' }}</span>
-                </div>
-
-                <div class="flex items-center gap-3 text-xs">
-                  <span class="text-[var(--text-muted)]"><i class="bi bi-person me-1"></i>{{ proj.projectManager || 'ยังไม่ระบุ' }}</span>
-                  <span class="text-[var(--crm-primary)] font-bold">{{ calcProjectProgress(proj) }}% Manday</span>
-                </div>
-              </div>
-
-              <h4 class="text-xs font-semibold text-[var(--text-active)] mb-2">
-                {{ proj.projectName }}
-              </h4>
-
-              <!-- Progress Bar -->
-              <div class="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
-                <div
-                  class="h-full rounded-full transition-all duration-500 bg-[var(--crm-primary)]"
-                  [style.width.%]="calcProjectProgress(proj)"
-                ></div>
-              </div>
-            </div>
-          } @empty {
-            <div class="py-8 text-center text-xs text-[var(--text-muted)]">
-              <i class="bi bi-folder2-open text-2xl mb-1 block opacity-40"></i>
-              ยังไม่มีข้อมูลโครงการในระบบ
-            </div>
-          }
-        </div>
+        <a routerLink="/feature/pm/rt/pmrt02" class="text-xs font-semibold text-[var(--crm-primary)] hover:underline flex items-center gap-1">
+          ดูทั้งหมด ({{ realProjects().length }}) <i class="bi bi-arrow-right"></i>
+        </a>
       </div>
 
-      <!-- Real Audit Logs Stream -->
-      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-            ประวัติการดำเนินงานจริง (Audit Logs)
-          </h3>
-          <a routerLink="/feature/pm/dt/pmdt20" class="text-xs font-medium text-[var(--crm-primary)] hover:underline">
-            ดูบันทึกทั้งหมด
-          </a>
-        </div>
-
-        <div class="relative pl-4 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border)]">
-          @for (log of realAuditLogs(); track log.id) {
-            <div class="relative">
-              <div class="absolute -left-4 top-1 w-2 h-2 rounded-full bg-[var(--crm-primary)] ring-4 ring-[var(--sidebar)]"></div>
-              <div>
-                <h5 class="text-xs font-semibold text-[var(--text-active)]">
-                  {{ log.username || log.userFullname || 'ผู้ใช้งาน' }}
-                  <span class="text-[10px] font-normal text-[var(--text-muted)] ms-1">({{ log.action }})</span>
-                </h5>
-                <p class="text-[11px] text-[var(--text-muted)] mt-0.5">{{ log.description }}</p>
-                <span class="text-[10px] text-[var(--text-muted)] mt-1 block font-mono">
-                  {{ (log.timestamp || log.createdDate) ? ((log.timestamp || log.createdDate) | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}
-                </span>
-              </div>
-            </div>
-          } @empty {
-            <div class="py-4 text-xs text-[var(--text-muted)]">
-              ยังไม่มีประวัติการบันทึก Audit Log
-            </div>
-          }
-        </div>
-      </div>
-    </div>
-
-    <!-- RIGHT 1 COLUMN: Real Pending Design Reviews -->
-    <div class="space-y-6">
-      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-palette2 text-[var(--crm-danger)]"></i>
-            รายการตรวจแบบจริง (Design Reviews)
-          </h3>
-          <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--crm-danger)]/10 text-[var(--crm-danger)]">
-            {{ pendingDesignReviews().length }} รายการ
-          </span>
-        </div>
-
-        <p class="text-xs text-[var(--text-muted)] mb-3">
-          ดึงข้อมูลจากระบบตรวจแบบสถาปัตยกรรม (PMDT09)
-        </p>
-
-        <div class="space-y-3">
-          @for (review of pendingDesignReviews(); track review.id) {
-            <div
-              (click)="navigateTo('/feature/pm/dt/pmdt09')"
-              class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/40 transition-all cursor-pointer group"
-            >
-              <div class="flex items-center justify-between">
+      <div class="space-y-3.5">
+        @for (proj of realProjects().slice(0, 4); track proj.id) {
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition-all">
+            <div class="flex flex-wrap items-center justify-between gap-2 mb-2">
+              <div class="flex items-center gap-2">
                 <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-                  {{ review.reviewCode }}
+                  {{ proj.projectCode }}
                 </span>
                 <span
                   class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
                   [ngClass]="{
-                    'bg-[var(--crm-danger)]/10 text-[var(--crm-danger)]': review.severity === 'CRITICAL' || review.severity === 'HIGH',
-                    'bg-[var(--crm-warning)]/10 text-[var(--crm-warning)]': review.severity === 'MEDIUM',
-                    'bg-slate-500/10 text-slate-500': !review.severity || review.severity === 'LOW'
+                    'bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]': proj.status === 'COMPLETED' || proj.status === 'ACTIVE',
+                    'bg-[var(--crm-secondary,#3b82f6)]/10 text-[var(--crm-secondary,#3b82f6)]': proj.status === 'IN_PROGRESS',
+                    'bg-[var(--crm-warning)]/10 text-[var(--crm-warning)]': proj.status === 'PLANNING' || proj.status === 'DRAFT'
                   }"
                 >
-                  {{ review.severity || review.status }}
+                  {{ proj.status || 'ACTIVE' }}
                 </span>
+                <span class="text-xs text-[var(--text-muted)]">&bull; {{ proj.customerName || 'ลูกค้าทั่วไป' }}</span>
               </div>
 
-              <h4 class="text-xs font-semibold text-[var(--text-active)] mt-2 group-hover:text-[var(--crm-primary)] transition-colors line-clamp-2">
-                {{ review.title }}
-              </h4>
-
-              <div class="flex items-center justify-between text-[11px] text-[var(--text-muted)] mt-2.5 pt-2 border-t border-[var(--border)]">
-                <span>{{ review.reviewer || review.assignedTo || 'รอผู้ตรวจสอบ' }}</span>
-                <span class="text-[var(--crm-danger)] font-medium">
-                  <i class="bi bi-calendar-event me-1"></i>{{ review.dueDate ? (review.dueDate | sicDate: null : 'DD/MM/YYYY') : 'ไม่มีกำหนด' }}
-                </span>
+              <div class="flex items-center gap-3 text-xs">
+                <span class="text-[var(--text-muted)]"><i class="bi bi-person me-1"></i>{{ proj.projectManager || 'ยังไม่ระบุ' }}</span>
+                <span class="text-[var(--crm-primary)] font-bold">{{ calcProjectProgress(proj) }}% Manday</span>
               </div>
             </div>
-          } @empty {
-            <div class="py-8 text-center text-xs text-[var(--text-muted)]">
-              <i class="bi bi-check2-circle text-2xl text-[var(--crm-primary)] mb-1 block"></i>
-              ไม่มีรายการตรวจแบบค้างในระบบ
+
+            <h4 class="text-xs font-semibold text-[var(--text-active)] mb-2">
+              {{ proj.projectName }}
+            </h4>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-[var(--border)] h-2 rounded-full overflow-hidden">
+              <div
+                class="h-full rounded-full transition-all duration-500 bg-[var(--crm-primary)]"
+                [style.width.%]="calcProjectProgress(proj)"
+              ></div>
             </div>
-          }
-        </div>
+          </div>
+        } @empty {
+          <div class="py-8 text-center text-xs text-[var(--text-muted)]">
+            <i class="bi bi-folder2-open text-2xl mb-1 block opacity-40"></i>
+            ยังไม่มีข้อมูลโครงการในระบบ
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Real Audit Logs Stream -->
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
+          ประวัติการดำเนินงานจริง (Audit Logs)
+        </h3>
+        <a routerLink="/feature/pm/dt/pmdt20" class="text-xs font-medium text-[var(--crm-primary)] hover:underline">
+          ดูบันทึกทั้งหมด
+        </a>
+      </div>
+
+      <div class="relative pl-4 space-y-4 before:absolute before:left-2 before:top-2 before:bottom-2 before:w-0.5 before:bg-[var(--border)]">
+        @for (log of realAuditLogs(); track log.id) {
+          <div class="relative">
+            <div class="absolute -left-4 top-1 w-2 h-2 rounded-full bg-[var(--crm-primary)] ring-4 ring-[var(--sidebar)]"></div>
+            <div>
+              <h5 class="text-xs font-semibold text-[var(--text-active)]">
+                {{ log.username || log.userFullname || 'ผู้ใช้งาน' }}
+                <span class="text-[10px] font-normal text-[var(--text-muted)] ms-1">({{ log.action }})</span>
+              </h5>
+              <p class="text-[11px] text-[var(--text-muted)] mt-0.5">{{ log.description }}</p>
+              <span class="text-[10px] text-[var(--text-muted)] mt-1 block font-mono">
+                {{ (log.timestamp || log.createdDate) ? ((log.timestamp || log.createdDate) | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}
+              </span>
+            </div>
+          </div>
+        } @empty {
+          <div class="py-4 text-xs text-[var(--text-muted)]">
+            ยังไม่มีประวัติการบันทึก Audit Log
+          </div>
+        }
       </div>
     </div>
   </div>

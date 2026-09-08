@@ -73,12 +73,12 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
         List<PmCustomerProject> projects = projectRepository.findByBusinessIdAndIsDeleteFalse(businessId);
         response.setTotalProjects(projects.size());
         response.setDelayedProjects(projects.stream()
-                .filter(p -> DELAYED_PROJECT_STATUSES.contains(p.getStatus()))
+                .filter(p -> p.getStatus() != null && DELAYED_PROJECT_STATUSES.stream().anyMatch(s -> s.equalsIgnoreCase(p.getStatus())))
                 .count());
         response.setCompletedProjects(projects.stream()
-                .filter(p -> COMPLETED_PROJECT_STATUSES.contains(p.getStatus()))
+                .filter(p -> p.getStatus() != null && COMPLETED_PROJECT_STATUSES.stream().anyMatch(s -> s.equalsIgnoreCase(p.getStatus())))
                 .count());
-        response.setActiveProjects(response.getTotalProjects() - response.getDelayedProjects() - response.getCompletedProjects());
+        response.setActiveProjects(Math.max(0, response.getTotalProjects() - response.getDelayedProjects() - response.getCompletedProjects()));
 
         // Bugs
         long openBugs = bugRepository.countByBusinessIdAndStatusNotInAndIsDeleteFalse(businessId, CLOSED_BUG_STATUSES);

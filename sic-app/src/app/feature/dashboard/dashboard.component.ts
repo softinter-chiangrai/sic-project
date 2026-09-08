@@ -108,24 +108,32 @@ export class DashboardComponent implements OnInit {
     const projects = this.realProjects();
     const reviews = this.realDesignReviews();
 
+    const matchStatus = (p: PmCustomerProject, statuses: string[]) => {
+      const s = (p.status || '').toUpperCase();
+      return statuses.some((st) => s === st.toUpperCase() || s.includes(st.toUpperCase()));
+    };
+
     const reqCount = summary?.stageRequirementsCount ?? projects.filter(
-      (p) => p.status === 'PLANNING' || p.status === 'DRAFT' || p.status === 'NEW'
+      (p) => matchStatus(p, ['PLANNING', 'DRAFT', 'NEW', 'PROSPECT', 'REQUIREMENT', 'ANALYSIS'])
     ).length;
 
     const reviewCount = summary?.stageDesignReviewsCount ?? reviews.filter(
-      (r) => r.status === 'PENDING' || r.status === 'IN_REVIEW' || r.status === 'REVISION'
+      (r) => {
+        const s = (r.status || '').toUpperCase();
+        return s === 'PENDING' || s === 'IN_REVIEW' || s === 'REVISION' || s === 'REVIEW' || s === 'DRAFT';
+      }
     ).length;
 
     const devCount = summary?.stageDevTasksCount ?? projects.filter(
-      (p) => p.status === 'IN_PROGRESS' || p.status === 'ACTIVE' || p.status === 'DEVELOPMENT'
+      (p) => matchStatus(p, ['IN_PROGRESS', 'ACTIVE', 'DEVELOPMENT', 'DEV', 'PROGRESS'])
     ).length;
 
     const qaCount = summary?.stageTestCasesCount ?? projects.filter(
-      (p) => p.status === 'TESTING' || p.status === 'QA' || p.status === 'REVIEW'
+      (p) => matchStatus(p, ['TESTING', 'QA', 'REVIEW', 'UAT', 'BUG'])
     ).length;
 
     const releaseCount = summary?.stageDeliveriesCount ?? projects.filter(
-      (p) => p.status === 'COMPLETED' || p.status === 'CLOSED' || p.status === 'DEPLOYED'
+      (p) => matchStatus(p, ['COMPLETED', 'CLOSED', 'DEPLOYED', 'DELIVERED', 'DONE'])
     ).length;
 
     return [

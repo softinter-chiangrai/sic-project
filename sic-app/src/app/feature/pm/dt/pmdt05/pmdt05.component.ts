@@ -730,7 +730,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         this.dialogService.open({
           type: 'confirm',
           component: SqlExportDialogComponent,
-          componentInputs: { xml },
+          componentInputs: { 
+            xml,
+            tabId: this.currentTabId 
+          },
         });
       },
       error: () => {
