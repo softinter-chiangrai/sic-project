@@ -362,6 +362,8 @@ export class SqlExportDialogComponent implements OnInit {
   loading = signal(false);
   loadingHistory = signal(false);
   previewHistoryId = signal<string | null>(null);
+  copied = signal(false);
+  copiedHistoryId = signal<string | null>(null);
 
   ngOnInit() {
     this.extractPages(this.xml);
