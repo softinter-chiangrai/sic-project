@@ -32,7 +32,7 @@ export class Pmdt18Component implements OnInit {
 
   approvalStatusMap = signal<Record<string, string>>({});
 
-  currentPage = signal(0);
+  currentPage = signal(1);
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
@@ -46,7 +46,7 @@ export class Pmdt18Component implements OnInit {
   constructor() {
     effect(() => {
       const res = this.renewalsResource.value();
-      const content = res?.content;
+      const content = res?.data;
       if (content && Array.isArray(content)) {
         this.loadApprovalStatuses(content);
       }
@@ -67,11 +67,11 @@ export class Pmdt18Component implements OnInit {
     });
   }
 
-  totalItems = computed(() => this.renewalsResource.value()?.totalElements || 0);
+  totalItems = computed(() => this.renewalsResource.value()?.pageable?.totalElements || 0);
 
   filteredRenewals = computed(() => {
     const res = this.renewalsResource.value();
-    let list: any[] = res?.content || [];
+    let list: any[] = res?.data || [];
     const term = this.searchTerm().trim().toLowerCase();
     const status = this.filterStatus();
 
@@ -96,10 +96,10 @@ export class Pmdt18Component implements OnInit {
     const total = this.totalPages();
     const current = this.currentPage();
     const range = 5;
-    let start = Math.max(0, current - Math.floor(range / 2));
-    let end = Math.min(total - 1, start + range - 1);
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
     if (end - start < range - 1) {
-      start = Math.max(0, end - range + 1);
+      start = Math.max(1, end - range + 1);
     }
     const pages: number[] = [];
     for (let i = start; i <= end; i++) {
@@ -133,7 +133,7 @@ export class Pmdt18Component implements OnInit {
   }
 
   onPageChange(page: number) {
-    if (page < 0 || page >= this.totalPages()) return;
+    if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
   }
 

@@ -42,7 +42,13 @@ public class SuUserBusinessMemberController {
     @Operation(summary = "ดึงรายชื่อสมาชิกในธุรกิจ")
     public ResponseEntity<PaginationResponse<SuUserBusinessMemberResponse>> getMembers(
             @RequestParam UUID businessId,
-            @PageableDefault(size = 10) Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
+        org.springframework.data.domain.Sort sort = com.softinter.sicapi.util.SortValidator.build(
+                com.softinter.sicapi.entity.su.SuUserBusiness.class, sortBy, sortDirection, "createdDate");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<SuUserBusinessMemberResponse> pageResult = memberService.getMembers(businessId, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }

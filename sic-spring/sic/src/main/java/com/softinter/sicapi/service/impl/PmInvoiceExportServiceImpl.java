@@ -1,22 +1,5 @@
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.entity.pm.PmCustomerContract;
-import com.softinter.sicapi.entity.pm.PmCustomerProject;
-import com.softinter.sicapi.entity.pm.PmInvoice;
-import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
-import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
-import com.softinter.sicapi.repository.pm.PmCustomerRepository;
-import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
-import com.softinter.sicapi.service.PmInvoiceExportService;
-import com.softinter.sicapi.service.ReportServiceClient;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import net.sf.jasperreports.engine.*;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import javax.sql.DataSource;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -28,6 +11,31 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+
+import javax.sql.DataSource;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.softinter.sicapi.entity.pm.PmCustomerContract;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.entity.pm.PmInvoice;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.service.PmInvoiceExportService;
+import com.softinter.sicapi.service.ReportServiceClient;
+import com.softinter.sicapi.util.ReportHelper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.sf.jasperreports.engine.JasperCompileManager;
+import net.sf.jasperreports.engine.JasperExportManager;
+import net.sf.jasperreports.engine.JasperFillManager;
+import net.sf.jasperreports.engine.JasperPrint;
+import net.sf.jasperreports.engine.JasperReport;
 
 @Slf4j
 @Service
@@ -112,7 +120,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
 
             JasperReport jasperReport = JasperCompileManager.compileReport(is);
 
-            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
+            parameters.put("logoStream", ReportHelper.getLogoInputStream());
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
 

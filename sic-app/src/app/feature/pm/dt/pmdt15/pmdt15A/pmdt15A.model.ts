@@ -33,3 +33,27 @@ export interface PmUserManualModel extends SicBaseStateModel {
   attachmentGroupId?: string;
   sections?: PmUserManualSectionModel[];
 }
+
+export interface GenerateUserManualDraftRequest {
+  projectId?: string;
+  manualTitle?: string;
+  manualType?: string;
+  requirementIds?: string[];
+  specificationIds?: string[];
+  prompt?: string;
+}
+
+export interface UserManualSectionDraft {
+  sectionCode?: string;
+  sectionTitle: string;
+  content: string;
+  sortOrder?: number;
+}
+
+export interface UserManualDraftResponse {
+  manualTitle?: string;
+  manualType?: string;
+  summary?: string;
+  sections?: UserManualSectionDraft[];
+}
+

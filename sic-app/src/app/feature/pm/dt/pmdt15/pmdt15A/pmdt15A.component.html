@@ -25,14 +25,23 @@
         }
       </div>
     </div>
-    @if (id()) {
-      <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2">
+      <button
+        type="button"
+        (click)="openAiModal()"
+        [disabled]="isLocked()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-medium text-sm shadow-md hover:shadow-lg shadow-purple-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        <i class="bi bi-stars text-base animate-pulse"></i>
+        <span>สร้างเนื้อหาด้วย AI (AI Generator)</span>
+      </button>
+      @if (id()) {
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
           {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF (JasperReports)' }}
         </sic-button>
-      </div>
-    }
+      }
+    </div>
   </div>
 
   <!-- Main Meta Form -->
@@ -93,13 +102,24 @@
             <i class="bi bi-list-nested text-[var(--crm-primary)]"></i>
             รายการหมวดหมู่ (Sections)
           </h3>
-          <button
-            type="button"
-            (click)="addSection()"
-            class="inline-flex items-center gap-1 text-xs font-semibold text-[var(--crm-primary)] hover:underline"
-          >
-            <i class="bi bi-plus-lg"></i> เพิ่ม Section
-          </button>
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="openAiModal()"
+              [disabled]="isLocked()"
+              class="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer disabled:opacity-50"
+              title="สร้างเนื้อหาคู่มือด้วย AI"
+            >
+              <i class="bi bi-stars"></i> สร้างด้วย AI
+            </button>
+            <button
+              type="button"
+              (click)="addSection()"
+              class="inline-flex items-center gap-1 text-xs font-semibold text-[var(--crm-primary)] hover:underline"
+            >
+              <i class="bi bi-plus-lg"></i> เพิ่ม Section
+            </button>
+          </div>
         </div>
 
         <div class="space-y-1.5 max-h-[500px] overflow-y-auto pr-1">
@@ -232,3 +252,211 @@
     }
   </form>
 </div>
+
+<!-- ============================================================ -->
+<!-- AI USER MANUAL GENERATOR MODAL -->
+<!-- ============================================================ -->
+@if (showAiModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
+    <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all max-h-[90vh]">
+      
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+            <i class="bi bi-stars text-lg animate-pulse"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+              สร้างเนื้อหาคู่มือการใช้งานด้วย AI (AI Manual Generator)
+            </h2>
+            <p class="text-xs text-[var(--text-muted)]">
+              เสริมข้อมูลจาก Requirement & Specification หลายรายการเพื่อวิเคราะห์และร่างคู่มือที่ครบถ้วน
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeAiModal()"
+          [disabled]="isGeneratingAi()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer disabled:opacity-50"
+        >
+          <i class="bi bi-x-lg text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-140px)]">
+        <!-- 1. Requirements Combobox (Multiple) -->
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              <i class="bi bi-card-checklist text-purple-500 mr-1"></i>
+              1. เลือก Requirements ที่เกี่ยวข้อง (เลือกได้มากกว่า 1 รายการ)
+            </label>
+            @if (aiSelectedRequirementIds().length > 0) {
+              <span class="text-xs font-medium text-purple-600 dark:text-purple-400">
+                เลือกแล้ว {{ aiSelectedRequirementIds().length }} รายการ
+              </span>
+            }
+          </div>
+          <sic-combobox
+            [multiple]="true"
+            [items]="requirementOptions()"
+            [ngModel]="aiSelectedRequirementIds()"
+            (ngModelChange)="aiSelectedRequirementIds.set($event)"
+            placeholder="-- ค้นหาและเลือก Requirements เพื่อนำข้อมูลมาใช้วิเคราะห์ --"
+            [clearable]="true"
+          >
+          </sic-combobox>
+          <p class="text-[11px] text-[var(--text-muted)]">
+            💡 AI จะนำวัตถุประสงค์ ขอบเขต และ Acceptance Criteria จาก Requirement ที่เลือกมาร่างคู่มือ
+          </p>
+        </div>
+
+        <!-- 2. Specifications Combobox (Multiple) -->
+        <div class="space-y-1">
+          <div class="flex items-center justify-between">
+            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              <i class="bi bi-file-earmark-code text-indigo-500 mr-1"></i>
+              2. เลือก Specifications ที่เกี่ยวข้อง (เลือกได้มากกว่า 1 รายการ)
+            </label>
+            @if (aiSelectedSpecificationIds().length > 0) {
+              <span class="text-xs font-medium text-indigo-600 dark:text-indigo-400">
+                เลือกแล้ว {{ aiSelectedSpecificationIds().length }} รายการ
+              </span>
+            }
+          </div>
+          <sic-combobox
+            [multiple]="true"
+            [items]="specificationOptions()"
+            [ngModel]="aiSelectedSpecificationIds()"
+            (ngModelChange)="aiSelectedSpecificationIds.set($event)"
+            placeholder="-- ค้นหาและเลือก Specifications เพื่อนำรายละเอียดหน้าจอ/ฟังก์ชันมาใช้วิเคราะห์ --"
+            [clearable]="true"
+          >
+          </sic-combobox>
+          <p class="text-[11px] text-[var(--text-muted)]">
+            💡 AI จะนำ Business Rules รายละเอียดฟิลด์ และขั้นตอนการทำงานจาก Specification มาจัดทำขั้นตอนการใช้งาน
+          </p>
+        </div>
+
+        <!-- 3. Manual Type -->
+        <div>
+          <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
+            <i class="bi bi-bookmark text-blue-500 mr-1"></i>
+            3. ประเภทคู่มือ (Manual Type)
+          </label>
+          <sic-combobox
+            [options]="typeOptions"
+            valueField="value"
+            displayField="label"
+            [ngModel]="aiManualType()"
+            (ngModelChange)="aiManualType.set($event)"
+            placeholder="เลือกประเภทคู่มือ"
+          >
+          </sic-combobox>
+        </div>
+
+        <!-- 4. Prompt / Specific Instructions -->
+        <div>
+          <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
+            <i class="bi bi-chat-left-text text-amber-500 mr-1"></i>
+            4. คำสั่งเพิ่มเติม หรือโฟกัสเนื้อหาที่ต้องการ (Prompt / Instructions)
+          </label>
+          <textarea
+            [ngModel]="aiPrompt()"
+            (ngModelChange)="aiPrompt.set($event)"
+            rows="3"
+            placeholder="ระบุสิ่งที่ต้องการให้ AI เน้นเป็นพิเศษ เช่น 'เน้นขั้นตอนการทำรายการชำระเงินและข้อควรระวัง', 'เน้นคำอธิบายสำหรับผู้ใช้งานที่ไม่ชำนาญคอมพิวเตอร์', 'เขียนสรุปข้อผิดพลาดที่พบบ่อยพร้อมวิธีแก้'..."
+            class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none"
+          >
+          </textarea>
+        </div>
+
+        <!-- 5. Generation Mode: Replace vs Append -->
+        <div class="space-y-1.5">
+          <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+            5. โหมดการสร้างเนื้อหา (Generation Mode)
+          </label>
+          <div class="grid grid-cols-2 gap-3">
+            <div
+              (click)="aiReplaceMode.set('replace')"
+              [class]="'p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-2.5 ' +
+                (aiReplaceMode() === 'replace'
+                  ? 'bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-300 font-medium shadow-xs'
+                  : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)]')"
+            >
+              <input
+                type="radio"
+                name="replaceMode"
+                [checked]="aiReplaceMode() === 'replace'"
+                class="mt-0.5 text-purple-600 focus:ring-purple-500"
+              />
+              <div>
+                <div class="font-semibold text-sm">แทนที่เนื้อหาเดิมทั้งหมด (Replace)</div>
+                <div class="text-[11px] text-[var(--text-muted)] mt-0.5">ล้าง Section เดิมและสร้างโครงสร้างคู่มือใหม่ทั้งหมดจาก AI</div>
+              </div>
+            </div>
+
+            <div
+              (click)="aiReplaceMode.set('append')"
+              [class]="'p-3 rounded-xl border text-xs cursor-pointer transition-all flex items-start gap-2.5 ' +
+                (aiReplaceMode() === 'append'
+                  ? 'bg-purple-500/10 border-purple-500 text-purple-700 dark:text-purple-300 font-medium shadow-xs'
+                  : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)]')"
+            >
+              <input
+                type="radio"
+                name="replaceMode"
+                [checked]="aiReplaceMode() === 'append'"
+                class="mt-0.5 text-purple-600 focus:ring-purple-500"
+              />
+              <div>
+                <div class="font-semibold text-sm">เพิ่มต่อท้ายเนื้อหาเดิม (Append)</div>
+                <div class="text-[11px] text-[var(--text-muted)] mt-0.5">เก็บ Section เดิมไว้ และเพิ่มหัวข้อใหม่ที่สร้างจาก AI ต่อท้าย</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        @if (isGeneratingAi()) {
+          <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
+            <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <div>
+              <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">AI กำลังวิเคราะห์ข้อมูลและร่างเนื้อหาคู่มือ...</p>
+              <p class="text-xs text-[var(--text-muted)]">กำลังประมวลผลข้อกำหนดและจัดเรียงเนื้อหาเป็นขั้นตอนพร้อมภาพประกอบ</p>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
+        <button
+          type="button"
+          (click)="closeAiModal()"
+          [disabled]="isGeneratingAi()"
+          class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer disabled:opacity-50"
+        >
+          ยกเลิก
+        </button>
+
+        <button
+          type="button"
+          (click)="generateWithAi()"
+          [disabled]="isGeneratingAi()"
+          class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-purple-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          @if (isGeneratingAi()) {
+            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            <span>กำลังประมวลผล...</span>
+          } @else {
+            <i class="bi bi-stars text-base"></i>
+            <span>สร้างเนื้อหาคู่มือ (Generate Manual)</span>
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+}

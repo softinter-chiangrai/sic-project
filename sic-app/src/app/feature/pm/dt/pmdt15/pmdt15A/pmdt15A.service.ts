@@ -2,7 +2,7 @@ import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
-import { PmUserManualModel } from './pmdt15A.model';
+import { GenerateUserManualDraftRequest, PmUserManualModel, UserManualDraftResponse } from './pmdt15A.model';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt15AService {
@@ -40,7 +40,28 @@ export class Pmdt15AService {
     return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/delivery/combobox`, { params: httpParams });
   }
 
+  getRequirementCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let httpParams = new HttpParams();
+    if (projectId) {
+      httpParams = httpParams.set('projectId', projectId);
+    }
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/requirement/combobox`, { params: httpParams });
+  }
+
+  getSpecificationCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let httpParams = new HttpParams();
+    if (projectId) {
+      httpParams = httpParams.set('projectId', projectId);
+    }
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/specifications/combobox`, { params: httpParams });
+  }
+
+  generateDraft(request: GenerateUserManualDraftRequest): Observable<UserManualDraftResponse> {
+    return this.http.post<UserManualDraftResponse>(`${apiBaseUrl}/api/pm/manual/generate/draft`, request);
+  }
+
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${apiBaseUrl}/api/pm/manual/${id}`);
   }
 }
+

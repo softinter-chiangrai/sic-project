@@ -64,9 +64,15 @@ public class PmCustomerContractController {
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) UUID projectId,
-            @PageableDefault(size = 10, sort = "contractNo", direction = Sort.Direction.ASC) Pageable pageable
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "ASC") String sortDirection
     ) {
         UUID businessId = businessAccessService.getBusinessId();
+        Sort sort = com.softinter.sicapi.util.SortValidator.build(
+                com.softinter.sicapi.entity.pm.PmCustomerContract.class, sortBy, sortDirection, "contractNo");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmCustomerContractResponse> pageResult = contractService.getContracts(businessId, customerId, projectId, keyword, status, contractType, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }

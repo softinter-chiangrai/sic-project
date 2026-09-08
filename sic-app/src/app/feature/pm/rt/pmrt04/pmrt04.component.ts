@@ -179,7 +179,7 @@ export class Pmrt04Component implements OnInit {
     this.isLoading.set(true);
 
     let params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
+      .set('page', this.currentPage().toString())
       .set('size', this.pageSize().toString());
 
     const projectId = this.filterProjectId();
@@ -208,7 +208,7 @@ export class Pmrt04Component implements OnInit {
     }
 
     if (this.sortBy()) {
-      params = params.set('sortBy', this.sortBy()).set('sortDir', this.sortDir());
+      params = params.set('sortBy', this.sortBy()).set('sortDirection', this.sortDir());
     }
 
     this.http

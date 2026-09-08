@@ -78,6 +78,18 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
 
+  // AI Generator Modal State
+  showAiModal = signal(false);
+  isGeneratingAi = signal(false);
+  aiManualType = signal('USER');
+  aiSelectedRequirementIds = signal<string[]>([]);
+  aiSelectedSpecificationIds = signal<string[]>([]);
+  aiPrompt = signal('');
+  aiReplaceMode = signal<'replace' | 'append'>('replace');
+  requirementOptions = signal<Array<{ value: string; text: string }>>([]);
+  specificationOptions = signal<Array<{ value: string; text: string }>>([]);
+  isLoadingAiOptions = signal(false);
+
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
@@ -93,9 +105,11 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       if (queryProj) {
         this.formData.patchValue({ projectId: queryProj } as any);
         this.loadDeliveryOptions(queryProj);
+        this.loadAiComboboxOptions(queryProj);
         this.cdr.markForCheck();
       } else {
         this.loadDeliveryOptions();
+        this.loadAiComboboxOptions();
       }
     });
 
@@ -107,6 +121,136 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.loadData(paramId);
       }
       this.cdr.markForCheck();
+    });
+  }
+
+  loadAiComboboxOptions(projectId?: string): void {
+    const projId = projectId || (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
+    this.isLoadingAiOptions.set(true);
+
+    this.service.getRequirementCombobox(projId).subscribe({
+      next: (res) => {
+        this.requirementOptions.set(res || []);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.requirementOptions.set([]);
+        this.cdr.markForCheck();
+      },
+    });
+
+    this.service.getSpecificationCombobox(projId).subscribe({
+      next: (res) => {
+        this.specificationOptions.set(res || []);
+        this.isLoadingAiOptions.set(false);
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.specificationOptions.set([]);
+        this.isLoadingAiOptions.set(false);
+        this.cdr.markForCheck();
+      },
+    });
+  }
+
+  openAiModal(): void {
+    if (this.isLocked()) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้ถูกล็อคแล้ว');
+      return;
+    }
+    const currentType = (this.formData?.form?.value as any)?.manualType || 'USER';
+    this.aiManualType.set(currentType);
+    this.aiPrompt.set('');
+
+    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
+    this.loadAiComboboxOptions(projId);
+    this.showAiModal.set(true);
+    this.cdr.markForCheck();
+  }
+
+  closeAiModal(): void {
+    if (this.isGeneratingAi()) return;
+    this.showAiModal.set(false);
+    this.cdr.markForCheck();
+  }
+
+  generateWithAi(): void {
+    if (this.isGeneratingAi()) return;
+
+    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
+    const currentTitle = (this.formData?.form?.value as any)?.manualTitle;
+
+    this.isGeneratingAi.set(true);
+    this.cdr.markForCheck();
+
+    const reqIds = this.aiSelectedRequirementIds();
+    const specIds = this.aiSelectedSpecificationIds();
+
+    this.service.generateDraft({
+      projectId: projId || undefined,
+      manualTitle: currentTitle || undefined,
+      manualType: this.aiManualType(),
+      requirementIds: reqIds.length > 0 ? reqIds : undefined,
+      specificationIds: specIds.length > 0 ? specIds : undefined,
+      prompt: this.aiPrompt() || undefined,
+    }).pipe(
+      finalize(() => {
+        this.isGeneratingAi.set(false);
+        this.cdr.markForCheck();
+      })
+    ).subscribe({
+      next: (draft) => {
+        if (!draft || !draft.sections || draft.sections.length === 0) {
+          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาคู่มือได้ กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
+        // Set manual title if empty
+        if (!currentTitle || currentTitle.trim() === '') {
+          if (draft.manualTitle) {
+            this.formData.patchValue({ manualTitle: draft.manualTitle } as any);
+          }
+        }
+        if (draft.manualType) {
+          this.formData.patchValue({ manualType: draft.manualType } as any);
+        }
+
+        const newSectionsList: PmUserManualSectionModel[] = draft.sections.map((s, idx) => ({
+          sectionCode: s.sectionCode || `SEC-${idx + 1}`,
+          sectionTitle: s.sectionTitle || `${idx + 1}. หัวข้อ`,
+          content: s.content || '',
+          sortOrder: s.sortOrder || (idx + 1),
+          state: SicEntityState.Added,
+        }));
+
+        if (this.aiReplaceMode() === 'replace') {
+          const existing = this.sections().filter((s) => !!s.id).map((s) => ({
+            ...s,
+            state: SicEntityState.Deleted,
+          }));
+          this.sections.set([...existing, ...newSectionsList]);
+          const firstVisibleIdx = this.sections().findIndex((s) => s.state !== SicEntityState.Deleted);
+          this.activeSectionIndex.set(firstVisibleIdx >= 0 ? firstVisibleIdx : 0);
+        } else {
+          const current = [...this.sections()];
+          const startOrder = current.length;
+          newSectionsList.forEach((s, i) => {
+            s.sortOrder = startOrder + i + 1;
+            current.push(s);
+          });
+          this.sections.set(current);
+          this.activeSectionIndex.set(current.length - 1);
+        }
+
+        this.formData.markAsDirty();
+        this.showAiModal.set(false);
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', 'AI ได้ทำการสร้างเนื้อหาคู่มือการใช้งานเรียบร้อยแล้ว');
+        this.cdr.markForCheck();
+      },
+      error: (err) => {
+        console.error('AI manual generation error:', err);
+        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+      },
     });
   }
 

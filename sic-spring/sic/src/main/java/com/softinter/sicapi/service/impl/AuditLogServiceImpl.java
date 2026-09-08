@@ -12,10 +12,11 @@ import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
 import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.util.LocalizationHelper;
+import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.util.SortValidator;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Async;
@@ -128,8 +129,8 @@ public class AuditLogServiceImpl implements AuditLogService {
     @Override
     @Transactional(readOnly = true)
     public Page<AuditLogResponse> getLogs(String searchTerm, String module, String status, String username, int page, int size, String sortBy, String sortDir) {
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDir != null ? sortDir : "DESC"), sortBy != null ? sortBy : "createdDate");
-        Pageable pageable = PageRequest.of(page > 0 ? page - 1 : 0, size > 0 ? size : 10, sort);
+        Sort sort = SortValidator.build(SuAuditLog.class, sortBy, sortDir, "createdDate");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
 
         return auditLogRepository.searchLogs(searchTerm, module, status, username, pageable)
                 .map(this::toResponse);

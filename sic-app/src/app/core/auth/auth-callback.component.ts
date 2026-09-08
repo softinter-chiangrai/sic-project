@@ -30,22 +30,29 @@ export class AuthCallbackComponent implements OnInit {
 
   private async handleLogin(): Promise<void> {
     try {
-      const ok = await this.auth.handleCallback();
       const returnUrl = this.auth.consumeReturnUrlFromState() || '/';
+      const ok = await this.auth.handleCallback();
 
       this.ngZone.run(() => {
         if (!ok) {
           console.warn('[AuthCallback] Token validation failed, redirecting to home');
-          void this.router.navigateByUrl('/', { replaceUrl: true });
+          this.router.navigateByUrl('/', { replaceUrl: true }).catch(() => {
+            window.location.replace('/');
+          });
           return;
         }
 
-        void this.router.navigateByUrl(returnUrl, { replaceUrl: true });
+        const target = returnUrl.startsWith('/') ? returnUrl : `/${returnUrl}`;
+        this.router.navigateByUrl(target, { replaceUrl: true }).catch(() => {
+          window.location.replace(target);
+        });
       });
     } catch (error) {
       console.error('[AuthCallback] Error during callback handling:', error);
       this.ngZone.run(() => {
-        void this.router.navigateByUrl('/', { replaceUrl: true });
+        this.router.navigateByUrl('/', { replaceUrl: true }).catch(() => {
+          window.location.replace('/');
+        });
       });
     }
   }

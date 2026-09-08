@@ -2,15 +2,17 @@ package com.softinter.sicapi.controller.pm;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmBugRequest;
+import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmBugResponse;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmBugService;
+import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.util.SortValidator;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -30,18 +32,19 @@ public class PmBugController {
     private final CurrentUserService currentUserService;
 
     @GetMapping("/paging")
-    public ResponseEntity<Page<PmBugResponse>> getPaging(
+    public ResponseEntity<PaginationResponse<PmBugResponse>> getPaging(
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String keyword,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdDate") String sortBy,
+            @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(bugService.findAll(businessId, projectId, keyword, pageable));
+        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmBug.class, sortBy, sortDirection, "createdDate");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
+        Page<PmBugResponse> pageResult = bugService.findAll(businessId, projectId, keyword, pageable);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     @GetMapping("/{id}")

@@ -34,7 +34,7 @@ export class Pmdt15Component implements OnInit {
   manuals = signal<PmUserManualModel[]>([]);
   isLoading = signal(false);
   totalElements = signal(0);
-  page = signal(0);
+  page = signal(1);
   size = signal(50);
   projectId = signal<string | null>(null);
 
@@ -101,9 +101,9 @@ export class Pmdt15Component implements OnInit {
       })
       .subscribe({
         next: (res) => {
-          const items = res.content || [];
+          const items = res.data || [];
           this.manuals.set(items);
-          this.totalElements.set(res.totalElements || 0);
+          this.totalElements.set(res.pageable?.totalElements || 0);
           this.isLoading.set(false);
           this.loadApprovalStatuses(items);
           this.cdr.markForCheck();

@@ -13,6 +13,8 @@ import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmSpecificationService;
 import com.softinter.sicapi.service.impl.SpecificationGeneratorService;
 import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.util.SortValidator;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -61,19 +63,22 @@ public class PmSpecificationController {
     public ResponseEntity<PaginationResponse<PmSpecificationResponse>> getSpecifications(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
-            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
 
+        Sort sort = SortValidator.build(
+                PmSpecification.class, sortBy, sortDirection, "createdDate");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
+
         Page<PmSpecificationResponse> pageResult = specificationService.findAll(businessId, keyword, status, pageable);
 
-        return ResponseEntity.ok(PaginationUtil.of(
-                pageResult.getContent(),
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                pageResult.getTotalElements()));
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     @GetMapping("/{id}")

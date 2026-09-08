@@ -34,7 +34,7 @@ export class Pmrt02Service {
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));
     if (params.size !== undefined) httpParams = httpParams.set('size', String(params.size));
     if (params.sortBy) httpParams = httpParams.set('sortBy', params.sortBy);
-    if (params.sortDir) httpParams = httpParams.set('sortDir', params.sortDir);
+    if (params.sortDir) httpParams = httpParams.set('sortDirection', params.sortDir);
 
     return this.http.get<PaginationResponse<PmCustomerProject>>(this.baseUrl, { params: httpParams });
   }

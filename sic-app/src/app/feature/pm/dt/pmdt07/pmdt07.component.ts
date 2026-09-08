@@ -97,10 +97,10 @@ export class Pmdt07Component implements OnInit {
             requirementId: requirementId || undefined,
             keyword: this.searchTerm() || undefined,
             status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
-            page: this.currentPage() - 1,
+            page: this.currentPage(),
             size: this.pageSize(),
             sortBy: 'createdDate',
-            sortDir: 'desc',
+            sortDirection: 'desc',
         };
 
         this.service.getList(params)

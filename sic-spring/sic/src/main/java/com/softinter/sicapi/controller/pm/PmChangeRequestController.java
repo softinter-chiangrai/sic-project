@@ -47,8 +47,9 @@ public class PmChangeRequestController {
             @RequestParam(required = false) String targetType,
             @RequestParam(required = false) UUID targetId,
             @RequestParam(required = false) String status,
-            @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(changeRequestService.listChangeRequests(projectId, targetType, targetId, status, pageable));
+            @RequestParam(required = false) String keyword,
+            @PageableDefault(size = 10, sort = "createdDate", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+        return ResponseEntity.ok(changeRequestService.listChangeRequests(projectId, targetType, targetId, status, keyword, pageable));
     }
 
     @DeleteMapping("/{id}")

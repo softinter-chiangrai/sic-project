@@ -10,7 +10,7 @@ export class Pmdt12Service {
   private http = inject(HttpClient);
   private apiBase = environment.apiBaseUrl;
 
-  getTestCases(projectId?: string | null, keyword?: string | null, page = 0, size = 10, sortBy = 'createdDate', sortDirection = 'DESC'): Observable<any> {
+  getTestCases(projectId?: string | null, keyword?: string | null, page = 1, size = 10, sortBy = 'createdDate', sortDirection = 'DESC'): Observable<any> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())

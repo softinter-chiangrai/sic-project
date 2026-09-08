@@ -222,7 +222,7 @@ export class Pmdt12Component implements OnInit {
 
     const requests: any = {
       scenarios: this.service.getTestScenarios(projectId),
-      testCasesRes: this.service.getTestCases(projectId, null, 0, 1000, 'testCaseCode', 'ASC'),
+      testCasesRes: this.service.getTestCases(projectId, null, 1, 1000, 'testCaseCode', 'ASC'),
     };
 
     if (projectId) {
@@ -237,8 +237,8 @@ export class Pmdt12Component implements OnInit {
           this.projectTasks.set(tasks || []);
 
           let tcs: PmTestCaseModel[] = [];
-          if (testCasesRes && testCasesRes.content) {
-            tcs = testCasesRes.content;
+          if (testCasesRes && testCasesRes.data) {
+            tcs = testCasesRes.data;
           } else if (Array.isArray(testCasesRes)) {
             tcs = testCasesRes;
           }

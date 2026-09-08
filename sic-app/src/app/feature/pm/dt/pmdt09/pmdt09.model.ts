@@ -36,14 +36,6 @@ export interface DesignReview extends SicBaseStateModel {
   approvalStatus?: string;
 }
 
-export interface PaginationResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  size: number;
-  totalPages: number;
-}
-
 export interface Pmdt09Model extends SicBaseStateModel {
   id?: string;
   code?: string;

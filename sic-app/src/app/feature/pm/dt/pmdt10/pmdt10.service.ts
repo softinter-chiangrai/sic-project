@@ -39,7 +39,7 @@ export class Pmdt10Service {
 
   // ===== Specifications =====
   getSpecificationsByProject(projectId: string): Observable<SpecificationSummary[]> {
-    const params = new HttpParams().set('page', '0').set('size', '100');
+    const params = new HttpParams().set('page', '1').set('size', '100');
     return this.http.get<any>(this.specUrl, { params }).pipe(
       map((res) => {
         const list: any[] = res?.data || res?.content || (Array.isArray(res) ? res : []);
@@ -73,7 +73,7 @@ export class Pmdt10Service {
 
   // ===== Bugs =====
   getBugsByProject(projectId: string): Observable<any[]> {
-    const params = new HttpParams().set('projectId', projectId).set('page', '0').set('size', '500');
+    const params = new HttpParams().set('projectId', projectId).set('page', '1').set('size', '500');
     return this.http.get<any>(`${environment.apiBaseUrl}/api/pm/bugs/paging`, { params }).pipe(
       map((res) => res?.data || res?.content || (Array.isArray(res) ? res : []))
     );

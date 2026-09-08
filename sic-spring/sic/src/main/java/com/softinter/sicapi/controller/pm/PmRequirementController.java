@@ -63,22 +63,23 @@ public class PmRequirementController {
     public ResponseEntity<PaginationResponse<PmRequirementResponse>> getRequirements(
         @RequestParam(required = false) String keyword,
         @RequestParam(required = false) String status,
-        @RequestParam(required = false) UUID projectId,   
-        @PageableDefault(size = 10, sort = "requirementCode", direction = Sort.Direction.ASC) Pageable pageable) {
+        @RequestParam(required = false) UUID projectId,
+        @RequestParam(defaultValue = "1") int page,
+        @RequestParam(defaultValue = "10") int size,
+        @RequestParam(required = false) String sortBy,
+        @RequestParam(defaultValue = "ASC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
 
+        Sort sort = com.softinter.sicapi.util.SortValidator.build(
+                PmRequirement.class, sortBy, sortDirection, "requirementCode");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
+
         Page<PmRequirementResponse> pageResult = requirementService.findAll(businessId, projectId, keyword, status, pageable);
-        PaginationResponse<PmRequirementResponse> response = PaginationUtil.of(
-                pageResult.getContent(),
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                pageResult.getTotalElements()
-        );
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     @GetMapping("/{id}")

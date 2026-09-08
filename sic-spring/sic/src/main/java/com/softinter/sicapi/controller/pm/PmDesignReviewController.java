@@ -40,21 +40,23 @@ public class PmDesignReviewController {
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String sortBy,
+            @RequestParam(defaultValue = "DESC") String sortDirection
     ) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
 
+        Sort sort = com.softinter.sicapi.util.SortValidator.build(
+                com.softinter.sicapi.entity.pm.PmDesignReview.class, sortBy, sortDirection, "createdDate");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
+
         Page<PmDesignReviewResponse> pageResult = designReviewService.findAll(businessId, projectId, status, keyword, pageable);
 
-        return ResponseEntity.ok(PaginationUtil.of(
-                pageResult.getContent(),
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                pageResult.getTotalElements()
-        ));
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     // ===== Combobox Endpoints =====

@@ -2,17 +2,19 @@ package com.softinter.sicapi.controller.pm;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
+import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmInvoiceResponse;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmInvoiceService;
+import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.util.SortValidator;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
@@ -46,17 +48,18 @@ public class PmInvoiceController {
 
     @GetMapping("/paging")
     @Operation(summary = "Get invoice list with pagination")
-    public ResponseEntity<Page<PmInvoiceResponse>> getPaging(
+    public ResponseEntity<PaginationResponse<PmInvoiceResponse>> getPaging(
             @RequestParam(required = false) UUID projectId,
-            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "createdDate") String sortBy,
+            @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = Sort.by(Sort.Direction.fromString(sortDirection), sortBy);
-        Pageable pageable = PageRequest.of(page, size, sort);
-        return ResponseEntity.ok(invoiceService.findAll(businessId, projectId, pageable));
+        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmInvoice.class, sortBy, sortDirection, "createdDate");
+        Pageable pageable = PaginationUtil.toPageable(page, size, sort);
+        Page<PmInvoiceResponse> pageResult = invoiceService.findAll(businessId, projectId, pageable);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     @GetMapping("/{id}")

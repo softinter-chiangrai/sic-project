@@ -38,7 +38,7 @@ export class Pmdt14Component implements OnInit {
   approvalStatusMap = signal<Record<string, string>>({});
   isLoading = signal(false);
   totalElements = signal(0);
-  page = signal(0);
+  page = signal(1);
   size = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
@@ -71,10 +71,10 @@ export class Pmdt14Component implements OnInit {
     const total = this.totalPages();
     const current = this.page();
     const range = 5;
-    let start = Math.max(0, current - Math.floor(range / 2));
-    let end = Math.min(total - 1, start + range - 1);
+    let start = Math.max(1, current - Math.floor(range / 2));
+    let end = Math.min(total, start + range - 1);
     if (end - start < range - 1) {
-      start = Math.max(0, end - range + 1);
+      start = Math.max(1, end - range + 1);
     }
     const pages: number[] = [];
     for (let i = start; i <= end; i++) {
@@ -94,9 +94,9 @@ export class Pmdt14Component implements OnInit {
     const projectId = this.customerState.getProjectId() || undefined;
     this.service.getPaging({ page: this.page(), size: this.size(), projectId }).subscribe({
       next: (res) => {
-        const items = res.content || [];
+        const items = res.data || [];
         this.deliveries.set(items);
-        this.totalElements.set(res.totalElements || 0);
+        this.totalElements.set(res.pageable?.totalElements || 0);
         this.isLoading.set(false);
         this.loadApprovalStatuses(items);
       },
@@ -144,7 +144,7 @@ export class Pmdt14Component implements OnInit {
   }
 
   onPageChange(p: number): void {
-    if (p < 0 || p >= this.totalPages()) return;
+    if (p < 1 || p > this.totalPages()) return;
     this.page.set(p);
     this.loadData();
   }

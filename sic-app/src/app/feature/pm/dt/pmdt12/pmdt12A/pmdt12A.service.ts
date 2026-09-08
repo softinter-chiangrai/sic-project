@@ -15,7 +15,7 @@ export class Pmdt12AService {
   }
 
   getTestCases(projectId?: string | null): Observable<any> {
-    let params = new HttpParams().set('page', '0').set('size', '1000');
+    let params = new HttpParams().set('page', '1').set('size', '1000');
     if (projectId) params = params.set('projectId', projectId);
     return this.http.get(`${this.apiBase}/api/pm/test-cases/paging`, { params });
   }

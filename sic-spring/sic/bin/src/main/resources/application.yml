@@ -1,0 +1,118 @@
+server:
+  port: 5265
+
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:54320/sic_app
+    username: sic-app
+    password: SicApp2026
+    driver-class-name: org.postgresql.Driver
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: "1"
+    validate-on-migrate: false
+    locations: classpath:db/migration
+    schemas: public
+    table: flyway_schema_history
+
+  devtools:
+    add-properties: false
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+        jdbc:
+          batch_size: 20
+    open-in-view: false
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  web:
+    cors:
+      allowed-origins:
+        - http://localhost:4200
+
+  mail:
+    host: smtp.gmail.com
+    port: 587
+    username: phurinsukman3@gmail.com
+    password: qeivnricakfexxzh
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+          connectiontimeout: 5000
+          timeout: 5000
+          writetimeout: 5000
+
+  data:
+    web:
+      pageable:
+        one-indexed-parameters: true   
+
+app:
+  keycloak:
+    realm: sic-project
+    auth-server-url: http://localhost:8080
+    ssl-required: none
+    resource: sic-app
+    verify-token-audience: false
+    credentials:
+      secret: ""
+    confidential-port: 0
+
+  storage:
+    s3:
+      bucket: public-files
+      document-bucket: documents
+      region: us-east-1
+      access-key: seaweedfs
+      secret-key: seaweedfs-secret
+      endpoint: http://localhost:8888
+      path-style-access-enabled: true
+
+  ai:
+    provider: gemini
+    api-key: sk_Lhki2ELsMXbWXAZIC6aYOI2YV54LnYQwtE5UK90aGFahN3EKf7HhcDPJwEbmRDQR
+    model: gemini-2.5-flash-lite
+    api-url: https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions
+
+  figma:
+    client-id: nHawYGgjLQRdiNyVylbvpw
+    client-secret: gRKO02QqgLYIsxrSL4txGeb7i2GXsYzu7FvInpTU
+    redirect-uri: http://localhost:4200/feature/pm/design-review
+
+  report-service:
+    enabled: true
+    base-url: ${REPORT_SERVICE_URL:http://localhost:80}
+    access-token: ${REPORT_SERVICE_TOKEN:sw7vuLj4VcTyksKN9ZFNYDRmtu_O2uYk}
+    timeout-seconds: 30
+    fallback-to-local: true
+
+
+logging:
+  pattern:
+    console: "%msg%n"
+  level:
+    root: WARN
+    org.springframework: WARN
+    org.hibernate: WARN
+    org.apache.tomcat: WARN
+    com.zaxxer.hikari: WARN
+    org.springframework.messaging: WARN
+    org.springframework.web.socket: WARN
+    org.springframework.data.repository: WARN
+
+spring.main.banner-mode: off

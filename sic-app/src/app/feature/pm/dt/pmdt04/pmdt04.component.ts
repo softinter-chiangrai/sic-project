@@ -79,7 +79,7 @@ export class Pmdt04Component implements OnInit {
     if (resolved && resolved.data) {
       const data = resolved.data || [];
       this.requirements.set(data);
-      this.totalItems.set(resolved.totalElements || data.length || 0);
+      this.totalItems.set(resolved.pageable?.totalElements || data.length || 0);
       this.loadApprovalStatuses(data);
     } else {
       this.loadRequirements();
@@ -97,12 +97,12 @@ export class Pmdt04Component implements OnInit {
 
     this.isLoading.set(true);
     const params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
+      .set('page', this.currentPage().toString())
       .set('size', this.pageSize().toString())
       .set('keyword', this.searchTerm() || '')
       .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
       .set('sortBy', this.sortBy())
-      .set('sortDir', this.sortDir())
+      .set('sortDirection', this.sortDir())
       .set('projectId', projectId);
 
     this.http
@@ -112,7 +112,7 @@ export class Pmdt04Component implements OnInit {
         next: (res) => {
           const data = res.data || [];
           this.requirements.set(data);
-          this.totalItems.set(res.totalElements || 0);
+          this.totalItems.set(res.pageable?.totalElements || 0);
           this.loadApprovalStatuses(data);
         },
         error: () => {

@@ -163,7 +163,11 @@ export class AuthService {
   consumeReturnUrlFromState(): string | null {
     if (!this.isBrowser) return null;
 
-    const raw = this.oauth.state;
+    let raw: string | null | undefined = this.oauth.state;
+    if (!raw) {
+      const params = new URLSearchParams(window.location.search);
+      raw = params.get('state');
+    }
     if (!raw) return null;
 
     try {

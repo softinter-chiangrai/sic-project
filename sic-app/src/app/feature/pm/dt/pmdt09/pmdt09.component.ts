@@ -151,7 +151,7 @@ export class Pmdt09Component implements OnInit {
       next: (res) => {
         const data = res.data || [];
         this.reviews.set(data);
-        this.totalElements.set(res.total || 0);
+        this.totalElements.set(res.pageable?.totalElements || 0);
         this.isLoading.set(false);
         this.loadApprovalStatuses(data);
       },

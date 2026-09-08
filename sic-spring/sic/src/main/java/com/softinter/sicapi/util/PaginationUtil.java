@@ -3,6 +3,8 @@ package com.softinter.sicapi.util;
 import com.softinter.sicapi.dto.Pageable;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,6 +12,21 @@ import java.util.List;
 public class PaginationUtil {
 
     private PaginationUtil() {} // ป้องกันการ instantiate
+
+    /**
+     * Single conversion point: API contract is always 1-based `page`.
+     * Spring's Pageable/PageRequest is always 0-based internally - never build
+     * a PageRequest anywhere else in the codebase, always go through here.
+     */
+    public static org.springframework.data.domain.Pageable toPageable(int page, int size, Sort sort) {
+        int zeroBasedPage = Math.max(page - 1, 0);
+        int safeSize = size > 0 ? size : 10;
+        return sort != null ? PageRequest.of(zeroBasedPage, safeSize, sort) : PageRequest.of(zeroBasedPage, safeSize);
+    }
+
+    public static org.springframework.data.domain.Pageable toPageable(int page, int size) {
+        return toPageable(page, size, null);
+    }
 
     public static <T> PaginationResponse<T> of(List<T> data, int pageNumberZeroBased, int pageSize, long totalElements) {
         PaginationResponse<T> response = new PaginationResponse<>();

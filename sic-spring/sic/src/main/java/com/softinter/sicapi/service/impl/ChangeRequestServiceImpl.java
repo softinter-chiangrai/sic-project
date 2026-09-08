@@ -266,7 +266,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ChangeRequestResponse> listChangeRequests(UUID projectId, String targetType, UUID targetId, String status, Pageable pageable) {
+    public PaginationResponse<ChangeRequestResponse> listChangeRequests(UUID projectId, String targetType, UUID targetId, String status, String keyword, Pageable pageable) {
         Specification<PmChangeRequest> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.isFalse(root.get("isDelete")));
@@ -274,7 +274,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             if (projectId != null) {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
-            if (targetType != null) {
+            if (targetType != null && !targetType.isBlank()) {
                 predicates.add(cb.equal(root.get("targetType"), targetType));
             }
             if (targetId != null) {
@@ -283,6 +283,19 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             if (status != null && !status.isBlank()) {
                 predicates.add(cb.equal(root.get("status"), status));
             }
+            if (keyword != null && !keyword.isBlank()) {
+                String searchPattern = "%" + keyword.trim().toLowerCase() + "%";
+                Predicate titleLike = cb.like(cb.lower(root.get("title")), searchPattern);
+                Predicate codeLike = cb.like(cb.lower(root.get("crCode")), searchPattern);
+                Predicate descLike = cb.like(cb.lower(root.get("description")), searchPattern);
+                predicates.add(cb.or(titleLike, codeLike, descLike));
+            }
+
+            // ถ้า query ไม่ได้ระบุ sort มาจาก client ให้ default เรียงตาม createdDate DESC
+            if (query != null && (pageable == null || pageable.getSort().isUnsorted())) {
+                query.orderBy(cb.desc(root.get("createdDate")));
+            }
+
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
