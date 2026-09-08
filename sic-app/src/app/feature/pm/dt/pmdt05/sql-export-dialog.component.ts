@@ -301,9 +301,12 @@ export interface DiagramSqlHistoryItem {
                       <button
                         type="button"
                         class="text-xs px-2 py-1 rounded bg-[var(--bg-muted)] text-[var(--text-active)] hover:bg-[var(--crm-primary)]/10 hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                        (click)="copyToClipboard(item.generatedSql)"
+                        (click)="copyToClipboard(item.generatedSql, item.id)"
                       >
-                        <i class="bi bi-clipboard"></i> Copy
+                        <i class="bi" [ngClass]="copiedHistoryId() === item.id ? 'bi-check-lg text-emerald-500' : 'bi-clipboard'"></i>
+                        <span [ngClass]="copiedHistoryId() === item.id ? 'text-emerald-500 font-semibold' : ''">
+                          {{ copiedHistoryId() === item.id ? 'Copied!' : 'Copy' }}
+                        </span>
                       </button>
                       <button
                         type="button"
@@ -490,7 +493,6 @@ export class SqlExportDialogComponent implements OnInit {
         if (this.tabId) {
           this.loadHistory(); // Refresh history log in background
         }
-        this.dialogService.success('Success', res.message || 'SQL generated and saved to history.');
       },
       error: (err) => {
         console.error('❌ Generation Error:', err);
@@ -501,23 +503,41 @@ export class SqlExportDialogComponent implements OnInit {
     });
   }
 
-  copyToClipboard(sqlText: string) {
+  copyToClipboard(sqlText: string, historyId?: string) {
     if (!sqlText) return;
 
-    navigator.clipboard
-      ?.writeText(sqlText)
-      .then(() => {
-        this.dialogService.success('Copied', 'SQL copied to clipboard.');
-      })
-      .catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = sqlText;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        textarea.remove();
-        this.dialogService.success('Copied', 'SQL copied to clipboard.');
+    const setSuccess = () => {
+      if (historyId) {
+        this.copiedHistoryId.set(historyId);
+        setTimeout(() => this.copiedHistoryId.set(null), 2000);
+      } else {
+        this.copied.set(true);
+        setTimeout(() => this.copied.set(false), 2000);
+      }
+    };
+
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(sqlText).then(setSuccess).catch(() => {
+        this.fallbackCopy(sqlText);
+        setSuccess();
       });
+    } else {
+      this.fallbackCopy(sqlText);
+      setSuccess();
+    }
+  }
+
+  private fallbackCopy(text: string) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+    } catch (e) {}
+    document.body.removeChild(textarea);
   }
 
   downloadSql(sqlText: string, prefix = 'schema') {
