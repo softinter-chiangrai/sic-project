@@ -11,13 +11,14 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
 
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmdt19.component.html',
   styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -75,24 +76,6 @@ export class Pmdt19Component implements OnInit {
     const start = this.currentPage() * this.pageSize();
     return list.slice(start, start + this.pageSize());
   });
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(0, current - Math.floor(range / 2));
-    let end = Math.min(total - 1, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(0, end - range + 1);
-    }
-    const pages: number[] = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
-
-  Math = Math;
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {

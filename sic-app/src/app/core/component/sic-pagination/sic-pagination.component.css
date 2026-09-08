@@ -1,0 +1,9 @@
+.sic-pagination input[type='number']::-webkit-outer-spin-button,
+.sic-pagination input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.sic-pagination input[type='number'] {
+  -moz-appearance: textfield;
+}

@@ -20,11 +20,12 @@ import { FormsModule } from '@angular/forms';
 import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-pmrt01',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmrt01.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -54,21 +55,6 @@ export class Pmrt01Component implements OnInit {
   });
 
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
 
   ngOnInit() {
     this.businessId = localStorage.getItem('businessId') || '';

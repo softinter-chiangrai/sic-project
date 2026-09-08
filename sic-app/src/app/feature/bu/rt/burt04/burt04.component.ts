@@ -12,11 +12,12 @@ import { MemberWithUI, TeamMember } from './burt04.model';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-burt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicPaginationComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04.component.html',
 })
@@ -83,22 +84,6 @@ export class Burt04AComponent implements OnInit {
   });
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  hasPrevious = computed(() => this.currentPage() > 1);
-  hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  Math = Math;
 
   ngOnInit() {
     this.loadBusinessId();

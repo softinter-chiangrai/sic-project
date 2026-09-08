@@ -13,11 +13,12 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-pmdt18',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmdt18.component.html',
   styleUrls: ['./pmdt18.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -36,8 +37,6 @@ export class Pmdt18Component implements OnInit {
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
-
-  protected Math = Math;
 
   renewalsResource = httpResource<any>(
     () => `${apiBaseUrl}/api/pm/ma-renewals/paging?page=${this.currentPage()}&size=${this.pageSize()}`
@@ -91,22 +90,6 @@ export class Pmdt18Component implements OnInit {
   });
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    const pages: number[] = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
 
   ngOnInit() {}
 

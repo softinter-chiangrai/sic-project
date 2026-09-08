@@ -18,11 +18,12 @@ import { burt04Service } from '../burt04/burt04.service';
 import { burt02AService } from './burt02A/burt02A.component';
 import { RolePermissionSummary, ProgramPermissionSummary } from './burt02.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-burt02',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './burt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -92,22 +93,6 @@ export class Burt02Component implements OnInit {
 
   protected totalItems = computed(() => this.filteredRoles().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
 
   ngOnInit() {
     this.loadRolesAndMembers();

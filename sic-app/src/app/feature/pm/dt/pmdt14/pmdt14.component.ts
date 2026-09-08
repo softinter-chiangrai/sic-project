@@ -15,13 +15,14 @@ import { ApprovalService } from '../pmdt03/approval.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -44,8 +45,6 @@ export class Pmdt14Component implements OnInit {
   filterStatus = signal('all');
   projectId = signal<string | null>(null);
 
-  readonly Math = Math;
-
   filteredDeliveries = computed(() => {
     let list = this.deliveries();
     const term = this.searchTerm().trim().toLowerCase();
@@ -66,22 +65,6 @@ export class Pmdt14Component implements OnInit {
   });
 
   totalPages = computed(() => Math.ceil(this.totalElements() / this.size()) || 1);
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.page();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    const pages: number[] = [];
-    for (let i = start; i <= end; i++) {
-      pages.push(i);
-    }
-    return pages;
-  });
 
   ngOnInit(): void {
     const projId = this.customerState.getProjectId();

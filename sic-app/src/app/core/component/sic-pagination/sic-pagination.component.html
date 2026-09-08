@@ -1,0 +1,84 @@
+@if (totalItems > 0) {
+  <div class="sic-pagination flex flex-wrap items-center justify-between gap-3 pt-1">
+    <div class="text-sm text-[var(--text-muted)]">
+      แสดง
+      <strong class="text-[var(--text-active)]">{{ rangeStart }}</strong>
+      -
+      <strong class="text-[var(--text-active)]">{{ rangeEnd }}</strong>
+      จาก
+      <strong class="text-[var(--text-active)]">{{ totalItems }}</strong>
+      รายการ
+    </div>
+
+    <div class="flex flex-wrap items-center gap-1">
+      <button
+        type="button"
+        (click)="goToPage(currentPage - 1)"
+        [disabled]="!hasPrevious"
+        class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+      >
+        <i class="bi bi-chevron-left"></i>
+      </button>
+
+      @if (pageNumbers[0] > 1) {
+        <button
+          type="button"
+          (click)="goToPage(1)"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all"
+        >1</button>
+        @if (pageNumbers[0] > 2) {
+          <span class="px-1 text-[var(--text-muted)]">…</span>
+        }
+      }
+
+      @for (page of pageNumbers; track page) {
+        <button
+          type="button"
+          (click)="goToPage(page)"
+          [class]="page === currentPage
+              ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all'
+              : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
+        >{{ page }}</button>
+      }
+
+      @if (pageNumbers[pageNumbers.length - 1] < totalPages) {
+        @if (pageNumbers[pageNumbers.length - 1] < totalPages - 1) {
+          <span class="px-1 text-[var(--text-muted)]">…</span>
+        }
+        <button
+          type="button"
+          (click)="goToPage(totalPages)"
+          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all"
+        >{{ totalPages }}</button>
+      }
+
+      <button
+        type="button"
+        (click)="goToPage(currentPage + 1)"
+        [disabled]="!hasNext"
+        class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+      >
+        <i class="bi bi-chevron-right"></i>
+      </button>
+
+      @if (totalPages > 1) {
+        <form class="flex items-center gap-1 ml-2" (ngSubmit)="onJumpSubmit()">
+          <span class="text-sm text-[var(--text-muted)] whitespace-nowrap">ไปที่หน้า</span>
+          <input
+            type="number"
+            min="1"
+            [max]="totalPages"
+            [(ngModel)]="jumpValue"
+            name="jumpToPage"
+            placeholder="{{ currentPage }}"
+            class="w-16 h-9 px-2 rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] text-sm text-center focus:outline-none focus:border-[var(--crm-primary)]"
+          />
+          <button
+            type="submit"
+            class="h-9 px-3 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all text-sm"
+          >ไป</button>
+        </form>
+      }
+    </div>
+  </div>
+}

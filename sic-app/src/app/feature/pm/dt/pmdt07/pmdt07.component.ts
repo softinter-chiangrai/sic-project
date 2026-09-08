@@ -15,11 +15,12 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent],
+    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicPaginationComponent],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })
@@ -42,22 +43,6 @@ export class Pmdt07Component implements OnInit {
     filterStatus = signal('all');
 
     totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-    hasPrevious = computed(() => this.currentPage() > 1);
-    hasNext = computed(() => this.currentPage() < this.totalPages());
-
-    pageNumbers = computed(() => {
-        const total = this.totalPages();
-        const current = this.currentPage();
-        const range = 5;
-        let start = Math.max(1, current - Math.floor(range / 2));
-        let end = Math.min(total, start + range - 1);
-        if (end - start < range - 1) {
-            start = Math.max(1, end - range + 1);
-        }
-        return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-    });
-
-    Math = Math;
 
     ngOnInit(): void {
         const qReqId = this.route.snapshot.queryParams['requirementId'];

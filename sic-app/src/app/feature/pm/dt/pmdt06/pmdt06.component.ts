@@ -18,6 +18,7 @@ import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-pmdt06',
@@ -29,6 +30,7 @@ import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
     SicTableActionsComponent,
     SicComboboxComponent,
     SicStripHtmlPipe,
+    SicPaginationComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',
@@ -44,9 +46,6 @@ export class Pmdt06Component implements OnInit {
   private approvalService = inject(ApprovalService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
-  // ใช้ Math ใน template
-  readonly Math = Math;
-
   // State
   isLoading = signal(false);
   changeRequests = signal<ChangeRequestItem[]>([]);
@@ -60,20 +59,6 @@ export class Pmdt06Component implements OnInit {
 
   // Computed
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-  hasPrevious = computed(() => this.currentPage() > 1);
-  hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
 
   ngOnInit() {
     this.route.queryParams.subscribe((queryParams) => {

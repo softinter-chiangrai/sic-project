@@ -193,37 +193,10 @@
   }
 
   <!-- Pagination -->
-  @if (totalElements() > 0) {
-    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
-      <div class="text-sm text-[var(--text-muted)]">
-        แสดง <strong class="text-[var(--text-active)]">{{ page() * size() + 1 }}</strong>
-        - <strong class="text-[var(--text-active)]">{{ Math.min((page() + 1) * size(), totalElements()) }}</strong>
-        จาก <strong class="text-[var(--text-active)]">{{ totalElements() }}</strong> รายการ
-      </div>
-      <div class="flex gap-1">
-        <button
-          (click)="onPageChange(page() - 1)"
-          [disabled]="page() === 0"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-left"></i>
-        </button>
-        @for (p of pageNumbers(); track p) {
-          <button
-            (click)="onPageChange(p)"
-            [class]="p === page() ? 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium transition-all' : 'min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'"
-          >
-            {{ p + 1 }}
-          </button>
-        }
-        <button
-          (click)="onPageChange(page() + 1)"
-          [disabled]="(page() + 1) * size() >= totalElements()"
-          class="min-w-[2.25rem] h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-        >
-          <i class="bi bi-chevron-right"></i>
-        </button>
-      </div>
-    </div>
-  }
+  <sic-pagination
+    [currentPage]="page()"
+    [pageSize]="size()"
+    [totalItems]="totalElements()"
+    (pageChange)="onPageChange($event)"
+  ></sic-pagination>
 </div>

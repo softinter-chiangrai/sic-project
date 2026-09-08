@@ -10,11 +10,12 @@ import { DesignReview, ReviewComment } from './pmdt09.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -84,22 +85,6 @@ export class Pmdt09Component implements OnInit {
 
   protected totalItems = computed(() => this.totalElements());
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: Math.max(0, end - start + 1) }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
 
   // ===== Options =====
   readonly statusSelectOptions = [

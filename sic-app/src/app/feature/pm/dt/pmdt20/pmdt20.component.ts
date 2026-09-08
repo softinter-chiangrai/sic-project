@@ -23,11 +23,12 @@ interface AuditLog {
 import { FormsModule } from '@angular/forms';
 import { AuditLogService } from './audit-log.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-pmdt20',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmdt20.component.html',
   styleUrls: ['./pmdt20.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -150,23 +151,6 @@ export class Pmdt20Component implements OnInit {
 
   // Display logs from server response directly
   protected paginatedLogs = computed(() => this.logs());
-
-  protected hasPrevious = computed(() => this.currentPage() > 1);
-  protected hasNext = computed(() => this.currentPage() < this.totalPages());
-
-  protected pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: Math.max(0, end - start + 1) }, (_, i) => start + i);
-  });
-
-  protected Math = Math;
 
   // ===== Actions =====
   onSearch(event: Event) {

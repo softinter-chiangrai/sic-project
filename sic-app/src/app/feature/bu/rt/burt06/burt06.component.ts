@@ -12,11 +12,12 @@ import { Burt06Service } from './burt06.service';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
+import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-burt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe, SicPaginationComponent],
   templateUrl: './burt06.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',
@@ -101,29 +102,12 @@ export class Burt06Component implements OnInit {
   // Total items & pages
   totalItems = computed(() => this.filteredFlows().length);
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
-  hasPrevious = computed(() => this.currentPage() > 1);
-  hasNext = computed(() => this.currentPage() < this.totalPages());
 
   // Paginated slice
   paginatedFlows = computed(() => {
     const start = (this.currentPage() - 1) * this.pageSize();
     return this.filteredFlows().slice(start, start + this.pageSize());
   });
-
-  // Page numbers for pagination UI
-  pageNumbers = computed(() => {
-    const total = this.totalPages();
-    const current = this.currentPage();
-    const range = 5;
-    let start = Math.max(1, current - Math.floor(range / 2));
-    let end = Math.min(total, start + range - 1);
-    if (end - start < range - 1) {
-      start = Math.max(1, end - range + 1);
-    }
-    return Array.from({ length: end - start + 1 }, (_, i) => start + i);
-  });
-
-  Math = Math;
 
   ngOnInit(): void {
     this.loadFlows();

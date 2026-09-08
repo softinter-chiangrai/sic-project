@@ -144,70 +144,21 @@
       </div>
 
       <!-- Pagination -->
-      @if (totalItems() > 0) {
-        <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--border)] mt-4">
-          <div class="flex flex-wrap items-center gap-3">
-            <div class="text-sm text-[var(--text-muted)]">
-              แสดง <strong class="text-[var(--text-active)]">{{ currentPage() * pageSize() + 1 }}</strong>
-              - <strong class="text-[var(--text-active)]">{{ Math.min((currentPage() + 1) * pageSize(), totalItems()) }}</strong>
-              จาก <strong class="text-[var(--text-active)]">{{ totalItems() }}</strong> รายการ
-            </div>
-            <div class="w-36">
-              <sic-combobox
-                [options]="pageSizeOptions"
-                [ngModel]="pageSize()"
-                (ngModelChange)="onPageSizeChange($event)"
-              ></sic-combobox>
-            </div>
-          </div>
-          <div class="flex items-center gap-1">
-            <button
-              (click)="onPageChange(0)"
-              [disabled]="currentPage() === 0"
-              class="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              title="หน้าแรก"
-            >
-              <i class="bi bi-chevron-double-left"></i>
-            </button>
-            <button
-              (click)="onPageChange(currentPage() - 1)"
-              [disabled]="currentPage() === 0"
-              class="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              title="ก่อนหน้า"
-            >
-              <i class="bi bi-chevron-left"></i>
-            </button>
-            @for (p of pageNumbers(); track p) {
-              <button
-                (click)="onPageChange(p)"
-                [class]="
-                  p === currentPage()
-                    ? 'min-w-[2.25rem] h-9 px-2 flex items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white font-medium shadow-sm transition-all'
-                    : 'min-w-[2.25rem] h-9 px-2 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all'
-                "
-              >
-                {{ p + 1 }}
-              </button>
-            }
-            <button
-              (click)="onPageChange(currentPage() + 1)"
-              [disabled]="(currentPage() + 1) * pageSize() >= totalItems()"
-              class="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              title="ถัดไป"
-            >
-              <i class="bi bi-chevron-right"></i>
-            </button>
-            <button
-              (click)="onPageChange(totalPages() - 1)"
-              [disabled]="currentPage() >= totalPages() - 1"
-              class="w-9 h-9 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-              title="หน้าสุดท้าย"
-            >
-              <i class="bi bi-chevron-double-right"></i>
-            </button>
-          </div>
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--border)] mt-4">
+        <div class="w-36">
+          <sic-combobox
+            [options]="pageSizeOptions"
+            [ngModel]="pageSize()"
+            (ngModelChange)="onPageSizeChange($event)"
+          ></sic-combobox>
         </div>
-      }
+        <sic-pagination
+          [currentPage]="currentPage() + 1"
+          [pageSize]="pageSize()"
+          [totalItems]="totalItems()"
+          (pageChange)="onPageChange($event - 1)"
+        ></sic-pagination>
+      </div>
     }
   </div>
 </div>
