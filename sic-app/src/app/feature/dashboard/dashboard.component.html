@@ -48,16 +48,386 @@
       </div>
     </div>
 
-    <!-- Quick Refresh Button -->
-    <div class="flex items-center gap-2">
+    <!-- Perspective & Quick Refresh Button -->
+    <div class="flex flex-wrap items-center gap-2">
+      <!-- Perspective Pill Filter -->
+      <div class="flex items-center p-1 rounded-xl bg-[var(--bg)] border border-[var(--border)] text-xs">
+        <button
+          (click)="activePerspective.set('ALL')"
+          class="px-2.5 py-1 rounded-lg font-medium transition-all"
+          [ngClass]="activePerspective() === 'ALL' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+        >
+          ทั้งหมด (All)
+        </button>
+        <button
+          (click)="activePerspective.set('EXEC')"
+          class="px-2.5 py-1 rounded-lg font-medium transition-all"
+          [ngClass]="activePerspective() === 'EXEC' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+        >
+          ผู้บริหาร (Exec)
+        </button>
+        <button
+          (click)="activePerspective.set('PM')"
+          class="px-2.5 py-1 rounded-lg font-medium transition-all"
+          [ngClass]="activePerspective() === 'PM' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+        >
+          PM & Team
+        </button>
+        <button
+          (click)="activePerspective.set('DEV_QA')"
+          class="px-2.5 py-1 rounded-lg font-medium transition-all"
+          [ngClass]="activePerspective() === 'DEV_QA' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+        >
+          Dev / QA
+        </button>
+      </div>
+
       <button
         (click)="loadAllRealData()"
-        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all"
+        class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all cursor-pointer"
         title="รีเฟรชข้อมูลจากฐานข้อมูลจริง"
       >
         <i class="bi bi-arrow-repeat text-sm" [class.animate-spin]="isLoading()"></i>
         <span>รีเฟรชข้อมูลจริง</span>
       </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 🔄 TIER 2: SDLC DELIVERY PIPELINE (Interactive & Live API Data)           -->
+  <!-- ========================================================================= -->
+  <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
+      <div>
+        <h3 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-diagram-3-fill text-[var(--crm-primary)]"></i>
+          วงจรการส่งมอบซอฟต์แวร์มาตรฐานสากล (SDLC Delivery Pipeline)
+        </h3>
+        <p class="text-xs text-[var(--text-muted)] mt-0.5">
+          เชื่อมโยงข้อมูลจริงจาก Requirement ➔ Review ➔ Tasks ➔ QA Test Cases ➔ Delivery
+        </p>
+      </div>
+      <span class="text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--sidebar-hover)] text-[var(--text-active)] border border-[var(--border)] self-start sm:self-auto">
+        {{ totalWorkItemsCount() }} รายการทั้งหมดในกระบวนการ
+      </span>
+    </div>
+
+    <!-- 5 Real Phase Interactive Steps -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+      @for (stage of sdlcStages(); track stage.stage) {
+        <a
+          [routerLink]="stage.route"
+          class="p-4 rounded-xl border {{ stage.bgClass }} transition-all hover:scale-[1.03] hover:shadow-md cursor-pointer block group"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-[11px] font-bold uppercase tracking-wider {{ stage.colorClass }}">
+              {{ stage.stage }}
+            </span>
+            <i class="bi {{ stage.icon }} {{ stage.colorClass }} text-base group-hover:scale-110 transition-transform"></i>
+          </div>
+          <div class="flex items-baseline justify-between mt-1">
+            <span class="text-2xl font-extrabold text-[var(--text-active)]">{{ stage.count }}</span>
+            <span class="text-[11px] text-[var(--text-muted)] font-medium">รายการ</span>
+          </div>
+          <p class="text-[11px] text-[var(--text-muted)] mt-1 truncate group-hover:text-[var(--text-active)] transition-colors">
+            {{ stage.thStage }} &rarr;
+          </p>
+        </a>
+      }
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 📊 TIER 2.5: SDLC QUALITY METRICS & MANDAY BURN RATE (Real Data)          -->
+  <!-- ========================================================================= -->
+  @if (activePerspective() === 'ALL' || activePerspective() === 'EXEC' || activePerspective() === 'DEV_QA') {
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Bug Severity & Defect Density -->
+      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-bug-fill text-[var(--crm-danger)]"></i>
+              คุณภาพซอฟต์แวร์ & ระดับความรุนแรงของ Defect (Quality Matrix)
+            </h3>
+            <p class="text-xs text-[var(--text-muted)] mt-0.5">
+              ติดตามสัดส่วน Bug ในระบบทั้งหมด {{ orgSummary()?.totalBugs || 0 }} รายการ
+            </p>
+          </div>
+          <a routerLink="/feature/pm/test-management" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
+            จัดการ Bug &rarr;
+          </a>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+          <div class="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 block">Critical</span>
+            <span class="text-xl font-black text-red-600 dark:text-red-400">{{ orgSummary()?.criticalOpenBugs || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 dark:text-orange-400 block">High</span>
+            <span class="text-xl font-black text-orange-600 dark:text-orange-400">{{ orgSummary()?.highBugs || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400 block">Medium</span>
+            <span class="text-xl font-black text-amber-600 dark:text-amber-400">{{ orgSummary()?.mediumBugs || 0 }}</span>
+          </div>
+          <div class="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">Resolved / Closed</span>
+            <span class="text-xl font-black text-emerald-600 dark:text-emerald-400">{{ orgSummary()?.closedBugs || 0 }}</span>
+          </div>
+        </div>
+
+        <!-- Testing Pass Rate Bar -->
+        <div class="pt-3 border-t border-[var(--border)]">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-muted)] flex items-center gap-1.5">
+              <i class="bi bi-shield-check text-emerald-500"></i>
+              อัตราการผ่านการทดสอบ Test Case (Pass Rate)
+            </span>
+            <span class="font-bold text-[var(--text-active)]">{{ testPassRate() }}% ({{ orgSummary()?.passedTestCases || 0 }} / {{ orgSummary()?.totalTestCases || 0 }} ผ่าน)</span>
+          </div>
+          <div class="w-full bg-[var(--bg)] h-2.5 rounded-full overflow-hidden border border-[var(--border)]">
+            <div
+              class="h-full rounded-full transition-all duration-500 bg-emerald-500"
+              [style.width.%]="testPassRate()"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Manday Utilization & Cost Burn Rate -->
+      <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm flex flex-col justify-between">
+        <div>
+          <div class="flex items-center justify-between mb-4">
+            <div>
+              <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-hourglass-split text-[var(--crm-primary)]"></i>
+                การใช้ทรัพยากร Manday รวม (Manday Burn Rate)
+              </h3>
+              <p class="text-xs text-[var(--text-muted)] mt-0.5">
+                ติดตามการใช้ Manday ทั้งหมดเทียบกับงบประมาณที่ตกลงไว้
+              </p>
+            </div>
+            <span
+              class="text-xs font-bold px-2.5 py-1 rounded-full"
+              [ngClass]="mandayBurnRate() > 90 ? 'bg-red-500/10 text-red-600 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'"
+            >
+              {{ mandayBurnRate() }}% ใช้ไปแล้ว
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div class="p-3.5 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+              <span class="text-[11px] text-[var(--text-muted)] block">งบประมาณ Manday ทั้งหมด</span>
+              <span class="text-2xl font-black text-[var(--text-active)] mt-0.5 block">
+                {{ orgSummary()?.totalBudgetManday || 0 | number }} <span class="text-xs font-normal text-[var(--text-muted)]">Manday</span>
+              </span>
+            </div>
+            <div class="p-3.5 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+              <span class="text-[11px] text-[var(--text-muted)] block">Manday ที่ใช้ไปจริง</span>
+              <span class="text-2xl font-black text-[var(--crm-primary)] mt-0.5 block">
+                {{ orgSummary()?.totalUsedManday || 0 | number }} <span class="text-xs font-normal text-[var(--text-muted)]">Manday</span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <span class="text-[var(--text-muted)]">สัดส่วนการใช้งบประมาณ</span>
+            <span class="font-mono text-xs text-[var(--text-muted)]">
+              เหลือ {{ (orgSummary()?.totalBudgetManday || 0) - (orgSummary()?.totalUsedManday || 0) }} Manday
+            </span>
+          </div>
+          <div class="w-full bg-[var(--bg)] h-3 rounded-full overflow-hidden border border-[var(--border)]">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [style.width.%]="mandayBurnRate()"
+              [ngClass]="mandayBurnRate() > 85 ? 'bg-[var(--crm-danger)]' : mandayBurnRate() > 65 ? 'bg-[var(--crm-warning)]' : 'bg-[var(--crm-primary)]'"
+            ></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- 📊 TIER 1.5: ORG-WIDE KPI CARDS (Real data, no mock)                      -->
+  <!-- ========================================================================= -->
+  @if (orgSummary(); as summary) {
+    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
+      <a routerLink="/feature/pm/project" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-primary)]/50 transition-all">
+        <div class="flex items-center justify-between mb-1.5">
+          <i class="bi bi-briefcase-fill text-[var(--crm-primary)]"></i>
+        </div>
+        <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.activeProjects }}</div>
+        <div class="text-[11px] text-[var(--text-muted)]">โครงการ Active</div>
+      </a>
+
+      <a routerLink="/feature/pm/project" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-danger)]/50 transition-all">
+        <div class="flex items-center justify-between mb-1.5">
+          <i class="bi bi-exclamation-triangle-fill text-[var(--crm-danger)]"></i>
+        </div>
+        <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.delayedProjects }}</div>
+        <div class="text-[11px] text-[var(--text-muted)]">โครงการล่าช้า</div>
+      </a>
+
+      <a routerLink="/feature/pm/test-management" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-danger)]/50 transition-all">
+        <div class="flex items-center justify-between mb-1.5">
+          <i class="bi bi-bug-fill text-[var(--crm-danger)]"></i>
+        </div>
+        <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.openBugs }}</div>
+        <div class="text-[11px] text-[var(--text-muted)]">Bug เปิดอยู่ ({{ summary.criticalOpenBugs }} Critical)</div>
+      </a>
+
+      <a routerLink="/feature/pm/invoice" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-warning)]/50 transition-all">
+        <div class="flex items-center justify-between mb-1.5">
+          <i class="bi bi-wallet-fill text-[var(--crm-warning)]"></i>
+        </div>
+        <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.pendingInvoiceCount }}</div>
+        <div class="text-[11px] text-[var(--text-muted)]">Invoice ค้างชำระ ({{ summary.pendingInvoiceAmount | number: '1.0-0' }} ฿)</div>
+      </a>
+
+      <a routerLink="/feature/pm/ma-ticket" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-primary)]/50 transition-all">
+        <div class="flex items-center justify-between mb-1.5">
+          <i class="bi bi-headset text-[var(--crm-primary)]"></i>
+        </div>
+        <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.openMaTickets }}</div>
+        <div class="text-[11px] text-[var(--text-muted)]">MA Ticket ค้าง</div>
+      </a>
+
+      <a routerLink="/feature/pm/renewal" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-warning)]/50 transition-all">
+        <div class="flex items-center justify-between mb-1.5">
+          <i class="bi bi-file-earmark-text text-[var(--crm-warning)]"></i>
+        </div>
+        <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.contractsNearExpiry }}</div>
+        <div class="text-[11px] text-[var(--text-muted)]">สัญญาใกล้หมดอายุ</div>
+      </a>
+    </div>
+  }
+
+  <!-- ========================================================================= -->
+  <!-- ⚡ QUICK ACTIONS                                                          -->
+  <!-- ========================================================================= -->
+  <div class="flex flex-wrap gap-2">
+    @for (action of quickActions; track action.label) {
+      <a
+        [routerLink]="action.route"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium transition-all {{ getQuickActionColorClass(action.color) }}"
+      >
+        <i class="bi {{ action.icon }}"></i> {{ action.label }}
+      </a>
+    }
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 🎯 ACTION QUEUE (Pending Approvals) & ⏰ UPCOMING DEADLINES & ⚠️ AT-RISK PROJECTS -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Pending Approvals -->
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-check2-square text-[var(--crm-danger)]"></i>
+          รออนุมัติ (Action Queue)
+        </h3>
+        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[var(--crm-danger)]/10 text-[var(--crm-danger)]">
+          {{ approvalSummaryTotal() }} รายการ
+        </span>
+      </div>
+      <div class="space-y-2.5">
+        @for (approval of myPendingApprovals(); track approval.id) {
+          <div
+            (click)="goToApproval(approval)"
+            class="p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/40 transition-all cursor-pointer"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+                {{ approval.documentType }}
+              </span>
+              <span class="text-[10px] text-[var(--text-muted)]">{{ approval.documentCode }}</span>
+            </div>
+            <h4 class="text-xs font-semibold text-[var(--text-active)] mt-1.5 line-clamp-1">{{ approval.documentTitle }}</h4>
+            <p class="text-[11px] text-[var(--text-muted)] mt-1">{{ approval.projectName || '-' }}</p>
+          </div>
+        } @empty {
+          <div class="py-8 text-center text-xs text-[var(--text-muted)]">
+            <i class="bi bi-check2-circle text-2xl text-[var(--crm-primary)] mb-1 block"></i>
+            ไม่มีรายการรออนุมัติ
+          </div>
+        }
+      </div>
+      <a routerLink="/feature/pm/approval" class="block text-center text-xs font-semibold text-[var(--crm-primary)] hover:underline mt-3">
+        ดูทั้งหมด
+      </a>
+    </div>
+
+    <!-- Upcoming Deadlines -->
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-calendar-event text-[var(--crm-warning)]"></i>
+          งานใกล้ครบกำหนด
+        </h3>
+      </div>
+      <div class="space-y-2.5">
+        @for (item of orgDeadlines(); track item.taskId) {
+          <div
+            (click)="goToDeadlineTask(item)"
+            class="p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+                {{ item.taskCode }}
+              </span>
+              <span class="text-[11px] font-medium {{ getDaysLeftClass(item.daysLeft) }}">
+                {{ item.overdue ? 'เลยกำหนด ' + (-item.daysLeft) + ' วัน' : 'เหลือ ' + item.daysLeft + ' วัน' }}
+              </span>
+            </div>
+            <h4 class="text-xs font-semibold text-[var(--text-active)] mt-1.5 line-clamp-1">{{ item.taskName }}</h4>
+            <p class="text-[11px] text-[var(--text-muted)] mt-1">{{ item.projectName || '-' }}</p>
+          </div>
+        } @empty {
+          <div class="py-8 text-center text-xs text-[var(--text-muted)]">
+            <i class="bi bi-calendar2-check text-2xl text-[var(--crm-primary)] mb-1 block"></i>
+            ไม่มีงานใกล้ครบกำหนด
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- At-Risk Projects -->
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
+          <i class="bi bi-heart-pulse text-[var(--crm-danger)]"></i>
+          โครงการที่ควรเฝ้าระวัง
+        </h3>
+      </div>
+      <div class="space-y-2.5">
+        @for (proj of orgProjectHealth(); track proj.projectId) {
+          <div
+            (click)="goToProjectDashboard(proj.projectId)"
+            class="p-3 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer"
+          >
+            <div class="flex items-center justify-between gap-2">
+              <span class="text-[10px] font-mono px-2 py-0.5 rounded font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+                {{ proj.projectCode }}
+              </span>
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full {{ getHealthStatusClass(proj.healthStatus) }}">
+                {{ proj.healthStatus }} ({{ proj.score }})
+              </span>
+            </div>
+            <h4 class="text-xs font-semibold text-[var(--text-active)] mt-1.5 line-clamp-1">{{ proj.projectName }}</h4>
+          </div>
+        } @empty {
+          <div class="py-8 text-center text-xs text-[var(--text-muted)]">
+            <i class="bi bi-shield-check text-2xl text-[var(--crm-primary)] mb-1 block"></i>
+            ยังไม่มีโครงการในระบบ
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -147,46 +517,6 @@
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- 🔄 TIER 3: REAL SDLC PROGRESSION PIPELINE                                 -->
-  <!-- ========================================================================= -->
-  <div class="p-5 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-    <div class="flex items-center justify-between mb-4">
-      <div>
-        <h3 class="font-bold text-sm text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-diagram-3-fill text-[var(--crm-primary)]"></i>
-          สถานะวงจรการส่งมอบโครงการจริง (Real SDLC Delivery Pipeline)
-        </h3>
-        <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          คำนวณจากสถานะโครงการและเอกสารตรวจแบบในระบบปัจจุบัน
-        </p>
-      </div>
-      <span class="text-xs font-semibold px-2.5 py-1 rounded-lg bg-[var(--sidebar-hover)] text-[var(--text-active)] border border-[var(--border)]">
-        {{ totalWorkItemsCount() }} รายการทั้งหมด
-      </span>
-    </div>
-
-    <!-- 5 Real Phase Steps -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
-      @for (stage of sdlcStages(); track stage.stage) {
-        <div class="p-3.5 rounded-xl border {{ stage.bgClass }} transition-all hover:scale-[1.02]">
-          <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[11px] font-bold uppercase tracking-wider {{ stage.colorClass }}">
-              {{ stage.stage }}
-            </span>
-            <i class="bi {{ stage.icon }} {{ stage.colorClass }}"></i>
-          </div>
-          <div class="flex items-baseline justify-between mt-1">
-            <span class="text-2xl font-extrabold text-[var(--text-active)]">{{ stage.count }}</span>
-            <span class="text-[11px] text-[var(--text-muted)] font-medium">รายการ</span>
-          </div>
-          <p class="text-[11px] text-[var(--text-muted)] mt-0.5 truncate">
-            {{ stage.thStage }}
-          </p>
-        </div>
-      }
-    </div>
-  </div>
 
   <!-- ========================================================================= -->
   <!-- 🟣 REAL PROJECTS & 🟡 REAL DESIGN REVIEWS & AUDIT LOGS                    -->

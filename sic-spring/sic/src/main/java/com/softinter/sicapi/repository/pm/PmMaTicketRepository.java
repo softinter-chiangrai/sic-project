@@ -1,5 +1,6 @@
 package com.softinter.sicapi.repository.pm;
 
+import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.pm.PmMaTicket;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -7,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -19,4 +21,6 @@ public interface PmMaTicketRepository extends JpaRepository<PmMaTicket, UUID>, J
 
     boolean existsByBusinessIdAndProjectIdAndTicketNoAndIsDeleteFalse(
             UUID businessId, UUID projectId, String ticketNo);
+
+    long countByBusinessIdAndStatusNotInAndIsDeleteFalse(UUID businessId, Collection<MaTicketStatus> closedStatuses);
 }

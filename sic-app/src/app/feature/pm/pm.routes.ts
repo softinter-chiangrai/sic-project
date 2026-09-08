@@ -54,7 +54,6 @@ import { pmrt04Resolver } from './rt/pmrt04/pmrt04.resolver';
 import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
 import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
 import { pmrt05Resolver } from './rt/pmrt05/pmrt05.resolver';
-import { pmrt06Resolver } from './rt/pmrt06/pmrt06.resolver';
 import { pmrt07Resolver } from './rt/pmrt07/pmrt07.resolver';
 import { ganttResolver } from '../../core/component/sic-gantt/gantt.resolver';
 
@@ -166,12 +165,10 @@ export const PM_ROUTES: Routes = [
     resolve: { pageData: pmrt05Resolver },
   },
 
-  // ===== Executive Dashboard =====
+  // ===== Executive Dashboard (merged into /feature/dashboard) =====
   {
     path: 'executive-dashboard',
-    loadComponent: () => import('./rt/pmrt06/pmrt06.component').then((m) => m.Pmrt06Component),
-    canActivate: [customerGuard],
-    resolve: { pageData: pmrt06Resolver },
+    redirectTo: '/feature/dashboard',
   },
 
   // ===== Notification Center =====

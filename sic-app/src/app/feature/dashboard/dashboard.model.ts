@@ -24,6 +24,7 @@ export interface SdlcStageSummary {
   thStage: string;
   icon: string;
   count: number;
+  route: string;
   colorClass: string;
   bgClass: string;
 }
@@ -52,5 +53,60 @@ export interface DashboardPreloadData {
   projects: PmCustomerProject[];
   reviews: DesignReview[];
   auditLogs: AuditLog[];
+}
+
+export interface DashboardOrgSummary {
+  totalProjects: number;
+  activeProjects: number;
+  delayedProjects: number;
+  completedProjects: number;
+  openBugs: number;
+  criticalOpenBugs: number;
+  pendingInvoiceCount: number;
+  pendingInvoiceAmount: number;
+  openMaTickets: number;
+  contractsNearExpiry: number;
+
+  // SDLC Metrics from API
+  stageRequirementsCount?: number;
+  stageDesignReviewsCount?: number;
+  stageDevTasksCount?: number;
+  stageTestCasesCount?: number;
+  stageDeliveriesCount?: number;
+
+  totalBugs?: number;
+  closedBugs?: number;
+  highBugs?: number;
+  mediumBugs?: number;
+  lowBugs?: number;
+
+  totalTestCases?: number;
+  passedTestCases?: number;
+  failedTestCases?: number;
+  pendingTestCases?: number;
+
+  totalBudgetManday?: number;
+  totalUsedManday?: number;
+}
+
+export interface DashboardDeadlineItem {
+  taskId: string;
+  taskCode: string;
+  taskName: string;
+  projectId: string | null;
+  projectName: string | null;
+  endDate: string;
+  daysLeft: number;
+  status: string;
+  overdue: boolean;
+}
+
+export interface DashboardProjectHealthItem {
+  projectId: string;
+  projectCode: string;
+  projectName: string;
+  status: string;
+  score: number;
+  healthStatus: 'Green' | 'Yellow' | 'Red';
 }
 
