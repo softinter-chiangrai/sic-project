@@ -15,6 +15,7 @@ import com.softinter.sicapi.entity.su.SuBusiness;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.service.PmCustomerProjectService;
 import com.softinter.sicapi.service.ApprovalService;
@@ -39,6 +40,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     private final PmCustomerRepository customerRepository;
     private final SuBusinessRepository businessRepository;
     private final PmApprovalRepository approvalRepository;
+    private final PmTaskRepository taskRepository;
     private final ApprovalService approvalService;
     private final AuditLogService auditLogService;
     private final DocumentVersionService documentVersionService;
@@ -263,7 +265,14 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         response.setPlannedEndDate(project.getPlannedEndDate());
         response.setActualEndDate(project.getActualEndDate());
         response.setBudgetManday(project.getBudgetManday());
-        response.setUsedManday(project.getUsedManday());
+
+        // ✅ คำนวณ usedManday แบบ Auto-Rollup จาก Task ทั้งหมดในโครงการ
+        int taskUsedManday = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(project.getId())
+                .stream()
+                .mapToInt(t -> t.getActualManday() != null ? t.getActualManday() : 0)
+                .sum();
+        response.setUsedManday(taskUsedManday > 0 ? taskUsedManday : (project.getUsedManday() != null ? project.getUsedManday() : 0));
+
         response.setStatus(project.getStatus());
         response.setPriority(project.getPriority());
         response.setDescription(project.getDescription());

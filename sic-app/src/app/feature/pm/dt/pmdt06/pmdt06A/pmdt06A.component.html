@@ -72,7 +72,7 @@
           ></sic-tiptap-editor>
         </div>
 
-        <!-- Change Reason -->
+        <!-- Change Reason & Priority -->
         <div>
           <sic-combobox
             label="สาเหตุการเปลี่ยนแปลง"
@@ -80,6 +80,21 @@
             [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
             valueField="value"
             textField="text"
+            placeholder="เลือกสาเหตุการเปลี่ยนแปลง"
+            [clearable]="true"
+          ></sic-combobox>
+        </div>
+
+        <div>
+          <sic-combobox
+            label="ความสำคัญ (Priority)"
+            formControlName="priority"
+            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'"
+            valueField="value"
+            textField="text"
+            placeholder="เลือกระดับความสำคัญ"
+            [required]="true"
+            [errorMessages]="{ required: 'กรุณาเลือกระดับความสำคัญ' }"
           ></sic-combobox>
         </div>
 
@@ -354,14 +369,16 @@
 
         @if (changeRequestId) {
           <div class="flex items-center gap-2">
-            <sic-button
-              type="button"
-              variant="danger"
-              (click)="deleteChangeRequest()"
-            >
-              <i class="bi bi-trash me-1"></i>
-              ลบ
-            </sic-button>
+            @if (currentStatus === 'DRAFT' || currentStatus === 'REJECTED') {
+              <sic-button
+                type="button"
+                variant="danger"
+                (click)="deleteChangeRequest()"
+              >
+                <i class="bi bi-trash me-1"></i>
+                ลบ
+              </sic-button>
+            }
             <button
               type="button"
               (click)="exportPdf()"

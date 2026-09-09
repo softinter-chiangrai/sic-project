@@ -17,6 +17,7 @@ public class ChangeRequestResponse {
     private String title;
     private String description;
     private String changeReason;
+    private String priority;
     private String requesterId;
     private String requesterName;
     private String assigneeId;

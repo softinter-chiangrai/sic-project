@@ -8,6 +8,7 @@ export interface Pmdt06AModel extends SicBaseStateModel {
   crCode: string;
   title: string;
   description?: string;
+  priority?: string;
   impactScore?: number;
   costImpact?: number;
   scheduleImpactDays?: number;
@@ -27,6 +28,7 @@ export interface ChangeRequestFormModel {
   title: string;
   description?: string;
   changeReason?: string;
+  priority?: string;
   assigneeId?: string;
   assigneeName?: string;
   assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];

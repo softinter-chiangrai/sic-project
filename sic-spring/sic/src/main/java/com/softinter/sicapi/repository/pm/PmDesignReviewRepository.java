@@ -18,6 +18,10 @@ public interface PmDesignReviewRepository extends JpaRepository<PmDesignReview, 
     @Query("SELECT r FROM PmDesignReview r WHERE r.id = :id AND r.businessId = :businessId AND r.isDelete = false")
     Optional<PmDesignReview> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
 
+    java.util.List<PmDesignReview> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+
+    java.util.List<PmDesignReview> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+
     @Query("SELECT r FROM PmDesignReview r WHERE r.businessId = :businessId AND r.isDelete = false AND " +
            "(:projectId IS NULL OR r.project.id = :projectId) AND " +
            "(:status IS NULL OR r.status = :status) AND " +

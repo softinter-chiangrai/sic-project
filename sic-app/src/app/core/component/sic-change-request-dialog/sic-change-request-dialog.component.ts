@@ -22,6 +22,7 @@ import { DialogService } from '../../services/dialog.service';
         <sic-input label="Title" formControlName="title" [required]="true"></sic-input>
         <sic-tiptap-editor label="Description" formControlName="description" minHeight="120px"></sic-tiptap-editor>
         <sic-combobox label="Change Reason" formControlName="changeReason" [apiUrl]="'/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'" valueField="value" textField="text"></sic-combobox>
+        <sic-combobox label="Priority" formControlName="priority" [apiUrl]="'/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'" valueField="value" textField="text" [required]="true"></sic-combobox>
         <sic-combobox label="Assignee" formControlName="assigneeId" [apiUrl]="'/api/business/combobox-members?businessId=' + businessId" valueField="value" textField="text" [required]="true"></sic-combobox>
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">
           <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
@@ -44,6 +45,7 @@ export class SicChangeRequestDialogComponent {
     title: ['', Validators.required],
     description: [''],
     changeReason: [''],
+    priority: ['MEDIUM', Validators.required],
     assigneeId: ['', Validators.required]
   });
 

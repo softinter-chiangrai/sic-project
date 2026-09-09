@@ -787,7 +787,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                         .orElse(false);
             case "CHANGE_REQUEST":
                 return changeRequestRepository.findById(documentId)
-                        .map(cr -> "APPROVED".equalsIgnoreCase(cr.getStatus()))
+                        .map(cr -> "APPROVED".equalsIgnoreCase(cr.getStatus()) || "IMPLEMENTED".equalsIgnoreCase(cr.getStatus()))
                         .orElse(false);
             case "PROJECT":
                 return customerProjectRepository.findById(documentId)

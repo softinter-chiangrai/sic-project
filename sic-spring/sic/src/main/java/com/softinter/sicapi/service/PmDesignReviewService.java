@@ -17,6 +17,7 @@ public interface PmDesignReviewService {
     UUID save(PmDesignReviewRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);
     PmReviewCommentResponse addComment(UUID reviewId, PmReviewCommentRequest request, UUID businessId, String userId);
+    List<ComboboxResponse> getComboboxDesignReviews(UUID businessId, UUID projectId);
     List<ComboboxResponse> getComboboxSpecifications(UUID businessId, UUID projectId, String type, String value);
     List<ComboboxResponse> getComboboxProjects(UUID businessId);
     List<ComboboxResponse> getComboboxRequirements(UUID businessId, UUID projectId);

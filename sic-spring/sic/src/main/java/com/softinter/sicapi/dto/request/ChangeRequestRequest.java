@@ -20,6 +20,7 @@ public class ChangeRequestRequest {
     private String title;
     private String description;
     private String changeReason;
+    private String priority;
     private String assigneeId;
     private List<CrAssigneeRequest> assignees;
     private String targetVersion;

@@ -28,6 +28,7 @@
                 COALESCE(c.company_name_local, c.company_name_en, '-') AS "customerName",
                 COALESCE(cr.target_type, '-')                 AS "targetType",
                 COALESCE(cr.change_reason, '-')               AS "changeReason",
+                COALESCE(cr.priority, 'MEDIUM')               AS "priority",
                 COALESCE(
                     NULLIF(TRIM(cr.target_version), ''),
                     (CASE 
@@ -72,6 +73,7 @@
 	<field name="customerName" class="java.lang.String"/>
 	<field name="targetType" class="java.lang.String"/>
 	<field name="changeReason" class="java.lang.String"/>
+	<field name="priority" class="java.lang.String"/>
 	<field name="targetVersion" class="java.lang.String"/>
 	<field name="status" class="java.lang.String"/>
 	<field name="requesterId" class="java.lang.String"/>
@@ -114,7 +116,7 @@
 
 	<!-- DETAIL BAND -->
 	<detail>
-		<band height="205" splitType="Stretch">
+		<band height="225" splitType="Stretch">
 			<!-- SECTION 1: ข้อมูลทั่วไป -->
 			<element kind="textField" uuid="09fa0de8-6bc4-47c3-b452-f471cb78972f" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA["1. ข้อมูลทั่วไปของคำขอเปลี่ยนแปลง (General Information)"]]></expression>
@@ -122,7 +124,7 @@
 			<element kind="line" uuid="7cf41209-4a3b-489e-913a-7a561bc49a12" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="rectangle" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="98" backcolor="#F8FAFC" radius="3">
+			<element kind="rectangle" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="116" backcolor="#F8FAFC" radius="3">
 				<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 			</element>
 
@@ -168,7 +170,7 @@
 				<expression><![CDATA[$F{targetVersion} != null ? $F{targetVersion} : "-"]]></expression>
 			</element>
 
-			<!-- Row 4: Change Reason & Requester -->
+			<!-- Row 4: Change Reason & Priority -->
 			<element kind="textField" uuid="b13e9a72-2b3a-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="92" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["สาเหตุการเปลี่ยน:"]]></expression>
 			</element>
@@ -176,20 +178,34 @@
 				<expression><![CDATA[$F{changeReason} != null ? $F{changeReason} : "-"]]></expression>
 			</element>
 			<element kind="textField" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="268" y="92" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["ความสำคัญ:"]]></expression>
+			</element>
+			<element kind="textField" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" positionType="Float" x="378" y="92" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{priority} != null ? $F{priority} : "-"]]></expression>
+			</element>
+
+			<!-- Row 5: Requester & Created Date -->
+			<element kind="textField" uuid="a1b2c3d4-1a2b-4c3d-8e5f-1a2b3c4d5e6f" positionType="Float" x="10" y="110" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
 				<expression><![CDATA["ผู้ยื่นคำขอ:"]]></expression>
 			</element>
-			<element kind="textField" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" positionType="Float" x="378" y="92" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<element kind="textField" uuid="b2c3d4e5-2b3c-4d5e-9f6a-2b3c4d5e6f7a" positionType="Float" x="120" y="110" width="135" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{requesterId} != null ? $F{requesterId} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="c3d4e5f6-3c4d-5e6f-0a7b-3c4d5e6f7a8b" positionType="Float" x="268" y="110" width="105" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA["วันที่สร้าง:"]]></expression>
+			</element>
+			<element kind="textField" uuid="d4e5f6a7-4d5e-6f7a-1b8c-4d5e6f7a8b9c" positionType="Float" x="378" y="110" width="130" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{createdDate} != null ? $F{createdDate} : "-"]]></expression>
 			</element>
 
 			<!-- SECTION 2: รายละเอียดการเปลี่ยนแปลง (Change Description) -->
-			<element kind="textField" uuid="3d2194c7-3c4b-47b2-843e-958a1b24ca02" positionType="Float" x="0" y="142" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<element kind="textField" uuid="3d2194c7-3c4b-47b2-843e-958a1b24ca02" positionType="Float" x="0" y="160" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA["2. รายละเอียดและขอบเขตการเปลี่ยนแปลง (Change Description)"]]></expression>
 			</element>
-			<element kind="line" uuid="7cf41209-3c4b-489e-913a-7a561bc49a12" positionType="Float" x="0" y="164" width="515" height="1" forecolor="#CBD5E1">
+			<element kind="line" uuid="7cf41209-3c4b-489e-913a-7a561bc49a12" positionType="Float" x="0" y="182" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" positionType="Float" x="0" y="172" width="515" height="26" markup="html" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+			<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" positionType="Float" x="0" y="190" width="515" height="26" markup="html" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
 				<paragraph lineSpacing="1_1_2" style="ContentText"/>
 				<expression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : "ไม่มีรายละเอียดเพิ่มเติม"]]></expression>
 			</element>

@@ -342,4 +342,29 @@ export class Pmdt06Component implements OnInit {
     };
     return status ? map[status] || '-' : '-';
   }
+
+  getPriorityClass(priority?: string): string {
+    if (!priority) return 'bg-gray-500/10 text-gray-500 dark:text-gray-400 border border-gray-500/20';
+    const p = priority.toUpperCase();
+    const map: Record<string, string> = {
+      LOW: 'bg-slate-500/10 text-slate-600 dark:text-slate-300 border border-slate-500/20',
+      MEDIUM: 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20',
+      HIGH: 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20',
+      CRITICAL: 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20',
+      URGENT: 'bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 font-bold',
+    };
+    return map[p] || 'bg-gray-500/10 text-gray-600 dark:text-gray-400 border border-gray-500/20';
+  }
+
+  getPriorityText(priority?: string): string {
+    if (!priority) return '-';
+    const map: Record<string, string> = {
+      LOW: 'ต่ำ',
+      MEDIUM: 'ปานกลาง',
+      HIGH: 'สูง',
+      CRITICAL: 'วิกฤต',
+      URGENT: 'ด่วน',
+    };
+    return map[priority.toUpperCase()] || priority;
+  }
 }

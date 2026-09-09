@@ -104,6 +104,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         title: [null, Validators.required],
         description: [null],
         changeReason: [null],
+        priority: ['MEDIUM', Validators.required],
         targetVersion: [null],
         assigneeId: [null],
         assigneeIds: [[], Validators.required],
@@ -170,7 +171,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         } else if (type === 'CONTRACT') {
             return environment.apiBaseUrl + '/api/pm/contracts/combobox';
         } else if (type === 'DESIGN_REVIEW') {
-            return environment.apiBaseUrl + '/api/pm/design-reviews/combobox-specification';
+            return environment.apiBaseUrl + '/api/pm/design-reviews/combobox';
         } else if (type === 'DELIVERY') {
             return environment.apiBaseUrl + '/api/pm/delivery/combobox';
         } else if (type === 'USER_MANUAL') {

@@ -329,6 +329,19 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ComboboxResponse> getComboboxDesignReviews(UUID businessId, UUID projectId) {
+        if (projectId != null) {
+            return designReviewRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId).stream()
+                    .map(r -> new ComboboxResponse(r.getId().toString(), (r.getReviewCode() != null ? r.getReviewCode() + " - " : "") + r.getTitle()))
+                    .collect(Collectors.toList());
+        }
+        return designReviewRepository.findByBusinessIdAndIsDeleteFalse(businessId).stream()
+                .map(r -> new ComboboxResponse(r.getId().toString(), (r.getReviewCode() != null ? r.getReviewCode() + " - " : "") + r.getTitle()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<ComboboxResponse> getComboboxSpecifications(UUID businessId, UUID projectId, String type, String value) {
         if ("Requirement".equalsIgnoreCase(type)) {
             if (value != null && !value.isBlank()) {

@@ -60,6 +60,18 @@ public class PmDesignReviewController {
     }
 
     // ===== Combobox Endpoints =====
+    @GetMapping("/combobox")
+    @Operation(summary = "Get combobox design reviews")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxDesignReviews(
+            @RequestParam(required = false) UUID projectId
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(designReviewService.getComboboxDesignReviews(businessId, projectId));
+    }
+
     @GetMapping("/combobox-specification")
     @Operation(summary = "Get combobox specifications/reviewables for Design Review")
     public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxSpecifications(

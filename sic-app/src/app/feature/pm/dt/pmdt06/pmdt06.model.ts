@@ -42,6 +42,7 @@ export interface ChangeRequestItem {
   title: string;
   description: string;
   changeReason: string;
+  priority?: string;
   estimatedManday: number;
   status: string;
   targetType: string;

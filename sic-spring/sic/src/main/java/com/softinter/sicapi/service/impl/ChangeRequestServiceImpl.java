@@ -98,6 +98,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
         cr.setChangeReason(request.getChangeReason());
+        cr.setPriority(request.getPriority() != null && !request.getPriority().isBlank() ? request.getPriority() : "MEDIUM");
         cr.setRequesterId(currentUserService.getUserId());
         cr.setStatus("DRAFT");
         cr.setTargetVersion(resolveTargetVersion(request.getTargetType(), request.getTargetId(), request.getTargetVersion()));
@@ -164,7 +165,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รหัสคำขอ (CR Code)", cr.getCrCode(), request.getCrCode());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อคำขอ (Title)", cr.getTitle(), request.getTitle());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", cr.getDescription(), request.getDescription());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เหตุผล (Reason)", cr.getChangeReason(), request.getChangeReason());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "สาเหตุ (Reason)", cr.getChangeReason(), request.getChangeReason());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", cr.getPriority(), request.getPriority());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
         String diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
 
@@ -189,6 +191,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
         cr.setChangeReason(request.getChangeReason());
+        if (request.getPriority() != null && !request.getPriority().isBlank()) {
+            cr.setPriority(request.getPriority());
+        }
         if (cr.getProjectId() == null) {
             UUID projId = request.getProjectId();
             if (projId == null && cr.getTargetType() != null && cr.getTargetId() != null) {
@@ -534,6 +539,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setTitle(cr.getTitle());
         response.setDescription(cr.getDescription());
         response.setChangeReason(cr.getChangeReason());
+        response.setPriority(cr.getPriority() != null ? cr.getPriority() : "MEDIUM");
         response.setRequesterId(cr.getRequesterId());
         response.setRequesterName(getUserName(cr.getRequesterId()));
         response.setAssigneeId(cr.getAssigneeId());

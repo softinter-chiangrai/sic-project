@@ -43,6 +43,9 @@ public class PmChangeRequest extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private String status = "DRAFT"; // DRAFT, SUBMITTED, APPROVED, REJECTED, IMPLEMENTED, CANCELLED
 
+    @Column(name = "priority", length = 20)
+    private String priority = "MEDIUM";
+
     @Column(name = "target_version", length = 20)
     private String targetVersion;
 
