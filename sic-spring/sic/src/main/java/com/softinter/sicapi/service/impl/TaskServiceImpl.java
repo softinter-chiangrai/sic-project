@@ -64,6 +64,7 @@ public class TaskServiceImpl implements TaskService {
         task.setStartDate(request.getStartDate());
         task.setEndDate(request.getEndDate());
         task.setEstimateManday(request.getEstimateManday());
+        task.setActualManday(request.getActualManday() != null ? request.getActualManday() : 0);
         task.setPriority(request.getPriority());
         task.setStatus(request.getStatus() != null ? request.getStatus() : "Todo");
         task.setColor(request.getColor());
@@ -116,6 +117,9 @@ public class TaskServiceImpl implements TaskService {
         task.setStartDate(request.getStartDate());
         task.setEndDate(request.getEndDate());
         task.setEstimateManday(request.getEstimateManday());
+        if (request.getActualManday() != null) {
+            task.setActualManday(request.getActualManday());
+        }
         task.setPriority(request.getPriority());
         task.setColor(request.getColor());
 

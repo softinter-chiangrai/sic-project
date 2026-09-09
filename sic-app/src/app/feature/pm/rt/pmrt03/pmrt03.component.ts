@@ -41,69 +41,121 @@ export class Pmrt03Component implements OnInit {
         score: 100,
         status: 'Green',
         factors: [
-          { name: 'ความคืบหน้างาน (Tasks)', value: 25, weight: 25 },
-          { name: 'การควบคุม Manday', value: 25, weight: 25 },
-          { name: 'คุณภาพ & Bug ที่ปิดแล้ว', value: 20, weight: 20 },
-          { name: 'ความคืบหน้า Phase', value: 15, weight: 15 },
-          { name: 'สถานะและกำหนดการ (Timeline)', value: 15, weight: 15 },
+          { name: 'ความคืบหน้างาน (Tasks)', value: 25, weight: 25, percent: 100, detail: '-' },
+          { name: 'การใช้ Manday (จากงบทั้งหมด)', value: 25, weight: 25, percent: 0, detail: '-' },
+          { name: 'คุณภาพ & การแก้ไข Bug', value: 20, weight: 20, percent: 100, detail: '-' },
+          { name: 'ความคืบหน้า Phase', value: 15, weight: 15, percent: 100, detail: '-' },
+          { name: 'สถานะและกำหนดการ (Timeline)', value: 15, weight: 15, percent: 100, detail: '-' },
         ],
       };
     }
 
     // 1. ความคืบหน้างาน (Tasks Progress) - Weight 25
     let taskScore = 25;
+    let taskPercent = 100;
+    let taskDetail = 'ไม่มีงาน (0/0)';
+    let taskColor = 'var(--crm-success)';
     if (p.taskCount > 0) {
       const taskRatio = p.taskCompletedCount / p.taskCount;
+      taskPercent = Math.round(taskRatio * 100);
       taskScore = Math.round(taskRatio * 25);
+      taskDetail = `${p.taskCompletedCount} / ${p.taskCount} งาน (${taskPercent}%)`;
+      taskColor = taskPercent >= 80 ? 'var(--crm-success)' : taskPercent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)';
     }
 
-    // 2. การควบคุม Manday (Manday Control) - Weight 25
+    // 2. การใช้ Manday (Manday Usage & Burn) - Weight 25
     let mandayScore = 25;
+    let mandayPercent = 0;
+    let mandayDetail = `${p.usedManday || 0} / ${p.budgetManday || 0} Manday`;
+    let mandayColor = 'var(--crm-success)';
     if (p.budgetManday > 0) {
-      const mandayRatio = p.usedManday / p.budgetManday;
-      if (mandayRatio <= 1.0) {
+      const mandayRatio = (p.usedManday || 0) / p.budgetManday;
+      mandayPercent = Math.min(100, Math.round(mandayRatio * 100));
+      mandayDetail = `${p.usedManday || 0} / ${p.budgetManday} Manday (${Math.round(mandayRatio * 100)}%)`;
+
+      if (mandayRatio <= 0.8) {
         mandayScore = 25;
+        mandayColor = 'var(--crm-success)';
+      } else if (mandayRatio <= 1.0) {
+        mandayScore = 22;
+        mandayColor = 'var(--crm-success)';
       } else if (mandayRatio <= 1.2) {
-        mandayScore = 15;
+        mandayScore = 12;
+        mandayColor = 'var(--crm-warning)';
       } else if (mandayRatio <= 1.5) {
-        mandayScore = 8;
+        mandayScore = 5;
+        mandayColor = 'var(--crm-danger)';
       } else {
         mandayScore = 0;
+        mandayColor = 'var(--crm-danger)';
       }
     }
 
-    // 3. คุณภาพและ Bug ที่ปิดแล้ว (Bug & Quality) - Weight 20
+    // 3. คุณภาพและการแก้ไข Bug (Bug & Quality) - Weight 20
     let bugScore = 20;
+    let bugPercent = 100;
+    let bugDetail = 'สมบูรณ์ ไม่มี Bug ในระบบ (0/0)';
+    let bugColor = 'var(--crm-success)';
     if (p.bugCount > 0) {
-      const openRatio = p.bugOpenCount / p.bugCount;
-      bugScore = Math.max(0, Math.round((1 - openRatio) * 20));
+      const closedBugs = Math.max(0, p.bugCount - (p.bugOpenCount || 0));
+      const closeRatio = closedBugs / p.bugCount;
+      bugPercent = Math.round(closeRatio * 100);
+      bugScore = Math.round(closeRatio * 20);
+      bugDetail = `ปิดแล้ว ${closedBugs} / ${p.bugCount} รายการ (${bugPercent}%)`;
+      bugColor = bugPercent >= 80 ? 'var(--crm-success)' : bugPercent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)';
     }
 
     // 4. ความคืบหน้า Phase (Phase Milestones) - Weight 15
     let phaseScore = 15;
+    let phasePercent = 100;
+    let phaseDetail = 'ไม่มี Phase (0/0)';
+    let phaseColor = 'var(--crm-success)';
     if (p.recentPhases && p.recentPhases.length > 0) {
       const totalProgress = p.recentPhases.reduce((sum, phase) => sum + (phase.progress || 0), 0);
       const avgProgress = totalProgress / p.recentPhases.length;
+      phasePercent = Math.round(avgProgress);
       phaseScore = Math.round((avgProgress / 100) * 15);
+      const completedPhases = p.recentPhases.filter(ph => ph.status === 'Completed' || (ph.progress || 0) >= 100).length;
+      phaseDetail = `${completedPhases}/${p.recentPhases.length} Phases (${phasePercent}%)`;
+      phaseColor = phasePercent >= 80 ? 'var(--crm-success)' : phasePercent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)';
     }
 
     // 5. สถานะและกำหนดการ (Timeline & Status) - Weight 15
     let statusScore = 15;
+    let statusPercent = 100;
+    let statusDetail = p.status || 'ปกติ';
+    let statusColor = 'var(--crm-success)';
+    let isOverdue = false;
+
     if (p.status === 'Delayed') {
-      statusScore = 4;
+      statusScore = 3;
+      statusPercent = 20;
+      statusDetail = 'ล่าช้ากว่ากำหนด (Delayed)';
+      statusColor = 'var(--crm-danger)';
+      isOverdue = true;
     } else if (p.status === 'Closed' || p.status === 'Delivered' || p.status === 'Done') {
       statusScore = 15;
+      statusPercent = 100;
+      statusDetail = 'เสร็จสิ้น/ส่งมอบแล้ว';
+      statusColor = 'var(--crm-success)';
     } else if (p.plannedEndDate) {
       const now = new Date();
       const end = new Date(p.plannedEndDate);
       if (end < now && p.status !== 'Done' && p.status !== 'Delivered' && p.status !== 'Closed') {
-        statusScore = 5;
+        statusScore = 3;
+        statusPercent = 20;
+        statusDetail = 'เลยกำหนดส่งตามแผน (Overdue)';
+        statusColor = 'var(--crm-danger)';
+        isOverdue = true;
       } else {
-        statusScore = 14;
+        statusScore = 15;
+        statusPercent = 100;
+        statusDetail = 'ตามแผนงาน (On Track)';
+        statusColor = 'var(--crm-success)';
       }
     }
 
-    const totalScore = Math.min(
+    let totalScore = Math.min(
       100,
       Math.max(0, taskScore + mandayScore + bugScore + phaseScore + statusScore)
     );
@@ -115,15 +167,21 @@ export class Pmrt03Component implements OnInit {
       status = 'Yellow';
     }
 
+    // หากเลยกำหนดส่ง (Overdue) หรือล่าช้า (Delayed) สุขภาพโครงการไม่ควรเป็น Green
+    if (isOverdue && status === 'Green') {
+      status = 'Yellow';
+      totalScore = Math.min(75, totalScore);
+    }
+
     return {
       score: totalScore,
       status,
       factors: [
-        { name: 'ความคืบหน้างาน (Tasks)', value: taskScore, weight: 25 },
-        { name: 'การควบคุม Manday', value: mandayScore, weight: 25 },
-        { name: 'คุณภาพ & Bug ที่ปิดแล้ว', value: bugScore, weight: 20 },
-        { name: 'ความคืบหน้า Phase', value: phaseScore, weight: 15 },
-        { name: 'สถานะและกำหนดการ (Timeline)', value: statusScore, weight: 15 },
+        { name: 'ความคืบหน้างาน (Tasks)', value: taskScore, weight: 25, percent: taskPercent, detail: taskDetail, color: taskColor },
+        { name: 'การใช้ Manday (จากงบทั้งหมด)', value: mandayScore, weight: 25, percent: mandayPercent, detail: mandayDetail, color: mandayColor },
+        { name: 'คุณภาพ & การแก้ไข Bug', value: bugScore, weight: 20, percent: bugPercent, detail: bugDetail, color: bugColor },
+        { name: 'ความคืบหน้า Phase', value: phaseScore, weight: 15, percent: phasePercent, detail: phaseDetail, color: phaseColor },
+        { name: 'สถานะและกำหนดการ (Timeline)', value: statusScore, weight: 15, percent: statusPercent, detail: statusDetail, color: statusColor },
       ],
     };
   });

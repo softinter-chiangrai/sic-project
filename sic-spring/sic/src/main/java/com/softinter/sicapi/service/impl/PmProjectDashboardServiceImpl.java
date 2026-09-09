@@ -100,6 +100,14 @@ public class PmProjectDashboardServiceImpl implements PmProjectDashboardService 
                 .count();
         response.setTaskCompletedCount((int) completedTasks);
 
+        // Auto Rollup: รวม usedManday จาก tasks จริง (ถ้ามีลงเวลาไว้) หากไม่มีให้ fallback ไปที่ค่า project.usedManday
+        int totalTaskUsedManday = tasks.stream()
+                .mapToInt(t -> t.getActualManday() != null ? t.getActualManday() : 0)
+                .sum();
+        if (totalTaskUsedManday > 0) {
+            response.setUsedManday(totalTaskUsedManday);
+        }
+
         // Recent phases (top 5)
         List<PmProjectDashboardPhaseSummary> recentPhases = phases.stream()
                 .limit(5)

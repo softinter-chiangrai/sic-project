@@ -70,6 +70,9 @@ export interface ProjectHealthFactor {
   name: string;
   value: number;
   weight: number;
+  percent: number;
+  detail: string;
+  color?: string;
 }
 
 export interface ProjectHealth {

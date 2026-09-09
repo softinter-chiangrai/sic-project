@@ -9,6 +9,7 @@ export interface TaskRequest {
   startDate: string;
   endDate: string;
   estimateManday: number;
+  actualManday?: number;
   priority?: string;
   color?: string;
   status?: string;
@@ -53,6 +54,7 @@ export interface TaskModel extends SicBaseStateModel {
   endDate: string;
   endTime?: string;
   estimateManday: number;
+  actualManday?: number;
   priority?: string;
   status?: string;
   color?: string;

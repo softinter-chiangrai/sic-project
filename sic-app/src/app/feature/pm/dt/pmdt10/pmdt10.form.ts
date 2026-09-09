@@ -17,6 +17,7 @@ export class Pmdt10Form {
       endDate: fb.control(null, [Validators.required]),
       endTime: fb.control('18:00', [Validators.required]),
       estimateManday: fb.control(null, [Validators.required, Validators.min(1)]),
+      actualManday: fb.control(0, [Validators.min(0)]),
       priority: fb.control('Medium'),
       status: fb.control('Todo'),
       color: fb.control('#3B82F6'),

@@ -16,6 +16,7 @@ public class TaskRequest {
     private Instant startDate;
     private Instant endDate;
     private Integer estimateManday;
+    private Integer actualManday;
     private String priority;
     private String color;
     private String status;

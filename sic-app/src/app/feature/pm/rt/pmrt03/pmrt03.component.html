@@ -200,22 +200,18 @@
               <div>
                 <div class="flex justify-between text-sm mb-1">
                   <span class="text-[var(--text-muted)]">{{ factor.name }}</span>
-                  <span class="text-[var(--text-active)] font-medium"
-                    >{{ factor.value }}/{{ factor.weight }}</span
-                  >
+                  <span class="text-[var(--text-active)] font-medium text-xs sm:text-sm">
+                    {{ factor.detail }}
+                  </span>
                 </div>
                 <div
                   class="w-full h-2 bg-[var(--bg)] rounded-full overflow-hidden border border-[var(--border)]/30"
                 >
                   <div
                     class="h-full rounded-full transition-all duration-500"
-                    [style.width.%]="(factor.value / factor.weight) * 100"
+                    [style.width.%]="factor.percent"
                     [style.background]="
-                      factor.value / factor.weight >= 0.8
-                        ? 'var(--crm-success)'
-                        : factor.value / factor.weight >= 0.5
-                          ? 'var(--crm-warning)'
-                          : 'var(--crm-danger)'
+                      factor.color || (factor.percent >= 80 ? 'var(--crm-success)' : factor.percent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)')
                     "
                   ></div>
                 </div>

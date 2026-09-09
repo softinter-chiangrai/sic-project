@@ -128,12 +128,24 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
                 .mapToLong(p -> p.getBudgetManday() != null ? p.getBudgetManday() : 0)
                 .sum();
         long totalUsedManday = projects.stream()
-                .mapToLong(p -> p.getUsedManday() != null ? p.getUsedManday() : 0)
+                .mapToLong(this::getProjectEffectiveUsedManday)
                 .sum();
         response.setTotalBudgetManday(totalBudgetManday);
         response.setTotalUsedManday(totalUsedManday);
 
         return response;
+    }
+
+    private int getProjectEffectiveUsedManday(PmCustomerProject project) {
+        if (project == null) return 0;
+        List<PmTask> tasks = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(project.getId());
+        int taskUsedManday = tasks.stream()
+                .mapToInt(t -> t.getActualManday() != null ? t.getActualManday() : 0)
+                .sum();
+        if (taskUsedManday > 0) {
+            return taskUsedManday;
+        }
+        return project.getUsedManday() != null ? project.getUsedManday() : 0;
     }
 
     @Override
@@ -189,8 +201,8 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
         // Manday control - weight 40
         int mandayScore = 40;
         Integer budget = project.getBudgetManday();
-        Integer used = project.getUsedManday();
-        if (budget != null && budget > 0 && used != null) {
+        int used = getProjectEffectiveUsedManday(project);
+        if (budget != null && budget > 0) {
             double ratio = (double) used / budget;
             if (ratio <= 1.0) mandayScore = 40;
             else if (ratio <= 1.2) mandayScore = 24;

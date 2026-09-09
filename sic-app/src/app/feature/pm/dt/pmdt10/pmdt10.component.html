@@ -204,6 +204,7 @@
                 <th class="px-5 py-3.5">Specification (Trace)</th>
                 <th class="px-5 py-3.5">Work Package</th>
                 <th class="px-5 py-3.5">ผู้รับผิดชอบ</th>
+                <th class="px-5 py-3.5">Manday (จริง/แผน)</th>
                 <th class="px-5 py-3.5">สถานะ</th>
                 <th class="px-5 py-3.5">ความสำคัญ</th>
                 <th class="px-5 py-3.5">กำหนดส่ง</th>
@@ -239,6 +240,10 @@
                       <sic-avatar [name]="task.assignedTo || 'Unassigned'" size="sm"></sic-avatar>
                       <span class="text-xs text-[var(--text)]">{{ task.assignedTo || '-' }}</span>
                     </div>
+                  </td>
+                  <td class="px-5 py-3.5 text-xs font-mono">
+                    <span class="font-semibold text-[var(--text-active)]">{{ task.actualManday || 0 }}</span>
+                    <span class="text-[var(--text-muted)]"> / {{ task.estimateManday || 0 }}</span>
                   </td>
                   <td class="px-5 py-3.5">
                     <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ getStatusClass(task.status) }}">
