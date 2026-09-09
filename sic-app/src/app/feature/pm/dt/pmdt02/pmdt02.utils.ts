@@ -105,7 +105,11 @@ export function buildGanttTasks(phase: PhaseResponse): DhtmlxGanttTask[] {
   return result;
 }
 
-// ===== ฟังก์ชันใหม่สำหรับ SicCalendarTimeline =====
+export interface TimelineAssignee {
+  name: string;
+  avatarUrl?: string;
+}
+
 export interface TimelineRowData {
   type: 'phase' | 'milestone' | 'workpackage' | 'task';
   id: string;
@@ -119,7 +123,7 @@ export interface TimelineRowData {
   hasChildren: boolean;
   color: string;
   assignedTo?: string;
-  assignees?: string[];
+  assignees?: (string | TimelineAssignee)[];
 }
 
 export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow<TimelineRowData>[] {
@@ -127,19 +131,16 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
   const phaseRowId = `phase-${phase.id}`;
 
   // 1. Phase row
-  const phaseAssignee = phase.owner || undefined;
   rows.push({
     id: phaseRowId,
     label: phase.phaseName,
     progress: phase.progress, // Phase มี progress โดยตรง
-    avatarUrl: phaseAssignee,
     phases: [{
       id: phase.id,
       label: phase.phaseName,
       start: phase.startDate,
       end: phase.endDate,
       color: phase.color || '#4A90D9',
-      avatarUrl: phaseAssignee
     }],
     data: {
       type: 'phase',
@@ -149,7 +150,6 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
       icon: '🚩',
       hasChildren: (phase.milestones?.length || 0) > 0,
       color: phase.color || '#4A90D9',
-      assignedTo: phase.owner
     }
   });
 
@@ -214,20 +214,45 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
         const taskProgress = calculateTaskProgress(task) * 100; // แปลงเป็นเปอร์เซ็นต์
         const visuals = getTaskVisuals(task);
 
-        // Collect assignees list
-        const assigneesList: string[] = [];
+        // Collect assignees list with name and avatarUrl
+        const assigneesList: TimelineAssignee[] = [];
+        const avatarsMap = task.assigneeAvatars || {};
+
+        const resolveAvatarUrl = (keyOrName: string): string | undefined => {
+          const rawUrl = avatarsMap[keyOrName];
+          if (!rawUrl) return undefined;
+          if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) return rawUrl;
+          return `http://localhost:5265${rawUrl}`;
+        };
+
         if (task.assigneeNames) {
           if (Array.isArray(task.assigneeNames)) {
-            assigneesList.push(...task.assigneeNames.filter(Boolean));
+            task.assigneeNames.filter(Boolean).forEach((name: string) => {
+              assigneesList.push({
+                name,
+                avatarUrl: resolveAvatarUrl(name),
+              });
+            });
           } else if (typeof task.assigneeNames === 'object') {
-            assigneesList.push(...Object.values(task.assigneeNames).filter(Boolean));
+            Object.entries(task.assigneeNames).forEach(([userId, name]) => {
+              if (name) {
+                assigneesList.push({
+                  name,
+                  avatarUrl: resolveAvatarUrl(userId) || resolveAvatarUrl(name),
+                });
+              }
+            });
           }
         }
+
         if (assigneesList.length === 0 && task.assignedTo) {
-          assigneesList.push(task.assignedTo);
+          assigneesList.push({
+            name: task.assignedTo,
+            avatarUrl: resolveAvatarUrl(task.assignedTo),
+          });
         }
 
-        const firstAssignee = assigneesList.length > 0 ? assigneesList[0] : undefined;
+        const firstAssignee = assigneesList.length > 0 ? (assigneesList[0].avatarUrl || assigneesList[0].name) : undefined;
 
         rows.push({
           id: task.id,

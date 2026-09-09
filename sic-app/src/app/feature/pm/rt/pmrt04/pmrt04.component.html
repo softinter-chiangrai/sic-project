@@ -4,19 +4,36 @@
   <!-- HEADER -->
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center gap-3">
-      <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-        @if (filterCustomerName()) {
-          สัญญาของ: {{ filterCustomerName() }}
-        } @else {
-          รายการสัญญา
+      <div>
+        <div class="flex items-center gap-3">
+          <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+            รายการสัญญา
+          </h1>
+          <span
+            class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
+          >
+            {{ totalItems() }} รายการ
+          </span>
+        </div>
+        @if (filterProjectName() || filterCustomerName()) {
+          <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-[var(--text-muted)]">
+            @if (filterProjectName()) {
+              <span class="flex items-center gap-1">
+                <i class="bi bi-folder text-[var(--crm-primary)]"></i> โครงการ: <strong class="text-[var(--text-active)]">{{ filterProjectName() }}</strong>
+                @if (filterProjectCode()) {
+                  <span class="font-mono text-[var(--text-muted)]">({{ filterProjectCode() }})</span>
+                }
+              </span>
+            }
+            @if (filterCustomerName()) {
+              <span class="flex items-center gap-1">
+                <i class="bi bi-building"></i> ลูกค้า: <strong class="text-[var(--text-active)]">{{ filterCustomerName() }}</strong>
+              </span>
+            }
+          </div>
         }
-      </h1>
-      <span
-        class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
-      >
-        {{ totalItems() }} รายการ
-      </span>
+      </div>
     </div>
 
     <div class="flex gap-2">

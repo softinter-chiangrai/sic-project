@@ -79,14 +79,14 @@ import { Pmdt02Service } from '../../../feature/pm/dt/pmdt02/pmdt02.service';
               <div
                 class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
                 [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
-                [title]="(phase.label || row.label) + (row.data?.assignees?.length ? (' | ผู้รับผิดชอบ: ' + row.data.assignees.join(', ')) : '')">
+                [title]="(phase.label || row.label) + getAssigneesTooltip(row.data?.assignees)">
                 <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
                 @if (row.data?.assignees && row.data?.assignees.length > 0) {
                   <div class="flex items-center -space-x-1 flex-shrink-0">
-                    @for (person of row.data?.assignees.slice(0, 2); track person) {
+                    @for (person of row.data?.assignees.slice(0, 3); track $index) {
                       <sic-avatar
-                        [name]="person"
-                        [src]="person.startsWith('http') || person.startsWith('assets') ? person : undefined"
+                        [name]="getAssigneeName(person)"
+                        [src]="getAssigneeAvatar(person)"
                         size="sm"
                         class="!w-4 !h-4 text-[0.55rem] ring-1 ring-white/30 rounded-full flex-shrink-0">
                       </sic-avatar>
@@ -390,6 +390,29 @@ export class SicGanttComponent implements OnInit {
         return;
     }
     this.router.navigate([route], { queryParams });
+  }
+
+  getAssigneeName(person: any): string {
+    if (!person) return '';
+    if (typeof person === 'string') return person;
+    return person.name || '';
+  }
+
+  getAssigneeAvatar(person: any): string | undefined {
+    if (!person) return undefined;
+    if (typeof person === 'object' && person.avatarUrl) {
+      return person.avatarUrl;
+    }
+    if (typeof person === 'string' && (person.startsWith('http://') || person.startsWith('https://') || person.startsWith('/api/'))) {
+      return person.startsWith('/api/') ? `http://localhost:5265${person}` : person;
+    }
+    return undefined;
+  }
+
+  getAssigneesTooltip(assignees?: any[]): string {
+    if (!assignees || assignees.length === 0) return '';
+    const names = assignees.map((p) => this.getAssigneeName(p)).filter(Boolean);
+    return names.length > 0 ? ` | ผู้รับผิดชอบ: ${names.join(', ')}` : '';
   }
 
   goBack() {

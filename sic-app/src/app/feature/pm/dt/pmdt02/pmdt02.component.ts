@@ -1381,6 +1381,29 @@ export class Pmdt02Component implements OnInit {
     return task.assignedTo || '-';
   }
 
+  getAssigneeName(person: any): string {
+    if (!person) return '';
+    if (typeof person === 'string') return person;
+    return person.name || '';
+  }
+
+  getAssigneeAvatar(person: any): string | undefined {
+    if (!person) return undefined;
+    if (typeof person === 'object' && person.avatarUrl) {
+      return person.avatarUrl;
+    }
+    if (typeof person === 'string' && (person.startsWith('http://') || person.startsWith('https://') || person.startsWith('/api/'))) {
+      return person.startsWith('/api/') ? `http://localhost:5265${person}` : person;
+    }
+    return undefined;
+  }
+
+  getAssigneesTooltip(assignees?: any[]): string {
+    if (!assignees || assignees.length === 0) return '';
+    const names = assignees.map((p) => this.getAssigneeName(p)).filter(Boolean);
+    return names.length > 0 ? ` | ผู้รับผิดชอบ: ${names.join(', ')}` : '';
+  }
+
   formatDate(dateStr: string): string {
     if (!dateStr) return '-';
     try {

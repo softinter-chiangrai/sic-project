@@ -236,10 +236,32 @@
                     {{ task.workPackageName || '-' }}
                   </td>
                   <td class="px-5 py-3.5">
-                    <div class="flex items-center gap-2">
-                      <sic-avatar [name]="task.assignedTo || 'Unassigned'" size="sm"></sic-avatar>
-                      <span class="text-xs text-[var(--text)]">{{ task.assignedTo || '-' }}</span>
-                    </div>
+                    @let assignees = getTaskAssignees(task);
+                    @if (assignees.length > 0) {
+                      <div class="flex items-center gap-2">
+                        <div class="flex items-center -space-x-1.5 flex-shrink-0">
+                          @for (person of assignees.slice(0, 3); track person) {
+                            <sic-avatar
+                              [name]="person"
+                              [src]="getAssigneeAvatar(task, person)"
+                              size="sm"
+                              [title]="person"
+                              class="!w-[22px] !h-[22px] !text-[0.65rem] ring-1 ring-[var(--bg,#0f172a)] rounded-full flex-shrink-0"
+                            ></sic-avatar>
+                          }
+                          @if (assignees.length > 3) {
+                            <span class="w-[22px] h-[22px] rounded-full bg-gray-600 text-white flex items-center justify-center text-[0.6rem] font-bold" [title]="assignees.slice(3).join(', ')">
+                              +{{ assignees.length - 3 }}
+                            </span>
+                          }
+                        </div>
+                        <span class="text-xs text-[var(--text)] truncate max-w-[120px]" [title]="assignees.join(', ')">
+                          {{ assignees.join(', ') }}
+                        </span>
+                      </div>
+                    } @else {
+                      <span class="text-xs text-[var(--text-muted)]">-</span>
+                    }
                   </td>
                   <td class="px-5 py-3.5 text-xs font-mono">
                     <span class="font-semibold text-[var(--text-active)]">{{ task.actualManday || 0 }}</span>

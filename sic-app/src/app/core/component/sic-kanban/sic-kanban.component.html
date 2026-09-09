@@ -287,6 +287,7 @@
                         @for (person of assignees.slice(0, 3); track person) {
                           <sic-avatar
                             [name]="person"
+                            [src]="getAssigneeAvatar(task, person)"
                             size="sm"
                             [title]="person"
                             class="!w-[22px] !h-[22px] !text-[0.65rem] ring-1 ring-[var(--bg,#0f172a)] rounded-full flex-shrink-0"

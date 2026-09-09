@@ -36,6 +36,7 @@ export interface TaskResponse {
   priority: string;
   assigneeIds?: string[];
   assigneeNames?: Record<string, string>;
+  assigneeAvatars?: Record<string, string>;
   specificationId?: string;
   specificationCode?: string;
   specificationTitle?: string;

@@ -542,4 +542,36 @@ export class Pmdt10Component implements OnInit {
       return false;
     }
   }
+
+  getTaskAssignees(task: TaskResponse): string[] {
+    const list: string[] = [];
+    if (task.assigneeNames) {
+      if (Array.isArray(task.assigneeNames)) {
+        list.push(...task.assigneeNames.filter(Boolean));
+      } else if (typeof task.assigneeNames === 'object') {
+        list.push(...Object.values(task.assigneeNames).filter(Boolean));
+      }
+    }
+    if (list.length === 0 && task.assignedTo) {
+      list.push(task.assignedTo);
+    }
+    return list;
+  }
+
+  getAssigneeAvatar(task: TaskResponse, person: string): string | undefined {
+    if (!person || !task.assigneeAvatars) return undefined;
+    const rawUrl = task.assigneeAvatars[person];
+    if (!rawUrl) {
+      if (task.assigneeNames && typeof task.assigneeNames === 'object') {
+        const entry = Object.entries(task.assigneeNames).find(([, name]) => name === person);
+        if (entry && task.assigneeAvatars[entry[0]]) {
+          const u = task.assigneeAvatars[entry[0]];
+          return u.startsWith('http://') || u.startsWith('https://') ? u : `http://localhost:5265${u}`;
+        }
+      }
+      return undefined;
+    }
+    if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) return rawUrl;
+    return `http://localhost:5265${rawUrl}`;
+  }
 }

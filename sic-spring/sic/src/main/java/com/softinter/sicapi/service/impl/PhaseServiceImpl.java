@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -287,22 +288,49 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setPriority(task.getPriority());
 
         List<PmTaskAssignee> assignees = taskAssigneeRepository.findByTaskId(task.getId());
+        List<String> userIds = new ArrayList<>();
+        Map<String, String> names = new HashMap<>();
+        Map<String, String> avatars = new HashMap<>();
+
         if (assignees != null && !assignees.isEmpty()) {
-            List<String> userIds = assignees.stream()
+            userIds = assignees.stream()
                     .map(PmTaskAssignee::getUserId)
                     .collect(Collectors.toList());
             dto.setAssigneeIds(userIds);
 
-            Map<String, String> names = new HashMap<>();
             List<SuProfile> profiles = profileRepository.findByUserIdIn(userIds);
             for (SuProfile profile : profiles) {
                 String fullName = LocalizationHelper.getFullName(profile);
-                names.put(profile.getUserId(), fullName != null ? fullName : profile.getUserId());
+                String displayName = fullName != null ? fullName : profile.getUserId();
+                names.put(profile.getUserId(), displayName);
+                if (profile.getUploadGroupId() != null) {
+                    avatars.put(displayName, "/api/storage/avatar/" + profile.getUploadGroupId());
+                    avatars.put(profile.getUserId(), "/api/storage/avatar/" + profile.getUploadGroupId());
+                }
             }
             for (String userId : userIds) {
                 names.putIfAbsent(userId, userId);
             }
+        } else if (task.getAssignedTo() != null && !task.getAssignedTo().isBlank()) {
+            String assigned = task.getAssignedTo().trim();
+            profileRepository.findByUserId(assigned).ifPresent(profile -> {
+                String fullName = LocalizationHelper.getFullName(profile);
+                String displayName = fullName != null ? fullName : profile.getUserId();
+                names.put(profile.getUserId(), displayName);
+                if (profile.getUploadGroupId() != null) {
+                    avatars.put(displayName, "/api/storage/avatar/" + profile.getUploadGroupId());
+                    avatars.put(profile.getUserId(), "/api/storage/avatar/" + profile.getUploadGroupId());
+                    avatars.put(assigned, "/api/storage/avatar/" + profile.getUploadGroupId());
+                }
+                dto.setAssigneeIds(List.of(profile.getUserId()));
+            });
+        }
+
+        if (!names.isEmpty()) {
             dto.setAssigneeNames(names);
+        }
+        if (!avatars.isEmpty()) {
+            dto.setAssigneeAvatars(avatars);
         }
 
         return dto;

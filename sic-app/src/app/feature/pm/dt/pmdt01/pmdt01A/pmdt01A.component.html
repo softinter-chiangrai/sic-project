@@ -81,20 +81,6 @@
       </div>
     </div>
 
-    <!-- Owner (Multiple) -->
-    <div>
-      <sic-combobox
-        label="ผู้รับผิดชอบ (Owner)"
-        formControlName="owner"
-        [apiUrl]="userApiUrl"
-        valueField="value"
-        textField="text"
-        placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
-        [clearable]="true"
-        [multiple]="true"
-        (selectionChanged)="onOwnerSelectionChanged($event)"
-      ></sic-combobox>
-    </div>
 
     <!-- ✅ Color Picker -->
     <div>

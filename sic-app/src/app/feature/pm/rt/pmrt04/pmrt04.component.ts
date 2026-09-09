@@ -50,6 +50,8 @@ export class Pmrt04Component implements OnInit {
   protected filterCustomerId = signal<string | null>(null);
   protected filterCustomerName = signal<string>('');
   protected filterProjectId = signal<string | null>(null);
+  protected filterProjectName = signal<string>('');
+  protected filterProjectCode = signal<string>('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected sortBy = signal('contractNo');
@@ -94,6 +96,9 @@ export class Pmrt04Component implements OnInit {
       const contractsRes = resolved.contracts;
       this.filterCustomerId.set(project.customerId);
       this.filterCustomerName.set(project.customerName);
+      this.filterProjectId.set(project.id);
+      this.filterProjectName.set(project.projectName || '');
+      this.filterProjectCode.set(project.projectCode || '');
       if (contractsRes) {
         const items = contractsRes.data || [];
         this.contracts.set(items);
@@ -118,6 +123,8 @@ export class Pmrt04Component implements OnInit {
           next: (project) => {
             this.filterCustomerId.set(project.customerId);
             this.filterCustomerName.set(project.customerName);
+            this.filterProjectName.set(project.projectName || '');
+            this.filterProjectCode.set(project.projectCode || '');
             this.currentPage.set(1);
             this.loadContracts();
           },
@@ -211,6 +218,12 @@ export class Pmrt04Component implements OnInit {
             const firstContract = items[0];
             if (firstContract?.customerName) {
               this.filterCustomerName.set(firstContract.customerName);
+            }
+          }
+          if (this.filterProjectId() && !this.filterProjectName()) {
+            const firstContract = items.find(c => c.projectName);
+            if (firstContract?.projectName) {
+              this.filterProjectName.set(firstContract.projectName);
             }
           }
         },

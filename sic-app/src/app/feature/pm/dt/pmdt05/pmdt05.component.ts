@@ -743,11 +743,6 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  // ===== Trace Links (keep for compatibility) =====
-  createDfdTab(name: string, relatedRequirementIds: string[]): void {
-    // ไม่ใช้แล้ว
-  }
-
   createTraceLink(
     sourceType: string,
     sourceId: string,

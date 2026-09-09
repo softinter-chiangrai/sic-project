@@ -23,7 +23,6 @@
         <p class="text-sm text-[var(--text-muted)] mt-1">{{ (p.description | sicStripHtml) || 'ไม่มีคำอธิบาย' }}</p>
         <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-2">
           <span><i class="bi bi-calendar3"></i> {{ formatDate(p.startDate) }} - {{ formatDate(p.endDate) }}</span>
-          <span><i class="bi bi-person"></i> {{ p.owner || '-' }}</span>
         </div>
       </div>
       <div class="flex flex-col items-end gap-2">
@@ -415,14 +414,14 @@
               <div
                 class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
                 [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
-                [title]="(phase.label || row.label) + (row.data?.assignees?.length ? (' | ผู้รับผิดชอบ: ' + row.data.assignees.join(', ')) : '')">
+                [title]="(phase.label || row.label) + getAssigneesTooltip(row.data?.assignees)">
                 <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
                 @if (row.data?.assignees && row.data?.assignees.length > 0) {
                   <div class="flex items-center -space-x-1 flex-shrink-0">
-                    @for (person of row.data?.assignees.slice(0, 2); track person) {
+                    @for (person of row.data?.assignees.slice(0, 3); track $index) {
                       <sic-avatar
-                        [name]="person"
-                        [src]="person.startsWith('http') || person.startsWith('assets') ? person : undefined"
+                        [name]="getAssigneeName(person)"
+                        [src]="getAssigneeAvatar(person)"
                         size="sm"
                         class="!w-4 !h-4 text-[0.55rem] ring-1 ring-white/30 rounded-full flex-shrink-0">
                       </sic-avatar>
