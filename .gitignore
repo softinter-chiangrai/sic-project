@@ -8,5 +8,5 @@ Migrations/
 *.log
 drawio-dev/
 sic-api/
-
+.yml
 .fake
