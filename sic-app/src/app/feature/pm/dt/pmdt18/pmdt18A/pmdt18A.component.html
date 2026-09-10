@@ -12,7 +12,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
-          {{ id() ? 'แก้ไขข้อเสนอต่อสัญญา MA (Renewal Proposal)' : 'สร้างข้อเสนอต่อสัญญา MA ใหม่ (New Renewal)' }}
+          {{ id() ? 'แก้ไขข้อเสนอต่อสัญญา MA' : 'สร้างข้อเสนอต่อสัญญา MA ใหม่' }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           บริหารการต่อสัญญา MA ล่วงหน้าและเสนอราคาการดูแลระบบ
@@ -42,7 +42,7 @@
         
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="อ้างอิงสัญญาเดิม (Current Contract)"
+            label="อ้างอิงสัญญาเดิม"
             [required]="true"
             [apiUrl]="apiContractCombobox"
             valueField="id"
@@ -51,7 +51,7 @@
           ></sic-combobox>
 
           <sic-combobox
-            label="ลูกค้า (Customer)"
+            label="ลูกค้า"
             [required]="true"
             [apiUrl]="apiCustomerCombobox"
             valueField="id"
@@ -60,7 +60,7 @@
           ></sic-combobox>
 
           <sic-combobox
-            label="โครงการ (Project)"
+            label="โครงการ"
             [required]="true"
             [apiUrl]="apiProjectCombobox"
             valueField="id"
@@ -69,13 +69,13 @@
           ></sic-combobox>
 
           <sic-input
-            label="เลขที่เอกสารต่อสัญญา (Renewal No)"
+            label="เลขที่เอกสารต่อสัญญา"
             placeholder="ระบบจะสร้างให้อัตโนมัติหากว่างไว้"
             formControlName="renewalNo"
           ></sic-input>
 
           <sic-combobox
-            label="สถานะข้อเสนอ (Status)"
+            label="สถานะข้อเสนอ"
             [required]="true"
             [items]="statusOptions"
             valueField="value"
@@ -93,19 +93,19 @@
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <sic-datepicker
-            label="วันสิ้นสุดสัญญาเดิม (Current End Date)"
+            label="วันสิ้นสุดสัญญาเดิม"
             [required]="true"
             formControlName="currentEndDate"
           ></sic-datepicker>
 
           <sic-datepicker
-            label="วันเริ่มต้นสัญญาใหม่ (New Start Date)"
+            label="วันเริ่มต้นสัญญาใหม่"
             [required]="true"
             formControlName="newStartDate"
           ></sic-datepicker>
 
           <sic-datepicker
-            label="วันสิ้นสุดสัญญาใหม่ (New End Date)"
+            label="วันสิ้นสุดสัญญาใหม่"
             [required]="true"
             formControlName="newEndDate"
           ></sic-datepicker>
@@ -113,7 +113,7 @@
 
         <div class="pt-2">
           <sic-input
-            label="มูลค่าเสนอต่อสัญญา (Proposed Amount)"
+            label="มูลค่าเสนอต่อสัญญา"
             type="text"
             [required]="true"
             formControlName="proposedAmount"
@@ -136,7 +136,7 @@
         </sic-button>
         @if (isLocked()) {
           <sic-button variant="primary" (click)="requestChange()">
-            <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+            <i class="bi bi-pencil-square"></i> ขอแก้ไข
           </sic-button>
         } @else {
           <sic-button variant="primary" [loading]="isSaving()" (click)="submit()">
@@ -148,7 +148,7 @@
       @if (isLocked()) {
         <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
           <i class="bi bi-lock-fill"></i>
-          เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+          เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
         </div>
       }
     </form>

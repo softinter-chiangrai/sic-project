@@ -41,9 +41,9 @@ export class Pmdt19Component implements OnInit {
   filterDocId = signal<string>('');
 
   readonly docTypeOptions = [
-    { text: 'ทุกประเภทเอกสาร (All Types)', value: 'ALL' },
-    { text: 'Requirement (ข้อกำหนดระบบ)', value: 'REQUIREMENT' },
-    { text: 'Specification (ข้อกำหนดเชิงเทคนิค)', value: 'SPECIFICATION' },
+    { text: 'ทุกประเภทเอกสาร', value: 'ALL' },
+    { text: 'Requirement', value: 'REQUIREMENT' },
+    { text: 'Specification', value: 'SPECIFICATION' },
     { text: 'Diagram', value: 'DIAGRAM' },
     { text: 'Design Review', value: 'DESIGN_REVIEW' },
     { text: 'Change Request', value: 'CHANGE_REQUEST' },
@@ -52,7 +52,7 @@ export class Pmdt19Component implements OnInit {
     { text: 'Invoice', value: 'INVOICE' },
     { text: 'MA Ticket', value: 'MA_TICKET' },
     { text: 'MA Renewal', value: 'MA_RENEWAL' },
-    { text: 'User Manual (คู่มือการใช้งาน)', value: 'USER_MANUAL' },
+    { text: 'User Manual', value: 'USER_MANUAL' },
     { text: 'Project', value: 'PROJECT' },
   ];
 

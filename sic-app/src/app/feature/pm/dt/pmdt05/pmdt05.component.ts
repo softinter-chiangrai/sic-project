@@ -63,8 +63,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   tabs = signal<DiagramModel[]>([]);
   isLoadingTabs = false;
 
+  get currentTab(): DiagramModel | undefined {
+    return this.tabs().find((t) => t.id === this.currentTabId) || this.currentDiagram || undefined;
+  }
+
   get currentTabLocked(): boolean {
-    const tab = this.tabs().find((t) => t.id === this.currentTabId);
+    const tab = this.currentTab;
     return !!(tab?.isApproved || tab?.approvalStatus === 'APPROVED');
   }
 
@@ -393,6 +397,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                     documentId: res.id,
                     documentCode: res.diagramCode || ('DIAG-' + res.id.substring(0, 8).toUpperCase()),
                     documentTitle: res.name || 'Diagram Document',
+                    version: res.version || tab.version || 'v1.0',
                     flowId: flowId,
                     comment: 'ส่งขออนุมัติ Diagram จากการแก้ไขข้อมูล',
                   })

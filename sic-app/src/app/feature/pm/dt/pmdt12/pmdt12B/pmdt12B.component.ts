@@ -52,9 +52,9 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   taskLoading = signal(false);
 
   priorityOptions = [
-    { value: 'High', text: 'High' },
-    { value: 'Medium', text: 'Medium' },
-    { value: 'Low', text: 'Low' },
+    { value: 'High', text: 'สูง' },
+    { value: 'Medium', text: 'ปานกลาง' },
+    { value: 'Low', text: 'ต่ำ' },
   ];
 
   // AI Assistant State

@@ -75,17 +75,17 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   // Delivery options
   typeOptions = [
-    { label: 'Final Delivery (ส่งมอบงวดสุดท้าย)', value: 'FINAL' },
-    { label: 'Partial Delivery (ส่งมอบบางส่วน)', value: 'PARTIAL' },
-    { label: 'Milestone Delivery (ส่งมอบตามงวดงาน)', value: 'MILESTONE' },
+    { label: 'ส่งมอบงวดสุดท้าย', value: 'FINAL' },
+    { label: 'ส่งมอบบางส่วน', value: 'PARTIAL' },
+    { label: 'ส่งมอบตามงวดงาน', value: 'MILESTONE' },
   ];
 
   statusOptions = [
-    { label: 'Draft (ฉบับร่าง)', value: 'DRAFT' },
-    { label: 'Preparing (กำลังเตรียมเอกสาร)', value: 'PREPARING' },
-    { label: 'Ready (พร้อมส่งมอบ)', value: 'READY' },
-    { label: 'Delivered (ส่งมอบแล้ว)', value: 'DELIVERED' },
-    { label: 'Confirmed (ลูกค้ายืนยันรับมอบ)', value: 'CONFIRMED' },
+    { label: 'ฉบับร่าง', value: 'DRAFT' },
+    { label: 'กำลังเตรียมเอกสาร', value: 'PREPARING' },
+    { label: 'พร้อมส่งมอบ', value: 'READY' },
+    { label: 'ส่งมอบแล้ว', value: 'DELIVERED' },
+    { label: 'ลูกค้ายืนยันรับมอบ', value: 'CONFIRMED' },
   ];
 
   isSaved = false;
@@ -312,7 +312,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
             documentTitle: payload.deliveryTitle,
             version: payload.deliveryVersion,
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติเอกสารส่งมอบงาน (Delivery)'
+            comment: 'ส่งขออนุมัติเอกสารส่งมอบงาน'
           }).subscribe({
             next: () => {
               this.isSaving.set(false);

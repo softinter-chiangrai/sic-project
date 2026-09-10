@@ -71,12 +71,11 @@ export class Pmrt04Component implements OnInit {
 
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
 
-  // ===== Options =====
   readonly statusSelectOptions = [
-    { value: 'Draft', text: 'ร่าง (Draft)' },
-    { value: 'Sent', text: 'ส่งแล้ว (Sent)' },
-    { value: 'Signed', text: 'ลงนามแล้ว (Signed)' },
-    { value: 'Expired', text: 'หมดอายุ (Expired)' },
+    { value: 'Draft', text: 'ฉบับร่าง' },
+    { value: 'Sent', text: 'ส่งแล้ว' },
+    { value: 'Signed', text: 'ลงนามแล้ว' },
+    { value: 'Expired', text: 'หมดอายุ' },
   ];
 
   typeSelectOptions = computed(() => {
@@ -411,7 +410,7 @@ export class Pmrt04Component implements OnInit {
       Draft: 'ร่าง',
       Sent: 'ส่งแล้ว',
       Signed: 'ลงนามแล้ว',
-      Changed: 'แก้ไขหลังลงนาม (Changed)',
+      Changed: 'แก้ไขหลังลงนาม',
       Expired: 'หมดอายุ',
     };
     return map[status] || status;

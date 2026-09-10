@@ -113,12 +113,12 @@ export class Pmdt14Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'DRAFT', text: 'ร่าง (Draft)' },
+    { value: 'DRAFT', text: 'ฉบับร่าง' },
     { value: 'PREPARING', text: 'กำลังเตรียมงาน' },
     { value: 'READY', text: 'พร้อมส่งมอบ' },
     { value: 'DELIVERED', text: 'ส่งมอบแล้ว' },
     { value: 'CONFIRMED', text: 'ลูกค้ายืนยันรับมอบแล้ว' },
-    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ (Changed)' },
+    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ' },
   ];
 
   onFilterChange(value: any): void {
@@ -210,12 +210,12 @@ export class Pmdt14Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ร่าง (Draft)',
+      DRAFT: 'ฉบับร่าง',
       PREPARING: 'กำลังเตรียมงาน',
       READY: 'พร้อมส่งมอบ',
       DELIVERED: 'ส่งมอบแล้ว',
       CONFIRMED: 'ลูกค้ายืนยันรับมอบแล้ว',
-      CHANGED: 'แก้ไขหลังอนุมัติ (Changed)',
+      CHANGED: 'แก้ไขหลังอนุมัติ',
     };
     return map[status] || status;
   }

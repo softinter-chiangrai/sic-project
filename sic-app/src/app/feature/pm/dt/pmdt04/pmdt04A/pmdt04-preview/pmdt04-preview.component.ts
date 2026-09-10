@@ -260,10 +260,10 @@ export class SicRequirementPreviewComponent implements OnChanges {
 
   getPriorityLabel(priority: string): string {
     const map: Record<string, string> = {
-      Must: 'ต้องมี (Must)',
-      Should: 'ควรมี (Should)',
-      Could: 'อาจมี (Could)',
-      "Won't": 'ไม่มี (Won\'t)',
+      Must: 'ต้องมี',
+      Should: 'ควรมี',
+      Could: 'อาจมี',
+      "Won't": 'ไม่มี',
     };
     return map[priority] || priority;
   }

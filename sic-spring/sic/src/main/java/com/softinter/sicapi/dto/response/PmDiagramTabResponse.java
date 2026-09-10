@@ -29,6 +29,7 @@ public class PmDiagramTabResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer versionCount;
+    private String version;
     private Integer rowVersion;
     private String approvalStatus;
     private Boolean isApproved;

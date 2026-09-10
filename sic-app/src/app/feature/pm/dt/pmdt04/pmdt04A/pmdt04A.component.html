@@ -198,7 +198,7 @@
                   (click)="requestChange()"
                 >
                   <i class="bi bi-pencil-square"></i>
-                  ขอแก้ไข (Open Change Request)
+                  ขอแก้ไข
                 </sic-button>
               } @else if (!isViewOnly) {
                 <sic-button
@@ -220,7 +220,7 @@
             @if (isLocked) {
               <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
                 <i class="bi bi-lock-fill"></i>
-                เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+                เอกสารนี้ผ่านการอนุมัติแล้ว (ล็อก Baseline) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
               </div>
             }
 
@@ -290,7 +290,7 @@
           <!-- Prompt Context -->
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-              คำสั่ง หรือ รายละเอียดความต้องการเพิ่มเติม (Prompt)
+              คำสั่งหรือรายละเอียดความต้องการเพิ่มเติม
             </label>
             <textarea
               [(ngModel)]="aiAssistPrompt"

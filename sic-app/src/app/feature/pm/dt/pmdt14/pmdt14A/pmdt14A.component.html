@@ -13,7 +13,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-box-seam text-[var(--crm-primary)]"></i>
-          {{ isView() ? 'ดูเอกสารส่งมอบ (View Delivery Document)' : (isEdit() ? 'แก้ไขเอกสารส่งมอบ (Edit Delivery)' : 'สร้างเอกสารส่งมอบใหม่ (New Delivery Document)') }}
+          {{ isView() ? 'ดูเอกสารส่งมอบ' : (isEdit() ? 'แก้ไขเอกสารส่งมอบ' : 'สร้างเอกสารส่งมอบใหม่') }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           จัดการรายการส่งมอบ ตรวจสอบเงื่อนไข Delivery Gate และแนบไฟล์เอกสารโครงการ
@@ -35,7 +35,7 @@
         <span class="w-2.5 h-2.5 rounded-full bg-[var(--crm-primary)] animate-pulse"></span>
         <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
-          Delivery Gate Check (การตรวจสอบเงื่อนไขส่งมอบ)
+          การตรวจสอบเงื่อนไขการส่งมอบ (Gate Check)
         </h2>
       </div>
       <button
@@ -59,7 +59,7 @@
             <div>
               <div class="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider mb-1">
                 <span>{{ item.category }}</span>
-                <span>{{ item.passed ? '✓ PASSED' : '✕ FAILED' }}</span>
+                <span>{{ item.passed ? '✓ ผ่าน' : '✕ ไม่ผ่าน' }}</span>
               </div>
               <div class="font-semibold text-sm truncate text-[var(--text-active)]" [title]="item.name">{{ item.name }}</div>
               <div class="text-xs mt-1 text-[var(--text-muted)] leading-relaxed">{{ item.detail }}</div>
@@ -80,7 +80,7 @@
         <div class="flex items-center gap-2">
           <span>สถานะ Gate Check:</span>
           <span [class]="'px-2.5 py-0.5 rounded-full font-medium text-xs ' + (gate.isPassed ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400')">
-            {{ gate.isPassed ? 'READY FOR DELIVERY (พร้อมส่งมอบ)' : 'WARNINGS FOUND (มีเงื่อนไขต้องตรวจสอบ)' }}
+            {{ gate.isPassed ? 'พร้อมส่งมอบ' : 'มีเงื่อนไขต้องตรวจสอบ' }}
           </span>
         </div>
         <div>
@@ -99,25 +99,25 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
       <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        ข้อมูลการส่งมอบ (Delivery Details)
+        ข้อมูลการส่งมอบ
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-input
           formControlName="deliveryCode"
-          label="รหัสการส่งมอบ (Delivery Code)"
+          label="รหัสการส่งมอบ"
           placeholder="เช่น DEL-001">
         </sic-input>
 
         <sic-input
           formControlName="deliveryTitle"
-          label="หัวข้อการส่งมอบ (Delivery Title)"
+          label="หัวข้อการส่งมอบ"
           placeholder="เช่น ส่งมอบระบบ Phase 1">
         </sic-input>
 
         <sic-combobox
           formControlName="deliveryType"
-          label="ประเภทการส่งมอบ (Type)"
+          label="ประเภทการส่งมอบ"
           [items]="typeOptions"
           valueField="value"
           displayField="label">
@@ -125,7 +125,7 @@
 
         <sic-combobox
           formControlName="contractId"
-          label="สัญญาที่เกี่ยวข้อง (Linked Contract)"
+          label="สัญญาที่เกี่ยวข้อง"
           placeholder="เลือกสัญญาโครงการ (ถ้ามี)"
           [options]="contractOptions()"
           valueField="value"
@@ -135,7 +135,7 @@
 
         <sic-datepicker
           formControlName="deliveryDate"
-          label="วันที่ส่งมอบ (Delivery Date)">
+          label="วันที่ส่งมอบ">
         </sic-datepicker>
       </div>
 
@@ -144,7 +144,7 @@
         <div class="flex flex-col gap-1.5">
           <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-            รายการการแก้ไขและฟีเจอร์หลัก (Release Notes)
+            รายการการแก้ไขและฟีเจอร์หลัก
           </label>
           <sic-tiptap-editor
             formControlName="releaseNote"
@@ -156,7 +156,7 @@
         <div class="flex flex-col gap-1.5">
           <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-card-checklist text-[var(--crm-primary)]"></i>
-            สรุปภาพรวมการส่งมอบ (Delivery Summary)
+            สรุปภาพรวมการส่งมอบ
           </label>
           <sic-tiptap-editor
             formControlName="deliverySummary"
@@ -172,7 +172,7 @@
       <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
-          รายการตรวจรับงาน (Delivery Checklist Items)
+          รายการตรวจรับงาน
         </h3>
         @if (!isView()) {
           <button
@@ -206,7 +206,7 @@
               </div>
               <div class="flex items-center gap-3 text-xs">
                 <span [class]="'px-2 py-0.5 rounded text-[10px] font-medium ' + (item.isChecked ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400')">
-                  {{ item.isChecked ? 'PASSED' : 'PENDING' }}
+                  {{ item.isChecked ? 'ผ่าน' : 'รอดำเนินการ' }}
                 </span>
                 @if (!isView()) {
                   <button type="button" (click)="removeChecklistItem($index)" class="text-[var(--crm-danger)] hover:opacity-80 p-1">
@@ -225,10 +225,10 @@
       <div class="border-b border-[var(--border)] pb-3">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-          เอกสารแนบส่งมอบและคู่มือการใช้งาน (Manuals & Attachments)
+          เอกสารแนบส่งมอบและคู่มือการใช้งาน
         </h3>
         <p class="text-xs text-[var(--text-muted)] mt-1">
-          แนบไฟล์คู่มือการใช้งาน (User/Admin Manual PDF), รายงานผลการทดสอบ (Test Report), Source Package และเอกสาร Sign-off
+          แนบไฟล์คู่มือการใช้งาน, รายงานผลการทดสอบ, Source Package และเอกสารส่งมอบงาน
         </p>
       </div>
 
@@ -245,7 +245,7 @@
         <div class="border-b border-[var(--border)] pb-3">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ (Approval Flow)
+            กระบวนการอนุมัติ
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-1">
             เลือกกระบวนการอนุมัติสำหรับเอกสารส่งมอบงาน เพื่อส่งให้ผู้มีอำนาจตรวจสอบและอนุมัติตามลำดับขั้นตอน
@@ -254,7 +254,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="กระบวนการอนุมัติ (Approval Flow)"
+            label="กระบวนการอนุมัติ"
             [apiUrl]="approvalFlowsApi"
             valueField="id"
             textField="flowName"
@@ -273,7 +273,7 @@
       </sic-button>
       @if (isLocked()) {
         <sic-button variant="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else if (isView()) {
         <sic-button variant="primary" (click)="goToEditMode()">
@@ -289,7 +289,7 @@
     @if (isLocked()) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
       </div>
     }
   </form>

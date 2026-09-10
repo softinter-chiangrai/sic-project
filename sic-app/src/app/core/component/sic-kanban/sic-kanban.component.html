@@ -313,7 +313,7 @@
                       class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 dark:text-blue-300 font-medium transition-colors cursor-pointer"
                       title="เริ่มลงมือทำงาน"
                     >
-                      <i class="bi bi-play-fill text-sm"></i> เริ่มทำงาน (Start)
+                      <i class="bi bi-play-fill text-sm"></i> เริ่มทำงาน
                     </button>
                   } @else if (isInProgressStatus(task.status)) {
                     @if (isBugTask(task)) {
@@ -323,7 +323,7 @@
                         class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-medium transition-colors cursor-pointer"
                         title="แก้ Bug เสร็จสิ้นและปิดงาน"
                       >
-                        <i class="bi bi-check-circle-fill text-xs"></i> แก้ไขเสร็จสิ้น (Complete)
+                        <i class="bi bi-check-circle-fill text-xs"></i> แก้ไขเสร็จสิ้น
                       </button>
                     } @else {
                       <button
@@ -332,12 +332,12 @@
                         class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 dark:text-amber-300 font-medium transition-colors cursor-pointer"
                         title="ส่งงานให้ Tester ตรวจ"
                       >
-                        <i class="bi bi-send-check text-xs"></i> ส่งตรวจ QA (Submit)
+                        <i class="bi bi-send-check text-xs"></i> ส่งตรวจ QA
                       </button>
                     }
                   } @else if (isWaitingFixStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-rose-600 dark:text-rose-400 font-medium">
-                      <i class="bi bi-bug-fill text-xs"></i> กำลังรอแก้ไข Bug (Bugfix)
+                      <i class="bi bi-bug-fill text-xs"></i> กำลังรอแก้ไข Bug
                     </span>
                   } @else if (isTestingStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-amber-600 dark:text-amber-400 font-medium">

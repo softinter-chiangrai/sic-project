@@ -121,10 +121,10 @@ export class Pmdt10Component implements OnInit {
 
   // Options
   readonly priorityOptions = [
-    { value: 'Critical', text: '🔥 วิกฤต (Critical)' },
-    { value: 'High', text: '🔴 สูง (High)' },
-    { value: 'Medium', text: '🟡 ปานกลาง (Medium)' },
-    { value: 'Low', text: '🟢 ต่ำ (Low)' },
+    { value: 'Critical', text: '🔥 วิกฤต' },
+    { value: 'High', text: '🔴 สูง' },
+    { value: 'Medium', text: '🟡 ปานกลาง' },
+    { value: 'Low', text: '🟢 ต่ำ' },
   ];
 
   // Computed Specifications Options

@@ -61,6 +61,13 @@ public interface ApprovalService {
     void unlockDocumentAfterChange(String documentType, UUID documentId, String reason);
 
     /**
+     * เหมือน unlockDocumentAfterChange แต่เพิ่มพารามิเตอร์ promoteMajorVersion:
+     * true = ปัดเวอร์ชันขึ้นเป็นเลขเต็มถัดไป (เช่น v1.4 -> v2.0) สำหรับเหตุการณ์ "อนุมัติ" จริง ๆ
+     * false = bump ทีละ 0.1 เหมือนเดิม สำหรับเหตุการณ์ "ปลดล็อคให้แก้ไขต่อ" (implement/assignee complete)
+     */
+    void unlockDocumentAfterChange(String documentType, UUID documentId, String reason, boolean promoteMajorVersion);
+
+    /**
      * สร้าง Revision ใหม่จากเอกสารที่ APPROVED แล้วโดยตรง (ไม่ผ่าน Change Request):
      * ฉบับอนุมัติเดิมถูก snapshot ไว้ใน pm_document_version อยู่แล้วตอน approve ครั้งก่อน
      * เมธอดนี้จึงแค่ปลดล็อคเอกสาร (bump เวอร์ชัน + ตั้งสถานะกลับเป็นแก้ไขได้ + deactivate

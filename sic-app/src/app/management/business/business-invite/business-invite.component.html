@@ -28,7 +28,7 @@
     <form [formGroup]="emailForm" (ngSubmit)="submitEmail()"
       class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col gap-4">
       <sic-combobox
-        label="ตำแหน่ง (Role)"
+        label="ตำแหน่ง"
         formControlName="roleId"
         [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
         [paging]="false">
@@ -50,7 +50,7 @@
     <form [formGroup]="tokenForm" (ngSubmit)="submitToken()"
       class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col gap-4">
       <sic-combobox
-        label="ตำแหน่ง (Role)"
+        label="ตำแหน่ง"
         formControlName="roleId"
         [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
         [paging]="false">

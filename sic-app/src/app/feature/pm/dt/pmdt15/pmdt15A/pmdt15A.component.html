@@ -12,7 +12,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-book text-[var(--crm-primary)]"></i>
-          {{ isEdit() ? 'แก้ไขคู่มือการใช้งาน (Edit User Manual)' : 'สร้างคู่มือการใช้งานใหม่ (New User Manual Builder)' }}
+          {{ isEdit() ? 'แก้ไขคู่มือการใช้งาน' : 'สร้างคู่มือการใช้งานใหม่' }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           จัดทำเอกสารคู่มือการใช้งาน ผู้ดูแลระบบ และขั้นตอนปฏิบัติงานโดยเชื่อมโยงจาก Specification
@@ -33,12 +33,12 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-medium text-sm shadow-md hover:shadow-lg shadow-purple-500/20 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <i class="bi bi-stars text-base animate-pulse"></i>
-        <span>สร้างเนื้อหาด้วย AI (AI Generator)</span>
+        <span>สร้างเนื้อหาด้วย AI</span>
       </button>
       @if (id()) {
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
-          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF (JasperReports)' }}
+          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF' }}
         </sic-button>
       }
     </div>
@@ -49,14 +49,14 @@
     <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        ข้อมูลคู่มือ (Manual Information)
+        ข้อมูลคู่มือ
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
         <div class="md:col-span-3">
           <sic-input
             formControlName="manualCode"
-            label="รหัสคู่มือ (Manual Code)"
+            label="รหัสคู่มือ"
             placeholder="เช่น MAN-001">
           </sic-input>
         </div>
@@ -64,7 +64,7 @@
         <div class="md:col-span-3">
           <sic-input
             formControlName="manualTitle"
-            label="ชื่อคู่มือ (Manual Title)"
+            label="ชื่อคู่มือ"
             placeholder="เช่น คู่มือการใช้งานระบบบริหารโครงการ">
           </sic-input>
         </div>
@@ -72,7 +72,7 @@
         <div class="md:col-span-3">
           <sic-combobox
             formControlName="manualType"
-            label="ประเภทคู่มือ (Manual Type)"
+            label="ประเภทคู่มือ"
             [options]="typeOptions"
             valueField="value"
             displayField="label">
@@ -82,7 +82,7 @@
         <div class="md:col-span-3">
           <sic-combobox
             formControlName="deliveryId"
-            label="เอกสารส่งมอบที่เกี่ยวข้อง (Linked Delivery)"
+            label="เอกสารส่งมอบที่เกี่ยวข้อง"
             [options]="deliveryOptions()"
             placeholder="เลือกเอกสารส่งมอบ (ถ้ามี)"
             [clearable]="true"
@@ -98,100 +98,112 @@
       <!-- Left Sidebar: Section List -->
       <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3">
         <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
-          <h3 class="font-semibold text-sm text-[var(--text-active)] flex items-center gap-1.5">
+          <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-list-nested text-[var(--crm-primary)]"></i>
-            รายการหมวดหมู่ (Sections)
+            โครงสร้างหัวข้อคู่มือ
           </h3>
-          <div class="flex items-center gap-2">
-            <button
-              type="button"
-              (click)="openAiModal()"
-              [disabled]="isLocked()"
-              class="inline-flex items-center gap-1 text-xs font-semibold text-purple-600 dark:text-purple-400 hover:underline cursor-pointer disabled:opacity-50"
-              title="สร้างเนื้อหาคู่มือด้วย AI"
-            >
-              <i class="bi bi-stars"></i> สร้างด้วย AI
-            </button>
-            <button
-              type="button"
-              (click)="addSection()"
-              class="inline-flex items-center gap-1 text-xs font-semibold text-[var(--crm-primary)] hover:underline"
-            >
-              <i class="bi bi-plus-lg"></i> เพิ่ม Section
-            </button>
-          </div>
+          <button
+            type="button"
+            (click)="addSection()"
+            [disabled]="isLocked()"
+            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <i class="bi bi-plus-lg"></i> เพิ่มหัวข้อ
+          </button>
         </div>
 
-        <div class="space-y-1.5 max-h-[500px] overflow-y-auto pr-1">
-          @for (sec of sections(); track $index) {
-            @if (sec.state !== 2) {
+        @if (sections().length === 0) {
+          <div class="text-center py-8 text-[var(--text-muted)] space-y-2">
+            <i class="bi bi-journal-plus text-3xl opacity-30"></i>
+            <p class="text-xs">ยังไม่มีหัวข้อคู่มือ กด "เพิ่มหัวข้อ" หรือ "สร้างด้วย AI" เพื่อเริ่มต้น</p>
+          </div>
+        } @else {
+          <div class="space-y-1.5">
+            @for (sec of sections(); track sec.id || $index) {
               <div
                 (click)="selectSection($index)"
-                [class]="'p-3 rounded-lg border text-sm cursor-pointer transition-all flex items-center justify-between gap-2 ' +
-                  ($index === activeSectionIndex()
-                    ? 'bg-[var(--crm-primary)]/10 border-[var(--crm-primary)] text-[var(--crm-primary)] font-semibold shadow-xs'
-                    : 'bg-[var(--bg)] border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)]')"
+                [class]="'p-2.5 rounded-lg border text-xs cursor-pointer transition-all flex items-center justify-between gap-2 ' +
+                  (selectedSectionIndex() === $index
+                    ? 'bg-[var(--crm-primary)]/10 border-[var(--crm-primary)] text-[var(--crm-primary)] font-medium shadow-xs'
+                    : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)]')"
               >
-                <div class="flex items-center gap-2 truncate">
-                  <i class="bi bi-file-earmark-text text-xs"></i>
-                  <span class="truncate">{{ sec.sectionTitle || 'Section ไม่มีชื่อ' }}</span>
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="font-mono text-[10px] opacity-60 shrink-0">{{ $index + 1 }}.</span>
+                  <span class="truncate">{{ sec.sectionTitle || 'หัวข้อไม่มีชื่อ' }}</span>
                 </div>
-                <button
-                  type="button"
-                  (click)="$event.stopPropagation(); removeSection($index)"
-                  class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] text-xs p-1 rounded hover:bg-[var(--sidebar)]"
-                  title="ลบ Section"
-                >
-                  <i class="bi bi-x-lg"></i>
-                </button>
+                @if (!isLocked()) {
+                  <button
+                    type="button"
+                    (click)="removeSection($index); $event.stopPropagation()"
+                    class="text-[var(--crm-danger)] hover:opacity-80 p-0.5 shrink-0"
+                    title="ลบหัวข้อนี้"
+                  >
+                    <i class="bi bi-trash text-xs"></i>
+                  </button>
+                }
               </div>
             }
-          }
-        </div>
+          </div>
+        }
       </div>
 
       <!-- Right Panel: Section Content Editor -->
       <div class="md:col-span-2 bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
-        @if (sections().length > 0 && sections()[activeSectionIndex()]) {
-          @let activeSec = sections()[activeSectionIndex()];
+        @if (selectedSection(); as sec) {
           <div class="space-y-4">
-            <div class="border-b border-[var(--border)] pb-3">
-              <label class="block text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] mb-1">
-                ชื่อหัวข้อ Section
-              </label>
-              <input
-                type="text"
-                [value]="activeSec.sectionTitle"
-                (input)="updateActiveSectionTitle($any($event.target).value)"
-                class="w-full text-base font-semibold bg-[var(--bg)] border border-[var(--border)] rounded-lg px-3 py-2 text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
-                placeholder="ระบุชื่อหัวข้อ..."
-              />
+            <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+              <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-pencil-square text-[var(--crm-primary)]"></i>
+                แก้ไขหัวข้อ: {{ sec.sectionTitle || 'หัวข้อย่อย' }}
+              </h3>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+              <div class="md:col-span-8">
+                <sic-input
+                  [ngModel]="sec.sectionTitle"
+                  [ngModelOptions]="{standalone: true}"
+                  [disabled]="isLocked()"
+                  (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'sectionTitle', $event)"
+                  label="ชื่อหัวข้อ"
+                  placeholder="เช่น 1. การเข้าสู่ระบบ">
+                </sic-input>
+              </div>
+
+              <div class="md:col-span-4">
+                <sic-combobox
+                  [ngModel]="sec.specId"
+                  [ngModelOptions]="{standalone: true}"
+                  [disabled]="isLocked()"
+                  (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'specId', $event)"
+                  label="เชื่อมโยง Specification"
+                  [options]="specificationOptions()"
+                  placeholder="เลือกฟังก์ชันอ้างอิง"
+                  [clearable]="true"
+                  valueField="value"
+                  displayField="text">
+                </sic-combobox>
+              </div>
             </div>
 
             <div>
-              <sic-tiptap-editor
-                label="เนื้อหาคำอธิบาย (Section Content)"
-                [placeholder]="'กรอกรายละเอียดขั้นตอนการทำงาน ข้อแนะนำ หรือหมายเหตุประกอบคู่มือ...'"
-                [minHeight]="'260px'"
-                [ngModel]="activeSec.content || ''"
-                [ngModelOptions]="{ standalone: true }"
-                (ngModelChange)="updateActiveSectionContent($event)"
-              ></sic-tiptap-editor>
-            </div>
-
-            <div class="space-y-2 pt-2">
-              <label class="block text-xs font-medium uppercase tracking-wider text-[var(--text-muted)] mb-1">
-                <i class="bi bi-images text-[var(--crm-primary)]"></i> ภาพประกอบ / Screenshots แนบประจำ Section
+              <label class="block text-xs font-semibold text-[var(--text)] mb-1.5">
+                เนื้อหาคู่มือและขั้นตอนการปฏิบัติงาน
               </label>
-              <sic-upload
-                [maxFiles]="5">
-              </sic-upload>
+              <sic-tiptap-editor
+                [ngModel]="sec.content"
+                [ngModelOptions]="{standalone: true}"
+                [disabled]="isLocked()"
+                (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'content', $event)"
+                placeholderInput="พิมพ์เนื้อหา คำแนะนำการใช้งาน หรือแปะรูปภาพขั้นตอนการทำงานที่นี่..."
+                minHeightInput="260px">
+              </sic-tiptap-editor>
             </div>
           </div>
         } @else {
-          <div class="p-12 text-center text-[var(--text-muted)] text-sm space-y-2">
-            <i class="bi bi-pencil-square text-3xl text-[var(--text-muted)]"></i>
-            <p>กดเลือก Section ด้านซ้าย หรือกด "+ เพิ่ม Section" เพื่อเริ่มต้นเขียนเนื้อหา</p>
+          <div class="text-center py-16 text-[var(--text-muted)] space-y-2">
+            <i class="bi bi-arrow-left-circle text-4xl opacity-30"></i>
+            <p class="text-sm">เลือกหัวข้อทางซ้าย หรือกด "เพิ่มหัวข้อ" เพื่อเริ่มเขียนเนื้อหา</p>
           </div>
         }
       </div>
@@ -202,7 +214,7 @@
       <div class="border-b border-[var(--border)] pb-3">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติคู่มือการใช้งาน (Approval Flow)
+          กระบวนการอนุมัติคู่มือการใช้งาน
         </h3>
         <p class="text-xs text-[var(--text-muted)] mt-1">
           เลือกกระบวนการอนุมัติสำหรับคู่มือการใช้งานนี้ เพื่อส่งให้ผู้จัดการโครงการและลูกค้ายืนยันรับรอง
@@ -211,7 +223,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <sic-combobox
-          label="กระบวนการอนุมัติ (Approval Flow)"
+          label="กระบวนการอนุมัติ"
           [apiUrl]="approvalFlowsApi"
           valueField="id"
           textField="flowName"
@@ -235,7 +247,7 @@
       }
       @if (isLocked()) {
         <sic-button variant="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else {
         <sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
@@ -247,7 +259,7 @@
     @if (isLocked()) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
       </div>
     }
   </form>
@@ -268,7 +280,7 @@
           </div>
           <div>
             <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
-              สร้างเนื้อหาคู่มือการใช้งานด้วย AI (AI Manual Generator)
+              สร้างเนื้อหาคู่มือการใช้งานด้วย AI
             </h2>
             <p class="text-xs text-[var(--text-muted)]">
               เสริมข้อมูลจาก Requirement & Specification หลายรายการเพื่อวิเคราะห์และร่างคู่มือที่ครบถ้วน
@@ -291,7 +303,7 @@
         <div class="space-y-1">
           <div class="flex items-center justify-between">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              <i class="bi bi-card-checklist text-purple-500 mr-1"></i>
+              <i class="bi bi-list-check text-purple-500 mr-1"></i>
               1. เลือก Requirements ที่เกี่ยวข้อง (เลือกได้มากกว่า 1 รายการ)
             </label>
             @if (aiSelectedRequirementIds().length > 0) {
@@ -309,9 +321,6 @@
             [clearable]="true"
           >
           </sic-combobox>
-          <p class="text-[11px] text-[var(--text-muted)]">
-            💡 AI จะนำวัตถุประสงค์ ขอบเขต และ Acceptance Criteria จาก Requirement ที่เลือกมาร่างคู่มือ
-          </p>
         </div>
 
         <!-- 2. Specifications Combobox (Multiple) -->
@@ -336,16 +345,13 @@
             [clearable]="true"
           >
           </sic-combobox>
-          <p class="text-[11px] text-[var(--text-muted)]">
-            💡 AI จะนำ Business Rules รายละเอียดฟิลด์ และขั้นตอนการทำงานจาก Specification มาจัดทำขั้นตอนการใช้งาน
-          </p>
         </div>
 
         <!-- 3. Manual Type -->
         <div>
           <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
             <i class="bi bi-bookmark text-blue-500 mr-1"></i>
-            3. ประเภทคู่มือ (Manual Type)
+            3. ประเภทคู่มือ
           </label>
           <sic-combobox
             [options]="typeOptions"
@@ -362,22 +368,21 @@
         <div>
           <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
             <i class="bi bi-chat-left-text text-amber-500 mr-1"></i>
-            4. คำสั่งเพิ่มเติม หรือโฟกัสเนื้อหาที่ต้องการ (Prompt / Instructions)
+            4. คำสั่งเพิ่มเติม หรือโฟกัสเนื้อหาที่ต้องการ
           </label>
           <textarea
             [ngModel]="aiPrompt()"
             (ngModelChange)="aiPrompt.set($event)"
             rows="3"
-            placeholder="ระบุสิ่งที่ต้องการให้ AI เน้นเป็นพิเศษ เช่น 'เน้นขั้นตอนการทำรายการชำระเงินและข้อควรระวัง', 'เน้นคำอธิบายสำหรับผู้ใช้งานที่ไม่ชำนาญคอมพิวเตอร์', 'เขียนสรุปข้อผิดพลาดที่พบบ่อยพร้อมวิธีแก้'..."
-            class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none"
-          >
-          </textarea>
+            placeholder="เช่น เน้นอธิบายขั้นตอนสำหรับผู้ใช้ทั่วไป, ใส่ตัวอย่าง Error case ที่พบบ่อย..."
+            class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
+          ></textarea>
         </div>
 
         <!-- 5. Generation Mode: Replace vs Append -->
-        <div class="space-y-1.5">
-          <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-            5. โหมดการสร้างเนื้อหา (Generation Mode)
+        <div>
+          <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+            5. โหมดการสร้างเนื้อหา
           </label>
           <div class="grid grid-cols-2 gap-3">
             <div
@@ -394,7 +399,7 @@
                 class="mt-0.5 text-purple-600 focus:ring-purple-500"
               />
               <div>
-                <div class="font-semibold text-sm">แทนที่เนื้อหาเดิมทั้งหมด (Replace)</div>
+                <div class="font-semibold text-sm">แทนที่เนื้อหาเดิมทั้งหมด</div>
                 <div class="text-[11px] text-[var(--text-muted)] mt-0.5">ล้าง Section เดิมและสร้างโครงสร้างคู่มือใหม่ทั้งหมดจาก AI</div>
               </div>
             </div>
@@ -413,7 +418,7 @@
                 class="mt-0.5 text-purple-600 focus:ring-purple-500"
               />
               <div>
-                <div class="font-semibold text-sm">เพิ่มต่อท้ายเนื้อหาเดิม (Append)</div>
+                <div class="font-semibold text-sm">เพิ่มต่อท้ายเนื้อหาเดิม</div>
                 <div class="text-[11px] text-[var(--text-muted)] mt-0.5">เก็บ Section เดิมไว้ และเพิ่มหัวข้อใหม่ที่สร้างจาก AI ต่อท้าย</div>
               </div>
             </div>
@@ -453,7 +458,7 @@
             <span>กำลังประมวลผล...</span>
           } @else {
             <i class="bi bi-stars text-base"></i>
-            <span>สร้างเนื้อหาคู่มือ (Generate Manual)</span>
+            <span>สร้างเนื้อหาคู่มือด้วย AI</span>
           }
         </button>
       </div>

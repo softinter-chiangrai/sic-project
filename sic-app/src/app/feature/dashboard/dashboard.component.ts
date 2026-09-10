@@ -351,7 +351,7 @@ export class DashboardComponent implements OnInit {
 
   private resolveUserRole(membersResponse: any, currentUserId: string | null): void {
     if (this.isAdmin()) {
-      this.realRoleName.set('ผู้ดูแลระบบ (Administrator)');
+      this.realRoleName.set('ผู้ดูแลระบบ');
       return;
     }
 
@@ -380,7 +380,7 @@ export class DashboardComponent implements OnInit {
     }
 
     // 3. Fallback to Member
-    this.realRoleName.set('สมาชิกในระบบ (Member)');
+    this.realRoleName.set('สมาชิกในระบบ');
   }
 
   get profileImage(): string {

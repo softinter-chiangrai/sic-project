@@ -256,9 +256,9 @@ export class Pmdt06Component implements OnInit {
   getTargetTypeText(type?: string): string {
     if (!type) return '-';
     const map: Record<string, string> = {
-      REQUIREMENT: 'ความต้องการ (Requirement)',
-      SPECIFICATION: 'ข้อกำหนด (Specification)',
-      TASK: 'งาน (Task)',
+      REQUIREMENT: 'ความต้องการ',
+      SPECIFICATION: 'ข้อกำหนด',
+      TASK: 'งาน',
       DFD: 'DFD',
       ER: 'ER Diagram',
     };

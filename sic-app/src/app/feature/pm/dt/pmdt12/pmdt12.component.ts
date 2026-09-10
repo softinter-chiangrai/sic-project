@@ -86,16 +86,16 @@ export class Pmdt12Component implements OnInit {
 
   // ===== Options =====
   readonly statusSelectOptions = [
-    { value: 'Pass', text: 'ผ่าน (Pass)' },
-    { value: 'Fail', text: 'ไม่ผ่าน (Fail)' },
-    { value: 'Blocked', text: 'ติดปัญหา (Blocked)' },
-    { value: 'Pending', text: 'รอดำเนินการ (Pending)' },
+    { value: 'Pass', text: 'ผ่าน' },
+    { value: 'Fail', text: 'ไม่ผ่าน' },
+    { value: 'Blocked', text: 'ติดปัญหา' },
+    { value: 'Pending', text: 'รอดำเนินการ' },
   ];
 
   readonly prioritySelectOptions = [
-    { value: 'High', text: 'High (สูง)' },
-    { value: 'Medium', text: 'Medium (ปานกลาง)' },
-    { value: 'Low', text: 'Low (ต่ำ)' },
+    { value: 'High', text: 'สูง' },
+    { value: 'Medium', text: 'ปานกลาง' },
+    { value: 'Low', text: 'ต่ำ' },
   ];
 
   readonly taskStatusSelectOptions = [
@@ -315,7 +315,7 @@ export class Pmdt12Component implements OnInit {
       return 'ไม่สามารถทดสอบได้เนื่องจากมี Bug ที่กำลังรอการแก้ไข';
     }
     if (testCase.taskId && (testCase.taskStatus || '').toLowerCase() !== 'testing') {
-      return 'Task ยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Testing)"';
+      return 'Task ยังไม่อยู่ในสถานะ "พร้อมทดสอบ"';
     }
     return 'บันทึกผลการทดสอบ';
   }

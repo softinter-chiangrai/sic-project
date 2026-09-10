@@ -51,11 +51,11 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   isLocked = signal(false);
 
   statusOptions = [
-    { value: 'DRAFT', label: 'Draft (ร่างข้อเสนอ)' },
-    { value: 'PROPOSED', label: 'Proposed (เสนอราคาแล้ว)' },
-    { value: 'CONFIRMED', label: 'Confirmed (ตกลงต่อสัญญาแล้ว)' },
-    { value: 'REJECTED', label: 'Rejected (ปฏิเสธการต่อสัญญา)' },
-    { value: 'EXPIRED', label: 'Expired (หมดอายุสัญญาแล้ว)' },
+    { value: 'DRAFT', label: 'ฉบับร่าง' },
+    { value: 'PROPOSED', label: 'เสนอราคาแล้ว' },
+    { value: 'CONFIRMED', label: 'ตกลงต่อสัญญาแล้ว' },
+    { value: 'REJECTED', label: 'ปฏิเสธการต่อสัญญา' },
+    { value: 'EXPIRED', label: 'หมดอายุสัญญาแล้ว' },
   ];
 
   apiContractCombobox = `${apiBaseUrl}/api/pm/customer-contracts/combobox`;

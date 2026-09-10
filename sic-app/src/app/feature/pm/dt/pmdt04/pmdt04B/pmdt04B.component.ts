@@ -246,6 +246,7 @@ export class Pmdt04BComponent implements OnInit {
                 documentId: id,
                 documentCode: data.requirementCode,
                 documentTitle: data.title,
+                version: data.version,
                 flowId: this.selectedFlowId,
                 comment: 'ส่งขออนุมัติ Requirement',
               })

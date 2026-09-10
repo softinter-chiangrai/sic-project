@@ -85,10 +85,10 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   statusOptions = [
-    { value: 'Pending', text: 'Pending (รอทดสอบ)' },
-    { value: 'Pass', text: 'Pass (ผ่าน)' },
-    { value: 'Fail', text: 'Fail (ไม่ผ่าน)' },
-    { value: 'Blocked', text: 'Blocked (ติดปัญหา)' },
+    { value: 'Pending', text: 'รอทดสอบ' },
+    { value: 'Pass', text: 'ผ่าน' },
+    { value: 'Fail', text: 'ไม่ผ่าน' },
+    { value: 'Blocked', text: 'ติดปัญหา' },
   ];
 
   ngOnInit(): void {
@@ -409,7 +409,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     if (this.isExecution() && !this.isTaskReadyForTest()) {
       this.dialog.warn(
         'ไม่สามารถบันทึกผลการทดสอบได้',
-        'Test Case นี้มีรายการ Bug ที่ยังแก้ไขไม่เสร็จสิ้น กรุณารอให้ทีมพัฒนาแก้ไขและปิด Bug ก่อนจึงจะสามารถทดสอบซ้ำ (Retest) ได้'
+        'Test Case นี้มีรายการ Bug ที่ยังแก้ไขไม่เสร็จสิ้น กรุณารอให้ทีมพัฒนาแก้ไขและปิด Bug ก่อนจึงจะสามารถทดสอบซ้ำได้'
       );
       return;
     }
@@ -419,7 +419,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       if (taskStatus && taskStatus !== 'testing') {
         this.dialog.warn(
           'ไม่สามารถบันทึกผลการทดสอบได้',
-          'Task ที่ผูกกับ Test Case นี้ยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Testing)"'
+          'Task ที่ผูกกับ Test Case นี้ยังไม่อยู่ในสถานะ "พร้อมทดสอบ"'
         );
         return;
       }

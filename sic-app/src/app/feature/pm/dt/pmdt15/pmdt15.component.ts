@@ -43,18 +43,18 @@ export class Pmdt15Component implements OnInit {
   filterStatus = signal('');
 
   typeFilterOptions = [
-    { label: 'User Manual (คู่มือผู้ใช้ทั่วไป)', value: 'USER' },
-    { label: 'Admin Manual (คู่มือผู้ดูแลระบบ)', value: 'ADMIN' },
-    { label: 'Installation Manual (คู่มือการติดตั้ง)', value: 'INSTALLATION' },
-    { label: 'Operation Manual (คู่มือการปฏิบัติงาน)', value: 'OPERATION' },
+    { label: 'คู่มือผู้ใช้ทั่วไป', value: 'USER' },
+    { label: 'คู่มือผู้ดูแลระบบ', value: 'ADMIN' },
+    { label: 'คู่มือการติดตั้ง', value: 'INSTALLATION' },
+    { label: 'คู่มือการปฏิบัติงาน', value: 'OPERATION' },
   ];
 
   statusFilterOptions = [
-    { label: 'ฉบับร่าง (Draft)', value: 'DRAFT' },
-    { label: 'รอตรวจสอบ (Review)', value: 'REVIEW' },
-    { label: 'อนุมัติแล้ว (Approved)', value: 'APPROVED' },
-    { label: 'แก้ไขหลังอนุมัติ (Changed)', value: 'CHANGED' },
-    { label: 'เผยแพร่แล้ว (Published)', value: 'PUBLISHED' },
+    { label: 'ฉบับร่าง', value: 'DRAFT' },
+    { label: 'รอตรวจสอบ', value: 'REVIEW' },
+    { label: 'อนุมัติแล้ว', value: 'APPROVED' },
+    { label: 'แก้ไขหลังอนุมัติ', value: 'CHANGED' },
+    { label: 'เผยแพร่แล้ว', value: 'PUBLISHED' },
   ];
 
   filteredManuals = computed(() => {
@@ -237,11 +237,11 @@ export class Pmdt15Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ฉบับร่าง (Draft)',
-      REVIEW: 'รอตรวจสอบ (Review)',
-      APPROVED: 'อนุมัติแล้ว (Approved)',
-      CHANGED: 'แก้ไขหลังอนุมัติ (Changed)',
-      PUBLISHED: 'เผยแพร่แล้ว (Published)',
+      DRAFT: 'ฉบับร่าง',
+      REVIEW: 'รอตรวจสอบ',
+      APPROVED: 'อนุมัติแล้ว',
+      CHANGED: 'แก้ไขหลังอนุมัติ',
+      PUBLISHED: 'เผยแพร่แล้ว',
     };
     return map[status] || status;
   }

@@ -59,10 +59,10 @@ export class Pmdt02CComponent implements OnInit {
   expandedSteps = signal<Set<string>>(new Set());
 
   priorityOptions = [
-    { value: 'Low', text: 'ต่ำ (Low)' },
-    { value: 'Medium', text: 'ปานกลาง (Medium)' },
-    { value: 'High', text: 'สูง (High)' },
-    { value: 'Critical', text: 'วิกฤต (Critical)' },
+    { value: 'Low', text: 'ต่ำ' },
+    { value: 'Medium', text: 'ปานกลาง' },
+    { value: 'High', text: 'สูง' },
+    { value: 'Critical', text: 'วิกฤต' },
   ];
 
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
@@ -192,10 +192,10 @@ export class Pmdt02CComponent implements OnInit {
 
   getTestStatusLabel(status?: string): string {
     const s = (status || '').toLowerCase();
-    if (s === 'pass' || s === 'passed') return '✅ ผ่าน (Pass)';
-    if (s === 'fail' || s === 'failed') return '❌ ไม่ผ่าน (Fail)';
-    if (s === 'blocked') return '🚧 ติดปัญหา (Blocked)';
-    return '⏳ รอทดสอบ (Pending)';
+    if (s === 'pass' || s === 'passed') return '✅ ผ่าน';
+    if (s === 'fail' || s === 'failed') return '❌ ไม่ผ่าน';
+    if (s === 'blocked') return '🚧 ติดปัญหา';
+    return '⏳ รอทดสอบ';
   }
 
   isStepExpanded(tcId: string): boolean {

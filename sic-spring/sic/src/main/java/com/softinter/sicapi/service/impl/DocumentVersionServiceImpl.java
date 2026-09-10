@@ -247,6 +247,18 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         return versionRepository.existsByDocumentTypeAndDocumentId(documentType, documentId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String getLatestVersionNo(String documentType, UUID documentId) {
+        // ใช้ path เดียวกับ getVersions() (ไม่กรอง isDelete) เพื่อให้ผลตรงกับที่ UI แสดงเสมอ
+        // การกรอง isDeleteFalse ที่ query level เคยทำให้ผลไม่ตรงกัน เพราะแถวเก่าบางแถวมี is_delete เป็น NULL
+        // ซึ่งไม่ match เงื่อนไข = false ใน SQL ทำให้ fallback ไปที่ "v1.0" ทั้งที่มีเวอร์ชันล่าสุดอยู่จริง
+        return getVersions(documentType, documentId).stream()
+                .findFirst()
+                .map(DocumentVersionResponse::getVersionNo)
+                .orElse("v1.0");
+    }
+
     private DocumentVersionResponse toResponse(PmDocumentVersion version) {
         DocumentVersionResponse response = new DocumentVersionResponse();
         response.setId(version.getId());

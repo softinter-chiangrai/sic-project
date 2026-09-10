@@ -5,6 +5,7 @@ import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmDiagramTab;
@@ -534,11 +535,10 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private String getCurrentVersion(PmDiagramTab tab) {
         if (tab.getId() == null)
             return "v1.0";
-        List<PmDiagramVersion> versions = versionRepository
-                .findByDiagramIdAndIsDeleteFalseOrderByVersionNumberDesc(tab.getId());
-        if (versions.isEmpty())
-            return "v1.0";
-        return "v" + versions.get(0).getVersionNumber();
+        return documentVersionService.getVersions("DIAGRAM", tab.getId()).stream()
+                .findFirst()
+                .map(DocumentVersionResponse::getVersionNo)
+                .orElse("v1.0");
     }
 
     private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
@@ -581,6 +581,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         }
 
         if (tab.getId() != null) {
+            dto.setVersion(getCurrentVersion(tab));
             dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
             try {
                 var status = approvalService.getCurrentStatus("DIAGRAM", tab.getId());
@@ -591,6 +592,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 dto.setIsApproved(false);
             }
         } else {
+            dto.setVersion("v1.0");
             dto.setVersionCount(0);
             dto.setApprovalStatus("DRAFT");
             dto.setIsApproved(false);

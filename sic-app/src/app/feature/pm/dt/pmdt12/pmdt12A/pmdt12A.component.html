@@ -15,7 +15,7 @@
       <div>
         <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           @if (isExecution()) {
-            🧪 บันทึกผลการทดสอบ (Test Execution)
+            🧪 บันทึกผลการทดสอบ
           } @else if (isView()) {
             👁️ รายละเอียด Test Case
           } @else if (isEdit()) {
@@ -54,7 +54,7 @@
         <div>
           <h4 class="font-semibold text-sm">Test Case นี้มี Bug ที่กำลังรอการแก้ไข</h4>
           <p class="text-xs mt-0.5 text-rose-700/80 dark:text-rose-300/80">
-            มีการเปิด Bug Task สำหรับเคสนี้แล้วและยังแก้ไขไม่เสร็จสิ้น จึงล็อคการทดสอบเคสนี้ไว้ชั่วคราว เมื่อทีมพัฒนาแก้ไข Bug เรียบร้อยแล้วจะสามารถกลับมาทดสอบซ้ำ (Retest) ได้
+            มีการเปิด Bug Task สำหรับเคสนี้แล้วและยังแก้ไขไม่เสร็จสิ้น จึงล็อคการทดสอบเคสนี้ไว้ชั่วคราว เมื่อทีมพัฒนาแก้ไข Bug เรียบร้อยแล้วจะสามารถกลับมาทดสอบซ้ำได้
           </p>
         </div>
       </div>
@@ -65,7 +65,7 @@
       <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-start gap-3">
         <i class="bi bi-exclamation-triangle-fill text-xl mt-0.5"></i>
         <div>
-          <h4 class="font-semibold text-sm">Task ที่ผูกยังไม่อยู่ในสถานะ "พร้อมทดสอบ (Testing)"</h4>
+          <h4 class="font-semibold text-sm">Task ที่ผูกยังไม่อยู่ในสถานะ "พร้อมทดสอบ"</h4>
           <p class="text-xs mt-0.5 text-amber-700/80 dark:text-amber-300/80">
             สถานะปัจจุบันของ Task คือ <strong>{{ linkedTaskStatus() || 'ยังไม่เริ่มพัฒนา' }}</strong> ระบบกำหนดให้ทีมพัฒนาต้องย้าย Task ไปยังสถานะ Testing ก่อน จึงจะสามารถบันทึกผลการทดสอบได้
           </p>
@@ -102,7 +102,7 @@
         </div>
           <div>
             <sic-combobox
-              label="ความสำคัญ (Priority)"
+              label="ความสำคัญ"
               formControlName="priority"
               [items]="priorityOptions"
               [disabled]="isView() || isExecution()"
@@ -115,13 +115,13 @@
       <div class="space-y-4">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
           <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-          การเชื่อมโยงงาน (Traceability & Task)
+          การเชื่อมโยงงาน
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <sic-combobox
-              label="งานที่เกี่ยวข้อง (Task) *"
+              label="งานที่เกี่ยวข้อง *"
               formControlName="taskId"
               [items]="taskOptions()"
               [disabled]="isView() || isExecution()"
@@ -143,7 +143,7 @@
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-sm font-medium text-[var(--text-active)]">
-              ขั้นตอนการทดสอบ (Test Steps) <span class="text-red-500">*</span>
+              ขั้นตอนการทดสอบ <span class="text-red-500">*</span>
             </span>
             <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
           </div>
@@ -159,7 +159,7 @@
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-sm font-medium text-[var(--text-active)]">
-              ผลลัพธ์ที่คาดหวัง (Expected Result) <span class="text-red-500">*</span>
+              ผลลัพธ์ที่คาดหวัง <span class="text-red-500">*</span>
             </span>
             <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
           </div>
@@ -176,7 +176,7 @@
           <div>
             <div class="flex items-center justify-between mb-1.5">
               <span class="text-sm font-medium text-[var(--text-active)]">
-                ผลลัพธ์ที่ได้จริง (Actual Result)
+                ผลลัพธ์ที่ได้จริง
               </span>
               <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
             </div>
@@ -209,7 +209,7 @@
             </div>
             <div>
               <sic-combobox
-                label="ผู้ทดสอบ (Tester)"
+                label="ผู้ทดสอบ"
                 [apiUrl]="testerApiUrl()"
                 valueField="text"
                 textField="text"
@@ -281,7 +281,7 @@
             <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
               สร้าง Test Case ด้วย AI
             </h2>
-            <p class="text-xs text-[var(--text-muted)]">AI จะช่วยวิเคราะห์และร่างขั้นตอนการทดสอบ (Test Steps) และผลลัพธ์ที่คาดหวัง</p>
+            <p class="text-xs text-[var(--text-muted)]">AI จะช่วยวิเคราะห์และร่างขั้นตอนการทดสอบและผลลัพธ์ที่คาดหวัง</p>
           </div>
         </div>
         <button
@@ -313,7 +313,7 @@
         <!-- Prompt -->
         <div>
           <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-            คำสั่ง หรือ เงื่อนไขการทดสอบที่ต้องการเน้น (Prompt)
+            คำสั่งหรือเงื่อนไขการทดสอบที่ต้องการเน้น
           </label>
           <textarea
             [ngModel]="aiAssistPrompt()"

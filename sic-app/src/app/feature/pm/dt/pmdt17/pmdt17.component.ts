@@ -103,12 +103,12 @@ export class Pmdt17Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'OPEN', text: 'เปิดตั๋ว (Open)' },
-    { value: 'IN_PROGRESS', text: 'กำลังดำเนินการ (In Progress)' },
-    { value: 'WAITING_CUSTOMER', text: 'รอลูกค้าตอบกลับ (Waiting)' },
-    { value: 'RESOLVED', text: 'แก้ไขแล้ว (Resolved)' },
-    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ (Changed)' },
-    { value: 'CLOSED', text: 'ปิดตั๋ว (Closed)' },
+    { value: 'OPEN', text: 'เปิดตั๋ว' },
+    { value: 'IN_PROGRESS', text: 'กำลังดำเนินการ' },
+    { value: 'WAITING_CUSTOMER', text: 'รอลูกค้าตอบกลับ' },
+    { value: 'RESOLVED', text: 'แก้ไขแล้ว' },
+    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ' },
+    { value: 'CLOSED', text: 'ปิดตั๋ว' },
   ];
 
   onFilterChange(value: any) {

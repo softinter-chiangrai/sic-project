@@ -13,7 +13,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-          {{ isEdit() ? 'แก้ไขบันทึกเวอร์ชันเอกสาร (Edit Version Record)' : 'สร้างบันทึกเวอร์ชันเอกสารใหม่ (New Document Version)' }}
+          {{ isEdit() ? 'แก้ไขบันทึกเวอร์ชันเอกสาร' : 'สร้างบันทึกเวอร์ชันเอกสารใหม่' }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           สร้างหรือแก้ไขประวัติ Version Control ประจำเอกสารโครงการ
@@ -27,13 +27,13 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
       <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        รายละเอียดเวอร์ชันเอกสาร (Version Details)
+        รายละเอียดเวอร์ชันเอกสาร
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
           formControlName="documentType"
-          label="ประเภทเอกสาร (Document Type)"
+          label="ประเภทเอกสาร"
           [items]="docTypeOptions"
           valueField="value"
           displayField="label">
@@ -41,20 +41,20 @@
 
         <sic-input
           formControlName="documentCode"
-          label="รหัสเอกสาร (Document Code)"
+          label="รหัสเอกสาร"
           placeholder="เช่น REQ-001, SPEC-002">
         </sic-input>
 
         <sic-input
           formControlName="versionNo"
-          label="หมายเลขเวอร์ชัน (Version No)"
+          label="หมายเลขเวอร์ชัน"
           placeholder="เช่น v1.0, v2.1">
         </sic-input>
       </div>
 
       <sic-input-area
         formControlName="changeSummary"
-        label="ประวัติและสรุปการเปลี่ยนแปลง (Changelog Summary)"
+        label="ประวัติและสรุปการเปลี่ยนแปลง"
         placeholder="ระบุสิ่งที่เปลี่ยนแปลง แก้ไขเพิ่มเติม หรือรายละเอียด revision...">
       </sic-input-area>
     </div>
@@ -63,7 +63,7 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
       <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-        แนบไฟล์ฉบับนี้ (Document Version File)
+        แนบไฟล์ฉบับนี้
       </h3>
 
       <sic-upload

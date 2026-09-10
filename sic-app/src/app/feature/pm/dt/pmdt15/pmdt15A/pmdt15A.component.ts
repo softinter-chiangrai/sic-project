@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -67,13 +67,33 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   sections = signal<PmUserManualSectionModel[]>([]);
   activeSectionIndex = signal<number>(0);
+  selectedSectionIndex = computed(() => this.activeSectionIndex());
+  selectedSection = computed(() => {
+    const list = this.sections();
+    const idx = this.activeSectionIndex();
+    return list[idx] || null;
+  });
+
+  onSectionFieldChange(index: number, field: string, value: any): void {
+    if (this.isLocked()) return;
+    const current = [...this.sections()];
+    if (current[index]) {
+      (current[index] as any)[field] = value;
+      if (current[index].id) {
+        current[index].state = SicEntityState.Modified;
+      }
+      this.sections.set(current);
+      this.formData.markAsDirty();
+      this.cdr.markForCheck();
+    }
+  }
 
   typeOptions = [
-    { label: 'User Manual (คู่มือสำหรับผู้ใช้งานทั่วไป)', value: 'USER' },
-    { label: 'Admin Manual (คู่มือสำหรับผู้ดูแลระบบ)', value: 'ADMIN' },
-    { label: 'Installation Manual (คู่มือการติดตั้งระบบ)', value: 'INSTALLATION' },
-    { label: 'Operation Manual (คู่มือการปฏิบัติงาน)', value: 'OPERATION' },
-    { label: 'Troubleshooting Guide (คู่มือการแก้ปัญหา)', value: 'TROUBLESHOOT' },
+    { label: 'คู่มือสำหรับผู้ใช้งานทั่วไป', value: 'USER' },
+    { label: 'คู่มือสำหรับผู้ดูแลระบบ', value: 'ADMIN' },
+    { label: 'คู่มือการติดตั้งระบบ', value: 'INSTALLATION' },
+    { label: 'คู่มือการปฏิบัติงาน', value: 'OPERATION' },
+    { label: 'คู่มือการแก้ปัญหา', value: 'TROUBLESHOOT' },
   ];
 
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
@@ -318,10 +338,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   initDefaultSections(): void {
     const defaults: PmUserManualSectionModel[] = [
-      { sectionCode: 'SEC-1', sectionTitle: '1. บทนำและวัตถุประสงค์ (Overview)', content: 'รายละเอียดวัตถุประสงค์ของระบบ...', sortOrder: 1 },
-      { sectionCode: 'SEC-2', sectionTitle: '2. การเข้าใช้งานระบบและสิทธิ์ (Login & Access)', content: 'ขั้นตอนการ เข้าสู่ระบบ และสิทธิ์ผู้ใช้งาน...', sortOrder: 2 },
-      { sectionCode: 'SEC-3', sectionTitle: '3. ขั้นตอนการใช้งานฟีเจอร์หลัก (Core Workflows)', content: 'คำอธิบายขั้นตอนการทำงานทีละขั้นตอนพร้อมภาพประกอบ...', sortOrder: 3 },
-      { sectionCode: 'SEC-4', sectionTitle: '4. คำถามที่พบบ่อยและการแก้ปัญหาเบื้องต้น (FAQ & Troubleshooting)', content: 'รายการปัญหาที่อาจพบและวิธีแก้ไข...', sortOrder: 4 },
+      { sectionCode: 'SEC-1', sectionTitle: '1. บทนำและวัตถุประสงค์', content: 'รายละเอียดวัตถุประสงค์ของระบบ...', sortOrder: 1 },
+      { sectionCode: 'SEC-2', sectionTitle: '2. การเข้าใช้งานระบบและสิทธิ์การใช้งาน', content: 'ขั้นตอนการเข้าสู่ระบบ และสิทธิ์ผู้ใช้งาน...', sortOrder: 2 },
+      { sectionCode: 'SEC-3', sectionTitle: '3. ขั้นตอนการใช้งานฟีเจอร์หลัก', content: 'คำอธิบายขั้นตอนการทำงานทีละขั้นตอนพร้อมภาพประกอบ...', sortOrder: 3 },
+      { sectionCode: 'SEC-4', sectionTitle: '4. คำถามที่พบบ่อยและการแก้ปัญหาเบื้องต้น', content: 'รายการปัญหาที่อาจพบและวิธีแก้ไข...', sortOrder: 4 },
     ];
     this.sections.set(defaults);
     this.cdr.markForCheck();
@@ -432,7 +452,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
             documentTitle: formVal.manualTitle ? ('คู่มือการใช้งาน ' + formVal.manualTitle) : 'คู่มือการใช้งาน',
             version: res?.version || formVal.version,
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติคู่มือการใช้งาน (User Manual)'
+            comment: 'ส่งขออนุมัติคู่มือการใช้งาน'
           }).subscribe({
             next: () => {
               this.isSaving.set(false);

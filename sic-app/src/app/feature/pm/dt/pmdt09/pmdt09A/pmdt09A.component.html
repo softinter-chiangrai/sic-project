@@ -13,7 +13,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
-          {{ isEdit ? 'แก้ไขข้อมูล Design Review (Edit Design Review)' : 'สร้าง Design Review ใหม่ (New Design Review)' }}
+          {{ isEdit ? 'แก้ไขการตรวจทานการออกแบบ' : 'สร้างการตรวจทานการออกแบบใหม่' }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           ตรวจทานการออกแบบ UI/UX, Prototype, และโครงสร้างระบบ พร้อมเชื่อมต่อ Figma Live Canvas
@@ -50,7 +50,7 @@
           ></sic-input>
 
           <sic-input
-            label="ชื่อเรื่อง (Title)"
+            label="ชื่อเรื่อง"
             formControlName="title"
             [required]="true"
             placeholder="เช่น Review UI Dashboard & Design Tokens"
@@ -68,7 +68,7 @@
           ></sic-combobox>
 
           <sic-combobox
-            label="ระดับความรุนแรง (Severity)"
+            label="ระดับความรุนแรง"
             formControlName="severity"
             [items]="service.severityOptions"
             valueField="value"
@@ -78,7 +78,7 @@
           ></sic-combobox>
 
           <sic-combobox
-            label="สถานะ (Status)"
+            label="สถานะ"
             formControlName="status"
             [items]="service.statusOptions"
             valueField="value"
@@ -88,7 +88,7 @@
           ></sic-combobox>
 
           <sic-datepicker
-            label="กำหนดส่ง (Due Date)"
+            label="กำหนดส่ง"
             formControlName="dueDate"
             [required]="true"
             placeholder="DD/MM/YYYY"
@@ -96,7 +96,7 @@
 
           <div class="md:col-span-2 lg:col-span-2">
             <sic-combobox
-              label="ผู้รับผิดชอบแก้ไข (Assigned To)"
+              label="ผู้รับผิดชอบแก้ไข"
               formControlName="assignedTo"
               [apiUrl]="service.apiGetUsers"
               valueField="name"
@@ -108,7 +108,7 @@
           </div>
 
           <sic-combobox
-            label="กระบวนการอนุมัติ (Approval Flow)"
+            label="กระบวนการอนุมัติ"
             [apiUrl]="service.apiGetApprovalFlows"
             valueField="id"
             textField="flowName"
@@ -123,7 +123,7 @@
         <!-- Description (Tiptap Editor) -->
         <div class="space-y-1.5">
           <sic-tiptap-editor
-            label="คำอธิบาย (Description)"
+            label="คำอธิบาย"
             [required]="true"
             formControlName="description"
             placeholder="อธิบายรายละเอียดของงาน วัตถุประสงค์ และสิ่งที่ต้องการให้ตรวจสอบ..."
@@ -273,7 +273,7 @@
           <div class="pt-4 border-t border-[var(--border)] space-y-3">
             <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-chat-dots text-[var(--crm-primary)]"></i>
-              ความคิดเห็นและการตรวจสอบ (Comments)
+              ความคิดเห็นและการตรวจสอบ
             </h3>
             <div class="space-y-2.5">
               @for (comment of form.get('comments')?.value; track comment.id) {
@@ -312,7 +312,7 @@
             </sic-button>
             @if (isLocked) {
               <sic-button variant="primary" (click)="requestChange()">
-                <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+                <i class="bi bi-pencil-square"></i> ขอแก้ไข
               </sic-button>
             } @else {
               <sic-button variant="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
@@ -325,7 +325,7 @@
         @if (isLocked) {
           <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
             <i class="bi bi-lock-fill"></i>
-            เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+            เอกสารนี้ผ่านการอนุมัติแล้ว (ล็อก Baseline) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
           </div>
         }
       </div>

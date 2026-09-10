@@ -30,6 +30,7 @@ export interface DiagramModel {
   requirementTitle?: string;
   approvalStatus?: string;
   isApproved?: boolean;
+  version?: string;
 }
 
 export interface DiagramVersion {

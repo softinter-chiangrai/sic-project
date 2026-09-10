@@ -4,7 +4,7 @@
     <div class="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-between text-xs">
       <div class="flex items-center gap-2">
         <i class="bi bi-info-circle-fill text-sm"></i>
-        <span>คำขอเปลี่ยนแปลงนี้อยู่ในโหมด <b>อ่านอย่างเดียว (Read-Only)</b> เนื่องจากอยู่ในกระบวนการอนุมัติหรือผ่านการพิจารณาแล้ว</span>
+        <span>คำขอเปลี่ยนแปลงนี้อยู่ในโหมด <b>อ่านอย่างเดียว</b> เนื่องจากอยู่ในกระบวนการอนุมัติหรือผ่านการพิจารณาแล้ว</span>
       </div>
       <sic-version-badge [status]="currentStatus" [isLocked]="currentIsLocked"></sic-version-badge>
     </div>
@@ -14,7 +14,7 @@
         <!-- CR Code -->
         <div>
           <sic-input
-            label="รหัสคำขอเปลี่ยนแปลง (CR Code)"
+            label="รหัสคำขอเปลี่ยนแปลง"
             formControlName="crCode"
             [required]="true"
             placeholder="CR-001"
@@ -87,7 +87,7 @@
 
         <div>
           <sic-combobox
-            label="ความสำคัญ (Priority)"
+            label="ความสำคัญ"
             formControlName="priority"
             [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'"
             valueField="value"
@@ -123,7 +123,7 @@
       <div class="border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ (Approval Flow)
+          กระบวนการอนุมัติ
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -152,7 +152,7 @@
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-              ผลกระทบที่คาดการณ์ (Impact Analysis)
+              ผลกระทบที่คาดการณ์
               @if (isLoadingImpact()) {
                 <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
                   <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
@@ -385,7 +385,7 @@
               class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--text)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] shadow-sm transition-all cursor-pointer"
             >
               <i class="bi bi-printer text-sm text-[var(--crm-primary)]"></i>
-              <span>พิมพ์เอกสาร (PDF)</span>
+              <span>พิมพ์เอกสาร</span>
             </button>
           </div>
         }

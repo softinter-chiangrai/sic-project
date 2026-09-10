@@ -41,11 +41,11 @@ export class Pmrt03Component implements OnInit {
         score: 100,
         status: 'Green',
         factors: [
-          { name: 'ความคืบหน้างาน (Tasks)', value: 25, weight: 25, percent: 100, detail: '-' },
+          { name: 'ความคืบหน้างาน', value: 25, weight: 25, percent: 100, detail: '-' },
           { name: 'การใช้ Manday (จากงบทั้งหมด)', value: 25, weight: 25, percent: 0, detail: '-' },
           { name: 'คุณภาพ & การแก้ไข Bug', value: 20, weight: 20, percent: 100, detail: '-' },
           { name: 'ความคืบหน้า Phase', value: 15, weight: 15, percent: 100, detail: '-' },
-          { name: 'สถานะและกำหนดการ (Timeline)', value: 15, weight: 15, percent: 100, detail: '-' },
+          { name: 'สถานะและกำหนดการ', value: 15, weight: 15, percent: 100, detail: '-' },
         ],
       };
     }
@@ -130,7 +130,7 @@ export class Pmrt03Component implements OnInit {
     if (p.status === 'Delayed') {
       statusScore = 3;
       statusPercent = 20;
-      statusDetail = 'ล่าช้ากว่ากำหนด (Delayed)';
+      statusDetail = 'ล่าช้ากว่ากำหนด';
       statusColor = 'var(--crm-danger)';
       isOverdue = true;
     } else if (p.status === 'Closed' || p.status === 'Delivered' || p.status === 'Done') {
@@ -144,13 +144,13 @@ export class Pmrt03Component implements OnInit {
       if (end < now && p.status !== 'Done' && p.status !== 'Delivered' && p.status !== 'Closed') {
         statusScore = 3;
         statusPercent = 20;
-        statusDetail = 'เลยกำหนดส่งตามแผน (Overdue)';
+        statusDetail = 'เลยกำหนดส่งตามแผน';
         statusColor = 'var(--crm-danger)';
         isOverdue = true;
       } else {
         statusScore = 15;
         statusPercent = 100;
-        statusDetail = 'ตามแผนงาน (On Track)';
+        statusDetail = 'ตามแผนงาน';
         statusColor = 'var(--crm-success)';
       }
     }
@@ -167,7 +167,7 @@ export class Pmrt03Component implements OnInit {
       status = 'Yellow';
     }
 
-    // หากเลยกำหนดส่ง (Overdue) หรือล่าช้า (Delayed) สุขภาพโครงการไม่ควรเป็น Green
+    // หากเลยกำหนดส่ง หรือล่าช้า สุขภาพโครงการไม่ควรเป็น Green
     if (isOverdue && status === 'Green') {
       status = 'Yellow';
       totalScore = Math.min(75, totalScore);
@@ -177,11 +177,11 @@ export class Pmrt03Component implements OnInit {
       score: totalScore,
       status,
       factors: [
-        { name: 'ความคืบหน้างาน (Tasks)', value: taskScore, weight: 25, percent: taskPercent, detail: taskDetail, color: taskColor },
+        { name: 'ความคืบหน้างาน', value: taskScore, weight: 25, percent: taskPercent, detail: taskDetail, color: taskColor },
         { name: 'การใช้ Manday (จากงบทั้งหมด)', value: mandayScore, weight: 25, percent: mandayPercent, detail: mandayDetail, color: mandayColor },
         { name: 'คุณภาพ & การแก้ไข Bug', value: bugScore, weight: 20, percent: bugPercent, detail: bugDetail, color: bugColor },
         { name: 'ความคืบหน้า Phase', value: phaseScore, weight: 15, percent: phasePercent, detail: phaseDetail, color: phaseColor },
-        { name: 'สถานะและกำหนดการ (Timeline)', value: statusScore, weight: 15, percent: statusPercent, detail: statusDetail, color: statusColor },
+        { name: 'สถานะและกำหนดการ', value: statusScore, weight: 15, percent: statusPercent, detail: statusDetail, color: statusColor },
       ],
     };
   });
@@ -439,9 +439,9 @@ export class Pmrt03Component implements OnInit {
 
   getHealthStatusText(status: string): string {
     const map: Record<string, string> = {
-      Green: 'สุขภาพดี (Green)',
-      Yellow: 'เฝ้าระวัง (Yellow)',
-      Red: 'วิกฤต (Red)',
+      Green: 'สุขภาพดี',
+      Yellow: 'เฝ้าระวัง',
+      Red: 'วิกฤต',
     };
     return map[status] || status;
   }

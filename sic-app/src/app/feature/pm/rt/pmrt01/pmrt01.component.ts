@@ -107,8 +107,8 @@ export class Pmrt01Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'active', text: 'ใช้งาน (Active)' },
-    { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
+    { value: 'active', text: 'ใช้งาน' },
+    { value: 'inactive', text: 'ไม่ใช้งาน' },
   ];
 
   onFilterChange(value: any) {

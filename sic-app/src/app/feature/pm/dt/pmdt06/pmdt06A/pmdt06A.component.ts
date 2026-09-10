@@ -118,17 +118,17 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     selectedTargetType = signal('REQUIREMENT');
     readonly targetTypeOptions = [
-        { value: 'PROJECT', text: 'โครงการ (Project)' },
-        { value: 'REQUIREMENT', text: 'ความต้องการระบบ (Requirement)' },
-        { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ (Specification)' },
-        { value: 'DIAGRAM', text: 'แผนภาพระบบ (Diagram)' },
-        { value: 'CONTRACT', text: 'สัญญาโครงการ (Contract)' },
-        { value: 'DESIGN_REVIEW', text: 'การตรวจทานการออกแบบ (Design Review)' },
-        { value: 'DELIVERY', text: 'การส่งมอบงาน (Delivery)' },
-        { value: 'USER_MANUAL', text: 'คู่มือการใช้งาน (User Manual)' },
-        { value: 'INVOICE', text: 'ใบแจ้งหนี้ (Invoice)' },
-        { value: 'MA_TICKET', text: 'รายการแจ้งซ่อม / MA (MA Ticket)' },
-        { value: 'MA_RENEWAL', text: 'การต่ออายุสัญญา MA (MA Renewal)' },
+        { value: 'PROJECT', text: 'โครงการ' },
+        { value: 'REQUIREMENT', text: 'ข้อกำหนดความต้องการ' },
+        { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ' },
+        { value: 'DIAGRAM', text: 'แผนภาพระบบ' },
+        { value: 'CONTRACT', text: 'สัญญาโครงการ' },
+        { value: 'DESIGN_REVIEW', text: 'การตรวจทานการออกแบบ' },
+        { value: 'DELIVERY', text: 'การส่งมอบงาน' },
+        { value: 'USER_MANUAL', text: 'คู่มือการใช้งาน' },
+        { value: 'INVOICE', text: 'ใบแจ้งหนี้' },
+        { value: 'MA_TICKET', text: 'ตั๋วแจ้งปัญหา MA' },
+        { value: 'MA_RENEWAL', text: 'การต่ออายุสัญญา MA' },
     ];
     targetDocumentOptions = signal<any[]>([]);
     isTargetLocked = signal(false);

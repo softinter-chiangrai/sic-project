@@ -8,11 +8,11 @@
 
     <!-- Specification Selection -->
     <div>
-      <label class="block text-sm font-medium text-[var(--text)] mb-1">Specification (ผูกกับสเปก)</label>
+      <label class="block text-sm font-medium text-[var(--text)] mb-1">Specification</label>
       <sic-combobox
         formControlName="specificationId"
         [options]="specOptions()"
-        placeholder="เลือก Specification (ถ้ามี)..."
+        placeholder="เลือก Specification..."
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -132,7 +132,7 @@
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-clipboard2-check text-[var(--crm-primary)]"></i>
-            รายการ Test Cases & ผลการทดสอบ (QA)
+            รายการเคสทดสอบและผลการทดสอบ
           </h3>
           <span class="text-xs text-[var(--text-muted)] bg-[var(--bg)] px-2 py-0.5 rounded border border-[var(--border)]">
             {{ linkedTestCases().length }} เคส
@@ -169,7 +169,7 @@
                   <div class="text-[var(--text-muted)] text-[0.75rem] bg-[var(--sidebar)] p-2.5 rounded-lg border border-[var(--border)] transition-all">
                     <div class="flex items-center justify-between gap-2 mb-1">
                       <span class="font-bold text-[var(--text)] flex items-center gap-1.5">
-                        <i class="bi bi-list-ol text-[var(--crm-primary)]"></i> ขั้นตอนการทดสอบ (Steps):
+                        <i class="bi bi-list-ol text-[var(--crm-primary)]"></i> ขั้นตอนการทดสอบ:
                       </span>
                       <button
                         type="button"

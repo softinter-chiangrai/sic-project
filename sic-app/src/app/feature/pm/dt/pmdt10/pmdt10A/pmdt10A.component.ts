@@ -67,10 +67,10 @@ export class Pmdt10AComponent implements OnInit {
   }
 
   readonly priorityOptions = [
-    { value: 'Low', text: 'Low (ต่ำ)' },
-    { value: 'Medium', text: 'Medium (ปานกลาง)' },
-    { value: 'High', text: 'High (สูง)' },
-    { value: 'Critical', text: 'Critical (วิกฤต)' },
+    { value: 'Low', text: 'ต่ำ' },
+    { value: 'Medium', text: 'ปานกลาง' },
+    { value: 'High', text: 'สูง' },
+    { value: 'Critical', text: 'วิกฤต' },
   ];
 
   ngOnInit(): void {

@@ -120,10 +120,10 @@ export class Pmdt16Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'UNPAID', text: 'รอชำระ (Unpaid)' },
-    { value: 'PARTIAL', text: 'ชำระบางส่วน (Partial)' },
-    { value: 'PAID', text: 'ชำระครบแล้ว (Paid)' },
-    { value: 'OVERDUE', text: 'เกินกำหนด (Overdue)' },
+    { value: 'UNPAID', text: 'รอชำระ' },
+    { value: 'PARTIAL', text: 'ชำระบางส่วน' },
+    { value: 'PAID', text: 'ชำระครบแล้ว' },
+    { value: 'OVERDUE', text: 'เกินกำหนด' },
   ];
 
   onFilterChange(value: any) {

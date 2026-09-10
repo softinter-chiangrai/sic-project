@@ -13,10 +13,10 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-          ประวัติและเวอร์ชันเอกสารโครงการ (Project Document Versions)
+          ประวัติและเวอร์ชันเอกสารโครงการ
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          แสดงรายการเอกสารทั้งหมดในโครงการ รายละเอียดเวอร์ชันล่าสุด และประวัติการเปลี่ยนแปลง (Changelog)
+          แสดงรายการเอกสารทั้งหมดในโครงการ รายละเอียดเวอร์ชันล่าสุด และประวัติการเปลี่ยนแปลง
         </p>
       </div>
     </div>
@@ -31,7 +31,7 @@
           [options]="docTypeOptions"
           [ngModel]="filterType()"
           (ngModelChange)="onTypeChange($event)"
-          placeholder="ทุกประเภทเอกสาร (All Types)"
+          placeholder="ทุกประเภทเอกสาร"
         ></sic-combobox>
       </div>
     </div>
@@ -68,13 +68,13 @@
         <table class="w-full text-sm">
           <thead class="bg-[var(--bg)] border-b border-[var(--border)] text-[var(--text-muted)] uppercase text-[11px] font-semibold tracking-wider">
             <tr>
-              <th class="px-4 py-3 text-left">เวอร์ชัน (Version)</th>
-              <th class="px-4 py-3 text-left">ประเภทเอกสาร (Type)</th>
-              <th class="px-4 py-3 text-left">รหัส / ชื่อเอกสาร (Code / Name)</th>
-              <th class="px-4 py-3 text-left">สรุปการเปลี่ยนแปลง (Change Summary)</th>
-              <th class="px-4 py-3 text-left">ผู้บันทึก (Author)</th>
-              <th class="px-4 py-3 text-left">วันที่บันทึก (Date)</th>
-              <th class="px-4 py-3 text-right">จัดการ (Actions)</th>
+              <th class="px-4 py-3 text-left">เวอร์ชัน</th>
+              <th class="px-4 py-3 text-left">ประเภทเอกสาร</th>
+              <th class="px-4 py-3 text-left">รหัส / ชื่อเอกสาร</th>
+              <th class="px-4 py-3 text-left">สรุปการเปลี่ยนแปลง</th>
+              <th class="px-4 py-3 text-left">ผู้บันทึก</th>
+              <th class="px-4 py-3 text-left">วันที่บันทึก</th>
+              <th class="px-4 py-3 text-right">จัดการ</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-[var(--border)]">

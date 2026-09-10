@@ -103,11 +103,11 @@ export class Pmdt18Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'DRAFT', text: 'ร่างข้อเสนอ (Draft)' },
-    { value: 'PROPOSED', text: 'เสนอราคาแล้ว (Proposed)' },
-    { value: 'CONFIRMED', text: 'ตกลงต่อสัญญาแล้ว (Confirmed)' },
-    { value: 'REJECTED', text: 'ปฏิเสธการต่อสัญญา (Rejected)' },
-    { value: 'EXPIRED', text: 'หมดอายุ (Expired)' },
+    { value: 'DRAFT', text: 'ร่างข้อเสนอ' },
+    { value: 'PROPOSED', text: 'เสนอราคาแล้ว' },
+    { value: 'CONFIRMED', text: 'ตกลงต่อสัญญาแล้ว' },
+    { value: 'REJECTED', text: 'ปฏิเสธการต่อสัญญา' },
+    { value: 'EXPIRED', text: 'หมดอายุ' },
   ];
 
   onFilterChange(value: any) {

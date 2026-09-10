@@ -104,17 +104,17 @@ export class Pmdt09AService {
   apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-status`;
 
   readonly severityOptions = [
-    { value: 'Low', label: 'Low (ต่ำ)' },
-    { value: 'Medium', label: 'Medium (ปานกลาง)' },
-    { value: 'High', label: 'High (สูง)' },
-    { value: 'Critical', label: 'Critical (วิกฤต)' },
+    { value: 'Low', label: 'ต่ำ' },
+    { value: 'Medium', label: 'ปานกลาง' },
+    { value: 'High', label: 'สูง' },
+    { value: 'Critical', label: 'วิกฤต' },
   ];
 
   readonly statusOptions = [
-    { value: 'Open', label: 'Open (เปิดอยู่)' },
-    { value: 'In Progress', label: 'In Progress (กำลังตรวจสอบ)' },
-    { value: 'Resolved', label: 'Resolved (แก้ไขเรียบร้อย)' },
-    { value: 'Closed', label: 'Closed (ปิดงาน)' },
+    { value: 'Open', label: 'เปิดอยู่' },
+    { value: 'In Progress', label: 'กำลังตรวจสอบ' },
+    { value: 'Resolved', label: 'แก้ไขเรียบร้อย' },
+    { value: 'Closed', label: 'ปิดงาน' },
   ];
 
   save(data: DesignReviewModel): Observable<any> {
@@ -453,7 +453,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         description: 'คำอธิบาย',
         reviewableType: 'ประเภทงานที่ตรวจสอบ',
         reviewableId: 'Specification/รายการที่ตรวจสอบ',
-        projectId: 'โครงการ (Project)',
+        projectId: 'โครงการ',
         severity: 'ระดับความรุนแรง',
         status: 'สถานะ',
         dueDate: 'กำหนดส่ง',

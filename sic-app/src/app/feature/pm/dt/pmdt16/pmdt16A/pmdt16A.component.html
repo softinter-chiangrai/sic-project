@@ -12,7 +12,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-receipt text-[var(--crm-primary)]"></i>
-          {{ isView() ? 'ดูใบแจ้งหนี้ (View Invoice)' : (isEdit() ? 'แก้ไขใบแจ้งหนี้ (Edit Invoice & Payment)' : 'สร้างใบแจ้งหนี้ใหม่ (New Invoice)') }}
+          {{ isView() ? 'ดูใบแจ้งหนี้' : (isEdit() ? 'แก้ไขใบแจ้งหนี้และการรับชำระ' : 'สร้างใบแจ้งหนี้ใหม่') }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           จัดการข้อมูลใบแจ้งหนี้ วางบิล และลงบันทึกการรับชำระเงินพร้อมแนบหลักฐาน
@@ -29,7 +29,7 @@
       <div class="flex items-center gap-2">
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
-          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF (JasperReports)' }}
+          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF' }}
         </sic-button>
       </div>
     }
@@ -40,12 +40,12 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        ข้อมูลทั่วไปของใบแจ้งหนี้ (Invoice Information)
+        ข้อมูลทั่วไปของใบแจ้งหนี้
       </h2>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          label="ประเภทบิล (Billing Type)"
+          label="ประเภทบิล"
           [required]="true"
           [items]="billingTypeOptions"
           valueField="value"
@@ -54,25 +54,25 @@
         ></sic-combobox>
 
         <sic-input
-          label="เลขที่ใบแจ้งหนี้ (Invoice No)"
+          label="เลขที่ใบแจ้งหนี้"
           placeholder="เช่น INV-2026-001"
           formControlName="invoiceNo"
         ></sic-input>
 
         <sic-datepicker
-          label="วันที่ออกบิล (Issue Date)"
+          label="วันที่ออกบิล"
           [required]="true"
           formControlName="issueDate"
         ></sic-datepicker>
 
         <sic-datepicker
-          label="วันครบกำหนดชำระ (Due Date)"
+          label="วันครบกำหนดชำระ"
           [required]="true"
           formControlName="dueDate"
         ></sic-datepicker>
 
         <sic-combobox
-          label="สัญญาอ้างอิง (Linked Contract)"
+          label="สัญญาอ้างอิง"
           placeholder="เลือกสัญญาที่เกี่ยวข้อง (ถ้ามี)"
           [options]="contractOptions()"
           valueField="value"
@@ -88,7 +88,7 @@
       <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
         <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-list-check text-[var(--crm-primary)]"></i>
-          รายการสินค้า/บริการ (Invoice Items)
+          รายการสินค้าและบริการ
         </h2>
         @if (!isView()) {
           <button
@@ -105,9 +105,9 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="text-left text-xs text-[var(--text-muted)] border-b border-[var(--border)]">
-              <th class="py-2 pr-2 font-medium">ชื่อรายการ (Item)</th>
-              <th class="py-2 pr-2 font-medium">คำอธิบาย (Description)</th>
-              <th class="py-2 pr-2 font-medium text-right w-40">ยอดเงิน (Amount)</th>
+              <th class="py-2 pr-2 font-medium">ชื่อรายการ</th>
+              <th class="py-2 pr-2 font-medium">คำอธิบาย</th>
+              <th class="py-2 pr-2 font-medium text-right w-40">ยอดเงิน</th>
               @if (!isView()) {
                 <th class="py-2 pl-2 w-10"></th>
               }
@@ -176,12 +176,12 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-cash-stack text-[var(--crm-primary)]"></i>
-        ยอดเงินและภาษี (Amounts & Tax)
+        ยอดเงินและภาษี
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-input-number
-          label="ยอดก่อนภาษี (Subtotal Amount)"
+          label="ยอดก่อนภาษี"
           [min]="0"
           [readonly]="true"
           formControlName="subtotalAmount"
@@ -194,7 +194,7 @@
         ></sic-input-number>
 
         <sic-input-number
-          label="จำนวนภาษี VAT (Auto)"
+          label="จำนวนภาษี VAT"
           [readonly]="true"
           formControlName="vatAmount"
         ></sic-input-number>
@@ -202,13 +202,13 @@
 
       <div class="p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-between flex-wrap gap-4">
         <div>
-          <span class="text-xs text-[var(--text-muted)]">ยอดรวมทั้งสิ้น (Total Amount):</span>
+          <span class="text-xs text-[var(--text-muted)]">ยอดรวมทั้งสิ้น:</span>
           <div class="text-2xl font-bold text-[var(--crm-primary)]">
             {{ (formData.form.get('totalAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
           </div>
         </div>
         <div class="text-right">
-          <span class="text-xs text-[var(--text-muted)]">ยอดค้างชำระ (Balance Due):</span>
+          <span class="text-xs text-[var(--text-muted)]">ยอดค้างชำระ:</span>
           <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">
             {{ ((formData.form.get('totalAmount')?.value || 0) - (formData.form.get('paidAmount')?.value || 0)) | currency:'THB':'symbol':'1.2-2' }}
           </div>
@@ -221,7 +221,7 @@
       <div class="border-b border-[var(--border)] pb-3">
         <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-credit-card text-[var(--crm-primary)]"></i>
-          บันทึกการรับชำระเงิน (Record Payment & Receipt)
+          บันทึกการรับชำระเงิน
         </h2>
         <p class="text-xs text-[var(--text-muted)] mt-1">
           บันทึกยอดเงินที่ได้รับจริง วันที่ชำระ และแนบสลิป/หลักฐานการโอนเงิน
@@ -230,7 +230,7 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          label="สถานะการชำระเงิน (Payment Status)"
+          label="สถานะการชำระเงิน"
           [items]="paymentStatusOptions"
           valueField="value"
           displayField="label"
@@ -238,20 +238,20 @@
         ></sic-combobox>
 
         <sic-input-number
-          label="ยอดเงินที่ชำระแล้ว (Paid Amount)"
+          label="ยอดเงินที่ชำระแล้ว"
           [min]="0"
           formControlName="paidAmount"
         ></sic-input-number>
 
         <sic-datepicker
-          label="วันที่ชำระเงิน (Payment Date)"
+          label="วันที่ชำระเงิน"
           formControlName="paidDate"
         ></sic-datepicker>
       </div>
 
       <div>
         <label class="block text-xs font-semibold text-[var(--text)] mb-1.5">
-          แนบสลิปการโอน / ใบเสร็จรับเงิน (Payment Slip / Receipt Files)
+          แนบสลิปการโอน / ใบเสร็จรับเงิน
         </label>
         <sic-upload
           formControlName="receiptGroupId"
@@ -264,7 +264,7 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-chat-left-text text-[var(--crm-primary)]"></i>
-        หมายเหตุเพิ่มเติม (Remarks)
+        หมายเหตุเพิ่มเติม
       </h2>
       <sic-tiptap-editor
         label="หมายเหตุ"
@@ -279,7 +279,7 @@
         <div class="border-b border-[var(--border)] pb-3">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ (Approval Flow)
+            กระบวนการอนุมัติ
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-1">
             เลือกกระบวนการอนุมัติสำหรับใบแจ้งหนี้นี้ เพื่อส่งให้ฝ่ายการเงินและผู้บริหารตรวจสอบอนุมัติ
@@ -288,7 +288,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="กระบวนการอนุมัติ (Approval Flow)"
+            label="กระบวนการอนุมัติ"
             [apiUrl]="approvalFlowsApi"
             valueField="id"
             textField="flowName"
@@ -307,7 +307,7 @@
       </sic-button>
       @if (isLocked()) {
         <sic-button variant="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else if (isView()) {
         <sic-button variant="primary" (click)="goToEditMode()">
@@ -323,7 +323,7 @@
     @if (isLocked()) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
       </div>
     }
   </form>

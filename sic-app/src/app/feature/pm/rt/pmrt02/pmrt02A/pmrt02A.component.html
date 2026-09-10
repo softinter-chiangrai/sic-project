@@ -129,7 +129,7 @@
       <!-- Budget Manday -->
       <div>
         <sic-number
-          label="Manday ตามแผน (Budget Manday)"
+          label="Manday ตามแผน"
           formControlName="budgetManday"
           [decimal]="0"
           placeholder="0"
@@ -168,7 +168,7 @@
         <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
           <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ (Approval Flow)
+            กระบวนการอนุมัติ
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -211,7 +211,7 @@
           variant="primary"
           (click)="requestChange()"
         >
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else if (!isViewOnly) {
         <sic-button
@@ -237,7 +237,7 @@
     @if (isLocked) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        โครงการนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        โครงการนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
       </div>
     }
 

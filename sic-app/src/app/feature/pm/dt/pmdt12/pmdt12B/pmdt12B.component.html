@@ -57,10 +57,10 @@
           </div>
           <div>
             <sic-combobox
-              label="ความสำคัญ (Priority)"
+              label="ความสำคัญ"
               formControlName="priority"
               [items]="priorityOptions"
-              placeholder="เลือก Priority"
+              placeholder="เลือกระดับความสำคัญ"
             ></sic-combobox>
           </div>
           <div>
@@ -92,7 +92,7 @@
         <div class="pt-2">
           <sic-checkbox
             formControlName="status"
-            label="เปิดใช้งาน (Active)"
+            label="เปิดใช้งาน"
             checkedValue="Active"
             uncheckedValue="Inactive"
           ></sic-checkbox>
@@ -177,7 +177,7 @@
         <!-- Prompt -->
         <div>
           <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-            คำสั่ง หรือ ขอบเขตการทดสอบที่ต้องการเน้น (Prompt)
+            คำสั่งหรือขอบเขตการทดสอบที่ต้องการเน้น
           </label>
           <textarea
             [ngModel]="aiAssistPrompt()"

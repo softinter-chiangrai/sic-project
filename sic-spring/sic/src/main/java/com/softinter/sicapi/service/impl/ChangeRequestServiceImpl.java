@@ -370,9 +370,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // ปลดล็อคเอกสารเป้าหมาย (bump เวอร์ชัน + ตั้งสถานะกลับเป็นแก้ไขได้)
+        // ปลดล็อคเอกสารเป้าหมาย (ปัดเวอร์ชันขึ้นเป็นเลขเต็มถัดไป + ตั้งสถานะกลับเป็นแก้ไขได้)
         approvalService.unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(),
-                "Change Request " + cr.getCrCode() + " approved");
+                "Change Request " + cr.getCrCode() + " approved", true);
 
         return toResponse(cr);
     }

@@ -12,7 +12,7 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-headset text-[var(--crm-primary)]"></i>
-          {{ isView() ? 'ดูตั๋วแจ้งปัญหา MA (View MA Ticket)' : (isEdit() ? 'แก้ไขตั๋วแจ้งปัญหา MA (Edit MA Ticket)' : 'สร้างตั๋วแจ้งปัญหาใหม่ (New MA Ticket)') }}
+          {{ isView() ? 'ดูตั๋วแจ้งปัญหา MA' : (isEdit() ? 'แก้ไขตั๋วแจ้งปัญหา MA' : 'สร้างตั๋วแจ้งปัญหาใหม่') }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
           รับแจ้งปัญหาหลังการส่งมอบ ติดตามการแก้ไข และกำหนดระดับความเร่งด่วนตาม SLA
@@ -32,18 +32,18 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        ข้อมูลทั่วไปของตั๋ว (Ticket Classification)
+        ข้อมูลทั่วไปของตั๋ว
       </h2>
       
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-input
-          label="รหัส MA Ticket (Ticket No)"
+          label="รหัส MA Ticket"
           placeholder="เช่น MA-2026-001"
           formControlName="ticketNo"
         ></sic-input>
 
         <sic-combobox
-          label="ประเภทปัญหา (Ticket Type)"
+          label="ประเภทปัญหา"
           [required]="true"
           [items]="ticketTypeOptions"
           valueField="value"
@@ -52,7 +52,7 @@
         ></sic-combobox>
 
         <sic-combobox
-          label="ระดับความรุนแรง (Severity / SLA)"
+          label="ระดับความรุนแรง"
           [required]="true"
           [items]="severityOptions"
           valueField="value"
@@ -63,7 +63,7 @@
 
       <div>
         <sic-combobox
-          label="ผู้รับผิดชอบแก้ไข (Assigned To)"
+          label="ผู้รับผิดชอบแก้ไข"
           [apiUrl]="apiMembersCombobox"
           [params]="{ businessId: businessId }"
           valueField="value"
@@ -80,21 +80,21 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-calendar-event text-[var(--crm-primary)]"></i>
-        กำหนดเวลาดำเนินการ (Schedule)
+        กำหนดเวลาดำเนินการ
       </h2>
 
       <!-- Start Date + Time -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <sic-datepicker
-            label="วันที่เริ่มต้น (Start Date)"
+            label="วันที่เริ่มต้น"
             placeholder="เลือกวันที่เริ่ม"
             formControlName="startDate"
           ></sic-datepicker>
         </div>
         <div>
           <sic-timepicker
-            label="เวลาเริ่มต้น (Start Time)"
+            label="เวลาเริ่มต้น"
             placeholder="เลือกเวลา"
             formControlName="startTime"
           ></sic-timepicker>
@@ -105,14 +105,14 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <sic-datepicker
-            label="วันที่สิ้นสุด (End Date)"
+            label="วันที่สิ้นสุด"
             placeholder="เลือกวันที่สิ้นสุด"
             formControlName="endDate"
           ></sic-datepicker>
         </div>
         <div>
           <sic-timepicker
-            label="เวลาสิ้นสุด (End Time)"
+            label="เวลาสิ้นสุด"
             placeholder="เลือกเวลา"
             formControlName="endTime"
           ></sic-timepicker>
@@ -124,18 +124,18 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-card-text text-[var(--crm-primary)]"></i>
-        รายละเอียดปัญหา (Ticket Content)
+        รายละเอียดปัญหา
       </h2>
 
       <sic-input
-        label="หัวข้อปัญหา (Title)"
+        label="หัวข้อปัญหา"
         placeholder="ระบุหัวข้อปัญหาที่พบแบบกระชับ"
         [required]="true"
         formControlName="title"
       ></sic-input>
 
       <sic-tiptap-editor
-        label="รายละเอียดปัญหาโดยละเอียด (Description)"
+        label="รายละเอียดปัญหาโดยละเอียด"
         placeholder="อธิบายอาการของปัญหา ขั้นตอนการเกิด และผลกระทบ..."
         [required]="true"
         minHeight="140px"
@@ -147,7 +147,7 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-check-circle text-[var(--crm-primary)]"></i>
-        สรุปการแก้ไขปัญหา (Resolution Summary)
+        สรุปการแก้ไขปัญหา
       </h2>
       <sic-tiptap-editor
         label="วิธีแก้ไขปัญหาและแนวทางป้องกัน"
@@ -163,7 +163,7 @@
         <div class="border-b border-[var(--border)] pb-3">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ (Approval Flow)
+            กระบวนการอนุมัติ
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-1">
             เลือกกระบวนการอนุมัติสำหรับตั๋วปัญหานี้ เพื่อส่งให้หัวหน้าทีมและลูกค้ายืนยันการปิดตั๋ว
@@ -172,7 +172,7 @@
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="กระบวนการอนุมัติ (Approval Flow)"
+            label="กระบวนการอนุมัติ"
             [apiUrl]="approvalFlowsApi"
             valueField="id"
             textField="flowName"
@@ -184,8 +184,6 @@
       </div>
     }
 
-
-
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">
@@ -193,7 +191,7 @@
       </sic-button>
       @if (isLocked()) {
         <sic-button variant="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข (Open Change Request)
+          <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else if (isView()) {
         <sic-button variant="primary" (click)="goToEditMode()">
@@ -209,7 +207,7 @@
     @if (isLocked()) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        เอกสารนี้ผ่านการอนุมัติแล้ว (Baseline Locked) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request
+        เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
       </div>
     }
   </form>

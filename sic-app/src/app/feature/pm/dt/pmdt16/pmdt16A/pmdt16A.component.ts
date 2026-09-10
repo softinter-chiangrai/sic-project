@@ -75,18 +75,18 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   isLoadingFlows = signal(false);
 
   billingTypeOptions = [
-    { value: 'FIXED_PRICE', label: 'Fixed Price (งวดราคาคงที่)' },
-    { value: 'MILESTONE', label: 'Milestone Billing (งวดงานตาม Milestone)' },
-    { value: 'MONTHLY', label: 'Monthly Billing (รายเดือน)' },
-    { value: 'MA', label: 'MA Billing (ค่าบำรุงรักษาระบบ)' },
-    { value: 'CHANGE_REQUEST', label: 'Change Request (งานส่วนเพิ่ม CR)' },
+    { value: 'FIXED_PRICE', label: 'งวดราคาคงที่' },
+    { value: 'MILESTONE', label: 'งวดงานตามไมล์สโตน' },
+    { value: 'MONTHLY', label: 'รายเดือน' },
+    { value: 'MA', label: 'ค่าบำรุงรักษาระบบ' },
+    { value: 'CHANGE_REQUEST', label: 'งานส่วนเพิ่ม' },
   ];
 
   paymentStatusOptions = [
-    { value: 'UNPAID', label: 'Unpaid (ยังไม่ชำระ)' },
-    { value: 'PARTIAL', label: 'Partial (ชำระบางส่วน)' },
-    { value: 'PAID', label: 'Paid (ชำระครบถ้วน)' },
-    { value: 'OVERDUE', label: 'Overdue (เกินกำหนดชำระ)' },
+    { value: 'UNPAID', label: 'ยังไม่ชำระ' },
+    { value: 'PARTIAL', label: 'ชำระบางส่วน' },
+    { value: 'PAID', label: 'ชำระครบถ้วน' },
+    { value: 'OVERDUE', label: 'เกินกำหนดชำระ' },
   ];
 
   isSaved = false;
@@ -303,7 +303,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
             documentCode: formValue.invoiceNo,
             documentTitle: formValue.invoiceNo ? ('ใบแจ้งหนี้ ' + formValue.invoiceNo) : 'ใบแจ้งหนี้',
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติใบแจ้งหนี้ (Invoice)'
+            comment: 'ส่งขออนุมัติใบแจ้งหนี้'
           }).subscribe({
             next: () => {
               this.isSaving.set(false);

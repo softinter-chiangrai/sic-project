@@ -100,7 +100,7 @@ export interface DiagramEditData {
             <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center justify-between">
               <span class="flex items-center gap-2">
                 <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                กระบวนการอนุมัติ (Approval Flow)
+                กระบวนการอนุมัติ
               </span>
               @if (currentApprovalStatus) {
                 <span class="text-xs px-2 py-0.5 rounded font-medium" [ngClass]="getApprovalBadgeClass(currentApprovalStatus)">

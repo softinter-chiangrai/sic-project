@@ -67,25 +67,25 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   isLoadingFlows = signal(false);
 
   ticketTypeOptions = [
-    { value: 'BUG_SUPPORT', label: 'Bug Support (แจ้งปัญหาระบบ)' },
-    { value: 'DATA_ISSUE', label: 'Data Issue (ข้อมูลผิดพลาด)' },
-    { value: 'USER_SUPPORT', label: 'User Support (การใช้งานผู้ใช้)' },
-    { value: 'CHANGE_REQUEST', label: 'Change Request (ขอปรับเปลี่ยน)' },
+    { value: 'BUG_SUPPORT', label: 'แจ้งปัญหาระบบ' },
+    { value: 'DATA_ISSUE', label: 'ข้อมูลผิดพลาด' },
+    { value: 'USER_SUPPORT', label: 'การใช้งานผู้ใช้' },
+    { value: 'CHANGE_REQUEST', label: 'ขอปรับเปลี่ยน' },
   ];
 
   severityOptions = [
-    { value: 'LOW', label: 'Low (ต่ำ - ภายใน 48 ชม.)' },
-    { value: 'MEDIUM', label: 'Medium (ปานกลาง - ภายใน 24 ชม.)' },
-    { value: 'HIGH', label: 'High (สูง - ภายใน 8 ชม.)' },
-    { value: 'CRITICAL', label: 'Critical (วิกฤต - ภายใน 2 ชม.)' },
+    { value: 'LOW', label: 'ต่ำ (ภายใน 48 ชม.)' },
+    { value: 'MEDIUM', label: 'ปานกลาง (ภายใน 24 ชม.)' },
+    { value: 'HIGH', label: 'สูง (ภายใน 8 ชม.)' },
+    { value: 'CRITICAL', label: 'วิกฤต (ภายใน 2 ชม.)' },
   ];
 
   statusOptions = [
-    { value: 'OPEN', label: 'Open (เปิดรับเรื่อง)' },
-    { value: 'IN_PROGRESS', label: 'In Progress (กำลังดำเนินการ)' },
-    { value: 'WAITING_CUSTOMER', label: 'Waiting for Customer (รอลูกค้า)' },
-    { value: 'RESOLVED', label: 'Resolved (แก้ไขเรียบร้อย)' },
-    { value: 'CLOSED', label: 'Closed (ปิดตั๋ว)' },
+    { value: 'OPEN', label: 'เปิดรับเรื่อง' },
+    { value: 'IN_PROGRESS', label: 'กำลังดำเนินการ' },
+    { value: 'WAITING_CUSTOMER', label: 'รอลูกค้า' },
+    { value: 'RESOLVED', label: 'แก้ไขเรียบร้อย' },
+    { value: 'CLOSED', label: 'ปิดงาน' },
   ];
 
   apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;

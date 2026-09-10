@@ -116,34 +116,34 @@
         @if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-            title="ผ่านการอนุมัติแล้ว (Approved)"
+            title="Approved"
           >
             <i class="bi bi-check-circle-fill text-[9px]"></i>
-            <span>อนุมัติแล้ว</span>
+            <span>Approved</span>
           </span>
         } @else if (tab.approvalStatus === 'PENDING' || tab.approvalStatus === 'IN_REVIEW' || tab.approvalStatus === 'In Review' || tab.approvalStatus === 'PARTIALLY_APPROVED') {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-            title="กำลังรอการอนุมัติ (Pending Approval)"
+            title="Pending Approval"
           >
             <i class="bi bi-clock-history text-[9px]"></i>
-            <span>รออนุมัติ</span>
+            <span>Pending</span>
           </span>
         } @else if (tab.approvalStatus === 'REJECTED' || tab.approvalStatus === 'NEED_REVISION') {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
-            title="ปฏิเสธ / ต้องแก้ไข"
+            title="Rejected / Needs Revision"
           >
             <i class="bi bi-x-circle-fill text-[9px]"></i>
-            <span>{{ tab.approvalStatus === 'NEED_REVISION' ? 'ต้องแก้ไข' : 'ไม่อนุมัติ' }}</span>
+            <span>{{ tab.approvalStatus === 'NEED_REVISION' ? 'Needs Revision' : 'Rejected' }}</span>
           </span>
         } @else {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-400 dark:text-sky-300 border border-sky-500/30"
-            title="ยังไม่ส่งอนุมัติ (ฉบับร่าง)"
+            title="Draft"
           >
             <i class="bi bi-file-earmark-text text-[9px] text-sky-400"></i>
-            <span>ยังไม่อนุมัติ</span>
+            <span>Draft</span>
           </span>
         }
 
@@ -153,7 +153,7 @@
             (click)="editTab(tab.id); $event.stopPropagation()"
             class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
             [class.opacity-100]="currentTabId === tab.id"
-            title="แก้ไขข้อมูล / ส่ง Approve"
+            title="Edit / Submit for Approval"
           >
             <i class="bi bi-pencil text-xs"></i>
           </button>
@@ -165,7 +165,7 @@
             (click)="deleteTab(tab.id, $event)"
             class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
             [class.opacity-100]="currentTabId === tab.id"
-            title="ลบ Diagram"
+            title="Delete Diagram"
           >
             <i class="bi bi-x text-sm"></i>
           </button>
@@ -197,6 +197,12 @@
         <span class="font-mono text-[0.6rem] text-[var(--text-muted)]"
           >ID: {{ currentTabId.slice(0, 8) }}</span
         >
+        @if (currentTab?.version) {
+          <span class="text-[var(--text-muted)] mx-2">|</span>
+          <span class="font-mono text-xs text-[var(--text-muted)]"
+            >{{ currentTab?.version }}</span
+          >
+        }
       }
     </div>
     <div class="flex items-center gap-3">
@@ -231,14 +237,14 @@
       <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 border-b border-amber-300 text-sm text-amber-800">
         <div class="flex items-center gap-2">
           <i class="bi bi-lock-fill"></i>
-          Diagram นี้ผ่านการอนุมัติแล้ว (Baseline Locked) ไม่สามารถแก้ไขได้โดยตรง
+          Diagram นี้ผ่านการอนุมัติแล้ว (ล็อก Baseline) ไม่สามารถแก้ไขได้โดยตรง
         </div>
         <button
           (click)="requestChangeForCurrentTab()"
           class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-600 text-white text-xs font-medium hover:bg-amber-700 transition-colors"
         >
           <i class="bi bi-pencil-square"></i>
-          ขอแก้ไข (Open Change Request)
+          ขอแก้ไข
         </button>
       </div>
     }

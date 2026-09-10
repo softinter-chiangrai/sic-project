@@ -38,4 +38,11 @@ public interface DocumentVersionService {
     String promoteToMajorVersion(String currentVersion);
 
     boolean isVersionExists(String documentType, UUID documentId);
+
+    /**
+     * ดึงเลขเวอร์ชันล่าสุด (ไม่รวมรายการที่ถูกลบ) ของเอกสารนี้โดยตรงจากฐานข้อมูล
+     * ต่างจาก getVersions(...).stream().findFirst() ตรงที่ query แถวเดียวและกรอง isDelete=false เสมอ
+     * จึงเป็นแหล่งอ้างอิงที่น่าเชื่อถือกว่าเมื่อจะนำไปคำนวณเวอร์ชันถัดไป (increment / promote)
+     */
+    String getLatestVersionNo(String documentType, UUID documentId);
 }
