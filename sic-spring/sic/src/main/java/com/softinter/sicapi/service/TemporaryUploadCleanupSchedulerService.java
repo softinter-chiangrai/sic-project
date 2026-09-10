@@ -25,7 +25,11 @@ public class TemporaryUploadCleanupSchedulerService {
     // (Optional) รันครั้งแรกทันทีที่ application พร้อมทำงาน (เหมือน .NET ที่เรียก RunCleanupAsync ก่อนเข้า loop)
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
-        log.info("Application ready – running initial cleanup of expired temporary uploads");
-        fileStorageService.cleanupExpiredTemporaryUploads();
+        try {
+            log.info("Application ready – running initial cleanup of expired temporary uploads");
+            fileStorageService.cleanupExpiredTemporaryUploads();
+        } catch (Exception e) {
+            log.warn("Initial cleanup of expired temporary uploads skipped or encountered error: {}", e.getMessage());
+        }
     }
 }

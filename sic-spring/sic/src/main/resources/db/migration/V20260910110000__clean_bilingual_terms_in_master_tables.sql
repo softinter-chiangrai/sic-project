@@ -61,50 +61,62 @@ UPDATE pm_approval_flow_step
 SET step_name = 'ลูกค้ายืนยันผลการแก้ไข'
 WHERE step_name LIKE '%Customer Acceptance%';
 
--- 3. Clean db_parameter
+-- 3. Clean db_parameter (DOCUMENT_TYPE and all system parameters)
 UPDATE db_parameter 
 SET parameter_name_local = 'โครงการ' 
-WHERE parameter_name_local LIKE 'โครงการ (%';
+WHERE parameter_value = 'PROJECT' OR parameter_name_local LIKE 'โครงการ (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'ข้อกำหนดความต้องการ' 
-WHERE parameter_name_local LIKE 'ความต้องการ (%' OR parameter_name_local LIKE 'ข้อกำหนด (%';
+WHERE parameter_value = 'REQUIREMENT' OR parameter_name_local LIKE 'ความต้องการ (%' OR parameter_name_local LIKE 'ข้อกำหนด (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'ข้อกำหนดเชิงเทคนิค' 
-WHERE parameter_name_local LIKE 'ข้อกำหนดเชิงเทคนิค (%';
+WHERE parameter_value = 'SPECIFICATION' OR parameter_name_local LIKE 'ข้อกำหนดเชิงเทคนิค (%' OR parameter_name_local LIKE 'เอกสารกำหนดคุณลักษณะ (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'แผนภาพระบบ' 
-WHERE parameter_name_local LIKE 'แผนภาพระบบ (%';
+WHERE parameter_value = 'DIAGRAM' OR parameter_name_local LIKE 'แผนภาพระบบ (%' OR parameter_name_local LIKE 'แผนภาพกระแสข้อมูล (%' OR parameter_name_local LIKE 'แผนภาพความสัมพันธ์ข้อมูล (%';
+
+UPDATE db_parameter 
+SET parameter_name_local = 'การตรวจรับแบบดีไซน์' 
+WHERE parameter_value = 'DESIGN_REVIEW' OR parameter_name_local LIKE 'การตรวจรับแบบดีไซน์ (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'คำขอเปลี่ยนแปลง' 
-WHERE parameter_name_local LIKE 'คำขอเปลี่ยนแปลง (%';
+WHERE parameter_value = 'CHANGE_REQUEST' OR parameter_name_local LIKE 'คำขอเปลี่ยนแปลง (%';
+
+UPDATE db_parameter 
+SET parameter_name_local = 'แผนการทดสอบ' 
+WHERE parameter_value = 'TEST_PLAN' OR parameter_name_local LIKE 'แผนการทดสอบ (%';
+
+UPDATE db_parameter 
+SET parameter_name_local = 'การตรวจรับระบบโดยผู้ใช้' 
+WHERE parameter_value = 'UAT' OR parameter_name_local LIKE 'การตรวจรับระบบโดยผู้ใช้ (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'เอกสารส่งมอบงาน' 
-WHERE parameter_name_local LIKE 'เอกสารส่งมอบ (%' OR parameter_name_local LIKE 'ส่งมอบงาน (%';
+WHERE parameter_value = 'DELIVERY' OR parameter_name_local LIKE 'เอกสารส่งมอบ (%' OR parameter_name_local LIKE 'ส่งมอบงาน (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'สัญญา' 
-WHERE parameter_name_local LIKE 'สัญญา (%';
+WHERE parameter_value = 'CONTRACT' OR parameter_name_local LIKE 'สัญญา (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'ใบแจ้งหนี้' 
-WHERE parameter_name_local LIKE 'ใบแจ้งหนี้ (%';
+WHERE parameter_value = 'INVOICE' OR parameter_name_local LIKE 'ใบแจ้งหนี้ (%' OR parameter_name_local LIKE 'ใบแจ้งหนี้ / ใบเสร็จ%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'ตั๋วแจ้งปัญหา MA' 
-WHERE parameter_name_local LIKE 'ใบแจ้งปัญหา% (MA Ticket)%' OR parameter_name_local LIKE 'ตั๋วแจ้งปัญหา MA (%';
+WHERE parameter_value = 'MA_TICKET' OR parameter_name_local LIKE 'ใบแจ้งปัญหา% (MA Ticket)%' OR parameter_name_local LIKE 'ตั๋วแจ้งปัญหา MA (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'ต่ออายุสัญญาบำรุงรักษา' 
-WHERE parameter_name_local LIKE 'ต่ออายุสัญญาบำรุงรักษา (%';
+WHERE parameter_value = 'MA_RENEWAL' OR parameter_name_local LIKE 'ต่ออายุสัญญาบำรุงรักษา (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'คู่มือการใช้งาน' 
-WHERE parameter_name_local LIKE 'คู่มือการใช้งาน (%';
+WHERE parameter_value = 'USER_MANUAL' OR parameter_name_local LIKE 'คู่มือการใช้งาน (%';
 
 UPDATE db_parameter 
 SET parameter_name_local = 'ลูกค้าทดสอบ' 
@@ -118,3 +130,4 @@ WHERE name_local = 'ควบคุมการเปลี่ยนแปลง
 UPDATE su_program 
 SET name_local = 'การบำรุงรักษาระบบ' 
 WHERE name_local = 'การบำรุงรักษา (MA Ticket)';
+

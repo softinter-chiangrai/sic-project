@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.entity.su.SuUpload;
 
@@ -31,6 +32,7 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
     List<SuUpload> findAllByUploadGroupIdAndIsActiveFalse(@Param("groupId") UUID uploadGroupId);
 
     @Modifying
+    @Transactional
     @Query("UPDATE SuUpload u SET u.isDelete = true, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
            "WHERE u.id = :id AND u.isActive = false AND u.tempExpiresAt < :now")
     int softDeleteExpiredUpload(@Param("id") UUID id,

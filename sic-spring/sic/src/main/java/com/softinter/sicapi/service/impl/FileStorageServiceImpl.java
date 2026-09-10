@@ -526,7 +526,6 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     // ==================== Cleanup Expired Temporary Uploads ====================
     @Override
-    @Transactional
     public void cleanupExpiredTemporaryUploads() {
         Instant now = Instant.now();
         List<SuUpload> expired;

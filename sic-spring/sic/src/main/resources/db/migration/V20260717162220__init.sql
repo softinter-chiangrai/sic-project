@@ -282,8 +282,8 @@ CREATE TABLE IF NOT EXISTS su_business_audit (
     CONSTRAINT fk_audit_business FOREIGN KEY (business_id) REFERENCES su_business(id)
 );
 
--- 12. su_business_invite
-CREATE TABLE IF NOT EXISTS su_business_invite (
+-- 12. su_program
+CREATE TABLE IF NOT EXISTS su_program (
     id UUID PRIMARY KEY,
     created_by VARCHAR(100) NOT NULL DEFAULT 'system',
     created_date TIMESTAMPTZ NOT NULL,
@@ -292,19 +292,24 @@ CREATE TABLE IF NOT EXISTS su_business_invite (
     is_delete BOOLEAN NOT NULL DEFAULT FALSE,
     delete_by VARCHAR(100),
     delete_date TIMESTAMPTZ,
-    business_id UUID NOT NULL,
-    role_id UUID NOT NULL,
-    invite_type VARCHAR(50) NOT NULL,
-    invite_email VARCHAR(320),
-    invite_token VARCHAR(300),
-    is_activated BOOLEAN NOT NULL DEFAULT FALSE,
-    expire_at TIMESTAMPTZ,
-    max_uses INTEGER,
-    use_count INTEGER DEFAULT 0,
-    CONSTRAINT fk_invite_business FOREIGN KEY (business_id) REFERENCES su_business(id), 
-    CONSTRAINT fk_invite_role FOREIGN KEY (role_id) REFERENCES su_business_role(id)
+    parent_program_id UUID,
+    program_code VARCHAR(50) NOT NULL,
+    icon VARCHAR(100),
+    name_en VARCHAR(255) NOT NULL,
+    name_local VARCHAR(255) NOT NULL,
+    route_path VARCHAR(500),
+    sort_order INTEGER,
+    is_active BOOLEAN NOT NULL DEFAULT FALSE,
+    is_add BOOLEAN NOT NULL DEFAULT FALSE,
+    is_back BOOLEAN NOT NULL DEFAULT FALSE,
+    is_print BOOLEAN NOT NULL DEFAULT FALSE,
+    is_remove BOOLEAN NOT NULL DEFAULT FALSE,
+    is_save BOOLEAN NOT NULL DEFAULT FALSE,
+    is_search BOOLEAN NOT NULL DEFAULT FALSE,
+    CONSTRAINT fk_program_parent FOREIGN KEY (parent_program_id) REFERENCES su_program(id)
 );
-CREATE INDEX IF NOT EXISTS idx_invite_business ON su_business_invite (business_id);
+
+CREATE INDEX IF NOT EXISTS idx_program_code ON su_program (program_code);
 
 -- 13. su_business_role
 CREATE TABLE IF NOT EXISTS su_business_role (
@@ -331,7 +336,31 @@ CREATE TABLE IF NOT EXISTS su_business_role (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_business_role_code ON su_business_role (business_id, role_code);
 
--- 14. su_business_role_program
+-- 14. su_business_invite
+CREATE TABLE IF NOT EXISTS su_business_invite (
+    id UUID PRIMARY KEY,
+    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
+    created_date TIMESTAMPTZ NOT NULL,
+    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
+    updated_date TIMESTAMPTZ NOT NULL,
+    is_delete BOOLEAN NOT NULL DEFAULT FALSE,
+    delete_by VARCHAR(100),
+    delete_date TIMESTAMPTZ,
+    business_id UUID NOT NULL,
+    role_id UUID NOT NULL,
+    invite_type VARCHAR(50) NOT NULL,
+    invite_email VARCHAR(320),
+    invite_token VARCHAR(300),
+    is_activated BOOLEAN NOT NULL DEFAULT FALSE,
+    expire_at TIMESTAMPTZ,
+    max_uses INTEGER,
+    use_count INTEGER DEFAULT 0,
+    CONSTRAINT fk_invite_business FOREIGN KEY (business_id) REFERENCES su_business(id), 
+    CONSTRAINT fk_invite_role FOREIGN KEY (role_id) REFERENCES su_business_role(id)
+);
+CREATE INDEX IF NOT EXISTS idx_invite_business ON su_business_invite (business_id);
+
+-- 15. su_business_role_program
 CREATE TABLE IF NOT EXISTS su_business_role_program (
     id UUID PRIMARY KEY,
     created_by VARCHAR(100) NOT NULL DEFAULT 'system',
@@ -356,7 +385,7 @@ CREATE TABLE IF NOT EXISTS su_business_role_program (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_business_role_program ON su_business_role_program (business_role_id, program_id);
 
--- 15. su_user_business
+-- 16. su_user_business
 CREATE TABLE IF NOT EXISTS su_user_business (
     id UUID PRIMARY KEY,
     created_by VARCHAR(100) NOT NULL DEFAULT 'system',
@@ -375,7 +404,7 @@ CREATE TABLE IF NOT EXISTS su_user_business (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_business ON su_user_business (user_id, business_id);
 
--- 16. su_user_business_role
+-- 17. su_user_business_role
 CREATE TABLE IF NOT EXISTS su_user_business_role (
     id UUID PRIMARY KEY,
     created_by VARCHAR(100) NOT NULL DEFAULT 'system',
@@ -395,7 +424,7 @@ CREATE TABLE IF NOT EXISTS su_user_business_role (
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_business_role ON su_user_business_role (user_business_id, business_role_id);
 
--- 17. su_profile
+-- 18. su_profile
 CREATE TABLE IF NOT EXISTS su_profile (
     id UUID PRIMARY KEY,
     created_by VARCHAR(100) NOT NULL DEFAULT 'system',
@@ -433,35 +462,6 @@ CREATE TABLE IF NOT EXISTS su_profile (
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_id ON su_profile (user_id);
-
--- 18. su_program
-CREATE TABLE IF NOT EXISTS su_program (
-    id UUID PRIMARY KEY,
-    created_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    created_date TIMESTAMPTZ NOT NULL,
-    updated_by VARCHAR(100) NOT NULL DEFAULT 'system',
-    updated_date TIMESTAMPTZ NOT NULL,
-    is_delete BOOLEAN NOT NULL DEFAULT FALSE,
-    delete_by VARCHAR(100),
-    delete_date TIMESTAMPTZ,
-    parent_program_id UUID,
-    program_code VARCHAR(50) NOT NULL,
-    icon VARCHAR(100),
-    name_en VARCHAR(255) NOT NULL,
-    name_local VARCHAR(255) NOT NULL,
-    route_path VARCHAR(500),
-    sort_order INTEGER,
-    is_active BOOLEAN NOT NULL DEFAULT FALSE,
-    is_add BOOLEAN NOT NULL DEFAULT FALSE,
-    is_back BOOLEAN NOT NULL DEFAULT FALSE,
-    is_print BOOLEAN NOT NULL DEFAULT FALSE,
-    is_remove BOOLEAN NOT NULL DEFAULT FALSE,
-    is_save BOOLEAN NOT NULL DEFAULT FALSE,
-    is_search BOOLEAN NOT NULL DEFAULT FALSE,
-    CONSTRAINT fk_program_parent FOREIGN KEY (parent_program_id) REFERENCES su_program(id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_program_code ON su_program (program_code);
 
 -- ============================================================
 -- ส่วนที่ 3: ระบบแชท / สื่อสาร (ตารางที่ 19-24)
@@ -804,7 +804,7 @@ CREATE TABLE IF NOT EXISTS pm_requirement_change_request (
 -- สร้างตาราง Impact Analysis
 CREATE TABLE IF NOT EXISTS pm_change_impact_analysis (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    change_request_id UUID NOT NULL REFERENCES pm_change_request(id),
+    change_request_id UUID NOT NULL REFERENCES pm_requirement_change_request(id),
     dfd_impact TEXT,
     er_impact TEXT,
     ui_impact TEXT,
@@ -828,7 +828,7 @@ CREATE TABLE IF NOT EXISTS pm_change_impact_analysis (
     updated_date TIMESTAMP,
     delete_by VARCHAR(100),
     delete_date TIMESTAMP,
-    is_delete BOOLEAN DEFAULT FALSE,
+    is_delete BOOLEAN DEFAULT FALSE
 );
 
 -- สร้าง Index

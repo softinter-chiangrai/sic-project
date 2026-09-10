@@ -12,6 +12,7 @@ export interface PmUserManualSectionModel {
   sectionTitle: string;
   content?: string;
   sortOrder?: number;
+  specId?: string;
   permissionRoles?: string;
   screenshotGroupId?: string;
   state?: number;

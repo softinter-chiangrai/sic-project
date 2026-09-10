@@ -136,12 +136,6 @@
             <version>2.5.0</version>
         </dependency>
 
-        <!-- Jackson -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
         <!-- Flyway -->
         <dependency>
             <groupId>org.flywaydb</groupId>
@@ -253,11 +247,11 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>${flyway.version}</version>
                 <configuration>
-                    <url>jdbc:postgresql://localhost:54320/sic_app</url>
-                    <user>sic-app</user>
-                    <password>SicApp2026</password>
+                    <url>jdbc:postgresql://localhost:54320/postgres</url>
+                    <user>administrator</user>
+                    <password>Sic2026</password>
                     <baselineOnMigrate>true</baselineOnMigrate>
-                    <baselineVersion>1</baselineVersion>
+                    <baselineVersion>0</baselineVersion>
                     <validateOnMigrate>false</validateOnMigrate>
                     <locations>
                         <location>filesystem:src/main/resources/db/migration</location>

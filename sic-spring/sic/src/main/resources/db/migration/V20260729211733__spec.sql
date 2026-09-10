@@ -218,7 +218,6 @@ DROP TABLE IF EXISTS pm_specification_requirement;
 CREATE INDEX IF NOT EXISTS idx_trace_source_type_id ON pm_trace_link(source_type, source_id);
 CREATE INDEX IF NOT EXISTS idx_trace_target_type_id ON pm_trace_link(target_type, target_id);
 
-DROP TABLE IF EXISTS pm_change_impact_analysis CASCADE;
 DROP TABLE IF EXISTS pm_requirement_change_request CASCADE;
 
 -- 1. สร้างตาราง Change Request
