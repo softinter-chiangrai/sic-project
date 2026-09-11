@@ -24,6 +24,11 @@ public class FlywayConfig {
                 .schemas("public")
                 .table("flyway_schema_history")
                 .load();
+        try {
+            flyway.repair();
+        } catch (Exception e) {
+            log.warn("Flyway repair encountered an issue: {}", e.getMessage());
+        }
         log.info("✅ Flyway configured successfully.");
         return flyway;
     }

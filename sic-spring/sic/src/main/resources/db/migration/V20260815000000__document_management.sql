@@ -74,6 +74,18 @@ CREATE TABLE IF NOT EXISTS pm_user_manual (
     updated_date        TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 );
 
+-- Ensure columns exist in case table existed previously with older schema
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS business_id UUID;
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS project_id UUID;
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS manual_code VARCHAR(50);
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS manual_title VARCHAR(255);
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS manual_type VARCHAR(50) DEFAULT 'USER';
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT '1.0';
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS related_spec_id UUID;
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS delivery_id UUID;
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS status VARCHAR(30) DEFAULT 'DRAFT';
+ALTER TABLE pm_user_manual ADD COLUMN IF NOT EXISTS attachment_group_id UUID;
+
 CREATE INDEX IF NOT EXISTS idx_pm_user_manual_project ON pm_user_manual(project_id, business_id);
 
 -- 4. pm_user_manual_section
@@ -107,7 +119,7 @@ ALTER TABLE pm_document_version ADD COLUMN IF NOT EXISTS file_ref_id UUID;
 
 
 
-CREATE TABLE su_notification (
+CREATE TABLE IF NOT EXISTS su_notification (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     business_id UUID NOT NULL,
     recipient_user_id VARCHAR(100) NOT NULL,

@@ -1,7 +1,13 @@
 -- ============================================================
 -- 1. เปลี่ยนชื่อตาราง
 -- ============================================================
-ALTER TABLE pm_audit_log RENAME TO su_audit_log;
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'pm_audit_log') AND
+       NOT EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'su_audit_log') THEN
+        ALTER TABLE pm_audit_log RENAME TO su_audit_log;
+    END IF;
+END $$;
 
 -- ============================================================
 -- 2. เพิ่มคอลัมน์ที่ขาดหายไป (ใช้ DO block เพื่อป้องกัน error)
@@ -69,7 +75,7 @@ CREATE INDEX IF NOT EXISTS idx_audit_created ON su_audit_log (created_date DESC)
 CREATE INDEX IF NOT EXISTS idx_audit_business ON su_audit_log (business_id);
 
 
-ALTER TABLE pm_test_case ADD COLUMN task_id UUID;
+ALTER TABLE pm_test_case ADD COLUMN IF NOT EXISTS task_id UUID;
 ALTER TABLE pm_test_case ADD COLUMN IF NOT EXISTS scenario_name VARCHAR(255);
 ALTER TABLE pm_test_case ALTER COLUMN scenario_id DROP NOT NULL;
 

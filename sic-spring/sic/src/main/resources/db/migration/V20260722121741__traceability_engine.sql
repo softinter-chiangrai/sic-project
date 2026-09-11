@@ -1,15 +1,18 @@
+DO $$ BEGIN
+    CREATE TYPE trace_relationship AS ENUM (
+        'DESIGNED_BY',
+        'IMPLEMENTED_BY',
+        'DOCUMENTED_BY',
+        'VERIFIED_BY',
+        'FAILED_BY',
+        'AFFECTED_BY',
+        'RELATED_TO'
+    );
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TYPE trace_relationship AS ENUM (
-    'DESIGNED_BY',
-    'IMPLEMENTED_BY',
-    'DOCUMENTED_BY',
-    'VERIFIED_BY',
-    'FAILED_BY',
-    'AFFECTED_BY',
-    'RELATED_TO'
-);
-
-CREATE TABLE pm_trace_link (
+CREATE TABLE IF NOT EXISTS pm_trace_link (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     project_id UUID NOT NULL,
     source_type VARCHAR(50) NOT NULL,
@@ -26,26 +29,38 @@ CREATE TABLE pm_trace_link (
     delete_date TIMESTAMPTZ
 );
 
-CREATE INDEX idx_trace_source ON pm_trace_link (source_type, source_id);
-CREATE INDEX idx_trace_target ON pm_trace_link (target_type, target_id);
-CREATE INDEX idx_trace_project ON pm_trace_link (project_id);
-CREATE INDEX idx_trace_relationship ON pm_trace_link (relationship_type);
+CREATE INDEX IF NOT EXISTS idx_trace_source ON pm_trace_link (source_type, source_id);
+CREATE INDEX IF NOT EXISTS idx_trace_target ON pm_trace_link (target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_trace_project ON pm_trace_link (project_id);
+CREATE INDEX IF NOT EXISTS idx_trace_relationship ON pm_trace_link (relationship_type);
 
-ALTER TABLE pm_trace_link ADD CONSTRAINT fk_trace_project
-    FOREIGN KEY (project_id) REFERENCES pm_customer_project(id);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_trace_project') THEN
+        ALTER TABLE pm_trace_link ADD CONSTRAINT fk_trace_project
+            FOREIGN KEY (project_id) REFERENCES pm_customer_project(id);
+    END IF;
+END $$;
 
 
 -- เพิ่มคอลัมน์ requirement_id, version, is_active
-ALTER TABLE pm_specification ADD COLUMN requirement_id UUID;
-ALTER TABLE pm_specification ADD COLUMN version VARCHAR(20) DEFAULT '1.0';
-ALTER TABLE pm_specification ADD COLUMN is_active BOOLEAN DEFAULT TRUE;
+ALTER TABLE pm_specification ADD COLUMN IF NOT EXISTS requirement_id UUID;
+ALTER TABLE pm_specification ADD COLUMN IF NOT EXISTS version VARCHAR(20) DEFAULT '1.0';
+ALTER TABLE pm_specification ADD COLUMN IF NOT EXISTS is_active BOOLEAN DEFAULT TRUE;
 
 -- เพิ่ม Foreign Key และ Index
-ALTER TABLE pm_specification ADD CONSTRAINT fk_spec_requirement 
-    FOREIGN KEY (requirement_id) REFERENCES pm_requirement(id);
-CREATE INDEX idx_spec_requirement ON pm_specification (requirement_id);
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'fk_spec_requirement') THEN
+        ALTER TABLE pm_specification ADD CONSTRAINT fk_spec_requirement 
+            FOREIGN KEY (requirement_id) REFERENCES pm_requirement(id);
+    END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS idx_spec_requirement ON pm_specification (requirement_id);
 
-ALTER TABLE pm_specification RENAME COLUMN related_er TO related_diagram;
+DO $$ BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='pm_specification' AND column_name='related_er') THEN
+        ALTER TABLE pm_specification RENAME COLUMN related_er TO related_diagram;
+    END IF;
+END $$;
 
 
 -- เพิ่มคอลัมน์ subject และ attachment_group_id ถ้ายังไม่มี
@@ -60,5 +75,5 @@ CREATE INDEX IF NOT EXISTS idx_comment_parent ON pm_comment (parent_comment_id);
 -- (optional) ถ้าต้องการค้นหาตาม target_type, target_id และ parent null
 CREATE INDEX IF NOT EXISTS idx_comment_target_parent_null ON pm_comment (target_type, target_id) WHERE parent_comment_id IS NULL AND is_delete = FALSE;
 
-ALTER TABLE su_upload ADD COLUMN session_id UUID;
-CREATE INDEX idx_session_id ON su_upload(session_id);
+ALTER TABLE su_upload ADD COLUMN IF NOT EXISTS session_id UUID;
+CREATE INDEX IF NOT EXISTS idx_session_id ON su_upload(session_id);
