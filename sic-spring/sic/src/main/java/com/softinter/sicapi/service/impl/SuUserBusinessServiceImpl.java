@@ -156,6 +156,9 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
         if (ub.getBusiness() != null) {
             response.setBusinessId(ub.getBusiness().getId());
             response.setBusinessCode(ub.getBusiness().getBusinessCode());
+            response.setBusinessName(LocalizationHelper.getBusinessName(ub.getBusiness()));
+        } else if (ub.getBusinessId() != null) {
+            response.setBusinessId(ub.getBusinessId());
         }
         response.setActive(Boolean.TRUE.equals(ub.getIsActive()));
         response.setDefault(Boolean.TRUE.equals(ub.getIsDefault()));

@@ -24,10 +24,10 @@ public interface SuUserBusinessRepository extends JpaRepository<SuUserBusiness, 
 
     List<SuUserBusiness> findByBusinessIdAndIsActiveTrue(UUID businessId);
 
-    @Query("SELECT ub FROM SuUserBusiness ub JOIN FETCH ub.business b JOIN FETCH b.title WHERE ub.userId = :userId AND ub.isActive = true AND b.isActive = true AND b.isDelete = false ORDER BY ub.isDefault DESC, b.id")
+    @Query("SELECT ub FROM SuUserBusiness ub JOIN FETCH ub.business b LEFT JOIN FETCH b.title WHERE ub.userId = :userId AND ub.isActive = true AND b.isActive = true AND b.isDelete = false ORDER BY ub.isDefault DESC, b.id")
     List<SuUserBusiness> findActiveByUserId(@Param("userId") String userId);
 
-    @Query("SELECT ub FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.business.id = :businessId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false")
+    @Query("SELECT ub FROM SuUserBusiness ub LEFT JOIN FETCH ub.business b LEFT JOIN FETCH b.title WHERE ub.userId = :userId AND ub.businessId = :businessId AND ub.isActive = true AND b.isActive = true AND b.isDelete = false")
     Optional<SuUserBusiness> findByUserIdAndBusinessId(@Param("userId") String userId, @Param("businessId") UUID businessId);
 
     @Query("SELECT CASE WHEN COUNT(ub) > 0 THEN true ELSE false END FROM SuUserBusiness ub WHERE ub.userId = :userId AND ub.isActive = true AND ub.business.isActive = true AND ub.business.isDelete = false AND ub.business.id = :businessId")

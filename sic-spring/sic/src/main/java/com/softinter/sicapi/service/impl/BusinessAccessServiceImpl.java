@@ -80,13 +80,18 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
                 .map(ub -> {
                     SuBusiness business = ub.getBusiness();
                     BusinessResponseDto dto = new BusinessResponseDto();
-                    dto.setId(business.getId());
-                    dto.setCode(business.getBusinessCode());
+                    if (business != null) {
+                        dto.setId(business.getId());
+                        dto.setCode(business.getBusinessCode());
+                        // ✅ ใช้ LocalizationHelper
+                        String name = LocalizationHelper.getBusinessName(business);
+                        dto.setName(name != null ? name : business.getBusinessCode());
+                    } else if (ub.getBusinessId() != null) {
+                        dto.setId(ub.getBusinessId());
+                        dto.setCode("-");
+                        dto.setName("-");
+                    }
                     dto.setIsDefault(ub.getIsDefault());
-
-                    // ✅ ใช้ LocalizationHelper
-                    String name = LocalizationHelper.getBusinessName(business);
-                    dto.setName(name != null ? name : business.getBusinessCode());
                     return dto;
                 })
                 .collect(Collectors.toList());
@@ -120,11 +125,15 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         businessAuditRepository.save(audit);
 
         SuBusiness business = userBusiness.getBusiness();
+        if (business == null && businessId != null) {
+            business = businessRepository.findById(businessId).orElse(null);
+        }
 
         // ✅ ใช้ LocalizationHelper แทน if/else + NameUtilityService
-        String businessName = LocalizationHelper.getBusinessName(business);
+        String businessName = business != null ? LocalizationHelper.getBusinessName(business) : null;
+        String businessCode = business != null ? business.getBusinessCode() : (businessId != null ? businessId.toString() : "-");
         if (businessName == null || businessName.isBlank()) {
-            businessName = business.getBusinessCode();
+            businessName = businessCode;
         }
 
         ChangeBusinessResponse response = new ChangeBusinessResponse();
@@ -136,7 +145,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
 
         try {
             auditLogService.log("SWITCH_BUSINESS", "Business Management",
-                    "สลับไปยังธุรกิจ: " + businessName + " (" + business.getBusinessCode() + ")",
+                    "สลับไปยังธุรกิจ: " + businessName + " (" + businessCode + ")",
                     "BUSINESS", businessId, null, null, "Success", null);
         } catch (Exception e) {
             log.error("ผิดพลาด audit log SWITCH_BUSINESS: {}", e.getMessage(), e);
@@ -232,6 +241,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             SuUserBusiness userBusiness = new SuUserBusiness();
             userBusiness.setUserId(userId);
             userBusiness.setBusinessId(business.getId());
+            userBusiness.setBusiness(business);
             userBusiness.setIsActive(true);
             boolean isFirst = userBusinessRepository.countByUserId(userId) == 0;
             userBusiness.setIsDefault(isFirst);

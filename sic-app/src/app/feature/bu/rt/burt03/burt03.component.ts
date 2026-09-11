@@ -99,19 +99,14 @@ export class Burt03Component implements OnInit {
   }
 
   loadBusinessId() {
-    const stored = localStorage.getItem('businessId');
-    if (stored) {
-      this.businessId.set(stored);
-      this.loadRoles();
-      return;
-    }
-
     this.service.getMyBusinesses().subscribe({
       next: (businesses) => {
         if (businesses && businesses.length > 0) {
-          const defaultBiz = businesses.find((b) => b.isDefault) || businesses[0];
-          this.businessId.set(defaultBiz.id);
-          localStorage.setItem('businessId', defaultBiz.id);
+          const stored = localStorage.getItem('businessId');
+          const matched = businesses.find((b) => b.id === stored);
+          const activeBiz = matched || businesses.find((b) => b.isDefault) || businesses[0];
+          this.businessId.set(activeBiz.id);
+          localStorage.setItem('businessId', activeBiz.id);
           this.loadRoles();
         } else {
           this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');

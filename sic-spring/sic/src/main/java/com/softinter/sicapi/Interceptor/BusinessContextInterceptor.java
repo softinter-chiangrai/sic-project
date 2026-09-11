@@ -69,17 +69,22 @@ public class BusinessContextInterceptor implements HandlerInterceptor {
                         .findFirst()
                         .orElse(null);
                 if (defaultBiz != null) {
-                    UUID bizId = defaultBiz.getBusiness().getId();
-                    BusinessContextHolder.setBusinessId(bizId);
-                    log.debug("Set businessId from default: {}", bizId);
-                    return true;
+                    UUID bizId = defaultBiz.getBusiness() != null ? defaultBiz.getBusiness().getId() : defaultBiz.getBusinessId();
+                    if (bizId != null) {
+                        BusinessContextHolder.setBusinessId(bizId);
+                        log.debug("Set businessId from default: {}", bizId);
+                        return true;
+                    }
                 }
 
                 // Fallback to first business
-                UUID firstBizId = userBusinesses.get(0).getBusiness().getId();
-                BusinessContextHolder.setBusinessId(firstBizId);
-                log.debug("No default, set businessId from first: {}", firstBizId);
-                return true;
+                var firstUb = userBusinesses.get(0);
+                UUID firstBizId = firstUb.getBusiness() != null ? firstUb.getBusiness().getId() : firstUb.getBusinessId();
+                if (firstBizId != null) {
+                    BusinessContextHolder.setBusinessId(firstBizId);
+                    log.debug("No default, set businessId from first: {}", firstBizId);
+                    return true;
+                }
             }
 
             // 3. Fallback: audit trail (session + clientIp)
