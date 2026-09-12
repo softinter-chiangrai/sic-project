@@ -1,12 +1,20 @@
 server:
   port: 5265
 
+# spring:
+#   datasource:
+#     url: jdbc:postgresql://localhost:54320/sic_app
+#     username: sic-app
+#     password: SicApp2026
+#     driver-class-name: org.postgresql.Driver
+
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:54320/sic_app
-    username: sic-app
-    password: SicApp2026
+    url: jdbc:postgresql://localhost:54320/postgres
+    username: administrator
+    password: Sic2026
     driver-class-name: org.postgresql.Driver
+
 
   flyway:
     enabled: true
