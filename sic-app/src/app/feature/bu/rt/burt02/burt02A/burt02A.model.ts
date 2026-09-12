@@ -20,8 +20,14 @@ export interface ModulePermission {
   moduleId: string;
   moduleCode: string;
   moduleName: string;
-  level: string;
   id?: string | null;
+  isActive: boolean;
+  isAdd: boolean;
+  isBack: boolean;
+  isPrint: boolean;
+  isRemove: boolean;
+  isSave: boolean;
+  isSearch: boolean;
 }
 
 export interface RolePermissionData {

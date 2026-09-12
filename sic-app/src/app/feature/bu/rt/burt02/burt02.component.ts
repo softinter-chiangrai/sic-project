@@ -225,13 +225,23 @@ export class Burt02Component implements OnInit {
       .pipe(finalize(() => this.isLoadingPermissions.set(false)))
       .subscribe({
         next: (data) => {
-          const permissions: ProgramPermissionSummary[] = data.modules.map((m) => ({
-            moduleId: m.moduleId,
-            moduleCode: m.moduleCode,
-            moduleName: m.moduleName, // ✅ ใช้ moduleName ที่แปลแล้ว
-            level: m.level,
-            isActive: m.level !== 'None',
-          }));
+          const permissions: ProgramPermissionSummary[] = data.modules.map((m) => {
+            const actions: string[] = [];
+            if (m.isAdd) actions.push('Add');
+            if (m.isSave) actions.push('Save');
+            if (m.isRemove) actions.push('Delete');
+            if (m.isPrint) actions.push('Print');
+            if (m.isSearch) actions.push('Search');
+            const levelText = actions.length > 0 ? actions.join(', ') : (m.isActive ? 'เปิดใช้งาน' : 'ไม่มีสิทธิ์');
+
+            return {
+              moduleId: m.moduleId,
+              moduleCode: m.moduleCode,
+              moduleName: m.moduleName,
+              level: levelText,
+              isActive: m.isActive,
+            };
+          });
 
           const updated = this.roles().map((r) => {
             if (r.roleId === roleId) {

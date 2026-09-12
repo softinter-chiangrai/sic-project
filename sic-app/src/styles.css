@@ -7,6 +7,13 @@
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+html, body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+
 /* =========================
    Prompt
    ========================= */
@@ -65,7 +72,6 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+0E00-0E7F;
 }
 
 @font-face {
@@ -74,7 +80,6 @@
   font-weight: 400;
   font-style: italic;
   font-display: swap;
-  unicode-range: U+0E00-0E7F;
 }
 
 @font-face {
@@ -233,13 +238,13 @@
   --crm-info: #3b82f6;          /* ✅ เพิ่ม */
 
   /* Light Theme */
-  --light-bg: #fafafa;
+  --light-bg: #f8fafc;
   --light-sidebar: #ffffff;
-  --light-sidebar-hover: #f3f4f6;
-  --light-text: #4b5563;
-  --light-text-muted: #9ca3af;
-  --light-text-active: #111827;
-  --light-border: #d8d8da;
+  --light-sidebar-hover: #f1f5f9;
+  --light-text: #334155;
+  --light-text-muted: #64748b;
+  --light-text-active: #0f172a;
+  --light-border: #e2e8f0;
 
   /* Dark Theme */
   --dark-bg: #0f172a;

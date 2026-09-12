@@ -7,7 +7,6 @@ import {
   ChangeDetectorRef,
   Component,
   computed,
-  HostListener,
   inject,
   Injectable,
   OnInit,
@@ -22,65 +21,14 @@ import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicPaginationComponent } from '../../../../../core/component/sic-pagination/sic-pagination.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { burt03Service } from '../../burt03/burt03.service';
-
-// ============================================================
-// 1. Permission Levels
-// ============================================================
-export const PERMISSION_LEVELS = [
-  { value: 'Full', label: 'เต็มรูปแบบ (Full)', color: 'purple' },
-  { value: 'Edit', label: 'แก้ไข/เพิ่ม (Edit)', color: 'blue' },
-  { value: 'Approve', label: 'อนุมัติ (Approve)', color: 'emerald' },
-  { value: 'View', label: 'ดูอย่างเดียว (View)', color: 'gray' },
-  { value: 'None', label: 'ไม่มีสิทธิ์ (None)', color: 'gray' },
-];
-
-// ============================================================
-// 2. Conversion functions
-// ============================================================
-export function mapBooleansToLevel(p: {
-  isAdd: boolean;
-  isBack: boolean;
-  isPrint: boolean;
-  isRemove: boolean;
-  isSave: boolean;
-  isSearch: boolean;
-}): string {
-  if (p.isAdd && p.isSave && p.isRemove && p.isPrint && p.isBack && p.isSearch) return 'Full';
-  if (p.isAdd && p.isSave && !p.isRemove && !p.isPrint && p.isBack && p.isSearch) return 'Edit';
-  if (!p.isAdd && p.isSave && !p.isRemove && !p.isPrint && p.isBack && p.isSearch) return 'Approve';
-  if (!p.isAdd && !p.isSave && !p.isRemove && !p.isPrint && p.isBack && p.isSearch) return 'View';
-  return 'None';
-}
-
-export function mapLevelToBooleans(level: string): {
-  isAdd: boolean;
-  isBack: boolean;
-  isPrint: boolean;
-  isRemove: boolean;
-  isSave: boolean;
-  isSearch: boolean;
-} {
-  return {
-    isAdd: level === 'Full' || level === 'Edit',
-    isSave: level === 'Full' || level === 'Edit' || level === 'Approve',
-    isRemove: level === 'Full',
-    isPrint: level === 'Full',
-    isBack: level !== 'None',
-    isSearch: level !== 'None',
-  };
-}
-
-// ============================================================
-// 3. Models
-// ============================================================
 import { ModulePermission, RolePermissionData } from './burt02A.model';
 
-
 // ============================================================
-// 4. Service
+// Service
 // ============================================================
 @Injectable({ providedIn: 'root' })
 export class burt02AService {
@@ -93,21 +41,6 @@ export class burt02AService {
     return this.http.get<any[]>(url, { params }).pipe(
       map((rolePrograms) => {
         const modules: ModulePermission[] = rolePrograms.map((rp) => {
-          let level: string;
-          if (rp.active) {
-            level = mapBooleansToLevel({
-              isAdd: rp.add || false,
-              isBack: rp.back || false,
-              isPrint: rp.print || false,
-              isRemove: rp.remove || false,
-              isSave: rp.save || false,
-              isSearch: rp.search || false,
-            });
-          } else {
-            level = 'None';
-          }
-
-          // ✅ ใช้ programName (แปลแล้ว) เป็นอันดับแรก
           const moduleName =
             rp.programName || rp.programNameLocal || rp.programNameEn || rp.programCode;
 
@@ -115,18 +48,23 @@ export class burt02AService {
             moduleId: rp.programId,
             moduleCode: rp.programCode,
             moduleName: moduleName,
-            level: level,
             id: rp.id || null,
+            isActive: rp.active ?? false,
+            isAdd: rp.add ?? false,
+            isBack: rp.back ?? true,
+            isPrint: rp.print ?? false,
+            isRemove: rp.remove ?? false,
+            isSave: rp.save ?? false,
+            isSearch: rp.search ?? false,
           };
         });
 
-        // ดึง businessRoleCode จากรายการแรก
         const roleCode = rolePrograms.length > 0 ? rolePrograms[0].businessRoleCode : '';
 
         return {
           roleId: roleId,
           roleCode: roleCode,
-          roleName: '', // จะถูก set จาก component
+          roleName: '',
           modules: modules,
         };
       }),
@@ -135,18 +73,17 @@ export class burt02AService {
 
   saveRolePermissions(data: RolePermissionData): Observable<string> {
     const modulesReq = data.modules.map((mod) => {
-      const perms = mapLevelToBooleans(mod.level);
       return {
         id: mod.id || null,
         businessRoleId: data.roleId,
         programId: mod.moduleId,
-        isActive: mod.level !== 'None',
-        isAdd: perms.isAdd,
-        isBack: perms.isBack,
-        isPrint: perms.isPrint,
-        isRemove: perms.isRemove,
-        isSave: perms.isSave,
-        isSearch: perms.isSearch,
+        isActive: mod.isActive,
+        isAdd: mod.isAdd,
+        isBack: mod.isBack,
+        isPrint: mod.isPrint,
+        isRemove: mod.isRemove,
+        isSave: mod.isSave,
+        isSearch: mod.isSearch,
       };
     });
 
@@ -160,7 +97,7 @@ export class burt02AService {
 }
 
 // ============================================================
-// 5. Component
+// Component
 // ============================================================
 @Component({
   selector: 'app-burt02A',
@@ -170,18 +107,18 @@ export class burt02AService {
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    SicButtonComponent,
     SicComboboxComponent,
-    SicInputComponent,
+    SicPaginationComponent,
   ],
   templateUrl: './burt02A.component.html',
+  styleUrls: ['./burt02A.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   readonly service = inject(burt02AService);
-  readonly roleService = inject(burt03Service); // ✅ สำหรับดึงชื่อบทบาท
+  readonly roleService = inject(burt03Service);
   readonly dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
 
@@ -193,22 +130,22 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   isSaving = signal(false);
 
   searchTerm = signal('');
-  filterLevel = signal('all');
+  filterGroup = signal('all');
+  currentPage = signal(1);
+  pageSize = signal(10);
   modules = signal<ModulePermission[]>([]);
   private initialModulesSnapshot = signal<string>('');
-  permissionLevels = PERMISSION_LEVELS;
 
-  readonly permissionSelectOptions = [
-    { value: 'Full', text: 'เต็มรูปแบบ (Full)' },
-    { value: 'Edit', text: 'แก้ไข/เพิ่ม (Edit)' },
-    { value: 'Approve', text: 'อนุมัติ (Approve)' },
-    { value: 'View', text: 'ดูอย่างเดียว (View)' },
-    { value: 'None', text: 'ไม่มีสิทธิ์ (None)' },
+  readonly groupOptions = [
+    { value: 'all', text: 'All Modules' },
+    { value: 'PM', text: 'PM - Project Management' },
+    { value: 'BU', text: 'BU - Business Management' },
+    { value: 'SU', text: 'SU - System & Settings' },
   ];
 
   filteredModules = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
-    const level = this.filterLevel();
+    const group = this.filterGroup();
     let list = this.modules();
 
     if (term) {
@@ -219,12 +156,27 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       );
     }
 
-    if (level !== 'all') {
-      list = list.filter((m) => m.level === level);
+    if (group !== 'all') {
+      list = list.filter((m) => m.moduleCode && m.moduleCode.toUpperCase().startsWith(group));
     }
 
     return list;
   });
+
+  totalItems = computed(() => this.filteredModules().length);
+
+  paginatedModules = computed(() => {
+    const list = this.filteredModules();
+    const page = this.currentPage();
+    const size = this.pageSize();
+    const start = (page - 1) * size;
+    return list.slice(start, start + size);
+  });
+
+  onPageChange(page: number) {
+    this.currentPage.set(page);
+    this.cdr.markForCheck();
+  }
 
   pageDirty = (): boolean => {
     if (!this.initialModulesSnapshot()) return false;
@@ -234,15 +186,18 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.currentPage.set(1);
   }
 
   clearSearch() {
     this.searchTerm.set('');
+    this.currentPage.set(1);
   }
 
-  onFilterLevelChange(value: any) {
+  onFilterGroupChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
-    this.filterLevel.set(val || 'all');
+    this.filterGroup.set(val || 'all');
+    this.currentPage.set(1);
   }
 
   ngOnInit(): void {
@@ -261,7 +216,6 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.cdr.markForCheck();
 
-    // ✅ ดึงข้อมูลสิทธิ์ + ชื่อบทบาทพร้อมกัน
     forkJoin({
       permissions: this.service.getRolePermissions(roleId),
       roleDetail: this.roleService.getRole(roleId),
@@ -275,11 +229,9 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: ({ permissions, roleDetail }) => {
           this.roleCode = permissions.roleCode || roleDetail.roleCode;
-          // ✅ ใช้ roleName ที่แปลแล้วจาก roleDetail
           this.roleName = roleDetail.roleName || roleDetail.roleNameEn || roleDetail.roleCode;
           this.modules.set(permissions.modules);
           this.initialModulesSnapshot.set(JSON.stringify(permissions.modules));
-          console.log('✅ โหลดข้อมูลสิทธิ์บทบาทสำเร็จ:', permissions.modules);
         },
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
@@ -288,43 +240,196 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
-  changeLevel(moduleId: string, level: any) {
+  // Toggle individual permission checkbox
+  togglePerm(
+    moduleId: string,
+    permKey: 'isAdd' | 'isSave' | 'isRemove' | 'isPrint' | 'isSearch' | 'isActive',
+    event: Event,
+  ) {
+    const checked = (event.target as HTMLInputElement).checked;
     const current = this.modules();
-    const updated = current.map((mod) => {
-      if (mod.moduleId === moduleId) {
-        return { ...mod, level: level as ModulePermission['level'] };
+    const updated = current.map((m) => {
+      if (m.moduleId === moduleId) {
+        const updatedMod = { ...m, [permKey]: checked };
+        // If checking any action, automatically ensure active and back are true
+        if (checked && permKey !== 'isActive') {
+          updatedMod.isActive = true;
+          updatedMod.isBack = true;
+        }
+        // If unchecking active, disable all actions
+        if (permKey === 'isActive' && !checked) {
+          updatedMod.isAdd = false;
+          updatedMod.isSave = false;
+          updatedMod.isRemove = false;
+          updatedMod.isPrint = false;
+          updatedMod.isSearch = false;
+          updatedMod.isBack = false;
+        }
+        return updatedMod;
       }
-      return mod;
+      return m;
     });
+
     this.modules.set(updated);
     this.cdr.markForCheck();
   }
 
-  getCurrentLevel(moduleId: string): string {
-    const found = this.modules().find((m) => m.moduleId === moduleId);
-    return found?.level || 'None';
+  // Set all permissions for a single row
+  setRowPermissions(moduleId: string, mode: 'full' | 'edit' | 'view' | 'clear') {
+    const current = this.modules();
+    const updated = current.map((m) => {
+      if (m.moduleId === moduleId) {
+        if (mode === 'full') {
+          return {
+            ...m,
+            isActive: true,
+            isAdd: true,
+            isSave: true,
+            isRemove: true,
+            isPrint: true,
+            isSearch: true,
+            isBack: true,
+          };
+        } else if (mode === 'edit') {
+          return {
+            ...m,
+            isActive: true,
+            isAdd: true,
+            isSave: true,
+            isRemove: false,
+            isPrint: true,
+            isSearch: true,
+            isBack: true,
+          };
+        } else if (mode === 'view') {
+          return {
+            ...m,
+            isActive: true,
+            isAdd: false,
+            isSave: false,
+            isRemove: false,
+            isPrint: false,
+            isSearch: true,
+            isBack: true,
+          };
+        } else {
+          return {
+            ...m,
+            isActive: false,
+            isAdd: false,
+            isSave: false,
+            isRemove: false,
+            isPrint: false,
+            isSearch: false,
+            isBack: false,
+          };
+        }
+      }
+      return m;
+    });
+
+    this.modules.set(updated);
+    this.cdr.markForCheck();
   }
 
-  getLevelColor(level: string): string {
-    const map: Record<string, string> = {
-      Full: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400',
-      Edit: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400',
-      Approve: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
-      View: 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400',
-      None: 'bg-gray-200 text-gray-400 dark:bg-gray-700 dark:text-gray-500',
-    };
-    return map[level] || map['None'];
+  // Column Header Toggle: Select/Unselect entire column for visible/filtered items
+  toggleColumn(permKey: 'isAdd' | 'isSave' | 'isRemove' | 'isPrint' | 'isSearch' | 'isActive') {
+    const isAllChecked = this.isColumnAllChecked(permKey);
+    const targetState = !isAllChecked;
+    const visibleIds = new Set(this.filteredModules().map((m) => m.moduleId));
+
+    const current = this.modules();
+    const updated = current.map((m) => {
+      if (visibleIds.has(m.moduleId)) {
+        const updatedMod = { ...m, [permKey]: targetState };
+        if (targetState && permKey !== 'isActive') {
+          updatedMod.isActive = true;
+          updatedMod.isBack = true;
+        }
+        if (permKey === 'isActive' && !targetState) {
+          updatedMod.isAdd = false;
+          updatedMod.isSave = false;
+          updatedMod.isRemove = false;
+          updatedMod.isPrint = false;
+          updatedMod.isSearch = false;
+          updatedMod.isBack = false;
+        }
+        return updatedMod;
+      }
+      return m;
+    });
+
+    this.modules.set(updated);
+    this.cdr.markForCheck();
   }
 
-  getLevelText(level: string): string {
-    const map: Record<string, string> = {
-      Full: 'เต็มรูปแบบ',
-      Edit: 'แก้ไข/เพิ่ม',
-      Approve: 'อนุมัติ',
-      View: 'ดูอย่างเดียว',
-      None: 'ไม่มีสิทธิ์',
-    };
-    return map[level] || level;
+  isColumnAllChecked(permKey: 'isAdd' | 'isSave' | 'isRemove' | 'isPrint' | 'isSearch' | 'isActive'): boolean {
+    const list = this.filteredModules();
+    if (list.length === 0) return false;
+    return list.every((m) => m[permKey]);
+  }
+
+  // Batch actions across all visible modules
+  setAllVisible(mode: 'full' | 'edit' | 'view' | 'clear') {
+    const visibleIds = new Set(this.filteredModules().map((m) => m.moduleId));
+    const current = this.modules();
+    const updated = current.map((m) => {
+      if (visibleIds.has(m.moduleId)) {
+        if (mode === 'full') {
+          return {
+            ...m,
+            isActive: true,
+            isAdd: true,
+            isSave: true,
+            isRemove: true,
+            isPrint: true,
+            isSearch: true,
+            isBack: true,
+          };
+        } else if (mode === 'edit') {
+          return {
+            ...m,
+            isActive: true,
+            isAdd: true,
+            isSave: true,
+            isRemove: false,
+            isPrint: true,
+            isSearch: true,
+            isBack: true,
+          };
+        } else if (mode === 'view') {
+          return {
+            ...m,
+            isActive: true,
+            isAdd: false,
+            isSave: false,
+            isRemove: false,
+            isPrint: false,
+            isSearch: true,
+            isBack: true,
+          };
+        } else {
+          return {
+            ...m,
+            isActive: false,
+            isAdd: false,
+            isSave: false,
+            isRemove: false,
+            isPrint: false,
+            isSearch: false,
+            isBack: false,
+          };
+        }
+      }
+      return m;
+    });
+
+    this.modules.set(updated);
+    this.cdr.markForCheck();
+  }
+
+  countActive(): number {
+    return this.modules().filter((m) => m.isActive).length;
   }
 
   onBack(): void {
@@ -348,8 +453,6 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       modules: this.modules(),
     };
 
-    console.log('📤 Sending data to backend:', JSON.stringify(data, null, 2));
-
     this.service
       .saveRolePermissions(data)
       .pipe(
@@ -361,7 +464,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: () => {
           this.initialModulesSnapshot.set(JSON.stringify(this.modules()));
-          this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์ของบทบาทถูกบันทึกเรียบร้อย').then(() => {
+          this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์การใช้งานของบทบาทถูกบันทึกเรียบร้อย').then(() => {
             this.router.navigate(['/feature/bu/permission']);
           });
         },
@@ -374,3 +477,4 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
 }
 
 export default Burt02AComponent;
+

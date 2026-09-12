@@ -264,7 +264,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             userRole.setIsActive(true);
             userBusinessRoleRepository.save(userRole);
 
-            grantBusinessMenuPermissions(adminRole, null);
+            grantAllProgramPermissions(adminRole);
 
             // 5. Sync uploads หลังจาก save (ถ้ามี)
             if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
@@ -371,17 +371,20 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         }
     }
 
-    private void grantBusinessMenuPermissions(SuBusinessRole role, UUID parentProgramId) {
-        List<SuProgram> programs = programRepository.findByParentProgramIdAndIsActiveTrue(parentProgramId);
+    private void grantAllProgramPermissions(SuBusinessRole role) {
+        List<SuProgram> programs = programRepository.findAllActive();
         for (SuProgram program : programs) {
-            if (program.getProgramCode() != null && program.getProgramCode().startsWith("BU")) {
-                SuBusinessRoleProgram brp = new SuBusinessRoleProgram();
-                brp.setBusinessRole(role);
-                brp.setProgram(program);
-                brp.setIsActive(true);
-                businessRoleProgramRepository.save(brp);
-                grantBusinessMenuPermissions(role, program.getId());
-            }
+            SuBusinessRoleProgram brp = new SuBusinessRoleProgram();
+            brp.setBusinessRole(role);
+            brp.setProgram(program);
+            brp.setIsActive(true);
+            brp.setAdd(true);
+            brp.setBack(true);
+            brp.setPrint(true);
+            brp.setRemove(true);
+            brp.setSave(true);
+            brp.setSearch(true);
+            businessRoleProgramRepository.save(brp);
         }
     }
 
