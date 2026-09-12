@@ -17,17 +17,18 @@ export const profileGuard: CanActivateFn = async (_route, _state) => {
     }
 
     try {
-        const profile: boolean = await firstValueFrom(
-            http.get<boolean>(`${environment.apiBaseUrl}/api/profile/activation`)
+        const response = await firstValueFrom(
+            http.get<{ profileComplete?: boolean } | boolean>(`${environment.apiBaseUrl}/api/profile/activation`)
         );
 
-        if (!profile) {
+        const isComplete = typeof response === 'boolean' ? response : (response?.profileComplete ?? false);
+
+        if (!isComplete) {
             return router.parseUrl('/management/profile');
         }
         return true;
     } catch (error) {
-        console.error('[DEBUG] profileGuard caught an error from .NET:', error);
-        // Instead of logging out, redirect to profile management so the user can recreate their profile!
+        console.error('[DEBUG] profileGuard caught an error:', error);
         return router.parseUrl('/management/profile');
     }
 };
