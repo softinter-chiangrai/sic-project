@@ -35,21 +35,21 @@ public class SuBusinessRoleProgram extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
 
-    @Column(name = "is_add")
+    @Column(name = "is_add", nullable = false)
     private boolean isAdd;
 
-    @Column(name = "is_back")
+    @Column(name = "is_back", nullable = false)
     private boolean isBack;
 
-    @Column(name = "is_print")
+    @Column(name = "is_print", nullable = false)
     private boolean isPrint;
 
-    @Column(name = "is_remove")
+    @Column(name = "is_remove", nullable = false)
     private boolean isRemove;
 
-    @Column(name = "is_save")
+    @Column(name = "is_save", nullable = false)
     private boolean isSave;
 
-    @Column(name = "is_search")
+    @Column(name = "is_search", nullable = false)
     private boolean isSearch;
 }

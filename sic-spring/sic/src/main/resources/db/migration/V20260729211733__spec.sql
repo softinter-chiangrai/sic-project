@@ -260,9 +260,9 @@ CREATE TABLE IF NOT EXISTS pm_edit_session (
 );
 
 -- Indexes
-CREATE INDEX idx_cr_target ON pm_change_request (target_type, target_id);
-CREATE INDEX idx_cr_status ON pm_change_request (status);
-CREATE INDEX idx_session_target ON pm_edit_session (target_type, target_id);
-CREATE INDEX idx_session_active ON pm_edit_session (is_active);
+CREATE INDEX IF NOT EXISTS idx_cr_target ON pm_change_request (target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_cr_status ON pm_change_request (status);
+CREATE INDEX IF NOT EXISTS idx_session_target ON pm_edit_session (target_type, target_id);
+CREATE INDEX IF NOT EXISTS idx_session_active ON pm_edit_session (is_active);
 
-ALTER TABLE pm_edit_session ADD COLUMN edit_type VARCHAR(20) DEFAULT 'CHANGE_REQUEST';
+ALTER TABLE pm_edit_session ADD COLUMN IF NOT EXISTS edit_type VARCHAR(20) DEFAULT 'CHANGE_REQUEST';

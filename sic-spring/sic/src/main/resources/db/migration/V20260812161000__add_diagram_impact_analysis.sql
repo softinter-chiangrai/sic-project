@@ -71,7 +71,7 @@ ALTER TABLE pm_specification
 ALTER TABLE pm_specification ADD COLUMN IF NOT EXISTS upload_group_id UUID;
 
 -- ลบคอลัมน์ spec_code ที่ไม่ได้ใช้แล้ว
-ALTER TABLE pm_specification DROP COLUMN spec_code;
+ALTER TABLE pm_specification DROP COLUMN IF EXISTS spec_code;
 
 
 -- 1. ลบ columns ที่ไม่ต้องการ
@@ -87,9 +87,15 @@ ALTER TABLE pm_specification
     DROP COLUMN IF EXISTS generated_from_requirement_id,
     DROP COLUMN IF EXISTS generated_from_diagram_id;
 
--- 2. เปลี่ยนชื่อ column
-ALTER TABLE pm_specification 
-    RENAME COLUMN spec_type TO specification_type;
+-- 2. เปลี่ยนชื่อ column (ถ้ามี spec_type) หรือสร้าง specification_type (ถ้ายังไม่มี)
+DO $$ 
+BEGIN
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'pm_specification' AND column_name = 'spec_type') THEN
+        ALTER TABLE pm_specification RENAME COLUMN spec_type TO specification_type;
+    ELSIF NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'pm_specification' AND column_name = 'specification_type') THEN
+        ALTER TABLE pm_specification ADD COLUMN specification_type VARCHAR(50);
+    END IF;
+END $$;
 
 -- 3. ให้ requirement_id เป็น nullable (รองรับ Specification ที่สร้างโดยตรงโดยไม่อ้างอิง requirement)
 ALTER TABLE pm_specification 

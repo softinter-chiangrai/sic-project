@@ -832,8 +832,8 @@ CREATE TABLE IF NOT EXISTS pm_change_impact_analysis (
 );
 
 -- สร้าง Index
-CREATE INDEX idx_change_impact_analysis_cr ON pm_change_impact_analysis(change_request_id);
-CREATE INDEX idx_change_impact_analysis_status ON pm_change_impact_analysis(analysis_status);
+CREATE INDEX IF NOT EXISTS idx_change_impact_analysis_cr ON pm_change_impact_analysis(change_request_id);
+CREATE INDEX IF NOT EXISTS idx_change_impact_analysis_status ON pm_change_impact_analysis(analysis_status);
 
 -- ============================================================
 -- ส่วนที่ 5: Specification และ Use Case (ตารางที่ 43-44) [ข้าม DFD/ER เดิม]

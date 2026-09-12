@@ -32,5 +32,5 @@ SET requirement_type = 'UI'
 WHERE LOWER(requirement_type) = 'ui';
 
 
-ALTER TABLE pm_change_impact ADD COLUMN delete_by VARCHAR(100);
-ALTER TABLE pm_change_impact ADD COLUMN delete_date TIMESTAMP;
+ALTER TABLE pm_change_impact ADD COLUMN IF NOT EXISTS delete_by VARCHAR(100);
+ALTER TABLE pm_change_impact ADD COLUMN IF NOT EXISTS delete_date TIMESTAMP;
