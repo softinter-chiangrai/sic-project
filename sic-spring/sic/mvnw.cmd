@@ -27,6 +27,11 @@
 @REM   MVNW_VERBOSE - true: enable verbose log; others: silence the output
 @REM ----------------------------------------------------------------------------
 
+@IF EXIST "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot" (
+  @SET "JAVA_HOME=C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
+  @SET "PATH=C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot\bin;%PATH%"
+)
+
 @IF "%__MVNW_ARG0_NAME__%"=="" (SET __MVNW_ARG0_NAME__=%~nx0)
 @SET __MVNW_CMD__=
 @SET __MVNW_ERROR__=
@@ -46,6 +51,10 @@
 : end batch / begin powershell #>
 
 $ErrorActionPreference = "Stop"
+if (Test-Path "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot") {
+  $env:JAVA_HOME = "C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot"
+  $env:Path = "$env:JAVA_HOME\bin;$env:Path"
+}
 if ($env:MVNW_VERBOSE -eq "true") {
   $VerbosePreference = "Continue"
 }

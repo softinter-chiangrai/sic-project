@@ -121,6 +121,4 @@ logging:
     com.zaxxer.hikari: WARN
     org.springframework.messaging: WARN
     org.springframework.web.socket: WARN
-    org.springframework.data.repository: WARN
-
-spring.main.banner-mode: off
+    org.springframework.data.repository: WARN
