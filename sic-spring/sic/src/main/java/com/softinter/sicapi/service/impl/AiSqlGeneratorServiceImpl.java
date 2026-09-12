@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.softinter.sicapi.dto.request.AiGenerateSqlRequest;
 import com.softinter.sicapi.dto.response.AiGenerateSqlResponse;
-import com.softinter.sicapi.entity.PmDiagramSqlHistory;
+import com.softinter.sicapi.entity.pm.PmDiagramSqlHistory;
 import com.softinter.sicapi.repository.PmDiagramSqlHistoryRepository;
 import com.softinter.sicapi.service.AiSqlGeneratorService;
 import com.softinter.sicapi.service.CurrentUserService;

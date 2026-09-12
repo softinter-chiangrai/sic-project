@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import com.softinter.sicapi.entity.PmDiagramSqlHistory;
+import com.softinter.sicapi.entity.pm.PmDiagramSqlHistory;
 
 @Repository
 public interface PmDiagramSqlHistoryRepository extends JpaRepository<PmDiagramSqlHistory, UUID> {

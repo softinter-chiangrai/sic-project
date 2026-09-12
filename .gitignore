@@ -1,4 +1,4 @@
-﻿sic-api/bin
+sic-api/bin
 sic-api/obj
 
 sic-api/App_Data/
@@ -10,3 +10,8 @@ drawio-dev/
 sic-api/
 .yml
 .fake
+target/
+**/target/
+bin/
+**/bin/
+fix-java-21.bat

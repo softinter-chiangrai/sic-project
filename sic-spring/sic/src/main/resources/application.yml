@@ -9,6 +9,9 @@ server:
 #     driver-class-name: org.postgresql.Driver
 
 spring:
+  main:
+    banner-mode: "off"
+
   datasource:
     url: jdbc:postgresql://localhost:54320/postgres
     username: administrator
@@ -19,7 +22,7 @@ spring:
   flyway:
     enabled: true
     baseline-on-migrate: true
-    baseline-version: "1"
+    baseline-version: "0"
     validate-on-migrate: false
     locations: classpath:db/migration
     schemas: public
@@ -91,11 +94,19 @@ app:
       endpoint: http://localhost:8888
       path-style-access-enabled: true
 
+  # ai:
+  #   provider: gemini
+  #   api-key: ${GEMINI_API_KEY:your_gemini_api_key}
+  #   model: gemini-2.5-flash-lite
+  #   api-url: https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions
+  
   ai:
-    provider: gemini
-    api-key: sk_Lhki2ELsMXbWXAZIC6aYOI2YV54LnYQwtE5UK90aGFahN3EKf7HhcDPJwEbmRDQR
-    model: gemini-2.5-flash-lite
-    api-url: https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions
+    provider: claude
+    api-key: ${AI_API_KEY:your_anthropic_api_key}
+    model: claude-sonnet-4-6
+    api-url: https://api.anthropic.com/v1/messages
+    max-tokens: 4096
+    anthropic-version: 2023-06-01
 
   figma:
     client-id: nHawYGgjLQRdiNyVylbvpw
@@ -115,10 +126,11 @@ logging:
     console: "%msg%n"
   level:
     root: WARN
+    com.softinter.sicapi: INFO
     org.springframework: WARN
     org.hibernate: WARN
     org.apache.tomcat: WARN
     com.zaxxer.hikari: WARN
     org.springframework.messaging: WARN
     org.springframework.web.socket: WARN
-    org.springframework.data.repository: WARN
+    org.springframework.data.repository: WARN

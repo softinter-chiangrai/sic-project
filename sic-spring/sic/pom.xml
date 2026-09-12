@@ -185,6 +185,8 @@
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
                 <configuration>
+                    <fork>true</fork>
+                    <executable>C:\Program Files\Eclipse Adoptium\jdk-21.0.11.10-hotspot\bin\javac.exe</executable>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <annotationProcessorPaths>
