@@ -14,6 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.BufferedReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -125,8 +129,8 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
         if (effectiveModel.startsWith("claude")) {
             config.provider = "claude";
-            config.apiUrl = claudeApiUrl;
-            config.apiKey = claudeApiKey;
+            config.apiUrl = (claudeApiUrl != null && !claudeApiUrl.isBlank()) ? claudeApiUrl : "https://api.anthropic.com/v1/messages";
+            config.apiKey = getEffectiveKey(claudeApiKey, "AI_API_KEY");
             config.maxTokens = claudeMaxTokens > 0 ? claudeMaxTokens : 4096;
 
             if (effectiveModel.equalsIgnoreCase("claude-3-7-sonnet")) {
@@ -139,8 +143,8 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         } else {
             // Gemini / OpenAI compatible
             config.provider = "openai";
-            config.apiUrl = geminiApiUrl;
-            config.apiKey = geminiApiKey;
+            config.apiUrl = (geminiApiUrl != null && !geminiApiUrl.isBlank()) ? geminiApiUrl : "https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions";
+            config.apiKey = getEffectiveKey(geminiApiKey, "GEMINI_API_KEY");
             config.maxTokens = geminiMaxTokens > 0 ? geminiMaxTokens : 4096;
 
             if (effectiveModel.equalsIgnoreCase("gemini-2.5-flash")) {
@@ -153,6 +157,61 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         }
 
         return config;
+    }
+
+    private String getEffectiveKey(String configuredKey, String envKeyName) {
+        if (configuredKey != null && !configuredKey.isBlank()) {
+            return configuredKey.trim();
+        }
+        String sysProp = System.getProperty(envKeyName);
+        if (sysProp != null && !sysProp.isBlank()) {
+            return sysProp.trim();
+        }
+        String sysEnv = System.getenv(envKeyName);
+        if (sysEnv != null && !sysEnv.isBlank()) {
+            return sysEnv.trim();
+        }
+        return readKeyFromDotEnv(envKeyName);
+    }
+
+    private String readKeyFromDotEnv(String key) {
+        String userDir = System.getProperty("user.dir", ".");
+        Path[] paths = new Path[] {
+            Paths.get(".env"),
+            Paths.get("sic-spring/sic/.env"),
+            Paths.get("../.env"),
+            Paths.get("../../.env"),
+            Paths.get(userDir, ".env"),
+            Paths.get(userDir, "sic-spring", "sic", ".env"),
+            Paths.get(userDir, "..", ".env"),
+            Paths.get(userDir, "..", "sic-spring", "sic", ".env")
+        };
+        for (Path p : paths) {
+            try {
+                if (Files.exists(p)) {
+                    try (BufferedReader reader = Files.newBufferedReader(p)) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            line = line.trim();
+                            if (!line.isEmpty() && !line.startsWith("#") && line.contains("=")) {
+                                int eq = line.indexOf('=');
+                                String k = line.substring(0, eq).trim();
+                                String v = line.substring(eq + 1).trim();
+                                if ((v.startsWith("\"") && v.endsWith("\"")) || (v.startsWith("'") && v.endsWith("'"))) {
+                                    v = v.substring(1, v.length() - 1);
+                                }
+                                if (k.equalsIgnoreCase(key) && !v.isBlank()) {
+                                    log.info("Successfully loaded {} from {}", key, p.toAbsolutePath());
+                                    return v.trim();
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return "";
     }
 
     private String callAiApi(String userPrompt, String systemPrompt, String modelId) {
