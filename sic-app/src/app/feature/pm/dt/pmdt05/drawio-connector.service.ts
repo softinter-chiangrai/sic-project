@@ -8,6 +8,7 @@ export class DrawioConnectorService {
   private iframe: HTMLIFrameElement | null = null;
   private pendingMessages: any[] = [];
   private drawioReady = false;
+  private lastLoadedXml: string | null = null;
 
   private isReadySubject = new BehaviorSubject<boolean>(false);
   isReady$ = this.isReadySubject.asObservable();
@@ -20,8 +21,6 @@ export class DrawioConnectorService {
 
   init(iframe: HTMLIFrameElement): void {
     this.iframe = iframe;
-    this.drawioReady = false;
-    this.isReadySubject.next(false);
     this.pendingMessages = [];
   }
 
@@ -36,7 +35,7 @@ export class DrawioConnectorService {
     }
     try {
       this.iframe.contentWindow.postMessage(JSON.stringify(data), '*');
-      console.log('[Draw.io] SEND:', data);
+      console.log('[Draw.io] SEND:', data.action || data);
     } catch (e) {
       console.error('[Draw.io] postMessage error:', e);
       this.errorSubject.next('Failed to send message to Draw.io');
@@ -49,7 +48,7 @@ export class DrawioConnectorService {
       const msg = this.pendingMessages.shift();
       try {
         this.iframe?.contentWindow?.postMessage(JSON.stringify(msg), '*');
-        console.log('[Draw.io] SEND QUEUE:', msg);
+        console.log('[Draw.io] SEND QUEUE:', msg.action || msg);
       } catch (e) {
         console.error('[Draw.io] flushQueue error:', e);
       }
@@ -60,7 +59,17 @@ export class DrawioConnectorService {
     if (!xml || xml.trim() === '') {
       xml = this.getEmptyDiagramXml();
     }
-    this.postMessage({ action: 'load', xml, autosave: 1 }, force);
+    this.lastLoadedXml = xml;
+    const msg = { action: 'load', xml, autosave: 1 };
+
+    if (!this.drawioReady && !force) {
+      console.log('[Draw.io] Not ready yet, queuing loadXml...');
+      this.pendingMessages = this.pendingMessages.filter((m) => m.action !== 'load');
+      this.pendingMessages.push(msg);
+      return;
+    }
+
+    this.postMessage(msg, true);
   }
 
   getEmptyDiagramXml(): string {
@@ -86,20 +95,17 @@ export class DrawioConnectorService {
   }
 
   insertMermaid(mermaidScript: string, pageName?: string): void {
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready');
-      this.pendingMessages.push({
-        action: 'mermaid',
-        mermaid: mermaidScript,
-        title: pageName || 'AI Generated Diagram'
-      });
-      return;
-    }
-    this.postMessage({
+    const msg = {
       action: 'mermaid',
       mermaid: mermaidScript,
-      title: pageName || 'AI Generated Diagram'
-    });
+      title: pageName || 'AI Generated Diagram',
+    };
+    if (!this.drawioReady) {
+      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready; queuing...');
+      this.pendingMessages.push(msg);
+      return;
+    }
+    this.postMessage(msg);
   }
 
   handleMessage(event: MessageEvent): void {
@@ -121,17 +127,16 @@ export class DrawioConnectorService {
       return;
     }
 
-    console.log('[Draw.io] EVENT:', data);
+    console.log('[Draw.io] EVENT:', data.event || data);
 
     if (data.event === 'configure') {
-      // ✅ เปิดใช้งาน autosave ในการตอบกลับ configure
       const reply = {
         action: 'configure',
         config: {
           defaultFonts: [],
           defaultLibraries: true,
-          autosave: true   // <--- สำคัญมาก
-        }
+          autosave: true,
+        },
       };
       try {
         (event.source as Window)?.postMessage(JSON.stringify(reply), '*');
@@ -143,16 +148,21 @@ export class DrawioConnectorService {
     }
 
     if (data.event === 'init' || data.event === 'ready') {
-      console.log('[Draw.io] READY received');
+      console.log('[Draw.io] READY/INIT received');
       this.drawioReady = true;
       this.isReadySubject.next(true);
-      this.flushQueue();
+
+      // Flush queue or send last loaded XML / empty diagram
+      if (this.pendingMessages.length > 0) {
+        this.flushQueue();
+      } else if (this.lastLoadedXml) {
+        this.postMessage({ action: 'load', xml: this.lastLoadedXml, autosave: 1 }, true);
+      }
       return;
     }
 
-    // ✅ จัดการ event save (ส่งโดย Draw.io เมื่อ autosave ทำงาน)
     if (data.event === 'save') {
-      console.log('[Draw.io] ✅ SAVE event received – requesting XML for auto‑save...');
+      console.log('[Draw.io] SAVE event received – requesting XML for auto‑save...');
       this.requestXml();
       return;
     }
@@ -173,6 +183,7 @@ export class DrawioConnectorService {
     this.drawioReady = false;
     this.isReadySubject.next(false);
     this.pendingMessages = [];
+    this.lastLoadedXml = null;
     this.xmlSubject = new Subject<string>();
     this.errorSubject = new Subject<string>();
     console.log('[Draw.io] Service reset');

@@ -14,5 +14,11 @@ public class PmChatRequest {
     @NotBlank(message = "Message is required")
     private String message;
 
+    private UUID sessionId;
+
+    private String sessionTitle;
+
+    private String model;
+
     private String context;
 }

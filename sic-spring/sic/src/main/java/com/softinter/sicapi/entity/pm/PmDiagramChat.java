@@ -38,6 +38,12 @@ public class PmDiagramChat extends BaseEntity {
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "session_id")
+    private UUID sessionId;
+
+    @Column(name = "session_title", length = 255)
+    private String sessionTitle;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "context_data", columnDefinition = "JSONB")
     private String contextData;

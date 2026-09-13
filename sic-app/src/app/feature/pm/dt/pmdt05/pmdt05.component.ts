@@ -128,6 +128,24 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         projectIdFromUrl = this.customerState.getProjectId();
       }
 
+      if (!projectIdFromUrl && tabIdFromUrl) {
+        this.diagramService.getDiagram(tabIdFromUrl).subscribe({
+          next: (diagram) => {
+            if (diagram && diagram.projectId) {
+              this.projectId = diagram.projectId;
+              this.customerState.setProject(diagram.projectId);
+              this.currentTabId = tabIdFromUrl;
+              this.loadProjectName();
+              this.loadTabs(tabIdFromUrl, shouldOpenCreate);
+            }
+          },
+          error: () => {
+            this.router.navigate(['/feature/pm/project']);
+          },
+        });
+        return;
+      }
+
       if (!projectIdFromUrl) {
         this.router.navigate(['/feature/pm/project']);
         return;
@@ -160,9 +178,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         this.currentTabId = tabIdFromUrl;
         this.currentDiagram = null;
         this.loadedDiagramTabId = null;
-        if (this.drawioReady) {
-          this.loadExistingDiagram();
-        }
+        this.loadExistingDiagram();
       } else if (!this.currentTabId && this.tabs().length > 0) {
         this.switchTab(this.tabs()[0].id);
       }

@@ -1,179 +1,270 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+
     <modelVersion>4.0.0</modelVersion>
+
+    <!-- ========================================================= -->
+    <!-- Spring Boot -->
+    <!-- ========================================================= -->
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.4</version>
+        <version>4.1.1</version>
         <relativePath/>
     </parent>
+
+    <!-- ========================================================= -->
+    <!-- Project Information -->
+    <!-- ========================================================= -->
     <groupId>softinter</groupId>
     <artifactId>spring-boot</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+
     <name>sic-spring</name>
     <description>SIC Project Spring Boot Application</description>
 
+    <!-- ========================================================= -->
+    <!-- Properties -->
+    <!-- ========================================================= -->
     <properties>
         <java.version>21</java.version>
-        <lombok.version>1.18.36</lombok.version>
+
+        <!-- Lombok -->
+        <lombok.version>1.18.42</lombok.version>
+
+        <!-- MapStruct -->
         <org.mapstruct.version>1.6.2</org.mapstruct.version>
         <lombok-mapstruct-binding.version>0.2.0</lombok-mapstruct-binding.version>
-        <flyway.version>10.20.1</flyway.version>
+
+        <!-- JasperReports -->
+        <jasperreports.version>7.0.1</jasperreports.version>
+
+        <!-- Apache POI -->
+        <poi.version>5.3.0</poi.version>
+
+        <!-- AWS SDK -->
+        <aws.sdk.version>2.25.0</aws.sdk.version>
+
+        <!-- SpringDoc / Swagger -->
+        <springdoc.version>3.1.1</springdoc.version>
     </properties>
 
+    <!-- ========================================================= -->
+    <!-- Dependencies -->
+    <!-- ========================================================= -->
     <dependencies>
-        <!-- Spring Boot Starters -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- Spring Boot Web / JPA -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- PostgreSQL -->
+        <!-- ===================================================== -->
+
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- Development -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-devtools</artifactId>
             <scope>runtime</scope>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
-        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- JasperReports -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports</artifactId>
-            <version>7.0.1</version>
+            <version>${jasperreports.version}</version>
         </dependency>
+
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports-pdf</artifactId>
-            <version>7.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.lowagie</groupId>
-            <artifactId>itext</artifactId>
-            <version>2.1.7</version>
+            <version>${jasperreports.version}</version>
         </dependency>
 
-        <!-- ถ้าต้องการส่งออกเป็น Excel (.xlsx) -->
-        <dependency>
-            <groupId>org.apache.poi</groupId>
-            <artifactId>poi-ooxml</artifactId>
-            <version>5.3.0</version>
-        </dependency>
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports-fonts</artifactId>
-            <version>7.0.1</version>
+            <version>${jasperreports.version}</version>
         </dependency>
+
+        <!-- ===================================================== -->
+        <!-- Excel -->
+        <!-- ===================================================== -->
+
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi-ooxml</artifactId>
+            <version>${poi.version}</version>
+        </dependency>
+
+        <!-- ===================================================== -->
+        <!-- Lombok -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <version>${lombok.version}</version>
             <optional>true</optional>
         </dependency>
-        <!-- Jackson สำหรับ parse JSON -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.datatype</groupId>
-            <artifactId>jackson-datatype-jsr310</artifactId>
-        </dependency>
 
-        <!-- YAML configuration support -->
-        <dependency>
-            <groupId>org.yaml</groupId>
-            <artifactId>snakeyaml</artifactId>
-        </dependency>
+        <!-- ===================================================== -->
+        <!-- Security -->
+        <!-- ===================================================== -->
 
-        <!-- Security & OAuth2 -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
         </dependency>
 
+        <!-- ===================================================== -->
         <!-- WebSocket -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
         </dependency>
 
-        <!-- Validation, Mail, Cache -->
+        <!-- ===================================================== -->
+        <!-- Validation -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+
+        <!-- ===================================================== -->
+        <!-- Mail -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
+
+        <!-- ===================================================== -->
+        <!-- Cache -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
+        <!-- ===================================================== -->
         <!-- MapStruct -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.mapstruct</groupId>
             <artifactId>mapstruct</artifactId>
             <version>${org.mapstruct.version}</version>
         </dependency>
 
+        <!-- ===================================================== -->
         <!-- AWS S3 -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>s3</artifactId>
-            <version>2.25.0</version>
+            <version>${aws.sdk.version}</version>
         </dependency>
 
+        <!-- ===================================================== -->
         <!-- OpenAPI / Swagger -->
+        <!-- Compatible with Spring Boot 4 -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springdoc</groupId>
             <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.5.0</version>
+            <version>${springdoc.version}</version>
         </dependency>
 
+        <!-- ===================================================== -->
         <!-- Flyway -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
         </dependency>
 
+        <!-- ===================================================== -->
         <!-- Testing -->
+        <!-- ===================================================== -->
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
             <scope>test</scope>
         </dependency>
+
     </dependencies>
+
+    <!-- ========================================================= -->
+    <!-- Build -->
+    <!-- ========================================================= -->
 
     <build>
         <plugins>
-            <!-- Spring Boot Plugin -->
+
+            <!-- ================================================= -->
+            <!-- Spring Boot Maven Plugin -->
+            <!-- ================================================= -->
+
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+
                 <configuration>
                     <mainClass>com.softinter.sicapi.SicApiApplication</mainClass>
+
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>
@@ -183,33 +274,50 @@
                 </configuration>
             </plugin>
 
-            <!-- Compiler Plugin -->
+            <!-- ================================================= -->
+            <!-- Maven Compiler -->
+            <!-- ================================================= -->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+
                 <configuration>
                     <source>${java.version}</source>
                     <target>${java.version}</target>
+
+                    <!-- สำคัญสำหรับ SpringDoc / Parameter Discovery -->
+                    <parameters>true</parameters>
+
                     <annotationProcessorPaths>
+
+                        <!-- Lombok -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok</artifactId>
                             <version>${lombok.version}</version>
                         </path>
+
+                        <!-- MapStruct -->
                         <path>
                             <groupId>org.mapstruct</groupId>
                             <artifactId>mapstruct-processor</artifactId>
                             <version>${org.mapstruct.version}</version>
                         </path>
+
+                        <!-- Lombok + MapStruct -->
                         <path>
                             <groupId>org.projectlombok</groupId>
                             <artifactId>lombok-mapstruct-binding</artifactId>
                             <version>${lombok-mapstruct-binding.version}</version>
                         </path>
+
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+
         </plugins>
     </build>
+
 </project>

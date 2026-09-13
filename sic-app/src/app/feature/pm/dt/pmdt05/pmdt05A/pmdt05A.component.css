@@ -1,23 +1,88 @@
-/* src/app/features/pmdt06/pmdt06A/pmdt06A.component.css */
 :host {
   display: block;
   height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(140, 140, 160, 0.25);
+  border-radius: 9999px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(140, 140, 160, 0.45);
 }
 
 .prose {
   max-width: 100%;
+  width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.prose p {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
 }
 
 .prose code {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 0.1rem 0.3rem;
-  border-radius: 3px;
-  font-size: 0.85em;
+  background: rgba(120, 119, 198, 0.15);
+  color: #a855f7;
+  padding: 0.15rem 0.35rem;
+  border-radius: 4px;
+  font-size: 0.82em;
+  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 .prose pre {
-  background: rgba(0, 0, 0, 0.1);
-  padding: 0.5rem;
-  border-radius: 5px;
+  background: rgba(15, 23, 42, 0.85);
+  color: #f8fafc;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
   overflow-x: auto;
+  max-width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 0.4rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.8em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.prose ul,
+.prose ol {
+  padding-left: 1.25rem;
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.prose li {
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+}
+
+@keyframes bounceSubtle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-bounce-subtle {
+  animation: bounceSubtle 2.5s ease-in-out infinite;
 }

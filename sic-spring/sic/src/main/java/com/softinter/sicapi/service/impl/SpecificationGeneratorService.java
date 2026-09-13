@@ -55,7 +55,7 @@ public class SpecificationGeneratorService {
                 Your task is to analyze requirements, diagrams, and user descriptions to generate a comprehensive, highly accurate Software Specification Document in JSON format.
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt);
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         SpecificationDraft draft = parseAiResponse(aiResponse);
 
         if (request.getSpecificationType() != null && !request.getSpecificationType().isBlank()) {

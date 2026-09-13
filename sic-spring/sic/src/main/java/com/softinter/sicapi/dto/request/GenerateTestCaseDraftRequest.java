@@ -11,4 +11,5 @@ public class GenerateTestCaseDraftRequest {
     private UUID scenarioId;
     private String title;
     private String prompt;
+    private String model;
 }

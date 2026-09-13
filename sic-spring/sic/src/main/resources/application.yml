@@ -97,19 +97,19 @@ app:
       endpoint: http://localhost:8888
       path-style-access-enabled: true
 
-  # ai:
-  #   provider: gemini
-  #   api-key: ${GEMINI_API_KEY:your_gemini_api_key}
-  #   model: gemini-2.5-flash-lite
-  #   api-url: https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions
-  
   ai:
-    provider: claude
-    api-key: ${AI_API_KEY:your_anthropic_api_key}
-    model: claude-sonnet-4-6
-    api-url: https://api.anthropic.com/v1/messages
-    max-tokens: 4096
-    anthropic-version: 2023-06-01
+    default-model: ${AI_DEFAULT_MODEL:gemini-2.5-flash-lite}
+    claude:
+      api-key: ${AI_API_KEY:}
+      model: ${CLAUDE_MODEL:claude-3-5-sonnet-20241022}
+      api-url: ${CLAUDE_API_URL:https://api.anthropic.com/v1/messages}
+      max-tokens: 4096
+      anthropic-version: 2023-06-01
+    gemini:
+      api-key: ${GEMINI_API_KEY:}
+      model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
+      api-url: ${GEMINI_API_URL:https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions}
+      max-tokens: 4096
 
   figma:
     client-id: nHawYGgjLQRdiNyVylbvpw

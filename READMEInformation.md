@@ -1,4 +1,4 @@
-# Software Project Lifecycle Management System
+# Software Development Lifecycle Management Platform
 
 > ระบบบริหารโครงการพัฒนาซอฟต์แวร์แบบครบวงจร  
 > ครอบคลุมตั้งแต่ลูกค้า, สัญญา, Requirement, DFD, ER Diagram, Specification, Development, Testing, Delivery, Invoice, MA และการต่อสัญญา

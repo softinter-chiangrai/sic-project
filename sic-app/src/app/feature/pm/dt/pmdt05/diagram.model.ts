@@ -52,6 +52,24 @@ export interface ChatMessage {
   createdAt: string;
 }
 
+export interface DiagramChatSession {
+  id: string;
+  diagramId: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+  messages: ChatMessage[];
+}
+
+export interface AiModel {
+  id: string;
+  name: string;
+  provider: string;
+  description: string;
+  icon: string;
+  recommended: boolean;
+}
+
 export type DiagramType =
   | 'Flowchart'
   | 'Sequence'

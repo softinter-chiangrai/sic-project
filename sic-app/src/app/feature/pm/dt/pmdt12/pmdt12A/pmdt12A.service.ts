@@ -63,6 +63,7 @@ export class Pmdt12AService {
     scenarioId?: string;
     title?: string;
     prompt?: string;
+    model?: string;
   }): Observable<any> {
     return this.http.post<any>(`${this.apiBase}/api/pm/test-cases/generate/draft`, request);
   }

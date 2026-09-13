@@ -101,6 +101,13 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   // AI Generator Modal State
   showAiModal = signal(false);
   isGeneratingAi = signal(false);
+  aiModel = signal('gemini-2.5-flash-lite');
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
+    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
+    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
+    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
+  ];
   aiManualType = signal('USER');
   aiSelectedRequirementIds = signal<string[]>([]);
   aiSelectedSpecificationIds = signal<string[]>([]);
@@ -213,6 +220,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       requirementIds: reqIds.length > 0 ? reqIds : undefined,
       specificationIds: specIds.length > 0 ? specIds : undefined,
       prompt: this.aiPrompt() || undefined,
+      model: this.aiModel() || undefined,
     }).pipe(
       finalize(() => {
         this.isGeneratingAi.set(false);

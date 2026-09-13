@@ -10,4 +10,5 @@ public class GenerateTestScenarioDraftRequest {
     private UUID requirementId;
     private String scenarioName;
     private String prompt;
+    private String model;
 }

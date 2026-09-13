@@ -45,6 +45,7 @@ export class Pmdt07Service {
         diagramIds?: string[];
         specificationType?: string;
         prompt?: string;
+        model?: string;
     }): Observable<any> {
         return this.http.post<any>(`${this.baseUrl}/generate/draft`, request);
     }

@@ -10,4 +10,5 @@ public class GenerateRequirementDraftRequest {
     private String title;
     private String prompt;
     private String requirementType;
+    private String model;
 }

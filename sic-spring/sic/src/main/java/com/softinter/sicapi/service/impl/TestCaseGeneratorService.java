@@ -66,7 +66,7 @@ public class TestCaseGeneratorService {
                 Ensure test steps and expected results are formatted with HTML tags suitable for rich-text rendering (e.g. <ol><li>...</li></ol>, <p>...</p>, <strong>...</strong>).
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt);
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         TestCaseDraftResponse draft = parseAiResponse(aiResponse);
 
         if (draft.getPriority() == null || draft.getPriority().isBlank()) {

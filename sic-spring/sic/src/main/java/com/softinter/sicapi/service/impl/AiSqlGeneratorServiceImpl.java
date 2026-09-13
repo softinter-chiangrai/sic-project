@@ -37,6 +37,10 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
 
     @Override
     public String generateSqlWithAi(String xml, String vendor) {
+        return generateSqlWithAi(xml, vendor, null);
+    }
+
+    public String generateSqlWithAi(String xml, String vendor, String modelId) {
         ErXmlParserServiceImpl.DatabaseModel model = parser.parse(xml);
 
         if (model.tables == null || model.tables.isEmpty()) {
@@ -65,7 +69,7 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
             """, vendor, structureJson);
 
         String systemPrompt = "You are an expert database administrator and SQL developer. Output ONLY valid, executable SQL scripts without markdown explanations.";
-        String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt);
+        String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, modelId);
         String extractedSql = extractSql(aiRawResponse);
 
         if (extractedSql == null || extractedSql.isBlank()) {
@@ -77,6 +81,10 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
     }
 
     private String generateMigrationSqlWithAi(String currentStructureJson, List<PmDiagramSqlHistory> allPreviousHistories, String vendor) {
+        return generateMigrationSqlWithAi(currentStructureJson, allPreviousHistories, vendor, null);
+    }
+
+    private String generateMigrationSqlWithAi(String currentStructureJson, List<PmDiagramSqlHistory> allPreviousHistories, String vendor, String modelId) {
         StringBuilder historyContext = new StringBuilder();
         for (int i = allPreviousHistories.size() - 1; i >= 0; i--) {
             PmDiagramSqlHistory h = allPreviousHistories.get(i);
@@ -117,7 +125,7 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
             """, vendor, historyContext.toString(), latestSchemaJson != null ? latestSchemaJson : "{}", currentStructureJson);
 
         String systemPrompt = "You are an expert database administrator and SQL developer specializing in database migration scripts. Output ONLY valid, executable migration SQL scripts (ALTER TABLE, CREATE TABLE, etc.) without markdown explanations.";
-        String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt);
+        String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, modelId);
         String extractedSql = extractSql(aiRawResponse);
 
         if (extractedSql == null || extractedSql.isBlank()) {
@@ -155,13 +163,13 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
             mode = "MIGRATION";
             PmDiagramSqlHistory latest = previousHistories.get(0);
             log.info("Generating Auto MIGRATION SQL based on {} previous history scripts for tab {}", previousHistories.size(), tabId);
-            sqlResult = generateMigrationSqlWithAi(currentStructureJson, previousHistories, vendor);
+            sqlResult = generateMigrationSqlWithAi(currentStructureJson, previousHistories, vendor, request.getModel());
             summaryNote = "Auto migration script following v" + latest.getVersionNo();
         } else {
             // No history -> Initial Full Schema Mode
             mode = "FULL";
             log.info("Generating Initial FULL DDL SQL for tab {}", tabId);
-            sqlResult = generateSqlWithAi(request.getXml(), vendor);
+            sqlResult = generateSqlWithAi(request.getXml(), vendor, request.getModel());
             summaryNote = "Initial full schema DDL (v1)";
         }
 

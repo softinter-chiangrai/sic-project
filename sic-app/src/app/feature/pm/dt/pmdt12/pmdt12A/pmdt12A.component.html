@@ -295,6 +295,20 @@
 
       <!-- Modal Body -->
       <div class="p-6 space-y-4">
+        <!-- AI Model Selection -->
+        <div>
+          <sic-combobox
+            label="โมเดล AI ที่ต้องการใช้"
+            [options]="aiModels"
+            valueField="id"
+            textField="name"
+            placeholder="เลือกโมเดล AI"
+            [ngModel]="aiAssistModel()"
+            (selectionChanged)="aiAssistModel.set($event?.value || $event?.id || $event || 'gemini-2.5-flash-lite')"
+            [clearable]="false">
+          </sic-combobox>
+        </div>
+
         <!-- Task Selection (Optional) -->
         <div>
           <sic-combobox

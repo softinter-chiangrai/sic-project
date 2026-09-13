@@ -13,4 +13,5 @@ public class GenerateSpecDraftRequest {
     private List<UUID> diagramIds;
     private String specificationType;
     private String prompt;
+    private String model;
 }

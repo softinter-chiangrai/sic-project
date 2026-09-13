@@ -64,6 +64,13 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   isGeneratingAiAssist = signal(false);
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
+  aiAssistModel = signal<string>('gemini-2.5-flash-lite');
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
+    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
+    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
+    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
+  ];
 
   // Multi-tester support
   businessId = signal<string | null>(null);
@@ -197,6 +204,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       scenarioId: scenarioId || undefined,
       title: currentTitle || undefined,
       prompt: this.aiAssistPrompt() || undefined,
+      model: this.aiAssistModel() || undefined,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAiAssist.set(false);

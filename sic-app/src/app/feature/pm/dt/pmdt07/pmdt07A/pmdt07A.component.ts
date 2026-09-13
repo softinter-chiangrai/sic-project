@@ -172,6 +172,13 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     aiAssistRequirementId = '';
     aiAssistDiagramIds: string[] = [];
     aiAssistPrompt = '';
+    aiAssistModel = 'gemini-2.5-flash-lite';
+    aiModels = [
+        { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
+        { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
+        { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
+        { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' }
+    ];
 
     // Auto-save
     private autoSaveSubscription: Subscription | null = null;
@@ -301,6 +308,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             diagramId: diagramIds.length === 1 ? diagramIds[0] : undefined,
             specificationType: specType,
             prompt: this.aiAssistPrompt || undefined,
+            model: this.aiAssistModel || undefined,
         }).pipe(finalize(() => {
             this.isGeneratingAiAssist = false;
             this.cdr.markForCheck();

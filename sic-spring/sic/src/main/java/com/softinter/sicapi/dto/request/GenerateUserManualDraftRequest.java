@@ -13,4 +13,5 @@ public class GenerateUserManualDraftRequest {
     private List<UUID> requirementIds;
     private List<UUID> specificationIds;
     private String prompt;
+    private String model;
 }

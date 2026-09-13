@@ -278,6 +278,19 @@
 
                 <!-- Modal Body -->
                 <div class="p-6 space-y-4">
+                    <!-- AI Model Selection -->
+                    <div>
+                        <sic-combobox
+                            label="โมเดล AI ที่ต้องการใช้"
+                            [options]="aiModels"
+                            valueField="id"
+                            textField="name"
+                            placeholder="เลือกโมเดล AI"
+                            [(ngModel)]="aiAssistModel"
+                            [clearable]="false">
+                        </sic-combobox>
+                    </div>
+
                     <!-- Requirement Selection (Optional) -->
                     <div>
                         <sic-combobox

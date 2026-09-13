@@ -51,7 +51,7 @@ public class RequirementGeneratorService {
                 5. If user wrote prompt in Thai, respond in Thai (except technical terms/standards). If in English, respond in English.
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt);
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         RequirementDraft draft = parseAiResponse(aiResponse);
 
         if (request.getRequirementType() != null && !request.getRequirementType().isBlank()) {

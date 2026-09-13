@@ -63,24 +63,15 @@ export interface DiagramEditData {
 
         <!-- ประเภท Diagram -->
         <div>
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1">ประเภท Diagram</label>
-          <select
+          <sic-combobox
+            label="ประเภท Diagram"
+            [options]="diagramTypeOptions"
+            valueField="value"
+            textField="text"
+            placeholder="เลือกประเภท Diagram"
             [(ngModel)]="type"
-            class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-          >
-            <option value="DFD">DFD</option>
-            <option value="ER">ER</option>
-            <option value="Flowchart">Flowchart</option>
-            <option value="Sequence">Sequence</option>
-            <option value="Class">Class</option>
-            <option value="State">State</option>
-            <option value="Gantt">Gantt</option>
-            <option value="Mindmap">Mindmap</option>
-            <option value="Journey">Journey</option>
-            <option value="Pie">Pie</option>
-            <option value="C4">C4</option>
-            <option value="Use Case">Use Case</option>
-          </select>
+            [clearable]="false"
+          ></sic-combobox>
         </div>
 
         <!-- Requirement ต้นทาง (แสดงเฉพาะตอนสร้างใหม่และมี requirementTitle ส่งมาจาก URL) -->
@@ -149,6 +140,21 @@ export class NewDiagramDialogComponent implements OnInit {
   type = 'DFD';
   selectedFlowId: string | null = null;
   currentApprovalStatus: string | null = null;
+
+  diagramTypeOptions = [
+    { value: 'DFD', text: 'DFD' },
+    { value: 'ER', text: 'ER' },
+    { value: 'Flowchart', text: 'Flowchart' },
+    { value: 'Sequence', text: 'Sequence' },
+    { value: 'Class', text: 'Class' },
+    { value: 'State', text: 'State' },
+    { value: 'Gantt', text: 'Gantt' },
+    { value: 'Mindmap', text: 'Mindmap' },
+    { value: 'Journey', text: 'Journey' },
+    { value: 'Pie', text: 'Pie' },
+    { value: 'C4', text: 'C4' },
+    { value: 'Use Case', text: 'Use Case' },
+  ];
 
   approvalFlowApiUrl = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/DIAGRAM`;
   requirementComboboxUrl = '';

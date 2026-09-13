@@ -4,6 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type {
+  AiModel,
   ChatMessage,
   DiagramModel,
   DiagramProject,
@@ -167,18 +168,40 @@ export class DiagramService {
     );
   }
 
-  getChatHistory(tabId: string): Observable<ChatMessage[]> {
-    return this.http.get<ChatMessage[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
+  getAiModels(): Observable<AiModel[]> {
+    return this.http.get<AiModel[]>(`${this.apiUrl}/api/ai/models`);
+  }
+
+  getChatSessions(tabId: string): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/api/diagram/chat/${tabId}/sessions`);
+  }
+
+  getChatHistory(tabId: string, sessionId?: string): Observable<ChatMessage[]> {
+    const url = sessionId
+      ? `${this.apiUrl}/api/diagram/chat/${tabId}/history?sessionId=${sessionId}`
+      : `${this.apiUrl}/api/diagram/chat/${tabId}/history`;
+    return this.http.get<ChatMessage[]>(url);
   }
 
   sendChatMessage(
     tabId: string,
     message: string,
+    sessionId?: string,
+    sessionTitle?: string,
+    model?: string
   ): Observable<PmChatResponse> {
     return this.http.post<PmChatResponse>(
       `${this.apiUrl}/api/diagram/chat`,
-      { diagramId: tabId, message }
+      { diagramId: tabId, message, sessionId, sessionTitle, model }
     );
+  }
+
+  deleteChatSession(tabId: string, sessionId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/sessions/${sessionId}`);
+  }
+
+  renameChatSession(tabId: string, sessionId: string, title: string): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/sessions/${sessionId}/title`, { title });
   }
 
   clearChatHistory(tabId: string): Observable<void> {

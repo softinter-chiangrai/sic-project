@@ -9,6 +9,8 @@ import java.util.UUID;
 public class PmChatResponse {
     private UUID id;
     private UUID diagramId;
+    private UUID sessionId;
+    private String sessionTitle;
     private String role;
     private String content;
     private String contextData;

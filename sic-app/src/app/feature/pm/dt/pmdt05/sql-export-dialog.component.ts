@@ -5,6 +5,7 @@ import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } fro
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { DialogService } from '../../../../core/services/dialog.service';
 
 import { DiagramPage } from './pmdt05.model';
@@ -26,7 +27,7 @@ export interface DiagramSqlHistoryItem {
 @Component({
   selector: 'app-sql-export-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent],
+  imports: [CommonModule, FormsModule, SicButtonComponent, SicComboboxComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
@@ -90,21 +91,19 @@ export interface DiagramSqlHistoryItem {
       <!-- Tab: Generate SQL -->
       @if (activeTab() === 'generate') {
         <div class="flex-1 overflow-y-auto p-5 space-y-4">
-          <!-- Select Page & Vendor Row -->
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Select Page, Vendor & AI Model Row -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-                >Select ER Diagram Page</label
-              >
-              <select
-                [(ngModel)]="selectedPageId"
-                (change)="onPageChange()"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-              >
-                @for (page of pages(); track page.id) {
-                  <option [value]="page.id">{{ page.name }}</option>
-                }
-              </select>
+              <sic-combobox
+                label="Select ER Diagram Page"
+                [options]="pages()"
+                valueField="id"
+                textField="name"
+                [ngModel]="selectedPageId"
+                (selectionChanged)="onPageSelected($event)"
+                placeholder="Select ER Diagram Page"
+                [clearable]="false"
+              ></sic-combobox>
               @if (pages().length === 0) {
                 <p class="text-xs text-[var(--text-muted)] mt-1">
                   ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER, er, database, schema)
@@ -113,16 +112,27 @@ export interface DiagramSqlHistoryItem {
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-[var(--text-active)] mb-1"
-                >Database Vendor</label
-              >
-              <select
+              <sic-combobox
+                label="Database Vendor"
+                [options]="vendorOptions"
+                valueField="value"
+                textField="text"
                 [(ngModel)]="vendor"
-                class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] appearance-none pr-8 transition-all"
-              >
-                <option value="postgresql">PostgreSQL</option>
-                <option value="mysql">MySQL</option>
-              </select>
+                placeholder="Database Vendor"
+                [clearable]="false"
+              ></sic-combobox>
+            </div>
+
+            <div>
+              <sic-combobox
+                label="AI Model"
+                [options]="aiModels"
+                valueField="id"
+                textField="name"
+                [(ngModel)]="selectedAiModel"
+                placeholder="เลือกโมเดล AI"
+                [clearable]="false"
+              ></sic-combobox>
             </div>
           </div>
 
@@ -356,9 +366,28 @@ export class SqlExportDialogComponent implements OnInit {
   histories = signal<DiagramSqlHistoryItem[]>([]);
   selectedPageId: string | null = null;
   vendor = 'postgresql';
+  vendorOptions = [
+    { value: 'postgresql', text: 'PostgreSQL' },
+    { value: 'mysql', text: 'MySQL' },
+  ];
+
+  selectedAiModel = 'gemini-2.5-flash-lite';
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
+    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
+    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
+    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
+  ];
+
   engine: 'parser' | 'ai' = 'ai';
   genMode: 'FULL' | 'MIGRATION' = 'FULL';
   selectedBaseVersionId: string | null = null;
+
+  onPageSelected(event: any) {
+    const id = event?.value || event?.id || event || null;
+    this.selectedPageId = id;
+    this.onPageChange();
+  }
 
   sql = signal<string>('');
   lastGeneratedVersion = signal<number | null>(null);
@@ -478,6 +507,7 @@ export class SqlExportDialogComponent implements OnInit {
       mode: this.genMode,
       engine: this.engine,
       baseVersionId: this.selectedBaseVersionId,
+      model: this.selectedAiModel,
     };
 
     console.log('📤 Sending Generate Request:', payload);

@@ -42,6 +42,7 @@ export interface GenerateUserManualDraftRequest {
   requirementIds?: string[];
   specificationIds?: string[];
   prompt?: string;
+  model?: string;
 }
 
 export interface UserManualSectionDraft {
