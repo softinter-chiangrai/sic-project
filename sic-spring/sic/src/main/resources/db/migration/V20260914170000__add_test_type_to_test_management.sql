@@ -9,8 +9,8 @@ ALTER TABLE public.pm_test_case
     ADD COLUMN IF NOT EXISTS test_type VARCHAR(20) DEFAULT 'SIT';
 
 -- 3. Seed Parameter LOV for TEST_TYPE
-INSERT INTO public.db_parameter (id, module_code, parameter_code, parameter_value, parameter_name_en, parameter_name_th, is_active, sort_order, create_by, create_date, update_by, update_date, is_delete)
+INSERT INTO public.db_parameter (id, module_code, parameter_code, parameter_value, parameter_name_en, parameter_name_local, is_active, sort_order, created_by, created_date, updated_by, updated_date, is_delete)
 VALUES
     (gen_random_uuid(), 'PM', 'TEST_TYPE', 'SIT', 'System Integration Testing (SIT)', 'การทดสอบระบบภายใน (SIT)', true, 1, 'system', NOW(), 'system', NOW(), false),
     (gen_random_uuid(), 'PM', 'TEST_TYPE', 'UAT', 'User Acceptance Testing (UAT)', 'การตรวจรับระบบโดยผู้ใช้ (UAT)', true, 2, 'system', NOW(), 'system', NOW(), false)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (module_code, parameter_code, parameter_value) DO NOTHING;

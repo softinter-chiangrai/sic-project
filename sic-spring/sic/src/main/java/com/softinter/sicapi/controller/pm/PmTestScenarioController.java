@@ -8,6 +8,7 @@ import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmTestScenarioService;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +53,7 @@ public class PmTestScenarioController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<UUID> save(@RequestBody PmTestScenarioRequest request) {
+    public ResponseEntity<UUID> save(@Valid @RequestBody PmTestScenarioRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(scenarioService.save(request, businessId, userId));

@@ -1,5 +1,5 @@
 {
   "cSpell.words": ["Ganttchart"],
-  "java.autobuild.enabled": false,
-  "java.configuration.updateBuildConfiguration": "disabled"
+  "java.autobuild.enabled": true,
+  "java.configuration.updateBuildConfiguration": "automatic"
 }

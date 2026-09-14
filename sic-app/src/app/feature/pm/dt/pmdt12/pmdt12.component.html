@@ -15,20 +15,20 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center gap-2">
-      <!-- Export UAT Report Button -->
+      <!-- Export Test / UAT Report Button -->
       <button
         type="button"
-        (click)="exportUatReport('UAT')"
+        (click)="exportUatReport(filterTestType())"
         [disabled]="isExportingUat()"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
-        title="ดาวน์โหลดเอกสารรายงานผลการตรวจรับ UAT (PDF)"
+        [title]="'ส่งออกรายงานผลการทดสอบ ' + (filterTestType() === 'All' ? 'ทั้งหมด' : filterTestType()) + ' (PDF)'"
       >
         @if (isExportingUat()) {
           <div class="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
           <span>กำลังออกรายงาน...</span>
         } @else {
           <i class="bi bi-file-earmark-pdf-fill text-purple-600 dark:text-purple-400"></i>
-          <span>ออกรายงาน UAT (PDF)</span>
+          <span>{{ filterTestType() === 'All' ? 'ออกรายงานผลการทดสอบ (PDF)' : (filterTestType() === 'SIT' ? 'ออกรายงาน SIT (PDF)' : 'ออกรายงาน UAT (PDF)') }}</span>
         }
       </button>
 
@@ -48,9 +48,9 @@
     <div class="inline-flex p-1 bg-[var(--bg)] border border-[var(--border)] rounded-xl gap-1">
       <button
         type="button"
-        (click)="setFilterTestType('all')"
+        (click)="setFilterTestType('All')"
         class="px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer"
-        [class]="filterTestType() === 'all' ? 'bg-[var(--sidebar)] text-[var(--text-active)] font-semibold shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
+        [class]="filterTestType() === 'All' ? 'bg-[var(--sidebar)] text-[var(--text-active)] font-semibold shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
       >
         ทั้งหมด
       </button>

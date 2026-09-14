@@ -66,7 +66,19 @@ public class PmUatExportServiceImpl implements PmUatExportService {
 
         // Calculate statistics
         String filter = (testTypeFilter != null && !testTypeFilter.isBlank()) ? testTypeFilter.toUpperCase() : "UAT";
-        List<PmTestCase> allCases = projectId != null ? testCaseRepository.findByProjectIdAndIsDeleteFalse(projectId) : List.of();
+        List<PmTestCase> allCases = new java.util.ArrayList<>();
+        if (projectId != null) {
+            allCases.addAll(testCaseRepository.findByProjectIdAndIsDeleteFalse(projectId));
+            List<PmTestScenario> scenarios = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+            for (PmTestScenario sc : scenarios) {
+                List<PmTestCase> scCases = testCaseRepository.findByBusinessIdAndScenarioIdAndIsDeleteFalse(businessId, sc.getId());
+                for (PmTestCase tc : scCases) {
+                    if (allCases.stream().noneMatch(c -> c.getId().equals(tc.getId()))) {
+                        allCases.add(tc);
+                    }
+                }
+            }
+        }
 
         List<PmTestCase> filteredCases = allCases.stream().filter(tc -> {
             if (scenarioId != null && (tc.getScenarioId() == null || !tc.getScenarioId().equals(scenarioId))) {

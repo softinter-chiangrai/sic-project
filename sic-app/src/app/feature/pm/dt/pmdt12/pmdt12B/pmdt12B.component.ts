@@ -236,7 +236,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกรหัสและชื่อ Test Scenario');
+      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกรหัส, ชื่อ Test Scenario และเลือก Task ที่เกี่ยวข้อง');
       return;
     }
 

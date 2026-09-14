@@ -9,7 +9,7 @@ export class Pmdt12BForm {
       id: fb.control(null),
       projectId: fb.control(null),
       testPlanId: fb.control(null),
-      taskId: fb.control(null),
+      taskId: fb.control(null, [Validators.required]),
       taskCode: fb.control(null),
       taskName: fb.control(null),
       scenarioCode: fb.control(null, [Validators.required, Validators.maxLength(50)]),

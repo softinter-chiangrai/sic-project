@@ -1,5 +1,5 @@
 <!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
-<jasperReport name="UatReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+<jasperReport name="UatReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" whenNoDataType="AllSectionsNoDetail" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
 	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SDLC"/>
 	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
 	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
@@ -64,7 +64,7 @@
             FROM pm_test_case tc
             LEFT JOIN pm_test_scenario sc ON sc.id = tc.scenario_id AND sc.is_delete = false
             WHERE tc.is_delete = false
-              AND ($P{projectId} IS NULL OR $P{projectId} = '' OR tc.project_id = CAST($P{projectId} AS uuid))
+              AND ($P{projectId} IS NULL OR $P{projectId} = '' OR tc.project_id = CAST($P{projectId} AS uuid) OR sc.project_id = CAST($P{projectId} AS uuid))
               AND ($P{scenarioId} IS NULL OR $P{scenarioId} = '' OR tc.scenario_id = CAST($P{scenarioId} AS uuid))
               AND (
                   ($P{testTypeFilter} = 'UAT' AND (tc.test_type = 'UAT' OR (tc.test_type IS NULL AND sc.test_type = 'UAT')))
@@ -94,8 +94,8 @@
 				<element kind="rectangle" uuid="9a8b7c6d-5e4f-3a2b-1c0d-ef9876543210" mode="Opaque" x="0" y="6" width="515" height="22" backcolor="#F1F5F9" radius="3">
 					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 				</element>
-				<element kind="textField" uuid="8b7c6d5e-4f3a-2b1c-0def-9876543210ab" x="8" y="7" width="500" height="20" vTextAlign="Middle" style="SectionHeading">
-					<expression><![CDATA["Scenario: [" + $F{scenarioCode} + "] " + $F{scenarioName}]]></expression>
+				<element kind="textField" uuid="8b7c6d5e-4f3a-2b1c-0def-9876543210ab" x="8" y="7" width="500" height="20" blankWhenNull="true" vTextAlign="Middle" style="SectionHeading">
+					<expression><![CDATA["Scenario: [" + ($F{scenarioCode} != null ? $F{scenarioCode} : "-") + "] " + ($F{scenarioName} != null ? $F{scenarioName} : "-")]]></expression>
 				</element>
 			</band>
 		</groupHeader>
@@ -112,10 +112,10 @@
 			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
 		</element>
 		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
-			<expression><![CDATA["เอกสารผลการตรวจรับระบบ (UAT)"]]></expression>
+			<expression><![CDATA[($P{testTypeFilter} != null && $P{testTypeFilter}.equals("SIT") ? "เอกสารผลการทดสอบระบบ (SIT)" : ($P{testTypeFilter} != null && $P{testTypeFilter}.equals("ALL") ? "เอกสารรายงานการทดสอบ (Test Report)" : "เอกสารผลการตรวจรับระบบ (UAT)"))]]></expression>
 		</element>
-		<element kind="staticText" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
-			<text><![CDATA[User Acceptance Testing (UAT) Summary Report]]></text>
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{testTypeFilter} != null && $P{testTypeFilter}.equals("SIT") ? "System Integration Testing (SIT) Report" : ($P{testTypeFilter} != null && $P{testTypeFilter}.equals("ALL") ? "Test Management Summary Report" : "User Acceptance Testing (UAT) Summary Report"))]]></expression>
 		</element>
 		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
 			<expression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
@@ -144,7 +144,7 @@
 			<text><![CDATA[ประเภทการทดสอบ:]]></text>
 		</element>
 		<element kind="textField" uuid="9b0c1d2e-3f4a-5b6c-7d8e-9f0a1b2c3d4e" x="80" y="98" width="230" height="18" blankWhenNull="true" style="Value">
-			<expression><![CDATA["การตรวจรับระบบโดยผู้ใช้ (UAT)"]]></expression>
+			<expression><![CDATA[($P{testTypeFilter} != null && $P{testTypeFilter}.equals("SIT") ? "การทดสอบระบบภายใน (SIT)" : ($P{testTypeFilter} != null && $P{testTypeFilter}.equals("ALL") ? "รายงานผลการทดสอบทั้งหมด (ALL)" : "การตรวจรับระบบโดยผู้ใช้ (UAT)"))]]></expression>
 		</element>
 
 		<!-- Statistics Summary Grid -->
@@ -242,7 +242,7 @@
 				<expression><![CDATA[$F{title}]]></expression>
 			</element>
 			<element kind="textField" uuid="fe5a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8b9c" x="76" y="21" width="130" height="14" blankWhenNull="true" style="FooterText">
-				<expression><![CDATA["ความสำคัญ: " + $F{priority}]]></expression>
+				<expression><![CDATA["ความสำคัญ: " + ($F{priority} != null ? $F{priority} : "-")]]></expression>
 			</element>
 
 			<!-- Test Step -->
@@ -256,11 +256,26 @@
 			</element>
 
 			<!-- Status Badge -->
-			<element kind="textField" uuid="cb8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f" x="458" y="8" width="54" height="22" hTextAlign="Center" vTextAlign="Middle" style="ValueBold">
-				<expression><![CDATA[$F{testStatus}.toUpperCase()]]></expression>
+			<element kind="textField" uuid="cb8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f" x="458" y="8" width="54" height="22" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{testStatus} != null ? $F{testStatus}.toUpperCase() : "PENDING"]]></expression>
 			</element>
 		</band>
 	</detail>
+
+	<!-- ========================================================
+         PAGE FOOTER (Must come before summary)
+         ======================================================== -->
+	<pageFooter height="25">
+		<element kind="line" uuid="ed2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b" x="0" y="4" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.5"/>
+		</element>
+		<element kind="textField" uuid="fe3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" x="0" y="8" width="250" height="15" style="FooterText">
+			<expression><![CDATA["SOFTINTER CO., LTD. — Test Management Report"]]></expression>
+		</element>
+		<element kind="textField" uuid="af4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d" x="365" y="8" width="150" height="15" hTextAlign="Right" style="FooterText">
+			<expression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
 
 	<!-- ========================================================
          SUMMARY BAND — Sign-Off Section
@@ -309,19 +324,4 @@
 			<text><![CDATA[วันที่: ........ / ........ / ................]]></text>
 		</element>
 	</summary>
-
-	<!-- ========================================================
-         PAGE FOOTER
-         ======================================================== -->
-	<pageFooter height="25">
-		<element kind="line" uuid="ed2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b" x="0" y="4" width="515" height="1" forecolor="#CBD5E1">
-			<pen lineWidth="0.5"/>
-		</element>
-		<element kind="textField" uuid="fe3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" x="0" y="8" width="250" height="15" style="FooterText">
-			<expression><![CDATA["SOFTINTER CO., LTD. — UAT Test Execution Report"]]></expression>
-		</element>
-		<element kind="textField" uuid="af4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d" x="365" y="8" width="150" height="15" hTextAlign="Right" style="FooterText">
-			<expression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></expression>
-		</element>
-	</pageFooter>
 </jasperReport>

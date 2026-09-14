@@ -36,7 +36,7 @@ export class Pmdt12Component implements OnInit {
   protected filterStatus = signal('all');
   protected filterPriority = signal('all');
   protected filterTaskStatus = signal('all');
-  protected filterTestType = signal<'all' | 'SIT' | 'UAT'>('all');
+  protected filterTestType = signal<'All' | 'SIT' | 'UAT'>('All');
   protected isLoading = signal(false);
   protected isExportingUat = signal(false);
 
@@ -135,7 +135,7 @@ export class Pmdt12Component implements OnInit {
     // 1. Filter test cases
     const filteredCases = rawTestCases.filter((tc) => {
       // Filter testType
-      if (testTypeFilter !== 'all') {
+      if (testTypeFilter !== 'All') {
         const tcType = (tc.testType || 'SIT').toUpperCase();
         if (tcType !== testTypeFilter) return false;
       }
@@ -192,7 +192,7 @@ export class Pmdt12Component implements OnInit {
       const scType = (sc.testType || 'SIT').toUpperCase();
 
       // If testType filter active and scenario doesn't match and has no matched cases, skip
-      if (testTypeFilter !== 'all' && scType !== testTypeFilter) {
+      if (testTypeFilter !== 'All' && scType !== testTypeFilter) {
         return;
       }
 
@@ -441,7 +441,7 @@ export class Pmdt12Component implements OnInit {
     this.scenarioPageMap.set(new Map());
   }
 
-  setFilterTestType(type: 'all' | 'SIT' | 'UAT') {
+  setFilterTestType(type: 'All' | 'SIT' | 'UAT') {
     this.filterTestType.set(type);
     this.scenarioPageMap.set(new Map());
   }
@@ -458,20 +458,20 @@ export class Pmdt12Component implements OnInit {
       .pipe(finalize(() => this.isExportingUat.set(false)))
       .subscribe({
         next: (blob: Blob) => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const timeStr = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
-          a.href = url;
-          a.download = `${testType}_Report_${projectId}_${timeStr}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-          this.dialog.success('ออกรายงานสำเร็จ', `ส่งออกเอกสารรายงานผลการทดสอบ (${testType}) เรียบร้อยแล้ว`);
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            // Fallback กรณีถูกบล็อก Popup
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
+          }
         },
         error: (err) => {
           console.error('Error exporting UAT report:', err);
-          this.dialog.error('ส่งออกรายงานไม่สำเร็จ', 'เกิดข้อผิดพลาดในการสร้างเอกสารรายงาน PDF');
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
         }
       });
   }
@@ -517,21 +517,20 @@ export class Pmdt12Component implements OnInit {
       .pipe(finalize(() => this.isExportingUat.set(false)))
       .subscribe({
         next: (blob: Blob) => {
-          const url = window.URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          const timeStr = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
-          const code = scenario.scenarioCode ? scenario.scenarioCode + '_' : '';
-          a.href = url;
-          a.download = `${testType}_Report_${code}${timeStr}.pdf`;
-          document.body.appendChild(a);
-          a.click();
-          document.body.removeChild(a);
-          window.URL.revokeObjectURL(url);
-          this.dialog.success('ออกรายงานสำเร็จ', `ส่งออกรายงานผลการทดสอบเฉพาะ Scenario: ${scenario.scenarioName || ''} เรียบร้อยแล้ว`);
+          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          const printWindow = window.open(pdfUrl, '_blank');
+          if (!printWindow) {
+            // Fallback กรณีถูกบล็อก Popup
+            const a = document.createElement('a');
+            a.href = pdfUrl;
+            a.target = '_blank';
+            a.click();
+          }
         },
         error: (err) => {
           console.error('Error exporting Scenario report:', err);
-          this.dialog.error('ส่งออกรายงานไม่สำเร็จ', 'เกิดข้อผิดพลาดในการสร้างเอกสารรายงาน PDF');
+          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
         }
       });
   }
