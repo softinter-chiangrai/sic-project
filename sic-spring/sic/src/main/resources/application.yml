@@ -100,7 +100,7 @@ app:
   ai:
     default-model: ${AI_DEFAULT_MODEL:gemini-2.5-flash-lite}
     claude:
-      api-key: ${AI_API_KEY:}
+      api-key: ${CLAUDE_API_KEY:${AI_API_KEY:}}
       model: ${CLAUDE_MODEL:claude-3-5-sonnet-20241022}
       api-url: ${CLAUDE_API_URL:https://api.anthropic.com/v1/messages}
       max-tokens: 4096
