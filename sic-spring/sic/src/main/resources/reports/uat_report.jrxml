@@ -278,50 +278,49 @@
 	</pageFooter>
 
 	<!-- ========================================================
-         SUMMARY BAND — Sign-Off Section
+         SUMMARY BAND — Sign-Off Section (Standard Template)
          ======================================================== -->
-	<summary height="180">
-		<element kind="line" uuid="dc9e0f1a-2b3c-4d5e-6f7a-8b9c0d1e2f3a" x="0" y="15" width="515" height="1" forecolor="#CBD5E1">
-			<pen lineWidth="0.8"/>
+	<summary height="190" splitType="Prevent">
+		<!-- Section Header: Sign-off -->
+		<element kind="textField" uuid="921ca47b-4d5c-48ca-913b-2a567c82a4c9" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA["การรับรองและอนุมัติผลการตรวจรับระบบ (UAT Sign-off & Approval)"]]></expression>
 		</element>
-		<element kind="staticText" uuid="ed0f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b" x="0" y="22" width="515" height="20" style="SectionHeading">
-			<text><![CDATA[การลงนามรับรองผลการตรวจรับระบบ (UAT Acceptance & Sign-Off)]]></text>
-		</element>
-		<element kind="staticText" uuid="fe1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c" x="0" y="42" width="515" height="24" style="ContentText">
-			<text><![CDATA[ข้าพเจ้าในฐานะตัวแทนผู้ตรวจรับระบบ ได้ดำเนินการทดสอบการทำงานของระบบตามรายการข้างต้นครบถ้วนแล้ว ขอรับรองว่าผลการทดสอบเป็นไปตามข้อกำหนดความต้องการของโครงการ]]></text>
+		<element kind="line" uuid="3d2194c7-4d5c-47b2-843e-958a1b24ca02" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.6"/>
 		</element>
 
-		<!-- Sign-off Boxes -->
-		<element kind="rectangle" uuid="af2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d" mode="Opaque" x="20" y="74" width="220" height="96" backcolor="#FAFAFA" radius="4">
+		<!-- Signatures: ผู้จัดทำ / ผู้ส่งมอบงาน -->
+		<element kind="rectangle" uuid="7cf41209-4d5c-489e-913a-7a561bc49a12" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
-		<element kind="staticText" uuid="ba3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e" x="30" y="80" width="200" height="16" hTextAlign="Center" style="Label">
-			<text><![CDATA[ผู้ตรวจรับมอบระบบ (Customer / Client)]]></text>
+		<element kind="textField" uuid="62d1a3c7-4d5c-48ca-91b5-827a4192b0c5" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
+			<expression><![CDATA["ผู้จัดทำ / ผู้ส่งมอบงาน"]]></expression>
 		</element>
-		<element kind="line" uuid="cb4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f" x="40" y="125" width="180" height="1" forecolor="#94A3B8">
-			<pen lineWidth="0.5" lineStyle="Dotted"/>
+		<element kind="textField" uuid="b13e9a72-4d5c-48a5-926f-47b2ae601b2a" x="10" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
 		</element>
-		<element kind="staticText" uuid="dc5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a" x="30" y="130" width="200" height="16" hTextAlign="Center" style="FooterText">
-			<text><![CDATA[(                                                            )]]></text>
+		<element kind="textField" uuid="8ea6f8e7-5e6d-47b2-913b-2a567c82a4c9" x="10" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
 		</element>
-		<element kind="staticText" uuid="ed6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b" x="30" y="148" width="200" height="16" hTextAlign="Center" style="FooterText">
-			<text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+		<element kind="textField" uuid="4b2a5c1a-5e6d-4b92-bca8-e5659858df34" x="10" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 
-		<element kind="rectangle" uuid="fe7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c" mode="Opaque" x="275" y="74" width="220" height="96" backcolor="#FAFAFA" radius="4">
+		<!-- Signatures: ผู้อนุมัติ / ผู้ตรวจรับมอบระบบ -->
+		<element kind="rectangle" uuid="921ca47b-5e6d-48ca-913b-2a567c82a4c9" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
-		<element kind="staticText" uuid="af8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d" x="285" y="80" width="200" height="16" hTextAlign="Center" style="Label">
-			<text><![CDATA[ผู้ส่งมอบงาน (Project Manager / Vendor)]]></text>
+		<element kind="textField" uuid="3d2194c7-5e6d-47b2-843e-958a1b24ca02" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
+			<expression><![CDATA["ผู้อนุมัติ / ผู้ตรวจรับมอบระบบ"]]></expression>
 		</element>
-		<element kind="line" uuid="ba9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e" x="295" y="125" width="180" height="1" forecolor="#94A3B8">
-			<pen lineWidth="0.5" lineStyle="Dotted"/>
+		<element kind="textField" uuid="7cf41209-5e6d-489e-913a-7a561bc49a12" x="280" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
 		</element>
-		<element kind="staticText" uuid="cb0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f" x="285" y="130" width="200" height="16" hTextAlign="Center" style="FooterText">
-			<text><![CDATA[(                                                            )]]></text>
+		<element kind="textField" uuid="62d1a3c7-5e6d-48ca-91b5-827a4192b0c5" x="280" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
 		</element>
-		<element kind="staticText" uuid="dc1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a" x="285" y="148" width="200" height="16" hTextAlign="Center" style="FooterText">
-			<text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+		<element kind="textField" uuid="8ea6f8e7-6f7e-47b2-913b-2a567c82a4c9" x="280" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 	</summary>
 </jasperReport>
