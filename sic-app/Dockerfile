@@ -20,7 +20,6 @@ RUN npm install --legacy-peer-deps
 
 # Copy source code and build SSR application with memory optimization
 COPY . .
-ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
 # ==========================================
