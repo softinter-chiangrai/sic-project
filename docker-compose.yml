@@ -13,7 +13,7 @@ services:
     ports:
       - "${POSTGRES_PORT:-54320}:5432"
     volumes:
-      - sic_db_data:/var/lib/postgresql/data
+      - keycloak_db_data:/var/lib/postgresql/data
       - ./sic-database/infra/postgres/init:/docker-entrypoint-initdb.d:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-administrator} -d ${POSTGRES_DB:-postgres}"]
@@ -46,7 +46,7 @@ services:
     volumes:
       - ./sic-auth/infra/keycloak/realm-one-project.json:/opt/keycloak/data/import/realm-one-project.json:ro
       - ./sic-auth/mint-keywind-theme-main/theme:/opt/keycloak/themes:ro
-      - sic_keycloak_data:/opt/keycloak/data
+      - keycloak_data:/opt/keycloak/data
     command:
       - "start-dev"
       - "--http-port=8080"
@@ -78,7 +78,7 @@ services:
       - "${SEAWEEDFS_VOLUME_PORT:-8081}:8080"
       - "${SEAWEEDFS_S3_PORT:-8888}:8333"
     volumes:
-      - sic_seaweedfs_data:/data
+      - seaweedfs_data:/data
       - ./sic-storage/infra/seaweedfs/s3.conf:/etc/seaweedfs/s3.conf:ro
     networks:
       - sic-network
@@ -189,6 +189,8 @@ services:
     build:
       context: ./sic-app
       dockerfile: Dockerfile
+      args:
+        GITHUB_TOKEN: ${GITHUB_TOKEN}
     depends_on:
       - sic-spring
     ports:
@@ -200,12 +202,15 @@ services:
       - sic-network
 
 # ============================================================================
-# Persistent Volumes
+# Persistent Volumes (Mapped to existing project volumes)
 # ============================================================================
 volumes:
-  sic_db_data:
-  sic_keycloak_data:
-  sic_seaweedfs_data:
+  keycloak_db_data:
+    name: sic-database_keycloak_db_data
+  keycloak_data:
+    name: sic-auth_keycloak_data
+  seaweedfs_data:
+    name: sic-storage_seaweedfs_data
 
 # ============================================================================
 # Shared Network

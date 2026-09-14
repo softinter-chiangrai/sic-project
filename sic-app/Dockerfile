@@ -5,15 +5,22 @@ FROM node:22-alpine AS builder
 
 WORKDIR /app
 
-# Install git for GitHub packages (e.g. sic-ng)
-RUN apk add --no-cache git
+# Build argument for GitHub Personal Access Token (for private dependencies like sic-ng)
+ARG GITHUB_TOKEN
 
-# Copy package files and install dependencies
+# Install git and configure GitHub credentials for private repos
+RUN apk add --no-cache git openssh-client && \
+    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "ssh://git@github.com/" && \
+    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:" && \
+    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+
+# Copy package definitions and install dependencies
 COPY package*.json ./
-RUN npm ci --legacy-peer-deps || npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps
 
-# Copy source code and build SSR application
+# Copy source code and build SSR application with memory optimization
 COPY . .
+ENV NODE_OPTIONS="--max-old-space-size=2048"
 RUN npm run build
 
 # ==========================================
