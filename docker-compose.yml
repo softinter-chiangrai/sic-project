@@ -198,6 +198,7 @@ services:
     environment:
       PORT: 4200
       NODE_ENV: production
+      ALLOWED_HOSTS: "*"
     networks:
       - sic-network
 
