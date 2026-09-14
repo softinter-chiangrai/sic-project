@@ -83,4 +83,18 @@ export class Pmdt12Service {
   }): Observable<any> {
     return this.http.post<any>(`${this.apiBase}/api/pm/test-cases/generate/draft`, request);
   }
+
+  exportUatReport(projectId?: string | null, testType: string = 'UAT', scenarioId?: string | null): Observable<Blob> {
+    let params = new HttpParams().set('testType', testType);
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
+    if (scenarioId) {
+      params = params.set('scenarioId', scenarioId);
+    }
+    return this.http.get(`${this.apiBase}/api/pm/test-cases/export-uat-report`, {
+      params,
+      responseType: 'blob',
+    });
+  }
 }

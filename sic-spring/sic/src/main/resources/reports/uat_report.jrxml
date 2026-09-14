@@ -1,0 +1,327 @@
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
+<jasperReport name="UatReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="a1b2c3d4-e5f6-7890-abcd-ef1234567890">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SDLC"/>
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="false"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="TableHeader" mode="Opaque" forecolor="#1E293B" backcolor="#F1F5F9" fontName="TH Sarabun New" fontSize="12.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="12.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
+
+	<parameter name="projectId" class="java.lang.String"/>
+	<parameter name="projectName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="customerName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="exportDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="businessName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logoStream" class="java.io.InputStream"/>
+	<parameter name="totalCases" class="java.lang.String">
+		<defaultValueExpression><![CDATA["0"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="passCount" class="java.lang.String">
+		<defaultValueExpression><![CDATA["0"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="failCount" class="java.lang.String">
+		<defaultValueExpression><![CDATA["0"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="blockedCount" class="java.lang.String">
+		<defaultValueExpression><![CDATA["0"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="pendingCount" class="java.lang.String">
+		<defaultValueExpression><![CDATA["0"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="passRate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["0%"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="testTypeFilter" class="java.lang.String">
+		<defaultValueExpression><![CDATA["UAT"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="scenarioId" class="java.lang.String">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+
+	<query language="sql"><![CDATA[SELECT 
+                COALESCE(sc.scenario_code, '-') AS "scenarioCode",
+                COALESCE(sc.scenario_name, 'General Test Cases') AS "scenarioName",
+                COALESCE(tc.test_case_code, '-') AS "testCaseCode",
+                COALESCE(tc.title, '-') AS "title",
+                COALESCE(tc.priority, 'Medium') AS "priority",
+                COALESCE(tc.test_step, '-') AS "testStep",
+                COALESCE(tc.expected_result, '-') AS "expectedResult",
+                COALESCE(tc.actual_result, '-') AS "actualResult",
+                COALESCE(tc.test_status, 'Pending') AS "testStatus",
+                COALESCE(tc.tester, '-') AS "tester"
+            FROM pm_test_case tc
+            LEFT JOIN pm_test_scenario sc ON sc.id = tc.scenario_id AND sc.is_delete = false
+            WHERE tc.is_delete = false
+              AND ($P{projectId} IS NULL OR $P{projectId} = '' OR tc.project_id = CAST($P{projectId} AS uuid))
+              AND ($P{scenarioId} IS NULL OR $P{scenarioId} = '' OR tc.scenario_id = CAST($P{scenarioId} AS uuid))
+              AND (
+                  ($P{testTypeFilter} = 'UAT' AND (tc.test_type = 'UAT' OR (tc.test_type IS NULL AND sc.test_type = 'UAT')))
+                  OR ($P{testTypeFilter} = 'SIT' AND (tc.test_type = 'SIT' OR (tc.test_type IS NULL AND (sc.test_type = 'SIT' OR sc.test_type IS NULL))))
+                  OR ($P{testTypeFilter} IS NULL OR $P{testTypeFilter} = '' OR $P{testTypeFilter} = 'ALL')
+              )
+            ORDER BY sc.scenario_code ASC, tc.test_case_code ASC;]]></query>
+
+	<field name="scenarioCode" class="java.lang.String"/>
+	<field name="scenarioName" class="java.lang.String"/>
+	<field name="testCaseCode" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="priority" class="java.lang.String"/>
+	<field name="testStep" class="java.lang.String"/>
+	<field name="expectedResult" class="java.lang.String"/>
+	<field name="actualResult" class="java.lang.String"/>
+	<field name="testStatus" class="java.lang.String"/>
+	<field name="tester" class="java.lang.String"/>
+
+	<!-- ========================================================
+         GROUP: Scenario Header
+         ======================================================== -->
+	<group name="ScenarioGroup">
+		<expression><![CDATA[$F{scenarioCode} + "_" + $F{scenarioName}]]></expression>
+		<groupHeader>
+			<band height="28">
+				<element kind="rectangle" uuid="9a8b7c6d-5e4f-3a2b-1c0d-ef9876543210" mode="Opaque" x="0" y="6" width="515" height="22" backcolor="#F1F5F9" radius="3">
+					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+				</element>
+				<element kind="textField" uuid="8b7c6d5e-4f3a-2b1c-0def-9876543210ab" x="8" y="7" width="500" height="20" vTextAlign="Middle" style="SectionHeading">
+					<expression><![CDATA["Scenario: [" + $F{scenarioCode} + "] " + $F{scenarioName}]]></expression>
+				</element>
+			</band>
+		</groupHeader>
+	</group>
+
+	<!-- ========================================================
+         TITLE BAND
+         ======================================================== -->
+	<title height="230">
+		<element kind="image" uuid="1c0eb912-78d1-4be5-a4b5-9014674c12ab" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="7cf41209-1a3b-489e-913a-7a561bc49a12" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA["เอกสารผลการตรวจรับระบบ (UAT)"]]></expression>
+		</element>
+		<element kind="staticText" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[User Acceptance Testing (UAT) Summary Report]]></text>
+		</element>
+		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA["วันที่ออกเอกสาร: " + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
+		</element>
+		<element kind="line" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" x="0" y="66" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+
+		<!-- Project Info Box -->
+		<element kind="rectangle" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" mode="Opaque" x="0" y="72" width="515" height="52" backcolor="#F8FAFC" radius="4">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+		<element kind="staticText" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" x="10" y="78" width="70" height="18" style="Label">
+			<text><![CDATA[โครงการ:]]></text>
+		</element>
+		<element kind="textField" uuid="2a5c1a8c-5e4b-92bc-a8e5-659858df341a" x="80" y="78" width="230" height="18" blankWhenNull="true" style="ValueBold">
+			<expression><![CDATA[$P{projectName}]]></expression>
+		</element>
+		<element kind="staticText" uuid="5c1a8c5e-4b92-bca8-e565-9858df341a2b" x="320" y="78" width="50" height="18" style="Label">
+			<text><![CDATA[ลูกค้า:]]></text>
+		</element>
+		<element kind="textField" uuid="1a8c5e4b-92bc-a8e5-6598-58df341a2b5c" x="370" y="78" width="135" height="18" blankWhenNull="true" style="Value">
+			<expression><![CDATA[$P{customerName}]]></expression>
+		</element>
+		<element kind="staticText" uuid="7a1b2c3d-4e5f-6a7b-8c9d-0e1f2a3b4c5d" x="10" y="98" width="70" height="18" style="Label">
+			<text><![CDATA[ประเภทการทดสอบ:]]></text>
+		</element>
+		<element kind="textField" uuid="9b0c1d2e-3f4a-5b6c-7d8e-9f0a1b2c3d4e" x="80" y="98" width="230" height="18" blankWhenNull="true" style="Value">
+			<expression><![CDATA["การตรวจรับระบบโดยผู้ใช้ (UAT)"]]></expression>
+		</element>
+
+		<!-- Statistics Summary Grid -->
+		<element kind="rectangle" uuid="a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d" mode="Opaque" x="0" y="132" width="515" height="85" backcolor="#FFFFFF" radius="4">
+			<pen lineWidth="0.8" lineColor="#CBD5E1"/>
+		</element>
+
+		<!-- Stat Cards -->
+		<element kind="staticText" uuid="b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e" x="10" y="140" width="75" height="16" hTextAlign="Center" style="Label">
+			<text><![CDATA[เคสทั้งหมด]]></text>
+		</element>
+		<element kind="textField" uuid="c3d4e5f6-a7b8-9c0d-1e2f-3a4b5c6d7e8f" x="10" y="156" width="75" height="24" hTextAlign="Center" style="DocTitle">
+			<expression><![CDATA[$P{totalCases}]]></expression>
+		</element>
+
+		<element kind="staticText" uuid="d4e5f6a7-b89c-0d1e-2f3a-4b5c6d7e8f9a" x="95" y="140" width="75" height="16" forecolor="#16A34A" hTextAlign="Center" style="Label">
+			<text><![CDATA[ผ่าน (Pass)]]></text>
+		</element>
+		<element kind="textField" uuid="e5f6a7b8-9c0d-1e2f-3a4b-5c6d7e8f9a0b" x="95" y="156" width="75" height="24" forecolor="#16A34A" hTextAlign="Center" style="DocTitle">
+			<expression><![CDATA[$P{passCount}]]></expression>
+		</element>
+
+		<element kind="staticText" uuid="f6a7b89c-0d1e-2f3a-4b5c-6d7e8f9a0b1c" x="180" y="140" width="75" height="16" forecolor="#DC2626" hTextAlign="Center" style="Label">
+			<text><![CDATA[ไม่ผ่าน (Fail)]]></text>
+		</element>
+		<element kind="textField" uuid="a7b89c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d" x="180" y="156" width="75" height="24" forecolor="#DC2626" hTextAlign="Center" style="DocTitle">
+			<expression><![CDATA[$P{failCount}]]></expression>
+		</element>
+
+		<element kind="staticText" uuid="b89c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e" x="265" y="140" width="75" height="16" forecolor="#D97706" hTextAlign="Center" style="Label">
+			<text><![CDATA[ติดปัญหา (Block)]]></text>
+		</element>
+		<element kind="textField" uuid="c90d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f" x="265" y="156" width="75" height="24" forecolor="#D97706" hTextAlign="Center" style="DocTitle">
+			<expression><![CDATA[$P{blockedCount}]]></expression>
+		</element>
+
+		<element kind="staticText" uuid="d01e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a" x="350" y="140" width="75" height="16" forecolor="#64748B" hTextAlign="Center" style="Label">
+			<text><![CDATA[รอทดสอบ]]></text>
+		</element>
+		<element kind="textField" uuid="e12f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b" x="350" y="156" width="75" height="24" forecolor="#64748B" hTextAlign="Center" style="DocTitle">
+			<expression><![CDATA[$P{pendingCount}]]></expression>
+		</element>
+
+		<element kind="staticText" uuid="f23a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" x="430" y="140" width="75" height="16" forecolor="#0284C7" hTextAlign="Center" style="Label">
+			<text><![CDATA[Pass Rate]]></text>
+		</element>
+		<element kind="textField" uuid="a34b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d" x="430" y="156" width="75" height="24" forecolor="#0284C7" hTextAlign="Center" style="DocTitle">
+			<expression><![CDATA[$P{passRate}]]></expression>
+		</element>
+	</title>
+
+	<!-- ========================================================
+         COLUMN HEADER
+         ======================================================== -->
+	<columnHeader height="22">
+		<element kind="rectangle" uuid="b45c6d7e-8f9a-0b1c-2d3e-4f5a6b7c8d9e" mode="Opaque" x="0" y="0" width="515" height="22" backcolor="#E2E8F0">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="staticText" uuid="c56d7e8f-9a0b-1c2d-3e4f-5a6b7c8d9e0f" x="4" y="2" width="70" height="18" vTextAlign="Middle" style="TableHeader">
+			<text><![CDATA[รหัสเคส]]></text>
+		</element>
+		<element kind="staticText" uuid="d67e8f9a-0b1c-2d3e-4f5a-6b7c8d9e0f1a" x="76" y="2" width="130" height="18" vTextAlign="Middle" style="TableHeader">
+			<text><![CDATA[หัวข้อ / ความสำคัญ]]></text>
+		</element>
+		<element kind="staticText" uuid="e78f9a0b-1c2d-3e4f-5a6b-7c8d9e0f1a2b" x="208" y="2" width="150" height="18" vTextAlign="Middle" style="TableHeader">
+			<text><![CDATA[ขั้นตอนทดสอบ (Steps)]]></text>
+		</element>
+		<element kind="staticText" uuid="f89a0b1c-2d3e-4f5a-6b7c-8d9e0f1a2b3c" x="360" y="2" width="95" height="18" vTextAlign="Middle" style="TableHeader">
+			<text><![CDATA[ผลลัพธ์ที่คาดหวัง]]></text>
+		</element>
+		<element kind="staticText" uuid="a90b1c2d-3e4f-5a6b-7c8d-9e0f1a2b3c4d" x="458" y="2" width="54" height="18" hTextAlign="Center" vTextAlign="Middle" style="TableHeader">
+			<text><![CDATA[สถานะ]]></text>
+		</element>
+	</columnHeader>
+
+	<!-- ========================================================
+         DETAIL BAND
+         ======================================================== -->
+	<detail>
+		<band height="40" splitType="Stretch">
+			<element kind="rectangle" uuid="ba1c2d3e-4f5a-6b7c-8d9e-0f1a2b3c4d5e" mode="Transparent" x="0" y="0" width="515" height="40">
+				<pen lineWidth="0.4" lineColor="#E2E8F0"/>
+			</element>
+
+			<!-- Test Case Code -->
+			<element kind="textField" uuid="cb2d3e4f-5a6b-7c8d-9e0f-1a2b3c4d5e6f" x="4" y="3" width="70" height="16" blankWhenNull="true" style="ValueBold">
+				<expression><![CDATA[$F{testCaseCode}]]></expression>
+			</element>
+			<element kind="textField" uuid="dc3e4f5a-6b7c-8d9e-0f1a-2b3c4d5e6f7a" x="4" y="19" width="70" height="16" blankWhenNull="true" style="FooterText">
+				<expression><![CDATA["ผู้ตรวจ: " + ($F{tester} != null ? $F{tester} : "-")]]></expression>
+			</element>
+
+			<!-- Title & Priority -->
+			<element kind="textField" uuid="ed4f5a6b-7c8d-9e0f-1a2b-3c4d5e6f7a8b" x="76" y="3" width="130" height="18" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+				<expression><![CDATA[$F{title}]]></expression>
+			</element>
+			<element kind="textField" uuid="fe5a6b7c-8d9e-0f1a-2b3c-4d5e6f7a8b9c" x="76" y="21" width="130" height="14" blankWhenNull="true" style="FooterText">
+				<expression><![CDATA["ความสำคัญ: " + $F{priority}]]></expression>
+			</element>
+
+			<!-- Test Step -->
+			<element kind="textField" uuid="af6b7c8d-9e0f-1a2b-3c4d-5e6f7a8b9c0d" x="208" y="3" width="150" height="34" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+				<expression><![CDATA[$F{testStep}]]></expression>
+			</element>
+
+			<!-- Expected Result -->
+			<element kind="textField" uuid="ba7c8d9e-0f1a-2b3c-4d5e-6f7a8b9c0d1e" x="360" y="3" width="95" height="34" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+				<expression><![CDATA[$F{expectedResult}]]></expression>
+			</element>
+
+			<!-- Status Badge -->
+			<element kind="textField" uuid="cb8d9e0f-1a2b-3c4d-5e6f-7a8b9c0d1e2f" x="458" y="8" width="54" height="22" hTextAlign="Center" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{testStatus}.toUpperCase()]]></expression>
+			</element>
+		</band>
+	</detail>
+
+	<!-- ========================================================
+         SUMMARY BAND — Sign-Off Section
+         ======================================================== -->
+	<summary height="180">
+		<element kind="line" uuid="dc9e0f1a-2b3c-4d5e-6f7a-8b9c0d1e2f3a" x="0" y="15" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+		<element kind="staticText" uuid="ed0f1a2b-3c4d-5e6f-7a8b-9c0d1e2f3a4b" x="0" y="22" width="515" height="20" style="SectionHeading">
+			<text><![CDATA[การลงนามรับรองผลการตรวจรับระบบ (UAT Acceptance & Sign-Off)]]></text>
+		</element>
+		<element kind="staticText" uuid="fe1a2b3c-4d5e-6f7a-8b9c-0d1e2f3a4b5c" x="0" y="42" width="515" height="24" style="ContentText">
+			<text><![CDATA[ข้าพเจ้าในฐานะตัวแทนผู้ตรวจรับระบบ ได้ดำเนินการทดสอบการทำงานของระบบตามรายการข้างต้นครบถ้วนแล้ว ขอรับรองว่าผลการทดสอบเป็นไปตามข้อกำหนดความต้องการของโครงการ]]></text>
+		</element>
+
+		<!-- Sign-off Boxes -->
+		<element kind="rectangle" uuid="af2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d" mode="Opaque" x="20" y="74" width="220" height="96" backcolor="#FAFAFA" radius="4">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="staticText" uuid="ba3c4d5e-6f7a-8b9c-0d1e-2f3a4b5c6d7e" x="30" y="80" width="200" height="16" hTextAlign="Center" style="Label">
+			<text><![CDATA[ผู้ตรวจรับมอบระบบ (Customer / Client)]]></text>
+		</element>
+		<element kind="line" uuid="cb4d5e6f-7a8b-9c0d-1e2f-3a4b5c6d7e8f" x="40" y="125" width="180" height="1" forecolor="#94A3B8">
+			<pen lineWidth="0.5" lineStyle="Dotted"/>
+		</element>
+		<element kind="staticText" uuid="dc5e6f7a-8b9c-0d1e-2f3a-4b5c6d7e8f9a" x="30" y="130" width="200" height="16" hTextAlign="Center" style="FooterText">
+			<text><![CDATA[(                                                            )]]></text>
+		</element>
+		<element kind="staticText" uuid="ed6f7a8b-9c0d-1e2f-3a4b-5c6d7e8f9a0b" x="30" y="148" width="200" height="16" hTextAlign="Center" style="FooterText">
+			<text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+		</element>
+
+		<element kind="rectangle" uuid="fe7a8b9c-0d1e-2f3a-4b5c-6d7e8f9a0b1c" mode="Opaque" x="275" y="74" width="220" height="96" backcolor="#FAFAFA" radius="4">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="staticText" uuid="af8b9c0d-1e2f-3a4b-5c6d-7e8f9a0b1c2d" x="285" y="80" width="200" height="16" hTextAlign="Center" style="Label">
+			<text><![CDATA[ผู้ส่งมอบงาน (Project Manager / Vendor)]]></text>
+		</element>
+		<element kind="line" uuid="ba9c0d1e-2f3a-4b5c-6d7e-8f9a0b1c2d3e" x="295" y="125" width="180" height="1" forecolor="#94A3B8">
+			<pen lineWidth="0.5" lineStyle="Dotted"/>
+		</element>
+		<element kind="staticText" uuid="cb0d1e2f-3a4b-5c6d-7e8f-9a0b1c2d3e4f" x="285" y="130" width="200" height="16" hTextAlign="Center" style="FooterText">
+			<text><![CDATA[(                                                            )]]></text>
+		</element>
+		<element kind="staticText" uuid="dc1e2f3a-4b5c-6d7e-8f9a-0b1c2d3e4f5a" x="285" y="148" width="200" height="16" hTextAlign="Center" style="FooterText">
+			<text><![CDATA[วันที่: ........ / ........ / ................]]></text>
+		</element>
+	</summary>
+
+	<!-- ========================================================
+         PAGE FOOTER
+         ======================================================== -->
+	<pageFooter height="25">
+		<element kind="line" uuid="ed2f3a4b-5c6d-7e8f-9a0b-1c2d3e4f5a6b" x="0" y="4" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.5"/>
+		</element>
+		<element kind="textField" uuid="fe3a4b5c-6d7e-8f9a-0b1c-2d3e4f5a6b7c" x="0" y="8" width="250" height="15" style="FooterText">
+			<expression><![CDATA["SOFTINTER CO., LTD. — UAT Test Execution Report"]]></expression>
+		</element>
+		<element kind="textField" uuid="af4b5c6d-7e8f-9a0b-1c2d-3e4f5a6b7c8d" x="365" y="8" width="150" height="15" hTextAlign="Right" style="FooterText">
+			<expression><![CDATA["หน้า " + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

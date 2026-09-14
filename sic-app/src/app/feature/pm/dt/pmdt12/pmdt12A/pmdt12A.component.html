@@ -86,7 +86,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <sic-input
-              label="รหัส Test Case *"
+              label="รหัส Test Case"
               formControlName="testCaseCode"
               placeholder="TESTCASE-001"
               [disabled]="isView() || isExecution()"
@@ -94,7 +94,7 @@
           </div>
           <div>
           <sic-input
-            label="หัวข้อ / ชื่อ Test Case *"
+            label="หัวข้อ / ชื่อ Test Case"
             formControlName="title"
             [disabled]="isView() || isExecution()"
             placeholder=""
@@ -104,7 +104,10 @@
             <sic-combobox
               label="ความสำคัญ"
               formControlName="priority"
-              [items]="priorityOptions"
+              [apiUrl]="priorityApiUrl"
+              placeholder="เลือกระดับความสำคัญ"
+              valueField="value"
+              textField="text"
               [disabled]="isView() || isExecution()"
             ></sic-combobox>
           </div>
@@ -115,13 +118,32 @@
       <div class="space-y-4">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
           <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-          การเชื่อมโยงงาน
+          การเชื่อมโยงและประเภทการทดสอบ
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <sic-combobox
-              label="งานที่เกี่ยวข้อง *"
+              label="Test Scenario (ชุดการทดสอบ)"
+              formControlName="scenarioId"
+              [items]="scenarioOptions()"
+              [disabled]="isView() || isExecution()"
+              placeholder="เลือก Scenario ที่สังกัด"
+              (selectionChanged)="onScenarioChange($event?.value || $event?.id || $event || null)"
+            ></sic-combobox>
+          </div>
+          <div>
+            <sic-combobox
+              label="ประเภทการทดสอบ"
+              formControlName="testType"
+              [items]="testTypeOptions"
+              [disabled]="isView() || isExecution()"
+              placeholder="เลือกประเภทการทดสอบ"
+            ></sic-combobox>
+          </div>
+          <div>
+            <sic-combobox
+              label="งานที่เกี่ยวข้อง"
               formControlName="taskId"
               [items]="taskOptions()"
               [disabled]="isView() || isExecution()"

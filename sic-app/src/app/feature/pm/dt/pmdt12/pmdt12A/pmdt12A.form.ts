@@ -17,6 +17,7 @@ export class Pmdt12AForm {
       expectedResult: fb.control(null, [Validators.required]),
       actualResult: fb.control(null),
       testStatus: fb.control('Pending'),
+      testType: fb.control('SIT'),
       tester: fb.control(null),
       testDate: fb.control(null),
       relatedRequirement: fb.control(null),

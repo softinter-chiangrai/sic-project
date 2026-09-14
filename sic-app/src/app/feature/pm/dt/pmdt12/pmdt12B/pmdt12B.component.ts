@@ -15,6 +15,7 @@ import { SicInputComponent } from '../../../../../core/component/sic-input/sic-i
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmdt12b',
@@ -44,12 +45,20 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   formData!: SicFromData<PmTestScenarioModel>;
   isEdit = signal(false);
+  isView = signal(false);
   isLoading = signal(false);
   isSaving = signal(false);
   scenarioId: string | null = null;
 
   taskOptions = signal<{ value: string; text: string }[]>([]);
   taskLoading = signal(false);
+
+  priorityApiUrl = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
+
+  testTypeOptions = [
+    { value: 'SIT', text: '🧪 การทดสอบระบบภายใน (SIT)' },
+    { value: 'UAT', text: '📋 การตรวจรับระบบโดยผู้ใช้ (UAT)' },
+  ];
 
   priorityOptions = [
     { value: 'High', text: 'สูง' },
@@ -71,10 +80,16 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   ];
 
   isSaved = false;
-  pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
+  pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
   ngOnInit(): void {
     this.formData = new SicFromData<PmTestScenarioModel>(Pmdt12BForm.createForm(this.fb));
+
+    const currentUrl = this.router.url;
+    if (currentUrl.includes('/view')) {
+      this.isView.set(true);
+    }
+
     const pId = this.customerState.getProjectId();
     if (pId) {
       this.formData.patchValue({ projectId: pId } as any);
@@ -87,7 +102,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       const id = params['id'];
       if (id) {
         this.scenarioId = id;
-        this.isEdit.set(true);
+        this.isEdit.set(!this.isView());
         this.loadScenario(id);
       }
     });

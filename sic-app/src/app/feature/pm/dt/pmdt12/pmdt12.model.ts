@@ -13,6 +13,7 @@ export interface PmTestCaseModel extends SicBaseStateModel {
   expectedResult: string;
   actualResult?: string;
   testStatus: string;
+  testType?: string;
   tester?: string;
   testDate?: string;
   relatedRequirement?: string;
@@ -36,6 +37,7 @@ export interface PmTestScenarioModel extends SicBaseStateModel {
   scenarioCode?: string;
   scenarioName: string;
   priority?: string;
+  testType?: string;
   description?: string;
   prerequisite?: string;
   status?: string;

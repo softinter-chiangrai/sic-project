@@ -114,6 +114,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         entity.setPriority(req.getPriority() != null ? req.getPriority() : "Medium");
         entity.setDescription(req.getDescription());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "Active");
+        entity.setTestType(req.getTestType() != null ? req.getTestType() : "SIT");
     }
 
     private PmTestScenarioResponse toResponse(PmTestScenario entity) {
@@ -133,6 +134,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         res.setPriority(entity.getPriority());
         res.setDescription(entity.getDescription());
         res.setStatus(entity.getStatus());
+        res.setTestType(entity.getTestType() != null ? entity.getTestType() : "SIT");
         res.setCreatedDate(entity.getCreatedDate());
         res.setUpdatedDate(entity.getUpdatedDate());
         res.setRowVersion(entity.getRowVersion());

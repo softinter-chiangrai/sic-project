@@ -219,6 +219,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         entity.setExpectedResult(req.getExpectedResult());
         entity.setActualResult(req.getActualResult());
         entity.setTestStatus(req.getTestStatus() != null ? req.getTestStatus() : "Pending");
+        entity.setTestType(req.getTestType() != null ? req.getTestType() : "SIT");
         entity.setTester(req.getTester());
         entity.setTestDate(req.getTestDate());
         entity.setRelatedRequirement(req.getRelatedRequirement());
@@ -244,6 +245,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         res.setExpectedResult(entity.getExpectedResult());
         res.setActualResult(entity.getActualResult());
         res.setTestStatus(entity.getTestStatus());
+        res.setTestType(entity.getTestType() != null ? entity.getTestType() : "SIT");
         res.setTester(entity.getTester());
         res.setTestDate(entity.getTestDate());
         res.setRelatedRequirement(entity.getRelatedRequirement());

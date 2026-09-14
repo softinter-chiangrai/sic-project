@@ -496,6 +496,12 @@ export const PM_ROUTES: Routes = [
     canActivate: [customerGuard, projectGuard],
     resolve: { pageData: pmdt12BResolver },
   },
+  {
+    path: 'test-scenario/:id/view',
+    loadComponent: () => import('./dt/pmdt12/pmdt12B/pmdt12B.component').then((m) => m.Pmdt12BComponent),
+    canActivate: [customerGuard, projectGuard],
+    resolve: { pageData: pmdt12BResolver },
+  },
 
 
   // ============================================================

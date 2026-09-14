@@ -18,6 +18,7 @@ public class PmTestCaseResponse {
     private String expectedResult;
     private String actualResult;
     private String testStatus;
+    private String testType;
     private String tester;
     private Instant testDate;
     private String relatedRequirement;

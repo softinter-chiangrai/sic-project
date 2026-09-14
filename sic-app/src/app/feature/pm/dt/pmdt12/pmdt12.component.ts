@@ -36,7 +36,9 @@ export class Pmdt12Component implements OnInit {
   protected filterStatus = signal('all');
   protected filterPriority = signal('all');
   protected filterTaskStatus = signal('all');
+  protected filterTestType = signal<'all' | 'SIT' | 'UAT'>('all');
   protected isLoading = signal(false);
+  protected isExportingUat = signal(false);
 
   // ===== Data =====
   protected scenarios = signal<PmTestScenarioModel[]>([]);
@@ -76,6 +78,7 @@ export class Pmdt12Component implements OnInit {
       ? `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${bId}`
       : `${environment.apiBaseUrl}/api/business/combobox-members`;
   });
+  protected priorityApiUrl = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
 
   // Track expanded accordion IDs ('unassigned' for null scenario)
   protected expandedScenarioIds = signal<Set<string>>(new Set());
@@ -110,6 +113,15 @@ export class Pmdt12Component implements OnInit {
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
   priorityOptions = ['High', 'Medium', 'Low'];
 
+  // ===== Computed Counts for Test Types =====
+  protected sitCount = computed(() => {
+    return this.testCases().filter((tc) => (tc.testType || 'SIT').toUpperCase() === 'SIT').length;
+  });
+
+  protected uatCount = computed(() => {
+    return this.testCases().filter((tc) => (tc.testType || 'SIT').toUpperCase() === 'UAT').length;
+  });
+
   // ===== Computed Groups =====
   protected scenarioGroups = computed(() => {
     const rawScenarios = this.scenarios();
@@ -118,9 +130,15 @@ export class Pmdt12Component implements OnInit {
     const status = this.filterStatus();
     const priority = this.filterPriority();
     const taskStatus = this.filterTaskStatus();
+    const testTypeFilter = this.filterTestType();
 
     // 1. Filter test cases
     const filteredCases = rawTestCases.filter((tc) => {
+      // Filter testType
+      if (testTypeFilter !== 'all') {
+        const tcType = (tc.testType || 'SIT').toUpperCase();
+        if (tcType !== testTypeFilter) return false;
+      }
       // Filter status
       if (status !== 'all' && (tc.testStatus || '').toLowerCase() !== status.toLowerCase()) {
         return false;
@@ -171,6 +189,13 @@ export class Pmdt12Component implements OnInit {
     // Filter scenarios matching search or containing filtered test cases
     rawScenarios.forEach((sc) => {
       const scId = sc.id!;
+      const scType = (sc.testType || 'SIT').toUpperCase();
+
+      // If testType filter active and scenario doesn't match and has no matched cases, skip
+      if (testTypeFilter !== 'all' && scType !== testTypeFilter) {
+        return;
+      }
+
       const casesForThisSc = map.get(scId) || [];
       const matchScKeyword = search && (
         (sc.scenarioCode || '').toLowerCase().includes(search) ||
@@ -204,7 +229,7 @@ export class Pmdt12Component implements OnInit {
   });
 
   protected totalScenarios = computed(() => {
-    return this.scenarios().length;
+    return this.scenarioGroups().filter((g) => g.scenario !== null).length;
   });
 
   // ===== Lifecycle =====
@@ -416,6 +441,41 @@ export class Pmdt12Component implements OnInit {
     this.scenarioPageMap.set(new Map());
   }
 
+  setFilterTestType(type: 'all' | 'SIT' | 'UAT') {
+    this.filterTestType.set(type);
+    this.scenarioPageMap.set(new Map());
+  }
+
+  exportUatReport(testType: string = 'UAT') {
+    const projectId = this.customerState.getProjectId();
+    if (!projectId) {
+      this.dialog.warn('ไม่พบข้อมูลโครงการ', 'กรุณาเลือกโครงการก่อนทำการออกรายงาน');
+      return;
+    }
+
+    this.isExportingUat.set(true);
+    this.service.exportUatReport(projectId, testType)
+      .pipe(finalize(() => this.isExportingUat.set(false)))
+      .subscribe({
+        next: (blob: Blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const timeStr = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+          a.href = url;
+          a.download = `${testType}_Report_${projectId}_${timeStr}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          this.dialog.success('ออกรายงานสำเร็จ', `ส่งออกเอกสารรายงานผลการทดสอบ (${testType}) เรียบร้อยแล้ว`);
+        },
+        error: (err) => {
+          console.error('Error exporting UAT report:', err);
+          this.dialog.error('ส่งออกรายงานไม่สำเร็จ', 'เกิดข้อผิดพลาดในการสร้างเอกสารรายงาน PDF');
+        }
+      });
+  }
+
   readyToTestCount = computed(() => {
     // นับเฉพาะ Task ของโครงการที่อยู่ในสถานะ Testing และไม่ใช่ Bug
     return this.projectTasks().filter((t: any) => {
@@ -433,9 +493,47 @@ export class Pmdt12Component implements OnInit {
     this.router.navigate(['/feature/pm/test-scenario/new']);
   }
 
+  goToViewScenario(id: string, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    this.router.navigate(['/feature/pm/test-scenario', id, 'view']);
+  }
+
   goToEditScenario(id: string, event?: MouseEvent) {
     if (event) event.stopPropagation();
     this.router.navigate(['/feature/pm/test-scenario', id, 'edit']);
+  }
+
+  exportScenarioReport(scenario: PmTestScenarioModel, event?: MouseEvent) {
+    if (event) event.stopPropagation();
+    const projectId = this.customerState.getProjectId();
+    if (!projectId) {
+      this.dialog.warn('ไม่พบข้อมูลโครงการ', 'กรุณาเลือกโครงการก่อนทำการออกรายงาน');
+      return;
+    }
+
+    const testType = scenario.testType || 'UAT';
+    this.isExportingUat.set(true);
+    this.service.exportUatReport(projectId, testType, scenario.id)
+      .pipe(finalize(() => this.isExportingUat.set(false)))
+      .subscribe({
+        next: (blob: Blob) => {
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          const timeStr = new Date().toISOString().replace(/[-:T.]/g, '').slice(0, 14);
+          const code = scenario.scenarioCode ? scenario.scenarioCode + '_' : '';
+          a.href = url;
+          a.download = `${testType}_Report_${code}${timeStr}.pdf`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          window.URL.revokeObjectURL(url);
+          this.dialog.success('ออกรายงานสำเร็จ', `ส่งออกรายงานผลการทดสอบเฉพาะ Scenario: ${scenario.scenarioName || ''} เรียบร้อยแล้ว`);
+        },
+        error: (err) => {
+          console.error('Error exporting Scenario report:', err);
+          this.dialog.error('ส่งออกรายงานไม่สำเร็จ', 'เกิดข้อผิดพลาดในการสร้างเอกสารรายงาน PDF');
+        }
+      });
   }
 
   deleteScenario(id: string, event?: MouseEvent) {
@@ -560,10 +658,20 @@ export class Pmdt12Component implements OnInit {
         if (testCase.actualResult) desc += `• ผลลัพธ์ที่พบจริง (ข้อผิดพลาด):\n${cleanHtml(testCase.actualResult)}\n\n`;
         if (testCase.tester) desc += `• ผู้รายงาน: ${testCase.tester}\n`;
 
+        const rawPriority = (testCase.priority || 'HIGH').toUpperCase();
+        let defaultPriority = 'HIGH';
+        if (rawPriority.includes('CRITICAL') || rawPriority === 'HIGH') {
+          defaultPriority = 'CRITICAL';
+        } else if (rawPriority.includes('MED')) {
+          defaultPriority = 'MEDIUM';
+        } else if (rawPriority.includes('LOW')) {
+          defaultPriority = 'LOW';
+        }
+
         this.bugForm.set({
           taskCode: bugCode,
           taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
-          priority: testCase.priority === 'High' ? 'Critical' : (testCase.priority || 'High'),
+          priority: defaultPriority,
           description: desc.trim(),
           assignedTo: parentTask.assignedTo || null,
           estimateManday: 1,
@@ -769,6 +877,22 @@ export class Pmdt12Component implements OnInit {
     if (s === 'on hold') return '⏸️ On Hold';
     if (s === 'to do') return '📝 To Do';
     return status || 'To Do';
+  }
+
+  getTestTypeClass(type?: string): string {
+    const t = (type || 'SIT').toUpperCase();
+    if (t === 'UAT') {
+      return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300 border border-purple-300 dark:border-purple-800';
+    }
+    return 'bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300 border border-sky-300 dark:border-sky-800';
+  }
+
+  getTestTypeIcon(type?: string): string {
+    const t = (type || 'SIT').toUpperCase();
+    if (t === 'UAT') {
+      return 'bi-clipboard-check';
+    }
+    return 'bi-flask';
   }
 }
 

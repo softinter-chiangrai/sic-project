@@ -36,6 +36,9 @@ public class PmTestScenario extends BaseBusinessEntity {
     @Column(name = "status", length = 20)
     private String status = "Active";
 
+    @Column(name = "test_type", length = 20)
+    private String testType = "SIT";
+
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 

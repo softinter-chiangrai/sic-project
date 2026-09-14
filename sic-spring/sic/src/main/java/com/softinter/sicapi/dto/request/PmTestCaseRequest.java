@@ -29,6 +29,7 @@ public class PmTestCaseRequest {
 
     private String actualResult;
     private String testStatus;
+    private String testType;
     private String tester;
     private Instant testDate;
     private String relatedRequirement;

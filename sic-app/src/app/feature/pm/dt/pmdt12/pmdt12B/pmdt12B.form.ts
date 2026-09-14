@@ -15,6 +15,7 @@ export class Pmdt12BForm {
       scenarioCode: fb.control(null, [Validators.required, Validators.maxLength(50)]),
       scenarioName: fb.control(null, [Validators.required, Validators.maxLength(255)]),
       priority: fb.control('Medium'),
+      testType: fb.control('SIT'),
       description: fb.control(null),
       status: fb.control('Active'),
       state: fb.control(null),

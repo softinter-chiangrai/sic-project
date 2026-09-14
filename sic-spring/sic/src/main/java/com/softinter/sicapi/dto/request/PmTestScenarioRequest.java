@@ -21,6 +21,7 @@ public class PmTestScenarioRequest {
     private String priority;
     private String description;
     private String status;
+    private String testType;
 
     private Integer state;
     private Integer rowVersion;

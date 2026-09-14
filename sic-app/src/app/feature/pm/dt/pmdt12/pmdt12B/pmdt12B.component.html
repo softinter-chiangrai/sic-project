@@ -4,8 +4,8 @@
   <div class="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[var(--border)]">
     <div>
       <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
-        <i class="bi bi-folder-plus text-[var(--crm-primary)]"></i>
-        {{ isEdit() ? 'แก้ไข Test Scenario' : 'เพิ่ม Test Scenario ใหม่' }}
+        <i class="bi" [ngClass]="isView() ? 'bi-folder2-open text-blue-500' : (isEdit() ? 'bi-folder-check text-amber-500' : 'bi-folder-plus text-[var(--crm-primary)]')"></i>
+        {{ isView() ? 'รายละเอียด Test Scenario' : (isEdit() ? 'แก้ไข Test Scenario' : 'เพิ่ม Test Scenario ใหม่') }}
       </h2>
       <p class="text-sm text-[var(--text-muted)] mt-1">
         กลุ่มสถานการณ์หรือหมวดหมู่การทดสอบสำหรับจัดการชุด Test Cases
@@ -13,16 +13,18 @@
     </div>
 
     <!-- AI Assistant Header Button -->
-    <div class="flex items-center gap-2">
-      <button
-        type="button"
-        (click)="openAiAssist()"
-        class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-        title="สร้างเนื้อหาและรายละเอียดด้วย AI">
-        <i class="bi bi-stars text-sm"></i>
-        <span>สร้างเนื้อหาด้วย AI</span>
-      </button>
-    </div>
+    @if (!isView()) {
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          (click)="openAiAssist()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          title="สร้างเนื้อหาและรายละเอียดด้วย AI">
+          <i class="bi bi-stars text-sm"></i>
+          <span>สร้างเนื้อหาด้วย AI</span>
+        </button>
+      </div>
+    }
   </div>
 
   @if (isLoading()) {
@@ -40,27 +42,41 @@
           ข้อมูล Test Scenario
         </h3>
 
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <div>
             <sic-input
               formControlName="scenarioCode"
-              label="รหัส Test Scenario *"
+              label="รหัส Test Scenario"
               placeholder="เช่น SC-001, SC-LOGIN"
+              [disabled]="isView()"
+            ></sic-input>
+          </div>
+          <div class="md:col-span-1">
+            <sic-input
+              formControlName="scenarioName"
+              label="ชื่อ Test Scenario"
+              placeholder="เช่น การเข้าสู่ระบบ, การพิมพ์รายงาน..."
+              [disabled]="isView()"
             ></sic-input>
           </div>
           <div>
-            <sic-input
-              formControlName="scenarioName"
-              label="ชื่อ Test Scenario *"
-              placeholder="เช่น การเข้าสู่ระบบ, การพิมพ์รายงาน..."
-            ></sic-input>
+            <sic-combobox
+              label="ประเภทการทดสอบ"
+              formControlName="testType"
+              [items]="testTypeOptions"
+              placeholder="เลือกประเภทการทดสอบ"
+              [disabled]="isView()"
+            ></sic-combobox>
           </div>
           <div>
             <sic-combobox
               label="ความสำคัญ"
               formControlName="priority"
-              [items]="priorityOptions"
+              [apiUrl]="priorityApiUrl"
               placeholder="เลือกระดับความสำคัญ"
+              valueField="value"
+              textField="text"
+              [disabled]="isView()"
             ></sic-combobox>
           </div>
           <div>
@@ -70,6 +86,7 @@
               [items]="taskOptions()"
               placeholder="เลือก Task ที่เกี่ยวข้อง"
               (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
+              [disabled]="isView()"
             ></sic-combobox>
           </div>
         </div>
@@ -85,6 +102,7 @@
             formControlName="description"
             placeholderInput="อธิบายขอบเขตและวัตถุประสงค์ในการทดสอบกลุ่มนี้..."
             minHeightInput="130px"
+            [disabledInput]="isView()"
           ></sic-tiptap-editor>
         </div>
 
@@ -95,6 +113,7 @@
             label="เปิดใช้งาน"
             checkedValue="Active"
             uncheckedValue="Inactive"
+            [disabled]="isView()"
           ></sic-checkbox>
         </div>
       </div>
@@ -110,18 +129,20 @@
           <i class="bi bi-arrow-left"></i>
           ย้อนกลับ
         </sic-button>
-        <sic-button
-          variant="primary"
-          [type]="'submit'"
-          [disabled]="isSaving()"
-        >
-          @if (isSaving()) {
-            <i class="bi bi-arrow-repeat animate-spin"></i>
-          } @else {
-            <i class="bi bi-floppy"></i>
-          }
-          {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
-        </sic-button>
+        @if (!isView()) {
+          <sic-button
+            variant="primary"
+            [type]="'submit'"
+            [disabled]="isSaving()"
+          >
+            @if (isSaving()) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+            } @else {
+              <i class="bi bi-floppy"></i>
+            }
+            {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+          </sic-button>
+        }
       </div>
 
     </form>

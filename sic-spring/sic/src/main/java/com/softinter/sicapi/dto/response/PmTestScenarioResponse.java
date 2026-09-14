@@ -18,6 +18,7 @@ public class PmTestScenarioResponse {
     private String priority;
     private String description;
     private String status;
+    private String testType;
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;

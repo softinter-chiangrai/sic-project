@@ -30,7 +30,22 @@ public class PmTestCaseController {
 
     private final PmTestCaseService testCaseService;
     private final com.softinter.sicapi.service.impl.TestCaseGeneratorService generatorService;
+    private final com.softinter.sicapi.service.PmUatExportService uatExportService;
     private final CurrentUserService currentUserService;
+
+    @GetMapping("/export-uat-report")
+    public ResponseEntity<byte[]> exportUatReport(
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false, defaultValue = "UAT") String testType,
+            @RequestParam(required = false) UUID scenarioId) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        byte[] pdfBytes = uatExportService.exportUatReportPdf(projectId, businessId, testType, scenarioId);
+        String filename = "uat-report-" + (scenarioId != null ? "scenario-" + scenarioId : (projectId != null ? projectId : "all")) + ".pdf";
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"" + filename + "\"")
+                .body(pdfBytes);
+    }
 
     @GetMapping("/paging")
     public ResponseEntity<PaginationResponse<PmTestCaseResponse>> getPaging(

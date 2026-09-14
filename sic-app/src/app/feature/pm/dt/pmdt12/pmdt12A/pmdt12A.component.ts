@@ -85,10 +85,17 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
+  priorityApiUrl = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
+
   priorityOptions = [
     { value: 'High', text: 'High' },
     { value: 'Medium', text: 'Medium' },
     { value: 'Low', text: 'Low' },
+  ];
+
+  testTypeOptions = [
+    { value: 'SIT', text: '🧪 การทดสอบระบบภายใน (SIT)' },
+    { value: 'UAT', text: '📋 การตรวจรับระบบโดยผู้ใช้ (UAT)' },
   ];
 
   statusOptions = [
@@ -147,16 +154,20 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
         const list = (scenarios || []).map((s: any) => ({
           value: s.id,
           text: s.scenarioName,
+          testType: s.testType || 'SIT',
         }));
         this.scenarioOptions.set(list);
         this.scenarioLoading.set(false);
 
-        // Pre-fill scenarioName if scenarioId was passed via queryParams
+        // Pre-fill scenarioName and testType if scenarioId was passed via queryParams
         const currentScenarioId = this.formData.form.get('scenarioId')?.value;
         if (currentScenarioId) {
           const found = list.find((s) => s.value === currentScenarioId);
           if (found) {
-            this.formData.form.patchValue({ scenarioName: found.text });
+            this.formData.form.patchValue({
+              scenarioName: found.text,
+              testType: found.testType || this.formData.form.get('testType')?.value || 'SIT',
+            });
           }
         }
       },
@@ -171,10 +182,11 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       this.formData.form.patchValue({ scenarioId: null, scenarioName: null });
       return;
     }
-    const found = this.scenarioOptions().find((s) => s.value === scenarioId);
+    const found = (this.scenarioOptions() as any[]).find((s) => s.value === scenarioId);
     this.formData.form.patchValue({
       scenarioId: scenarioId,
       scenarioName: found ? found.text : null,
+      testType: found?.testType || this.formData.form.get('testType')?.value || 'SIT',
     });
   }
 

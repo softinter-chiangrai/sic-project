@@ -48,6 +48,9 @@ public class PmTestCase extends BaseBusinessEntity {
     @Column(name = "test_status", length = 20)
     private String testStatus = "Pending";
 
+    @Column(name = "test_type", length = 20)
+    private String testType = "SIT";
+
     @Column(name = "tester", length = 100)
     private String tester;
 
