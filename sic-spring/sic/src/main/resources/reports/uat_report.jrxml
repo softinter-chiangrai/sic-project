@@ -289,12 +289,12 @@
 			<pen lineWidth="0.6"/>
 		</element>
 
-		<!-- Signatures: ผู้จัดทำ / ผู้ส่งมอบงาน -->
+		<!-- Signatures: ผู้จัดทำ -->
 		<element kind="rectangle" uuid="7cf41209-4d5c-489e-913a-7a561bc49a12" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
 		<element kind="textField" uuid="62d1a3c7-4d5c-48ca-91b5-827a4192b0c5" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
-			<expression><![CDATA["ผู้จัดทำ / ผู้ส่งมอบงาน"]]></expression>
+			<expression><![CDATA["ผู้จัดทำ"]]></expression>
 		</element>
 		<element kind="textField" uuid="b13e9a72-4d5c-48a5-926f-47b2ae601b2a" x="10" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
 			<expression><![CDATA["(..................................................................)"]]></expression>
@@ -306,12 +306,12 @@
 			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 
-		<!-- Signatures: ผู้อนุมัติ / ผู้ตรวจรับมอบระบบ -->
+		<!-- Signatures: ผู้อนุมัติ -->
 		<element kind="rectangle" uuid="921ca47b-5e6d-48ca-913b-2a567c82a4c9" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
 		<element kind="textField" uuid="3d2194c7-5e6d-47b2-843e-958a1b24ca02" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
-			<expression><![CDATA["ผู้อนุมัติ / ผู้ตรวจรับมอบระบบ"]]></expression>
+			<expression><![CDATA["ผู้อนุมัติ"]]></expression>
 		</element>
 		<element kind="textField" uuid="7cf41209-5e6d-489e-913a-7a561bc49a12" x="280" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
 			<expression><![CDATA["(..................................................................)"]]></expression>
