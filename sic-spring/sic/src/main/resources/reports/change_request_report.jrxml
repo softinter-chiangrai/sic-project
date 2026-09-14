@@ -232,44 +232,44 @@
          ======================================================== -->
 	<summary height="190" splitType="Prevent">
 		<!-- SECTION 3: การพิจารณาและอนุมัติ (Review & Approval) -->
-		<element kind="textField" uuid="9be5ec9b-325b-4c07-ae65-4f7db20ef7b2" positionType="Float" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+		<element kind="textField" uuid="9be5ec9b-325b-4c07-ae65-4f7db20ef7b2" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 			<expression><![CDATA["3. การพิจารณาและอนุมัติคำขอเปลี่ยนแปลง (Review & Approval)"]]></expression>
 		</element>
-		<element kind="line" uuid="fa72b53e-5bca-4bfa-a67b-1a067ff51410" positionType="Float" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
+		<element kind="line" uuid="fa72b53e-5bca-4bfa-a67b-1a067ff51410" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
 			<pen lineWidth="0.6"/>
 		</element>
 
 		<!-- Signatures: ผู้จัดทำ -->
-		<element kind="rectangle" uuid="cae9bf22-f12b-426b-9c78-2df8073eb492" positionType="Float" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
+		<element kind="rectangle" uuid="cae9bf22-f12b-426b-9c78-2df8073eb492" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
-		<element kind="textField" uuid="bdf672bb-85bb-41bc-b2cf-ce18d18471da" positionType="Float" x="10" y="46" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+		<element kind="textField" uuid="bdf672bb-85bb-41bc-b2cf-ce18d18471da" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
 			<expression><![CDATA["ผู้จัดทำ"]]></expression>
 		</element>
-		<element kind="staticText" uuid="7cfebc34-31f0-466d-88ae-4f707fe8fa01" positionType="Float" x="10" y="122" width="225" height="16" hTextAlign="Center" vTextAlign="Bottom" style="Value">
-			<text><![CDATA[(..................................................................)]]></text>
+		<element kind="textField" uuid="7cfebc34-31f0-466d-88ae-4f707fe8fa01" x="10" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
 		</element>
-		<element kind="textField" uuid="1ae147df-660c-4fa2-bc40-1e528b030438" positionType="Float" x="10" y="142" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+		<element kind="textField" uuid="1ae147df-660c-4fa2-bc40-1e528b030438" x="10" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
 			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
 		</element>
-		<element kind="textField" uuid="69a5e8e8-7828-4428-aa92-747209ff8279" positionType="Float" x="10" y="162" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+		<element kind="textField" uuid="69a5e8e8-7828-4428-aa92-747209ff8279" x="10" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
 			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 
 		<!-- Signatures: ผู้อนุมัติ -->
-		<element kind="rectangle" uuid="9ba52fb3-fbb5-4f4f-b6e8-091ea285f269" positionType="Float" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
+		<element kind="rectangle" uuid="9ba52fb3-fbb5-4f4f-b6e8-091ea285f269" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
-		<element kind="textField" uuid="b1e19483-3630-4e39-b9a3-5e93fb2ea72c" positionType="Float" x="280" y="46" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+		<element kind="textField" uuid="b1e19483-3630-4e39-b9a3-5e93fb2ea72c" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
 			<expression><![CDATA["ผู้อนุมัติ"]]></expression>
 		</element>
-		<element kind="staticText" uuid="ea20509a-6895-46aa-bf7e-b79ee25b3992" positionType="Float" x="280" y="122" width="225" height="16" hTextAlign="Center" vTextAlign="Bottom" style="Value">
-			<text><![CDATA[(..................................................................)]]></text>
+		<element kind="textField" uuid="ea20509a-6895-46aa-bf7e-b79ee25b3992" x="280" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
 		</element>
-		<element kind="textField" uuid="7cfcb95a-f1ea-42f5-836f-e3046ba26f21" positionType="Float" x="280" y="142" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+		<element kind="textField" uuid="7cfcb95a-f1ea-42f5-836f-e3046ba26f21" x="280" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
 			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
 		</element>
-		<element kind="textField" uuid="3df8cb22-1efb-4171-8bc8-60193fb61df6" positionType="Float" x="280" y="162" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+		<element kind="textField" uuid="3df8cb22-1efb-4171-8bc8-60193fb61df6" x="280" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
 			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 	</summary>
