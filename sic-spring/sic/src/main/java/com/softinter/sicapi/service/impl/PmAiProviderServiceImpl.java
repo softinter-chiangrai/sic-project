@@ -130,7 +130,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         if (effectiveModel.startsWith("claude")) {
             config.provider = "claude";
             config.apiUrl = (claudeApiUrl != null && !claudeApiUrl.isBlank()) ? claudeApiUrl : "https://api.anthropic.com/v1/messages";
-            config.apiKey = getEffectiveKey(claudeApiKey, "AI_API_KEY");
+            config.apiKey = getEffectiveKey(claudeApiKey, "CLAUDE_API_KEY");
             config.maxTokens = claudeMaxTokens > 0 ? claudeMaxTokens : 4096;
 
             if (effectiveModel.equalsIgnoreCase("claude-3-7-sonnet")) {
