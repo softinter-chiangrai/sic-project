@@ -147,7 +147,7 @@
       </div>
 
       <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (isEdit || isView) {
+      @if (form.get('targetId')?.value || impactData() || isEdit || isView) {
         <div class="border-t border-[var(--border)] pt-4 mt-2">
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">

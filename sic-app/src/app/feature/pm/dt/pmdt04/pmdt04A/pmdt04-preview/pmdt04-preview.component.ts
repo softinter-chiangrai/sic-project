@@ -16,7 +16,7 @@ import { RequirementPreviewData } from '../pmdt04A.model';
           <span class="badge" [class]="'badge--' + getStatusClass(data.status)">
             {{ getStatusText(data.status) }}
           </span>
-          <span class="badge badge--version">v{{ data.version }}</span>
+          <span class="badge badge--version">{{ formatVersion(data.version) }}</span>
         </div>
         <h1 class="requirement-preview__title">{{ data.title }}</h1>
         <div class="requirement-preview__meta">
@@ -266,5 +266,11 @@ export class SicRequirementPreviewComponent implements OnChanges {
       "Won't": 'ไม่มี',
     };
     return map[priority] || priority;
+  }
+
+  formatVersion(version?: string): string {
+    if (!version) return '';
+    const trimmed = String(version).trim();
+    return trimmed.toLowerCase().startsWith('v') ? trimmed : `v${trimmed}`;
   }
 }

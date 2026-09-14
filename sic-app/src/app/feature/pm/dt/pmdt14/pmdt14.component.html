@@ -110,7 +110,7 @@
                 </span>
               </td>
               <td class="px-4 py-3 font-mono text-xs text-[var(--text-muted)]">
-                v{{ item.deliveryVersion }}
+                {{ item.deliveryVersion?.startsWith('v') || item.deliveryVersion?.startsWith('V') ? item.deliveryVersion : (item.deliveryVersion ? 'v' + item.deliveryVersion : '-') }}
               </td>
               <td class="px-4 py-3 text-xs text-[var(--text)]">
                 {{ item.deliveryDate ? (item.deliveryDate | sicDate: null : 'DD/MM/YYYY') : '-' }}

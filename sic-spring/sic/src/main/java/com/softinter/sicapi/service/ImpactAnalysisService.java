@@ -17,5 +17,7 @@ public interface ImpactAnalysisService {
     // ✅ ใหม่: ใช้ Traceability Engine
     ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId);
 
+    ImpactAnalysisResponse previewImpact(String targetType, UUID targetId);
+
     void delete(UUID id);
 }

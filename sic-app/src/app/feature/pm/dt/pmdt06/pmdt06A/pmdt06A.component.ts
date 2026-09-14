@@ -206,6 +206,17 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         this.form.get('targetType')?.valueChanges.subscribe((val) => {
             this.selectedTargetType.set(val);
             this.form.get('targetId')?.setValue(null);
+            this.impactData.set(null);
+            this.showImpactSection.set(false);
+        });
+
+        this.form.get('targetId')?.valueChanges.subscribe((val) => {
+            if (val) {
+                this.triggerImpactAnalysis();
+            } else {
+                this.impactData.set(null);
+                this.showImpactSection.set(false);
+            }
         });
 
         this.route.queryParams.subscribe((qParams) => {
@@ -229,6 +240,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     targetId: qParams['targetId'],
                     title: qParams['targetTitle'] ? `คำขอเปลี่ยนแปลง: ${qParams['targetTitle']}` : null,
                 });
+                this.triggerImpactAnalysis();
             }
         });
 
@@ -352,42 +364,62 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     if (data && data.id) {
                         this.impactData.set(data);
                         this.showImpactSection.set(true);
+                        this.cdr.detectChanges();
                     } else {
-                        // ถ้ายังไม่มี Impact ให้ auto detect ทันที
-                        this.autoDetectImpact();
+                        // ถ้ายังไม่มี Impact ให้วิเคราะห์ทันที
+                        this.triggerImpactAnalysis();
                     }
                 },
                 error: () => {
-                    // ถ้ายังไม่มี Impact ให้ auto detect ทันที
-                    this.autoDetectImpact();
+                    // ถ้ายังไม่มี Impact ให้วิเคราะห์ทันที
+                    this.triggerImpactAnalysis();
                 }
             });
+    }
+
+    triggerImpactAnalysis() {
+        const targetType = this.form.get('targetType')?.value || this.selectedTargetType();
+        const targetId = this.form.get('targetId')?.value;
+        if (!targetType || !targetId) {
+            return;
+        }
+
+        this.isLoadingImpact.set(true);
+        if (this.changeRequestId) {
+            this.impactService.autoDetect(this.changeRequestId)
+                .pipe(finalize(() => this.isLoadingImpact.set(false)))
+                .subscribe({
+                    next: (data) => {
+                        this.impactData.set(data);
+                        this.showImpactSection.set(true);
+                        this.cdr.detectChanges();
+                    },
+                    error: (err) => {
+                        console.error('Auto detect impact failed:', err);
+                    }
+                });
+        } else {
+            this.impactService.preview(targetType, targetId)
+                .pipe(finalize(() => this.isLoadingImpact.set(false)))
+                .subscribe({
+                    next: (data) => {
+                        this.impactData.set(data);
+                        this.showImpactSection.set(true);
+                        this.cdr.detectChanges();
+                    },
+                    error: (err) => {
+                        console.error('Preview impact failed:', err);
+                    }
+                });
+        }
     }
 
     autoDetectImpact() {
-        const id = this.changeRequestId;
-        if (!id) return;
-
-        this.isLoadingImpact.set(true);
-        this.impactService.autoDetect(id)
-            .pipe(finalize(() => this.isLoadingImpact.set(false)))
-            .subscribe({
-                next: (data) => {
-                    this.impactData.set(data);
-                    this.showImpactSection.set(true);
-                    if (data && data.id) {
-                        this.dialog.success('วิเคราะห์ผลกระทบ', 'ระบบวิเคราะห์ผลกระทบอัตโนมัติเรียบร้อย');
-                    }
-                },
-                error: (err) => {
-                    console.error('Auto detect impact failed:', err);
-                    this.showImpactSection.set(false);
-                }
-            });
+        this.triggerImpactAnalysis();
     }
 
     refreshImpact() {
-        this.autoDetectImpact();
+        this.triggerImpactAnalysis();
     }
 
     // ===== CRUD =====

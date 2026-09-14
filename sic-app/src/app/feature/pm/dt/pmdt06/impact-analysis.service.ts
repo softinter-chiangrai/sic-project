@@ -54,6 +54,12 @@ export class ImpactAnalysisService {
         return this.http.get<ImpactAnalysis>(`${this.baseUrl}/change-request/${changeRequestId}`);
     }
 
+    preview(targetType: string, targetId: string): Observable<ImpactAnalysis> {
+        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/preview`, {
+            params: { targetType, targetId }
+        });
+    }
+
     autoDetect(changeRequestId: string): Observable<ImpactAnalysis> {
         return this.http.post<ImpactAnalysis>(`${this.baseUrl}/auto-detect-trace/${changeRequestId}`, {});
     }

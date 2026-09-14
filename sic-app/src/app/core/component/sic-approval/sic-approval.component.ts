@@ -344,4 +344,10 @@ export class SicApprovalComponent implements OnInit, OnChanges {
         };
         return map[status] || 'bg-gray-100 text-gray-600';
     }
+
+    formatVersion(version?: string): string {
+        if (!version) return '';
+        const trimmed = version.trim();
+        return trimmed.toLowerCase().startsWith('v') ? trimmed : `v${trimmed}`;
+    }
 }

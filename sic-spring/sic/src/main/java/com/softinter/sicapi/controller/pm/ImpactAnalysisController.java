@@ -31,6 +31,15 @@ public class ImpactAnalysisController {
         return data != null ? ResponseEntity.ok(data) : ResponseEntity.notFound().build();
     }
 
+    @GetMapping("/preview")
+    @Operation(summary = "Preview impact analysis by targetType and targetId")
+    public ResponseEntity<ImpactAnalysisResponse> previewImpact(
+            @RequestParam String targetType,
+            @RequestParam UUID targetId) {
+        ImpactAnalysisResponse response = impactAnalysisService.previewImpact(targetType, targetId);
+        return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
+    }
+
     @PostMapping("/save")
     @Operation(summary = "Save impact analysis (manual or auto)")
     public ResponseEntity<UUID> save(@Valid @RequestBody SaveImpactAnalysisRequest request) {

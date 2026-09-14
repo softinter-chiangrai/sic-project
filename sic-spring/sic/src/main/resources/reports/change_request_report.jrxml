@@ -230,7 +230,7 @@
 	<!-- ========================================================
          SUMMARY BAND: Sign-off Section (Will stay neatly together)
          ======================================================== -->
-	<summary height="180" splitType="Prevent">
+	<summary height="190" splitType="Prevent">
 		<!-- SECTION 3: การพิจารณาและอนุมัติ (Review & Approval) -->
 		<element kind="textField" uuid="9be5ec9b-325b-4c07-ae65-4f7db20ef7b2" positionType="Float" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 			<expression><![CDATA["3. การพิจารณาและอนุมัติคำขอเปลี่ยนแปลง (Review & Approval)"]]></expression>
@@ -239,38 +239,38 @@
 			<pen lineWidth="0.6"/>
 		</element>
 
-		<!-- Signatures: Requester -->
-		<element kind="rectangle" uuid="cae9bf22-f12b-426b-9c78-2df8073eb492" positionType="Float" mode="Opaque" x="0" y="42" width="245" height="125" backcolor="#FAFAFA" radius="3">
+		<!-- Signatures: ผู้จัดทำ -->
+		<element kind="rectangle" uuid="cae9bf22-f12b-426b-9c78-2df8073eb492" positionType="Float" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
-		<element kind="textField" uuid="bdf672bb-85bb-41bc-b2cf-ce18d18471da" positionType="Float" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
-			<expression><![CDATA["ผู้ยื่นคำขอเปลี่ยนแปลง (Requester)"]]></expression>
+		<element kind="textField" uuid="bdf672bb-85bb-41bc-b2cf-ce18d18471da" positionType="Float" x="10" y="46" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["ผู้จัดทำ"]]></expression>
 		</element>
-		<element kind="staticText" uuid="7cfebc34-31f0-466d-88ae-4f707fe8fa01" positionType="Float" x="10" y="98" width="225" height="18" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+		<element kind="staticText" uuid="7cfebc34-31f0-466d-88ae-4f707fe8fa01" positionType="Float" x="10" y="122" width="225" height="16" hTextAlign="Center" vTextAlign="Bottom" style="Value">
 			<text><![CDATA[(..................................................................)]]></text>
 		</element>
-		<element kind="textField" uuid="1ae147df-660c-4fa2-bc40-1e528b030438" positionType="Float" x="10" y="120" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
-			<expression><![CDATA["ชื่อ: " + ($F{requesterId} != null && !"-".equals($F{requesterId}) ? $F{requesterId} : ".....................................................")]]></expression>
+		<element kind="textField" uuid="1ae147df-660c-4fa2-bc40-1e528b030438" positionType="Float" x="10" y="142" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
 		</element>
-		<element kind="textField" uuid="69a5e8e8-7828-4428-aa92-747209ff8279" positionType="Float" x="10" y="140" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
-			<expression><![CDATA["วันที่: " + ($F{createdDate} != null ? $F{createdDate} : "........ / ........ / ................")]]></expression>
+		<element kind="textField" uuid="69a5e8e8-7828-4428-aa92-747209ff8279" positionType="Float" x="10" y="162" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 
-		<!-- Signatures: Approver (PM / CCB) -->
-		<element kind="rectangle" uuid="9ba52fb3-fbb5-4f4f-b6e8-091ea285f269" positionType="Float" mode="Opaque" x="270" y="42" width="245" height="125" backcolor="#FAFAFA" radius="3">
+		<!-- Signatures: ผู้อนุมัติ -->
+		<element kind="rectangle" uuid="9ba52fb3-fbb5-4f4f-b6e8-091ea285f269" positionType="Float" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
 			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
 		</element>
-		<element kind="textField" uuid="b1e19483-3630-4e39-b9a3-5e93fb2ea72c" positionType="Float" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
-			<expression><![CDATA["ผู้อนุมัติ (Project Manager / CCB)"]]></expression>
+		<element kind="textField" uuid="b1e19483-3630-4e39-b9a3-5e93fb2ea72c" positionType="Float" x="280" y="46" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA["ผู้อนุมัติ"]]></expression>
 		</element>
-		<element kind="staticText" uuid="ea20509a-6895-46aa-bf7e-b79ee25b3992" positionType="Float" x="280" y="98" width="225" height="18" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+		<element kind="staticText" uuid="ea20509a-6895-46aa-bf7e-b79ee25b3992" positionType="Float" x="280" y="122" width="225" height="16" hTextAlign="Center" vTextAlign="Bottom" style="Value">
 			<text><![CDATA[(..................................................................)]]></text>
 		</element>
-		<element kind="textField" uuid="7cfcb95a-f1ea-42f5-836f-e3046ba26f21" positionType="Float" x="280" y="120" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
-			<expression><![CDATA["ชื่อ: " + ($F{approvedBy} != null && !"-".equals($F{approvedBy}) ? $F{approvedBy} : ".....................................................")]]></expression>
+		<element kind="textField" uuid="7cfcb95a-f1ea-42f5-836f-e3046ba26f21" positionType="Float" x="280" y="142" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["ตำแหน่ง: ....................................................."]]></expression>
 		</element>
-		<element kind="textField" uuid="3df8cb22-1efb-4171-8bc8-60193fb61df6" positionType="Float" x="280" y="140" width="225" height="18" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
-			<expression><![CDATA["วันที่: " + ($F{approvedAt} != null ? $F{approvedAt} : "........ / ........ / ................")]]></expression>
+		<element kind="textField" uuid="3df8cb22-1efb-4171-8bc8-60193fb61df6" positionType="Float" x="280" y="162" width="225" height="16" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="Value">
+			<expression><![CDATA["วันที่: ........ / ........ / ................"]]></expression>
 		</element>
 	</summary>
 </jasperReport>

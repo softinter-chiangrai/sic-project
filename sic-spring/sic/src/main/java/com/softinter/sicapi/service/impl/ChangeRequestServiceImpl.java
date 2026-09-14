@@ -49,6 +49,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final ImpactAnalysisService impactAnalysisService;
 
     @Override
     @Transactional
@@ -136,6 +137,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
 
         logCrAudit("CREATE_CR", cr);
+
+        try {
+            impactAnalysisService.autoDetectUsingTrace(cr.getId());
+        } catch (Exception e) {
+            log.error("Auto detect impact error on create CR: {}", e.getMessage());
+        }
 
         return toResponse(cr);
     }
@@ -255,6 +262,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
 
         cr = changeRequestRepository.save(cr);
+
+        try {
+            impactAnalysisService.autoDetectUsingTrace(cr.getId());
+        } catch (Exception e) {
+            log.error("Auto detect impact error on update CR: {}", e.getMessage());
+        }
 
         logCrAudit("UPDATE_CR", cr);
 

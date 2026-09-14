@@ -42,7 +42,7 @@
                     <span class="text-sm font-mono text-[var(--text-muted)]">
                         {{ approvalData.documentCode }}
                         @if (approvalData.version) {
-                            <span class="ml-1">v{{ approvalData.version }}</span>
+                            <span class="ml-1">{{ formatVersion(approvalData.version) }}</span>
                         }
                     </span>
                 }

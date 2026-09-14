@@ -108,20 +108,8 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         }
     }
 
-    @Override
-    @Transactional
-    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
-        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
-
-        PmChangeRequest changeRequest = changeRequestRepository
-                .findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
-
-        UUID targetId = changeRequest.getTargetId();
-        String targetType = changeRequest.getTargetType();
-
-        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType,
-                targetId);
+    private ChangeImpactAnalysis computeImpactAnalysis(String targetType, UUID targetId) {
+        TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType, targetId);
 
         Map<String, Set<UUID>> impacted = traceResult.getImpacted();
 
@@ -252,11 +240,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         }
         UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
 
-        ChangeImpactAnalysis analysis = repository
-                .findByChangeRequestId(changeRequestId)
-                .orElse(new ChangeImpactAnalysis());
-
-        analysis.setChangeRequest(changeRequest);
+        ChangeImpactAnalysis analysis = new ChangeImpactAnalysis();
         analysis.setImpactedRequirementIds(filteredReqIds);
         analysis.setImpactedSpecIds(filteredSpecIds);
         analysis.setImpactedTaskIds(taskIds);
@@ -266,21 +250,67 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedTableNames(new String[0]);
 
         // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
-        if (analysis.getMandayImpact() == null || analysis.getMandayImpact() == 0) {
-            int calculatedManday = Math.max(1, (filteredSpecIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5));
-            analysis.setMandayImpact(calculatedManday);
-        }
-        if (analysis.getTimelineImpact() == null || analysis.getTimelineImpact() == 0) {
-            int calculatedDays = Math.max(1, (int) Math.ceil(analysis.getMandayImpact() / 2.0));
-            analysis.setTimelineImpact(calculatedDays);
-        }
+        int calculatedManday = Math.max(1, (filteredSpecIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+        analysis.setMandayImpact(calculatedManday);
+        int calculatedDays = Math.max(1, (int) Math.ceil(calculatedManday / 2.0));
+        analysis.setTimelineImpact(calculatedDays);
 
         analysis.setAnalysisStatus("AUTO");
         analysis.setAnalyzedAt(Instant.now());
-        analysis.setAnalyzedBy(currentUserService.getUserId());
+        if (currentUserService != null) {
+            try {
+                analysis.setAnalyzedBy(currentUserService.getUserId());
+            } catch (Exception ignored) {}
+        }
+
+        return analysis;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ImpactAnalysisResponse previewImpact(String targetType, UUID targetId) {
+        if (targetType == null || targetId == null) {
+            return null;
+        }
+        log.info("Previewing impact analysis for targetType={}, targetId={}", targetType, targetId);
+        ChangeImpactAnalysis analysis = computeImpactAnalysis(targetType, targetId);
+        return toResponse(analysis);
+    }
+
+    @Override
+    @Transactional
+    public ImpactAnalysisResponse autoDetectUsingTrace(UUID changeRequestId) {
+        log.info("Starting auto-detect using Traceability Engine for change request: {}", changeRequestId);
+
+        PmChangeRequest changeRequest = changeRequestRepository
+                .findById(changeRequestId)
+                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+
+        UUID targetId = changeRequest.getTargetId();
+        String targetType = changeRequest.getTargetType();
+
+        ChangeImpactAnalysis computed = computeImpactAnalysis(targetType, targetId);
+
+        ChangeImpactAnalysis analysis = repository
+                .findByChangeRequestId(changeRequestId)
+                .orElse(new ChangeImpactAnalysis());
+
+        analysis.setChangeRequest(changeRequest);
+        analysis.setImpactedRequirementIds(computed.getImpactedRequirementIds());
+        analysis.setImpactedSpecIds(computed.getImpactedSpecIds());
+        analysis.setImpactedTaskIds(computed.getImpactedTaskIds());
+        analysis.setImpactedTestCaseIds(computed.getImpactedTestCaseIds());
+        analysis.setImpactedBugIds(computed.getImpactedBugIds());
+        analysis.setImpactedDiagramIds(computed.getImpactedDiagramIds());
+        analysis.setImpactedTableNames(computed.getImpactedTableNames());
+        analysis.setMandayImpact(computed.getMandayImpact());
+        analysis.setTimelineImpact(computed.getTimelineImpact());
+        analysis.setAnalysisStatus(computed.getAnalysisStatus());
+        analysis.setAnalyzedAt(computed.getAnalyzedAt());
+        analysis.setAnalyzedBy(computed.getAnalyzedBy());
 
         ChangeImpactAnalysis saved = repository.save(analysis);
-        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, diagramIds.length);
+        log.info("Auto-detect using Trace completed and saved for change request: {} (found {} diagrams)", changeRequestId, analysis.getImpactedDiagramIds().length);
 
         return toResponse(saved);
     }
@@ -296,7 +326,9 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
         
         dto.setId(entity.getId());
-        dto.setChangeRequestId(entity.getChangeRequest().getId());
+        if (entity.getChangeRequest() != null) {
+            dto.setChangeRequestId(entity.getChangeRequest().getId());
+        }
         
         dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
         if (entity.getImpactedRequirementIds() != null && entity.getImpactedRequirementIds().length > 0) {
