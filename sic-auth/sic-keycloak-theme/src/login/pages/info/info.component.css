@@ -1,0 +1,10 @@
+:host {
+  display: block;
+}
+
+.kc-sic-info-message {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  color: var(--sic-color-text-muted, #64748b);
+  line-height: 1.5;
+}

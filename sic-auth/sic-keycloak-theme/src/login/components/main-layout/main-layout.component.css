@@ -1,0 +1,109 @@
+:host {
+  display: block;
+}
+
+/*
+  พบว่า .kc-sic-hero/.kc-sic-panel สูงเกิน viewport ไป 64px (เท่ากับ padding: 2rem
+  บน+ล่างของ .kc-sic-hero พอดี) ทำให้ .kc-sic-login-page เกิด scrollbar ทั้งที่แต่ละ
+  component ข้างในไม่ได้ล้นจริง — สาเหตุคือ box-sizing default เป็น content-box ทำให้
+  padding บวกเพิ่มเข้าไปนอกเหนือจาก height: 100% ที่ตั้งไว้ ต้องบังคับ border-box ทุก
+  element ในหน้านี้เพื่อให้ height/padding คำนวณรวมกันถูกต้อง
+*/
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.kc-sic-login-page {
+  /*
+    position: fixed + inset: 0 แทน min-height: 100vh ธรรมดา — เจอจากการทดสอบจริงว่า
+    ancestor ที่ TemplateComponent สร้างขึ้น (kc-root, #kc-content-wrapper ฯลฯ) ทำให้มี
+    ช่องว่างสีขาวโผล่มาด้านบนของหน้า (แม้ margin/padding ของทุก element ในสายจะเป็น 0
+    หมดแล้วก็ตาม) ยึดตำแหน่งไว้กับ viewport ตรงๆ แบบนี้ตัดปัญหานั้นทิ้งไปเลย ไม่ต้องหา
+    สาเหตุที่แท้จริงจากฝั่ง ancestor
+  */
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow-y: auto;
+}
+
+/* ---------- ภาพ hero — เต็มทั้งหน้า เป็นพื้นหลังของทั้ง login-page ไม่ใช่แค่ครึ่งซ้าย
+   การ์ด (.kc-sic-panel) ลอยทับอยู่ด้านบนแบบ overlay แทน ไม่มีพื้นสีทึบแยกส่วนขวา ---------- */
+
+.kc-sic-hero {
+  /*
+    ภาพพื้นหลังตั้งค่าผ่าน [style.background-image] ใน template แทนการ hardcode
+    ที่นี่ — เพราะไฟล์ static asset ของ Keycloak theme ถูก serve อยู่ใต้ path ที่มี
+    hash เปลี่ยนได้ (kcContext.url.resourcesPath) ไม่ใช่ root "/" ของโดเมน คนละ
+    behavior กับตอน build เป็น Angular app ปกติ — CSS ธรรมดาไม่มีทางรู้ค่านี้ได้
+    เพราะมันคำนวณจาก kcContext ที่มีแค่ฝั่ง component/template เท่านั้น
+  */
+  position: absolute;
+  inset: 0;
+  background-color: #1e293b;
+  background-size: cover;
+  background-position: center;
+}
+
+.kc-sic-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(180deg, rgba(10, 20, 50, 0.12) 0%, rgba(10, 20, 50, 0.4) 100%);
+  pointer-events: none;
+}
+
+/* ---------- การ์ด — ลอยทับบนภาพ ชิดขวา ---------- */
+
+.kc-sic-panel {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 2rem clamp(2rem, 8vw, 6rem) 2rem 2rem;
+}
+
+.kc-sic-panel-inner {
+  width: 100%;
+  max-width: 420px;
+}
+
+.kc-sic-login-card {
+  width: 100%;
+}
+
+/*
+  sic-card เองมี padding แค่ var(--sic-space-4) (1rem) รอบ .sic-card__content — แต่
+  นั่นเป็น internal CSS ของ SicCardComponent เอง (คนละ Angular component, คนละ
+  ViewEncapsulation) ชื่อ class ธรรมดาจากที่นี่ข้ามไป override ไม่ได้ (เจอ error ด้วย
+  ::ng-deep ก็ deprecated) เลยห่อเนื้อหาด้วย div เพิ่มอีกชั้น แล้วใส่ padding เพิ่ม
+  เข้าไปตรงนี้แทน ง่ายกว่าและไม่ต้องพึ่ง encapsulation-piercing
+*/
+.kc-sic-card-body {
+  padding: 0.5rem 1.5rem;
+}
+
+.kc-sic-login-header {
+  margin-bottom: 1.25rem;
+  text-align: center;
+}
+
+.kc-sic-brand-logo {
+  width: 6rem;
+  height: 6rem;
+  object-fit: contain;
+  margin-bottom: 0.25rem;
+}
+
+/* ---------- Responsive: center the card on narrow screens แทนชิดขวา (ภาพยังโชว์เต็มจอเหมือนเดิม) ---------- */
+
+@media (max-width: 640px) {
+  .kc-sic-panel {
+    justify-content: center;
+    padding: 1.5rem;
+  }
+}

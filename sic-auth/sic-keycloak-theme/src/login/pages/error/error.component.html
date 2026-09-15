@@ -1,0 +1,22 @@
+@let message = kcContext.message;
+@let skipLink = kcContext.skipLink;
+@let client = kcContext.client;
+
+<app-main-layout [subtitle]="i18n.msgStr('errorTitle')">
+  <div
+    id="kc-error-message"
+    class="kc-sic-error-message"
+    [innerHTML]="message?.summary"
+  ></div>
+
+  @if (!skipLink && !!client?.baseUrl) {
+    <sic-a-link
+      variant="ghost"
+      size="sm"
+      id="backToApplication"
+      [href]="client?.baseUrl"
+    >
+      <span [innerHTML]="i18n.msgStr('backToApplication')"></span>
+    </sic-a-link>
+  }
+</app-main-layout>

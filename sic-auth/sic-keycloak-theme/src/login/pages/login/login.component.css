@@ -1,0 +1,36 @@
+:host {
+  display: block;
+}
+
+.kc-sic-form-options {
+  margin: 0.25rem 0 1rem;
+}
+
+.kc-sic-register-hint {
+  margin-top: 1.25rem;
+}
+
+:host sic-input,
+:host sic-input-password,
+:host sic-button {
+  display: block;
+  margin-bottom: 0.85rem;
+}
+
+.kc-sic-social-divider {
+  margin: 1.25rem 0 0.85rem;
+}
+
+.kc-sic-social-divider-line {
+  flex: 1 1 0;
+  height: 1px;
+  background: var(--sic-color-border, #e2e8f0);
+}
+
+.kc-sic-social-providers {
+  margin-bottom: 0.5rem;
+}
+
+.kc-sic-social-icon {
+  margin-right: 0.4rem;
+}

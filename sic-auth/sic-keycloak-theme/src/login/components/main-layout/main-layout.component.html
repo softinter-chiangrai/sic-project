@@ -1,0 +1,60 @@
+<div class="kc-sic-login-page">
+  <!-- kcContext.message (เช่น brute-force lockout, already-logged-in ฯลฯ) — แต่ละหน้า
+       ที่มี logic แสดง toast เอง (ดู ngOnInit ของแต่ละ page component) ใช้ container นี้ร่วมกัน -->
+  <sic-toast position="top-right" />
+
+  <!-- ภาพ hero เต็มทั้งหน้า -->
+  <div
+    class="kc-sic-hero"
+    [style.background-image]="'url(' + heroBackgroundUrl + ')'"
+  ></div>
+
+  <!-- การ์ดลอยชิดขวา -->
+  <div class="kc-sic-panel">
+    <div class="kc-sic-panel-inner">
+      <sic-card
+        [bordered]="true"
+        [elevated]="true"
+        class="kc-sic-login-card"
+      >
+        <div class="kc-sic-card-body">
+          <sic-flex
+            direction="column"
+            align="center"
+            class="kc-sic-login-header"
+          >
+            <img
+              [src]="logoUrl"
+              alt=""
+              class="kc-sic-brand-logo"
+            />
+            <!--
+              "lg" คือ preset ขนาดใหญ่สุดที่ sic-text มี (sm/md/lg เท่านั้น) จะให้ใหญ่กว่านั้น
+              ต้องบังคับด้วย inline [style.font-size] เพราะ font-size ของ sic-text ตั้งเองผ่าน
+              :host(.sic-text--lg) ใน CSS ของ SicTextComponent เอง (คนละ component คนละ
+              encapsulation) — inline style ชนะทุก external stylesheet เสมอไม่ต้องแข่ง
+              specificity ข้าม component
+            -->
+            <sic-text
+              size="lg"
+              weight="bold"
+              [block]="true"
+              [style.font-size]="'1.75rem'"
+              >{{ brandName }}</sic-text
+            >
+            @if (subtitle) {
+              <sic-text
+                size="sm"
+                color="muted"
+                [block]="true"
+                >{{ subtitle }}</sic-text
+              >
+            }
+          </sic-flex>
+
+          <ng-content></ng-content>
+        </div>
+      </sic-card>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,62 @@
+:host {
+  display: block;
+}
+
+.kc-sic-group-header {
+  margin: 0.75rem 0 0.25rem;
+}
+
+.kc-sic-field-group {
+  margin-bottom: 0.85rem;
+}
+
+.kc-sic-terms-error {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.78rem;
+  color: var(--sic-color-danger, #dc2626);
+}
+
+.kc-sic-back-hint {
+  margin: 1rem 0;
+}
+
+.kc-sic-submit {
+  margin-top: 0.25rem;
+}
+
+.kc-sic-hidden-recaptcha-submit {
+  width: 100%;
+}
+
+:host sic-input,
+:host sic-input-password,
+:host sic-input-area,
+:host sic-combobox {
+  display: block;
+  margin-bottom: 0.85rem;
+}
+
+/* field คู่ที่ตั้งใจวางข้างกันแบ่งครึ่งแถวเดียวกัน (password+confirm, firstName+
+   lastName — ดู FIELD_PAIRS ใน register.component.ts) — sic-input/sic-input-password
+   ข้างในแต่ละช่องไม่ต้องมี margin-bottom ของตัวเองอีก เพราะ .kc-sic-field-row ที่ห่อ
+   อยู่มี margin-bottom แทนให้แล้ว */
+.kc-sic-field-row {
+  margin-bottom: 0.85rem;
+}
+
+.kc-sic-field-row-item {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+.kc-sic-field-row-item sic-input,
+.kc-sic-field-row-item sic-input-password {
+  margin-bottom: 0 !important;
+}
+
+@media (max-width: 480px) {
+  .kc-sic-field-row {
+    flex-direction: column;
+  }
+}

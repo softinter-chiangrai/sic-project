@@ -1,0 +1,28 @@
+@let user = kcContext.user;
+@let url = kcContext.url;
+
+<app-main-layout [subtitle]="i18n.msgStr('emailVerifyTitle')">
+  <sic-text
+    size="sm"
+    color="muted"
+    [block]="true"
+    class="kc-sic-instruction"
+  >
+    {{ i18n.msgStr('emailVerifyInstruction1', user?.email ?? '') }}
+  </sic-text>
+
+  <sic-text
+    size="sm"
+    color="muted"
+    [block]="true"
+  >
+    {{ i18n.msgStr('emailVerifyInstruction2') }}
+    <sic-a-link
+      variant="ghost"
+      size="sm"
+      [href]="url?.loginAction"
+      >{{ i18n.msgStr('doClickHere') }}</sic-a-link
+    >
+    {{ i18n.msgStr('emailVerifyInstruction3') }}
+  </sic-text>
+</app-main-layout>

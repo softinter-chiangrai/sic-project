@@ -1,0 +1,28 @@
+/*
+ * Global (non component-scoped) overrides — only affects pages that opt in via a
+ * body class, so pages still using Keycloak's default theme/CSS are unaffected.
+ */
+
+/* Custom login page (sic-ng split-screen design): TemplateComponent always renders
+   #kc-header (realm display name) and #kc-locale (language dropdown) regardless of
+   doUseDefaultCss — hide them here since the page provides its own branding/header. */
+body.kc-sic-custom-login {
+  margin: 0;
+}
+
+/* <kc-root> is an unrecognized custom element to the browser's default UA stylesheet,
+   so it defaults to `display: inline` — which, as an inline box wrapping our block-level
+   page content, adds phantom whitespace above it (line-height/baseline spacing of the
+   inline formatting context). Force it to block to remove that gap. */
+body.kc-sic-custom-login kc-root {
+  display: block;
+}
+
+body.kc-sic-custom-login #kc-header,
+body.kc-sic-custom-login #kc-locale {
+  display: none;
+}
+
+/* kcContext.message ตอนนี้แสดงผ่าน SicToastService/<sic-toast> แทน (ดู
+   login.component.ts ngOnInit()) ไม่ใช่ alert banner ของ TemplateComponent แล้ว —
+   ไม่ต้องมี .alert-* override ที่นี่อีกต่อไป */

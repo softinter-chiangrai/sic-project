@@ -1,0 +1,173 @@
+@let realm = kcContext.realm;
+@let usernameHidden = kcContext.usernameHidden;
+@let url = kcContext.url;
+@let social = kcContext.social;
+
+<app-main-layout [subtitle]="i18n.msgStr('loginAccountTitle')">
+  @if (realm?.password) {
+    <!--
+      ยังเป็นฟอร์ม native POST ไป url.loginAction เหมือน theme เริ่มต้นทุกอย่าง —
+      sic-ng components ทำหน้าที่แค่ "เปลือก UI"
+
+      CAVEAT (เจอจากการทดสอบจริง): ตั้งใจ "ไม่" ใส่ [formGroup]="loginForm" บน <form>
+      นี้ — เพราะ FormGroupDirective (จาก ReactiveFormsModule) มี host listener ดัก
+      submit event แล้ว preventDefault() เสมอ (เหมือน NgForm ของ template-driven forms
+      ทุกประการ) เพื่อเปลี่ยนเป็น Angular-managed form (ส่ง ngSubmit แทน native submit)
+      — ถ้าใส่ [formGroup] ปุ่ม submit จะไม่ POST ไปที่ Keycloak เลย จึงผูกทีละ control
+      ด้วย [formControl] ตรงๆ แทน (ไม่ต้องพึ่ง ControlContainer จาก formGroup ของ
+      ancestor เลย เพราะไม่มี [formGroup]/formGroupName คลุมอยู่)
+    -->
+    <form
+      id="kc-form-login"
+      method="post"
+      [action]="url?.loginAction"
+      (submit)="handleSubmit($event)"
+    >
+      @if (!usernameHidden) {
+        <sic-input
+          name="username"
+          [label]="
+            !realm?.loginWithEmailAllowed
+              ? i18n.msgStr('username')
+              : !realm?.registrationEmailAsUsername
+                ? i18n.msgStr('usernameOrEmail')
+                : i18n.msgStr('email')
+          "
+          [formControl]="loginForm.controls.username"
+          [errorMessages]="{ required: i18n.msgStr('username') + ' is required' }"
+        />
+      }
+
+      <sic-input-password
+        name="password"
+        [label]="i18n.msgStr('password')"
+        autocomplete="current-password"
+        [formControl]="loginForm.controls.password"
+        [errorMessages]="{ required: i18n.msgStr('password') + ' is required' }"
+      />
+
+      <sic-flex
+        justify="between"
+        align="center"
+        class="kc-sic-form-options"
+      >
+        @if (realm?.rememberMe && !usernameHidden) {
+          <sic-checkbox
+            [label]="i18n.msgStr('rememberMe')"
+            [formControl]="loginForm.controls.rememberMe"
+          />
+          <!--
+            CAVEAT: sic-checkbox ในเวอร์ชันปัจจุบันของ sic-ng ยังไม่ forward `name`
+            ไปที่ <input type="checkbox"> จริงข้างใน จึงต้องมี hidden input คู่กัน
+            ให้ browser ส่งค่า rememberMe ไปกับฟอร์ม POST จริง
+          -->
+          <input
+            type="hidden"
+            name="rememberMe"
+            [value]="loginForm.controls.rememberMe.value ? 'on' : ''"
+          />
+        }
+
+        @if (realm?.resetPasswordAllowed) {
+          <sic-a-link
+            variant="ghost"
+            size="sm"
+            [href]="url?.loginResetCredentialsUrl"
+          >
+            {{ i18n.msgStr('doForgotPassword') }}
+          </sic-a-link>
+        }
+      </sic-flex>
+
+      <input
+        type="hidden"
+        id="id-hidden-input"
+        name="credentialId"
+        [value]="kcContext?.auth?.selectedCredential"
+      />
+
+      <sic-button
+        type="submit"
+        variant="solid"
+        color="primary"
+        size="sm"
+        [block]="true"
+        [loading]="isLoginButtonDisabled()"
+        [disabled]="isLoginButtonDisabled()"
+      >
+        {{ i18n.msgStr('doLogIn') }}
+      </sic-button>
+    </form>
+
+    <!--
+      Login ด้วย identity provider อื่น (SSO เช่น Google/Microsoft/GitHub ฯลฯ) — เงื่อนไข
+      เดียวกับ default theme ของ Keycloak เป๊ะ: โชว์เฉพาะตอน realm เปิด password login
+      ด้วย (ไม่ใช่ realm ที่บังคับ SSO อย่างเดียว) และมี identity provider ตั้งค่าไว้จริง
+      อย่างน้อย 1 ตัว (kcContext.social.providers มาจาก Keycloak เอง — ไม่ต้องตั้งอะไร
+      เพิ่มฝั่ง theme เลย แค่ไปเพิ่ม Identity Provider ใน Keycloak Admin Console)
+    -->
+    @if (realm?.password && social?.providers?.length) {
+      <sic-flex
+        align="center"
+        gap="0.75rem"
+        class="kc-sic-social-divider"
+      >
+        <span class="kc-sic-social-divider-line"></span>
+        <sic-text
+          size="sm"
+          color="muted"
+        >
+          {{ i18n.msgStr('identity-provider-login-label') }}
+        </sic-text>
+        <span class="kc-sic-social-divider-line"></span>
+      </sic-flex>
+
+      <sic-flex
+        direction="column"
+        gap="0.5rem"
+        class="kc-sic-social-providers"
+      >
+        @for (provider of social?.providers; track provider.alias) {
+          <sic-a-link
+            variant="outline"
+            color="primary"
+            size="sm"
+            [block]="true"
+            [href]="provider.loginUrl"
+            [id]="provider.alias"
+          >
+            @if (provider.iconClasses) {
+              <i
+                aria-hidden="true"
+                [class]="provider.iconClasses"
+                class="kc-sic-social-icon"
+              ></i>
+            }
+            {{ provider.displayName }}
+          </sic-a-link>
+        }
+      </sic-flex>
+    }
+
+    @if (displayInfo) {
+      <sic-flex
+        justify="center"
+        class="kc-sic-register-hint"
+      >
+        <sic-text
+          size="sm"
+          color="muted"
+        >
+          {{ i18n.msgStr('noAccount') }}
+          <sic-a-link
+            variant="ghost"
+            size="sm"
+            [href]="url?.registrationUrl"
+          >
+            {{ i18n.msgStr('doRegister') }}
+          </sic-a-link>
+        </sic-text>
+      </sic-flex>
+    }
+  }
+</app-main-layout>

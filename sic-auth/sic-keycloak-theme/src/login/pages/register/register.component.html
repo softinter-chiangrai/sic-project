@@ -1,0 +1,249 @@
+@let url = kcContext.url;
+@let messagesPerField = kcContext.messagesPerField;
+@let recaptchaRequired = kcContext.recaptchaRequired;
+@let recaptchaVisible = kcContext.recaptchaVisible;
+@let recaptchaSiteKey = kcContext.recaptchaSiteKey;
+@let recaptchaAction = kcContext.recaptchaAction;
+@let termsAcceptanceRequired = kcContext.termsAcceptanceRequired;
+
+<!--
+  render field เดียวใช้ template นี้ซ้ำได้ทั้งตอนวางเต็มแถว (field ทั่วไป) และตอน
+  วางคู่กันครึ่งแถว (field.pairWith — ดู register.component.ts) — เลี่ยงเขียน switch
+  เดิมซ้ำสองที่
+-->
+<ng-template
+  #fieldTpl
+  let-field="field"
+>
+  @switch (field.kind) {
+    @case ('hidden') {
+      <input
+        type="hidden"
+        [name]="field.attribute.name"
+        [value]="field.control.value"
+      />
+    }
+    @case ('password') {
+      <sic-input-password
+        [name]="field.attribute.name"
+        [label]="field.label"
+        [autocomplete]="field.attribute.autocomplete ?? 'new-password'"
+        [formControl]="field.control"
+        [errorMessages]="errorMessagesFor(field.attribute.name)"
+        (focusout)="onFieldBlur(field.attribute.name)"
+      />
+    }
+    @case ('textarea') {
+      <sic-input-area
+        [name]="field.attribute.name"
+        [label]="field.label"
+        [formControl]="field.control"
+        [errorMessages]="errorMessagesFor(field.attribute.name)"
+        (focusout)="onFieldBlur(field.attribute.name)"
+      />
+    }
+    @case ('choice') {
+      <sic-combobox
+        [label]="field.label"
+        [options]="field.options"
+        [formControl]="field.control"
+        [errorMessages]="errorMessagesFor(field.attribute.name)"
+        (focusout)="onFieldBlur(field.attribute.name)"
+      />
+      <!-- sic-combobox เป็น custom dropdown ไม่ใช่ native <select> — ไม่มี native
+           input[name] ให้ browser ส่งไปกับ POST เอง ต้องมี hidden input คู่กัน -->
+      <input
+        type="hidden"
+        [name]="field.attribute.name"
+        [value]="field.control.value"
+      />
+    }
+    @case ('multichoice') {
+      <sic-combobox
+        [label]="field.label"
+        [options]="field.options"
+        [multi]="true"
+        [formControl]="field.control"
+        [errorMessages]="errorMessagesFor(field.attribute.name)"
+        (focusout)="onFieldBlur(field.attribute.name)"
+      />
+      @for (v of $any(field.control.value); track v) {
+        <input
+          type="hidden"
+          [name]="field.attribute.name"
+          [value]="v"
+        />
+      }
+    }
+    @default {
+      <sic-input
+        [name]="field.attribute.name"
+        [label]="field.label"
+        [autocomplete]="field.attribute.autocomplete"
+        [formControl]="field.control"
+        [errorMessages]="errorMessagesFor(field.attribute.name)"
+        (focusout)="onFieldBlur(field.attribute.name)"
+      />
+    }
+  }
+</ng-template>
+
+<app-main-layout [subtitle]="i18n.msgStr('registerTitle')">
+  <!--
+    CAVEAT (เจอซ้ำอีกรอบ — ดู login.component.html): พอ import ทั้ง FormsModule (สำหรับ
+    [ngModel] ของ sic-checkbox ด้านล่าง) และ ReactiveFormsModule (สำหรับ [formControl]
+    ของ field ที่เหลือ) เข้ามาพร้อมกัน NgForm (จาก FormsModule) จะ auto-attach ทับ
+    <form> ตัวนี้ (selector ของมันคือ "form:not([ngNoForm]):not([formGroup])" — เข้าเงื่อนไข
+    เพราะ form นี้ไม่มี [formGroup]) แล้ว preventDefault() submit event ทันที เปลี่ยนเป็น
+    ngSubmit แทน native POST — ใส่ ngNoForm เพื่อปิด NgForm บน <form> นี้โดยเฉพาะ
+    (ยังใช้ [ngModel]/[formControl] กับ control แต่ละตัวข้างในได้ตามปกติ ไม่ต้องพึ่ง
+    ControlContainer จาก ancestor form อยู่แล้ว)
+  -->
+  <form
+    id="kc-register-form"
+    method="post"
+    ngNoForm
+    [action]="url.registrationAction"
+    (submit)="handleSubmit($event)"
+  >
+    @for (field of fields; track field.attribute.name) {
+      @if (field.skipInLoop) {
+        <!-- render ไปแล้วคู่กับ field.pairWith ของ field ก่อนหน้า -->
+      } @else {
+        @if (field.groupHeader) {
+          <sic-text
+            size="sm"
+            weight="semibold"
+            [block]="true"
+            class="kc-sic-group-header"
+            >{{ field.groupHeader }}</sic-text
+          >
+        }
+
+        @if (field.pairWith) {
+          <sic-flex
+            gap="0.75rem"
+            class="kc-sic-field-row"
+          >
+            <div class="kc-sic-field-row-item">
+              <ng-container
+                [ngTemplateOutlet]="fieldTpl"
+                [ngTemplateOutletContext]="{ field: field }"
+              />
+            </div>
+            <div class="kc-sic-field-row-item">
+              <ng-container
+                [ngTemplateOutlet]="fieldTpl"
+                [ngTemplateOutletContext]="{ field: field.pairWith }"
+              />
+            </div>
+          </sic-flex>
+        } @else {
+          <ng-container
+            [ngTemplateOutlet]="fieldTpl"
+            [ngTemplateOutletContext]="{ field: field }"
+          />
+        }
+      }
+    }
+
+    @if (termsAcceptanceRequired) {
+      <div class="kc-sic-field-group">
+        <sic-text
+          size="sm"
+          weight="semibold"
+          [block]="true"
+          >{{ i18n.msgStr('termsTitle') }}</sic-text
+        >
+        <sic-text
+          size="sm"
+          color="muted"
+          [block]="true"
+          id="kc-registration-terms-text"
+        >
+          {{ i18n.msgStr('termsText') }}
+        </sic-text>
+      </div>
+      <div class="kc-sic-field-group">
+        <sic-checkbox
+          [label]="i18n.msgStr('acceptTerms')"
+          [ngModel]="areTermsAccepted()"
+          (ngModelChange)="areTermsAccepted.set($event)"
+          [ngModelOptions]="{ standalone: true }"
+        />
+        <!-- sic-checkbox ยังไม่ forward name ไป native input — ใช้ hidden input คู่กันเหมือนหน้า login -->
+        <input
+          type="hidden"
+          name="termsAccepted"
+          [value]="areTermsAccepted() ? 'on' : ''"
+        />
+        @if (messagesPerField.existsError('termsAccepted')) {
+          <span
+            id="input-error-terms-accepted"
+            aria-live="polite"
+            class="kc-sic-terms-error"
+          >
+            {{ messagesPerField.get('termsAccepted') }}
+          </span>
+        }
+      </div>
+    }
+
+    @if (recaptchaRequired && (recaptchaVisible || recaptchaAction === undefined)) {
+      <div class="kc-sic-field-group">
+        <div
+          class="g-recaptcha"
+          data-size="compact"
+          [attr.data-sitekey]="recaptchaSiteKey"
+          [attr.data-action]="recaptchaAction"
+        ></div>
+      </div>
+    }
+
+    @if (recaptchaRequired && !recaptchaVisible && recaptchaAction !== undefined) {
+      <button
+        class="g-recaptcha kc-sic-hidden-recaptcha-submit"
+        type="submit"
+        [attr.data-sitekey]="recaptchaSiteKey"
+        data-callback="onSubmitRecaptcha"
+        [attr.data-action]="recaptchaAction"
+      >
+        {{ i18n.msgStr('doRegister') }}
+      </button>
+    } @else {
+      <sic-button
+        type="submit"
+        variant="solid"
+        color="primary"
+        size="sm"
+        [block]="true"
+        class="kc-sic-submit"
+      >
+        {{ i18n.msgStr('doRegister') }}
+      </sic-button>
+    }
+
+    <!-- อยู่ใต้ปุ่ม Register เหมือนเดิม แต่เปลี่ยนหน้าตาให้เหมือน "New user? Register"
+         ของหน้า login (sic-text + sic-a-link ในบรรทัดเดียวกัน) แทน "« Back to Login" -->
+    <sic-flex
+      justify="center"
+      class="kc-sic-back-hint"
+    >
+      <sic-text
+        size="sm"
+        color="muted"
+      >
+        <!-- Keycloak ไม่มี i18n key สำเร็จรูปสำหรับข้อความนี้ (มีแค่ทิศตรงข้าม
+             "noAccount" ของหน้า login) เลย hardcode ข้อความเองแบบเดียวกับ toast
+             PLEASE_INPUT_DATA_MESSAGE — ยังใช้ doLogIn (แปลได้ตามภาษา) กับตัวลิงก์อยู่ -->
+        Already have an account?
+        <sic-a-link
+          variant="ghost"
+          size="sm"
+          [href]="url.loginUrl"
+          >{{ i18n.msgStr('doLogIn') }}</sic-a-link
+        >
+      </sic-text>
+    </sic-flex>
+  </form>
+</app-main-layout>

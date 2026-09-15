@@ -1,0 +1,92 @@
+{
+  "$schema": "./node_modules/@angular/cli/lib/config/schema.json",
+  "version": 1,
+  "newProjectRoot": "projects",
+  "projects": {
+    "sic-keycloak-theme": {
+      "projectType": "application",
+      "root": ".",
+      "sourceRoot": "src",
+      "prefix": "kc",
+      "architect": {
+        "build": {
+          "builder": "@analogjs/platform:vite",
+          "options": {
+            "configFile": "vite.config.ts",
+            "main": "src/main.ts",
+            "outputPath": "dist",
+            "tsConfig": "tsconfig.app.json"
+          },
+          "defaultConfiguration": "production",
+          "configurations": {
+            "development": {
+              "mode": "development"
+            },
+            "production": {
+              "sourcemap": false,
+              "mode": "production"
+            }
+          }
+        },
+        "serve": {
+          "builder": "@analogjs/platform:vite-dev-server",
+          "defaultConfiguration": "development",
+          "options": {
+            "buildTarget": "sic-keycloak-theme:build",
+            "port": 5173
+          },
+          "configurations": {
+            "development": {
+              "buildTarget": "sic-keycloak-theme:build:development",
+              "hmr": true
+            },
+            "production": {
+              "buildTarget": "sic-keycloak-theme:build:production"
+            }
+          }
+        },
+        "lint": {
+          "builder": "@angular-eslint/builder:lint",
+          "options": {
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
+          }
+        }
+      },
+      "schematics": {
+        "@schematics/angular:component": {
+          "type": "component"
+        },
+        "@schematics/angular:directive": {
+          "type": "directive"
+        },
+        "@schematics/angular:service": {
+          "type": "service"
+        },
+        "@schematics/angular:guard": {
+          "typeSeparator": "."
+        },
+        "@schematics/angular:interceptor": {
+          "typeSeparator": "."
+        },
+        "@schematics/angular:module": {
+          "typeSeparator": "."
+        },
+        "@schematics/angular:pipe": {
+          "typeSeparator": "."
+        },
+        "@schematics/angular:resolver": {
+          "typeSeparator": "."
+        }
+      }
+    }
+  },
+  "cli": {
+    "analytics": false,
+    "schematicCollections": [
+      "angular-eslint"
+    ]
+  }
+}

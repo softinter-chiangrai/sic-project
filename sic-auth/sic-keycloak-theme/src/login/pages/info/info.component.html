@@ -1,0 +1,37 @@
+@let skipLink = kcContext.skipLink;
+@let actionUri = kcContext.actionUri;
+@let pageRedirectUri = kcContext.pageRedirectUri;
+@let client = kcContext.client;
+
+<app-main-layout [subtitle]="headerHtml">
+  <div
+    id="kc-info-message"
+    class="kc-sic-info-message"
+    [innerHTML]="infoMessageHtml"
+  ></div>
+
+  @if (!skipLink) {
+    @if (pageRedirectUri) {
+      <sic-a-link
+        variant="ghost"
+        size="sm"
+        [href]="pageRedirectUri"
+        ><span [innerHTML]="i18n.msgStr('backToApplication')"></span
+      ></sic-a-link>
+    } @else if (actionUri) {
+      <sic-a-link
+        variant="ghost"
+        size="sm"
+        [href]="actionUri"
+        ><span [innerHTML]="i18n.msgStr('proceedWithAction')"></span
+      ></sic-a-link>
+    } @else if (client?.baseUrl) {
+      <sic-a-link
+        variant="ghost"
+        size="sm"
+        [href]="client?.baseUrl"
+        ><span [innerHTML]="i18n.msgStr('backToApplication')"></span
+      ></sic-a-link>
+    }
+  }
+</app-main-layout>
