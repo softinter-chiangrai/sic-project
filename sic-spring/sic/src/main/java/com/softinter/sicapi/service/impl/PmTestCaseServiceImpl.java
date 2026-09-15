@@ -4,6 +4,7 @@ import com.softinter.sicapi.dto.request.PmTestCaseRequest;
 import com.softinter.sicapi.dto.response.PmTestCaseResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.PmTestCase;
+import com.softinter.sicapi.entity.pm.PmTestScenario;
 
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestCaseRepository;

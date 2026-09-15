@@ -143,6 +143,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       const scenarioId = queryParams['scenarioId'];
       if (scenarioId && !this.testCaseId) {
         this.formData.patchValue({ scenarioId } as any);
+        this.updateTestTypeLockState(scenarioId);
       }
     });
   }
@@ -170,6 +171,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
             });
           }
         }
+        this.updateTestTypeLockState(currentScenarioId);
       },
       error: () => {
         this.scenarioLoading.set(false);
@@ -177,9 +179,20 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  updateTestTypeLockState(scenarioId?: string | null): void {
+    const effectiveScenarioId = scenarioId !== undefined ? scenarioId : this.formData.form.get('scenarioId')?.value;
+    const testTypeCtrl = this.formData.form.get('testType');
+    if (this.isView() || this.isExecution() || !!effectiveScenarioId) {
+      testTypeCtrl?.disable({ emitEvent: false });
+    } else {
+      testTypeCtrl?.enable({ emitEvent: false });
+    }
+  }
+
   onScenarioChange(scenarioId: string | null): void {
     if (!scenarioId) {
       this.formData.form.patchValue({ scenarioId: null, scenarioName: null });
+      this.updateTestTypeLockState(null);
       return;
     }
     const found = (this.scenarioOptions() as any[]).find((s) => s.value === scenarioId);
@@ -188,6 +201,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       scenarioName: found ? found.text : null,
       testType: found?.testType || this.formData.form.get('testType')?.value || 'SIT',
     });
+    this.updateTestTypeLockState(scenarioId);
   }
 
   // ===== AI Assistant In-Form =====
@@ -409,6 +423,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
           this.testerValues.set([]);
         }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
+        this.updateTestTypeLockState(data.scenarioId);
         this.isLoading.set(false);
       },
       error: () => {

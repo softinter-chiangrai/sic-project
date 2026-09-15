@@ -15,22 +15,60 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center gap-2">
-      <!-- Export Test / UAT Report Button -->
-      <button
-        type="button"
-        (click)="exportUatReport(filterTestType())"
-        [disabled]="isExportingUat()"
-        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
-        [title]="'ส่งออกรายงานผลการทดสอบ ' + (filterTestType() === 'All' ? 'ทั้งหมด' : filterTestType()) + ' (PDF)'"
-      >
-        @if (isExportingUat()) {
-          <div class="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-          <span>กำลังออกรายงาน...</span>
-        } @else {
-          <i class="bi bi-file-earmark-pdf-fill text-purple-600 dark:text-purple-400"></i>
-          <span>{{ filterTestType() === 'All' ? 'ออกรายงานผลการทดสอบ (PDF)' : (filterTestType() === 'SIT' ? 'ออกรายงาน SIT (PDF)' : 'ออกรายงาน UAT (PDF)') }}</span>
+      <!-- Export Test / UAT Report Dropdown -->
+      <div class="relative inline-block text-left">
+        <button
+          type="button"
+          (click)="toggleExportDropdown($event)"
+          [disabled]="isExportingUat()"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
+          title="เลือกออกรายงานผลการทดสอบ (PDF)"
+        >
+          @if (isExportingUat()) {
+            <div class="w-4 h-4 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <span>กำลังออกรายงาน...</span>
+          } @else {
+            <i class="bi bi-file-earmark-pdf-fill text-purple-600 dark:text-purple-400"></i>
+            <span>ออกรายงาน (PDF)</span>
+            <i class="bi bi-chevron-down text-xs ml-0.5 transition-transform" [class.rotate-180]="showExportDropdown()"></i>
+          }
+        </button>
+
+        <!-- Dropdown Menu Panel -->
+        @if (showExportDropdown()) {
+          <div
+            (click)="$event.stopPropagation()"
+            class="absolute right-0 mt-2 w-80 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] shadow-xl z-50 py-1.5 divide-y divide-[var(--border)] animate-in fade-in zoom-in-95 duration-100"
+          >
+            <div class="px-3 py-2 text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+              <i class="bi bi-printer text-[var(--crm-primary)]"></i>
+              เลือกประเภทรายงานที่ต้องการออก
+            </div>
+            <div class="py-1">
+              @for (opt of exportReportOptions; track opt.value) {
+                <button
+                  type="button"
+                  (click)="onSelectExportType(opt.value)"
+                  class="w-full text-left px-3.5 py-2.5 hover:bg-[var(--bg)] flex items-start gap-3 transition-colors cursor-pointer group"
+                >
+                  <i class="bi {{ opt.icon }} text-lg mt-0.5 group-hover:scale-110 transition-transform"></i>
+                  <div class="flex-1">
+                    <div class="text-xs font-semibold text-[var(--text-active)] group-hover:text-purple-600 dark:group-hover:text-purple-400 flex items-center justify-between">
+                      <span>{{ opt.title }}</span>
+                      <span class="text-[10px] uppercase font-bold px-1.5 py-0.5 rounded bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-300">
+                        {{ opt.value }}
+                      </span>
+                    </div>
+                    <div class="text-[11px] text-[var(--text-muted)] mt-0.5">
+                      {{ opt.desc }}
+                    </div>
+                  </div>
+                </button>
+              }
+            </div>
+          </div>
         }
-      </button>
+      </div>
 
       <button
         (click)="goToAddScenario()"

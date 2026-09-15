@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
@@ -39,6 +39,28 @@ export class Pmdt12Component implements OnInit {
   protected filterTestType = signal<'All' | 'SIT' | 'UAT'>('All');
   protected isLoading = signal(false);
   protected isExportingUat = signal(false);
+  protected showExportDropdown = signal(false);
+
+  protected exportReportOptions = [
+    {
+      value: 'UAT',
+      title: 'รายงานผลการตรวจรับระบบ (UAT)',
+      desc: 'เฉพาะ Test Cases ของ UAT สำหรับส่งมอบลูกค้า',
+      icon: 'bi-clipboard-check text-purple-600 dark:text-purple-400',
+    },
+    {
+      value: 'SIT',
+      title: 'รายงานผลการทดสอบระบบ (SIT)',
+      desc: 'เฉพาะ Test Cases ของ SIT สำหรับทีมพัฒนา',
+      icon: 'bi-flask text-sky-600 dark:text-sky-400',
+    },
+    {
+      value: 'ALL',
+      title: 'รายงานผลการทดสอบทั้งหมด (ALL)',
+      desc: 'รวมทุก Test Cases ทั้ง SIT และ UAT ในเอกสารเดียว',
+      icon: 'bi-file-earmark-text text-indigo-600 dark:text-indigo-400',
+    },
+  ];
 
   // ===== Data =====
   protected scenarios = signal<PmTestScenarioModel[]>([]);
@@ -444,6 +466,27 @@ export class Pmdt12Component implements OnInit {
   setFilterTestType(type: 'All' | 'SIT' | 'UAT') {
     this.filterTestType.set(type);
     this.scenarioPageMap.set(new Map());
+  }
+
+  toggleExportDropdown(event?: MouseEvent): void {
+    if (event) event.stopPropagation();
+    this.showExportDropdown.update((v) => !v);
+  }
+
+  closeExportDropdown(): void {
+    this.showExportDropdown.set(false);
+  }
+
+  onSelectExportType(type: string): void {
+    this.closeExportDropdown();
+    this.exportUatReport(type);
+  }
+
+  @HostListener('document:click')
+  onDocumentClick(): void {
+    if (this.showExportDropdown()) {
+      this.closeExportDropdown();
+    }
   }
 
   exportUatReport(testType: string = 'UAT') {
