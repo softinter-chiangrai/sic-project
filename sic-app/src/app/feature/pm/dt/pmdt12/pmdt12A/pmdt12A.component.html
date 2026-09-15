@@ -137,8 +137,8 @@
               label="ประเภทการทดสอบ"
               formControlName="testType"
               [items]="testTypeOptions"
-              [disabled]="isView() || isExecution()"
-              placeholder="เลือกประเภทการทดสอบ"
+              [disabled]="isView() || isExecution() || !!formData.form.get('scenarioId')?.value"
+              [placeholder]="formData.form.get('scenarioId')?.value ? 'อิงตาม Test Scenario' : 'เลือกประเภทการทดสอบ'"
             ></sic-combobox>
           </div>
           <div>

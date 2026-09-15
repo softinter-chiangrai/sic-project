@@ -219,7 +219,16 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         entity.setExpectedResult(req.getExpectedResult());
         entity.setActualResult(req.getActualResult());
         entity.setTestStatus(req.getTestStatus() != null ? req.getTestStatus() : "Pending");
-        entity.setTestType(req.getTestType() != null ? req.getTestType() : "SIT");
+
+        // Auto-inherit testType from Scenario if scenarioId is present
+        String effectiveTestType = req.getTestType();
+        if (entity.getScenarioId() != null) {
+            PmTestScenario sc = scenarioRepository.findById(entity.getScenarioId()).orElse(null);
+            if (sc != null && sc.getTestType() != null && !sc.getTestType().isBlank()) {
+                effectiveTestType = sc.getTestType();
+            }
+        }
+        entity.setTestType(effectiveTestType != null ? effectiveTestType : "SIT");
         entity.setTester(req.getTester());
         entity.setTestDate(req.getTestDate());
         entity.setRelatedRequirement(req.getRelatedRequirement());

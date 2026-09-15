@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 public class PmTestScenarioServiceImpl implements PmTestScenarioService {
 
     private final PmTestScenarioRepository scenarioRepository;
+    private final com.softinter.sicapi.repository.pm.PmTestCaseRepository testCaseRepository;
     private final PmTaskRepository taskRepository;
     private final TraceLinkService traceLinkService;
 
@@ -76,6 +77,22 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
             entity = scenarioRepository.save(entity);
+        }
+
+        // ===== Cascade Sync testType to all child Test Cases =====
+        if (entity.getTestType() != null) {
+            try {
+                List<com.softinter.sicapi.entity.pm.PmTestCase> childCases =
+                        testCaseRepository.findByBusinessIdAndScenarioIdAndIsDeleteFalse(businessId, entity.getId());
+                for (com.softinter.sicapi.entity.pm.PmTestCase tc : childCases) {
+                    if (!entity.getTestType().equalsIgnoreCase(tc.getTestType())) {
+                        tc.setTestType(entity.getTestType());
+                        testCaseRepository.save(tc);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Failed to cascade sync testType to test cases for scenario {}: {}", entity.getId(), e.getMessage());
+            }
         }
 
         // ===== สร้าง Trace Link กับ Task =====
