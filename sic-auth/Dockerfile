@@ -3,9 +3,8 @@
 # ============================================================================
 FROM node:24-bookworm-slim AS theme-builder
 
-# Install OpenJDK & Maven for Keycloakify JAR packaging
+# Install OpenJDK for Keycloakify JAR packaging
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    maven \
     default-jre-headless \
     && rm -rf /var/lib/apt/lists/*
 
