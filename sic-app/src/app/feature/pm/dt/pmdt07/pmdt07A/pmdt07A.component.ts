@@ -32,6 +32,7 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { HttpClient } from '@angular/common/http';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -126,19 +127,20 @@ import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox
 })
 export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
     // Dependencies
-    private route = inject(ActivatedRoute);
-    private router = inject(Router);
-    public service = inject(Pmdt07Service);
-    public exportService = inject(SpecificationExportService);
-    private dialog = inject(DialogService);
-    private fb = inject(FormBuilder);
-    private cdr = inject(ChangeDetectorRef);
-    private navigation = inject(NavigationService);
-    public customerState = inject(CustomerStateService);
-    private auth = inject(AuthService);
-    private approvalService = inject(ApprovalService);
-    private http = inject(HttpClient);
-    private businessService = inject(BusinessService);
+    readonly route = inject(ActivatedRoute);
+    readonly router = inject(Router);
+    readonly service = inject(Pmdt07Service);
+    readonly dialog = inject(DialogService);
+    private readonly fb = inject(FormBuilder);
+    private readonly navigation = inject(NavigationService);
+    private readonly cdr = inject(ChangeDetectorRef);
+    readonly customerState = inject(CustomerStateService);
+    private readonly businessService = inject(BusinessService);
+    readonly exportService = inject(SpecificationExportService);
+    private readonly approvalService = inject(ApprovalService);
+    private readonly http = inject(HttpClient);
+    private readonly auth = inject(AuthService);
+    readonly aiHistoryService = inject(AiHistoryService);
 
     apiBaseUrl = environment.apiBaseUrl;
     userApiUrl = '';
@@ -169,6 +171,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     // AI Assistant State
     showAiAssistModal = false;
     isGeneratingAiAssist = false;
+    aiAssistTab: 'generate' | 'history' = 'generate';
     aiAssistRequirementId = '';
     aiAssistDiagramIds: string[] = [];
     aiAssistPrompt = '';
@@ -179,6 +182,11 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
         { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' }
     ];
+    aiHistories: any[] = [];
+    aiCurrentDraft: any = null;
+    aiCurrentVersionNo: number | null = null;
+    previewHistoryId: string | null = null;
+    copiedId: string | null = null;
 
     // Auto-save
     private autoSaveSubscription: Subscription | null = null;
@@ -282,6 +290,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             this.aiAssistDiagramIds = [];
         }
         this.aiAssistPrompt = '';
+        this.aiAssistTab = 'generate';
+        this.loadAiHistory();
         this.showAiAssistModal = true;
         this.cdr.markForCheck();
     }
@@ -291,12 +301,18 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.cdr.markForCheck();
     }
 
+    loadAiHistory(): void {
+        const targetId = this.specId || this.form?.value?.id || 'new';
+        this.aiHistories = this.aiHistoryService.getHistories('specification', targetId);
+    }
+
     generateWithAi(): void {
         const formVal = this.form.value;
         const projectId = formVal.projectId || this.customerState.getProjectId();
         const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
         const diagramIds = Array.isArray(this.aiAssistDiagramIds) ? this.aiAssistDiagramIds : (this.aiAssistDiagramIds ? [this.aiAssistDiagramIds] : []);
         const specType = formVal.specificationType || 'UI Specification';
+        const targetId = this.specId || formVal.id || 'new';
 
         this.isGeneratingAiAssist = true;
         this.cdr.markForCheck();
@@ -317,33 +333,88 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 const currentTitle = this.form.value.title;
                 const titleToSet = (currentTitle && currentTitle.trim() !== '') ? currentTitle : (draft.title || currentTitle);
 
-                this.form.patchValue({
+                const fullDraft = {
+                    ...draft,
                     title: titleToSet,
-                    priority: draft.priority || this.form.value.priority,
+                    specificationType: draft.specificationType || specType,
+                    priority: draft.priority || this.form.value.priority || 'MEDIUM',
                     estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
                     description: draft.generatedHtmlDescription || draft.description || this.form.value.description,
-                });
-                if (requirementId) {
-                    this.form.patchValue({
-                        requirementId: requirementId,
-                        generatedFromRequirementId: requirementId
-                    });
-                }
-                if (diagramIds.length > 0) {
-                    this.form.patchValue({
-                        generatedFromDiagramId: diagramIds.join(',')
-                    });
-                }
-                if (draft.specificationType) {
-                    this.form.patchValue({ specificationType: draft.specificationType });
-                }
-                this.form.markAsDirty();
-                this.closeAiAssist();
-                this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลและรายละเอียด Specification ลงในฟอร์มเรียบร้อยแล้ว');
+                    requirementId: requirementId,
+                    diagramIds: diagramIds,
+                };
+
+                const historyItem = this.aiHistoryService.addHistory(
+                    'specification',
+                    targetId,
+                    fullDraft,
+                    this.aiAssistPrompt,
+                    this.aiAssistModel,
+                    titleToSet
+                );
+
+                this.loadAiHistory();
+                this.aiCurrentDraft = fullDraft;
+                this.aiCurrentVersionNo = historyItem.versionNo;
+                this.cdr.markForCheck();
             },
             error: (err) => {
                 this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
             }
+        });
+    }
+
+    pasteSpecificationDraft(draft: any): void {
+        if (!draft) return;
+        const currentTitle = this.form.value.title;
+        const titleToSet = (currentTitle && currentTitle.trim() !== '') ? currentTitle : (draft.title || currentTitle);
+
+        this.form.patchValue({
+            title: titleToSet,
+            priority: draft.priority || this.form.value.priority,
+            estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
+            description: draft.generatedHtmlDescription || draft.description || this.form.value.description,
+        });
+
+        if (draft.requirementId) {
+            this.form.patchValue({
+                requirementId: draft.requirementId,
+                generatedFromRequirementId: draft.requirementId
+            });
+        }
+        if (draft.diagramIds && draft.diagramIds.length > 0) {
+            this.form.patchValue({
+                generatedFromDiagramId: draft.diagramIds.join(',')
+            });
+        }
+        if (draft.specificationType) {
+            this.form.patchValue({ specificationType: draft.specificationType });
+        }
+
+        this.form.markAsDirty();
+        this.closeAiAssist();
+        this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูล Specification เวอร์ชันที่เลือกลงในแบบฟอร์มเรียบร้อยแล้ว');
+    }
+
+    deleteAiHistory(id: string, event: Event): void {
+        event.stopPropagation();
+        const targetId = this.specId || this.form?.value?.id || 'new';
+        this.aiHistoryService.deleteHistory('specification', targetId, id);
+        this.loadAiHistory();
+        this.cdr.markForCheck();
+    }
+
+    togglePreview(id: string): void {
+        this.previewHistoryId = this.previewHistoryId === id ? null : id;
+    }
+
+    copyDraft(draft: any, id?: string): void {
+        if (!draft) return;
+        const text = `Specification: ${draft.title || ''}\nType: ${draft.specificationType || ''}\nPriority: ${draft.priority || ''}\nManday: ${draft.estimatedManday || ''}\n\nDescription:\n${draft.description || ''}`;
+        navigator.clipboard?.writeText(text).then(() => {
+            this.copiedId = id || 'current';
+            setTimeout(() => { this.copiedId = null; this.cdr.markForCheck(); }, 2000);
+            this.cdr.markForCheck();
         });
     }
 

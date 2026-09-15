@@ -251,121 +251,290 @@
     <!-- ============================================================ -->
     <!-- AI ASSISTANT MODAL (IN-FORM) -->
     <!-- ============================================================ -->
+    <!-- ============================================================ -->
+    <!-- AI ASSISTANT MODAL (IN-FORM) -->
+    <!-- ============================================================ -->
     @if (showAiAssistModal) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
-            <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all">
+            <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] transition-all">
                 
-                <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-                            <i class="bi bi-stars text-lg"></i>
+                <!-- Modal Header with Tabs -->
+                <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20 flex-shrink-0">
+                    <div class="flex items-center justify-between pb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                                <i class="bi bi-stars text-lg"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
+                                    สร้าง Specification ด้วย AI
+                                </h2>
+                                <p class="text-xs text-[var(--text-muted)]">วิเคราะห์และร่างข้อมูล Specification พร้อมเนื้อหาที่สมบูรณ์</p>
+                            </div>
                         </div>
+                        <button
+                            (click)="closeAiAssist()"
+                            [disabled]="isGeneratingAiAssist"
+                            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+                            <i class="bi bi-x-lg text-sm"></i>
+                        </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex gap-4 border-b border-[var(--border)]">
+                        <button
+                            type="button"
+                            (click)="aiAssistTab = 'generate'"
+                            class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
+                            [class.text-purple-600]="aiAssistTab === 'generate'"
+                            [class.border-b-2]="aiAssistTab === 'generate'"
+                            [class.border-purple-600]="aiAssistTab === 'generate'"
+                            [class.text-[var(--text-muted)]]="aiAssistTab !== 'generate'">
+                            <i class="bi bi-lightning-charge-fill"></i>
+                            <span>สร้างเนื้อหา (Generate)</span>
+                        </button>
+                        <button
+                            type="button"
+                            (click)="aiAssistTab = 'history'"
+                            class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
+                            [class.text-purple-600]="aiAssistTab === 'history'"
+                            [class.border-b-2]="aiAssistTab === 'history'"
+                            [class.border-purple-600]="aiAssistTab === 'history'"
+                            [class.text-[var(--text-muted)]]="aiAssistTab !== 'history'">
+                            <i class="bi bi-clock-history"></i>
+                            <span>ประวัติเวอร์ชัน (History Log)</span>
+                            @if (aiHistories.length > 0) {
+                                <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-purple-500/15 text-purple-600">
+                                    {{ aiHistories.length }}
+                                </span>
+                            }
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Modal Body: GENERATE TAB -->
+                @if (aiAssistTab === 'generate') {
+                    <div class="p-6 space-y-4 overflow-y-auto flex-1 custom-scrollbar">
+                        <!-- AI Model Selection -->
                         <div>
-                            <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
-                                สร้าง Specification ด้วย AI
-                            </h2>
-                            <p class="text-xs text-[var(--text-muted)]">AI จะช่วยวิเคราะห์และร่างข้อมูล Specification พร้อมเนื้อหาที่สมบูรณ์</p>
+                            <sic-combobox
+                                label="โมเดล AI ที่ต้องการใช้"
+                                [options]="aiModels"
+                                valueField="id"
+                                textField="name"
+                                placeholder="เลือกโมเดล AI"
+                                [(ngModel)]="aiAssistModel"
+                                [clearable]="false">
+                            </sic-combobox>
                         </div>
-                    </div>
-                    <button
-                        (click)="closeAiAssist()"
-                        [disabled]="isGeneratingAiAssist"
-                        class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors">
-                        <i class="bi bi-x-lg text-sm"></i>
-                    </button>
-                </div>
 
-                <!-- Modal Body -->
-                <div class="p-6 space-y-4">
-                    <!-- AI Model Selection -->
-                    <div>
-                        <sic-combobox
-                            label="โมเดล AI ที่ต้องการใช้"
-                            [options]="aiModels"
-                            valueField="id"
-                            textField="name"
-                            placeholder="เลือกโมเดล AI"
-                            [(ngModel)]="aiAssistModel"
-                            [clearable]="false">
-                        </sic-combobox>
-                    </div>
-
-                    <!-- Requirement Selection (Optional) -->
-                    <div>
-                        <sic-combobox
-                            label="อ้างอิงจากความต้องการ (ถ้ามี)"
-                            [apiUrl]="service.apiGetComboboxRequirement"
-                            [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                            placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
-                            [(ngModel)]="aiAssistRequirementId"
-                            [clearable]="true">
-                        </sic-combobox>
-                        <p class="text-[11px] text-[var(--text-muted)] mt-1">
-                            💡 หากเลือกความต้องการ ระบบจะนำเนื้อหามาวิเคราะห์ร่วมด้วย
-                        </p>
-                    </div>
-
-                    <!-- Diagram Selection (Multiple) -->
-                    <div>
-                        <sic-combobox
-                            label="อ้างอิงจาก Diagram (ถ้ามี)"
-                            [apiUrl]="service.apiGetComboboxDiagram"
-                            [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                            valueField="id"
-                            textField="name"
-                            placeholder="-- ไม่ระบุ หรือเลือกหลายแผนภาพ --"
-                            [(ngModel)]="aiAssistDiagramIds"
-                            [multiple]="true"
-                            [clearable]="true">
-                        </sic-combobox>
-                        <p class="text-[11px] text-[var(--text-muted)] mt-1">
-                            💡 สามารถเลือก Diagram ได้หลายแผนภาพ (เช่น ER Diagram + Use Case + Sequence) เพื่อให้ AI ประมวลผลร่วมกัน
-                        </p>
-                    </div>
-
-                    <div>
-                        <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-                            คำสั่งหรือประเด็นความต้องการเพิ่มเติม
-                        </label>
-                        <textarea
-                            [(ngModel)]="aiAssistPrompt"
-                            rows="4"
-                            placeholder="ระบุสิ่งที่ต้องการให้ AI เน้น เช่น 'ขอให้เพิ่มข้อกำหนดเกี่ยวกับความปลอดภัย การจำกัดสิทธิ์ Admin และ API สำหรับ Export รายงานเป็น Excel'..."
-                            class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
-                        </textarea>
-                    </div>
-
-                    @if (isGeneratingAiAssist) {
-                        <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
-                            <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                            <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และเรียบเรียงเนื้อหา Specification...</p>
+                        <!-- Requirement Selection (Optional) -->
+                        <div>
+                            <sic-combobox
+                                label="อ้างอิงจากความต้องการ (ถ้ามี)"
+                                [apiUrl]="service.apiGetComboboxRequirement"
+                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                                placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                                [(ngModel)]="aiAssistRequirementId"
+                                [clearable]="true">
+                            </sic-combobox>
                         </div>
-                    }
-                </div>
 
-                <!-- Modal Footer -->
-                <div class="px-6 py-4 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)]">
-                    <button
-                        (click)="closeAiAssist()"
-                        [disabled]="isGeneratingAiAssist"
-                        class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
-                        ยกเลิก
-                    </button>
+                        <!-- Diagram Selection (Multiple) -->
+                        <div>
+                            <sic-combobox
+                                label="อ้างอิงจาก Diagram (ถ้ามี)"
+                                [apiUrl]="service.apiGetComboboxDiagram"
+                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
+                                valueField="id"
+                                textField="name"
+                                placeholder="-- ไม่ระบุ หรือเลือกหลายแผนภาพ --"
+                                [(ngModel)]="aiAssistDiagramIds"
+                                [multiple]="true"
+                                [clearable]="true">
+                            </sic-combobox>
+                        </div>
 
-                    <button
-                        (click)="generateWithAi()"
-                        [disabled]="isGeneratingAiAssist"
-                        class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all">
+                        <div>
+                            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
+                                คำสั่งหรือประเด็นความต้องการเพิ่มเติม
+                            </label>
+                            <textarea
+                                [(ngModel)]="aiAssistPrompt"
+                                rows="3"
+                                placeholder="ระบุสิ่งที่ต้องการให้ AI เน้น เช่น 'ขอให้เพิ่มข้อกำหนดเกี่ยวกับความปลอดภัย การจำกัดสิทธิ์ Admin และ API สำหรับ Export รายงานเป็น Excel'..."
+                                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+                            </textarea>
+                        </div>
+
                         @if (isGeneratingAiAssist) {
-                            <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                            <span>กำลังประมวลผล...</span>
-                        } @else {
-                            <i class="bi bi-stars"></i>
-                            <span>สร้างเนื้อหาลงฟอร์ม</span>
+                            <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
+                                <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+                                <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และเรียบเรียงเนื้อหา Specification...</p>
+                            </div>
                         }
-                    </button>
-                </div>
+
+                        <!-- Latest Result Preview -->
+                        @if (aiCurrentDraft) {
+                            <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-3">
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center gap-2">
+                                        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-600 text-white">
+                                            v{{ aiCurrentVersionNo }} (ล่าสุด)
+                                        </span>
+                                        <span class="text-xs font-bold text-[var(--text-active)] truncate max-w-xs">
+                                            {{ aiCurrentDraft.title }}
+                                        </span>
+                                    </div>
+                                    <div class="flex items-center gap-1.5">
+                                        <button
+                                            type="button"
+                                            (click)="copyDraft(aiCurrentDraft, 'current')"
+                                            class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] flex items-center gap-1 cursor-pointer">
+                                            <i class="bi" [class.bi-clipboard]="copiedId !== 'current'" [class.bi-check-lg]="copiedId === 'current'" [class.text-green-500]="copiedId === 'current'"></i>
+                                            <span>{{ copiedId === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                                        </button>
+                                        <button
+                                            type="button"
+                                            (click)="pasteSpecificationDraft(aiCurrentDraft)"
+                                            class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                            <i class="bi bi-clipboard-check"></i>
+                                            <span>วางลงในฟอร์ม (Paste)</span>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto">
+                                    <div *ngIf="aiCurrentDraft.description" [innerHTML]="aiCurrentDraft.description" class="prose prose-sm max-w-none text-xs"></div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                    <!-- Modal Footer: GENERATE -->
+                    <div class="px-6 py-3.5 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)] flex-shrink-0">
+                        <button
+                            (click)="closeAiAssist()"
+                            [disabled]="isGeneratingAiAssist"
+                            class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+                            ปิด
+                        </button>
+
+                        <button
+                            (click)="generateWithAi()"
+                            [disabled]="isGeneratingAiAssist"
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+                            @if (isGeneratingAiAssist) {
+                                <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>กำลังประมวลผล...</span>
+                            } @else {
+                                <i class="bi bi-stars"></i>
+                                <span>{{ aiCurrentDraft ? 'Generate ใหม่' : 'สร้างเนื้อหา' }}</span>
+                            }
+                        </button>
+                    </div>
+                }
+
+                <!-- Modal Body: HISTORY LOG TAB -->
+                @if (aiAssistTab === 'history') {
+                    <div class="p-6 space-y-3 overflow-y-auto flex-1 custom-scrollbar">
+                        @if (aiHistories.length === 0) {
+                            <div class="py-12 text-center text-[var(--text-muted)] flex flex-col items-center gap-2">
+                                <i class="bi bi-clock-history text-3xl opacity-40"></i>
+                                <p class="text-xs">ยังไม่มีประวัติการสร้าง Specification ด้วย AI สำหรับเอกสารนี้</p>
+                                <button
+                                    type="button"
+                                    (click)="aiAssistTab = 'generate'"
+                                    class="text-xs text-purple-600 underline cursor-pointer hover:opacity-80">
+                                    คลิกที่นี่เพื่อเริ่มสร้างเวอร์ชันแรก
+                                </button>
+                            </div>
+                        } @else {
+                            @for (item of aiHistories; track item.id) {
+                                <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-purple-500/40 transition-all space-y-2.5 shadow-sm">
+                                    <div class="flex items-center justify-between">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-500/15 text-purple-600">
+                                                v{{ item.versionNo }}
+                                            </span>
+                                            <span class="text-xs font-semibold text-[var(--text-active)] truncate max-w-[200px]" [title]="item.data?.title || item.title">
+                                                {{ item.data?.title || item.title }}
+                                            </span>
+                                            <span class="text-[11px] text-[var(--text-muted)]">
+                                                ({{ item.model }})
+                                            </span>
+                                        </div>
+
+                                        <div class="flex items-center gap-2 text-[11px] text-[var(--text-muted)]">
+                                            <span>{{ item.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+                                            <button
+                                                (click)="deleteAiHistory(item.id, $event)"
+                                                class="p-1 text-[var(--text-muted)] hover:text-red-500 transition-colors cursor-pointer"
+                                                title="ลบประวัตินี้">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    @if (item.prompt) {
+                                        <p class="text-xs text-[var(--text-muted)] italic truncate">
+                                            "{{ item.prompt }}"
+                                        </p>
+                                    }
+
+                                    <!-- Actions for this history item -->
+                                    <div class="flex items-center justify-between pt-1 border-t border-[var(--border)]/50">
+                                        <button
+                                            type="button"
+                                            (click)="togglePreview(item.id)"
+                                            class="text-xs text-purple-600 hover:underline flex items-center gap-1 font-medium cursor-pointer">
+                                            <i class="bi" [class.bi-chevron-up]="previewHistoryId === item.id" [class.bi-chevron-down]="previewHistoryId !== item.id"></i>
+                                            <span>{{ previewHistoryId === item.id ? 'ซ่อนตัวอย่าง' : 'ดูตัวอย่างเนื้อหา' }}</span>
+                                        </button>
+
+                                        <div class="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                (click)="copyDraft(item.data, item.id)"
+                                                class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] flex items-center gap-1 cursor-pointer">
+                                                <i class="bi" [class.bi-clipboard]="copiedId !== item.id" [class.bi-check-lg]="copiedId === item.id" [class.text-green-500]="copiedId === item.id"></i>
+                                                <span>{{ copiedId === item.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                                            </button>
+                                            
+                                            <!-- PASTE BUTTON -->
+                                            <button
+                                                type="button"
+                                                (click)="pasteSpecificationDraft(item.data)"
+                                                class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                                <i class="bi bi-clipboard-check"></i>
+                                                <span>วางลงในฟอร์ม (Paste)</span>
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    <!-- Expanded Preview -->
+                                    @if (previewHistoryId === item.id) {
+                                        <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--sidebar)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto mt-2">
+                                            <div *ngIf="item.data?.description" [innerHTML]="item.data?.description" class="prose prose-sm max-w-none text-xs"></div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    <!-- Modal Footer: HISTORY -->
+                    <div class="px-6 py-3.5 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)] flex-shrink-0">
+                        <button
+                            (click)="closeAiAssist()"
+                            class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+                            ปิด
+                        </button>
+                        <span class="text-xs text-[var(--text-muted)]">
+                            มีประวัติทั้งหมด {{ aiHistories.length }} เวอร์ชัน
+                        </span>
+                    </div>
+                }
 
             </div>
         </div>

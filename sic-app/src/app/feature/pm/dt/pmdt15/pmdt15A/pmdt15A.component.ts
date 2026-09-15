@@ -22,6 +22,7 @@ import { ApprovalFlow } from '../../pmdt03/approval.model';
 import { Pmdt15AForm } from './pmdt15A.form';
 import { Pmdt15AService } from './pmdt15A.service';
 import { PmUserManualModel, PmUserManualSectionModel } from './pmdt15A.model';
+import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 
 @Component({
   selector: 'app-pmdt15a',
@@ -51,6 +52,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly approvalService = inject(ApprovalService);
   private readonly http = inject(HttpClient);
+  private readonly aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<PmUserManualModel>;
   id = signal<string | null>(null);
@@ -101,6 +103,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   // AI Generator Modal State
   showAiModal = signal(false);
   isGeneratingAi = signal(false);
+  aiAssistTab = signal<'generate' | 'history'>('generate');
   aiModel = signal('gemini-2.5-flash-lite');
   aiModels = [
     { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
@@ -116,6 +119,11 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   requirementOptions = signal<Array<{ value: string; text: string }>>([]);
   specificationOptions = signal<Array<{ value: string; text: string }>>([]);
   isLoadingAiOptions = signal(false);
+  aiHistories = signal<AiHistoryItem[]>([]);
+  aiCurrentDraft = signal<any | null>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  previewHistoryId = signal<string | null>(null);
+  copiedId = signal<string | null>(null);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -180,6 +188,34 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  loadAiHistory(): void {
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('user_manual', targetId));
+  }
+
+  deleteAiHistory(id: string, e: MouseEvent): void {
+    e.stopPropagation();
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        this.aiHistoryService.deleteHistory('user_manual', targetId, id);
+        this.loadAiHistory();
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  clearAllAiHistory(): void {
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของคู่มือนี้หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        this.aiHistoryService.clearHistories('user_manual', targetId);
+        this.loadAiHistory();
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
   openAiModal(): void {
     if (this.isLocked()) {
       this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้ถูกล็อคแล้ว');
@@ -188,6 +224,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     const currentType = (this.formData?.form?.value as any)?.manualType || 'USER';
     this.aiManualType.set(currentType);
     this.aiPrompt.set('');
+    this.aiAssistTab.set('generate');
+    this.loadAiHistory();
 
     const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
     this.loadAiComboboxOptions(projId);
@@ -206,6 +244,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
     const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
     const currentTitle = (this.formData?.form?.value as any)?.manualTitle;
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
 
     this.isGeneratingAi.set(true);
     this.cdr.markForCheck();
@@ -233,52 +272,88 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
           return;
         }
 
-        // Set manual title if empty
-        if (!currentTitle || currentTitle.trim() === '') {
-          if (draft.manualTitle) {
-            this.formData.patchValue({ manualTitle: draft.manualTitle } as any);
-          }
-        }
-        if (draft.manualType) {
-          this.formData.patchValue({ manualType: draft.manualType } as any);
-        }
+        const historyItem = this.aiHistoryService.addHistory(
+          'user_manual',
+          targetId,
+          draft,
+          this.aiPrompt(),
+          this.aiModel()
+        );
 
-        const newSectionsList: PmUserManualSectionModel[] = draft.sections.map((s, idx) => ({
-          sectionCode: s.sectionCode || `SEC-${idx + 1}`,
-          sectionTitle: s.sectionTitle || `${idx + 1}. หัวข้อ`,
-          content: s.content || '',
-          sortOrder: s.sortOrder || (idx + 1),
-          state: SicEntityState.Added,
-        }));
+        this.aiCurrentDraft.set(draft);
+        this.aiCurrentVersionNo.set(historyItem.versionNo);
+        this.loadAiHistory();
 
-        if (this.aiReplaceMode() === 'replace') {
-          const existing = this.sections().filter((s) => !!s.id).map((s) => ({
-            ...s,
-            state: SicEntityState.Deleted,
-          }));
-          this.sections.set([...existing, ...newSectionsList]);
-          const firstVisibleIdx = this.sections().findIndex((s) => s.state !== SicEntityState.Deleted);
-          this.activeSectionIndex.set(firstVisibleIdx >= 0 ? firstVisibleIdx : 0);
-        } else {
-          const current = [...this.sections()];
-          const startOrder = current.length;
-          newSectionsList.forEach((s, i) => {
-            s.sortOrder = startOrder + i + 1;
-            current.push(s);
-          });
-          this.sections.set(current);
-          this.activeSectionIndex.set(current.length - 1);
-        }
-
-        this.formData.markAsDirty();
-        this.showAiModal.set(false);
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', 'AI ได้ทำการสร้างเนื้อหาคู่มือการใช้งานเรียบร้อยแล้ว');
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างเนื้อหาคู่มือการใช้งาน (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('AI manual generation error:', err);
         this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
       },
+    });
+  }
+
+  pasteDraftToForm(draft: any, mode: 'replace' | 'append' = 'replace'): void {
+    if (this.isLocked()) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้ถูกล็อคแล้ว');
+      return;
+    }
+    if (!draft || !draft.sections || draft.sections.length === 0) {
+      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลหัวข้อคู่มือที่จะวางลงในฟอร์ม');
+      return;
+    }
+
+    const currentTitle = (this.formData?.form?.value as any)?.manualTitle;
+    if (!currentTitle || currentTitle.trim() === '') {
+      if (draft.manualTitle) {
+        this.formData.patchValue({ manualTitle: draft.manualTitle } as any);
+      }
+    }
+    if (draft.manualType) {
+      this.formData.patchValue({ manualType: draft.manualType } as any);
+    }
+
+    const newSectionsList: PmUserManualSectionModel[] = draft.sections.map((s: any, idx: number) => ({
+      sectionCode: s.sectionCode || `SEC-${idx + 1}`,
+      sectionTitle: s.sectionTitle || `${idx + 1}. หัวข้อ`,
+      content: s.content || '',
+      sortOrder: s.sortOrder || (idx + 1),
+      state: SicEntityState.Added,
+    }));
+
+    if (mode === 'replace') {
+      const existing = this.sections().filter((s) => !!s.id).map((s) => ({
+        ...s,
+        state: SicEntityState.Deleted,
+      }));
+      this.sections.set([...existing, ...newSectionsList]);
+      const firstVisibleIdx = this.sections().findIndex((s) => s.state !== SicEntityState.Deleted);
+      this.activeSectionIndex.set(firstVisibleIdx >= 0 ? firstVisibleIdx : 0);
+    } else {
+      const current = [...this.sections()];
+      const startOrder = current.length;
+      newSectionsList.forEach((s, i) => {
+        s.sortOrder = startOrder + i + 1;
+        current.push(s);
+      });
+      this.sections.set(current);
+      this.activeSectionIndex.set(current.length - 1);
+    }
+
+    this.formData.markAsDirty();
+    this.showAiModal.set(false);
+    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลคู่มือจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.cdr.markForCheck();
+  }
+
+  copyDraft(draft: any, historyId?: string): void {
+    if (!draft) return;
+    const text = typeof draft === 'string' ? draft : JSON.stringify(draft, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedId.set(historyId || 'current');
+      setTimeout(() => this.copiedId.set(null), 2000);
+      this.cdr.markForCheck();
     });
   }
 

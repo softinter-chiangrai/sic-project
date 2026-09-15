@@ -39,6 +39,7 @@ public class PmDeliveryController {
     private final PmDeliveryService deliveryService;
     private final PmDeliveryRepository deliveryRepository;
     private final com.softinter.sicapi.service.PmDeliveryExportService exportService;
+    private final com.softinter.sicapi.service.impl.DeliveryGeneratorService deliveryGeneratorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
 
@@ -148,5 +149,13 @@ public class PmDeliveryController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(deliveryService.createInvoiceFromDelivery(id, businessId, userId));
+    }
+
+    @PostMapping("/generate/draft")
+    @Operation(summary = "Generate delivery draft using AI")
+    public ResponseEntity<com.softinter.sicapi.dto.response.DeliveryDraft> generateDraft(
+            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest request) {
+        com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest();
+        return ResponseEntity.ok(deliveryGeneratorService.generateDraft(req));
     }
 }

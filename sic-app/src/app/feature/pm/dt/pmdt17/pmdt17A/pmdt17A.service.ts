@@ -19,4 +19,8 @@ export class Pmdt17AService {
   delete(id: string): Observable<void> {
     return this.http.delete<void>(`${apiBaseUrl}/api/pm/ma-tickets/${id}`);
   }
+
+  generateDraft(data: { projectId?: string; title?: string; ticketType?: string; priority?: string; prompt?: string; model?: string }): Observable<any> {
+    return this.http.post<any>(`${apiBaseUrl}/api/pm/ma-tickets/generate/draft`, data);
+  }
 }

@@ -32,6 +32,7 @@ public class PmInvoiceController {
 
     private final PmInvoiceService invoiceService;
     private final com.softinter.sicapi.service.PmInvoiceExportService exportService;
+    private final com.softinter.sicapi.service.impl.InvoiceGeneratorService invoiceGeneratorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
 
@@ -92,5 +93,13 @@ public class PmInvoiceController {
         String userId = currentUserService.getUserId();
         invoiceService.delete(id, businessId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/generate/draft")
+    @Operation(summary = "Generate invoice draft using AI")
+    public ResponseEntity<com.softinter.sicapi.dto.response.InvoiceDraft> generateDraft(
+            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest request) {
+        com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest();
+        return ResponseEntity.ok(invoiceGeneratorService.generateDraft(req));
     }
 }

@@ -14,6 +14,7 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { Pmdt12AForm } from './pmdt12A.form';
 import { PmTestCaseModel } from './pmdt12A.model';
 import { Pmdt12AService } from './pmdt12A.service';
@@ -43,6 +44,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   private readonly service = inject(Pmdt12AService);
   private readonly dialog = inject(DialogService);
   private readonly customerState = inject(CustomerStateService);
+  readonly aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<PmTestCaseModel>;
   isEdit = signal(false);
@@ -62,6 +64,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   // AI Assistant State
   showAiAssistModal = signal(false);
   isGeneratingAiAssist = signal(false);
+  aiAssistTab = signal<'generate' | 'history'>('generate');
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
   aiAssistModel = signal<string>('gemini-2.5-flash-lite');
@@ -71,6 +74,11 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
     { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
   ];
+  aiHistories = signal<any[]>([]);
+  aiCurrentDraft = signal<any>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  previewHistoryId = signal<string | null>(null);
+  copiedId = signal<string | null>(null);
 
   // Multi-tester support
   businessId = signal<string | null>(null);
@@ -209,6 +217,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     const currentTaskId = this.formData.form.get('taskId')?.value;
     this.aiAssistTaskId.set(currentTaskId || null);
     this.aiAssistPrompt.set('');
+    this.aiAssistTab.set('generate');
+    this.loadAiHistory();
     this.showAiAssistModal.set(true);
   }
 
@@ -216,11 +226,17 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.showAiAssistModal.set(false);
   }
 
+  loadAiHistory(): void {
+    const targetId = this.testCaseId || this.formData?.form?.get('id')?.value || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('test-case', targetId));
+  }
+
   generateWithAi(): void {
     const pId = this.customerState.getProjectId() || this.formData.form.get('projectId')?.value;
     const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
     const scenarioId = this.formData.form.get('scenarioId')?.value;
     const currentTitle = this.formData.form.get('title')?.value;
+    const targetId = this.testCaseId || this.formData?.form?.get('id')?.value || 'new';
 
     this.isGeneratingAiAssist.set(true);
 
@@ -235,37 +251,81 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAiAssist.set(false);
         if (draft) {
-          const currentTitleValue = this.formData.form.get('title')?.value;
-          if (draft.title && (!currentTitleValue || currentTitleValue.trim() === '')) {
-            this.formData.form.patchValue({ title: draft.title });
-          }
+          const titleToSet = (draft.title && draft.title.trim() !== '') ? draft.title : currentTitle;
 
-          if (draft.priority) {
-            this.formData.form.patchValue({ priority: draft.priority });
-          }
+          const fullDraft = {
+            ...draft,
+            title: titleToSet,
+            taskId: selectedTaskId,
+            priority: draft.priority || 'MEDIUM',
+          };
 
-          if (draft.testStep) {
-            this.formData.form.patchValue({ testStep: draft.testStep });
-          }
+          const historyItem = this.aiHistoryService.addHistory(
+            'test-case',
+            targetId,
+            fullDraft,
+            this.aiAssistPrompt(),
+            this.aiAssistModel(),
+            titleToSet
+          );
 
-          if (draft.expectedResult) {
-            this.formData.form.patchValue({ expectedResult: draft.expectedResult });
-          }
-
-          // If a task was selected in AI modal that wasn't previously linked, link it
-          if (selectedTaskId && selectedTaskId !== this.formData.form.get('taskId')?.value) {
-            this.onTaskChange(selectedTaskId);
-          }
-
-          this.formData.markAsDirty();
-          this.closeAiAssist();
-          this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลขั้นตอนการทดสอบและผลที่คาดหวังลงในแบบฟอร์มเรียบร้อยแล้ว');
+          this.loadAiHistory();
+          this.aiCurrentDraft.set(fullDraft);
+          this.aiCurrentVersionNo.set(historyItem.versionNo);
         }
       },
       error: (err) => {
         this.isGeneratingAiAssist.set(false);
         this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
       }
+    });
+  }
+
+  pasteTestCaseDraft(draft: any): void {
+    if (!draft) return;
+    const currentTitleValue = this.formData.form.get('title')?.value;
+    if (draft.title && (!currentTitleValue || currentTitleValue.trim() === '')) {
+      this.formData.form.patchValue({ title: draft.title });
+    }
+
+    if (draft.priority) {
+      this.formData.form.patchValue({ priority: draft.priority });
+    }
+
+    if (draft.testStep) {
+      this.formData.form.patchValue({ testStep: draft.testStep });
+    }
+
+    if (draft.expectedResult) {
+      this.formData.form.patchValue({ expectedResult: draft.expectedResult });
+    }
+
+    if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {
+      this.onTaskChange(draft.taskId);
+    }
+
+    this.formData.markAsDirty();
+    this.closeAiAssist();
+    this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูล Test Case เวอร์ชันที่เลือกลงในแบบฟอร์มเรียบร้อยแล้ว');
+  }
+
+  deleteAiHistory(id: string, event: Event): void {
+    event.stopPropagation();
+    const targetId = this.testCaseId || this.formData?.form?.get('id')?.value || 'new';
+    this.aiHistoryService.deleteHistory('test-case', targetId, id);
+    this.loadAiHistory();
+  }
+
+  togglePreview(id: string): void {
+    this.previewHistoryId.update((curr) => (curr === id ? null : id));
+  }
+
+  copyDraft(draft: any, id?: string): void {
+    if (!draft) return;
+    const text = `Test Case: ${draft.title || ''}\nPriority: ${draft.priority || ''}\n\nTest Steps:\n${draft.testStep || ''}\n\nExpected Result:\n${draft.expectedResult || ''}`;
+    navigator.clipboard?.writeText(text).then(() => {
+      this.copiedId.set(id || 'current');
+      setTimeout(() => this.copiedId.set(null), 2000);
     });
   }
 

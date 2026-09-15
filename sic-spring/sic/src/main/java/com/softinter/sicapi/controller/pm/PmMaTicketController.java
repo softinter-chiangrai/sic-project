@@ -32,6 +32,7 @@ public class PmMaTicketController {
 
     private final PmMaTicketService ticketService;
     private final com.softinter.sicapi.service.PmMaTicketExportService exportService;
+    private final com.softinter.sicapi.service.impl.MaTicketGeneratorService maTicketGeneratorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
 
@@ -92,5 +93,13 @@ public class PmMaTicketController {
         String userId = currentUserService.getUserId();
         ticketService.delete(id, businessId, userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/generate/draft")
+    @Operation(summary = "Generate MA ticket draft using AI")
+    public ResponseEntity<com.softinter.sicapi.dto.response.MaTicketDraft> generateDraft(
+            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest request) {
+        com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest();
+        return ResponseEntity.ok(maTicketGeneratorService.generateDraft(req));
     }
 }

@@ -23,6 +23,7 @@ import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse 
 import { ApprovalService } from '../../pmdt03/approval.service';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { ApprovalFlow } from '../../pmdt03/approval.model';
+import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 
 @Component({
   selector: 'app-pmdt14a',
@@ -53,6 +54,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   private readonly fb = inject(FormBuilder);
   private readonly customerState = inject(CustomerStateService);
   private readonly approvalService = inject(ApprovalService);
+  private readonly aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<PmDeliveryModel>;
   id = signal<string | null>(null);
@@ -88,8 +90,151 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     { label: 'ลูกค้ายืนยันรับมอบ', value: 'CONFIRMED' },
   ];
 
+  // AI Assistant State
+  showAiModal = signal(false);
+  isGeneratingAi = signal(false);
+  aiAssistTab = signal<'generate' | 'history'>('generate');
+  aiModel = signal('gemini-2.5-flash-lite');
+  aiPrompt = signal('');
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite' },
+    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash' },
+    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet' },
+    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet' },
+  ];
+  aiHistories = signal<AiHistoryItem[]>([]);
+  aiCurrentDraft = signal<any | null>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  copiedId = signal<string | null>(null);
+
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
+
+  loadAiHistory(): void {
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('delivery', targetId));
+  }
+
+  deleteAiHistory(id: string, e: MouseEvent): void {
+    e.stopPropagation();
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        this.aiHistoryService.deleteHistory('delivery', targetId, id);
+        this.loadAiHistory();
+      }
+    });
+  }
+
+  clearAllAiHistory(): void {
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของเอกสารส่งมอบนี้หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        this.aiHistoryService.clearHistories('delivery', targetId);
+        this.loadAiHistory();
+      }
+    });
+  }
+
+  openAiModal(): void {
+    if (this.isLocked() || this.isView()) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      return;
+    }
+    this.aiPrompt.set('');
+    this.aiAssistTab.set('generate');
+    this.loadAiHistory();
+    this.showAiModal.set(true);
+  }
+
+  closeAiModal(): void {
+    if (this.isGeneratingAi()) return;
+    this.showAiModal.set(false);
+  }
+
+  generateWithAi(): void {
+    if (this.isGeneratingAi()) return;
+
+    const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
+    const currentTitle = (this.formData?.form?.value as any)?.deliveryTitle;
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+
+    this.isGeneratingAi.set(true);
+
+    this.service.generateDraft({
+      projectId: projId || undefined,
+      deliveryName: currentTitle || undefined,
+      prompt: this.aiPrompt() || undefined,
+      model: this.aiModel() || undefined,
+    }).subscribe({
+      next: (draft) => {
+        this.isGeneratingAi.set(false);
+        if (!draft) {
+          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาเอกสารส่งมอบได้ กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
+        const historyItem = this.aiHistoryService.addHistory(
+          'delivery',
+          targetId,
+          draft,
+          this.aiPrompt(),
+          this.aiModel()
+        );
+
+        this.aiCurrentDraft.set(draft);
+        this.aiCurrentVersionNo.set(historyItem.versionNo);
+        this.loadAiHistory();
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลส่งมอบงาน (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
+      },
+      error: (err) => {
+        this.isGeneratingAi.set(false);
+        console.error('AI delivery generation error:', err);
+        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+      },
+    });
+  }
+
+  pasteDeliveryDraft(draft: any): void {
+    if (this.isLocked() || this.isView()) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      return;
+    }
+    if (!draft) {
+      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      return;
+    }
+
+    if (draft.deliveryName) {
+      this.formData.patchValue({ deliveryTitle: draft.deliveryName } as any);
+    }
+    if (draft.notes) {
+      this.formData.patchValue({ notes: draft.notes } as any);
+    }
+
+    if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      const newItems: PmDeliveryChecklistModel[] = draft.items.map((it: any, idx: number) => ({
+        itemName: typeof it === 'string' ? it : (it.itemName || it.name || `รายการที่ ${idx + 1}`),
+        isChecked: false,
+        sortOrder: idx + 1,
+        state: SicEntityState.Added,
+      }));
+      this.checklists.set(newItems);
+    }
+
+    this.formData.markAsDirty();
+    this.showAiModal.set(false);
+    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลการส่งมอบจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+  }
+
+  copyDraft(draft: any, historyId?: string): void {
+    if (!draft) return;
+    const text = typeof draft === 'string' ? draft : JSON.stringify(draft, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedId.set(historyId || 'current');
+      setTimeout(() => this.copiedId.set(null), 2000);
+    });
+  }
 
   ngOnInit(): void {
     const rawForm = Pmdt14AForm.createForm(this.fb);

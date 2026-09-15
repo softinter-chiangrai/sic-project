@@ -55,6 +55,7 @@ import { RequirementModel } from './pmdt04A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Pmdt04AForm } from './pmdt04A.form';
+import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
@@ -90,6 +91,7 @@ export class Pmdt04AService {
     title?: string;
     prompt?: string;
     requirementType?: string;
+    model?: string;
   }): Observable<{
     title?: string;
     description?: string;
@@ -141,6 +143,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   private readonly customerState = inject(CustomerStateService);
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  readonly aiHistoryService = inject(AiHistoryService);
 
   // ===== Form =====
   formData!: SicFromData<RequirementModel>;
@@ -178,9 +181,22 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // ===== AI Assistant =====
   showAiAssistModal = false;
   isGeneratingAiAssist = false;
+  aiAssistTab: 'generate' | 'history' = 'generate';
   aiAssistPrompt = '';
   aiAssistTitle = '';
   aiAssistType = 'FUNCTIONAL';
+  aiAssistModel = 'gemini-2.5-flash-lite';
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite' },
+    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash' },
+    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet' },
+    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet' },
+  ];
+  aiHistories: any[] = [];
+  aiCurrentDraft: any = null;
+  aiCurrentVersionNo: number | null = null;
+  previewHistoryId: string | null = null;
+  copiedId: string | null = null;
 
   // ===== CanDeactivate =====
   isSaved = false;
@@ -192,6 +208,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.aiAssistTitle = formVal.title || '';
     this.aiAssistType = formVal.requirementType || 'FUNCTIONAL';
     this.aiAssistPrompt = '';
+    this.aiAssistTab = 'generate';
+    this.loadAiHistory();
     this.showAiAssistModal = true;
     this.cdr.markForCheck();
   }
@@ -201,9 +219,15 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.cdr.markForCheck();
   }
 
+  loadAiHistory(): void {
+    const targetId = this.reqId || this.form?.value?.id || 'new';
+    this.aiHistories = this.aiHistoryService.getHistories('requirement', targetId);
+  }
+
   generateWithAi(): void {
     const formVal = this.form.value;
     const projectId = formVal.projectId || this.customerState.getProjectId();
+    const targetId = this.reqId || formVal.id || 'new';
 
     this.isGeneratingAiAssist = true;
     this.cdr.markForCheck();
@@ -213,32 +237,81 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       title: this.aiAssistTitle || formVal.title || undefined,
       requirementType: this.aiAssistType || formVal.requirementType || undefined,
       prompt: this.aiAssistPrompt || undefined,
+      model: this.aiAssistModel || undefined,
     }).pipe(finalize(() => {
       this.isGeneratingAiAssist = false;
       this.cdr.markForCheck();
     })).subscribe({
       next: (draft) => {
-        const currentTitle = this.form.value.title;
-        const titleToSet = (draft.title && draft.title.trim() !== '') 
-          ? draft.title 
-          : (this.aiAssistTitle || currentTitle);
+        const titleToSave = (draft.title && draft.title.trim() !== '')
+          ? draft.title
+          : (this.aiAssistTitle || formVal.title);
 
-        this.form.patchValue({
-          title: titleToSet,
-          description: draft.description || this.form.value.description,
-          acceptanceCriteria: draft.acceptanceCriteria || this.form.value.acceptanceCriteria,
-          businessValue: draft.businessValue || this.form.value.businessValue,
-          priority: draft.priority || this.form.value.priority || 'MEDIUM',
-          requirementType: draft.requirementType || this.form.value.requirementType || 'FUNCTIONAL',
-        });
+        const fullDraft = {
+          ...draft,
+          title: titleToSave,
+          requirementType: draft.requirementType || this.aiAssistType || 'FUNCTIONAL',
+          priority: draft.priority || 'MEDIUM',
+        };
 
-        this.form.markAsDirty();
-        this.closeAiAssist();
-        this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูลและรายละเอียด Requirement ลงในฟอร์มเรียบร้อยแล้ว');
+        const historyItem = this.aiHistoryService.addHistory(
+          'requirement',
+          targetId,
+          fullDraft,
+          this.aiAssistPrompt,
+          this.aiAssistModel,
+          titleToSave
+        );
+
+        this.loadAiHistory();
+        this.aiCurrentDraft = fullDraft;
+        this.aiCurrentVersionNo = historyItem.versionNo;
+        this.cdr.markForCheck();
       },
       error: (err) => {
         this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
       }
+    });
+  }
+
+  pasteRequirementDraft(draft: any): void {
+    if (!draft) return;
+    const currentTitle = this.form.value.title;
+    const titleToSet = (draft.title && draft.title.trim() !== '') ? draft.title : currentTitle;
+
+    this.form.patchValue({
+      title: titleToSet,
+      description: draft.description || this.form.value.description,
+      acceptanceCriteria: draft.acceptanceCriteria || this.form.value.acceptanceCriteria,
+      businessValue: draft.businessValue || this.form.value.businessValue,
+      priority: draft.priority || this.form.value.priority || 'MEDIUM',
+      requirementType: draft.requirementType || this.form.value.requirementType || 'FUNCTIONAL',
+    });
+
+    this.form.markAsDirty();
+    this.closeAiAssist();
+    this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูลเวอร์ชันที่เลือกเข้าสู่แบบฟอร์มเรียบร้อยแล้ว');
+  }
+
+  deleteAiHistory(id: string, event: Event): void {
+    event.stopPropagation();
+    const targetId = this.reqId || this.form?.value?.id || 'new';
+    this.aiHistoryService.deleteHistory('requirement', targetId, id);
+    this.loadAiHistory();
+    this.cdr.markForCheck();
+  }
+
+  togglePreview(id: string): void {
+    this.previewHistoryId = this.previewHistoryId === id ? null : id;
+  }
+
+  copyDraft(draft: any, id?: string): void {
+    if (!draft) return;
+    const text = `Requirement: ${draft.title || ''}\nType: ${draft.requirementType || ''}\nPriority: ${draft.priority || ''}\n\nDescription:\n${draft.description || ''}\n\nAcceptance Criteria:\n${draft.acceptanceCriteria || ''}\n\nBusiness Value:\n${draft.businessValue || ''}`;
+    navigator.clipboard?.writeText(text).then(() => {
+      this.copiedId = id || 'current';
+      setTimeout(() => { this.copiedId = null; this.cdr.markForCheck(); }, 2000);
+      this.cdr.markForCheck();
     });
   }
 

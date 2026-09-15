@@ -9,6 +9,7 @@ import { PmTestScenarioModel } from './pmdt12B.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
@@ -42,6 +43,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  readonly aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<PmTestScenarioModel>;
   isEdit = signal(false);
@@ -69,6 +71,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   // AI Assistant State
   showAiAssistModal = signal(false);
   isGeneratingAiAssist = signal(false);
+  aiAssistTab = signal<'generate' | 'history'>('generate');
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
   aiAssistModel = signal<string>('gemini-2.5-flash-lite');
@@ -78,6 +81,11 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
     { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
   ];
+  aiHistories = signal<any[]>([]);
+  aiCurrentDraft = signal<any>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  previewHistoryId = signal<string | null>(null);
+  copiedId = signal<string | null>(null);
 
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
@@ -157,6 +165,8 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     const currentTaskId = this.formData.form.get('taskId')?.value;
     this.aiAssistTaskId.set(currentTaskId || null);
     this.aiAssistPrompt.set('');
+    this.aiAssistTab.set('generate');
+    this.loadAiHistory();
     this.showAiAssistModal.set(true);
   }
 
@@ -164,10 +174,16 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     this.showAiAssistModal.set(false);
   }
 
+  loadAiHistory(): void {
+    const targetId = this.scenarioId || this.formData?.form?.get('id')?.value || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('test-scenario', targetId));
+  }
+
   generateWithAi(): void {
     const pId = this.customerState.getProjectId() || this.formData.form.get('projectId')?.value;
     const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
     const currentName = this.formData.form.get('scenarioName')?.value;
+    const targetId = this.scenarioId || this.formData?.form?.get('id')?.value || 'new';
 
     this.isGeneratingAiAssist.set(true);
 
@@ -181,36 +197,82 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAiAssist.set(false);
         if (draft) {
-          if (draft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
-            this.formData.form.patchValue({ scenarioCode: draft.scenarioCode });
-          }
-
           const currentScenarioName = this.formData.form.get('scenarioName')?.value;
-          if (draft.scenarioName && (!currentScenarioName || currentScenarioName.trim() === '')) {
-            this.formData.form.patchValue({ scenarioName: draft.scenarioName });
-          }
+          const nameToSet = (draft.scenarioName && draft.scenarioName.trim() !== '') ? draft.scenarioName : currentScenarioName;
 
-          if (draft.priority) {
-            this.formData.form.patchValue({ priority: draft.priority });
-          }
+          const fullDraft = {
+            ...draft,
+            scenarioName: nameToSet,
+            taskId: selectedTaskId,
+            priority: draft.priority || 'Medium',
+          };
 
-          if (draft.description) {
-            this.formData.form.patchValue({ description: draft.description });
-          }
+          const historyItem = this.aiHistoryService.addHistory(
+            'test-scenario',
+            targetId,
+            fullDraft,
+            this.aiAssistPrompt(),
+            this.aiAssistModel(),
+            nameToSet
+          );
 
-          if (selectedTaskId && selectedTaskId !== this.formData.form.get('taskId')?.value) {
-            this.onTaskChange(selectedTaskId);
-          }
-
-          this.formData.markAsDirty();
-          this.closeAiAssist();
-          this.dialog.success('สร้างเนื้อหาด้วย AI สำเร็จ', 'นำเข้าข้อมูล Test Scenario ลงในแบบฟอร์มเรียบร้อยแล้ว');
+          this.loadAiHistory();
+          this.aiCurrentDraft.set(fullDraft);
+          this.aiCurrentVersionNo.set(historyItem.versionNo);
         }
       },
       error: (err) => {
         this.isGeneratingAiAssist.set(false);
         this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
       }
+    });
+  }
+
+  pasteTestScenarioDraft(draft: any): void {
+    if (!draft) return;
+    if (draft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
+      this.formData.form.patchValue({ scenarioCode: draft.scenarioCode });
+    }
+
+    const currentScenarioName = this.formData.form.get('scenarioName')?.value;
+    if (draft.scenarioName && (!currentScenarioName || currentScenarioName.trim() === '')) {
+      this.formData.form.patchValue({ scenarioName: draft.scenarioName });
+    }
+
+    if (draft.priority) {
+      this.formData.form.patchValue({ priority: draft.priority });
+    }
+
+    if (draft.description) {
+      this.formData.form.patchValue({ description: draft.description });
+    }
+
+    if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {
+      this.onTaskChange(draft.taskId);
+    }
+
+    this.formData.markAsDirty();
+    this.closeAiAssist();
+    this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูล Test Scenario เวอร์ชันที่เลือกลงในแบบฟอร์มเรียบร้อยแล้ว');
+  }
+
+  deleteAiHistory(id: string, event: Event): void {
+    event.stopPropagation();
+    const targetId = this.scenarioId || this.formData?.form?.get('id')?.value || 'new';
+    this.aiHistoryService.deleteHistory('test-scenario', targetId, id);
+    this.loadAiHistory();
+  }
+
+  togglePreview(id: string): void {
+    this.previewHistoryId.update((curr) => (curr === id ? null : id));
+  }
+
+  copyDraft(draft: any, id?: string): void {
+    if (!draft) return;
+    const text = `Test Scenario: ${draft.scenarioName || ''}\nCode: ${draft.scenarioCode || ''}\nPriority: ${draft.priority || ''}\n\nDescription:\n${draft.description || ''}`;
+    navigator.clipboard?.writeText(text).then(() => {
+      this.copiedId.set(id || 'current');
+      setTimeout(() => this.copiedId.set(null), 2000);
     });
   }
 

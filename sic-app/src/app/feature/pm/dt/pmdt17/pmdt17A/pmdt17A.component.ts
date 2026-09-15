@@ -1,6 +1,6 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { ReactiveFormsModule, FormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
@@ -23,6 +23,7 @@ import { Pmdt17AForm } from './pmdt17A.form';
 import { PmMaTicketModel } from './pmdt17A.model';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
+import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 
 @Component({
   selector: 'app-pmdt17a',
@@ -30,6 +31,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     RouterModule,
     SicButtonComponent,
     SicVersionBadgeComponent,
@@ -52,6 +54,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   private customerState = inject(CustomerStateService);
   private businessService = inject(BusinessService);
   private approvalService = inject(ApprovalService);
+  private aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<PmMaTicketModel>;
   id = signal<string | null>(null);
@@ -91,8 +94,161 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;
   businessId = this.businessService.getCurrentBusinessId();
 
+  // AI Assistant State
+  showAiModal = signal(false);
+  isGeneratingAi = signal(false);
+  aiAssistTab = signal<'generate' | 'history'>('generate');
+  aiModel = signal('gemini-2.5-flash-lite');
+  aiPrompt = signal('');
+  aiTicketType = signal('BUG_SUPPORT');
+  aiPriority = signal('MEDIUM');
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite' },
+    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash' },
+    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet' },
+    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet' },
+  ];
+  aiHistories = signal<AiHistoryItem[]>([]);
+  aiCurrentDraft = signal<any | null>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  copiedId = signal<string | null>(null);
+
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
+
+  loadAiHistory(): void {
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('ma_ticket', targetId));
+  }
+
+  deleteAiHistory(id: string, e: MouseEvent): void {
+    e.stopPropagation();
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        this.aiHistoryService.deleteHistory('ma_ticket', targetId, id);
+        this.loadAiHistory();
+      }
+    });
+  }
+
+  clearAllAiHistory(): void {
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของตั๋วนี้หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        this.aiHistoryService.clearHistories('ma_ticket', targetId);
+        this.loadAiHistory();
+      }
+    });
+  }
+
+  openAiModal(): void {
+    if (this.isLocked() || this.isView()) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      return;
+    }
+    const currentType = (this.formData?.form?.value as any)?.ticketType || 'BUG_SUPPORT';
+    const currentSev = (this.formData?.form?.value as any)?.severity || 'MEDIUM';
+    this.aiTicketType.set(currentType);
+    this.aiPriority.set(currentSev);
+    this.aiPrompt.set('');
+    this.aiAssistTab.set('generate');
+    this.loadAiHistory();
+    this.showAiModal.set(true);
+  }
+
+  closeAiModal(): void {
+    if (this.isGeneratingAi()) return;
+    this.showAiModal.set(false);
+  }
+
+  generateWithAi(): void {
+    if (this.isGeneratingAi()) return;
+
+    const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
+    const currentTitle = (this.formData?.form?.value as any)?.title;
+    const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+
+    this.isGeneratingAi.set(true);
+
+    this.service.generateDraft({
+      projectId: projId || undefined,
+      title: currentTitle || undefined,
+      ticketType: this.aiTicketType() || undefined,
+      priority: this.aiPriority() || undefined,
+      prompt: this.aiPrompt() || undefined,
+      model: this.aiModel() || undefined,
+    }).subscribe({
+      next: (draft) => {
+        this.isGeneratingAi.set(false);
+        if (!draft) {
+          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาตั๋วได้ กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
+        const historyItem = this.aiHistoryService.addHistory(
+          'ma_ticket',
+          targetId,
+          draft,
+          this.aiPrompt(),
+          this.aiModel()
+        );
+
+        this.aiCurrentDraft.set(draft);
+        this.aiCurrentVersionNo.set(historyItem.versionNo);
+        this.loadAiHistory();
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลตั๋วแจ้งปัญหา (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
+      },
+      error: (err) => {
+        this.isGeneratingAi.set(false);
+        console.error('AI ma ticket generation error:', err);
+        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+      },
+    });
+  }
+
+  pasteMaTicketDraft(draft: any): void {
+    if (this.isLocked() || this.isView()) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      return;
+    }
+    if (!draft) {
+      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      return;
+    }
+
+    if (draft.title) {
+      this.formData.patchValue({ title: draft.title } as any);
+    }
+    if (draft.description) {
+      this.formData.patchValue({ description: draft.description } as any);
+    }
+    if (draft.rootCause) {
+      this.formData.patchValue({ rootCause: draft.rootCause } as any);
+    }
+    if (draft.resolution) {
+      this.formData.patchValue({ resolution: draft.resolution } as any);
+    }
+    if (draft.ticketType) {
+      this.formData.patchValue({ ticketType: draft.ticketType } as any);
+    }
+    if (draft.priority) {
+      this.formData.patchValue({ severity: draft.priority } as any);
+    }
+
+    this.formData.markAsDirty();
+    this.showAiModal.set(false);
+    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูล MA Ticket จาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+  }
+
+  copyDraft(draft: any, historyId?: string): void {
+    if (!draft) return;
+    const text = typeof draft === 'string' ? draft : JSON.stringify(draft, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedId.set(historyId || 'current');
+      setTimeout(() => this.copiedId.set(null), 2000);
+    });
+  }
 
   ngOnInit() {
     const rawForm = Pmdt17AForm.createForm(this.fb);
