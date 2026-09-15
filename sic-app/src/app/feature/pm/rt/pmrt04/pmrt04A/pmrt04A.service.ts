@@ -45,4 +45,16 @@ export class Pmrt04AService {
   updateInstallment(id: string, data: Partial<Pmrt04AModel>): Observable<Pmrt04AModel> {
     return this.http.put<Pmrt04AModel>(`${this.baseUrl}/${id}`, data);
   }
+
+  generateDraft(req: {
+    projectId?: string;
+    customerId?: string;
+    contractNo?: string;
+    contractType?: string;
+    contractValue?: number;
+    prompt?: string;
+    model?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/generate/draft`, req);
+  }
 }

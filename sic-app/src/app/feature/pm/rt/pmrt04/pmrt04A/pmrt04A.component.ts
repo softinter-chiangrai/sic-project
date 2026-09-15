@@ -8,9 +8,10 @@ import {
   OnInit,
   inject,
 } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { signal } from '@angular/core';
 
 import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
@@ -29,6 +30,7 @@ import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt04AForm } from './pmrt04A.form';
 import { ContractModel } from './pmrt04A.model';
 import { Pmrt04AService } from './pmrt04A.service';
+import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 
 @Component({
   selector: 'app-pmrt04a',
@@ -36,6 +38,7 @@ import { Pmrt04AService } from './pmrt04A.service';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     RouterModule,
     SicButtonComponent,
     SicVersionBadgeComponent,
@@ -57,6 +60,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private navigation = inject(NavigationService);
   private projectService = inject(Pmrt02Service);
   private cdr = inject(ChangeDetectorRef);
+  private aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<ContractModel>;
   get form(): FormGroup {
@@ -75,6 +79,32 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   customerName: string | null = null;
   projectId: string | null = null;
   projectName: string | null = null;
+
+  // ===== AI Assistant =====
+  showAiModal = signal(false);
+  aiActiveTab = signal<'generate' | 'history'>('generate');
+  isGeneratingAi = signal(false);
+  aiModel = signal('gemini-2.5-flash');
+  aiPrompt = signal('');
+  aiContractType = signal('SOFTWARE_DEVELOPMENT');
+  aiHistories = signal<AiHistoryItem<any>[]>([]);
+  aiCurrentDraft = signal<any>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  copiedId = signal<string | null>(null);
+
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite (เร็วที่สุด / ประหยัด)' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (แนะนำ / สมดุล)' },
+    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet (ฉลาด / ละเอียด)' },
+    { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet (ล่าสุด / ให้เหตุผลดีที่สุด)' },
+  ];
+
+  aiContractTypeOptions = [
+    { value: 'SOFTWARE_DEVELOPMENT', label: 'สัญญาจ้างพัฒนาซอฟต์แวร์ (Software Development)' },
+    { value: 'MAINTENANCE_SUPPORT', label: 'สัญญาบำรุงรักษาและสนับสนุนระบบ (MA & Support)' },
+    { value: 'CONSULTING', label: 'สัญญาบริการที่ปรึกษาด้านไอที (IT Consulting)' },
+    { value: 'CLOUD_INFRASTRUCTURE', label: 'สัญญาบริการคลาวด์และโครงสร้างพื้นฐาน (Cloud & Infra)' },
+  ];
 
   // Approval Integration
   selectedFlowId: string | null = null;
@@ -316,6 +346,141 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
         },
       });
+  }
+
+  // ===== AI Assistant Methods =====
+  openAiAssist(): void {
+    if (this.isLocked || this.isView) return;
+    this.showAiModal.set(true);
+    this.aiActiveTab.set('generate');
+    this.loadAiHistory();
+  }
+
+  closeAiAssist(): void {
+    this.showAiModal.set(false);
+  }
+
+  loadAiHistory(): void {
+    const targetId = this.contractId || this.form?.get('id')?.value || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('contract', targetId));
+  }
+
+  deleteAiHistory(id: string, event: Event): void {
+    event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้ใช่หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        const targetId = this.contractId || this.form?.get('id')?.value || 'new';
+        this.aiHistoryService.deleteHistory('contract', targetId, id);
+        this.loadAiHistory();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  clearAllAiHistories(): void {
+    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้าง AI ทั้งหมดของสัญญานี้ใช่หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        const targetId = this.contractId || this.form?.get('id')?.value || 'new';
+        this.aiHistoryService.clearHistories('contract', targetId);
+        this.loadAiHistory();
+        this.cdr.detectChanges();
+      }
+    });
+  }
+
+  generateAiDraft(): void {
+    if (this.isGeneratingAi()) return;
+
+    this.isGeneratingAi.set(true);
+    const targetId = this.contractId || this.form?.get('id')?.value || 'new';
+    const currentNo = this.form?.get('contractNo')?.value;
+    const currentVal = this.form?.get('contractValue')?.value;
+
+    this.service.generateDraft({
+      projectId: this.projectId || this.form?.get('projectId')?.value || undefined,
+      customerId: this.customerId || this.form?.get('customerId')?.value || undefined,
+      contractNo: currentNo || undefined,
+      contractType: this.aiContractType() || this.form?.get('contractType')?.value || undefined,
+      contractValue: currentVal ? Number(currentVal) : undefined,
+      prompt: this.aiPrompt() || undefined,
+      model: this.aiModel() || undefined,
+    }).subscribe({
+      next: (draft) => {
+        this.isGeneratingAi.set(false);
+        if (!draft) {
+          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาสัญญาได้ กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
+        const historyItem = this.aiHistoryService.addHistory(
+          'contract',
+          targetId,
+          draft,
+          this.aiPrompt(),
+          this.aiModel()
+        );
+
+        this.aiCurrentDraft.set(draft);
+        this.aiCurrentVersionNo.set(historyItem.versionNo);
+        this.loadAiHistory();
+
+        // ดึงข้อมูลหัวข้อและเนื้อหา TipTap ลงในฟอร์มทันที
+        this.applyDraftToForm(draft);
+
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลสัญญา (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isGeneratingAi.set(false);
+        console.error('AI contract generation error:', err);
+        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.cdr.detectChanges();
+      },
+    });
+  }
+
+  private applyDraftToForm(draft: any): void {
+    if (!draft) return;
+    this.formData.patchValue({
+      contractNo: draft.contractNo || this.form.get('contractNo')?.value,
+      contractType: draft.contractType || this.form.get('contractType')?.value,
+      contractValue: draft.contractValue !== undefined && draft.contractValue !== null ? Number(draft.contractValue) : this.form.get('contractValue')?.value,
+      paymentTerms: draft.paymentTerms || this.form.get('paymentTerms')?.value,
+      scopeSummary: draft.scopeSummary || this.form.get('scopeSummary')?.value,
+      startDate: draft.startDate || this.form.get('startDate')?.value,
+      endDate: draft.endDate || this.form.get('endDate')?.value,
+      signStatus: draft.signStatus || this.form.get('signStatus')?.value || 'Draft',
+    });
+    this.form.markAsDirty();
+  }
+
+  pasteContractDraft(draft: any): void {
+    if (this.isLocked || this.isView) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      return;
+    }
+    if (!draft) {
+      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      return;
+    }
+
+    this.applyDraftToForm(draft);
+    this.showAiModal.set(false);
+    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลสัญญาจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.cdr.detectChanges();
+  }
+
+  copyDraft(draft: any, historyId?: string): void {
+    if (!draft) return;
+    const text = typeof draft === 'string' ? draft : JSON.stringify(draft, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedId.set(historyId || 'current');
+      setTimeout(() => {
+        this.copiedId.set(null);
+        this.cdr.detectChanges();
+      }, 2000);
+      this.cdr.detectChanges();
+    });
   }
 }
 

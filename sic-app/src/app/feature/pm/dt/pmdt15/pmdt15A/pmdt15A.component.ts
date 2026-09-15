@@ -284,7 +284,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.aiCurrentVersionNo.set(historyItem.versionNo);
         this.loadAiHistory();
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างเนื้อหาคู่มือการใช้งาน (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
+        // ดึงข้อมูลหัวข้อคู่มือและเนื้อหาแต่ละ Section (Tiptap) ลงในฟอร์มทันที
+        this.pasteDraftToForm(draft, 'replace');
+
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างเนื้อหาคู่มือการใช้งาน (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
         this.cdr.markForCheck();
       },
       error: (err) => {

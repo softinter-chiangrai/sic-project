@@ -15,20 +15,33 @@
   <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-3xl mx-auto p-4 space-y-6">
 
     <!-- HEADER -->
-    <div class="text-center space-y-1">
-      <div class="flex items-center justify-center gap-2 flex-wrap">
-        <h2 class="text-3xl font-bold text-[var(--text-active)]">
-          {{ isViewOnly && !isLocked ? 'รายละเอียดโครงการ' : (isLocked ? 'ข้อมูลโครงการ (อนุมัติแล้ว)' : (isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ')) }}
-        </h2>
-        @if (isEdit || isViewOnly) {
-          <sic-version-badge [status]="form.get('status')?.value" [isLocked]="isLocked"></sic-version-badge>
+    <div class="flex items-center justify-between flex-wrap gap-4 border-b border-[var(--border)] pb-4">
+      <div class="space-y-1">
+        <div class="flex items-center gap-2 flex-wrap">
+          <h2 class="text-2xl font-bold text-[var(--text-active)]">
+            {{ isViewOnly && !isLocked ? 'รายละเอียดโครงการ' : (isLocked ? 'ข้อมูลโครงการ (อนุมัติแล้ว)' : (isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ')) }}
+          </h2>
+          @if (isEdit || isViewOnly) {
+            <sic-version-badge [status]="form.get('status')?.value" [isLocked]="isLocked"></sic-version-badge>
+          }
+        </div>
+        @if (customerName()) {
+          <p class="text-sm text-[var(--text-muted)] flex items-center gap-1.5">
+            <i class="bi bi-building"></i>
+            ลูกค้า: <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
+          </p>
         }
       </div>
-      @if (customerName()) {
-        <p class="text-sm text-[var(--text-muted)] flex items-center justify-center gap-1.5">
-          <i class="bi bi-building"></i>
-          ลูกค้า: <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
-        </p>
+
+      <!-- AI Assistant Button -->
+      @if (!isViewOnly && !isLocked) {
+        <button
+          type="button"
+          (click)="openAiAssist()"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-sm hover:shadow transition-all cursor-pointer">
+          <i class="bi bi-stars text-amber-300"></i>
+          <span>สร้างด้วย AI</span>
+        </button>
       }
     </div>
 
@@ -242,4 +255,252 @@
     }
 
   </form>
+}
+
+<!-- ===== AI ASSISTANT MODAL ===== -->
+@if (showAiModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
+
+      <!-- Modal Header -->
+      <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-transparent flex-shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
+            <i class="bi bi-stars text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
+              AI Project Charter & Scope Generator
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
+                PRO
+              </span>
+            </h3>
+            <p class="text-xs text-[var(--text-muted)]">สร้างข้อมูลโครงการ วัตถุประสงค์ และขอบเขตงานอัตโนมัติด้วย AI</p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="closeAiAssist()"
+          class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+          <i class="bi bi-x-lg text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Tabs Navigation -->
+      <div class="flex border-b border-[var(--border)] bg-[var(--bg)] px-6 pt-2 gap-4 flex-shrink-0">
+        <button
+          type="button"
+          (click)="aiActiveTab.set('generate')"
+          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
+          <i class="bi bi-magic"></i>
+          สร้างเนื้อหา (Generate)
+        </button>
+        <button
+          type="button"
+          (click)="aiActiveTab.set('history')"
+          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
+          <i class="bi bi-clock-history"></i>
+          ประวัติเวอร์ชัน (History Log)
+          @if (aiHistories().length > 0) {
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold">
+              {{ aiHistories().length }}
+            </span>
+          }
+        </button>
+      </div>
+
+      <!-- TAB 1: GENERATE -->
+      @if (aiActiveTab() === 'generate') {
+        <div class="p-6 overflow-y-auto space-y-4 flex-1">
+          <!-- AI Model Selection -->
+          <div class="space-y-1">
+            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
+              <i class="bi bi-cpu text-purple-500 mr-1"></i>
+              โมเดล AI ที่ต้องการใช้
+            </label>
+            <sic-combobox
+              [options]="aiModels"
+              valueField="id"
+              textField="name"
+              [ngModel]="aiModel()"
+              (ngModelChange)="aiModel.set($event)"
+              placeholder="เลือกโมเดล AI"
+              [clearable]="false">
+            </sic-combobox>
+          </div>
+
+          <!-- Prompt / Instructions -->
+          <div>
+            <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
+              <i class="bi bi-chat-left-text text-indigo-500 mr-1"></i>
+              รายละเอียดโครงการ / ความต้องการเพิ่มเติม
+            </label>
+            <textarea
+              [ngModel]="aiPrompt()"
+              (ngModelChange)="aiPrompt.set($event)"
+              rows="3"
+              placeholder="เช่น พัฒนาระบบ CRM พร้อมระบบสะสมแต้มและแดชบอร์ดสรุปยอดขาย รองรับผู้ใช้งาน 10,000 คน..."
+              class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"></textarea>
+          </div>
+
+          @if (isGeneratingAi()) {
+            <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
+              <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+              <div>
+                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">AI กำลังร่างข้อมูลโครงการ...</p>
+                <p class="text-xs text-[var(--text-muted)]">กำลังวิเคราะห์เป้าหมายและจัดทำขอบเขตงานโครงการ</p>
+              </div>
+            </div>
+          }
+
+          <!-- Latest Result Preview Card -->
+          @if (aiCurrentDraft()) {
+            <div class="p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] space-y-3">
+              <div class="flex items-center justify-between border-b border-[var(--border)] pb-2 flex-wrap gap-2">
+                <span class="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                  <i class="bi bi-check-circle-fill"></i>
+                  ผลลัพธ์ล่าสุด (เวอร์ชัน v{{ aiCurrentVersionNo() }})
+                </span>
+                <div class="flex items-center gap-2">
+                  <button
+                    type="button"
+                    (click)="copyDraft(aiCurrentDraft())"
+                    class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--sidebar)] border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+                    <i class="bi" [ngClass]="copiedId() === 'current' ? 'bi-check text-emerald-500' : 'bi-clipboard'"></i>
+                    {{ copiedId() === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="pasteProjectDraft(aiCurrentDraft())"
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    วางลงในฟอร์ม
+                  </button>
+                </div>
+              </div>
+
+              <div class="text-xs text-[var(--text-active)] space-y-1.5">
+                <p><strong>ชื่อโครงการ:</strong> {{ aiCurrentDraft().projectName }} ({{ aiCurrentDraft().projectCode }})</p>
+                <p><strong>สถานะ:</strong> {{ aiCurrentDraft().status }} | <strong>ระยะเวลา:</strong> {{ aiCurrentDraft().startDate }} ถึง {{ aiCurrentDraft().endDate }}</p>
+                @if (aiCurrentDraft().description) {
+                  <div class="mt-2 p-2 bg-[var(--sidebar)] rounded-lg text-xs text-[var(--text-muted)] line-clamp-4" [innerHTML]="aiCurrentDraft().description"></div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Modal Footer: GENERATE -->
+        <div class="px-6 py-3.5 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)] flex-shrink-0">
+          <button
+            type="button"
+            (click)="closeAiAssist()"
+            class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+            ยกเลิก
+          </button>
+          <button
+            type="button"
+            (click)="generateAiDraft()"
+            [disabled]="isGeneratingAi()"
+            class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-2">
+            @if (isGeneratingAi()) {
+              <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+              <span>กำลังสร้าง...</span>
+            } @else {
+              <i class="bi bi-stars text-amber-300"></i>
+              <span>สร้างเนื้อหาด้วย AI</span>
+            }
+          </button>
+        </div>
+      }
+
+      <!-- TAB 2: HISTORY LOG -->
+      @if (aiActiveTab() === 'history') {
+        <div class="p-6 overflow-y-auto space-y-3 flex-1">
+          @if (aiHistories().length === 0) {
+            <div class="text-center py-12 text-[var(--text-muted)]">
+              <i class="bi bi-clock-history text-4xl block mb-2 opacity-40"></i>
+              <p class="text-sm font-medium">ยังไม่มีประวัติการสร้างเนื้อหา AI</p>
+              <p class="text-xs mt-1">ประวัติจะถูกบันทึกอัตโนมัติเมื่อสร้างเนื้อหาในแท็บ "สร้างเนื้อหา"</p>
+            </div>
+          } @else {
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-xs text-[var(--text-muted)]">มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน</span>
+              <button
+                type="button"
+                (click)="clearAllAiHistories()"
+                class="text-xs text-rose-500 hover:underline cursor-pointer flex items-center gap-1">
+                <i class="bi bi-trash3"></i> ล้างประวัติทั้งหมด
+              </button>
+            </div>
+
+            @for (item of aiHistories(); track item.id) {
+              <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-purple-500/40 transition-all space-y-2">
+                <div class="flex items-center justify-between flex-wrap gap-2">
+                  <div class="flex items-center gap-2">
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                      v{{ item.versionNo }}
+                    </span>
+                    <span class="text-xs font-semibold text-[var(--text-active)]">
+                      {{ item.data?.projectName || 'โครงการใหม่' }}
+                    </span>
+                  </div>
+                  <span class="text-[11px] text-[var(--text-muted)]">
+                    {{ item.createdAt | date:'dd/MM/yyyy HH:mm' }}
+                  </span>
+                </div>
+
+                @if (item.prompt) {
+                  <p class="text-xs text-[var(--text-muted)] italic line-clamp-2 bg-[var(--sidebar)] p-2 rounded-lg">
+                    "{{ item.prompt }}"
+                  </p>
+                }
+
+                @if (item.data?.description) {
+                  <div class="text-xs text-[var(--text-muted)] p-2 rounded-lg bg-[var(--sidebar)] line-clamp-3" [innerHTML]="item.data?.description"></div>
+                }
+
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-[var(--border)]">
+                  <button
+                    type="button"
+                    (click)="deleteAiHistory(item.id, $event)"
+                    class="px-2 py-1 rounded-lg text-xs text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer">
+                    <i class="bi bi-trash"></i> ลบ
+                  </button>
+                  <button
+                    type="button"
+                    (click)="copyDraft(item.data, item.id)"
+                    class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--sidebar)] border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+                    <i class="bi" [ngClass]="copiedId() === item.id ? 'bi-check text-emerald-500' : 'bi-clipboard'"></i>
+                    {{ copiedId() === item.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="pasteProjectDraft(item.data)"
+                    class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer flex items-center gap-1.5">
+                    <i class="bi bi-arrow-down-circle"></i>
+                    วางลงในฟอร์ม
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </div>
+
+        <!-- Modal Footer: HISTORY -->
+        <div class="px-6 py-3.5 border-t border-[var(--border)] flex items-center justify-between bg-[var(--bg)] flex-shrink-0">
+          <button
+            type="button"
+            (click)="closeAiAssist()"
+            class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
+            ปิด
+          </button>
+          <span class="text-xs text-[var(--text-muted)]">
+            มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน
+          </span>
+        </div>
+      }
+
+    </div>
+  </div>
 }

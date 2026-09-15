@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { environment } from '../../../../../../environments/environment';
@@ -19,6 +19,7 @@ import { ApprovalService } from '../../../dt/pmdt03/approval.service';
 import type { ApprovalFlow } from '../../../dt/pmdt03/approval.model';
 import { Pmrt02AService } from './pmrt02A.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 
 import { ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
@@ -30,6 +31,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
   imports: [
     CommonModule,
     ReactiveFormsModule,
+    FormsModule,
     RouterModule,
     SicButtonComponent,
     SicInputComponent,
@@ -53,6 +55,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);
   private cdr = inject(ChangeDetectorRef);
+  private aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<any>;
   get form(): FormGroup {
@@ -66,6 +69,24 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   isSaving = false;
 
   customerName = signal<string>('');
+
+  // ===== AI Assistant =====
+  showAiModal = signal(false);
+  aiActiveTab = signal<'generate' | 'history'>('generate');
+  isGeneratingAi = signal(false);
+  aiModel = signal('gemini-2.5-flash');
+  aiPrompt = signal('');
+  aiHistories = signal<AiHistoryItem<any>[]>([]);
+  aiCurrentDraft = signal<any>(null);
+  aiCurrentVersionNo = signal<number | null>(null);
+  copiedId = signal<string | null>(null);
+
+  aiModels = [
+    { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite (เร็วที่สุด / ประหยัด)' },
+    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (แนะนำ / สมดุล)' },
+    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet (ฉลาด / ละเอียด)' },
+    { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet (ล่าสุด / ให้เหตุผลดีที่สุด)' },
+  ];
 
   // ===== Approval Flow =====
   flows: ApprovalFlow[] = [];
@@ -335,6 +356,130 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         this.isSaving = false;
         this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
       },
+    });
+  }
+
+  // ===== AI Assistant Methods =====
+  openAiAssist(): void {
+    if (this.isLocked || this.isViewOnly) return;
+    this.showAiModal.set(true);
+    this.aiActiveTab.set('generate');
+    this.loadAiHistory();
+  }
+
+  closeAiAssist(): void {
+    this.showAiModal.set(false);
+  }
+
+  loadAiHistory(): void {
+    const targetId = this.projectId || this.form?.get('id')?.value || 'new';
+    this.aiHistories.set(this.aiHistoryService.getHistories('project', targetId));
+  }
+
+  deleteAiHistory(id: string, event: Event): void {
+    event.stopPropagation();
+    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้ใช่หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        const targetId = this.projectId || this.form?.get('id')?.value || 'new';
+        this.aiHistoryService.deleteHistory('project', targetId, id);
+        this.loadAiHistory();
+      }
+    });
+  }
+
+  clearAllAiHistories(): void {
+    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้าง AI ทั้งหมดของโครงการนี้ใช่หรือไม่?').then((ok: boolean) => {
+      if (ok) {
+        const targetId = this.projectId || this.form?.get('id')?.value || 'new';
+        this.aiHistoryService.clearHistories('project', targetId);
+        this.loadAiHistory();
+      }
+    });
+  }
+
+  generateAiDraft(): void {
+    if (this.isGeneratingAi()) return;
+
+    this.isGeneratingAi.set(true);
+    const targetId = this.projectId || this.form?.get('id')?.value || 'new';
+    const currentCode = this.form?.get('projectCode')?.value;
+    const currentName = this.form?.get('projectName')?.value;
+    const customerId = this.form?.get('customerId')?.value;
+
+    this.projectService.generateDraft({
+      customerId: customerId || undefined,
+      projectCode: currentCode || undefined,
+      projectName: currentName || undefined,
+      prompt: this.aiPrompt() || undefined,
+      model: this.aiModel() || undefined,
+    }).subscribe({
+      next: (draft) => {
+        this.isGeneratingAi.set(false);
+        if (!draft) {
+          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาโครงการได้ กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
+        const historyItem = this.aiHistoryService.addHistory(
+          'project',
+          targetId,
+          draft,
+          this.aiPrompt(),
+          this.aiModel()
+        );
+
+        this.aiCurrentDraft.set(draft);
+        this.aiCurrentVersionNo.set(historyItem.versionNo);
+        this.loadAiHistory();
+
+        // ดึงข้อมูลหัวข้อและเนื้อหา TipTap ลงในฟอร์มทันที
+        this.applyDraftToForm(draft);
+
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลโครงการ (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.cdr.detectChanges();
+      },
+      error: (err) => {
+        this.isGeneratingAi.set(false);
+        console.error('AI project generation error:', err);
+        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+      },
+    });
+  }
+
+  private applyDraftToForm(draft: any): void {
+    if (!draft) return;
+    this.formData.patchValue({
+      projectCode: draft.projectCode || this.form.get('projectCode')?.value,
+      projectName: draft.projectName || this.form.get('projectName')?.value,
+      description: draft.description || this.form.get('description')?.value,
+      status: draft.status || this.form.get('status')?.value || 'Planning',
+      startDate: draft.startDate || this.form.get('startDate')?.value,
+      plannedEndDate: draft.endDate || draft.plannedEndDate || this.form.get('plannedEndDate')?.value,
+    });
+    this.form.markAsDirty();
+  }
+
+  pasteProjectDraft(draft: any): void {
+    if (this.isLocked || this.isViewOnly) {
+      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      return;
+    }
+    if (!draft) {
+      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      return;
+    }
+
+    this.applyDraftToForm(draft);
+    this.showAiModal.set(false);
+    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลโครงการจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+  }
+
+  copyDraft(draft: any, historyId?: string): void {
+    if (!draft) return;
+    const text = typeof draft === 'string' ? draft : JSON.stringify(draft, null, 2);
+    navigator.clipboard.writeText(text).then(() => {
+      this.copiedId.set(historyId || 'current');
+      setTimeout(() => this.copiedId.set(null), 2000);
     });
   }
 }

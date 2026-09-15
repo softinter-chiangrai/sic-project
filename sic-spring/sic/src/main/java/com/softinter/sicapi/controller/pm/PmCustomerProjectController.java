@@ -35,6 +35,14 @@ public class PmCustomerProjectController {
 
     private final PmCustomerProjectService projectService;
     private final PmCustomerProjectExportService projectExportService;
+    private final com.softinter.sicapi.service.impl.ProjectGeneratorService projectGeneratorService;
+
+    @PostMapping("/generate/draft")
+    @Operation(summary = "Generate project charter/plan draft with AI")
+    public ResponseEntity<com.softinter.sicapi.dto.response.ProjectDraft> generateDraft(
+            @RequestBody com.softinter.sicapi.dto.request.GenerateProjectDraftRequest req) {
+        return ResponseEntity.ok(projectGeneratorService.generateDraft(req));
+    }
 
     @GetMapping
     @Operation(summary = "รายการโครงการของลูกค้า (แบบแบ่งหน้า)")

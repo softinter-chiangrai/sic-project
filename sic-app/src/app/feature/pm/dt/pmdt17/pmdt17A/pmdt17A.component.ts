@@ -197,7 +197,11 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         this.aiCurrentDraft.set(draft);
         this.aiCurrentVersionNo.set(historyItem.versionNo);
         this.loadAiHistory();
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลตั๋วแจ้งปัญหา (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
+
+        // ดึงข้อมูลหัวข้อ (Title) ประเภท ระดับความเร่งด่วน รายละเอียดปัญหา (Tiptap) และแนวทางแก้ไข (Tiptap) ลงในฟอร์มทันที
+        this.applyDraftToForm(draft);
+
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลตั๋วแจ้งปัญหา (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
@@ -205,6 +209,19 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
       },
     });
+  }
+
+  private applyDraftToForm(draft: any): void {
+    if (!draft) return;
+    this.formData.patchValue({
+      title: draft.title || this.formData.form.value.title,
+      ticketType: draft.ticketType || this.formData.form.value.ticketType || 'BUG_SUPPORT',
+      severity: draft.severity || draft.priority || this.formData.form.value.severity || 'MEDIUM',
+      description: draft.description || this.formData.form.value.description,
+      resolutionSummary: draft.resolutionSummary || draft.resolution || this.formData.form.value.resolutionSummary,
+    } as any);
+
+    this.formData.markAsDirty();
   }
 
   pasteMaTicketDraft(draft: any): void {
@@ -217,26 +234,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    if (draft.title) {
-      this.formData.patchValue({ title: draft.title } as any);
-    }
-    if (draft.description) {
-      this.formData.patchValue({ description: draft.description } as any);
-    }
-    if (draft.rootCause) {
-      this.formData.patchValue({ rootCause: draft.rootCause } as any);
-    }
-    if (draft.resolution) {
-      this.formData.patchValue({ resolution: draft.resolution } as any);
-    }
-    if (draft.ticketType) {
-      this.formData.patchValue({ ticketType: draft.ticketType } as any);
-    }
-    if (draft.priority) {
-      this.formData.patchValue({ severity: draft.priority } as any);
-    }
-
-    this.formData.markAsDirty();
+    this.applyDraftToForm(draft);
     this.showAiModal.set(false);
     this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูล MA Ticket จาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
   }

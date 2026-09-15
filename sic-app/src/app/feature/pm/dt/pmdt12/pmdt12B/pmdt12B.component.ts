@@ -219,6 +219,23 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
           this.loadAiHistory();
           this.aiCurrentDraft.set(fullDraft);
           this.aiCurrentVersionNo.set(historyItem.versionNo);
+
+          // ดึงข้อมูลหัวข้อและเนื้อหาที่ AI สร้างลงในฟอร์มทันที
+          this.formData.form.patchValue({
+            scenarioName: fullDraft.scenarioName,
+            description: fullDraft.description || this.formData.form.get('description')?.value,
+            priority: fullDraft.priority || this.formData.form.get('priority')?.value || 'Medium',
+          });
+
+          if (fullDraft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
+            this.formData.form.patchValue({ scenarioCode: fullDraft.scenarioCode });
+          }
+
+          if (fullDraft.taskId && fullDraft.taskId !== this.formData.form.get('taskId')?.value) {
+            this.onTaskChange(fullDraft.taskId);
+          }
+
+          this.formData.markAsDirty();
         }
       },
       error: (err) => {
@@ -230,21 +247,14 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   pasteTestScenarioDraft(draft: any): void {
     if (!draft) return;
+    this.formData.form.patchValue({
+      scenarioName: draft.scenarioName || this.formData.form.get('scenarioName')?.value,
+      description: draft.description || this.formData.form.get('description')?.value,
+      priority: draft.priority || this.formData.form.get('priority')?.value || 'Medium',
+    });
+
     if (draft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
       this.formData.form.patchValue({ scenarioCode: draft.scenarioCode });
-    }
-
-    const currentScenarioName = this.formData.form.get('scenarioName')?.value;
-    if (draft.scenarioName && (!currentScenarioName || currentScenarioName.trim() === '')) {
-      this.formData.form.patchValue({ scenarioName: draft.scenarioName });
-    }
-
-    if (draft.priority) {
-      this.formData.form.patchValue({ priority: draft.priority });
-    }
-
-    if (draft.description) {
-      this.formData.form.patchValue({ description: draft.description });
     }
 
     if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {

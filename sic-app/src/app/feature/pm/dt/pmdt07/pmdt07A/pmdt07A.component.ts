@@ -356,6 +356,31 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.loadAiHistory();
                 this.aiCurrentDraft = fullDraft;
                 this.aiCurrentVersionNo = historyItem.versionNo;
+
+                // ดึงข้อมูลหัวข้อและเนื้อหาที่ AI สร้างลงในฟอร์มทันที
+                this.form.patchValue({
+                    title: fullDraft.title,
+                    priority: fullDraft.priority || this.form.value.priority,
+                    estimatedManday: fullDraft.estimatedManday || this.form.value.estimatedManday,
+                    description: fullDraft.description || this.form.value.description,
+                });
+
+                if (fullDraft.requirementId) {
+                    this.form.patchValue({
+                        requirementId: fullDraft.requirementId,
+                        generatedFromRequirementId: fullDraft.requirementId
+                    });
+                }
+                if (fullDraft.diagramIds && fullDraft.diagramIds.length > 0) {
+                    this.form.patchValue({
+                        generatedFromDiagramId: fullDraft.diagramIds.join(',')
+                    });
+                }
+                if (fullDraft.specificationType) {
+                    this.form.patchValue({ specificationType: fullDraft.specificationType });
+                }
+
+                this.form.markAsDirty();
                 this.cdr.markForCheck();
             },
             error: (err) => {

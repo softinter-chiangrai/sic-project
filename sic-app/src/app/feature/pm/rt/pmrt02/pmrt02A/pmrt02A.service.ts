@@ -26,4 +26,14 @@ export class Pmrt02AService {
   update(id: string, project: ProjectModel): Observable<any> {
     return this.http.put(`${this.baseUrl}/${id}`, project);
   }
+
+  generateDraft(req: {
+    customerId?: string;
+    projectCode?: string;
+    projectName?: string;
+    prompt?: string;
+    model?: string;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.baseUrl}/generate/draft`, req);
+  }
 }

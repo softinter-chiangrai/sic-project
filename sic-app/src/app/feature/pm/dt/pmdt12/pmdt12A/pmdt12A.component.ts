@@ -272,6 +272,21 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
           this.loadAiHistory();
           this.aiCurrentDraft.set(fullDraft);
           this.aiCurrentVersionNo.set(historyItem.versionNo);
+
+          // ดึงข้อมูลหัวข้อและเนื้อหาที่ AI สร้างลงในฟอร์มทันที
+          this.formData.form.patchValue({
+            title: fullDraft.title,
+            priority: fullDraft.priority || this.formData.form.get('priority')?.value || 'Medium',
+            testStep: fullDraft.testStep || this.formData.form.get('testStep')?.value,
+            expectedResult: fullDraft.expectedResult || this.formData.form.get('expectedResult')?.value,
+            actualResult: fullDraft.actualResult || this.formData.form.get('actualResult')?.value,
+          });
+
+          if (fullDraft.taskId && fullDraft.taskId !== this.formData.form.get('taskId')?.value) {
+            this.onTaskChange(fullDraft.taskId);
+          }
+
+          this.formData.markAsDirty();
         }
       },
       error: (err) => {
@@ -283,22 +298,13 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
   pasteTestCaseDraft(draft: any): void {
     if (!draft) return;
-    const currentTitleValue = this.formData.form.get('title')?.value;
-    if (draft.title && (!currentTitleValue || currentTitleValue.trim() === '')) {
-      this.formData.form.patchValue({ title: draft.title });
-    }
-
-    if (draft.priority) {
-      this.formData.form.patchValue({ priority: draft.priority });
-    }
-
-    if (draft.testStep) {
-      this.formData.form.patchValue({ testStep: draft.testStep });
-    }
-
-    if (draft.expectedResult) {
-      this.formData.form.patchValue({ expectedResult: draft.expectedResult });
-    }
+    this.formData.form.patchValue({
+      title: draft.title || this.formData.form.get('title')?.value,
+      priority: draft.priority || this.formData.form.get('priority')?.value || 'Medium',
+      testStep: draft.testStep || this.formData.form.get('testStep')?.value,
+      expectedResult: draft.expectedResult || this.formData.form.get('expectedResult')?.value,
+      actualResult: draft.actualResult || this.formData.form.get('actualResult')?.value,
+    });
 
     if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {
       this.onTaskChange(draft.taskId);

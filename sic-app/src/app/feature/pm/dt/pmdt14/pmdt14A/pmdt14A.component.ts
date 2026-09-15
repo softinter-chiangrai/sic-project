@@ -185,7 +185,11 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         this.aiCurrentDraft.set(draft);
         this.aiCurrentVersionNo.set(historyItem.versionNo);
         this.loadAiHistory();
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลส่งมอบงาน (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
+
+        // ดึงข้อมูลหัวข้อการส่งมอบ รายการ Release Note / Summary (Tiptap) และ Checklist ลงในฟอร์มทันที
+        this.applyDraftToForm(draft);
+
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลส่งมอบงาน (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
@@ -193,6 +197,30 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
       },
     });
+  }
+
+  private applyDraftToForm(draft: any): void {
+    if (!draft) return;
+    this.formData.patchValue({
+      deliveryTitle: draft.deliveryTitle || draft.deliveryName || this.formData.form.value.deliveryTitle,
+      deliveryType: draft.deliveryType || this.formData.form.value.deliveryType || 'FINAL',
+      deliveryVersion: draft.deliveryVersion || this.formData.form.value.deliveryVersion || '1.0',
+      releaseNote: draft.releaseNote || this.formData.form.value.releaseNote,
+      deliverySummary: draft.deliverySummary || this.formData.form.value.deliverySummary,
+    } as any);
+
+    const rawItems = draft.items || draft.checklists;
+    if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {
+      const newItems: PmDeliveryChecklistModel[] = rawItems.map((it: any, idx: number) => ({
+        itemName: typeof it === 'string' ? it : (it.itemName || it.checklistName || it.name || `รายการที่ ${idx + 1}`),
+        isChecked: typeof it === 'object' && it.isPassed !== undefined ? it.isPassed : false,
+        sortOrder: idx + 1,
+        state: SicEntityState.Added,
+      }));
+      this.checklists.set(newItems);
+    }
+
+    this.formData.markAsDirty();
   }
 
   pasteDeliveryDraft(draft: any): void {
@@ -205,24 +233,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    if (draft.deliveryName) {
-      this.formData.patchValue({ deliveryTitle: draft.deliveryName } as any);
-    }
-    if (draft.notes) {
-      this.formData.patchValue({ notes: draft.notes } as any);
-    }
-
-    if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {
-      const newItems: PmDeliveryChecklistModel[] = draft.items.map((it: any, idx: number) => ({
-        itemName: typeof it === 'string' ? it : (it.itemName || it.name || `รายการที่ ${idx + 1}`),
-        isChecked: false,
-        sortOrder: idx + 1,
-        state: SicEntityState.Added,
-      }));
-      this.checklists.set(newItems);
-    }
-
-    this.formData.markAsDirty();
+    this.applyDraftToForm(draft);
     this.showAiModal.set(false);
     this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลการส่งมอบจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
   }

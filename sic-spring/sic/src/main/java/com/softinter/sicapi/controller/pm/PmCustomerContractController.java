@@ -37,6 +37,14 @@ public class PmCustomerContractController {
     private final com.softinter.sicapi.service.PmCustomerContractExportService exportService;
     private final BusinessAccessService businessAccessService;
     private final ApprovalService approvalService;
+    private final com.softinter.sicapi.service.impl.ContractGeneratorService contractGeneratorService;
+
+    @PostMapping("/generate/draft")
+    @Operation(summary = "Generate contract draft with AI")
+    public ResponseEntity<com.softinter.sicapi.dto.response.ContractDraft> generateDraft(
+            @RequestBody com.softinter.sicapi.dto.request.GenerateContractDraftRequest req) {
+        return ResponseEntity.ok(contractGeneratorService.generateDraft(req));
+    }
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export Contract Document as PDF using JasperReports")

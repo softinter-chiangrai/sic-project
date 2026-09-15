@@ -190,7 +190,11 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         this.aiCurrentDraft.set(draft);
         this.aiCurrentVersionNo.set(historyItem.versionNo);
         this.loadAiHistory();
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลใบแจ้งหนี้ (เวอร์ชัน v${historyItem.versionNo}) เรียบร้อยแล้ว`);
+
+        // ดึงข้อมูลหัวข้อ/ประเภท หมายเหตุ (Tiptap) อัตราภาษี และรายการสินค้าลงในฟอร์มทันที
+        this.applyDraftToForm(draft);
+
+        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลใบแจ้งหนี้ (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
@@ -198,6 +202,40 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
       },
     });
+  }
+
+  private applyDraftToForm(draft: any): void {
+    if (!draft) return;
+
+    if (draft.billingType || draft.invoiceType) {
+      this.formData.patchValue({ billingType: draft.billingType || draft.invoiceType } as any);
+    }
+    if (draft.vatRate !== undefined && draft.vatRate !== null) {
+      this.formData.patchValue({ vatRate: Number(draft.vatRate) } as any);
+    } else if (draft.taxRate !== undefined && draft.taxRate !== null) {
+      this.formData.patchValue({ vatRate: Number(draft.taxRate) } as any);
+    }
+    if (draft.remark || draft.notes) {
+      this.formData.patchValue({ remark: draft.remark || draft.notes } as any);
+    }
+
+    if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {
+      const newItems = draft.items.map((it: any, idx: number) => ({
+        id: `ai-item-${Date.now()}-${idx}`,
+        itemNo: idx + 1,
+        itemName: it.itemDescription || it.itemName || it.name || `รายการที่ ${idx + 1}`,
+        description: it.description || '',
+        quantity: it.quantity || 1,
+        unitPrice: it.unitPrice || it.amount || 0,
+        amount: it.amount || ((it.quantity || 1) * (it.unitPrice || 0)),
+      }));
+      this.items.set(newItems);
+    } else if (draft.amount !== undefined && draft.amount !== null) {
+      this.formData.patchValue({ subtotalAmount: Number(draft.amount) } as any);
+    }
+
+    this.calculateTotals();
+    this.formData.markAsDirty();
   }
 
   pasteInvoiceDraft(draft: any): void {
@@ -210,21 +248,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    if (draft.invoiceType) {
-      this.formData.patchValue({ billingType: draft.invoiceType } as any);
-    }
-    if (draft.amount !== undefined && draft.amount !== null) {
-      this.formData.patchValue({ subtotalAmount: Number(draft.amount) } as any);
-    }
-    if (draft.taxRate !== undefined && draft.taxRate !== null) {
-      this.formData.patchValue({ vatRate: Number(draft.taxRate) } as any);
-    }
-    if (draft.notes) {
-      this.formData.patchValue({ notes: draft.notes } as any);
-    }
-
-    this.calculateTotals();
-    this.formData.markAsDirty();
+    this.applyDraftToForm(draft);
     this.showAiModal.set(false);
     this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลใบแจ้งหนี้จาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
   }
