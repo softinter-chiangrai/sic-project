@@ -47,7 +47,7 @@ export default defineConfig(
         'error',
         {
           type: 'element',
-          prefix: 'kc',
+          prefix: ['app', 'kc'],
           style: 'kebab-case',
         },
       ],

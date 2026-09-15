@@ -12,6 +12,7 @@
   bracketSpacing: true,
   arrowParens: "always",
   singleAttributePerLine: true,
+  endOfLine: "auto",
   overrides: [
     {
       files: "*.html",

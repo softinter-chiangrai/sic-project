@@ -6,7 +6,7 @@
   "registrationAllowed": false,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
-  "loginTheme": "keywind-mint-flavor",
+  "loginTheme": "sic-keycloak-theme",
   "clients": [
     {
       "clientId": "sic-app",

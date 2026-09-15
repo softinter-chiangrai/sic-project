@@ -27,7 +27,9 @@ services:
   # 2. Authentication Service (Keycloak)
   # ============================================================================
   sic-auth:
-    image: quay.io/keycloak/keycloak:latest
+    build:
+      context: ./sic-auth
+      dockerfile: Dockerfile
     container_name: sic-auth
     restart: unless-stopped
     depends_on:
@@ -45,8 +47,6 @@ services:
       KC_PROXY: "edge"
     volumes:
       - ./sic-auth/infra/keycloak/realm-one-project.json:/opt/keycloak/data/import/realm-one-project.json:ro
-      # - ./sic-auth/mint-keywind-theme-main/theme:/opt/keycloak/themes:ro
-      - ./sic-auth/sic-keycloak-theme/dist_keycloak/keycloak-theme-for-kc-all-other-versions.jar:/opt/keycloak/providers/sic-ng-login-theme.jar
       - keycloak_data:/opt/keycloak/data
     command:
       - "start-dev"
