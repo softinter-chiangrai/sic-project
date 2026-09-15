@@ -99,7 +99,8 @@ public class PmUatExportServiceImpl implements PmUatExportService {
         long fail = filteredCases.stream().filter(c -> "Fail".equalsIgnoreCase(c.getTestStatus()) || "Failed".equalsIgnoreCase(c.getTestStatus())).count();
         long blocked = filteredCases.stream().filter(c -> "Blocked".equalsIgnoreCase(c.getTestStatus())).count();
         long pending = filteredCases.stream().filter(c -> c.getTestStatus() == null || "Pending".equalsIgnoreCase(c.getTestStatus())).count();
-        String passRate = total > 0 ? String.format("%.1f%%", (double) pass / total * 100) : "0%";
+        double rate = total > 0 ? ((double) pass / total * 100.0) : 0.0;
+        String passRate = (rate % 1 == 0) ? String.format("%.0f%%", rate) : String.format("%.1f%%", rate);
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("projectId", projectId != null ? projectId.toString() : "");
