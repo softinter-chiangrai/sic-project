@@ -1,5 +1,6 @@
 // src/app/core/services/ai-history.service.ts
 import { Injectable } from '@angular/core';
+import { DEFAULT_AI_MODEL } from '../config/ai-models.config';
 
 export interface AiHistoryItem<T = any> {
   id: string;
@@ -56,7 +57,7 @@ export class AiHistoryService {
       moduleKey,
       targetId: targetId || undefined,
       title: title || `Version ${nextVersionNo}`,
-      model: model || 'gemini-2.5-flash-lite',
+      model: model || DEFAULT_AI_MODEL,
       prompt: prompt || '',
       summary: summary || '',
       createdAt: new Date().toISOString(),

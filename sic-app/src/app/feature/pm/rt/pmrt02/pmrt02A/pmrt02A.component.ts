@@ -1,3 +1,5 @@
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+
 // src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
@@ -74,19 +76,14 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   aiActiveTab = signal<'generate' | 'history'>('generate');
   isGeneratingAi = signal(false);
-  aiModel = signal('gemini-2.5-flash');
+  aiModel = signal(DEFAULT_AI_MODEL);
   aiPrompt = signal('');
   aiHistories = signal<AiHistoryItem<any>[]>([]);
   aiCurrentDraft = signal<any>(null);
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
 
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite (เร็วที่สุด / ประหยัด)' },
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (แนะนำ / สมดุล)' },
-    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet (ฉลาด / ละเอียด)' },
-    { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet (ล่าสุด / ให้เหตุผลดีที่สุด)' },
-  ];
+  aiModels = AI_MODEL_OPTIONS;
 
   // ===== Approval Flow =====
   flows: ApprovalFlow[] = [];
@@ -415,7 +412,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
-        if (!draft) {
+        if (!draft || (!draft.projectName && !draft.description && !draft.projectCode)) {
           this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาโครงการได้ กรุณาลองใหม่อีกครั้ง');
           return;
         }

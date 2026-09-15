@@ -22,6 +22,7 @@ import type { AiModel, ChatMessage, DiagramChatSession } from '../diagram.model'
 import { DiagramService, PmChatResponse } from '../diagram.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 
 @Component({
   selector: 'app-pmdt05a',
@@ -54,7 +55,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // AI Models state
   availableModels = signal<AiModel[]>([]);
-  selectedModelId = signal<string>('gemini-2.5-flash-lite');
+  selectedModelId = signal<string>(DEFAULT_AI_MODEL);
   showModelMenu = signal<boolean>(false);
 
   selectedModel = computed(() => {
@@ -140,46 +141,20 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
       .pipe(
         takeUntil(this.destroy$),
         catchError(() =>
-          of([
-            {
-              id: 'gemini-2.5-flash-lite',
-              name: 'Gemini 2.5 Flash Lite',
-              provider: 'Google (KKU)',
-              description: 'ประมวลผลรวดเร็ว ตอบสนองฉับไว (แนะนำ)',
-              icon: 'bi-lightning-charge-fill',
-              recommended: true,
-            },
-            {
-              id: 'gemini-2.5-flash',
-              name: 'Gemini 2.5 Flash',
-              provider: 'Google (KKU)',
-              description: 'ความเร็วสูงและคุณภาพการออกแบบ Diagram ยอดเยี่ยม',
-              icon: 'bi-stars',
-              recommended: false,
-            },
-            {
-              id: 'claude-3-5-sonnet',
-              name: 'Claude 3.5 Sonnet',
-              provider: 'Anthropic',
-              description: 'คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน',
-              icon: 'bi-cpu-fill',
-              recommended: false,
-            },
-            {
-              id: 'claude-3-7-sonnet',
-              name: 'Claude 3.7 Sonnet',
-              provider: 'Anthropic',
-              description: 'โมเดลอัจฉริยะรุ่นล่าสุด พร้อมความสามารถเชิงตรรกะระดับสูง',
-              icon: 'bi-robot',
-              recommended: false,
-            },
-          ] as AiModel[])
+          of(AI_MODEL_OPTIONS.map(m => ({
+            id: m.id,
+            name: m.name,
+            provider: m.provider || 'AI',
+            description: m.name,
+            icon: 'bi-stars',
+            recommended: m.recommended ?? false
+          })) as AiModel[])
         )
       )
       .subscribe((models) => {
         this.availableModels.set(models);
         if (!models.some((m) => m.id === this.selectedModelId())) {
-          this.selectedModelId.set(models[0]?.id || 'gemini-2.5-flash-lite');
+          this.selectedModelId.set(models[0]?.id || DEFAULT_AI_MODEL);
         }
       });
   }

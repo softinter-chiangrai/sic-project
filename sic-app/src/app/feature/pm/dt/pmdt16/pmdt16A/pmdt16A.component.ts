@@ -1,5 +1,6 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -95,15 +96,10 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   isGeneratingAi = signal(false);
   aiAssistTab = signal<'generate' | 'history'>('generate');
-  aiModel = signal('gemini-2.5-flash-lite');
+  aiModel = signal(DEFAULT_AI_MODEL);
   aiPrompt = signal('');
   aiBillingType = signal('FIXED_PRICE');
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite' },
-    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash' },
-    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet' },
-    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet' },
-  ];
+  aiModels = AI_MODEL_OPTIONS;
   aiHistories = signal<AiHistoryItem[]>([]);
   aiCurrentDraft = signal<any | null>(null);
   aiCurrentVersionNo = signal<number | null>(null);

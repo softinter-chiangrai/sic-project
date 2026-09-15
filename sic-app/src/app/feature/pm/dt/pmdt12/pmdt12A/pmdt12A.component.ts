@@ -1,6 +1,7 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -67,13 +68,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   aiAssistTab = signal<'generate' | 'history'>('generate');
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
-  aiAssistModel = signal<string>('gemini-2.5-flash-lite');
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
-    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
-    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
-    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
-  ];
+  aiAssistModel = signal<string>(DEFAULT_AI_MODEL);
+  aiModels = AI_MODEL_OPTIONS;
   aiHistories = signal<any[]>([]);
   aiCurrentDraft = signal<any>(null);
   aiCurrentVersionNo = signal<number | null>(null);

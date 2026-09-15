@@ -137,6 +137,10 @@ public class SpecificationGeneratorService {
     }
 
     private SpecificationDraft parseAiResponse(String aiResponse) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
+            return createFallbackSpec("Specification generated from context");
+        }
+
         try {
             Matcher matcher = JSON_PATTERN.matcher(aiResponse);
             String json;
@@ -145,19 +149,26 @@ public class SpecificationGeneratorService {
             } else {
                 json = aiResponse.trim();
             }
-            return objectMapper.readValue(json, SpecificationDraft.class);
+            SpecificationDraft draft = objectMapper.readValue(json, SpecificationDraft.class);
+            if (draft == null || (draft.getTitle() == null && draft.getDescription() == null && draft.getObjective() == null)) {
+                return createFallbackSpec(aiResponse);
+            }
+            return draft;
         } catch (Exception e) {
             log.error("Failed to parse AI response: {}", aiResponse, e);
-            // Return fallback draft rather than crashing
-            SpecificationDraft fallback = new SpecificationDraft();
-            fallback.setTitle("Generated Specification");
-            fallback.setObjective("Specification generated from prompt");
-            fallback.setScope("System scope");
-            fallback.setDescription(aiResponse);
-            fallback.setPriority("Medium");
-            fallback.setEstimatedManday(1);
-            return fallback;
+            return createFallbackSpec(aiResponse);
         }
+    }
+
+    private SpecificationDraft createFallbackSpec(String desc) {
+        SpecificationDraft fallback = new SpecificationDraft();
+        fallback.setTitle("Generated Specification");
+        fallback.setObjective("Specification generated from prompt");
+        fallback.setScope("System scope");
+        fallback.setDescription(desc);
+        fallback.setPriority("Medium");
+        fallback.setEstimatedManday(1);
+        return fallback;
     }
 
     private String buildHtmlDescription(SpecificationDraft draft) {

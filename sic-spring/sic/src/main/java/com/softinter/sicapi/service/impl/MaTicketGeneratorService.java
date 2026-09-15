@@ -98,7 +98,7 @@ public class MaTicketGeneratorService {
     }
 
     private MaTicketDraft parseAiResponse(String aiResponse) {
-        if (aiResponse == null || aiResponse.isBlank()) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
             return fallbackDraft("No response from AI");
         }
 
@@ -109,7 +109,11 @@ public class MaTicketGeneratorService {
         }
 
         try {
-            return objectMapper.readValue(jsonContent, MaTicketDraft.class);
+            MaTicketDraft draft = objectMapper.readValue(jsonContent, MaTicketDraft.class);
+            if (draft == null || (draft.getTitle() == null && draft.getDescription() == null)) {
+                return fallbackDraft(aiResponse);
+            }
+            return draft;
         } catch (Exception e) {
             log.warn("Failed to parse AI JSON response for MA Ticket, attempting raw extraction: {}", e.getMessage());
             return fallbackDraft(aiResponse);

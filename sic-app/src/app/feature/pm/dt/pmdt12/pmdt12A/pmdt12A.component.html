@@ -360,7 +360,7 @@
               textField="name"
               placeholder="เลือกโมเดล AI"
               [ngModel]="aiAssistModel()"
-              (selectionChanged)="aiAssistModel.set($event?.value || $event?.id || $event || 'gemini-2.5-flash-lite')"
+              (selectionChanged)="aiAssistModel.set($event?.value || $event?.id || $event)"
               [clearable]="false">
             </sic-combobox>
           </div>

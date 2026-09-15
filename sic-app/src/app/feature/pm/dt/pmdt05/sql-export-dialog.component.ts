@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../core/config/ai-models.config';
 import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -371,13 +372,8 @@ export class SqlExportDialogComponent implements OnInit {
     { value: 'mysql', text: 'MySQL' },
   ];
 
-  selectedAiModel = 'gemini-2.5-flash-lite';
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
-    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
-    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
-    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
-  ];
+  selectedAiModel = DEFAULT_AI_MODEL;
+  aiModels = AI_MODEL_OPTIONS;
 
   engine: 'parser' | 'ai' = 'ai';
   genMode: 'FULL' | 'MIGRATION' = 'FULL';

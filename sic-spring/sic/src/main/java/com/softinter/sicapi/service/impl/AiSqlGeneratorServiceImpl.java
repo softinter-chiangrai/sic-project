@@ -72,9 +72,9 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
         String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, modelId);
         String extractedSql = extractSql(aiRawResponse);
 
-        if (extractedSql == null || extractedSql.isBlank()) {
-            log.warn("Could not extract SQL block, using raw response");
-            extractedSql = aiRawResponse;
+        if (extractedSql == null || extractedSql.isBlank() || extractedSql.trim().equals("{}")) {
+            log.warn("Could not extract SQL block from AI, using fallback template");
+            extractedSql = "-- SQL generated from structure\n-- Please review the diagram structure\n";
         }
 
         return extractedSql.trim();
@@ -128,9 +128,9 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
         String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, modelId);
         String extractedSql = extractSql(aiRawResponse);
 
-        if (extractedSql == null || extractedSql.isBlank()) {
-            log.warn("Could not extract migration SQL block, using raw response");
-            extractedSql = aiRawResponse;
+        if (extractedSql == null || extractedSql.isBlank() || extractedSql.trim().equals("{}")) {
+            log.warn("Could not extract migration SQL block from AI, using minimal safe migration");
+            extractedSql = "-- No migration changes detected or failed to parse AI output\n";
         }
 
         return extractedSql.trim();

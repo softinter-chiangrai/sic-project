@@ -98,13 +98,17 @@ public class RequirementGeneratorService {
     }
 
     private RequirementDraft parseAiResponse(String aiResponse) {
-        if (aiResponse == null || aiResponse.isBlank()) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
             return createFallbackDraft("AI response is empty");
         }
 
         String json = extractJson(aiResponse);
         try {
-            return objectMapper.readValue(json, RequirementDraft.class);
+            RequirementDraft draft = objectMapper.readValue(json, RequirementDraft.class);
+            if (draft == null || (draft.getTitle() == null && draft.getDescription() == null)) {
+                return createFallbackDraft(aiResponse);
+            }
+            return draft;
         } catch (Exception e) {
             log.error("Failed to parse Requirement AI JSON: {}\nRaw: {}", e.getMessage(), aiResponse);
             return createFallbackDraft(aiResponse);

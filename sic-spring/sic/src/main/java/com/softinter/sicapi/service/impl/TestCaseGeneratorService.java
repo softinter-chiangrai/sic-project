@@ -144,6 +144,10 @@ public class TestCaseGeneratorService {
     }
 
     private TestCaseDraftResponse parseAiResponse(String aiResponse) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
+            return createFallbackTestCase();
+        }
+
         try {
             Matcher matcher = JSON_PATTERN.matcher(aiResponse);
             String json;
@@ -152,16 +156,24 @@ public class TestCaseGeneratorService {
             } else {
                 json = aiResponse.trim();
             }
-            return objectMapper.readValue(json, TestCaseDraftResponse.class);
+            TestCaseDraftResponse draft = objectMapper.readValue(json, TestCaseDraftResponse.class);
+            if (draft == null || (draft.getTitle() == null && draft.getTestStep() == null)) {
+                return createFallbackTestCase();
+            }
+            return draft;
         } catch (Exception e) {
             log.error("Failed to parse AI test case response: {}", aiResponse, e);
-            TestCaseDraftResponse fallback = new TestCaseDraftResponse();
-            fallback.setTitle("Generated Test Case");
-            fallback.setPriority("Medium");
-            fallback.setTestStep("<ol><li>เปิดหน้าจอการทำงาน</li><li>กรอกข้อมูลเพื่อทดสอบ</li><li>ตรวจสอบผลลัพธ์</li></ol>");
-            fallback.setExpectedResult("<p>ระบบทำงานถูกต้องตามเงื่อนไขที่กำหนด</p>");
-            return fallback;
+            return createFallbackTestCase();
         }
+    }
+
+    private TestCaseDraftResponse createFallbackTestCase() {
+        TestCaseDraftResponse fallback = new TestCaseDraftResponse();
+        fallback.setTitle("Generated Test Case");
+        fallback.setPriority("Medium");
+        fallback.setTestStep("<ol><li>เปิดหน้าจอการทำงาน</li><li>กรอกข้อมูลเพื่อทดสอบ</li><li>ตรวจสอบผลลัพธ์</li></ol>");
+        fallback.setExpectedResult("<p>ระบบทำงานถูกต้องตามเงื่อนไขที่กำหนด</p>");
+        return fallback;
     }
 
     private String convertTextToHtmlOrderedList(String text) {

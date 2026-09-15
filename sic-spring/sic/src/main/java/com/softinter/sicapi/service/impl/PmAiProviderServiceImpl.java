@@ -77,38 +77,56 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         List<AiModelResponse> models = new ArrayList<>();
 
         models.add(AiModelResponse.builder()
-                .id("gemini-2.5-flash-lite")
-                .name("Gemini 2.5 Flash Lite")
+                .id("gemini-3.7-flash")
+                .name("Gemini 3.7 Flash")
                 .provider("Google (KKU)")
-                .description("ประมวลผลรวดเร็ว ตอบสนองฉับไว (แนะนำ)")
-                .icon("bi-lightning-charge-fill")
+                .description("ประมวลผลรวดเร็ว ฉลาด และแม่นยำสูง (แนะนำ)")
+                .icon("bi-stars")
                 .recommended(true)
                 .build());
 
         models.add(AiModelResponse.builder()
-                .id("gemini-2.5-flash")
-                .name("Gemini 2.5 Flash")
+                .id("gemini-3.5-flash")
+                .name("Gemini 3.5 Flash")
                 .provider("Google (KKU)")
-                .description("ความเร็วสูงและคุณภาพการออกแบบ Diagram ยอดเยี่ยม")
-                .icon("bi-stars")
+                .description("เสถียร คุณภาพสูง และออกแบบ Diagram ยอดเยี่ยม")
+                .icon("bi-lightning-charge-fill")
                 .recommended(false)
                 .build());
 
         models.add(AiModelResponse.builder()
-                .id("claude-3-5-sonnet")
-                .name("Claude 3.5 Sonnet")
-                .provider("Anthropic")
-                .description("คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน")
+                .id("gemini-2.5-flash-lite")
+                .name("Gemini 2.5 Flash Lite")
+                .provider("Google (KKU)")
+                .description("ประมวลผลรวดเร็วพิเศษ และประหยัด Token")
+                .icon("bi-speedometer2")
+                .recommended(false)
+                .build());
+
+        models.add(AiModelResponse.builder()
+                .id("gpt-5.4-mini")
+                .name("OpenAI GPT-5.4 Mini")
+                .provider("OpenAI (KKU)")
+                .description("โมเดลอัจฉริยะ ความสามารถสูง")
                 .icon("bi-cpu-fill")
                 .recommended(false)
                 .build());
 
         models.add(AiModelResponse.builder()
-                .id("claude-3-7-sonnet")
-                .name("Claude 3.7 Sonnet")
-                .provider("Anthropic")
-                .description("โมเดลอัจฉริยะรุ่นล่าสุด พร้อมความสามารถเชิงตรรกะระดับสูง")
+                .id("deepseek-v4-flash")
+                .name("DeepSeek V4 Flash")
+                .provider("DeepSeek (KKU)")
+                .description("คิดวิเคราะห์ตรรกะและการเขียนโค้ดดีเยี่ยม")
                 .icon("bi-robot")
+                .recommended(false)
+                .build());
+
+        models.add(AiModelResponse.builder()
+                .id("claude-sonnet-4.6")
+                .name("Claude Sonnet 4.6")
+                .provider("Anthropic (KKU)")
+                .description("คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน")
+                .icon("bi-cpu")
                 .recommended(false)
                 .build());
 
@@ -127,7 +145,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         String effectiveModel = (modelId != null && !modelId.isBlank()) ? modelId.trim() : defaultModel;
         ModelConfig config = new ModelConfig();
 
-        if (effectiveModel.startsWith("claude")) {
+        if (effectiveModel.startsWith("claude-3") && claudeApiKey != null && !claudeApiKey.isBlank()) {
             config.provider = "claude";
             config.apiUrl = (claudeApiUrl != null && !claudeApiUrl.isBlank()) ? claudeApiUrl : "https://api.anthropic.com/v1/messages";
             config.apiKey = getEffectiveKey(claudeApiKey, "CLAUDE_API_KEY");
@@ -141,18 +159,16 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                 config.targetModel = claudeModel != null && !claudeModel.isBlank() ? claudeModel : "claude-3-5-sonnet-20241022";
             }
         } else {
-            // Gemini / OpenAI compatible
+            // Gemini / OpenAI / DeepSeek / Meta compatible
             config.provider = "openai";
             config.apiUrl = (geminiApiUrl != null && !geminiApiUrl.isBlank()) ? geminiApiUrl : "https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions";
             config.apiKey = getEffectiveKey(geminiApiKey, "GEMINI_API_KEY");
             config.maxTokens = geminiMaxTokens > 0 ? geminiMaxTokens : 4096;
 
             if (effectiveModel.equalsIgnoreCase("gemini-2.5-flash")) {
-                config.targetModel = "gemini-2.5-flash";
-            } else if (effectiveModel.equalsIgnoreCase("gemini-2.5-flash-lite")) {
-                config.targetModel = "gemini-2.5-flash-lite";
+                config.targetModel = "gemini-2.5-flash-lite"; // automatic fallback for non-lite model
             } else {
-                config.targetModel = geminiModel != null && !geminiModel.isBlank() ? geminiModel : "gemini-2.5-flash-lite";
+                config.targetModel = effectiveModel;
             }
         }
 

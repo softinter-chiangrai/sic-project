@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -104,13 +105,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   isGeneratingAi = signal(false);
   aiAssistTab = signal<'generate' | 'history'>('generate');
-  aiModel = signal('gemini-2.5-flash-lite');
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
-    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
-    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
-    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' },
-  ];
+  aiModel = signal(DEFAULT_AI_MODEL);
+  aiModels = AI_MODEL_OPTIONS;
   aiManualType = signal('USER');
   aiSelectedRequirementIds = signal<string[]>([]);
   aiSelectedSpecificationIds = signal<string[]>([]);

@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
-
 import { CommonModule } from '@angular/common';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import {
   Component,
   inject,
@@ -185,13 +185,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   aiAssistPrompt = '';
   aiAssistTitle = '';
   aiAssistType = 'FUNCTIONAL';
-  aiAssistModel = 'gemini-2.5-flash-lite';
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite' },
-    { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash' },
-    { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet' },
-    { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet' },
-  ];
+  aiAssistModel = DEFAULT_AI_MODEL;
+  aiModels = AI_MODEL_OPTIONS;
   aiHistories: any[] = [];
   aiCurrentDraft: any = null;
   aiCurrentVersionNo: number | null = null;

@@ -80,6 +80,10 @@ public class ProjectGeneratorService {
     }
 
     private ProjectDraft parseResponse(String rawResponse, GenerateProjectDraftRequest request, PmCustomer customer) {
+        if (rawResponse == null || rawResponse.isBlank() || rawResponse.trim().equals("{}")) {
+            return buildFallback(request, customer);
+        }
+
         String jsonStr = rawResponse;
         Matcher matcher = JSON_PATTERN.matcher(rawResponse);
         if (matcher.find()) {
@@ -93,7 +97,11 @@ public class ProjectGeneratorService {
         }
 
         try {
-            return objectMapper.readValue(jsonStr, ProjectDraft.class);
+            ProjectDraft draft = objectMapper.readValue(jsonStr, ProjectDraft.class);
+            if (draft == null || (draft.getProjectName() == null && draft.getDescription() == null)) {
+                return buildFallback(request, customer);
+            }
+            return draft;
         } catch (Exception e) {
             log.warn("Failed to parse JSON response for project draft, using fallback. Raw response: {}", rawResponse);
             return buildFallback(request, customer);

@@ -110,7 +110,7 @@ public class DeliveryGeneratorService {
     }
 
     private DeliveryDraft parseAiResponse(String aiResponse) {
-        if (aiResponse == null || aiResponse.isBlank()) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
             return fallbackDraft("No response from AI");
         }
 
@@ -121,7 +121,11 @@ public class DeliveryGeneratorService {
         }
 
         try {
-            return objectMapper.readValue(jsonContent, DeliveryDraft.class);
+            DeliveryDraft draft = objectMapper.readValue(jsonContent, DeliveryDraft.class);
+            if (draft == null || (draft.getDeliveryTitle() == null && draft.getDeliverySummary() == null && draft.getReleaseNote() == null)) {
+                return fallbackDraft(aiResponse);
+            }
+            return draft;
         } catch (Exception e) {
             log.warn("Failed to parse AI JSON response for Delivery, attempting raw extraction: {}", e.getMessage());
             return fallbackDraft(aiResponse);

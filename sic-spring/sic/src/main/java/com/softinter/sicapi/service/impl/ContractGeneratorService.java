@@ -86,6 +86,10 @@ public class ContractGeneratorService {
     }
 
     private ContractDraft parseResponse(String rawResponse, GenerateContractDraftRequest request, PmCustomerProject project) {
+        if (rawResponse == null || rawResponse.isBlank() || rawResponse.trim().equals("{}")) {
+            return buildFallback(request, project);
+        }
+
         String jsonStr = rawResponse;
         Matcher matcher = JSON_PATTERN.matcher(rawResponse);
         if (matcher.find()) {
@@ -99,7 +103,11 @@ public class ContractGeneratorService {
         }
 
         try {
-            return objectMapper.readValue(jsonStr, ContractDraft.class);
+            ContractDraft draft = objectMapper.readValue(jsonStr, ContractDraft.class);
+            if (draft == null || (draft.getContractNo() == null && draft.getScopeSummary() == null && draft.getPaymentTerms() == null)) {
+                return buildFallback(request, project);
+            }
+            return draft;
         } catch (Exception e) {
             log.warn("Failed to parse JSON response for contract draft, using fallback. Raw response: {}", rawResponse);
             return buildFallback(request, project);

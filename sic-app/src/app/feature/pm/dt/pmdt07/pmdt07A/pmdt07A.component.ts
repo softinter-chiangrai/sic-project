@@ -1,7 +1,7 @@
 // src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts
-
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
@@ -175,13 +175,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     aiAssistRequirementId = '';
     aiAssistDiagramIds: string[] = [];
     aiAssistPrompt = '';
-    aiAssistModel = 'gemini-2.5-flash-lite';
-    aiModels = [
-        { id: 'gemini-2.5-flash-lite', name: '⚡ Gemini 2.5 Flash Lite ' },
-        { id: 'gemini-2.5-flash', name: '✨ Gemini 2.5 Flash ' },
-        { id: 'claude-3-5-sonnet', name: '🧠 Claude 3.5 Sonnet ' },
-        { id: 'claude-3-7-sonnet', name: '🤖 Claude 3.7 Sonnet ' }
-    ];
+    aiAssistModel = DEFAULT_AI_MODEL;
+    aiModels = AI_MODEL_OPTIONS;
     aiHistories: any[] = [];
     aiCurrentDraft: any = null;
     aiCurrentVersionNo: number | null = null;

@@ -427,7 +427,7 @@
           valueField="id"
           textField="name"
           [ngModel]="selectedModelId()"
-          (selectionChanged)="selectModel($event?.value || $event?.id || $event || 'gemini-2.5-flash-lite')"
+          (selectionChanged)="selectModel($event?.value || $event?.id || $event)"
           placeholder="เลือกโมเดล AI"
           [clearable]="false"
         >

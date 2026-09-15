@@ -1,3 +1,5 @@
+import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+
 // src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
 
 import { CommonModule } from '@angular/common';
@@ -84,7 +86,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   aiActiveTab = signal<'generate' | 'history'>('generate');
   isGeneratingAi = signal(false);
-  aiModel = signal('gemini-2.5-flash');
+  aiModel = signal(DEFAULT_AI_MODEL);
   aiPrompt = signal('');
   aiContractType = signal('SOFTWARE_DEVELOPMENT');
   aiHistories = signal<AiHistoryItem<any>[]>([]);
@@ -92,12 +94,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
 
-  aiModels = [
-    { id: 'gemini-2.5-flash-lite', name: 'Gemini 2.5 Flash Lite (เร็วที่สุด / ประหยัด)' },
-    { id: 'gemini-2.5-flash', name: 'Gemini 2.5 Flash (แนะนำ / สมดุล)' },
-    { id: 'claude-3-5-sonnet', name: 'Claude 3.5 Sonnet (ฉลาด / ละเอียด)' },
-    { id: 'claude-3-7-sonnet', name: 'Claude 3.7 Sonnet (ล่าสุด / ให้เหตุผลดีที่สุด)' },
-  ];
+  aiModels = AI_MODEL_OPTIONS;
 
   aiContractTypeOptions = [
     { value: 'SOFTWARE_DEVELOPMENT', label: 'สัญญาจ้างพัฒนาซอฟต์แวร์ (Software Development)' },
@@ -407,7 +404,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
-        if (!draft) {
+        if (!draft || (!draft.contractNo && !draft.details && !draft.scopeOfWork)) {
           this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาสัญญาได้ กรุณาลองใหม่อีกครั้ง');
           return;
         }

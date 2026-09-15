@@ -122,6 +122,10 @@ public class TestScenarioGeneratorService {
     }
 
     private TestScenarioDraftResponse parseAiResponse(String aiResponse) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
+            return createFallbackScenario();
+        }
+
         try {
             Matcher matcher = JSON_PATTERN.matcher(aiResponse);
             String json;
@@ -130,15 +134,23 @@ public class TestScenarioGeneratorService {
             } else {
                 json = aiResponse.trim();
             }
-            return objectMapper.readValue(json, TestScenarioDraftResponse.class);
+            TestScenarioDraftResponse draft = objectMapper.readValue(json, TestScenarioDraftResponse.class);
+            if (draft == null || (draft.getScenarioName() == null && draft.getDescription() == null)) {
+                return createFallbackScenario();
+            }
+            return draft;
         } catch (Exception e) {
             log.error("Failed to parse AI test scenario response: {}", aiResponse, e);
-            TestScenarioDraftResponse fallback = new TestScenarioDraftResponse();
-            fallback.setScenarioCode("SC-" + (int)(Math.random() * 900 + 100));
-            fallback.setScenarioName("Generated Test Scenario");
-            fallback.setPriority("Medium");
-            fallback.setDescription("<p>กลุ่มการทดสอบที่สร้างโดย AI เพื่อรองรับการทดสอบระบบ</p>");
-            return fallback;
+            return createFallbackScenario();
         }
+    }
+
+    private TestScenarioDraftResponse createFallbackScenario() {
+        TestScenarioDraftResponse fallback = new TestScenarioDraftResponse();
+        fallback.setScenarioCode("SC-" + (int)(Math.random() * 900 + 100));
+        fallback.setScenarioName("Generated Test Scenario");
+        fallback.setPriority("Medium");
+        fallback.setDescription("<p>กลุ่มการทดสอบที่สร้างโดย AI เพื่อรองรับการทดสอบระบบ</p>");
+        return fallback;
     }
 }

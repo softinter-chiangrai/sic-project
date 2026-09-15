@@ -162,6 +162,10 @@ public class UserManualGeneratorService {
 
     private UserManualDraftResponse parseAiResponse(String aiResponse, String manualType, String customTitle,
                                                    List<PmRequirement> reqs, List<PmSpecification> specs) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
+            return createFallbackResponse(manualType, customTitle, reqs, specs, "No response from AI");
+        }
+
         try {
             Matcher matcher = JSON_PATTERN.matcher(aiResponse);
             String json;
@@ -170,7 +174,11 @@ public class UserManualGeneratorService {
             } else {
                 json = aiResponse.trim();
             }
-            return objectMapper.readValue(json, UserManualDraftResponse.class);
+            UserManualDraftResponse response = objectMapper.readValue(json, UserManualDraftResponse.class);
+            if (response == null || response.getSections() == null || response.getSections().isEmpty()) {
+                return createFallbackResponse(manualType, customTitle, reqs, specs, aiResponse);
+            }
+            return response;
         } catch (Exception e) {
             log.error("Failed to parse AI response for User Manual: {}", aiResponse, e);
             return createFallbackResponse(manualType, customTitle, reqs, specs, aiResponse);

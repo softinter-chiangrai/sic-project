@@ -101,7 +101,7 @@ public class InvoiceGeneratorService {
     }
 
     private InvoiceDraft parseAiResponse(String aiResponse) {
-        if (aiResponse == null || aiResponse.isBlank()) {
+        if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
             return fallbackDraft("No response from AI");
         }
 
@@ -112,7 +112,11 @@ public class InvoiceGeneratorService {
         }
 
         try {
-            return objectMapper.readValue(jsonContent, InvoiceDraft.class);
+            InvoiceDraft draft = objectMapper.readValue(jsonContent, InvoiceDraft.class);
+            if (draft == null || (draft.getInvoiceTitle() == null && draft.getRemark() == null)) {
+                return fallbackDraft(aiResponse);
+            }
+            return draft;
         } catch (Exception e) {
             log.warn("Failed to parse AI JSON response for Invoice, attempting raw extraction: {}", e.getMessage());
             return fallbackDraft(aiResponse);
