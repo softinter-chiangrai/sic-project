@@ -18,6 +18,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { environment } from '../../../../../../environments/environment';
+import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 
 @Component({
   selector: 'app-pmdt12b',
@@ -94,7 +95,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       this.isView.set(true);
     }
 
-    const pId = this.customerState.getProjectId();
+    const pId = resolveProjectId(this.route, this.customerState);
     if (pId) {
       this.formData.patchValue({ projectId: pId } as any);
       this.loadTasks(pId);
@@ -176,7 +177,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   }
 
   generateWithAi(): void {
-    const pId = this.customerState.getProjectId() || this.formData.form.get('projectId')?.value;
+    const pId = this.formData.form.get('projectId')?.value || this.customerState.getProjectId();
     const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
     const currentName = this.formData.form.get('scenarioName')?.value;
     const targetId = this.scenarioId || this.formData?.form?.get('id')?.value || 'new';
@@ -292,6 +293,10 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
         });
         this.formData.resetModel(this.formData.form.getRawValue() as any);
         this.isLoading.set(false);
+        // โหลด Task list ใหม่ด้วย projectId ของ record จริง เผื่อตอน ngOnInit ยังไม่มี projectId ใน cache
+        if (data.projectId) {
+          this.loadTasks(data.projectId);
+        }
       },
       error: () => {
         this.isLoading.set(false);

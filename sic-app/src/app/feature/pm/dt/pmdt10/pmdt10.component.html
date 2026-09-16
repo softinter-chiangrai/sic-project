@@ -65,6 +65,17 @@
     </div>
   </div>
 
+  @if (!projectId()) {
+    <div class="flex flex-col items-center justify-center gap-3 py-16 text-center border border-dashed border-[var(--border)] rounded-2xl bg-[var(--sidebar)]">
+      <i class="bi bi-kanban text-4xl text-[var(--text-muted)] opacity-40"></i>
+      <p class="text-[var(--text)] font-medium">กรุณาเลือกโปรเจกต์ก่อนดู Task Board</p>
+      <p class="text-sm text-[var(--text-muted)]">ไปที่หน้ารายการโปรเจกต์แล้วเลือกโปรเจกต์ที่ต้องการ</p>
+      <a routerLink="/feature/pm/project" class="mt-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all">
+        ไปหน้ารายการโปรเจกต์
+      </a>
+    </div>
+  } @else {
+
   <!-- ===== 2. TOOLBAR FILTERS & VIEW SWITCHER ===== -->
   <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-3">
 
@@ -307,6 +318,7 @@
       </div>
     }
 
+  }
   }
 
   <!-- ===== 5. TASK CREATE / EDIT MODAL (PMDT10A) ===== -->

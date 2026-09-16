@@ -10,6 +10,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import type { ApprovalStatus } from '../pmdt03/approval.model';
 import { ApprovalService } from '../pmdt03/approval.service';
+import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 
 import { RequirementItem } from './pmdt04.model';
 
@@ -73,7 +74,7 @@ export class Pmdt04Component implements OnInit {
 
   // ===== Load Data =====
   loadRequirements() {
-    const projectId = this.customerState.getProjectId();
+    const projectId = resolveProjectId(this.route, this.customerState);
 
     this.isLoading.set(true);
     let params = new HttpParams()
@@ -175,7 +176,7 @@ export class Pmdt04Component implements OnInit {
   }
 
   goToView(id: string) {
-    const projectId = this.customerState.getProjectId();
+    const projectId = resolveProjectId(this.route, this.customerState);
     const requirement = this.requirements().find(r => r.id === id);
     this.navigation.navigate(['/feature/pm/matrix'], {
       queryParams: {

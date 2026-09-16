@@ -58,7 +58,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   testCaseId: string | null = null;
 
   get projectIdForTrace(): string {
-    return this.customerState.getProjectId() || this.formData?.form?.get('projectId')?.value || '';
+    return this.formData?.form?.get('projectId')?.value || this.customerState.getProjectId() || '';
   }
 
   taskOptions = signal<{ value: string; text: string }[]>([]);

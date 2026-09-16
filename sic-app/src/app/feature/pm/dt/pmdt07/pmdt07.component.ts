@@ -11,6 +11,7 @@ import { Pmdt07Service } from './pmdt07.service';
 import { PmSpecificationModel } from './pmdt07.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from '../pmdt03/approval.service';
+import { resolveProjectId, resolveRequirementId } from '../../../../core/utils/resolve-context.util';
 
 import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -75,8 +76,8 @@ export class Pmdt07Component implements OnInit {
 
     loadData(): void {
         this.isLoading.set(true);
-        const requirementId = this.customerState.getRequirementId();
-        const projectId = this.customerState.getProjectId();
+        const requirementId = resolveRequirementId(this.route, this.customerState);
+        const projectId = resolveProjectId(this.route, this.customerState);
         const params = {
             projectId: projectId || undefined,
             requirementId: requirementId || undefined,

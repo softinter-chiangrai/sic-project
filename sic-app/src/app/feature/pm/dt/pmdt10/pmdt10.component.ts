@@ -10,6 +10,7 @@ import {
   KanbanColumnConfig,
 } from '../../../../core/component/sic-kanban/sic-kanban.component';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../core/services/business.service';
 
@@ -279,19 +280,13 @@ export class Pmdt10Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
-      const pId = params['projectId'] || this.customerState.getProjectId();
+      const pId = params['projectId'] || resolveProjectId(this.route, this.customerState);
       const specId = params['specificationId'] || null;
 
       if (pId) {
         this.projectId.set(pId);
         if (specId) this.selectedSpecId.set(specId);
         this.loadProjectData(pId);
-      } else {
-        const stored = this.customerState.getProjectId();
-        if (stored) {
-          this.projectId.set(stored);
-          this.loadProjectData(stored);
-        }
       }
     });
   }

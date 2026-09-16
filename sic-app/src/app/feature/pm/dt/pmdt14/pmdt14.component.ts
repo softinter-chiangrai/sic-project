@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
@@ -18,6 +18,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 
 @Component({
   selector: 'app-pmdt14',
@@ -34,6 +35,7 @@ export class Pmdt14Component implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly approvalService = inject(ApprovalService);
   private readonly customerState = inject(CustomerStateService);
+  private readonly route = inject(ActivatedRoute);
 
   deliveries = signal<PmDeliveryModel[]>([]);
   approvalStatusMap = signal<Record<string, string>>({});
@@ -67,14 +69,14 @@ export class Pmdt14Component implements OnInit {
   totalPages = computed(() => Math.ceil(this.totalElements() / this.size()) || 1);
 
   ngOnInit(): void {
-    const projId = this.customerState.getProjectId();
+    const projId = resolveProjectId(this.route, this.customerState);
     this.projectId.set(projId);
     this.loadData();
   }
 
   loadData(): void {
     this.isLoading.set(true);
-    const projectId = this.customerState.getProjectId() || undefined;
+    const projectId = resolveProjectId(this.route, this.customerState) || undefined;
     this.service.getPaging({ page: this.page(), size: this.size(), projectId }).subscribe({
       next: (res) => {
         const items = res.data || [];

@@ -17,6 +17,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { Pmdt19AForm } from './pmdt19A.form';
 import { Pmdt19AService } from './pmdt19A.service';
 import { DocumentVersionModel } from './pmdt19A.model';
+import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 
 @Component({
   selector: 'app-pmdt19a',
@@ -70,7 +71,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     const rawForm = Pmdt19AForm.createForm(this.fb);
     this.formData = new SicFromData<DocumentVersionModel>(rawForm);
 
-    const projId = this.customerState.getProjectId();
+    const projId = resolveProjectId(this.route, this.customerState);
     const qType = this.route.snapshot.queryParams['documentType'];
     const qId = this.route.snapshot.queryParams['documentId'];
     const qCode = this.route.snapshot.queryParams['documentCode'];

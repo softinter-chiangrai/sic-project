@@ -1,10 +1,11 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13.component.ts
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 import { PmTestCaseModel, PmTestScenarioModel } from './pmdt12.model';
 import { Pmdt12Service } from './pmdt12.service';
 
@@ -27,6 +28,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 })
 export class Pmdt12Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private service = inject(Pmdt12Service);
   private customerState = inject(CustomerStateService);
   private dialog = inject(DialogService);
@@ -265,7 +267,7 @@ export class Pmdt12Component implements OnInit {
 
   loadData() {
     this.isLoading.set(true);
-    const projectId = this.customerState.getProjectId();
+    const projectId = resolveProjectId(this.route, this.customerState);
 
     const requests: any = {
       scenarios: this.service.getTestScenarios(projectId),
