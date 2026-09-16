@@ -35,24 +35,24 @@ public class ContractGeneratorService {
         String prompt = buildPrompt(project, request.getContractNo(), request.getContractType(), request.getContractValue(), request.getPrompt());
         String systemPrompt = """
                 You are a Senior Legal Counsel and Enterprise Software Contract Specialist with 15+ years of experience drafting IT and Software Development contracts in Thailand.
-                Your task is to generate a comprehensive, professional Software Contract draft in JSON format.
+                Your task is to generate a comprehensive, detailed, professional Software Contract draft in JSON format.
                 
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave contractNo, contractType, contractValue, startDate, endDate, and signStatus as null unless specifically provided by the user. Do NOT invent dates, contract numbers, status, or types - users will specify these themselves.
+                3. Leave contractNo, contractType, contractValue, startDate, endDate, and signStatus as null unless specifically provided by the user. Do NOT invent dates or contract numbers - users will specify these themselves.
                 4. The JSON structure MUST be:
                 {
                     "contractNo": null,
                     "contractType": null,
                     "contractValue": null,
-                    "paymentTerms": "Clear payment milestone schedule (e.g. งวดที่ 1 30% เมื่อลงนาม, งวดที่ 2 40% เมื่อส่งมอบระบบ, งวดที่ 3 30% หลัง UAT ผ่าน)",
-                    "scopeSummary": "Comprehensive scope of work formatted in HTML using <p>, <ul>, <li>, <strong>, <h3> tags explaining project background, deliverables, SLA terms, and confidentiality",
+                    "paymentTerms": "รายละเอียดเงื่อนไขการแบ่งชำระเงินตามงวดงานอย่างชัดเจนและครบถ้วน (เช่น แบ่งชำระเป็น 3 งวด: งวดที่ 1 30% เมื่อลงนามสัญญา, งวดที่ 2 40% เมื่อส่งมอบระบบเวอร์ชันทดสอบ (UAT), งวดที่ 3 30% เมื่อตรวจรับมอบงานเสร็จสมบูรณ์)",
+                    "scopeSummary": "<h3>1. วัตถุประสงค์และขอบเขตงาน</h3><p>...</p><h3>2. รายการส่งมอบและขั้นตอนการดำเนินงาน</h3><ul><li>...</li></ul><h3>3. การรับประกันและบริการหลังการขาย</h3><p>...</p><h3>4. ข้อกำหนดการรักษาความลับและทรัพย์สินทางปัญญา</h3><p>...</p>",
                     "startDate": null,
                     "endDate": null,
                     "signStatus": null
                 }
-                5. Ensure professional, legally sound wording. If prompt in Thai, respond in Thai.
+                5. Ensure professional, legally sound wording in Thai. Provide rich and detailed HTML tags for scopeSummary.
                 """;
 
         try {
@@ -66,22 +66,27 @@ public class ContractGeneratorService {
 
     private String buildPrompt(PmCustomerProject project, String contractNo, String contractType, BigDecimal contractValue, String userPrompt) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Please draft a professional software contract with the following context:\n");
+        sb.append("กรุณาร่างสัญญาจ้างพัฒนาซอฟต์แวร์หรือบริการ IT โดยมีรายละเอียดประกอบดังนี้:\n");
         if (project != null) {
-            sb.append("- Project Name: ").append(project.getProjectName()).append("\n");
-            sb.append("- Project Code: ").append(project.getProjectCode()).append("\n");
+            sb.append("- ชื่อโครงการ: ").append(project.getProjectName()).append("\n");
+            sb.append("- รหัสโครงการ: ").append(project.getProjectCode()).append("\n");
+            if (project.getDescription() != null && !project.getDescription().isBlank()) {
+                sb.append("- รายละเอียดโครงการ: ").append(project.getDescription()).append("\n");
+            }
         }
         if (contractNo != null && !contractNo.isBlank()) {
-            sb.append("- Contract Number: ").append(contractNo).append("\n");
+            sb.append("- เลขที่สัญญา: ").append(contractNo).append("\n");
         }
         if (contractType != null && !contractType.isBlank()) {
-            sb.append("- Contract Type: ").append(contractType).append("\n");
+            sb.append("- ประเภทสัญญา: ").append(contractType).append("\n");
         }
         if (contractValue != null) {
-            sb.append("- Contract Value: ").append(contractValue).append(" THB\n");
+            sb.append("- มูลค่าสัญญา: ").append(contractValue).append(" บาท\n");
         }
         if (userPrompt != null && !userPrompt.isBlank()) {
-            sb.append("- User Instructions / Special Terms: ").append(userPrompt).append("\n");
+            sb.append("- ข้อกำหนดเพิ่มเติมจากผู้ใช้: ").append(userPrompt).append("\n");
+        } else {
+            sb.append("- ข้อกำหนดเพิ่มเติม: ให้ร่างเนื้อหาขอบเขตงานและงวดการชำระเงินมาตรฐานสำหรับการพัฒนาซอฟต์แวร์ระดับองค์กร\n");
         }
         return sb.toString();
     }
@@ -105,9 +110,18 @@ public class ContractGeneratorService {
 
         try {
             ContractDraft draft = objectMapper.readValue(jsonStr, ContractDraft.class);
-            if (draft == null || (draft.getScopeSummary() == null && draft.getPaymentTerms() == null)) {
+            if (draft == null) {
                 return buildFallback(request, project);
             }
+
+            ContractDraft fallback = buildFallback(request, project);
+            if (draft.getScopeSummary() == null || draft.getScopeSummary().trim().length() < 25) {
+                draft.setScopeSummary(fallback.getScopeSummary());
+            }
+            if (draft.getPaymentTerms() == null || draft.getPaymentTerms().trim().length() < 10) {
+                draft.setPaymentTerms(fallback.getPaymentTerms());
+            }
+
             draft.setContractNo(request.getContractNo() != null && !request.getContractNo().isBlank() ? request.getContractNo() : null);
             draft.setContractType(request.getContractType() != null && !request.getContractType().isBlank() ? request.getContractType() : null);
             draft.setContractValue(request.getContractValue());

@@ -238,6 +238,11 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       this.cdr.markForCheck();
     })).subscribe({
       next: (draft) => {
+        if (!draft) {
+          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหา Requirement ได้ กรุณาลองใหม่อีกครั้ง');
+          return;
+        }
+
         const titleToSave = (draft.title && draft.title.trim() !== '')
           ? draft.title
           : (this.aiAssistTitle || formVal.title);

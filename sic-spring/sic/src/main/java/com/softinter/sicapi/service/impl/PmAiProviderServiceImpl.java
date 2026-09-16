@@ -194,13 +194,11 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         String userDir = System.getProperty("user.dir", ".");
         Path[] paths = new Path[] {
             Paths.get(".env"),
-            Paths.get("sic-spring/sic/.env"),
             Paths.get("../.env"),
             Paths.get("../../.env"),
             Paths.get(userDir, ".env"),
-            Paths.get(userDir, "sic-spring", "sic", ".env"),
             Paths.get(userDir, "..", ".env"),
-            Paths.get(userDir, "..", "sic-spring", "sic", ".env")
+            Paths.get(userDir, "..", "..", ".env")
         };
         for (Path p : paths) {
             try {

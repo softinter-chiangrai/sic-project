@@ -404,7 +404,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
-        if (!draft || (!draft.contractNo && !draft.details && !draft.scopeOfWork)) {
+        if (!draft || (!draft.contractNo && !draft.scopeSummary && !draft.paymentTerms)) {
           this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาสัญญาได้ กรุณาลองใหม่อีกครั้ง');
           return;
         }

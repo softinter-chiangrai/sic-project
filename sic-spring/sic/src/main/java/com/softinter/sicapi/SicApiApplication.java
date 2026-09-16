@@ -24,11 +24,14 @@ public class SicApiApplication {
     }
 
     private static void loadDotEnv() {
+        String userDir = System.getProperty("user.dir", ".");
         Path[] potentialPaths = new Path[] {
             Paths.get(".env"),
-            Paths.get("sic-spring/sic/.env"),
             Paths.get("../.env"),
-            Paths.get("../../.env")
+            Paths.get("../../.env"),
+            Paths.get(userDir, ".env"),
+            Paths.get(userDir, "..", ".env"),
+            Paths.get(userDir, "..", "..", ".env")
         };
         for (Path path : potentialPaths) {
             if (Files.exists(path)) {
