@@ -38,31 +38,25 @@ public class RequirementGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. The JSON structure MUST be:
+                3. Leave requirementType and priority as null unless specifically provided by the user. Do NOT invent requirement types or priority levels - users will select these themselves.
+                4. The JSON structure MUST be:
                 {
                     "title": "Clear, concise, professional requirement title",
                     "description": "Comprehensive HTML description (use <p>, <ul>, <li>, <strong>, <h3> for rich formatting suitable for rich-text editors)",
                     "acceptanceCriteria": "Given-When-Then or clear bulleted criteria formatted in HTML (<p>, <ul>, <li>, <strong>)",
                     "businessValue": "Direct business impact, ROI, efficiency, or compliance value formatted in HTML (<p>, <ul>, <li>)",
-                    "requirementType": "FUNCTIONAL or NON_FUNCTIONAL",
-                    "priority": "HIGH, MEDIUM, or LOW"
+                    "requirementType": null,
+                    "priority": null
                 }
-                4. Ensure the output is directly applicable, testable, unambiguous, and professional.
-                5. If user wrote prompt in Thai, respond in Thai (except technical terms/standards). If in English, respond in English.
+                5. Ensure the output is directly applicable, testable, unambiguous, and professional.
+                6. If user wrote prompt in Thai, respond in Thai (except technical terms/standards). If in English, respond in English.
                 """;
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         RequirementDraft draft = parseAiResponse(aiResponse);
 
-        if (request.getRequirementType() != null && !request.getRequirementType().isBlank()) {
-            draft.setRequirementType(request.getRequirementType());
-        }
-        if (draft.getPriority() == null || draft.getPriority().isBlank()) {
-            draft.setPriority("MEDIUM");
-        }
-        if (draft.getRequirementType() == null || draft.getRequirementType().isBlank()) {
-            draft.setRequirementType("FUNCTIONAL");
-        }
+        draft.setRequirementType(request.getRequirementType() != null && !request.getRequirementType().isBlank() ? request.getRequirementType() : null);
+        draft.setPriority(null);
 
         return draft;
     }
@@ -134,8 +128,8 @@ public class RequirementGeneratorService {
         draft.setDescription("<p>" + (raw != null ? raw.replace("\n", "<br/>") : "") + "</p>");
         draft.setAcceptanceCriteria("<p>- System functions as expected</p>");
         draft.setBusinessValue("<p>- Enhances system usability and operations</p>");
-        draft.setRequirementType("FUNCTIONAL");
-        draft.setPriority("MEDIUM");
+        draft.setRequirementType(null);
+        draft.setPriority(null);
         return draft;
     }
 }

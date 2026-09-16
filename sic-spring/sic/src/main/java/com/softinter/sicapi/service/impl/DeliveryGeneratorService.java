@@ -39,11 +39,12 @@ public class DeliveryGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. The JSON structure MUST be:
+                3. Leave deliveryType and deliveryVersion as null unless specifically provided by the user. Do NOT invent delivery types or versions - users will specify these themselves.
+                4. The JSON structure MUST be:
                 {
                     "deliveryTitle": "Clear, professional delivery title (e.g. เอกสารส่งมอบระบบและงวดงาน Phase 1)",
-                    "deliveryType": "FINAL, PHASE, MILESTONE, SPRINT, or AD_HOC",
-                    "deliveryVersion": "v1.0.0 or semantic version",
+                    "deliveryType": null,
+                    "deliveryVersion": null,
                     "deliverySummary": "Comprehensive HTML delivery overview and scope (<p>, <ul>, <li>, <strong>, <h3>)",
                     "releaseNote": "Key features, bug fixes, changes, deployment instructions formatted in HTML (<p>, <ul>, <li>)",
                     "checklists": [
@@ -61,18 +62,14 @@ public class DeliveryGeneratorService {
                         }
                     ]
                 }
-                4. Ensure professional tone. If prompt in Thai, respond in Thai.
+                5. Ensure professional tone. If prompt in Thai, respond in Thai.
                 """;
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         DeliveryDraft draft = parseAiResponse(aiResponse);
 
-        if (request.getDeliveryType() != null && !request.getDeliveryType().isBlank()) {
-            draft.setDeliveryType(request.getDeliveryType());
-        }
-        if (draft.getDeliveryType() == null || draft.getDeliveryType().isBlank()) {
-            draft.setDeliveryType("PHASE");
-        }
+        draft.setDeliveryType(request.getDeliveryType() != null && !request.getDeliveryType().isBlank() ? request.getDeliveryType() : null);
+        draft.setDeliveryVersion(null);
         if (draft.getChecklists() == null) {
             draft.setChecklists(new ArrayList<>());
         }
@@ -135,8 +132,8 @@ public class DeliveryGeneratorService {
     private DeliveryDraft fallbackDraft(String text) {
         return DeliveryDraft.builder()
                 .deliveryTitle("เอกสารส่งมอบงาน (AI Draft)")
-                .deliveryType("PHASE")
-                .deliveryVersion("1.0.0")
+                .deliveryType(null)
+                .deliveryVersion(null)
                 .deliverySummary("<p>" + text.replace("\n", "<br/>") + "</p>")
                 .releaseNote("<p>รายละเอียดการส่งมอบและหมายเหตุประกอบ</p>")
                 .checklists(new ArrayList<>())

@@ -39,16 +39,17 @@ public class ProjectGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. The JSON structure MUST be:
+                3. Leave projectCode, startDate, endDate, and status as null unless specifically provided by the user. Do NOT invent project codes, dates, or status values - users will specify these themselves.
+                4. The JSON structure MUST be:
                 {
-                    "projectCode": "Project code (e.g. PRJ-2026-001 or CRM-V2)",
+                    "projectCode": null,
                     "projectName": "Clear and professional project title (e.g. โครงการพัฒนาระบบบริหารจัดการลูกค้าสัมพันธ์อัจฉริยะ)",
                     "description": "Comprehensive project description, business objectives, scope, and key deliverables formatted in HTML using <p>, <ul>, <li>, <strong>, <h3> tags",
-                    "startDate": "YYYY-MM-DD (e.g. 2026-10-01)",
-                    "endDate": "YYYY-MM-DD (e.g. 2027-04-30)",
-                    "status": "Prospect, Planning, Development, or Requirement Gathering"
+                    "startDate": null,
+                    "endDate": null,
+                    "status": null
                 }
-                4. Ensure professional phrasing. If prompt in Thai, respond in Thai.
+                5. Ensure professional phrasing. If prompt in Thai, respond in Thai.
                 """;
 
         try {
@@ -101,6 +102,10 @@ public class ProjectGeneratorService {
             if (draft == null || (draft.getProjectName() == null && draft.getDescription() == null)) {
                 return buildFallback(request, customer);
             }
+            draft.setProjectCode(request.getProjectCode() != null && !request.getProjectCode().isBlank() ? request.getProjectCode() : null);
+            draft.setStartDate(null);
+            draft.setEndDate(null);
+            draft.setStatus(null);
             return draft;
         } catch (Exception e) {
             log.warn("Failed to parse JSON response for project draft, using fallback. Raw response: {}", rawResponse);
@@ -110,15 +115,13 @@ public class ProjectGeneratorService {
 
     private ProjectDraft buildFallback(GenerateProjectDraftRequest request, PmCustomer customer) {
         String custName = customer != null ? (customer.getCompanyNameLocal() != null ? customer.getCompanyNameLocal() : customer.getCompanyNameEn()) : "ลูกค้าองค์กร";
-        LocalDate today = LocalDate.now();
-        LocalDate end = today.plusMonths(6);
 
         String pName = (request.getProjectName() != null && !request.getProjectName().isBlank())
                 ? request.getProjectName()
                 : "โครงการพัฒนาระบบสารสนเทศสำหรับ " + custName;
 
         return ProjectDraft.builder()
-                .projectCode(request.getProjectCode() != null ? request.getProjectCode() : "PRJ-" + today.getYear() + "-001")
+                .projectCode(request.getProjectCode() != null && !request.getProjectCode().isBlank() ? request.getProjectCode() : null)
                 .projectName(pName)
                 .description("<p><strong>วัตถุประสงค์ของโครงการ:</strong></p>" +
                         "<p>เพื่อพัฒนาและติดตั้งระบบสารสนเทศที่ตอบสนองต่อกระบวนการทำงานของ " + custName + " เพิ่มประสิทธิภาพในการดำเนินงานและลดข้อผิดพลาด</p>" +
@@ -129,9 +132,9 @@ public class ProjectGeneratorService {
                         "<li>การทดสอบระบบ (Unit Test, SIT, UAT) และการแก้ไขข้อผิดพลาด</li>" +
                         "<li>การติดตั้งบน Server และส่งมอบคู่มือการใช้งาน</li>" +
                         "</ul>")
-                .startDate(today.toString())
-                .endDate(end.toString())
-                .status("Planning")
+                .startDate(null)
+                .endDate(null)
+                .status(null)
                 .build();
     }
 }

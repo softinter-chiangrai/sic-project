@@ -40,12 +40,13 @@ public class InvoiceGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. The JSON structure MUST be:
+                3. Leave billingType and vatRate as null. Do NOT invent billing types or VAT rates - users will specify these themselves.
+                4. The JSON structure MUST be:
                 {
                     "invoiceTitle": "Clear invoice / billing milestone title (e.g. งวดที่ 1: ส่งมอบ Requirement & System Architecture)",
-                    "billingType": "MILESTONE, MONTHLY, PROGRESS, or FIXED",
+                    "billingType": null,
                     "remark": "Terms, payment conditions, bank details, or notes formatted in HTML (<p>, <ul>, <li>, <strong>)",
-                    "vatRate": 7.0,
+                    "vatRate": null,
                     "items": [
                         {
                             "itemDescription": "Description of work/deliverable (e.g. ค่าพัฒนาและออกแบบระบบ Phase 1)",
@@ -55,18 +56,14 @@ public class InvoiceGeneratorService {
                         }
                     ]
                 }
-                4. Ensure professional tone. If prompt in Thai, respond in Thai.
+                5. Ensure professional tone. If prompt in Thai, respond in Thai.
                 """;
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         InvoiceDraft draft = parseAiResponse(aiResponse);
 
-        if (draft.getBillingType() == null || draft.getBillingType().isBlank()) {
-            draft.setBillingType("MILESTONE");
-        }
-        if (draft.getVatRate() == null) {
-            draft.setVatRate(BigDecimal.valueOf(7.0));
-        }
+        draft.setBillingType(null);
+        draft.setVatRate(null);
         if (draft.getItems() == null) {
             draft.setItems(new ArrayList<>());
         }
@@ -126,8 +123,8 @@ public class InvoiceGeneratorService {
     private InvoiceDraft fallbackDraft(String text) {
         return InvoiceDraft.builder()
                 .invoiceTitle("ใบแจ้งหนี้งวดงาน (AI Draft)")
-                .billingType("MILESTONE")
-                .vatRate(BigDecimal.valueOf(7.0))
+                .billingType(null)
+                .vatRate(null)
                 .remark("<p>" + text.replace("\n", "<br/>") + "</p>")
                 .items(new ArrayList<>())
                 .build();

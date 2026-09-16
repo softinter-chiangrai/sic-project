@@ -69,9 +69,8 @@ public class TestCaseGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         TestCaseDraftResponse draft = parseAiResponse(aiResponse);
 
-        if (draft.getPriority() == null || draft.getPriority().isBlank()) {
-            draft.setPriority("Medium");
-        }
+        draft.setPriority(null);
+        draft.setTestCaseCode(null);
 
         // Format HTML for testStep if not already HTML
         if (draft.getTestStep() != null && !draft.getTestStep().contains("<")) {
@@ -127,13 +126,15 @@ public class TestCaseGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
+                Leave priority and testCaseCode as null. Do NOT invent priority levels or test case codes - users will specify these themselves.
                 Language for test case content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
                 ```json
                 {
                   "title": "หัวข้อ Test Case (ชัดเจนและระบุเป้าหมายการทดสอบ เช่น 'ทดสอบการบันทึกข้อมูลเมื่อกรอกครบถ้วน')",
-                  "priority": "High / Medium / Low",
+                  "priority": null,
+                  "testCaseCode": null,
                   "testStep": "<ol><li>เปิดหน้าจอ...</li><li>กรอกข้อมูล...</li><li>คลิกปุ่มบันทึก</li></ol>",
                   "expectedResult": "<p>1. ระบบบันทึกข้อมูลสำเร็จและแสดง Alert ยืนยัน</p><p>2. ข้อมูลปรากฏในตารางรายการอย่างถูกต้อง</p>"
                 }
@@ -170,7 +171,8 @@ public class TestCaseGeneratorService {
     private TestCaseDraftResponse createFallbackTestCase() {
         TestCaseDraftResponse fallback = new TestCaseDraftResponse();
         fallback.setTitle("Generated Test Case");
-        fallback.setPriority("Medium");
+        fallback.setPriority(null);
+        fallback.setTestCaseCode(null);
         fallback.setTestStep("<ol><li>เปิดหน้าจอการทำงาน</li><li>กรอกข้อมูลเพื่อทดสอบ</li><li>ตรวจสอบผลลัพธ์</li></ol>");
         fallback.setExpectedResult("<p>ระบบทำงานถูกต้องตามเงื่อนไขที่กำหนด</p>");
         return fallback;

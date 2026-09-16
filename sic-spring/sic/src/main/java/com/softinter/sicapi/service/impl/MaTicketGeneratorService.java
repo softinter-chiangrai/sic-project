@@ -38,32 +38,23 @@ public class MaTicketGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. The JSON structure MUST be:
+                3. Leave ticketType and severity as null unless specifically provided by the user. Do NOT invent ticket types or severity levels - users will select these themselves.
+                4. The JSON structure MUST be:
                 {
                     "title": "Clear, professional, concise ticket title (e.g. ปัญหาการเชื่อมต่อระบบ Payment Gateway ขัดข้อง)",
-                    "ticketType": "INCIDENT, REQUEST, PROBLEM, CHANGE, or PREVENTIVE",
-                    "severity": "CRITICAL, HIGH, MEDIUM, or LOW",
+                    "ticketType": null,
+                    "severity": null,
                     "description": "Comprehensive HTML description covering problem symptoms, reproduction steps, expected vs actual behavior, and affected components formatted in HTML (<p>, <ul>, <li>, <strong>, <h3>)",
                     "resolutionSummary": "Root cause analysis, workaround, or proposed technical resolution steps formatted in HTML (<p>, <ul>, <li>, <strong>)"
                 }
-                4. If user prompt is in Thai, respond in Thai.
+                5. If user prompt is in Thai, respond in Thai.
                 """;
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         MaTicketDraft draft = parseAiResponse(aiResponse);
 
-        if (request.getTicketType() != null && !request.getTicketType().isBlank()) {
-            draft.setTicketType(request.getTicketType());
-        }
-        if (request.getSeverity() != null && !request.getSeverity().isBlank()) {
-            draft.setSeverity(request.getSeverity());
-        }
-        if (draft.getTicketType() == null || draft.getTicketType().isBlank()) {
-            draft.setTicketType("INCIDENT");
-        }
-        if (draft.getSeverity() == null || draft.getSeverity().isBlank()) {
-            draft.setSeverity("MEDIUM");
-        }
+        draft.setTicketType(request.getTicketType() != null && !request.getTicketType().isBlank() ? request.getTicketType() : null);
+        draft.setSeverity(request.getSeverity() != null && !request.getSeverity().isBlank() ? request.getSeverity() : null);
 
         return draft;
     }
@@ -123,8 +114,8 @@ public class MaTicketGeneratorService {
     private MaTicketDraft fallbackDraft(String text) {
         return MaTicketDraft.builder()
                 .title("แจ้งปัญหาการใช้งาน (AI Draft)")
-                .ticketType("INCIDENT")
-                .severity("MEDIUM")
+                .ticketType(null)
+                .severity(null)
                 .description("<p>" + text.replace("\n", "<br/>") + "</p>")
                 .resolutionSummary("<p>อยู่ระหว่างการตรวจสอบหาสาเหตุ</p>")
                 .build();

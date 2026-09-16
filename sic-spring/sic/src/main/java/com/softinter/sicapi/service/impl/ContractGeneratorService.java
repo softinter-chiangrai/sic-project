@@ -40,18 +40,19 @@ public class ContractGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. The JSON structure MUST be:
+                3. Leave contractNo, contractType, contractValue, startDate, endDate, and signStatus as null unless specifically provided by the user. Do NOT invent dates, contract numbers, status, or types - users will specify these themselves.
+                4. The JSON structure MUST be:
                 {
-                    "contractNo": "Contract number (e.g. CTR-2026-001)",
-                    "contractType": "SOFTWARE_DEVELOPMENT, MAINTENANCE_SUPPORT, CONSULTING, or CLOUD_INFRASTRUCTURE",
-                    "contractValue": 250000.00,
+                    "contractNo": null,
+                    "contractType": null,
+                    "contractValue": null,
                     "paymentTerms": "Clear payment milestone schedule (e.g. งวดที่ 1 30% เมื่อลงนาม, งวดที่ 2 40% เมื่อส่งมอบระบบ, งวดที่ 3 30% หลัง UAT ผ่าน)",
                     "scopeSummary": "Comprehensive scope of work formatted in HTML using <p>, <ul>, <li>, <strong>, <h3> tags explaining project background, deliverables, SLA terms, and confidentiality",
-                    "startDate": "YYYY-MM-DD (e.g. 2026-10-01)",
-                    "endDate": "YYYY-MM-DD (e.g. 2027-03-31)",
-                    "signStatus": "Draft"
+                    "startDate": null,
+                    "endDate": null,
+                    "signStatus": null
                 }
-                4. Ensure professional, legally sound wording. If prompt in Thai, respond in Thai.
+                5. Ensure professional, legally sound wording. If prompt in Thai, respond in Thai.
                 """;
 
         try {
@@ -104,9 +105,15 @@ public class ContractGeneratorService {
 
         try {
             ContractDraft draft = objectMapper.readValue(jsonStr, ContractDraft.class);
-            if (draft == null || (draft.getContractNo() == null && draft.getScopeSummary() == null && draft.getPaymentTerms() == null)) {
+            if (draft == null || (draft.getScopeSummary() == null && draft.getPaymentTerms() == null)) {
                 return buildFallback(request, project);
             }
+            draft.setContractNo(request.getContractNo() != null && !request.getContractNo().isBlank() ? request.getContractNo() : null);
+            draft.setContractType(request.getContractType() != null && !request.getContractType().isBlank() ? request.getContractType() : null);
+            draft.setContractValue(request.getContractValue());
+            draft.setStartDate(null);
+            draft.setEndDate(null);
+            draft.setSignStatus(null);
             return draft;
         } catch (Exception e) {
             log.warn("Failed to parse JSON response for contract draft, using fallback. Raw response: {}", rawResponse);
@@ -116,13 +123,11 @@ public class ContractGeneratorService {
 
     private ContractDraft buildFallback(GenerateContractDraftRequest request, PmCustomerProject project) {
         String projName = project != null ? project.getProjectName() : "ระบบสารสนเทศ";
-        LocalDate today = LocalDate.now();
-        LocalDate end = today.plusMonths(6);
 
         return ContractDraft.builder()
-                .contractNo(request.getContractNo() != null ? request.getContractNo() : "CTR-" + today.getYear() + "-001")
-                .contractType(request.getContractType() != null ? request.getContractType() : "SOFTWARE_DEVELOPMENT")
-                .contractValue(request.getContractValue() != null ? request.getContractValue() : BigDecimal.valueOf(150000.00))
+                .contractNo(request.getContractNo() != null && !request.getContractNo().isBlank() ? request.getContractNo() : null)
+                .contractType(request.getContractType() != null && !request.getContractType().isBlank() ? request.getContractType() : null)
+                .contractValue(request.getContractValue())
                 .paymentTerms("แบ่งชำระเป็น 3 งวด: งวดที่ 1 (30%) เมื่อลงนามสัญญา, งวดที่ 2 (40%) เมื่อส่งมอบระบบเวอร์ชันทดสอบ, งวดที่ 3 (30%) เมื่อตรวจรับมอบงานเรียบร้อย (UAT Pass)")
                 .scopeSummary("<p><strong>ขอบเขตของสัญญาจ้างพัฒนา:</strong> " + projName + "</p>" +
                         "<ul>" +
@@ -131,9 +136,9 @@ public class ContractGeneratorService {
                         "<li>การจัดทำคู่มือการใช้งานและอบรมบุคลากร</li>" +
                         "<li>การรับประกันและบำรุงรักษาระบบ (Warranty & Support) เป็นเวลา 1 ปีหลังจากส่งมอบงาน</li>" +
                         "</ul>")
-                .startDate(today.toString())
-                .endDate(end.toString())
-                .signStatus("Draft")
+                .startDate(null)
+                .endDate(null)
+                .signStatus(null)
                 .build();
     }
 }

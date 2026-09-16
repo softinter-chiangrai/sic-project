@@ -59,13 +59,8 @@ public class TestScenarioGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         TestScenarioDraftResponse draft = parseAiResponse(aiResponse);
 
-        if (draft.getPriority() == null || draft.getPriority().isBlank()) {
-            draft.setPriority("Medium");
-        }
-
-        if (draft.getScenarioCode() == null || draft.getScenarioCode().isBlank()) {
-            draft.setScenarioCode("SC-" + (int)(Math.random() * 900 + 100));
-        }
+        draft.setPriority(null);
+        draft.setScenarioCode(null);
 
         return draft;
     }
@@ -105,14 +100,15 @@ public class TestScenarioGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
+                Leave scenarioCode and priority as null. Do NOT invent scenario codes or priority levels - users will specify these themselves.
                 Language for scenario content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
                 ```json
                 {
-                  "scenarioCode": "SC-001",
+                  "scenarioCode": null,
                   "scenarioName": "ชื่อ Test Scenario (ครอบคลุมชุดการทดสอบ เช่น 'ทดสอบกระบวนการสั่งซื้อสินค้าและการชำระเงิน')",
-                  "priority": "High / Medium / Low",
+                  "priority": null,
                   "description": "<p><strong>วัตถุประสงค์และขอบเขต:</strong> เพื่อทดสอบการทำงานของระบบในการจัดการ...</p><ul><li>ทดสอบการแสดงผลหน้าจอและ Validation</li><li>ทดสอบความถูกต้องของการคำนวณ</li><li>ทดสอบการบันทึกและส่งแจ้งเตือน</li></ul>"
                 }
                 ```
@@ -147,9 +143,9 @@ public class TestScenarioGeneratorService {
 
     private TestScenarioDraftResponse createFallbackScenario() {
         TestScenarioDraftResponse fallback = new TestScenarioDraftResponse();
-        fallback.setScenarioCode("SC-" + (int)(Math.random() * 900 + 100));
+        fallback.setScenarioCode(null);
         fallback.setScenarioName("Generated Test Scenario");
-        fallback.setPriority("Medium");
+        fallback.setPriority(null);
         fallback.setDescription("<p>กลุ่มการทดสอบที่สร้างโดย AI เพื่อรองรับการทดสอบระบบ</p>");
         return fallback;
     }

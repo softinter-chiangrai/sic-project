@@ -58,9 +58,8 @@ public class SpecificationGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
         SpecificationDraft draft = parseAiResponse(aiResponse);
 
-        if (request.getSpecificationType() != null && !request.getSpecificationType().isBlank()) {
-            draft.setSpecificationType(request.getSpecificationType());
-        }
+        draft.setSpecificationType(request.getSpecificationType() != null && !request.getSpecificationType().isBlank() ? request.getSpecificationType() : null);
+        draft.setPriority(null);
 
         // Generate rich HTML for Tiptap editor
         draft.setGeneratedHtmlDescription(buildHtmlDescription(draft));
@@ -82,7 +81,7 @@ public class SpecificationGeneratorService {
               .append("- Title: ").append(req.getTitle()).append("\n")
               .append("- Description: ").append(req.getDescription() != null ? req.getDescription() : "").append("\n")
               .append("- Acceptance Criteria: ").append(req.getAcceptanceCriteria() != null ? req.getAcceptanceCriteria() : "").append("\n")
-              .append("- Priority: ").append(req.getPriority() != null ? req.getPriority() : "Medium").append("\n\n");
+              .append("- Priority: ").append(req.getPriority() != null ? req.getPriority() : "").append("\n\n");
         }
 
         if (diagrams != null && !diagrams.isEmpty()) {
@@ -103,16 +102,18 @@ public class SpecificationGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
+                Leave priority and specificationType as null unless specifically provided by the user. Do NOT invent priority levels or types - users will select these themselves.
                 Language for content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
                 ```json
                 {
                   "title": "ชื่อของ Specification (ภาษาไทย/อังกฤษ)",
+                  "specificationType": null,
                   "objective": "วัตถุประสงค์ของการทำงาน",
                   "scope": "ขอบเขตการทำงาน",
                   "description": "คำอธิบายภาพรวมของระบบ",
-                  "priority": "High / Medium / Low",
+                  "priority": null,
                   "estimatedManday": 3,
                   "screens": [
                     { "screenName": "ชื่อหน้าจอ", "description": "หน้าที่ของหน้าจอ", "navigation": "เส้นทางการเข้าถึงหน้าจอ" }
@@ -166,7 +167,8 @@ public class SpecificationGeneratorService {
         fallback.setObjective("Specification generated from prompt");
         fallback.setScope("System scope");
         fallback.setDescription(desc);
-        fallback.setPriority("Medium");
+        fallback.setSpecificationType(null);
+        fallback.setPriority(null);
         fallback.setEstimatedManday(1);
         return fallback;
     }
