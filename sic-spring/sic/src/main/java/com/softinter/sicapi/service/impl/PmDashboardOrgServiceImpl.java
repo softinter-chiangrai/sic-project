@@ -2,6 +2,7 @@ package com.softinter.sicapi.service.impl;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import java.util.List;
@@ -153,7 +154,7 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
     public List<DashboardDeadlineResponse> getUpcomingDeadlines(UUID businessId, int limit) {
         Pageable pageable = PageRequest.of(0, Math.max(limit, 1));
         List<PmTask> tasks = taskRepository.findUpcomingByBusinessId(businessId, DONE_TASK_STATUSES, pageable);
-        Instant now = Instant.now();
+        LocalDate today = LocalDate.now();
 
         return tasks.stream().map(task -> {
             DashboardDeadlineResponse dto = new DashboardDeadlineResponse();
@@ -163,7 +164,7 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
             dto.setStatus(task.getStatus());
             dto.setEndDate(task.getEndDate());
 
-            long daysLeft = ChronoUnit.DAYS.between(now, task.getEndDate());
+            long daysLeft = task.getEndDate() != null ? ChronoUnit.DAYS.between(today, task.getEndDate()) : 0;
             dto.setDaysLeft(daysLeft);
             dto.setOverdue(daysLeft < 0);
 
@@ -224,7 +225,7 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
         if (DELAYED_PROJECT_STATUSES.contains(project.getStatus())) {
             statusScore = 6;
         } else if (!COMPLETED_PROJECT_STATUSES.contains(project.getStatus()) && project.getPlannedEndDate() != null) {
-            if (project.getPlannedEndDate().isBefore(Instant.now())) {
+            if (project.getPlannedEndDate().isBefore(LocalDate.now())) {
                 statusScore = 10;
             }
         }

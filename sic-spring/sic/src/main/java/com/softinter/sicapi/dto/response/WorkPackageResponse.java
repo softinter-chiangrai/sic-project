@@ -1,6 +1,6 @@
 package com.softinter.sicapi.dto.response;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,8 +13,8 @@ public class WorkPackageResponse {
     private String milestoneName;
     private String packageName;
     private String description;
-    private Instant startDate;
-    private Instant endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String status;
     private String color;
     private List<TaskResponse> tasks;

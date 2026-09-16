@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -60,7 +61,7 @@ public class PmBug extends BaseBusinessEntity {
     private Instant foundDate;
 
     @Column(name = "fix_due_date")
-    private Instant fixDueDate;
+    private LocalDate fixDueDate;
 
     @Column(name = "fixed_date")
     private Instant fixedDate;

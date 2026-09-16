@@ -19,9 +19,9 @@ public class PmMaRenewalResponse {
     private String customerName;
     private UUID projectId;
     private String projectName;
-    private Instant currentEndDate;
-    private Instant newStartDate;
-    private Instant newEndDate;
+    private LocalDate currentEndDate;
+    private LocalDate newStartDate;
+    private LocalDate newEndDate;
     private BigDecimal proposedAmount;
     private MaRenewalStatus status;
     private Boolean isLocked;

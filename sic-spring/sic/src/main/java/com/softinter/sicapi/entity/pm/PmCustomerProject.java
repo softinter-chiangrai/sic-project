@@ -1,6 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
@@ -49,13 +49,13 @@ public class PmCustomerProject extends BaseBusinessEntity {
     private String projectName;
 
     @Column(name = "start_date")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @Column(name = "planned_end_date")
-    private Instant plannedEndDate;
+    private LocalDate plannedEndDate;
 
     @Column(name = "actual_end_date")
-    private Instant actualEndDate;
+    private LocalDate actualEndDate;
 
     @Column(name = "budget_manday")
     private Integer budgetManday;

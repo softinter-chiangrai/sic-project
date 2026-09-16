@@ -1,6 +1,6 @@
 package com.softinter.sicapi.dto.request;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
@@ -25,9 +25,9 @@ public class PmCustomerProjectRequest {
     @Size(max = 255)
     private String projectName;
 
-    private Instant startDate;
-    private Instant plannedEndDate;
-    private Instant actualEndDate;
+    private LocalDate startDate;
+    private LocalDate plannedEndDate;
+    private LocalDate actualEndDate;
 
     private Integer budgetManday;
     private Integer usedManday;

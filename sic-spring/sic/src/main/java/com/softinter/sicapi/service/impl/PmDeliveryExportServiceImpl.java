@@ -59,7 +59,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         }
 
         String deliveryDateStr = delivery.getDeliveryDate() != null
-                ? DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.of("Asia/Bangkok")).format(delivery.getDeliveryDate()) : "-";
+                ? DateTimeFormatter.ofPattern("dd/MM/yyyy").format(delivery.getDeliveryDate()) : "-";
         String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
 
         Map<String, Object> parameters = new HashMap<>();

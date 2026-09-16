@@ -20,7 +20,7 @@ public class PmPaymentResponse {
     private String customerName;
     private UUID projectId;
     private String projectName;
-    private Instant paymentDate;
+    private LocalDate paymentDate;
     private PaymentMethod paymentMethod;
     private BigDecimal amount;
     private String referenceNo;

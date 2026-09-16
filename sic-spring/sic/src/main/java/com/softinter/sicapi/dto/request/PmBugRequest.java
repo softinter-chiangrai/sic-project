@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -29,7 +30,7 @@ public class PmBugRequest {
     private String foundBy;
     private String assignedTo;
     private Instant foundDate;
-    private Instant fixDueDate;
+    private LocalDate fixDueDate;
     private Instant fixedDate;
     private String status;
     private String relatedSpec;

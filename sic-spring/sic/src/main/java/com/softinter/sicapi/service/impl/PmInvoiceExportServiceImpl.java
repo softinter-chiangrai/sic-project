@@ -52,7 +52,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
     private static final DateTimeFormatter DISPLAY_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Asia/Bangkok"));
     private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd/MM/yyyy").withZone(ZoneId.of("Asia/Bangkok"));
+            DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
     @Override
     @Transactional(readOnly = true)

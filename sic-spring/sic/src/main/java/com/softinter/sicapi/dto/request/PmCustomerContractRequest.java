@@ -1,7 +1,7 @@
 package com.softinter.sicapi.dto.request;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import jakarta.validation.constraints.NotBlank;
@@ -28,10 +28,10 @@ public class PmCustomerContractRequest {
     private UUID projectId;
 
     @NotNull(message = "กรุณาระบุวันที่เริ่ม")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @NotNull(message = "กรุณาระบุวันที่สิ้นสุด")
-    private Instant endDate;
+    private LocalDate endDate;
 
     @NotNull(message = "กรุณาระบุมูลค่าสัญญา")
     @PositiveOrZero(message = "มูลค่าต้องไม่ติดลบ")

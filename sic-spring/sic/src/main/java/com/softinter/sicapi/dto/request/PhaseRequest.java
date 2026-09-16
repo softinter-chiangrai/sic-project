@@ -1,7 +1,7 @@
 package com.softinter.sicapi.dto.request;
 
 import lombok.Data;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -10,8 +10,8 @@ public class PhaseRequest {
     private String phaseCode;
     private String phaseName;
     private String description;
-    private Instant startDate;
-    private Instant endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String color;
     private String owner;
     private UUID dependencyId; 

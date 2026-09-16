@@ -24,6 +24,11 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
 
     List<PmTask> findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(UUID projectId);
 
+    @Query("SELECT COALESCE(SUM(t.actualManday), 0) FROM PmTask t " +
+           "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph " +
+           "WHERE ph.project.id = :projectId AND t.isDelete = false")
+    Integer sumActualMandayByProjectId(@Param("projectId") UUID projectId);
+
     @Query("SELECT COUNT(t) FROM PmTask t " +
            "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph JOIN ph.project p " +
            "WHERE p.businessId = :businessId AND t.isDelete = false AND p.isDelete = false")

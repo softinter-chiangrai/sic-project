@@ -17,7 +17,7 @@ public class PmDeliveryResponse {
     private String deliveryType;
     private UUID contractId;
     private UUID milestoneId;
-    private Instant deliveryDate;
+    private LocalDate deliveryDate;
     private String deliveryVersion;
     private String releaseNote;
     private String deliverySummary;

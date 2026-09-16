@@ -1,6 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,10 +33,10 @@ public class PmWorkPackage extends BaseBusinessEntity  {
     private String description;
 
     @Column(name = "start_date")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private Instant endDate;
+    private LocalDate endDate;
 
     @Column(name = "color", length = 20)
     private String color;

@@ -24,7 +24,7 @@ public class PmDesignReviewResponse {
     private String severity;
     private String status;
     private Boolean isLocked;
-    private Instant dueDate;
+    private LocalDate dueDate;
     private String figmaUrl;
     private String embedMode;
     private Boolean isActive;

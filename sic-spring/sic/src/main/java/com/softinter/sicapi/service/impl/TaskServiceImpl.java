@@ -28,6 +28,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -132,11 +133,11 @@ public class TaskServiceImpl implements TaskService {
             task.setStatus(request.getStatus());
             if (isCompletedStatus(request.getStatus())) {
                 if (task.getActualEnd() == null) {
-                    task.setActualEnd(Instant.now());
+                    task.setActualEnd(LocalDate.now());
                 }
             } else if ("In Progress".equalsIgnoreCase(request.getStatus()) || "Doing".equalsIgnoreCase(request.getStatus())) {
                 if (task.getActualStart() == null) {
-                    task.setActualStart(Instant.now());
+                    task.setActualStart(LocalDate.now());
                 }
             }
         }

@@ -1,6 +1,6 @@
 package com.softinter.sicapi.dto.response;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,8 +14,8 @@ public class PhaseResponse {
     private String phaseCode;
     private String phaseName;
     private String description;
-    private Instant startDate;
-    private Instant endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String color;
     private String owner;
     private String status;

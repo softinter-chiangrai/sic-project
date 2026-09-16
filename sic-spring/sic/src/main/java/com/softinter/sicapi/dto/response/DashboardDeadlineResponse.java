@@ -1,6 +1,6 @@
 package com.softinter.sicapi.dto.response;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import lombok.Data;
@@ -12,7 +12,7 @@ public class DashboardDeadlineResponse {
     private String taskName;
     private UUID projectId;
     private String projectName;
-    private Instant endDate;
+    private LocalDate endDate;
     private long daysLeft;
     private String status;
     private boolean overdue;

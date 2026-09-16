@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
 
   seaweedfs-init:
-    image: minio/mc:latest
+    image: quay.io/minio/mc:latest
     container_name: sic-seaweedfs-init
     depends_on:
       - seaweedfs

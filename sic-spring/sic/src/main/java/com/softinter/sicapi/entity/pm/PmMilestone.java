@@ -1,6 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,7 +33,7 @@ public class PmMilestone extends BaseEntity {
     private String description;
 
     @Column(name = "due_date")
-    private Instant dueDate;
+    private LocalDate dueDate;
 
     @Column(name = "color", length = 20)
     private String color;

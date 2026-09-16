@@ -62,14 +62,16 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         project.setStartDate(request.getStartDate());
         project.setPlannedEndDate(request.getPlannedEndDate());
         project.setActualEndDate(request.getActualEndDate());
-        project.setBudgetManday(request.getBudgetManday());
+        project.setBudgetManday(request.getBudgetManday() != null ? request.getBudgetManday() : 0);
         project.setUsedManday(request.getUsedManday() != null ? request.getUsedManday() : 0);
-        project.setStatus(request.getStatus());
-        project.setPriority(request.getPriority());
+        project.setStatus(request.getStatus() != null ? request.getStatus() : "Prospect");
+        project.setPriority(request.getPriority() != null ? request.getPriority() : "Medium");
         project.setDescription(request.getDescription());
         project.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
-        project = projectRepository.save(project);
+        project = projectRepository.saveAndFlush(project);
+
+        PmCustomerProjectResponse response = toResponse(project);
 
         // ✅ Create Initial Document Version
         try {
@@ -80,7 +82,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
                     project.getProjectCode(),
                     "v0.1",
                     "สร้างโปรเจกต์เริ่มต้น (Initial project)",
-                    JsonSnapshotHelper.toJson(toResponse(project))
+                    JsonSnapshotHelper.toJson(response)
             );
         } catch (Exception e) {
             log.error("Error creating document version on create project: {}", e.getMessage(), e);
@@ -94,7 +96,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             log.error("ผิดพลาด audit log CREATE_PROJECT: {}", e.getMessage(), e);
         }
 
-        return toResponse(project);
+        return response;
     }
 
     @Override
@@ -267,10 +269,15 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         response.setBudgetManday(project.getBudgetManday());
 
         // ✅ คำนวณ usedManday แบบ Auto-Rollup จาก Task ทั้งหมดในโครงการ
-        int taskUsedManday = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(project.getId())
-                .stream()
-                .mapToInt(t -> t.getActualManday() != null ? t.getActualManday() : 0)
-                .sum();
+        int taskUsedManday = 0;
+        if (project.getId() != null) {
+            try {
+                Integer sum = taskRepository.sumActualMandayByProjectId(project.getId());
+                taskUsedManday = sum != null ? sum : 0;
+            } catch (Exception e) {
+                log.warn("Failed to calculate usedManday for project {}: {}", project.getId(), e.getMessage());
+            }
+        }
         response.setUsedManday(taskUsedManday > 0 ? taskUsedManday : (project.getUsedManday() != null ? project.getUsedManday() : 0));
 
         response.setStatus(project.getStatus());

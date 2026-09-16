@@ -6,6 +6,7 @@ import com.softinter.sicapi.entity.enums.MaTicketType;
 import lombok.Data;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,9 +35,9 @@ public class PmMaTicketResponse {
     private Instant targetResolveDate;
     private Instant resolvedDate;
     private Instant closedDate;
-    private Instant startDate;
+    private LocalDate startDate;
     private String startTime;
-    private Instant endDate;
+    private LocalDate endDate;
     private String endTime;
     private String resolutionSummary;
 

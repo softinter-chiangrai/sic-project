@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -69,13 +70,13 @@ public class PmMaTicket extends BaseBusinessEntity {
     private Instant closedDate;
 
     @Column(name = "start_date")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @Column(name = "start_time", length = 5)
     private String startTime;
 
     @Column(name = "end_date")
-    private Instant endDate;
+    private LocalDate endDate;
 
     @Column(name = "end_time", length = 5)
     private String endTime;

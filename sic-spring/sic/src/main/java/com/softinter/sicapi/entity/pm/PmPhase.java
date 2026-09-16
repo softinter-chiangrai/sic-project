@@ -1,6 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -40,10 +40,10 @@ public class PmPhase extends BaseEntity {
     private String color;
 
     @Column(name = "start_date")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private Instant endDate;
+    private LocalDate endDate;
 
     @Column(length = 100)
     private String owner;

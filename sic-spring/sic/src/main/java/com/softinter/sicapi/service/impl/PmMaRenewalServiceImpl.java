@@ -214,9 +214,9 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         entity.setContractId(req.getContractId());
         entity.setCustomerId(req.getCustomerId());
         entity.setProjectId(req.getProjectId());
-        entity.setCurrentEndDate(req.getCurrentEndDate() != null ? req.getCurrentEndDate() : Instant.now());
-        entity.setNewStartDate(req.getNewStartDate() != null ? req.getNewStartDate() : Instant.now());
-        entity.setNewEndDate(req.getNewEndDate() != null ? req.getNewEndDate() : Instant.now().plus(java.time.Duration.ofDays(365)));
+        entity.setCurrentEndDate(req.getCurrentEndDate() != null ? req.getCurrentEndDate() : LocalDate.now());
+        entity.setNewStartDate(req.getNewStartDate() != null ? req.getNewStartDate() : LocalDate.now());
+        entity.setNewEndDate(req.getNewEndDate() != null ? req.getNewEndDate() : LocalDate.now().plusDays(365));
         entity.setProposedAmount(req.getProposedAmount() != null ? req.getProposedAmount() : BigDecimal.ZERO);
         entity.setStatus(req.getStatus() != null ? req.getStatus() : MaRenewalStatus.DRAFT);
         entity.setNewContractId(req.getNewContractId());

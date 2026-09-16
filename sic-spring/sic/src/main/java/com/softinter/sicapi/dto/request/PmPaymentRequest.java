@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -19,7 +19,7 @@ public class PmPaymentRequest {
     private UUID invoiceId;
 
     @NotNull(message = "Payment date is required")
-    private Instant paymentDate;
+    private LocalDate paymentDate;
 
     private PaymentMethod paymentMethod = PaymentMethod.BANK_TRANSFER;
 

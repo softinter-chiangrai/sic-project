@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.DocumentVersionRequest;
 import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.entity.pm.PmDocumentVersion;
@@ -142,25 +143,25 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, String versionNo, String changeSummary) {
         createVersion(documentType, documentId, null, null, versionNo, changeSummary);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary) {
         createVersion(documentType, documentId, projectId, documentCode, versionNo, changeSummary, null);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData) {
         createVersion(documentType, documentId, projectId, documentCode, versionNo, changeSummary, snapshotData, null, null);
     }
 
     @Override
-    @Transactional
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData, UUID fileRefId, String filePath) {
         UUID previousVersionId = versionRepository
                 .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId)
@@ -170,8 +171,12 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         PmDocumentVersion version = new PmDocumentVersion();
         version.setDocumentType(documentType);
         version.setDocumentId(documentId);
+        UUID bizId = businessAccessService != null ? businessAccessService.getBusinessId() : null;
+        if (bizId == null) {
+            bizId = BusinessContextHolder.getBusinessId();
+        }
         version.setProjectId(projectId);
-        version.setBusinessId(businessAccessService.getBusinessId());
+        version.setBusinessId(bizId);
         version.setDocumentCode(documentCode);
         version.setVersionNo(versionNo);
         version.setChangeSummary(changeSummary);

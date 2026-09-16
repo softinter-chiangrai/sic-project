@@ -2,6 +2,7 @@ package com.softinter.sicapi.service.impl;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -156,7 +157,7 @@ public class PmPaymentServiceImpl implements PmPaymentService {
     private void mapRequestToEntity(PmPaymentRequest req, PmPayment entity) {
         entity.setPaymentNo(req.getPaymentNo());
         entity.setInvoiceId(req.getInvoiceId());
-        entity.setPaymentDate(req.getPaymentDate() != null ? req.getPaymentDate() : Instant.now());
+        entity.setPaymentDate(req.getPaymentDate() != null ? req.getPaymentDate() : LocalDate.now());
         entity.setPaymentMethod(req.getPaymentMethod() != null ? req.getPaymentMethod() : PaymentMethod.BANK_TRANSFER);
         entity.setAmount(req.getAmount() != null ? req.getAmount() : BigDecimal.ZERO);
         entity.setReferenceNo(req.getReferenceNo());

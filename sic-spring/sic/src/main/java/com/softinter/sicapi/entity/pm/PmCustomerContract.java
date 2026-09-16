@@ -1,7 +1,7 @@
 package com.softinter.sicapi.entity.pm;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
@@ -37,10 +37,10 @@ public class PmCustomerContract extends BaseBusinessEntity {
     private String contractType;
 
     @Column(name = "start_date")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private Instant endDate;
+    private LocalDate endDate;
 
     @Column(name = "contract_value")
     private BigDecimal contractValue;

@@ -1,6 +1,6 @@
 package com.softinter.sicapi.dto.response;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -16,10 +16,10 @@ public class TaskResponse {
     private String taskName;
     private String description;
     private String assignedTo;
-    private Instant startDate;
-    private Instant endDate;
-    private Instant actualStart;
-    private Instant actualEnd;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private LocalDate actualStart;
+    private LocalDate actualEnd;
     private Integer estimateManday;
     private Integer actualManday;
     private String status;

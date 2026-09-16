@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -387,11 +388,11 @@ public class PhaseServiceImpl implements PhaseService {
         phaseRepository.save(phase);
     }
 
-    private String calculatePhaseStatus(int progress, int totalTasks, java.time.Instant startDate, java.time.Instant endDate) {
+    private String calculatePhaseStatus(int progress, int totalTasks, LocalDate startDate, LocalDate endDate) {
         if (progress >= 100 && totalTasks > 0) {
             return "Done";
         }
-        java.time.Instant now = java.time.Instant.now();
+        LocalDate now = LocalDate.now();
         if (endDate != null && now.isAfter(endDate) && progress < 100) {
             return "Delayed";
         }

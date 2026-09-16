@@ -2,7 +2,7 @@ package com.softinter.sicapi.dto.request;
 
 import lombok.Data;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,8 +13,8 @@ public class TaskRequest {
     private String taskName;
     private String description;
     private String assignedTo;
-    private Instant startDate;
-    private Instant endDate;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private Integer estimateManday;
     private Integer actualManday;
     private String priority;

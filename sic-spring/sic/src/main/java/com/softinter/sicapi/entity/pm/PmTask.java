@@ -1,6 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
-import java.time.Instant;
+import java.time.LocalDate;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
 
@@ -39,16 +39,16 @@ public class PmTask extends BaseBusinessEntity {
     private String assignedTo;
 
     @Column(name = "start_date")
-    private Instant startDate;
+    private LocalDate startDate;
 
     @Column(name = "end_date")
-    private Instant endDate;
+    private LocalDate endDate;
 
     @Column(name = "actual_start")
-    private Instant actualStart;
+    private LocalDate actualStart;
 
     @Column(name = "actual_end")
-    private Instant actualEnd;
+    private LocalDate actualEnd;
 
     @Column(name = "estimate_manday")
     private Integer estimateManday;

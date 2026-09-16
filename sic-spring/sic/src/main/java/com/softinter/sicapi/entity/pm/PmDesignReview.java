@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +49,7 @@ public class PmDesignReview extends BaseBusinessEntity {
     private String status = "Open";
 
     @Column(name = "due_date")
-    private Instant dueDate;
+    private LocalDate dueDate;
 
     @Column(name = "figma_url", columnDefinition = "TEXT")
     private String figmaUrl;

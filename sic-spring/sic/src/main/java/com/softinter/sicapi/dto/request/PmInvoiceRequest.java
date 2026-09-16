@@ -7,6 +7,7 @@ import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 
@@ -29,10 +30,10 @@ public class PmInvoiceRequest {
     private BillingType billingType = BillingType.MILESTONE;
 
     @NotNull(message = "Issue date is required")
-    private Instant issueDate;
+    private LocalDate issueDate;
 
     @NotNull(message = "Due date is required")
-    private Instant dueDate;
+    private LocalDate dueDate;
 
     @NotNull(message = "Subtotal amount is required")
     private BigDecimal subtotalAmount;
