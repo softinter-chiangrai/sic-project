@@ -17,11 +17,15 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.TaskRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.TaskResponse;
 import com.softinter.sicapi.service.TaskService;
+import com.softinter.sicapi.util.PaginationUtil;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @RestController
 @RequestMapping("/api/pm/tasks")
@@ -66,6 +70,17 @@ public class TaskController {
         log.info("Deleting task ID: {}", taskId);
         taskService.deleteTask(taskId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<PaginationResponse<TaskResponse>> search(
+            @RequestParam UUID projectId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PaginationUtil.toPageable(page, size);
+        Page<TaskResponse> pageResult = taskService.search(projectId, keyword, pageable);
+        return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
     @GetMapping("/combobox")

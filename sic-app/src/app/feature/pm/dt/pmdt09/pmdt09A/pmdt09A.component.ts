@@ -23,6 +23,7 @@ import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { ToForm } from '../../../../../core/types/form.type';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 // ===== Model =====
 export interface ReviewCommentModel {
@@ -155,6 +156,7 @@ export class Pmdt09AService {
     SicDatepickerComponent,
     SicInputComponent,
     SicTiptapEditorComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt09A.component.html',
   styles: [],

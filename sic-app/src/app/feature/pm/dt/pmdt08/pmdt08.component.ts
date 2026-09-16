@@ -16,6 +16,7 @@ import { Pmdt08AComponent } from './pmdt08A/pmdt08A.component';
 import { environment } from '../../../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { AttachmentFile } from './pmdt08.model';
 
 @Component({
@@ -43,6 +44,7 @@ export class Pmdt08Component implements OnInit {
   private authService = inject(AuthService);
   private sidebarService = inject(SicSidebarService);
   private http = inject(HttpClient);
+  private customerState = inject(CustomerStateService);
 
   readonly apiBaseUrl = environment.apiBaseUrl;
 
@@ -108,9 +110,9 @@ export class Pmdt08Component implements OnInit {
       content: ['', Validators.required],
     });
 
-    // ดึง projectId จาก queryParams หรือ params
+    // ดึง projectId จาก queryParams หรือ customerState
     this.route.queryParams.subscribe((params) => {
-      const pId = params['projectId'] || params['id'];
+      const pId = params['projectId'] || params['id'] || this.customerState.getProjectId();
       if (pId) {
         this.projectId.set(pId);
         this.loadPosts();

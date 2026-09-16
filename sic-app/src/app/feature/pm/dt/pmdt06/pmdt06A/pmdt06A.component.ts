@@ -32,6 +32,7 @@ import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { ChangeRequestFormModel } from './pmdt06A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
     selector: 'app-pmdt06a',
@@ -50,6 +51,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
         SicCardComponent,
         SicDatePipe,
         SicTiptapEditorComponent,
+        SicTraceLinkPanelComponent,
     ],
     changeDetection: ChangeDetectionStrategy.Eager,
     templateUrl: './pmdt06A.component.html',

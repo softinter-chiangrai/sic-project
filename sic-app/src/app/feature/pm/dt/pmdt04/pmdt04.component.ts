@@ -74,21 +74,19 @@ export class Pmdt04Component implements OnInit {
   // ===== Load Data =====
   loadRequirements() {
     const projectId = this.customerState.getProjectId();
-    if (!projectId) {
-      this.dialog.warn('กรุณาเลือกโครงการ', 'กรุณาเลือกโครงการก่อนเข้าหน้านี้');
-      this.navigation.navigate(['/feature/pm/project']);
-      return;
-    }
 
     this.isLoading.set(true);
-    const params = new HttpParams()
+    let params = new HttpParams()
       .set('page', this.currentPage().toString())
       .set('size', this.pageSize().toString())
       .set('keyword', this.searchTerm() || '')
       .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
       .set('sortBy', this.sortBy())
-      .set('sortDirection', this.sortDir())
-      .set('projectId', projectId);
+      .set('sortDirection', this.sortDir());
+
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
 
     this.http
       .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })

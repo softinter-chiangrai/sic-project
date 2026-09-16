@@ -12,6 +12,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicTimepickerComponent} from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt10a',
@@ -24,6 +25,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt10A.component.html',
   styleUrls: ['./pmdt10A.component.css'],
@@ -37,6 +39,7 @@ export class Pmdt10AComponent implements OnInit {
   @Input() isOpen = false;
   @Input() isEdit = false;
   @Input() taskId: string | null = null;
+  @Input() projectId: string | null = null;
   @Input() initialSpecId: string | null = null;
   @Input() specifications: SpecificationSummary[] = [];
   @Input() workPackages: WorkPackageOption[] = [];

@@ -24,6 +24,8 @@ import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -353,5 +355,13 @@ public class TaskServiceImpl implements TaskService {
     public List<TaskResponse> getAllTasksByProjectId(UUID projectId) {
         return taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId)
                 .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<TaskResponse> search(UUID projectId, String keyword, Pageable pageable) {
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        return taskRepository.searchByProjectIdAndKeyword(projectId, normalizedKeyword, pageable)
+                .map(this::toResponse);
     }
 }

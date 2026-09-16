@@ -3,6 +3,7 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.request.PmTestCaseRequest;
 import com.softinter.sicapi.dto.response.PmTestCaseResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmTestCase;
 import com.softinter.sicapi.entity.pm.PmTestScenario;
 
@@ -12,6 +13,7 @@ import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmTestCaseService;
 import com.softinter.sicapi.service.AuditLogService;
+import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
 import jakarta.persistence.criteria.Predicate;
@@ -39,6 +41,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     private final PmTaskRepository taskRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
@@ -153,7 +156,23 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         // Auto-sync Task status based on Test Case result
         syncLinkedTaskStatus(entity);
 
+        createTestCaseTraceLink(entity);
+
         return entity.getId();
+    }
+
+    private void createTestCaseTraceLink(PmTestCase entity) {
+        if (entity.getProjectId() == null || entity.getTaskId() == null) {
+            return;
+        }
+        try {
+            traceLinkService.createLink(entity.getProjectId(),
+                    "TASK", entity.getTaskId(),
+                    "TEST_CASE", entity.getId(),
+                    TraceRelationship.VERIFIED_BY);
+        } catch (Exception e) {
+            log.warn("Failed to create trace link for test case: {}", e.getMessage());
+        }
     }
 
     private void syncLinkedTaskStatus(PmTestCase entity) {

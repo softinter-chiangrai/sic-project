@@ -10,7 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.Instant;
+import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +31,6 @@ public interface PmMaRenewalRepository extends JpaRepository<PmMaRenewal, UUID>,
            "ORDER BY r.currentEndDate ASC")
     List<PmMaRenewal> findNearExpiry(@Param("businessId") UUID businessId,
                                       @Param("excludedStatuses") Collection<MaRenewalStatus> excludedStatuses,
-                                      @Param("from") Instant from,
-                                      @Param("to") Instant to);
+                                      @Param("from") LocalDate from,
+                                      @Param("to") LocalDate to);
 }

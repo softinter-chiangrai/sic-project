@@ -124,15 +124,14 @@ export class Pmrt02Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
-      let customerId = params['customerId'] || this.customerState.getCustomerId();
-      if (!customerId) {
-        this.dialog.warn('กรุณาเลือกลูกค้าก่อน', 'ไม่พบข้อมูลลูกค้า');
-        this.navigation.navigate(['/feature/pm/customer']);
-        return;
+      const customerId = params['customerId'] || this.customerState.getCustomerId() || null;
+      if (customerId) {
+        this.customerState.setCustomer(customerId);
+        this.filterCustomerId.set(customerId);
+      } else {
+        this.filterCustomerId.set(null);
+        this.filterCustomerName.set('');
       }
-
-      this.customerState.setCustomer(customerId);
-      this.filterCustomerId.set(customerId);
 
       if (!resolved || !resolved.data) {
         this.loadProjects();

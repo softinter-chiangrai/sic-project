@@ -13,6 +13,7 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { RequirementDetail, TraceLink, RelatedItem, Pmrt05PageData } from './pmrt05.model';
+import { SicTraceLinkPickerComponent } from '../../../../core/component/sic-trace-link-picker/sic-trace-link-picker.component';
 
 @Component({
   selector: 'app-pmrt05',
@@ -89,17 +90,14 @@ export class Pmrt05Component implements OnInit {
       }
     } else {
       this.route.queryParams.subscribe((params) => {
-        const reqId = params['requirementId'];
-        const projId = params['projectId'];
-        if (!reqId || !projId) {
-          this.dialog.warn('ไม่พบ Requirement', 'กรุณาระบุ requirementId และ projectId');
-          this.navigation.navigate(['/feature/pm/project']);
-          return;
+        const reqId = params['requirementId'] || this.customerState.getRequirementId();
+        const projId = params['projectId'] || this.customerState.getProjectId();
+        if (reqId) {
+          this.requirementId.set(reqId);
+          if (projId) this.projectId.set(projId);
+          this.loadRequirement(reqId);
+          this.loadTraceLinks(reqId);
         }
-        this.requirementId.set(reqId);
-        this.projectId.set(projId);
-        this.loadRequirement(reqId);
-        this.loadTraceLinks(reqId);
       });
     }
   }
@@ -378,12 +376,25 @@ export class Pmrt05Component implements OnInit {
     });
   }
 
-  createBug() {
+  // ===== เพิ่มความสัมพันธ์กับรายการที่มีอยู่แล้ว =====
+  openAddLinkDialog(): void {
     const reqId = this.requirementId();
     const projId = this.projectId();
-    if (!reqId || !projId) return;
-    this.navigation.navigate(['/feature/pm/bug'], {
-      queryParams: { projectId: projId, requirementId: reqId },
+    if (!reqId || !projId) {
+      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
+      return;
+    }
+    this.dialog.open({
+      type: 'confirm',
+      component: SicTraceLinkPickerComponent,
+      componentInputs: {
+        targetType: 'REQUIREMENT',
+        targetId: reqId,
+        projectId: projId,
+        onLinked: () => {
+          this.loadTraceLinks(reqId);
+        },
+      },
     });
   }
 

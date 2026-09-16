@@ -25,6 +25,7 @@ import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog
 import { ApprovalService } from '../pmdt03/approval.service';
 import { DiagramModel } from './diagram.model';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { TraceLinkService, TraceRelationshipType } from '../../../../core/services/trace-link.service';
 
 @Component({
   selector: 'app-pmdt05',
@@ -46,6 +47,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private customerState = inject(CustomerStateService);
+  private traceLinkService = inject(TraceLinkService);
   private isCreateDialogOpened = false;
 
   // ===== State =====
@@ -769,14 +771,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     sourceId: string,
     targetType: string,
     targetId: string,
-    relationshipType: string
+    relationshipType: TraceRelationshipType
   ): void {
     if (!this.projectId) {
       console.warn('No projectId, cannot create trace link');
       return;
     }
-    this.http
-      .post('/api/trace/links', {
+    this.traceLinkService
+      .createLink({
         projectId: this.projectId,
         sourceType,
         sourceId,

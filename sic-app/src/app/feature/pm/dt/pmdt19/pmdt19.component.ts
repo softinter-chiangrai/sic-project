@@ -79,24 +79,23 @@ export class Pmdt19Component implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
-      // ดึง projectId จาก queryParams ก่อน ถ้าไม่มีค่อยใช้จาก customerState
-      const projectId = params['projectId'] || this.customerState.getProjectId();
+      const projectId = params['projectId'] || this.customerState.getProjectId() || null;
 
-      if (!projectId) {
-        this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาเข้าจากหน้าโครงการ');
-        this.navigation.navigate(['/feature/pm/project']);
-        return;
+      if (projectId) {
+        this.activeProjectId.set(projectId);
+        this.customerState.setProject(projectId);
+      } else {
+        this.activeProjectId.set(null);
       }
-
-      this.activeProjectId.set(projectId);
-      this.customerState.setProject(projectId);
 
       const qType = params['documentType'];
       const qId = params['documentId'];
       if (qType) this.filterType.set(qType);
       if (qId) this.filterDocId.set(qId);
 
-      this.loadVersions();
+      if (projectId) {
+        this.loadVersions();
+      }
     });
   }
 

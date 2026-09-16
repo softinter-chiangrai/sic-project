@@ -25,8 +25,9 @@ public class PmDiagramTabController {
 
     @GetMapping
     public ResponseEntity<List<PmDiagramTabResponse>> getTabs(
-            @RequestParam(required = false) UUID projectId) {
-        return ResponseEntity.ok(tabService.getTabs(projectId));
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword) {
+        return ResponseEntity.ok(tabService.getTabs(projectId, keyword));
     }
 
     @GetMapping("/combobox")

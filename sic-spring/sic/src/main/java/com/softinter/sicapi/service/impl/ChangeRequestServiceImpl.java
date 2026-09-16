@@ -6,11 +6,13 @@ import com.softinter.sicapi.dto.response.CrAssigneeResponse;
 import com.softinter.sicapi.dto.response.ChangeImpactResponse;
 import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.*;
 import com.softinter.sicapi.repository.pm.*;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
 import com.softinter.sicapi.service.*;
 import com.softinter.sicapi.service.AuditLogService;
+import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
@@ -50,6 +52,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
     private final ImpactAnalysisService impactAnalysisService;
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional
@@ -108,6 +111,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setCreatedDate(Instant.now());
 
         cr = changeRequestRepository.save(cr);
+
+        createChangeRequestTraceLink(cr);
 
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(cr));
@@ -262,6 +267,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
 
         cr = changeRequestRepository.save(cr);
+
+        createChangeRequestTraceLink(cr);
 
         try {
             impactAnalysisService.autoDetectUsingTrace(cr.getId());
@@ -477,6 +484,20 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     }
 
     // ============================ Helper Methods ============================
+
+    private void createChangeRequestTraceLink(PmChangeRequest cr) {
+        if (cr.getProjectId() == null || cr.getTargetType() == null || cr.getTargetId() == null) {
+            return;
+        }
+        try {
+            traceLinkService.createLink(cr.getProjectId(),
+                    "CHANGE_REQUEST", cr.getId(),
+                    cr.getTargetType(), cr.getTargetId(),
+                    TraceRelationship.AFFECTED_BY);
+        } catch (Exception e) {
+            log.warn("Failed to create trace link for change request: {}", e.getMessage());
+        }
+    }
 
     private String getDocumentStatus(String targetType, UUID targetId) {
         if (targetType == null || targetId == null) {

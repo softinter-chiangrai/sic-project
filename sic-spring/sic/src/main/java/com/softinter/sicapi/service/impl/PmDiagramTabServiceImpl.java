@@ -468,6 +468,20 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<PmDiagramTabResponse> getTabs(UUID projectId, String keyword) {
+        List<PmDiagramTabResponse> tabs = getTabs(projectId);
+        if (keyword == null || keyword.isBlank()) {
+            return tabs;
+        }
+        String pattern = keyword.trim().toLowerCase();
+        return tabs.stream()
+                .filter(t -> (t.getName() != null && t.getName().toLowerCase().contains(pattern))
+                        || (t.getDiagramCode() != null && t.getDiagramCode().toLowerCase().contains(pattern)))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PmDiagramTabResponse getTab(UUID id) {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found: " + id));

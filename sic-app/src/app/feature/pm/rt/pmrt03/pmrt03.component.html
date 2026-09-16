@@ -448,3 +448,22 @@
     </div>
   </div>
 }
+
+@if (!project() && !isLoading() && !error()) {
+  <div class="flex flex-col items-center justify-center py-20 gap-4 bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl shadow-sm my-6">
+    <div class="w-16 h-16 rounded-2xl bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center text-3xl">
+      <i class="bi bi-kanban"></i>
+    </div>
+    <div class="text-center">
+      <h3 class="text-lg font-semibold text-[var(--text-active)]">ยังไม่ได้เลือกโครงการ</h3>
+      <p class="text-sm text-[var(--text-muted)] mt-1">กรุณาเลือกโครงการจากหน้ารายการโครงการเพื่อดูภาพรวม Dashboard</p>
+    </div>
+    <button
+      (click)="goBack()"
+      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all shadow-sm cursor-pointer"
+    >
+      <i class="bi bi-briefcase"></i>
+      ไปหน้ารายการโครงการ
+    </button>
+  </div>
+}

@@ -471,14 +471,12 @@ export class Pmdt02Component implements OnInit {
       const phaseId = params.get('id');
       this.route.queryParams.subscribe((qParams) => {
         const pid = qParams['projectId'];
-        if (phaseId && pid) {
-          this.currentPhaseId.set(phaseId);
+        if (pid) {
           this.projectId.set(pid);
+        }
+        if (phaseId) {
+          this.currentPhaseId.set(phaseId);
           this.loadPhaseDetail(phaseId);
-        } else {
-          this.router.navigate(['/feature/pm/phase'], {
-            queryParams: { projectId: this.projectId() },
-          });
         }
       });
     });

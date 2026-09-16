@@ -3,6 +3,7 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.request.PmBugRequest;
 import com.softinter.sicapi.dto.response.PmBugResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmBug;
 import com.softinter.sicapi.entity.pm.PmTask;
 import com.softinter.sicapi.entity.pm.PmTestCase;
@@ -11,6 +12,7 @@ import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
 import com.softinter.sicapi.service.PmBugService;
 import com.softinter.sicapi.service.AuditLogService;
+import com.softinter.sicapi.service.TraceLinkService;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +36,7 @@ public class PmBugServiceImpl implements PmBugService {
     private final PmTaskRepository taskRepository;
     private final PmTestCaseRepository testCaseRepository;
     private final AuditLogService auditLogService;
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
@@ -100,6 +103,8 @@ public class PmBugServiceImpl implements PmBugService {
             entity = bugRepository.save(entity);
         }
 
+        createBugTraceLinks(entity);
+
         // Audit Log
         try {
             String action = isNew ? "CREATE_BUG" : "UPDATE_BUG";
@@ -129,6 +134,28 @@ public class PmBugServiceImpl implements PmBugService {
                     "BUG", bug.getId(), null, null, "Success", null);
         } catch (Exception e) {
             log.error("ผิดพลาด audit log DELETE_BUG: {}", e.getMessage(), e);
+        }
+    }
+
+    private void createBugTraceLinks(PmBug entity) {
+        if (entity.getProjectId() == null) {
+            return;
+        }
+        try {
+            if (entity.getTestCaseId() != null) {
+                traceLinkService.createLink(entity.getProjectId(),
+                        "TEST_CASE", entity.getTestCaseId(),
+                        "BUG", entity.getId(),
+                        TraceRelationship.FAILED_BY);
+            }
+            if (entity.getTaskId() != null) {
+                traceLinkService.createLink(entity.getProjectId(),
+                        "TASK", entity.getTaskId(),
+                        "BUG", entity.getId(),
+                        TraceRelationship.RELATED_TO);
+            }
+        } catch (Exception e) {
+            log.warn("Failed to create trace link for bug: {}", e.getMessage());
         }
     }
 

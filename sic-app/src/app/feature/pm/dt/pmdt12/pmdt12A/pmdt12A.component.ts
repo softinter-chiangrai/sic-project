@@ -19,6 +19,7 @@ import { AiHistoryService } from '../../../../../core/services/ai-history.servic
 import { Pmdt12AForm } from './pmdt12A.form';
 import { PmTestCaseModel } from './pmdt12A.model';
 import { Pmdt12AService } from './pmdt12A.service';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt12a',
@@ -33,6 +34,7 @@ import { Pmdt12AService } from './pmdt12A.service';
     SicComboboxComponent,
     SicDatepickerComponent,
     SicTiptapEditorComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt12A.component.html',
   styleUrls: ['./pmdt12A.component.css'],
@@ -54,6 +56,11 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   isLoading = signal(false);
   isSaving = signal(false);
   testCaseId: string | null = null;
+
+  get projectIdForTrace(): string {
+    return this.customerState.getProjectId() || this.formData?.form?.get('projectId')?.value || '';
+  }
+
   taskOptions = signal<{ value: string; text: string }[]>([]);
   taskLoading = signal(false);
   linkedTaskStatus = signal<string | null>(null);

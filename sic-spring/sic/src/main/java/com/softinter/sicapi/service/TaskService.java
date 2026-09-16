@@ -6,6 +6,8 @@ import java.util.UUID;
 
 import com.softinter.sicapi.dto.request.TaskRequest;
 import com.softinter.sicapi.dto.response.TaskResponse;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface TaskService {
     List<TaskResponse> getTasksByWorkPackageId(UUID wpId);
@@ -14,4 +16,5 @@ public interface TaskService {
     TaskResponse updateTask(UUID taskId, TaskRequest request);
     void deleteTask(UUID taskId);
     List<TaskResponse> getAllTasksByProjectId(UUID projectId);
+    Page<TaskResponse> search(UUID projectId, String keyword, Pageable pageable);
 }

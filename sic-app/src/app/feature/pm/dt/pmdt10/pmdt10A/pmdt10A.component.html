@@ -201,6 +201,14 @@
           ></sic-colorpicker>
         </div>
 
+        @if (isEdit && taskId) {
+          <sic-trace-link-panel
+            entityType="TASK"
+            [entityId]="taskId"
+            [projectId]="projectId"
+          ></sic-trace-link-panel>
+        }
+
         <!-- Modal Footer Actions -->
         <div class="flex items-center justify-end gap-3 pt-5 border-t border-[var(--border)]">
           <button

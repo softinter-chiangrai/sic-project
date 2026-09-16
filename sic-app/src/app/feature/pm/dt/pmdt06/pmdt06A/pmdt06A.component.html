@@ -347,6 +347,14 @@
         </div>
       }
 
+      @if (isEdit && changeRequestId) {
+        <sic-trace-link-panel
+          entityType="CHANGE_REQUEST"
+          [entityId]="changeRequestId"
+          [projectId]="projectId"
+        ></sic-trace-link-panel>
+      }
+
       <!-- Actions -->
       <div class="flex items-center justify-between pt-2 border-t border-[var(--border)]">
         <div class="flex gap-3">

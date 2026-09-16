@@ -205,6 +205,15 @@
                         <input type="hidden" formControlName="projectName" />
                         <input type="hidden" formControlName="createdBy" />
 
+                        @if (isEdit) {
+                            <sic-trace-link-panel
+                                class="block mt-4"
+                                entityType="SPECIFICATION"
+                                [entityId]="form.getRawValue().id"
+                                [projectId]="form.getRawValue().projectId"
+                            ></sic-trace-link-panel>
+                        }
+
                         <!-- Buttons -->
                         <div class="flex gap-3 pt-3 border-t border-[var(--border)] mt-4">
                             <sic-button type="button" variant="secondary" (click)="onBack()">

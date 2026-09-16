@@ -21,6 +21,7 @@ import { Pmrt04Service } from './pmrt04.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract } from './pmrt04.model';
 import { NavigationService } from '../../../../core/services/navigation.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -42,6 +43,7 @@ export class Pmrt04Component implements OnInit {
   private contractService = inject(Pmrt04Service);
   private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);
+  private customerState = inject(CustomerStateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -107,32 +109,33 @@ export class Pmrt04Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
-      const projectId = params['projectId'];
+      const projectId = params['projectId'] || this.customerState.getProjectId();
 
-      if (!projectId) {
-        this.dialog.warn('ไม่พบรหัสโครงการ', 'กรุณาระบุรหัสโครงการ');
-        this.navigation.navigate(['/feature/pm/project']);
-        return;
-      }
+      if (projectId) {
+        this.filterProjectId.set(projectId);
+        this.customerState.setProject(projectId);
 
-      this.filterProjectId.set(projectId);
-
-      if (!resolved || !resolved.project) {
-        this.projectService.getProject(projectId).subscribe({
-          next: (project) => {
-            this.filterCustomerId.set(project.customerId);
-            this.filterCustomerName.set(project.customerName);
-            this.filterProjectName.set(project.projectName || '');
-            this.filterProjectCode.set(project.projectCode || '');
-            this.currentPage.set(1);
-            this.loadContracts();
-          },
-          error: (err) => {
-            console.error('Error loading project:', err);
-            this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการที่ระบุ');
-            this.navigation.navigate(['/feature/pm/project']);
-          },
-        });
+        if (!resolved || !resolved.project) {
+          this.projectService.getProject(projectId).subscribe({
+            next: (project) => {
+              this.filterCustomerId.set(project.customerId);
+              this.filterCustomerName.set(project.customerName);
+              this.filterProjectName.set(project.projectName || '');
+              this.filterProjectCode.set(project.projectCode || '');
+              this.currentPage.set(1);
+              this.loadContracts();
+            },
+            error: (err) => {
+              console.error('Error loading project:', err);
+              this.loadContracts();
+            },
+          });
+        }
+      } else {
+        this.filterProjectId.set(null);
+        if (!resolved || !resolved.contracts) {
+          this.loadContracts();
+        }
       }
     });
   }
@@ -281,20 +284,14 @@ export class Pmrt04Component implements OnInit {
 
   // ===== Navigation =====
   goToAdd() {
-    const customerId = this.filterCustomerId();
-    const projectId = this.filterProjectId();
-    if (customerId) {
-      const queryParams: any = { customerId };
-      if (projectId) {
-        queryParams.projectId = projectId;
-      }
-      this.navigation.navigate(['/feature/pm/contract/new'], {
-        queryParams,
-      });
-    } else {
-      this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
-      this.navigation.navigate(['/feature/pm/project']);
-    }
+    const customerId = this.filterCustomerId() || this.customerState.getCustomerId();
+    const projectId = this.filterProjectId() || this.customerState.getProjectId();
+    const queryParams: any = {};
+    if (customerId) queryParams.customerId = customerId;
+    if (projectId) queryParams.projectId = projectId;
+    this.navigation.navigate(['/feature/pm/contract/new'], {
+      queryParams: Object.keys(queryParams).length > 0 ? queryParams : undefined,
+    });
   }
 
   goToEdit(id: string) {

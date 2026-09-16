@@ -7,10 +7,12 @@ import { Pmdt01Service } from './pmdt01.service';
 import { Pmdt01Form } from './pmdt01.form';
 import { PhaseModel, PhasePageData } from './pmdt01.model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 export const pmdt01Resolver: ResolveFn<PhaseModel[] | null> = (route) => {
   const service = inject(Pmdt01Service);
-  const projectId = route.queryParams['projectId'];
+  const customerState = inject(CustomerStateService);
+  const projectId = route.queryParams['projectId'] || customerState.getProjectId();
   if (!projectId) return of(null);
   return service.getPhases(projectId).pipe(
     catchError((err) => {

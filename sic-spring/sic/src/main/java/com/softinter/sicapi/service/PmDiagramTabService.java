@@ -12,6 +12,8 @@ public interface PmDiagramTabService {
 
     List<PmDiagramTabResponse> getTabs(UUID projectId);
 
+    List<PmDiagramTabResponse> getTabs(UUID projectId, String keyword);
+
     PmDiagramTabResponse getTab(UUID id);
 
     PmDiagramTabResponse createTab(PmDiagramTabRequest request);

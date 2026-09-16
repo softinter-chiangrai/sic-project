@@ -105,9 +105,9 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
         response.setOpenMaTickets(maTicketRepository.countByBusinessIdAndStatusNotInAndIsDeleteFalse(
                 businessId, CLOSED_TICKET_STATUSES));
 
-        Instant now = Instant.now();
+        LocalDate today = LocalDate.now();
         List<PmMaRenewal> nearExpiry = maRenewalRepository.findNearExpiry(
-                businessId, FINAL_RENEWAL_STATUSES, now, now.plus(NEAR_EXPIRY_DAYS, ChronoUnit.DAYS));
+                businessId, FINAL_RENEWAL_STATUSES, today, today.plusDays(NEAR_EXPIRY_DAYS));
         response.setContractsNearExpiry(nearExpiry.size());
 
         // SDLC Funnel Counts

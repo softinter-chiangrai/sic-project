@@ -3,9 +3,11 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
 import com.softinter.sicapi.dto.response.PmDesignReviewResponse;
 import com.softinter.sicapi.dto.response.PmReviewCommentResponse;
+import com.softinter.sicapi.entity.enums.TraceRelationship;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmDesignReview;
 import com.softinter.sicapi.entity.pm.PmReviewComment;
+import com.softinter.sicapi.service.TraceLinkService;
 
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
@@ -58,6 +60,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
+    private final TraceLinkService traceLinkService;
 
     @Override
     @Transactional(readOnly = true)
@@ -170,6 +173,17 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         }
 
         PmDesignReview saved = designReviewRepository.save(entity);
+
+        if (saved.getProject() != null && saved.getReviewItemType() != null && saved.getReviewItemId() != null) {
+            try {
+                traceLinkService.createLink(saved.getProject().getId(),
+                        saved.getReviewItemType(), saved.getReviewItemId(),
+                        "DESIGN_REVIEW", saved.getId(),
+                        TraceRelationship.RELATED_TO);
+            } catch (Exception e) {
+                log.warn("Failed to create trace link for design review: {}", e.getMessage());
+            }
+        }
 
         // ✅ Create document version
         try {

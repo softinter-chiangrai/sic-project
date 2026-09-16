@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -42,4 +43,13 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
     List<PmTask> findUpcomingByBusinessId(@Param("businessId") UUID businessId,
                                            @Param("doneStatuses") Collection<String> doneStatuses,
                                            Pageable pageable);
+
+    @Query("SELECT t FROM PmTask t " +
+           "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph JOIN ph.project p " +
+           "WHERE p.id = :projectId AND t.isDelete = false " +
+           "AND (:keyword IS NULL OR LOWER(t.taskName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(t.taskCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<PmTask> searchByProjectIdAndKeyword(@Param("projectId") UUID projectId,
+                                              @Param("keyword") String keyword,
+                                              Pageable pageable);
 }

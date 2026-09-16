@@ -5,6 +5,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { PhaseModel } from './pmdt01.model';
 import { Pmdt01Service } from './pmdt01.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 
 @Component({
@@ -18,6 +19,7 @@ export class Pmdt01Component implements OnInit {
   private router = inject(Router);
   private phaseService = inject(Pmdt01Service);
   private dialog = inject(DialogService);
+  private customerState = inject(CustomerStateService);
 
   projectId = signal<string>('');
   phases = signal<PhaseModel[]>([]);
@@ -30,14 +32,13 @@ export class Pmdt01Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
-      const pid = params['projectId'];
+      const pid = params['projectId'] || this.customerState.getProjectId();
       if (pid) {
         this.projectId.set(pid);
+        this.customerState.setProject(pid);
         if (!resolved || !Array.isArray(resolved)) {
           this.loadPhases();
         }
-      } else {
-        this.router.navigate(['/feature/pm/project']);
       }
     });
   }

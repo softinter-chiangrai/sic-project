@@ -33,6 +33,7 @@ import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { HttpClient } from '@angular/common/http';
 import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -52,7 +53,8 @@ import { AiHistoryService } from '../../../../../core/services/ai-history.servic
         SicCheckboxComponent,
         SicApprovalComponent,
         SicDatePipe,
-        Pmdt07PreviewComponent
+        Pmdt07PreviewComponent,
+        SicTraceLinkPanelComponent
     ],
     templateUrl: './pmdt07A.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,

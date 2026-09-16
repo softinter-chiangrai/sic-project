@@ -139,10 +139,19 @@
 
   <!-- ===== RELATED ITEMS ===== -->
   <div>
-    <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
-      <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-      ความสัมพันธ์
-    </h2>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-semibold text-[var(--text-active)] flex items-center gap-2">
+        <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
+        ความสัมพันธ์
+      </h2>
+      <button
+        (click)="openAddLinkDialog()"
+        class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--crm-primary)] text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+      >
+        <i class="bi bi-plus-lg"></i>
+        เพิ่มความสัมพันธ์
+      </button>
+    </div>
 
     @if (traceLinks().length === 0) {
       <div
@@ -150,7 +159,7 @@
       >
         <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
         <p>ยังไม่มีเอกสารที่เชื่อมโยงกับ Requirement นี้</p>
-        <p class="text-sm">ใช้ปุ่มด้านบนเพื่อสร้างเอกสารใหม่</p>
+        <p class="text-sm">สร้างเอกสารใหม่ด้วยปุ่มด้านบน หรือกด "เพิ่มความสัมพันธ์" เพื่อเชื่อมกับเอกสารที่มีอยู่แล้ว</p>
       </div>
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
