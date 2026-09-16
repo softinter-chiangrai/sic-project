@@ -171,14 +171,35 @@ export class AuthService {
     if (!raw) return null;
 
     try {
-      let decoded = decodeURIComponent(raw);
+      let decoded = raw;
+      // Decode multiple layers of URI encoding (e.g. %252F -> %2F -> /)
+      for (let i = 0; i < 3; i++) {
+        try {
+          const next = decodeURIComponent(decoded);
+          if (next === decoded) break;
+          decoded = next;
+        } catch {
+          break;
+        }
+      }
 
       // angular-oauth2-oidc stores state in the format: "<random_nonce>;<custom_state>"
       if (decoded.includes(';')) {
         const parts = decoded.split(';');
-        const pathPart = parts.find(p => p.startsWith('/'));
-        if (pathPart) {
-          return pathPart;
+        for (let i = 1; i < parts.length; i++) {
+          let part = parts[i];
+          try {
+            while (part.includes('%')) {
+              const next = decodeURIComponent(part);
+              if (next === part) break;
+              part = next;
+            }
+          } catch {
+            // ignore
+          }
+          if (part.startsWith('/')) {
+            return part;
+          }
         }
         decoded = parts[parts.length - 1];
       }

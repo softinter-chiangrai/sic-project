@@ -14,12 +14,17 @@ export const businessGuard: CanActivateFn = async (_route, _state) => {
         return true;
     }
 
-    const businesses: boolean = await firstValueFrom(
-        http.get<boolean>(`${environment.apiBaseUrl}/api/business/activation`),
-    );
+    try {
+        const businesses: boolean = await firstValueFrom(
+            http.get<boolean>(`${environment.apiBaseUrl}/api/business/activation`),
+        );
 
-    if (!businesses) {
+        if (!businesses) {
+            return router.parseUrl('/management/business');
+        }
+        return true;
+    } catch (error) {
+        console.error('[DEBUG] businessGuard caught an error:', error);
         return router.parseUrl('/management/business');
     }
-    return true;
 };
