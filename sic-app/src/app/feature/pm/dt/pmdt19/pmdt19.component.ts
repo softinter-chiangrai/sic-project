@@ -11,14 +11,14 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
 
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
   templateUrl: './pmdt19.component.html',
   styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

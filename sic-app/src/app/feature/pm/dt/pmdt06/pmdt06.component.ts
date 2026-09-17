@@ -19,6 +19,7 @@ import {
   SicGridLoadRequest,
   SicGridPanelComponent,
   SicGridPanelConfig,
+  SicGridPanelTemplate,
   SicGridRowData,
 } from 'sic-ng';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -36,6 +37,7 @@ import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
     SicComboboxComponent,
     SicStripHtmlPipe,
     SicGridPanelComponent,
+    SicGridPanelTemplate,
   ],
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',

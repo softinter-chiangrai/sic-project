@@ -18,12 +18,12 @@ import { ApprovalService } from './approval.service';
 import type { Approval } from './approval.model';
 import { ApprovalItem } from './pmdt03.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt03',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
   templateUrl: './pmdt03.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

@@ -17,12 +17,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt16',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

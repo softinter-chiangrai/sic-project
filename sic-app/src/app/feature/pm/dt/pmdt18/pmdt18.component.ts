@@ -14,12 +14,12 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt18',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
   templateUrl: './pmdt18.component.html',
   styleUrls: ['./pmdt18.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

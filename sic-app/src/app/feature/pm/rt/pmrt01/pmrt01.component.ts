@@ -22,12 +22,12 @@ import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmrt01',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
   templateUrl: './pmrt01.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

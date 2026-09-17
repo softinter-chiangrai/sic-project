@@ -16,12 +16,12 @@ import { resolveProjectId, resolveRequirementId } from '../../../../core/utils/r
 import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent],
+    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })

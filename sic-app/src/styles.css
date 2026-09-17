@@ -389,4 +389,13 @@ html, body {
   font-size: 0.95rem !important;
   font-family: var(--font-sans) !important;
 }
+
+/* Gridpanel: หัวคอลัมน์ปกติของ sic-gridpanel ถูกบังคับ justify-content: center ไว้ตายตัวใน library
+   (align ใน column config มีผลแค่เนื้อหาในเซลล์ ไม่ใช่ label หัวตาราง) แก้ให้ชิดซ้ายทั้งแอปเพื่อให้เข้ากับ
+   เนื้อหาส่วนใหญ่ที่เป็นข้อความชิดซ้าย ส่วนคอลัมน์ badge/action ที่ตั้ง align: 'center' ไว้ในเซลล์
+   จะได้ header ชิดซ้าย + เนื้อหากึ่งกลาง ซึ่งเป็นแพทเทิร์นปกติของตารางข้อมูลทั่วไป */
+.sic-gridpanel__sort {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
 

@@ -15,7 +15,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt17',
@@ -27,6 +27,7 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridR
     SicTableActionsComponent,
     SicComboboxComponent,
     SicGridPanelComponent,
+    SicGridPanelTemplate,
     SicDrawerComponent,
   ],
   templateUrl: './pmdt17.component.html',

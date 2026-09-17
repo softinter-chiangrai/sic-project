@@ -28,12 +28,12 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicDrawerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, SicDrawerComponent],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

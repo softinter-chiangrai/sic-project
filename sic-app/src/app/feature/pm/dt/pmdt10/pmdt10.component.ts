@@ -17,7 +17,7 @@ import { BusinessService } from '../../../../core/services/business.service';
 import { Pmdt10Service } from './pmdt10.service';
 import { Pmdt10AComponent } from './pmdt10A/pmdt10A.component';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
-import { SicAvatarComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicAvatarComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
@@ -32,6 +32,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     SicComboboxComponent,
     SicKanbanComponent,
     SicGridPanelComponent,
+    SicGridPanelTemplate,
     Pmdt10AComponent,
   ],
   templateUrl: './pmdt10.component.html',

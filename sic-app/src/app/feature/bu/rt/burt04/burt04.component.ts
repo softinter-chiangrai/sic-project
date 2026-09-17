@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { burt04Service } from './burt04.service';
 import { MemberWithUI, TeamMember } from './burt04.model';
@@ -16,7 +16,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 @Component({
   selector: 'app-burt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04.component.html',
 })

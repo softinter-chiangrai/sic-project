@@ -18,7 +18,7 @@ import { forkJoin, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 
 import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from 'sic-ng';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -108,6 +108,7 @@ export class burt02AService {
     RouterModule,
     SicComboboxComponent,
     SicGridPanelComponent,
+    SicGridPanelTemplate,
   ],
   templateUrl: './burt02A.component.html',
   styleUrls: ['./burt02A.component.css'],

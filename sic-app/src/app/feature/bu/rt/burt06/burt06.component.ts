@@ -3,7 +3,7 @@ import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } 
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
-import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
+import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalFlow } from './burt06.model';
 import { Burt06Service } from './burt06.service';
@@ -16,7 +16,7 @@ import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 @Component({
   selector: 'app-burt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe, SicGridPanelComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe, SicGridPanelComponent, SicGridPanelTemplate],
   templateUrl: './burt06.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',
