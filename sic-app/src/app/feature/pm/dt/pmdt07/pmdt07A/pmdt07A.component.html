@@ -216,15 +216,15 @@
 
                         <!-- Buttons -->
                         <div class="flex gap-3 pt-3 border-t border-[var(--border)] mt-4">
-                            <sic-button type="button" variant="secondary" (click)="onBack()">
+                            <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
                                 <i class="bi bi-arrow-left"></i> ย้อนกลับ
                             </sic-button>
                             @if (isLocked) {
-                                <sic-button type="button" variant="primary" (click)="requestChange()">
+                                <sic-button type="button" variant="solid" color="primary" (click)="requestChange()">
                                     <i class="bi bi-pencil-square"></i> ขอแก้ไข
                                 </sic-button>
                             } @else if (!isViewOnly) {
-                                <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid">
+                                <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving || form.invalid">
                                     @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
                                     {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
                                 </sic-button>

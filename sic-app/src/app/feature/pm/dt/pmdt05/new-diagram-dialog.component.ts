@@ -2,8 +2,8 @@
 import { Component, inject, Input, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SicInputComponent } from '../../../../core/component/sic-input/sic-input.component';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicInputComponent } from 'sic-ng';
+import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalService } from '../pmdt03/approval.service';
@@ -120,8 +120,8 @@ export interface DiagramEditData {
       </div>
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="cancel()">ยกเลิก</sic-button>
-        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()">
+        <sic-button variant="outline" color="primary" size="sm" (click)="cancel()">ยกเลิก</sic-button>
+        <sic-button variant="solid" color="primary" size="sm" [disabled]="!canSave" (click)="save()">
           {{ editData ? 'บันทึก' : 'สร้าง' }}
         </sic-button>
       </div>

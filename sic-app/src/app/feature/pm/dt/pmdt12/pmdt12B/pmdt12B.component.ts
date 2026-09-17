@@ -12,10 +12,10 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicCheckboxComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { environment } from '../../../../../../environments/environment';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';

@@ -211,16 +211,16 @@
         <!-- Buttons -->
         <div class="flex gap-4 pt-2">
           <div class="flex-1">
-            <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="onBack()">
+            <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="onBack()">
               <i class="bi bi-arrow-left"></i>
               ย้อนกลับ
             </sic-button>
           </div>
           <div class="flex-[2]">
             <sic-button
-              [fullWidth]="true"
+              [block]="true"
               [type]="'submit'"
-              variant="primary"
+              variant="solid" color="primary"
               [disabled]="isSaving || form.invalid"
             >
               @if (isSaving) {

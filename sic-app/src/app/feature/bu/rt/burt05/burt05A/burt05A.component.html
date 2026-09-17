@@ -165,17 +165,17 @@
       <!-- BUTTONS -->
       <div class="flex gap-4 pt-2">
         <sic-button
-          [fullWidth]="true"
+          [block]="true"
           type="button"
-          variant="secondary"
+          variant="outline" color="primary"
           (click)="goBack()"
         >
           <i class="bi bi-arrow-left"></i> ยกเลิก
         </sic-button>
         <sic-button
-          [fullWidth]="true"
+          [block]="true"
           type="submit"
-          variant="primary"
+          variant="solid" color="primary"
           [disabled]="isSaving() || programForm.invalid"
           [loading]="isSaving()"
         >

@@ -20,7 +20,7 @@ import type { TaskResponse } from '../../../feature/pm/dt/pmdt02/pmdt02C/pmdt02C
 import type { WorkPackageResponse } from '../../../feature/pm/dt/pmdt02/pmdt02B/pmdt02B.model';
 import type { MilestoneResponse } from '../../../feature/pm/dt/pmdt02/pmdt02A/pmdt02A.model';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
-import { SicAvatarComponent } from '../sic-avatar/sic-avatar.component';
+import { SicAvatarComponent } from 'sic-ng';
 import { SicStripHtmlPipe } from '../../pipes/sic-strip-html.pipe';
 
 export type KanbanViewMode = 'task' | 'workPackage' | 'milestone';

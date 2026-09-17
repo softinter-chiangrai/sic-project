@@ -246,11 +246,11 @@
         </sic-button>
       }
       @if (isLocked()) {
-        <sic-button variant="primary" (click)="requestChange()">
+        <sic-button variant="solid" color="primary" (click)="requestChange()">
           <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else {
-        <sic-button variant="primary" (click)="onSubmit()" [disabled]="isSaving()">
+        <sic-button variant="solid" color="primary" (click)="onSubmit()" [disabled]="isSaving()">
           <i class="bi bi-check-lg"></i> {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึกคู่มือ' }}
         </sic-button>
       }

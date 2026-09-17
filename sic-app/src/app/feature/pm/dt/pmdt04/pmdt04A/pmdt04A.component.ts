@@ -26,13 +26,13 @@ import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../../../../core/auth/auth.service';
 
 // Components
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
-import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicInputAreaComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
+import { SicCardComponent } from 'sic-ng';
+import { SicCheckboxComponent } from 'sic-ng';
 import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 
 // ✅ เปลี่ยนเป็น sic-tiptap-editor

@@ -11,7 +11,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 
 export interface SicStepItem {
   id?: string | number;

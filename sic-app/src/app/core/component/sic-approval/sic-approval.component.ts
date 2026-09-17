@@ -16,8 +16,8 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
-import { SicInputAreaComponent } from '../sic-input-area/sic-input-area.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicInputAreaComponent } from 'sic-ng';
 
 import { DialogService } from '../../services/dialog.service';
 import { SicDatePipe } from '../../pipes/sic-date.pipe';

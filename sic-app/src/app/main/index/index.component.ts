@@ -3,7 +3,7 @@ import { Router, RouterOutlet } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
 import { AppLanguage, LanguageService } from '../../core/services/language.service';
 import { TooltipDirective } from "../../core/directive/tooltip/tootop.directive";
-import { SicButtonComponent } from "../../core/component/sic-button/sic-button.component";
+import { SicButtonComponent } from "sic-ng";
 import { TranslateModule } from '@ngx-translate/core';
 
 

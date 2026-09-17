@@ -6,13 +6,13 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
 
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicInputNumberComponent } from '../../../../../core/component/sic-input-number/sic-input-number.component';
+import { SicInputComponent } from 'sic-ng';
+import { SicInputNumberComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicDatepickerComponent } from 'sic-ng';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';

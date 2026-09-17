@@ -18,9 +18,9 @@ import { forkJoin, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 
 import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputComponent } from 'sic-ng';
 import { SicPaginationComponent } from '../../../../../core/component/sic-pagination/sic-pagination.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';

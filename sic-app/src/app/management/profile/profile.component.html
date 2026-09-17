@@ -195,7 +195,7 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
       >
         <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary">บันทึก</sic-button>
+          <sic-button [block]="true" [type]="'submit'" variant="solid" color="primary">บันทึก</sic-button>
         </div>
       </div>
     </div>
@@ -229,7 +229,7 @@
             ></sic-input>
           </div>
           <div class="w-50">
-            <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="resend()">
+            <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="resend()">
               ส่งรหัสยืนยันใหม่
             </sic-button>
           </div>
@@ -239,12 +239,12 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
       >
         <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'button'" variant="secondary" (click)="back()">
+          <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="back()">
             ย้อนกลับ
           </sic-button>
         </div>
         <div class="flex-1">
-          <sic-button [fullWidth]="true" [type]="'submit'" variant="primary"> ยืนยัน </sic-button>
+          <sic-button [block]="true" [type]="'submit'" variant="solid" color="primary"> ยืนยัน </sic-button>
         </div>
       </div>
     </div>

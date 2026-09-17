@@ -17,7 +17,7 @@ import { BusinessService } from '../../../../core/services/business.service';
 import { Pmdt10Service } from './pmdt10.service';
 import { Pmdt10AComponent } from './pmdt10A/pmdt10A.component';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
-import { SicAvatarComponent } from '../../../../core/component/sic-avatar/sic-avatar.component';
+import { SicAvatarComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({

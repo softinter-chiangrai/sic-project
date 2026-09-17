@@ -20,7 +20,7 @@ import type { Approval } from './approval.model';
 import { ApprovalItem } from './pmdt03.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
-import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
+import { SicSkeletonComponent } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt03',

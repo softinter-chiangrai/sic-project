@@ -7,8 +7,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BusinessJoinService } from './business-join.service';
 import { BusinessJoinFormData, JoinModel } from './business-join.model';
 import { DialogService } from '../../../core/services/dialog.service';
-import { SicInputComponent } from '../../../core/component/sic-input/sic-input.component';
-import { SicButtonComponent } from '../../../core/component/sic-button/sic-button.component';
+import { SicInputComponent } from 'sic-ng';
+import { SicButtonComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { ToForm } from '../../../core/types/form.type';
 

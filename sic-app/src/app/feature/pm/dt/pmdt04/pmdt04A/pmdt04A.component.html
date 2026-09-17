@@ -182,9 +182,9 @@
             <!-- Action Buttons -->
             <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
               <sic-button
-                [fullWidth]="isViewOnly"
+                [block]="isViewOnly"
                 type="button"
-                variant="secondary"
+                variant="outline" color="primary"
                 (click)="onBack()"
               >
                 <i class="bi bi-arrow-left"></i>
@@ -192,9 +192,9 @@
               </sic-button>
               @if (isLocked) {
                 <sic-button
-                  [fullWidth]="true"
+                  [block]="true"
                   type="button"
-                  variant="primary"
+                  variant="solid" color="primary"
                   (click)="requestChange()"
                 >
                   <i class="bi bi-pencil-square"></i>
@@ -202,9 +202,9 @@
                 </sic-button>
               } @else if (!isViewOnly) {
                 <sic-button
-                  [fullWidth]="true"
+                  [block]="true"
                   type="submit"
-                  variant="primary"
+                  variant="solid" color="primary"
                   [disabled]="isSaving || form.invalid"
                 >
                   @if (isSaving) {

@@ -10,7 +10,7 @@ import {
   TraceLinkService,
   TraceRelationshipType,
 } from '../../services/trace-link.service';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 
 interface TraceEntityTypeDef {
@@ -82,8 +82,8 @@ interface TraceEntityTypeDef {
         </div>
 
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">
-          <sic-button variant="secondary" size="sm" type="button" (click)="cancel()">ยกเลิก</sic-button>
-          <sic-button variant="primary" size="sm" type="submit" [disabled]="form.invalid || saving()">
+          <sic-button variant="outline" color="primary" size="sm" type="button" (click)="cancel()">ยกเลิก</sic-button>
+          <sic-button variant="solid" color="primary" size="sm" type="submit" [disabled]="form.invalid || saving()">
             {{ saving() ? 'กำลังบันทึก...' : 'เพิ่มความสัมพันธ์' }}
           </sic-button>
         </div>

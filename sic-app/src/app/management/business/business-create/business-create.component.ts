@@ -8,10 +8,10 @@ import { SicProfileComponent } from "../../../core/component/sic-profile/sic-pro
 import { BusinessCreateService } from './business-create.service';
 import { SicRadioComponent } from "../../../core/component/sic-radio/sic-radio.component";
 import { SicComboboxComponent } from "../../../core/component/sic-combobox/sic-combobox.component";
-import { SicButtonComponent } from "../../../core/component/sic-button/sic-button.component";
+import { SicButtonComponent } from "sic-ng";
 import { SicInputComponent } from "../../../core/component/sic-input/sic-input.component";
-import { SicInputAreaComponent } from "../../../core/component/sic-input-area/sic-input-area.component";
-import { SicInputPhoneComponent } from "../../../core/component/sic-input-phone/sic-input-phone.component";
+import { SicInputAreaComponent } from 'sic-ng';
+import { SicInputPhoneComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../core/services/dialog.service';
 

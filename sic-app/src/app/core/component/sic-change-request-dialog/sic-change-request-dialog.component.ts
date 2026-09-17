@@ -1,9 +1,9 @@
 import { Component, Input, Output, EventEmitter, inject, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { SicInputComponent } from '../sic-input/sic-input.component';
+import { SicInputComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../sic-tiptap-editor/sic-tiptap-editor.component';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import { DialogService } from '../../services/dialog.service';
 
@@ -25,8 +25,8 @@ import { DialogService } from '../../services/dialog.service';
         <sic-combobox label="Priority" formControlName="priority" [apiUrl]="'/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'" valueField="value" textField="text" [required]="true"></sic-combobox>
         <sic-combobox label="Assignee" formControlName="assigneeId" [apiUrl]="'/api/business/combobox-members?businessId=' + businessId" valueField="value" textField="text" [required]="true"></sic-combobox>
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">
-          <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
-          <sic-button variant="primary" size="sm" type="submit" [disabled]="form.invalid">Create & Submit</sic-button>
+          <sic-button variant="outline" color="primary" size="sm" (click)="cancel()">Cancel</sic-button>
+          <sic-button variant="solid" color="primary" size="sm" type="submit" [disabled]="form.invalid">Create & Submit</sic-button>
         </div>
       </form>
     </div>

@@ -6,10 +6,10 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicInputComponent } from 'sic-ng';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
@@ -31,7 +31,7 @@ import { SpecificationExportService } from '../specification-export.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { HttpClient } from '@angular/common/http';
-import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicCheckboxComponent } from 'sic-ng';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 

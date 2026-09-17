@@ -16,7 +16,7 @@ import { SicPaginationComponent } from '../../../../core/component/sic-paginatio
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
-import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
+import { SicSkeletonComponent } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt17',

@@ -1,6 +1,6 @@
 import { NgComponentOutlet } from '@angular/common';
 import { Component, computed, inject, ChangeDetectionStrategy } from '@angular/core';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { DialogService } from '../../services/dialog.service';
 
 @Component({
@@ -45,10 +45,19 @@ export class SicDialogComponent {
 
   readonly confirmButtonVariant = computed(() => {
     switch (this.state()?.type) {
+      case 'warn':
+        return 'outline' as const;
+      default:
+        return 'solid' as const;
+    }
+  });
+
+  readonly confirmButtonColor = computed(() => {
+    switch (this.state()?.type) {
       case 'success':
         return 'success' as const;
       case 'warn':
-        return 'outline' as const;
+        return 'warning' as const;
       case 'confirm':
         return 'primary' as const;
       case 'error':

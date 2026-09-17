@@ -212,9 +212,9 @@
     <!-- Buttons -->
     <div class="flex gap-4 pt-4">
       <sic-button
-        [fullWidth]="true"
+        [block]="true"
         [type]="'button'"
-        variant="secondary"
+        variant="outline" color="primary"
         (click)="onBack()"
       >
         <i class="bi bi-arrow-left"></i> ย้อนกลับ
@@ -222,18 +222,18 @@
 
       @if (isLocked) {
         <sic-button
-          [fullWidth]="true"
+          [block]="true"
           [type]="'button'"
-          variant="primary"
+          variant="solid" color="primary"
           (click)="requestChange()"
         >
           <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else if (!isViewOnly) {
         <sic-button
-          [fullWidth]="true"
+          [block]="true"
           [type]="'submit'"
-          variant="primary"
+          variant="solid" color="primary"
           [disabled]="isSaving || form.invalid"
         >
           @if (isSaving) {

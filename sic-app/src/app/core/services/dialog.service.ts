@@ -1,5 +1,7 @@
 // src/app/core/services/dialog.service.ts
 import { ApplicationRef, ComponentRef, createComponent, DOCUMENT, EnvironmentInjector, inject, Injectable, signal, Type } from '@angular/core';
+import { firstValueFrom } from 'rxjs';
+import { SicDialogService as SicNgDialogService } from 'sic-ng';
 import { SicDialogComponent } from '../component/sic-dialog/sic-dialog.component';
 
 export type DialogType = 'info' | 'success' | 'warn' | 'confirm' | 'error';
@@ -23,38 +25,40 @@ export class DialogService {
   private readonly appRef = inject(ApplicationRef);
   private readonly environmentInjector = inject(EnvironmentInjector);
   private readonly document = inject(DOCUMENT);
+  private readonly sicDialog = inject(SicNgDialogService);
   private readonly dialogState = signal<DialogState | null>(null);
   private componentRef?: ComponentRef<SicDialogComponent>;
   private resolver?: (result: boolean) => void;
 
   readonly state = this.dialogState.asReadonly();
 
-  info(title: string, description: string): Promise<boolean> {
-    return this.open({ type: 'info', title, description, confirmText: 'OK' });
+  async info(title: string, description: string): Promise<boolean> {
+    await firstValueFrom(this.sicDialog.info(title, description));
+    return true;
   }
 
-  success(title: string, description: string): Promise<boolean> {
-    return this.open({ type: 'success', title, description, confirmText: 'OK' });
+  async success(title: string, description: string): Promise<boolean> {
+    await firstValueFrom(this.sicDialog.success(title, description));
+    return true;
   }
 
-  warn(title: string, description: string): Promise<boolean> {
-    return this.open({ type: 'warn', title, description, confirmText: 'OK' });
+  async warn(title: string, description: string): Promise<boolean> {
+    await firstValueFrom(this.sicDialog.warning(title, description));
+    return true;
   }
 
-  error(title: string, description: string): Promise<boolean> {
-    return this.open({ type: 'error', title, description, confirmText: 'OK' });
+  async error(title: string, description: string): Promise<boolean> {
+    await firstValueFrom(this.sicDialog.danger(title, description));
+    return true;
   }
 
   confirm(title: string, description: string): Promise<boolean> {
-    return this.open({
-      type: 'confirm',
-      title,
-      description,
-      confirmText: 'Confirm',
-      cancelText: 'Cancel',
-    });
+    return firstValueFrom(this.sicDialog.confirm(title, description));
   }
 
+  /** Custom-component dialogs still render through our own SicDialogComponent —
+   *  sic-ng's SicDialogService.open() passes data via DI (SIC_DIALOG_DATA), while
+   *  every dialog component here expects plain @Input()s via componentInputs. */
   open(options: DialogOptions): Promise<boolean> {
     this.ensureDialogMounted();
     this.close(false);

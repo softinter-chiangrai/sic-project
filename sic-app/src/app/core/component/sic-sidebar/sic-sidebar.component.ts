@@ -20,7 +20,7 @@ import { DialogService } from '../../services/dialog.service';
 import { AppLanguage, LanguageService } from '../../services/language.service';
 import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
-import { SicCardComponent } from '../sic-card/sic-card.component';
+import { SicCardComponent } from 'sic-ng';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 import { ChatService } from '../../services/chat.service';
 import { SicNotificationPanelComponent } from '../sic-notification-panel/sic-notification-panel.component';

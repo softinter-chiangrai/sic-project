@@ -6,8 +6,8 @@ import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
-import { SicCardComponent } from '../../../../core/component/sic-card/sic-card.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicCardComponent } from 'sic-ng';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';

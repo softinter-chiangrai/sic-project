@@ -43,7 +43,7 @@
         >
           @if (dialog.type === 'confirm') {
             <sic-button
-              variant="secondary"
+              variant="outline" color="primary"
               size="sm"
               (click)="close(false)"
             >
@@ -53,6 +53,7 @@
 
           <sic-button
             [variant]="confirmButtonVariant()"
+            [color]="confirmButtonColor()"
             size="sm"
             (click)="close(true)"
           >

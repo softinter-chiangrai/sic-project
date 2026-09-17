@@ -86,7 +86,7 @@
     <!-- Modal Footer -->
     <div class="px-5 py-3.5 border-t border-[var(--border)] bg-[var(--sidebar)] flex items-center justify-end gap-2">
       <sic-button
-        [fullWidth]="false"
+        [block]="false"
         type="button"
         variant="outline"
         (click)="closeModal()"
@@ -95,10 +95,10 @@
         ยกเลิก
       </sic-button>
       <sic-button
-        [fullWidth]="false"
+        [block]="false"
         type="submit"
         form="pmdt09aForm"
-        variant="primary"
+        variant="solid" color="primary"
         (click)="submitPost()"
         [disabled]="isSubmitting || postForm.invalid"
       >

@@ -142,10 +142,10 @@
                           [label]="''"
                           [placeholder]="column.placeholder || ''"
                           [hint]="column.hint"
-                          [dateFormat]="column.dateFormat"
+                          [format]="column.dateFormat || 'dd/MM/yyyy'"
                           [clearable]="column.clearable ?? true"
-                          [minDate]="column.minDate"
-                          [maxDate]="column.maxDate"
+                          [min]="column.minDate"
+                          [max]="column.maxDate"
                           [readonly]="isCellReadonly(row, column)"
                           [errorMessages]="column.errorMessages ?? {}"
                           [formControl]="getControl(row, column)"></sic-datepicker>
@@ -183,7 +183,6 @@
                       @if (shouldRenderCellField(row, column)) {
                         <sic-colorpicker
                           [label]="''"
-                          [placeholder]="column.placeholder || ''"
                           [hint]="column.hint"
                           [readonly]="isCellReadonly(row, column)"
                           [errorMessages]="column.errorMessages ?? {}"

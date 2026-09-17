@@ -197,8 +197,8 @@
       <div class="flex items-center justify-end gap-3 pt-2">
         <sic-button
           type="button"
-          variant="secondary"
-          [fullWidth]="false"
+          variant="outline" color="primary"
+          [block]="false"
           (click)="onBack()"
         >
           <i class="bi bi-arrow-left"></i>
@@ -208,8 +208,8 @@
         @if (isLocked) {
           <sic-button
             type="button"
-            variant="primary"
-            [fullWidth]="false"
+            variant="solid" color="primary"
+            [block]="false"
             (click)="requestChange()"
           >
             <i class="bi bi-pencil-square"></i>
@@ -218,8 +218,8 @@
         } @else if (!isView) {
           <sic-button
             type="submit"
-            variant="primary"
-            [fullWidth]="false"
+            variant="solid" color="primary"
+            [block]="false"
             [disabled]="isSaving || form.invalid"
           >
             @if (isSaving) {

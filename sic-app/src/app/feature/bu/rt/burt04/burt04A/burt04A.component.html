@@ -47,10 +47,10 @@
 
     <!-- Buttons -->
     <div class="flex gap-4 pt-4">
-      <sic-button [fullWidth]="true" type="button" variant="secondary" (click)="onBack()">
+      <sic-button [block]="true" type="button" variant="outline" color="primary" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> ย้อนกลับ
       </sic-button>
-      <sic-button [fullWidth]="true" type="submit" variant="primary" [disabled]="isSaving()">
+      <sic-button [block]="true" type="submit" variant="solid" color="primary" [disabled]="isSaving()">
         @if (isSaving()) {
           <i class="bi bi-arrow-repeat animate-spin"></i>
         } @else {

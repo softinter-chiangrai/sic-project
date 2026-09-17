@@ -14,9 +14,9 @@ import { CustomerModel } from './pmrt01A.model';
 import { Pmrt01AService } from './pmrt01A.service';
 
 import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputPhoneComponent } from '../../../../../core/component/sic-input-phone/sic-input-phone.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicInputAreaComponent } from 'sic-ng';
+import { SicInputPhoneComponent } from 'sic-ng';
 import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { SicFromData } from '../../../../../core/model/sic-from-data';

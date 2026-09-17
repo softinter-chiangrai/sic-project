@@ -28,7 +28,7 @@ import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
-import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
+import { SicSkeletonComponent } from 'sic-ng';
 
 @Component({
   selector: 'app-pmrt04',

@@ -284,15 +284,15 @@
         <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
       </sic-button>
       @if (isLocked()) {
-        <sic-button variant="primary" (click)="requestChange()">
+        <sic-button variant="solid" color="primary" (click)="requestChange()">
           <i class="bi bi-pencil-square"></i> ขอแก้ไข
         </sic-button>
       } @else if (isView()) {
-        <sic-button variant="primary" (click)="goToEditMode()">
+        <sic-button variant="solid" color="primary" (click)="goToEditMode()">
           <i class="bi bi-pencil"></i> แก้ไขเอกสาร
         </sic-button>
       } @else {
-        <sic-button variant="primary" (click)="onSubmit()" [loading]="isSaving()">
+        <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()">
           <i class="bi bi-check-lg"></i> บันทึกเอกสาร
         </sic-button>
       }

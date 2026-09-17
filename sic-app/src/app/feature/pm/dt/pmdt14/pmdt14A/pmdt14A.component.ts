@@ -4,12 +4,12 @@ import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/a
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from '../../../../../core/component/sic-input-area/sic-input-area.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicInputAreaComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
+import { SicDatepickerComponent } from 'sic-ng';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';

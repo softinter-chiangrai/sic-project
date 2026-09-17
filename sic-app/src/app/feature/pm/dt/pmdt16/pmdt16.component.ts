@@ -17,7 +17,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
-import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
+import { SicSkeletonComponent } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt16',

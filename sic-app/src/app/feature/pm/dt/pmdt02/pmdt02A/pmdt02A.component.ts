@@ -3,16 +3,16 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicColorpickerComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmdt02AService } from './pmdt02A.service';
 import { Pmdt02AForm } from './pmdt02A.form';
 import { MilestoneModel, MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
+import { SicButtonComponent } from "sic-ng";
 
 @Component({
   selector: 'app-pmdt02A',

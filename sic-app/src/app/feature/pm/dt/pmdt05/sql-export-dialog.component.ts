@@ -5,7 +5,7 @@ import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } fro
 import { FormsModule } from '@angular/forms';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../core/config/ai-models.config';
 import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { DialogService } from '../../../../core/services/dialog.service';
 
@@ -184,7 +184,7 @@ export interface DiagramSqlHistoryItem {
             </div>
 
             <sic-button
-              variant="primary"
+              variant="solid" color="primary"
               size="sm"
               [disabled]="loading() || !selectedPageId"
               (click)="generate()"
@@ -350,7 +350,7 @@ export interface DiagramSqlHistoryItem {
             Tab ID: <code class="font-mono text-[11px]">{{ tabId }}</code>
           }
         </span>
-        <sic-button variant="secondary" size="sm" (click)="close()">Close</sic-button>
+        <sic-button variant="outline" color="primary" size="sm" (click)="close()">Close</sic-button>
       </div>
     </div>
   `,

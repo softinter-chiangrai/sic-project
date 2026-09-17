@@ -6,9 +6,9 @@ import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angu
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicColorpickerComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { HttpClient } from '@angular/common/http';
 import { Pmdt02CService } from './pmdt02C.service';
@@ -18,7 +18,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
-import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
+import { SicButtonComponent } from "sic-ng";
 
 @Component({
   selector: 'app-pmdt02C',

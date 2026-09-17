@@ -21,9 +21,9 @@ import { FormsModule } from '@angular/forms';
 import { TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
-import { SicColorpickerComponent } from '../sic-colorpicker/sic-colorpicker.component';
-import { SicInputComponent } from '../sic-input/sic-input.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicColorpickerComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
 import { SicOrganizationalChartNode } from './sic-organizational-chart.model';
 
 type NodeEditPayload = {
@@ -85,8 +85,8 @@ type NodeEditPayload = {
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
         <!-- ✅ แก้ไข: ใช้ property binding -->
-        <sic-button [variant]="'secondary'" size="sm" (click)="cancel()">Cancel</sic-button>
-        <sic-button [variant]="'primary'" size="sm" [disabled]="!canSave" (click)="save()">Save</sic-button>
+        <sic-button [variant]="'outline'" [color]="'primary'" size="sm" (click)="cancel()">Cancel</sic-button>
+        <sic-button [variant]="'solid'" [color]="'primary'" size="sm" [disabled]="!canSave" (click)="save()">Save</sic-button>
       </div>
     </div>
   `,

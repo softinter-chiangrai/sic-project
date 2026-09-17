@@ -177,7 +177,7 @@
                 <div class="flex flex-wrap gap-2">
                     @if (canApprove()) {
                         <sic-button
-                            variant="success"
+                            variant="solid" color="success"
                             size="sm"
                             [disabled]="isSubmitting()"
                             (click)="approve()"
@@ -189,7 +189,7 @@
 
                     @if (canReject()) {
                         <sic-button
-                            variant="danger"
+                            variant="solid" color="danger"
                             size="sm"
                             [disabled]="isSubmitting()"
                             (click)="reject()"
@@ -201,7 +201,7 @@
 
                     @if (canRevise()) {
                         <sic-button
-                            variant="secondary"
+                            variant="outline" color="primary"
                             size="sm"
                             [disabled]="isSubmitting()"
                             (click)="requestRevision()"
@@ -213,7 +213,7 @@
 
                     @if (canCancel()) {
                         <sic-button
-                            variant="secondary"
+                            variant="outline" color="primary"
                             size="sm"
                             [disabled]="isSubmitting()"
                             (click)="cancel()"

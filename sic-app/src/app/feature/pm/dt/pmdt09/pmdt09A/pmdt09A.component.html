@@ -311,7 +311,7 @@
         <div class="pt-5 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-3">
           <div>
             @if (isEdit && !isLocked) {
-              <sic-button variant="danger" (click)="onDelete()" [disabled]="isLoading || isSaving">
+              <sic-button variant="solid" color="danger" (click)="onDelete()" [disabled]="isLoading || isSaving">
                 <i class="bi bi-trash"></i> ลบ
               </sic-button>
             }
@@ -321,11 +321,11 @@
               <i class="bi bi-arrow-left"></i> {{ isLocked ? 'กลับ' : 'ยกเลิก' }}
             </sic-button>
             @if (isLocked) {
-              <sic-button variant="primary" (click)="requestChange()">
+              <sic-button variant="solid" color="primary" (click)="requestChange()">
                 <i class="bi bi-pencil-square"></i> ขอแก้ไข
               </sic-button>
             } @else {
-              <sic-button variant="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
+              <sic-button variant="solid" color="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
                 <i class="bi bi-check-lg"></i> {{ isEdit ? 'บันทึกข้อมูล' : 'สร้างรายการ' }}
               </sic-button>
             }

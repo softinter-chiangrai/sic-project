@@ -7,7 +7,7 @@ import { catchError, forkJoin, map, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DialogService } from '../../services/dialog.service';
 import { TRACE_RELATIONSHIP_LABEL, TraceLink, TraceLinkService } from '../../services/trace-link.service';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicTraceLinkPickerComponent } from '../sic-trace-link-picker/sic-trace-link-picker.component';
 
 interface DisplayLink {
@@ -34,7 +34,7 @@ interface DisplayLink {
           <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
           ความสัมพันธ์ที่เชื่อมโยง
         </span>
-        <sic-button variant="secondary" size="sm" type="button" (click)="openPicker()" [disabled]="!entityId || !projectId">
+        <sic-button variant="outline" color="primary" size="sm" type="button" (click)="openPicker()" [disabled]="!entityId || !projectId">
           <i class="bi bi-plus-lg"></i> เพิ่มความสัมพันธ์
         </sic-button>
       </div>

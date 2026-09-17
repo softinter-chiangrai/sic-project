@@ -3,7 +3,7 @@ import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } 
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalFlow } from './burt06.model';
 import { Burt06Service } from './burt06.service';

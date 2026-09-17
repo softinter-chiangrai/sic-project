@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { burt04Service } from './burt04.service';
 import { MemberWithUI, TeamMember } from './burt04.model';

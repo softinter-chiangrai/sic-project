@@ -4,9 +4,9 @@ import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../../environments/environment';
-import { SicDatepickerComponent } from '../../../../../core/component/sic-datepicker/sic-datepicker.component';
+import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
-import { SicColorpickerComponent } from '../../../../../core/component/sic-colorpicker/sic-colorpicker.component';
+import { SicColorpickerComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { Pmdt01AModel, Pmdt01APageData } from './pmdt01A.model';
@@ -15,7 +15,7 @@ import { Pmdt01AForm } from './pmdt01A.form';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { SicButtonComponent } from "../../../../../core/component/sic-button/sic-button.component";
+import { SicButtonComponent } from "sic-ng";
 
 @Component({
   selector: 'app-pmdt01A',

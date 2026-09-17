@@ -268,13 +268,13 @@
 
         <!-- === Action Buttons === -->
         <div class="flex justify-end gap-3 pt-2">
-          <sic-button type="button" variant="secondary" [fullWidth]="false" (click)="cancel()">
+          <sic-button type="button" variant="outline" color="primary" [block]="false" (click)="cancel()">
             <i class="bi bi-x-lg"></i> ยกเลิก
           </sic-button>
           <sic-button
             type="submit"
-            variant="primary"
-            [fullWidth]="false"
+            variant="solid" color="primary"
+            [block]="false"
             [disabled]="form.invalid || isSaving()"
           >
             @if (isSaving()) {

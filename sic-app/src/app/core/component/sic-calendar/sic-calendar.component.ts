@@ -20,10 +20,10 @@ import type { Subscription } from 'rxjs';
 import dayjs from '../../dayjs';
 import { DateTimeUtil, type CalendarEra } from '../../utils/datetime.util';
 import { DialogService } from '../../services/dialog.service';
-import { SicButtonComponent } from '../sic-button/sic-button.component';
-import { SicColorpickerComponent } from '../sic-colorpicker/sic-colorpicker.component';
-import { SicInputComponent } from '../sic-input/sic-input.component';
-import { SicInputAreaComponent } from '../sic-input-area/sic-input-area.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicColorpickerComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
+import { SicInputAreaComponent } from 'sic-ng';
 
 // ===== NEW INTERFACE =====
 export interface CalendarItem {
@@ -97,8 +97,8 @@ type TaskDraftPayload = {
       </div>
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <sic-button variant="secondary" size="sm" (click)="cancel()">Cancel</sic-button>
-        <sic-button variant="primary" size="sm" [disabled]="!canSave" (click)="save()">Add Task</sic-button>
+        <sic-button variant="outline" color="primary" size="sm" (click)="cancel()">Cancel</sic-button>
+        <sic-button variant="solid" color="primary" size="sm" [disabled]="!canSave" (click)="save()">Add Task</sic-button>
       </div>
     </div>
   `,

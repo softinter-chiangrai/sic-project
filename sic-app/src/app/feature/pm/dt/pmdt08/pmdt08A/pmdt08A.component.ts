@@ -5,8 +5,8 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { Post } from '../discussion.model';
 import { DiscussionService } from '../discussion.service';
 import { finalize, Subscription } from 'rxjs';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';

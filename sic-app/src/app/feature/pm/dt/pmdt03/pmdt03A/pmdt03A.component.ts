@@ -13,9 +13,9 @@ import {
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicCardComponent } from '../../../../../core/component/sic-card/sic-card.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicCardComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';

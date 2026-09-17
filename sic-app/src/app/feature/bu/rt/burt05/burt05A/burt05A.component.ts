@@ -6,10 +6,10 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { SicButtonComponent } from '../../../../../core/component/sic-button/sic-button.component';
-import { SicInputComponent } from '../../../../../core/component/sic-input/sic-input.component';
-import { SicInputNumberComponent } from '../../../../../core/component/sic-input-number/sic-input-number.component';
-import { SicCheckboxComponent } from '../../../../../core/component/sic-checkbox/sic-checkbox.component';
+import { SicButtonComponent } from 'sic-ng';
+import { SicInputComponent } from 'sic-ng';
+import { SicInputNumberComponent } from 'sic-ng';
+import { SicCheckboxComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { Program } from '../burt05.model';

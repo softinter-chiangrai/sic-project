@@ -6,7 +6,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../../environments/environment';
 import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { SicButtonComponent } from '../../../../core/component/sic-button/sic-button.component';
+import { SicButtonComponent } from 'sic-ng';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 @Component({
@@ -215,7 +215,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
       <!-- Footer -->
       <div class="flex items-center justify-end border-t px-6 py-4" style="border-color: var(--border); background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));">
-        <sic-button variant="secondary" size="sm" (click)="close()">
+        <sic-button variant="outline" color="primary" size="sm" (click)="close()">
           ปิดหน้าต่าง
         </sic-button>
       </div>

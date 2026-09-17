@@ -359,9 +359,9 @@
       <div class="flex items-center justify-between pt-2 border-t border-[var(--border)]">
         <div class="flex gap-3">
           @if (isView) {
-            <sic-button type="button" variant="secondary" (click)="cancel()">ย้อนกลับ</sic-button>
+            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">ย้อนกลับ</sic-button>
           } @else {
-            <sic-button type="submit" variant="primary" [disabled]="isSaving || form.invalid">
+            <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving || form.invalid">
               @if (isSaving) {
                 <i class="bi bi-arrow-repeat animate-spin me-1"></i>
               }
@@ -371,7 +371,7 @@
                   : (selectedFlowId ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ') : (isEdit ? 'บันทึก' : 'สร้าง'))
               }}
             </sic-button>
-            <sic-button type="button" variant="secondary" (click)="cancel()">ยกเลิก</sic-button>
+            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">ยกเลิก</sic-button>
           }
         </div>
 
@@ -380,7 +380,7 @@
             @if (currentStatus === 'DRAFT' || currentStatus === 'REJECTED') {
               <sic-button
                 type="button"
-                variant="danger"
+                variant="solid" color="danger"
                 (click)="deleteChangeRequest()"
               >
                 <i class="bi bi-trash me-1"></i>
