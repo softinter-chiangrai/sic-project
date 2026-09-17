@@ -15,7 +15,7 @@ import { ApprovalService } from '../pmdt03/approval.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
@@ -23,7 +23,7 @@ import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -66,7 +66,21 @@ export class Pmdt14Component implements OnInit {
     return list;
   });
 
-  totalPages = computed(() => Math.ceil(this.totalElements() / this.size()) || 1);
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    pageSize: this.size(),
+    column: [
+      { label: 'รหัส / หัวข้อ', name: 'deliveryCode', type: 'codeTitle', minWidth: 140 },
+      { label: 'ประเภท', name: 'deliveryType', type: 'typeTag', minWidth: 100 },
+      { label: 'เวอร์ชัน', name: 'deliveryVersion', type: 'versionText', minWidth: 90 },
+      { label: 'วันที่ส่งมอบ', name: 'deliveryDate', type: 'dateText', minWidth: 110 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 140 },
+      { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 120 },
+    ],
+  };
 
   ngOnInit(): void {
     const qp = this.route.snapshot.queryParams;
@@ -76,7 +90,6 @@ export class Pmdt14Component implements OnInit {
 
     const projId = resolveProjectId(this.route, this.customerState);
     this.projectId.set(projId);
-    this.loadData();
   }
 
   // ===== URL State Sync =====
@@ -93,29 +106,36 @@ export class Pmdt14Component implements OnInit {
     });
   }
 
-  loadData(): void {
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.isLoading.set(true);
+    this.page.set(request.pageNumber);
+    this.syncFiltersToUrl();
+
     const projectId = resolveProjectId(this.route, this.customerState) || undefined;
-    this.service.getPaging({ page: this.page(), size: this.size(), projectId }).subscribe({
+    this.service.getPaging({ page: request.pageNumber, size: request.pageSize, projectId }).subscribe({
       next: (res) => {
         const items = res.data || [];
+        const totalElements = res.pageable?.totalElements || 0;
         this.deliveries.set(items);
-        this.totalElements.set(res.pageable?.totalElements || 0);
+        this.totalElements.set(totalElements);
         this.isLoading.set(false);
-        this.loadApprovalStatuses(items);
+        grid.setRows(this.filteredDeliveries() as unknown as SicGridRowData[], { totalElements }, request.requestId);
+        this.loadApprovalStatuses(items, grid, request.requestId, totalElements);
       },
       error: () => {
         this.isLoading.set(false);
+        grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
       },
     });
   }
 
-  loadApprovalStatuses(deliveries: PmDeliveryModel[]): void {
+  loadApprovalStatuses(deliveries: PmDeliveryModel[], grid: SicGridPanelComponent, requestId: number, totalElements: number): void {
     deliveries.forEach((delivery) => {
       if (!delivery.id) return;
       this.approvalService.getDocumentStatus('DELIVERY', delivery.id).subscribe({
         next: (approval) => {
           this.approvalStatusMap.update((map) => ({ ...map, [delivery.id!]: approval.status }));
+          grid.setRows(this.filteredDeliveries() as unknown as SicGridRowData[], { totalElements }, requestId);
         },
         error: () => {
           // No approval status or not submitted yet
@@ -124,15 +144,17 @@ export class Pmdt14Component implements OnInit {
     });
   }
 
-  onSearch(event: Event): void {
+  onSearch(event: Event, grid: SicGridPanelComponent): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.syncFiltersToUrl();
+    grid.reload();
   }
 
-  clearSearch(): void {
+  clearSearch(grid: SicGridPanelComponent): void {
     this.searchTerm.set('');
     this.syncFiltersToUrl();
+    grid.reload();
   }
 
   readonly statusOptions = [
@@ -144,17 +166,11 @@ export class Pmdt14Component implements OnInit {
     { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ' },
   ];
 
-  onFilterChange(value: any): void {
+  onFilterChange(value: any, grid: SicGridPanelComponent): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.syncFiltersToUrl();
-  }
-
-  onPageChange(p: number): void {
-    if (p < 1 || p > this.totalPages()) return;
-    this.page.set(p);
-    this.syncFiltersToUrl();
-    this.loadData();
+    grid.reload();
   }
 
   goBack(): void {
@@ -204,14 +220,14 @@ export class Pmdt14Component implements OnInit {
       });
   }
 
-  onDelete(id?: string): void {
+  onDelete(id: string | undefined, grid: SicGridPanelComponent): void {
     if (!id) return;
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบเอกสารส่งมอบนี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
             this.dialog.success('สำเร็จ', 'ลบเอกสารส่งมอบเรียบร้อย');
-            this.loadData();
+            grid.reload();
           },
           error: (err) => {
             this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');

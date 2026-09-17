@@ -18,10 +18,9 @@ import { forkJoin, Observable } from 'rxjs';
 import { finalize, map } from 'rxjs/operators';
 
 import { environment } from '../../../../../../environments/environment';
-import { SicButtonComponent } from 'sic-ng';
+import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from 'sic-ng';
-import { SicPaginationComponent } from '../../../../../core/component/sic-pagination/sic-pagination.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { burt03Service } from '../../burt03/burt03.service';
@@ -108,7 +107,7 @@ export class burt02AService {
     ReactiveFormsModule,
     RouterModule,
     SicComboboxComponent,
-    SicPaginationComponent,
+    SicGridPanelComponent,
   ],
   templateUrl: './burt02A.component.html',
   styleUrls: ['./burt02A.component.css'],
@@ -165,17 +164,41 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
 
   totalItems = computed(() => this.filteredModules().length);
 
-  paginatedModules = computed(() => {
-    const list = this.filteredModules();
-    const page = this.currentPage();
-    const size = this.pageSize();
-    const start = (page - 1) * size;
-    return list.slice(start, start + size);
-  });
+  gridConfig: SicGridPanelConfig = {
+    id: 'moduleId',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'Program / Module', name: 'moduleName', type: 'moduleInfo', minWidth: 180 },
+      { label: 'Active', name: 'isActive', type: 'permCheckbox', align: 'center', minWidth: 90 },
+      { label: 'Add', name: 'isAdd', type: 'permCheckbox', align: 'center', minWidth: 90 },
+      { label: 'Save', name: 'isSave', type: 'permCheckbox', align: 'center', minWidth: 90 },
+      { label: 'Delete', name: 'isRemove', type: 'permCheckbox', align: 'center', minWidth: 90 },
+      { label: 'Print', name: 'isPrint', type: 'permCheckbox', align: 'center', minWidth: 90 },
+      { label: 'Search', name: 'isSearch', type: 'permCheckbox', align: 'center', minWidth: 90 },
+      { label: 'Actions', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 150 },
+    ],
+  };
 
-  onPageChange(page: number) {
-    this.currentPage.set(page);
-    this.cdr.markForCheck();
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    const list = this.filteredModules();
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
+  }
+
+  // เช็คค่าปัจจุบันจาก modules() สด ๆ เสมอ — แถวใน grid เป็น clone ตอน setRows() ไม่อัปเดตเองตอน togglePerm()
+  isChecked(moduleId: string, permKey: 'isAdd' | 'isSave' | 'isRemove' | 'isPrint' | 'isSearch' | 'isActive'): boolean {
+    return !!this.modules().find((m) => m.moduleId === moduleId)?.[permKey];
   }
 
   pageDirty = (): boolean => {
@@ -183,21 +206,21 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
     return this.initialModulesSnapshot() !== JSON.stringify(this.modules());
   };
 
-  onSearch(event: Event) {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch() {
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  onFilterGroupChange(value: any) {
+  onFilterGroupChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterGroup.set(val || 'all');
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
   ngOnInit(): void {

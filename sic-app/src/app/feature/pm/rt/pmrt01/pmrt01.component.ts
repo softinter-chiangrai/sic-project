@@ -8,6 +8,7 @@ import {
   inject,
   OnInit,
   signal,
+  ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -20,13 +21,13 @@ import { FormsModule } from '@angular/forms';
 import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmrt01',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmrt01.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -44,8 +45,6 @@ export class Pmrt01Component implements OnInit {
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('customerCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
   protected customers = signal<CustomerModel[]>([]);
   protected totalItems = signal(0);
@@ -54,19 +53,37 @@ export class Pmrt01Component implements OnInit {
   // guard: ป้องกัน loadCustomers() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
   private syncingUrl = false;
 
-  // ===== Computed =====
-  protected paginatedCustomers = computed(() => {
-    return this.customers();
-  });
+  // ===== Grid =====
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    defaultSortField: 'customerCode',
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'รหัส', name: 'customerCode', type: 'code', sortable: true, minWidth: 100 },
+      { label: 'ชื่อบริษัท', name: 'companyNameEn', type: 'companyInfo', sortable: true, minWidth: 220 },
+      { label: 'อีเมล', name: 'email', type: 'emailLink', sortable: true, minWidth: 200 },
+      { label: 'เบอร์โทร', name: 'phoneNumber', type: 'phoneText', minWidth: 120 },
+      { label: 'สถานะ', name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+    ],
+  };
+
+  // resolver อาจ preload ข้อมูลหน้าแรกมาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
+  private initialResolverData: { data: CustomerModel[]; totalElements: number } | null = null;
+
+  // guard: ป้องกัน handleGridLoad ยิงซ้ำตอน mount ครั้งแรกถ้ามี resolver data แล้ว แต่ businessId ยังไม่พร้อมจาก localStorage
+  private hasResolverData = false;
 
   ngOnInit() {
     this.businessId = localStorage.getItem('businessId') || '';
     const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
     if (resolved && resolved.data) {
-      this.customers.set(resolved.data || []);
-      this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
+      this.hasResolverData = true;
+      this.initialResolverData = { data: resolved.data || [], totalElements: resolved.pageable?.totalElements || resolved.data.length || 0 };
     }
 
     this.route.queryParams.subscribe((params) => {
@@ -79,33 +96,58 @@ export class Pmrt01Component implements OnInit {
       if (params['status'] !== undefined) this.filterStatus.set(params['status']);
       if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
 
-      if ((!resolved || !resolved.data) && this.businessId) {
-        this.loadCustomers();
+      // ข้ามรอบแรก: grid จะ mount และยิง loadData เองอัตโนมัติ (ใช้ resolver data ถ้ามี) — รอบถัดไปจาก URL เปลี่ยน (เช่นปุ่ม back) ต้อง reload เอง
+      if (this.gridRef) {
+        this.gridRef.reload();
       }
     });
   }
 
-  loadCustomers() {
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    if (this.hasResolverData && this.initialResolverData) {
+      const { data, totalElements } = this.initialResolverData;
+      this.hasResolverData = false;
+      this.customers.set(data);
+      this.totalItems.set(totalElements);
+      grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+      return;
+    }
+
     this.isLoading.set(true);
-    const page = this.currentPage() - 1;
+    this.currentPage.set(request.pageNumber);
+    this.syncFiltersToUrl();
+    const page = request.pageNumber - 1;
     this.service
       .getCustomers(
         this.businessId,
         page,
-        this.pageSize(),
+        request.pageSize,
         this.searchTerm() || undefined,
-        this.sortBy() || undefined,
-        this.sortDir()
+        request.sortField ?? 'customerCode',
+        request.sortDescending ? 'desc' : 'asc'
       )
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (pageData) => {
-          this.customers.set(pageData.data || []);
-          this.totalItems.set(pageData.pageable?.totalElements || 0);
+          const data = pageData.data || [];
+          const totalElements = pageData.pageable?.totalElements || 0;
+          this.customers.set(data);
+          this.totalItems.set(totalElements);
+          grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
         },
         error: (err) => {
           console.error('Load customers error', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
         },
       });
   }
@@ -126,19 +168,17 @@ export class Pmrt01Component implements OnInit {
   }
 
   // ===== Event Handlers =====
-  onSearch(event: Event) {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadCustomers();
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch() {
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadCustomers();
+    this.reloadFromPage1(grid);
   }
 
   readonly statusOptions = [
@@ -146,29 +186,11 @@ export class Pmrt01Component implements OnInit {
     { value: 'inactive', text: 'ไม่ใช้งาน' },
   ];
 
-  onFilterChange(value: any) {
+  onFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadCustomers();
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.loadCustomers();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.syncFiltersToUrl();
-    this.loadCustomers();
+    this.reloadFromPage1(grid);
   }
 
   goToAdd() {
@@ -193,12 +215,12 @@ export class Pmrt01Component implements OnInit {
     this.navigation.navigate(['/feature/pm/customer', id, 'edit']);
   }
 
-  toggleActive(customer: CustomerModel) {
+  toggleActive(customer: CustomerModel, grid: SicGridPanelComponent) {
     if (!customer.id) return;
     const updated = { ...customer, isActive: !customer.isActive };
     this.service.updateCustomer(customer.id, updated).subscribe({
       next: () => {
-        this.loadCustomers();
+        grid.reload();
         this.dialog.success(
           'อัปเดตสถานะสำเร็จ',
           `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`,
@@ -210,7 +232,7 @@ export class Pmrt01Component implements OnInit {
     });
   }
 
-  deleteCustomer(id: string | undefined) {
+  deleteCustomer(id: string | undefined, grid: SicGridPanelComponent) {
     if (!id) {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
       return;
@@ -219,7 +241,7 @@ export class Pmrt01Component implements OnInit {
       if (confirmed) {
         this.service.deleteCustomer(id).subscribe({
           next: () => {
-            this.loadCustomers();
+            grid.reload();
             this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
           },
           error: (err) => {

@@ -16,12 +16,12 @@ import { resolveProjectId, resolveRequirementId } from '../../../../core/utils/r
 import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicPaginationComponent],
+    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })
@@ -43,7 +43,25 @@ export class Pmdt07Component implements OnInit {
     searchTerm = signal('');
     filterStatus = signal('all');
 
-    totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+    gridConfig: SicGridPanelConfig = {
+        id: 'id',
+        selectable: false,
+        showToolbar: false,
+        pageSize: this.pageSize(),
+        column: [
+            { label: 'รหัส', name: 'specificationCode', type: 'code', minWidth: 100 },
+            { label: 'ชื่อเรื่อง', name: 'title', type: 'text', minWidth: 200 },
+            { label: 'ประเภท', name: 'specificationType', type: 'typeTag', minWidth: 140 },
+            { label: 'เวอร์ชัน', name: 'version', type: 'versionText', minWidth: 80 },
+            { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
+            { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
+            { label: 'Manday', name: 'estimatedManday', type: 'mandayText', minWidth: 80 },
+            { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+        ],
+    };
+
+    // resolver อาจ preload ข้อมูลหน้าแรกมาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
+    private initialResolverData: { data: PmSpecificationModel[]; totalElements: number } | null = null;
 
     ngOnInit(): void {
         const qReqId = this.route.snapshot.queryParams['requirementId'];
@@ -79,11 +97,7 @@ export class Pmdt07Component implements OnInit {
         const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
         if (resolved && resolved.data) {
             const data = resolved.data || [];
-            this.specs.set(data);
-            this.totalItems.set(resolved.pageable?.totalElements || data.length || 0);
-            this.loadApprovalStatuses(data);
-        } else {
-            this.loadData();
+            this.initialResolverData = { data, totalElements: resolved.pageable?.totalElements || data.length || 0 };
         }
     }
 
@@ -101,8 +115,30 @@ export class Pmdt07Component implements OnInit {
         });
     }
 
-    loadData(): void {
+    // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+    private reloadFromPage1(grid: SicGridPanelComponent): void {
+        if (grid.currentPage === 1) {
+            grid.reload();
+        } else {
+            grid.goToPage(1);
+        }
+    }
+
+    handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+        if (this.initialResolverData) {
+            const { data, totalElements } = this.initialResolverData;
+            this.initialResolverData = null;
+            this.specs.set(data);
+            this.totalItems.set(totalElements);
+            grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+            this.loadApprovalStatuses(data, grid, request.requestId);
+            return;
+        }
+
         this.isLoading.set(true);
+        this.currentPage.set(request.pageNumber);
+        this.syncFiltersToUrl();
+
         const requirementId = resolveRequirementId(this.route, this.customerState);
         const projectId = resolveProjectId(this.route, this.customerState);
         const params = {
@@ -110,8 +146,8 @@ export class Pmdt07Component implements OnInit {
             requirementId: requirementId || undefined,
             keyword: this.searchTerm() || undefined,
             status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
-            page: this.currentPage(),
-            size: this.pageSize(),
+            page: request.pageNumber,
+            size: request.pageSize,
             sortBy: 'createdDate',
             sortDirection: 'desc',
         };
@@ -121,19 +157,22 @@ export class Pmdt07Component implements OnInit {
             .subscribe({
                 next: (res: PaginationResponse<PmSpecificationModel>) => {
                     const data = res.data || [];
+                    const totalElements = res.pageable?.totalElements || 0;
                     this.specs.set(data);
-                    this.totalItems.set(res.pageable?.totalElements || 0);
-                    this.loadApprovalStatuses(data);
+                    this.totalItems.set(totalElements);
+                    grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+                    this.loadApprovalStatuses(data, grid, request.requestId);
                 },
                 error: () => {
                     this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
                     this.specs.set([]);
                     this.totalItems.set(0);
+                    grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
                 },
             });
     }
 
-    loadApprovalStatuses(specifications: PmSpecificationModel[]): void {
+    loadApprovalStatuses(specifications: PmSpecificationModel[], grid: SicGridPanelComponent, requestId: number): void {
         specifications.forEach((spec) => {
             if (!spec.id) return;
             this.approvalService.getDocumentStatus('SPECIFICATION', spec.id).subscribe({
@@ -143,6 +182,7 @@ export class Pmdt07Component implements OnInit {
                             item.id === spec.id ? { ...item, approvalStatus: approval.status } : item
                         )
                     );
+                    grid.setRows(this.specs() as unknown as SicGridRowData[], { totalElements: this.totalItems() }, requestId);
                 },
                 error: () => {
                     // ไม่มีสถานะอนุมัติ ปล่อย null
@@ -151,19 +191,15 @@ export class Pmdt07Component implements OnInit {
         });
     }
 
-    onSearch(event: Event): void {
+    onSearch(event: Event, grid: SicGridPanelComponent): void {
         const input = event.target as HTMLInputElement;
         this.searchTerm.set(input.value);
-        this.currentPage.set(1);
-        this.syncFiltersToUrl();
-        this.loadData();
+        this.reloadFromPage1(grid);
     }
 
-    clearSearch(): void {
+    clearSearch(grid: SicGridPanelComponent): void {
         this.searchTerm.set('');
-        this.currentPage.set(1);
-        this.syncFiltersToUrl();
-        this.loadData();
+        this.reloadFromPage1(grid);
     }
 
     readonly statusOptions = [
@@ -174,19 +210,10 @@ export class Pmdt07Component implements OnInit {
         { value: 'Changed', text: 'เปลี่ยนแปลง' },
     ];
 
-    onFilterChange(value: any): void {
+    onFilterChange(value: any, grid: SicGridPanelComponent): void {
         const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
         this.filterStatus.set(val || 'all');
-        this.currentPage.set(1);
-        this.syncFiltersToUrl();
-        this.loadData();
-    }
-
-    onPageChange(page: number): void {
-        if (page < 1 || page > this.totalPages()) return;
-        this.currentPage.set(page);
-        this.syncFiltersToUrl();
-        this.loadData();
+        this.reloadFromPage1(grid);
     }
 
     goToAdd(): void {
@@ -230,14 +257,14 @@ export class Pmdt07Component implements OnInit {
             });
     }
 
-    deleteSpec(id: string): void {
+    deleteSpec(id: string, grid: SicGridPanelComponent): void {
         this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
             .then((ok) => {
                 if (ok) {
                     this.service.delete(id).subscribe({
                         next: () => {
                             this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
-                            this.loadData();
+                            grid.reload();
                         },
                         error: (err) => {
                             this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');

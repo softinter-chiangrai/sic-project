@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -13,11 +13,12 @@ import { apiBaseUrl } from '../../../../core/config/api.config';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { ApprovalService } from '../pmdt03/approval.service';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt15',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmdt15.component.html',
   styleUrls: ['./pmdt15.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -57,6 +58,24 @@ export class Pmdt15Component implements OnInit {
     { label: 'เผยแพร่แล้ว', value: 'PUBLISHED' },
   ];
 
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
+
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
+    column: [
+      { label: 'รหัสคู่มือ', name: 'manualCode', type: 'code', minWidth: 140 },
+      { label: 'ชื่อคู่มือ', name: 'manualTitle', type: 'text', minWidth: 200 },
+      { label: 'ประเภท', name: 'manualType', type: 'typeTag', minWidth: 140 },
+      { label: 'เวอร์ชัน', name: 'version', type: 'versionText', align: 'center', minWidth: 90 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 120 },
+      { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 100 },
+    ],
+  };
+
   filteredManuals = computed(() => {
     let list = this.manuals();
     const search = this.searchTerm().trim().toLowerCase();
@@ -86,12 +105,13 @@ export class Pmdt15Component implements OnInit {
     this.route.queryParams.subscribe((params) => {
       const qProjectId = params['projectId'];
       this.projectId.set(qProjectId || null);
-      this.loadData();
       this.cdr.markForCheck();
+      // ครั้งแรก grid ยัง mount ไม่เสร็จ (จะยิง loadData เองอัตโนมัติ) — ครั้งถัดไปเมื่อ projectId เปลี่ยนต้อง reload เอง
+      this.gridRef?.reload();
     });
   }
 
-  loadData(): void {
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.isLoading.set(true);
     this.service
       .getPaging({
@@ -105,17 +125,19 @@ export class Pmdt15Component implements OnInit {
           this.manuals.set(items);
           this.totalElements.set(res.pageable?.totalElements || 0);
           this.isLoading.set(false);
-          this.loadApprovalStatuses(items);
+          grid.setRows(this.filteredManuals() as unknown as SicGridRowData[], { totalElements: items.length }, request.requestId);
+          this.loadApprovalStatuses(items, grid, request.requestId);
           this.cdr.markForCheck();
         },
         error: () => {
           this.isLoading.set(false);
           this.cdr.markForCheck();
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
         },
       });
   }
 
-  loadApprovalStatuses(manuals: PmUserManualModel[]): void {
+  loadApprovalStatuses(manuals: PmUserManualModel[], grid: SicGridPanelComponent, requestId: number): void {
     manuals.forEach((manual) => {
       if (!manual.id) return;
       this.approvalService.getDocumentStatus('USER_MANUAL', manual.id).subscribe({
@@ -125,6 +147,7 @@ export class Pmdt15Component implements OnInit {
               item.id === manual.id ? { ...item, approvalStatus: approval.status } : item
             )
           );
+          grid.setRows(this.filteredManuals() as unknown as SicGridRowData[], { totalElements: this.filteredManuals().length }, requestId);
           this.cdr.markForCheck();
         },
         error: () => {
@@ -132,6 +155,10 @@ export class Pmdt15Component implements OnInit {
         },
       });
     });
+  }
+
+  onFilterSignalChange(): void {
+    this.gridRef?.reload();
   }
 
   goToAdd(): void {
@@ -168,13 +195,13 @@ export class Pmdt15Component implements OnInit {
     }
   }
 
-  onDelete(id: string): void {
+  onDelete(id: string, grid: SicGridPanelComponent): void {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบระบุคู่มือนี้ใช่หรือไม่?').then((confirmed: boolean) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
             this.dialog.success('สำเร็จ', 'ลบคู่มือเรียบร้อยแล้ว');
-            this.loadData();
+            grid.reload();
           },
           error: (err) => {
             this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');

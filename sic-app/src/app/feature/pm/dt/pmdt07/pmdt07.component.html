@@ -30,11 +30,11 @@
                 class="w-full h-[3.15rem] pl-9 pr-9 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-[0.95rem] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
                 placeholder="ค้นหารหัส, ชื่อ, โมดูล..."
                 [value]="searchTerm()"
-                (input)="onSearch($event)"
+                (input)="onSearch($event, grid)"
             />
             @if (searchTerm()) {
                 <button
-                    (click)="clearSearch()"
+                    (click)="clearSearch(grid)"
                     class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
                 >
                     <i class="bi bi-x-lg text-xs"></i>
@@ -46,120 +46,81 @@
             <sic-combobox
                 [options]="statusOptions"
                 [ngModel]="filterStatus()"
-                (ngModelChange)="onFilterChange($event)"
+                (ngModelChange)="onFilterChange($event, grid)"
                 placeholder="📊 ทุกสถานะ"
                 [clearable]="true"
             ></sic-combobox>
         </div>
     </div>
 
-    <!-- LOADING -->
-    @if (isLoading()) {
-        <div class="flex flex-col items-center justify-center py-12 gap-3">
-            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-        </div>
-    }
+    <!-- GRID -->
+    <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
+        <sic-gridpanel
+            #grid
+            [config]="gridConfig"
+            (loadData)="handleGridLoad($event, grid)"
+        >
+            <ng-template sicGridPanelTemplate="code" section="cell" let-row>
+                @let r = $any(row);
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+                    {{ r.specificationCode }}
+                </span>
+            </ng-template>
 
-    <!-- TABLE -->
-    @if (!isLoading()) {
-        <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-            <table class="w-full text-sm">
-                <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-                    <tr>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">รหัส</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[200px]">ชื่อเรื่อง</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[140px]">ประเภท</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">เวอร์ชัน</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">สถานะ</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">อนุมัติ</th>
-                        <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]">Manday</th>
-                        <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[160px]">จัดการ</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-[var(--border)]">
-                    @for (spec of specs(); track spec.id) {
-                        <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-                            <td class="px-4 py-3">
-                                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                                    {{ spec.specificationCode }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                <div>
-                                    <div class="font-medium text-[var(--text-active)]">{{ spec.title }}</div>
+            <ng-template sicGridPanelTemplate="typeTag" section="cell" let-row>
+                @let r = $any(row);
+                <span class="inline-block px-2 py-0.5 rounded text-xs font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 dark:text-indigo-400">
+                    {{ r.specificationType || r.specType || '-' }}
+                </span>
+            </ng-template>
 
-                                </div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span class="inline-block px-2 py-0.5 rounded text-xs font-medium text-indigo-600 bg-indigo-50 dark:bg-indigo-950/30 dark:text-indigo-400">
-                                    {{ spec.specificationType || spec.specType || '-' }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm">
-                                {{ spec.version ? (spec.version.startsWith('v') || spec.version.startsWith('V') ? spec.version : 'v' + spec.version) : 'v1.0' }}
-                            </td>
-                            <td class="px-4 py-3">
-                                <span [class]="getStatusClass(spec.status || 'Draft') + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                                    {{ getStatusText(spec.status || 'Draft') }}
-                                </span>
-                            </td>
-                            <td class="px-4 py-3">
-                                @if (spec.status?.toUpperCase() === 'CHANGED') {
-                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                        รอส่งอนุมัติ
-                                    </span>
-                                } @else if (spec.status?.toUpperCase() === 'DRAFT') {
-                                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                                        ยังไม่อนุมัติ
-                                    </span>
-                                } @else if (spec.approvalStatus) {
-                                    <span [class]="getApprovalStatusClass(spec.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                                        {{ getApprovalStatusText(spec.approvalStatus) }}
-                                    </span>
-                                } @else {
-                                    <span class="text-xs text-[var(--text-muted)]">-</span>
-                                }
-                            </td>
-                            <td class="px-4 py-3 text-[var(--text-active)] font-mono">
-                                {{ spec.estimatedManday || 0 }}
-                            </td>
-                            <td class="px-4 py-3 text-center">
-                                <sic-table-actions
-                                    (onView)="goToView(spec.id!)"
-                                    (onPrint)="printDocument(spec)"
-                                    (onEdit)="goToEdit(spec.id!)"
-                                    (onDelete)="deleteSpec(spec.id!)"
-                                ></sic-table-actions>
-                            </td>
-                        </tr>
-                    } @empty {
-                        <tr>
-                            <td colspan="8" class="px-4 py-12 text-center">
-                                <div class="flex flex-col items-center gap-3">
-                                    <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                                    <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Specification</p>
-                                    <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Specification ใหม่</p>
-                                    <button
-                                        (click)="goToAdd()"
-                                        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                                    >
-                                        <i class="bi bi-plus-lg"></i> เพิ่ม Specification
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        </div>
-    }
+            <ng-template sicGridPanelTemplate="versionText" section="cell" let-row>
+                @let r = $any(row);
+                <span class="text-[var(--text-muted)] font-mono text-sm">
+                    {{ r.version ? (r.version.startsWith('v') || r.version.startsWith('V') ? r.version : 'v' + r.version) : 'v1.0' }}
+                </span>
+            </ng-template>
 
-    <!-- PAGINATION -->
-    <sic-pagination
-        [currentPage]="currentPage()"
-        [pageSize]="pageSize()"
-        [totalItems]="totalItems()"
-        (pageChange)="onPageChange($event)"
-    ></sic-pagination>
+            <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+                @let r = $any(row);
+                <span [class]="getStatusClass(r.status || 'Draft') + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                    {{ getStatusText(r.status || 'Draft') }}
+                </span>
+            </ng-template>
+
+            <ng-template sicGridPanelTemplate="approvalBadge" section="cell" let-row>
+                @let r = $any(row);
+                @if (r.status?.toUpperCase() === 'CHANGED') {
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                        รอส่งอนุมัติ
+                    </span>
+                } @else if (r.status?.toUpperCase() === 'DRAFT') {
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                        ยังไม่อนุมัติ
+                    </span>
+                } @else if (r.approvalStatus) {
+                    <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+                        {{ getApprovalStatusText(r.approvalStatus) }}
+                    </span>
+                } @else {
+                    <span class="text-xs text-[var(--text-muted)]">-</span>
+                }
+            </ng-template>
+
+            <ng-template sicGridPanelTemplate="mandayText" section="cell" let-row>
+                @let r = $any(row);
+                <span class="text-[var(--text-active)] font-mono">{{ r.estimatedManday || 0 }}</span>
+            </ng-template>
+
+            <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+                @let r = $any(row);
+                <sic-table-actions
+                    (onView)="goToView(r.id)"
+                    (onPrint)="printDocument(r)"
+                    (onEdit)="goToEdit(r.id)"
+                    (onDelete)="deleteSpec(r.id, grid)"
+                ></sic-table-actions>
+            </ng-template>
+        </sic-gridpanel>
+    </div>
 </div>

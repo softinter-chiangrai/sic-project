@@ -17,7 +17,7 @@ import { BusinessService } from '../../../../core/services/business.service';
 import { Pmdt10Service } from './pmdt10.service';
 import { Pmdt10AComponent } from './pmdt10A/pmdt10A.component';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
-import { SicAvatarComponent } from 'sic-ng';
+import { SicAvatarComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
@@ -31,6 +31,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     SicAvatarComponent,
     SicComboboxComponent,
     SicKanbanComponent,
+    SicGridPanelComponent,
     Pmdt10AComponent,
   ],
   templateUrl: './pmdt10.component.html',
@@ -369,6 +370,61 @@ export class Pmdt10Component implements OnInit {
     this.selectedPriority.set(null);
     this.selectedAssignee.set(null);
     this.searchQuery.set('');
+    this.gridRef?.reload();
+  }
+
+  onSearchQueryChange(value: string): void {
+    this.searchQuery.set(value);
+    this.gridRef?.reload();
+  }
+
+  onSpecFilterChange(value: any): void {
+    this.selectedSpecId.set(value);
+    this.gridRef?.reload();
+  }
+
+  onWpFilterChange(value: any): void {
+    this.selectedWpId.set(value);
+    this.gridRef?.reload();
+  }
+
+  onPriorityFilterChange(value: any): void {
+    this.selectedPriority.set(value);
+    this.gridRef?.reload();
+  }
+
+  onAssigneeFilterChange(value: any): void {
+    this.selectedAssignee.set(value);
+    this.gridRef?.reload();
+  }
+
+  // ===== List view grid (lazy:false — filteredTasks() ทั้งชุดถูกกรอง/คำนวณในเครื่องอยู่แล้ว) =====
+  // @if(viewType()==='list') block-scopes the #grid template ref — ต้องใช้ ViewChild แทน
+  // เพื่อให้ toolbar ตัวกรอง (นอก @if) เรียก reload ได้แม้ grid ยังไม่ mount (โหมด kanban)
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
+
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
+    column: [
+      { label: 'รหัส Task', name: 'taskCode', type: 'taskCode', minWidth: 100 },
+      { label: 'ชื่อ Task', name: 'taskName', type: 'taskName', minWidth: 150 },
+      { label: 'Specification (Trace)', name: 'specificationCode', type: 'specTrace', minWidth: 160 },
+      { label: 'Work Package', name: 'workPackageName', type: 'wpName', minWidth: 120 },
+      { label: 'ผู้รับผิดชอบ', name: 'assignees', type: 'assigneeList', minWidth: 160 },
+      { label: 'Manday (จริง/แผน)', name: 'actualManday', type: 'mandayText', minWidth: 120 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
+      { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', minWidth: 100 },
+      { label: 'กำหนดส่ง', name: 'endDate', type: 'endDateText', minWidth: 110 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'right', minWidth: 60 },
+    ],
+  };
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    const list = this.filteredTasks();
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
   }
 
   // Modal Actions
@@ -401,7 +457,7 @@ export class Pmdt10Component implements OnInit {
     this.allTasks.set(list);
   }
 
-  deleteTask(task: TaskResponse, event?: Event): void {
+  deleteTask(task: TaskResponse, event?: Event, grid?: SicGridPanelComponent): void {
     if (event) event.stopPropagation();
     this.dialog
       .confirm('ยืนยันการลบ', `คุณต้องการลบ Task "${task.taskName}" (${task.taskCode}) ใช่หรือไม่?`)
@@ -411,6 +467,7 @@ export class Pmdt10Component implements OnInit {
           next: () => {
             this.dialog.success('สำเร็จ', 'ลบ Task เรียบร้อย');
             this.allTasks.set(this.allTasks().filter((t) => t.id !== task.id));
+            grid?.reload();
           },
           error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
         });

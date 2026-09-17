@@ -3,7 +3,6 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
-  effect,
   inject,
   OnInit,
   signal,
@@ -19,13 +18,12 @@ import { ApprovalService } from './approval.service';
 import type { Approval } from './approval.model';
 import { ApprovalItem } from './pmdt03.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
-import { SicSkeletonComponent } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt03',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent, SicSkeletonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmdt03.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -43,8 +41,6 @@ export class Pmdt03Component implements OnInit {
   protected filterProject = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('requestedDate');
-  protected sortDir = signal<'asc' | 'desc'>('desc');
   protected isLoading = signal(false);
   protected viewMode = signal<'pending' | 'myRequests' | 'approvedHistory'>('pending');
 
@@ -52,8 +48,7 @@ export class Pmdt03Component implements OnInit {
   protected approvals = signal<ApprovalItem[]>([]);
   protected totalElements = signal(0);
 
-  // ===== Bulk Selection (เฉพาะแท็บ "รอฉันอนุมัติ" เท่านั้น) =====
-  protected selectedIds = signal<Set<string>>(new Set());
+  // ===== Bulk Selection (เฉพาะแท็บ "รอฉันอนุมัติ" เท่านั้น) — ใช้ selection ในตัวของ grid =====
   protected isBulkActing = signal(false);
 
   // ===== Column Visibility =====
@@ -66,18 +61,30 @@ export class Pmdt03Component implements OnInit {
   protected visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   protected showColumnMenu = signal(false);
 
-  // guard: ป้องกัน loadApprovals() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  // guard: ป้องกัน reload ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
   private syncingUrl = false;
-  // guard: ข้าม effect รอบแรกตอนสร้าง component เพราะ ngOnInit (queryParams) จะเป็นผู้ trigger การโหลดข้อมูลครั้งแรกแทน
-  // เพื่อให้ค่าที่อ่านจาก query params (page/filters) ไม่ถูก effect รอบแรกเขียนทับ
-  private viewModeInitialized = false;
 
   // ===== Computed =====
   protected totalItems = computed(() => this.totalElements());
 
-  protected paginatedApprovals = computed(() => this.approvals());
-
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  protected gridConfig = computed<SicGridPanelConfig>(() => {
+    const visible = this.visibleColumns();
+    return {
+      id: 'id',
+      selectable: this.viewMode() === 'pending',
+      showToolbar: false,
+      pageSize: this.pageSize(),
+      column: [
+        { label: 'ประเภท/รหัส', name: 'documentCode', type: 'docInfo', minWidth: 120 },
+        { label: 'รายการ', name: 'title', type: 'titleInfo', minWidth: 180 },
+        { label: 'โครงการ', name: 'projectName', type: 'text', hidden: !visible.has('projectName'), minWidth: 120 },
+        { label: 'ผู้ขอ', name: 'requester', type: 'text', hidden: !visible.has('requester'), minWidth: 100 },
+        { label: 'วันที่ขอ', name: 'requestedDate', type: 'dateInfo', hidden: !visible.has('requestedDate'), minWidth: 140 },
+        { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 110 },
+        { label: 'ดำเนินการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 120 },
+      ],
+    };
+  });
 
   // ===== Options =====
   readonly documentTypeOptions = [
@@ -131,21 +138,6 @@ export class Pmdt03Component implements OnInit {
     { id: '2', name: 'ระบบ HR' },
   ];
 
-  // ===== Lifecycle =====
-  constructor() {
-    effect(() => {
-      this.viewMode(); // trigger เมื่อ viewMode เปลี่ยน
-      if (!this.viewModeInitialized) {
-        // ข้ามรอบแรก: ngOnInit จะอ่าน query params แล้ว trigger การโหลดข้อมูลครั้งแรกเอง
-        this.viewModeInitialized = true;
-        return;
-      }
-      this.currentPage.set(1);
-      this.selectedIds.set(new Set());
-      this.loadApprovals();
-    });
-  }
-
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       if (this.syncingUrl) {
@@ -157,14 +149,30 @@ export class Pmdt03Component implements OnInit {
       if (params['status'] !== undefined) this.filterStatus.set(params['status']);
       if (params['type'] !== undefined) this.filterType.set(params['type']);
       if (params['project'] !== undefined) this.filterProject.set(params['project']);
-      if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
-
-      this.loadApprovals();
+      if (params['page'] !== undefined) {
+        const page = +params['page'] || 1;
+        this.currentPage.set(page);
+      }
     });
   }
 
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
+  setViewMode(mode: 'pending' | 'myRequests' | 'approvedHistory', grid: SicGridPanelComponent): void {
+    if (this.viewMode() === mode) return;
+    this.viewMode.set(mode);
+    this.reloadFromPage1(grid);
+  }
+
   // ===== Load Data =====
-  loadApprovals(): void {
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     const userId = this.authService.getUserId();
     if (!userId) {
       this.dialog.error('ไม่พบข้อมูลผู้ใช้', 'กรุณาเข้าสู่ระบบใหม่');
@@ -172,9 +180,11 @@ export class Pmdt03Component implements OnInit {
     }
 
     this.isLoading.set(true);
+    this.currentPage.set(request.pageNumber);
+    this.syncFiltersToUrl();
 
-    const page = this.currentPage() - 1; // backend ใช้ 0-based
-    const size = this.pageSize();
+    const page = request.pageNumber - 1; // backend ใช้ 0-based
+    const size = request.pageSize;
 
     const keyword = this.searchTerm().trim() || undefined;
     const documentType = this.filterType() !== 'all' ? this.filterType() : undefined;
@@ -194,13 +204,16 @@ export class Pmdt03Component implements OnInit {
       .subscribe({
         next: (response: PaginationResponse<Approval>) => {
           this.totalElements.set(response.pageable.totalElements);
-          this.approvals.set(response.data.map((approval) => this.mapApprovalToItem(approval)));
+          const items = response.data.map((approval) => this.mapApprovalToItem(approval));
+          this.approvals.set(items);
+          grid.setRows(items as unknown as SicGridRowData[], { totalElements: response.pageable.totalElements }, request.requestId);
         },
         error: (error: any) => {
           console.error('Load approvals error:', error);
           this.approvals.set([]);
           this.totalElements.set(0);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการอนุมัติได้');
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
         },
       });
   }
@@ -256,114 +269,59 @@ export class Pmdt03Component implements OnInit {
   }
 
   // ===== Actions =====
-  onSearch(event: Event): void {
+  onSearch(event: Event, grid: SicGridPanelComponent): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadApprovals();
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch(): void {
+  clearSearch(grid: SicGridPanelComponent): void {
     this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadApprovals();
+    this.reloadFromPage1(grid);
   }
 
-  onFilterChange(value: any): void {
+  onFilterChange(value: any, grid: SicGridPanelComponent): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadApprovals();
+    this.reloadFromPage1(grid);
   }
 
-  onTypeChange(value: any): void {
+  onTypeChange(value: any, grid: SicGridPanelComponent): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterType.set(val || 'all');
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadApprovals();
+    this.reloadFromPage1(grid);
   }
 
-  onProjectChange(value: any): void {
+  onProjectChange(value: any, grid: SicGridPanelComponent): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterProject.set(val || 'all');
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadApprovals();
-  }
-
-  onSortChange(field: string): void {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.currentPage.set(1);
-    this.loadApprovals();
-  }
-
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.syncFiltersToUrl();
-    this.loadApprovals();
+    this.reloadFromPage1(grid);
   }
 
   goToApproval(id: string): void {
     this.router.navigate(['/feature/pm/approval', id]);
   }
 
-  // ===== Bulk Selection (เฉพาะแท็บ "รอฉันอนุมัติ") =====
-  toggleSelect(id: string): void {
-    this.selectedIds.update((set) => {
-      const next = new Set(set);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  isSelected(id: string): boolean {
-    return this.selectedIds().has(id);
-  }
-
-  isAllSelected(): boolean {
-    const items = this.paginatedApprovals();
-    return items.length > 0 && items.every((i) => this.selectedIds().has(i.id));
-  }
-
-  toggleSelectAll(): void {
-    this.selectedIds.set(
-      this.isAllSelected() ? new Set() : new Set(this.paginatedApprovals().map((i) => i.id)),
-    );
-  }
-
-  clearSelection(): void {
-    this.selectedIds.set(new Set());
-  }
-
-  bulkApprove(): void {
-    const ids = Array.from(this.selectedIds());
+  // ===== Bulk Selection (เฉพาะแท็บ "รอฉันอนุมัติ") — ใช้ grid.selectedRowIds ในตัว =====
+  bulkApprove(grid: SicGridPanelComponent): void {
+    const ids = Array.from(grid.selectedRowIds) as string[];
     if (ids.length === 0) return;
     this.dialog.confirm('ยืนยันการอนุมัติ', `คุณต้องการอนุมัติ ${ids.length} รายการที่เลือกใช่หรือไม่?`).then((confirmed) => {
       if (!confirmed) return;
-      this.runBulkAction(ids, (id) => this.approvalService.approve(id));
+      this.runBulkAction(ids, grid, (id) => this.approvalService.approve(id));
     });
   }
 
-  bulkReject(): void {
-    const ids = Array.from(this.selectedIds());
+  bulkReject(grid: SicGridPanelComponent): void {
+    const ids = Array.from(grid.selectedRowIds) as string[];
     if (ids.length === 0) return;
     this.dialog.confirm('ยืนยันการปฏิเสธ', `คุณต้องการปฏิเสธ ${ids.length} รายการที่เลือกใช่หรือไม่?`).then((confirmed) => {
       if (!confirmed) return;
-      this.runBulkAction(ids, (id) => this.approvalService.reject(id));
+      this.runBulkAction(ids, grid, (id) => this.approvalService.reject(id));
     });
   }
 
-  private runBulkAction(ids: string[], action: (id: string) => ReturnType<ApprovalService['approve']>): void {
+  private runBulkAction(ids: string[], grid: SicGridPanelComponent, action: (id: string) => ReturnType<ApprovalService['approve']>): void {
     this.isBulkActing.set(true);
     let remaining = ids.length;
     let failed = 0;
@@ -374,8 +332,7 @@ export class Pmdt03Component implements OnInit {
           remaining -= 1;
           if (remaining === 0) {
             this.isBulkActing.set(false);
-            this.clearSelection();
-            this.loadApprovals();
+            grid.reload();
             if (failed > 0) {
               this.dialog.error('ดำเนินการไม่สำเร็จบางรายการ', `${failed} รายการดำเนินการไม่สำเร็จ`);
             } else {

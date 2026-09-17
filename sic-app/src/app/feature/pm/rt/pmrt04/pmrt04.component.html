@@ -89,14 +89,14 @@
 
   <!-- PRESET TABS -->
   <div class="flex flex-wrap gap-2">
-    <button type="button" (click)="setPreset('all')"
+    <button type="button" (click)="setPreset('all', grid)"
       class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
       [class]="activePreset() === 'all'
         ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
         : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
       ทั้งหมด <span class="opacity-80">{{ totalItems() }}</span>
     </button>
-    <button type="button" (click)="setPreset('expiring')"
+    <button type="button" (click)="setPreset('expiring', grid)"
       class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
       [class]="activePreset() === 'expiring'
         ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
@@ -116,11 +116,11 @@
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
         placeholder="ค้นหาเลขสัญญา, ลูกค้า, ประเภท..."
         [value]="searchTerm()"
-        (input)="onSearch($event)"
+        (input)="onSearch($event, grid)"
       />
       @if (searchTerm()) {
         <button
-          (click)="clearSearch()"
+          (click)="clearSearch(grid)"
           class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
           <i class="bi bi-x-lg text-xs"></i>
@@ -132,7 +132,7 @@
       <sic-combobox
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
-        (ngModelChange)="onFilterChange($event)"
+        (ngModelChange)="onFilterChange($event, grid)"
         placeholder="📊 ทุกสถานะ"
         [clearable]="true"
       ></sic-combobox>
@@ -142,321 +142,149 @@
       <sic-combobox
         [options]="typeSelectOptions()"
         [ngModel]="filterType()"
-        (ngModelChange)="onTypeChange($event)"
+        (ngModelChange)="onTypeChange($event, grid)"
         placeholder="📋 ทุกประเภท"
         [clearable]="true"
       ></sic-combobox>
     </div>
   </div>
 
-  <!-- LOADING (Skeleton) -->
-  @if (isLoading()) {
-    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      @for (i of [1,2,3,4,5]; track i) {
-        <div class="border-b border-[var(--border)] px-4 py-3 last:border-b-0">
-          <sic-skeleton height="20px" width="100%"></sic-skeleton>
-        </div>
-      }
-    </div>
-  }
-
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div
-      class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm"
+  <!-- GRID -->
+  <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
+    <sic-gridpanel
+      #grid
+      [config]="gridConfig()"
+      (loadData)="handleGridLoad($event, grid)"
     >
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th class="px-4 py-3 w-10">
-              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="เลือกทั้งหมด" />
-            </th>
-            <th
-              (click)="onSortChange('contractNo')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
-              เลขสัญญา
-              @if (sortBy() === 'contractNo') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            @if (isColumnVisible('contractType')) {
-              <th
-                (click)="onSortChange('contractType')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[140px]"
-              >
-                ประเภท
-                @if (sortBy() === 'contractType') {
-                  <i
-                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                    [class.bi-chevron-up]="sortDir() === 'asc'"
-                    [class.bi-chevron-down]="sortDir() === 'desc'"
-                  ></i>
-                }
-              </th>
-            }
-            @if (isColumnVisible('customerName')) {
-              <th
-                (click)="onSortChange('customerName')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
-              >
-                ลูกค้า
-                @if (sortBy() === 'customerName') {
-                  <i
-                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                    [class.bi-chevron-up]="sortDir() === 'asc'"
-                    [class.bi-chevron-down]="sortDir() === 'desc'"
-                  ></i>
-                }
-              </th>
-            }
-            @if (isColumnVisible('projectName')) {
-              <th
-                (click)="onSortChange('projectName')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
-              >
-                โครงการ
-                @if (sortBy() === 'projectName') {
-                  <i
-                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                    [class.bi-chevron-up]="sortDir() === 'asc'"
-                    [class.bi-chevron-down]="sortDir() === 'desc'"
-                  ></i>
-                }
-              </th>
-            }
-            @if (isColumnVisible('contractValue')) {
-              <th
-                (click)="onSortChange('contractValue')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-              >
-                มูลค่า
-                @if (sortBy() === 'contractValue') {
-                  <i
-                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                    [class.bi-chevron-up]="sortDir() === 'asc'"
-                    [class.bi-chevron-down]="sortDir() === 'desc'"
-                  ></i>
-                }
-              </th>
-            }
-            @if (isColumnVisible('duration')) {
-              <th
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px] hidden md:table-cell"
-              >
-                ระยะเวลา
-              </th>
-            }
-            <th
-              (click)="onSortChange('signStatus')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              สถานะ
-              @if (sortBy() === 'signStatus') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            @if (isColumnVisible('approvalStatus')) {
-              <th
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
-              >
-                อนุมัติ
-              </th>
-            }
-            <th
-              class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[260px]"
-            >
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (contract of paginatedContracts(); track contract.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors" [class.bg-[rgba(59,130,246,0.06)]]="isSelected(contract.id)">
-              <td class="px-4 py-3">
-                <input type="checkbox" [checked]="isSelected(contract.id)" (change)="toggleSelect(contract.id)" [attr.aria-label]="'เลือก ' + contract.contractNo" />
-              </td>
-              <td class="px-4 py-3">
-                <span
-                  class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
-                >
-                  {{ contract.contractNo }}
-                </span>
-              </td>
-              @if (isColumnVisible('contractType')) {
-                <td class="px-4 py-3">
-                  <span class="text-[var(--text-active)]">{{ contract.contractType }}</span>
-                </td>
-              }
-              @if (isColumnVisible('customerName')) {
-                <td class="px-4 py-3">
-                  <span class="text-[var(--text-active)]">{{ contract.customerName }}</span>
-                </td>
-              }
-              @if (isColumnVisible('projectName')) {
-                <td class="px-4 py-3">
-                  @if (contract.projectName) {
-                    <button
-                      (click)="goToProject(contract.projectId)"
-                      class="text-[var(--crm-primary)] hover:underline transition-colors"
-                    >
-                      {{ contract.projectName }}
-                    </button>
-                  } @else {
-                    <span class="text-[var(--text-muted)]">-</span>
-                  }
-                </td>
-              }
-              @if (isColumnVisible('contractValue')) {
-                <td class="px-4 py-3 font-mono text-[var(--text-active)]">
-                  {{ formatCurrency(contract.contractValue) }}
-                </td>
-              }
-              @if (isColumnVisible('duration')) {
-                <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
-                  {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
-                </td>
-              }
-              <td class="px-4 py-3">
-                <span
-                  [class]="
-                    getStatusClass(contract.signStatus) +
-                    ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-                  "
-                >
-                  {{ getStatusText(contract.signStatus) }}
-                </span>
-              </td>
-              @if (isColumnVisible('approvalStatus')) {
-                <td class="px-4 py-3">
-                  @if (contract.signStatus === 'Changed') {
-                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                      รอส่งอนุมัติ
-                    </span>
-                  } @else if (contract.approvalStatus) {
-                    <span
-                      [class]="
-                        getApprovalStatusClass(contract.approvalStatus) +
-                        ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-                      "
-                    >
-                      {{ getApprovalStatusText(contract.approvalStatus) }}
-                    </span>
-                  } @else {
-                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                      ยังไม่อนุมัติ
-                    </span>
-                  }
-                </td>
-              }
-              <td class="px-4 py-3">
-                <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                  <!-- ปุ่มดูสรุปด่วน (Quick View Drawer) -->
-                  <button
-                    (click)="openQuickView(contract)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดูสรุปด่วน"
-                  >
-                    <i class="bi bi-layout-sidebar-inset"></i>
-                  </button>
+      <ng-template sicGridPanelTemplate="code" section="cell" let-row>
+        @let r = $any(row);
+        <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+          {{ r.contractNo }}
+        </span>
+      </ng-template>
 
-                  <!-- ปุ่มดูข้อมูล -->
-                  <button
-                    (click)="goToView(contract.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
-                    title="ดูข้อมูล"
-                  >
-                    <i class="bi bi-eye"></i>
-                  </button>
+      <ng-template sicGridPanelTemplate="projectLink" section="cell" let-row>
+        @let r = $any(row);
+        @if (r.projectName) {
+          <button
+            (click)="goToProject(r.projectId)"
+            class="text-[var(--crm-primary)] hover:underline transition-colors"
+          >
+            {{ r.projectName }}
+          </button>
+        } @else {
+          <span class="text-[var(--text-muted)]">-</span>
+        }
+      </ng-template>
 
-                  <!-- ปุ่มส่งออกเอกสาร PDF -->
-                  <button
-                    (click)="printContract(contract)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-                    title="ส่งออกเอกสาร PDF"
-                  >
-                    <i class="bi bi-printer"></i>
-                  </button>
+      <ng-template sicGridPanelTemplate="currencyText" section="cell" let-row>
+        @let r = $any(row);
+        <span class="font-mono text-[var(--text-active)]">{{ formatCurrency(r.contractValue) }}</span>
+      </ng-template>
 
-                  <!-- ปุ่มแก้ไข -->
-                  <button
-                    (click)="goToEdit(contract.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                    title="แก้ไข"
-                  >
-                    <i class="bi bi-pencil"></i>
-                  </button>
+      <ng-template sicGridPanelTemplate="dateRangeText" section="cell" let-row>
+        @let r = $any(row);
+        <span class="text-sm text-[var(--text-muted)] font-mono">
+          {{ formatDate(r.startDate) }} - {{ formatDate(r.endDate) }}
+        </span>
+      </ng-template>
 
-                  <!-- ปุ่มต่อสัญญา -->
-                  <button
-                    (click)="goToRenew(contract.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ต่อสัญญา"
-                  >
-                    <i class="bi bi-arrow-repeat text-sm"></i>
-                  </button>
+      <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getStatusClass(r.signStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getStatusText(r.signStatus) }}
+        </span>
+      </ng-template>
 
-                  <!-- ปุ่มลบสัญญา -->
-                  <button
-                    (click)="deleteContract(contract)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                    title="ลบสัญญา"
-                  >
-                    <i class="bi bi-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="12" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลสัญญา</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่มสัญญาใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่มสัญญา
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+      <ng-template sicGridPanelTemplate="approvalBadge" section="cell" let-row>
+        @let r = $any(row);
+        @if (r.signStatus === 'Changed') {
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+            รอส่งอนุมัติ
+          </span>
+        } @else if (r.approvalStatus) {
+          <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            {{ getApprovalStatusText(r.approvalStatus) }}
+          </span>
+        } @else {
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+            ยังไม่อนุมัติ
+          </span>
+        }
+      </ng-template>
 
-  <!-- PAGINATION -->
-  <sic-pagination
-    [currentPage]="currentPage()"
-    [pageSize]="pageSize()"
-    [totalItems]="totalItems()"
-    (pageChange)="onPageChange($event)"
-  ></sic-pagination>
+      <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+        @let r = $any(row);
+        <div class="flex items-center justify-center gap-1.5 flex-wrap">
+          <!-- ปุ่มดูสรุปด่วน (Quick View Drawer) -->
+          <button
+            (click)="openQuickView(r)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+            title="ดูสรุปด่วน"
+          >
+            <i class="bi bi-layout-sidebar-inset"></i>
+          </button>
+
+          <!-- ปุ่มดูข้อมูล -->
+          <button
+            (click)="goToView(r.id)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
+            title="ดูข้อมูล"
+          >
+            <i class="bi bi-eye"></i>
+          </button>
+
+          <!-- ปุ่มส่งออกเอกสาร PDF -->
+          <button
+            (click)="printContract(r)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
+            title="ส่งออกเอกสาร PDF"
+          >
+            <i class="bi bi-printer"></i>
+          </button>
+
+          <!-- ปุ่มแก้ไข -->
+          <button
+            (click)="goToEdit(r.id)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
+            title="แก้ไข"
+          >
+            <i class="bi bi-pencil"></i>
+          </button>
+
+          <!-- ปุ่มต่อสัญญา -->
+          <button
+            (click)="goToRenew(r.id)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+            title="ต่อสัญญา"
+          >
+            <i class="bi bi-arrow-repeat text-sm"></i>
+          </button>
+
+          <!-- ปุ่มลบสัญญา -->
+          <button
+            (click)="deleteContract(r, grid)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+            title="ลบสัญญา"
+          >
+            <i class="bi bi-trash"></i>
+          </button>
+        </div>
+      </ng-template>
+    </sic-gridpanel>
+  </div>
 
   <!-- BULK ACTION BAR -->
-  @if (selectedIds().size > 0) {
+  @if (grid.selectedRowIds.size > 0) {
     <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
       <span class="text-sm font-medium text-[var(--text-active)]">
-        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ selectedIds().size }} รายการ
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ grid.selectedRowIds.size }} รายการ
       </span>
-      <button type="button" (click)="bulkExportPdf()"
+      <button type="button" (click)="bulkExportPdf(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
         <i class="bi bi-file-earmark-pdf"></i> Export PDF ทั้งหมด
       </button>
-      <button type="button" (click)="clearSelection()"
+      <button type="button" (click)="grid.selectedRowIds.clear()"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
         <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
       </button>

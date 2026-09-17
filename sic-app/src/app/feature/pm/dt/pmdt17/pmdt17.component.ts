@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -12,11 +12,10 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
-import { SicSkeletonComponent } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt17',
@@ -27,9 +26,8 @@ import { SicSkeletonComponent } from 'sic-ng';
     FormsModule,
     SicTableActionsComponent,
     SicComboboxComponent,
-    SicPaginationComponent,
+    SicGridPanelComponent,
     SicDrawerComponent,
-    SicSkeletonComponent,
   ],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
@@ -64,8 +62,28 @@ export class Pmdt17Component implements OnInit {
     return url;
   });
 
-  // ===== Bulk Selection =====
-  selectedIds = signal<Set<string>>(new Set());
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
+
+  gridConfig = computed<SicGridPanelConfig>(() => {
+    const visible = this.visibleColumns();
+    return {
+      id: 'id',
+      selectable: true,
+      showToolbar: false,
+      pageSize: this.pageSize(),
+      column: [
+        { label: 'เลขที่ Ticket', name: 'ticketNo', type: 'code', minWidth: 130 },
+        { label: 'หัวข้อปัญหา', name: 'title', type: 'titleTruncate', minWidth: 180 },
+        { label: 'ลูกค้า / โครงการ', name: 'customerName', type: 'customerInfo', minWidth: 150 },
+        { label: 'ประเภท', name: 'ticketType', type: 'typeText', hidden: !visible.has('ticketType'), minWidth: 100 },
+        { label: 'ความรุนแรง', name: 'severity', type: 'severityBadge', hidden: !visible.has('severity'), align: 'center', minWidth: 110 },
+        { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
+        { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
+        { label: 'ผู้รับผิดชอบ', name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), minWidth: 130 },
+        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 100 },
+      ],
+    };
+  });
 
   // ===== Column Visibility =====
   private readonly COLUMN_STORAGE_KEY = 'pmdt17.visibleColumns';
@@ -84,8 +102,18 @@ export class Pmdt17Component implements OnInit {
       const content = res?.data;
       if (content && Array.isArray(content)) {
         this.loadApprovalStatuses(content);
+        this.gridRef?.setRows(content as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
       }
     });
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    this.currentPage.set(request.pageNumber);
+    this.syncFiltersToUrl();
+    const res = this.ticketsResource.value();
+    if (res?.data) {
+      grid.setRows(res.data as unknown as SicGridRowData[], { totalElements: res.pageable?.totalElements || res.data.length }, request.requestId);
+    }
   }
 
   loadApprovalStatuses(items: any[]): void {
@@ -106,8 +134,6 @@ export class Pmdt17Component implements OnInit {
 
   // การกรอง keyword/สถานะ ทำที่ Backend แล้ว (ผ่าน ticketsResource) เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
   filteredTickets = computed(() => this.ticketsResource.value()?.data || []);
-
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
@@ -156,49 +182,21 @@ export class Pmdt17Component implements OnInit {
     this.syncFiltersToUrl();
   }
 
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.syncFiltersToUrl();
-  }
-
   // ===== Preset Tabs (reuse filterStatus โดยตรง) =====
   setPreset(status: string): void {
     this.filterStatus.set(status);
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
+    // รีเซ็ต grid กลับหน้า 1 — goToPage(1) เป็น no-op เงียบๆ ถ้าอยู่หน้า 1 อยู่แล้ว ต้อง reload() เอง
+    if (this.gridRef?.currentPage === 1) {
+      this.gridRef?.reload();
+    } else {
+      this.gridRef?.goToPage(1);
+    }
   }
 
-  // ===== Bulk Selection =====
-  toggleSelect(id: string): void {
-    this.selectedIds.update((set) => {
-      const next = new Set(set);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  isSelected(id: string): boolean {
-    return this.selectedIds().has(id);
-  }
-
-  isAllSelected(): boolean {
-    const items = this.filteredTickets();
-    return items.length > 0 && items.every((i: any) => this.selectedIds().has(i.id));
-  }
-
-  toggleSelectAll(): void {
-    this.selectedIds.set(
-      this.isAllSelected() ? new Set() : new Set(this.filteredTickets().map((i: any) => i.id)),
-    );
-  }
-
-  clearSelection(): void {
-    this.selectedIds.set(new Set());
-  }
-
+  // ===== Bulk Selection — ใช้ selection ในตัวของ grid =====
   bulkExportPdf(): void {
-    const ids = Array.from(this.selectedIds());
+    const ids = Array.from(this.gridRef?.selectedRowIds ?? []) as string[];
     if (ids.length === 0) return;
 
     this.isLoading.set(true);
@@ -221,7 +219,7 @@ export class Pmdt17Component implements OnInit {
           remaining -= 1;
           if (remaining === 0) {
             this.isLoading.set(false);
-            this.clearSelection();
+            this.gridRef?.reload();
           }
         },
       });

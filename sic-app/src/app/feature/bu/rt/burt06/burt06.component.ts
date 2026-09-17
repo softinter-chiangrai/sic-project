@@ -3,7 +3,7 @@ import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } 
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
-import { SicButtonComponent } from 'sic-ng';
+import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalFlow } from './burt06.model';
 import { Burt06Service } from './burt06.service';
@@ -12,12 +12,11 @@ import { Burt06Service } from './burt06.service';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-burt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe, SicGridPanelComponent],
   templateUrl: './burt06.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',
@@ -36,8 +35,6 @@ export class Burt06Component implements OnInit {
   searchTerm = signal('');
   filterStatus = signal('all');
   filterDocumentType = signal('all');
-  sortBy = signal('flowCode');
-  sortDir = signal<'asc' | 'desc'>('asc');
 
   documentTypeMap: Record<string, string> = {
     REQUIREMENT: 'Requirement',
@@ -88,26 +85,42 @@ export class Burt06Component implements OnInit {
       list = list.filter((f) => f.documentType === docType);
     }
 
-    const by = this.sortBy();
-    const dir = this.sortDir();
-    list = [...list].sort((a, b) => {
-      const va = String(a[by as keyof ApprovalFlow] ?? '');
-      const vb = String(b[by as keyof ApprovalFlow] ?? '');
-      return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-    });
-
     return list;
   });
 
-  // Total items & pages
+  // Total items
   totalItems = computed(() => this.filteredFlows().length);
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
-  // Paginated slice
-  paginatedFlows = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return this.filteredFlows().slice(start, start + this.pageSize());
-  });
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'รหัส Flow', name: 'flowCode', type: 'flowCode', sortable: true, minWidth: 150 },
+      { label: 'ชื่อ Flow', name: 'flowName', type: 'flowName', sortable: true, minWidth: 180 },
+      { label: 'ประเภทเอกสาร', name: 'documentType', type: 'docType', sortable: true, minWidth: 130 },
+      { label: 'โหมด', name: 'approvalMode', type: 'approvalMode', minWidth: 100 },
+      { label: 'Steps', name: 'steps', type: 'stepsCount', align: 'center', minWidth: 60 },
+      { label: 'สถานะ', name: 'active', type: 'statusBadge', sortable: true, minWidth: 80 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 200 },
+    ],
+  };
+
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    const list = this.filteredFlows();
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
+  }
 
   ngOnInit(): void {
     this.loadFlows();
@@ -131,7 +144,7 @@ export class Burt06Component implements OnInit {
     this.router.navigate(['/feature/bu/approval-flow', flow.id, 'edit']);
   }
 
-  deleteFlow(flow: ApprovalFlow): void {
+  deleteFlow(flow: ApprovalFlow, grid: SicGridPanelComponent): void {
     this.dialog.confirm(
       'ยืนยันการลบ',
       `คุณต้องการลบ Approval Flow "${flow.flowName}" (${flow.flowCode}) ใช่หรือไม่?`
@@ -144,6 +157,7 @@ export class Burt06Component implements OnInit {
             next: () => {
               this.flows.update((list) => list.filter((f) => f.id !== flow.id));
               this.dialog.success('ลบสำเร็จ', `ลบ Flow "${flow.flowName}" เรียบร้อย`);
+              grid.reload();
             },
             error: (err) => {
               this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
@@ -153,42 +167,28 @@ export class Burt06Component implements OnInit {
     });
   }
 
-  // ===== Search, Sort, Filter & Pagination Handlers =====
-  onSearch(event: Event): void {
+  // ===== Search & Filter Handlers =====
+  onSearch(event: Event, grid: SicGridPanelComponent): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch(): void {
+  clearSearch(grid: SicGridPanelComponent): void {
     this.searchTerm.set('');
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  onFilterStatusChange(value: any): void {
+  onFilterStatusChange(value: any, grid: SicGridPanelComponent): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  onFilterDocTypeChange(value: any): void {
+  onFilterDocTypeChange(value: any, grid: SicGridPanelComponent): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterDocumentType.set(val || 'all');
-    this.currentPage.set(1);
-  }
-
-  onSortChange(field: string): void {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-  }
-
-  onPageChange(page: number): void {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
+    this.reloadFromPage1(grid);
   }
 
   getApprovalModeText(mode: string): string {

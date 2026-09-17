@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -13,13 +13,13 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt18',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmdt18.component.html',
   styleUrls: ['./pmdt18.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -45,14 +45,43 @@ export class Pmdt18Component implements OnInit {
     () => `${apiBaseUrl}/api/pm/ma-renewals/paging?page=${this.currentPage()}&size=${this.pageSize()}`
   );
 
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
+
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'เลขที่ข้อเสนอ', name: 'renewalNo', type: 'code', minWidth: 140 },
+      { label: 'อ้างอิงสัญญาเดิม', name: 'contractNo', type: 'contractText', minWidth: 130 },
+      { label: 'ลูกค้า / โครงการ', name: 'customerName', type: 'customerInfo', minWidth: 160 },
+      { label: 'ระยะเวลาสัญญาใหม่', name: 'newStartDate', type: 'dateRangeText', minWidth: 150 },
+      { label: 'มูลค่าเสนอ', name: 'proposedAmount', type: 'amountText', align: 'right', minWidth: 120 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
+      { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 100 },
+    ],
+  };
+
   constructor() {
     effect(() => {
       const res = this.renewalsResource.value();
       const content = res?.data;
       if (content && Array.isArray(content)) {
         this.loadApprovalStatuses(content);
+        this.gridRef?.setRows(this.filteredRenewals() as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
       }
     });
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    this.currentPage.set(request.pageNumber);
+    this.syncFiltersToUrl();
+    const res = this.renewalsResource.value();
+    if (res?.data) {
+      grid.setRows(this.filteredRenewals() as unknown as SicGridRowData[], { totalElements: res.pageable?.totalElements || res.data.length }, request.requestId);
+    }
   }
 
   loadApprovalStatuses(items: any[]): void {
@@ -92,8 +121,6 @@ export class Pmdt18Component implements OnInit {
     return list;
   });
 
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
-
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
     if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
@@ -119,11 +146,13 @@ export class Pmdt18Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.syncFiltersToUrl();
+    this.gridRef?.reload();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.syncFiltersToUrl();
+    this.gridRef?.reload();
   }
 
   readonly statusOptions = [
@@ -138,12 +167,7 @@ export class Pmdt18Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.syncFiltersToUrl();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.syncFiltersToUrl();
+    this.gridRef?.reload();
   }
 
   goToAdd() {

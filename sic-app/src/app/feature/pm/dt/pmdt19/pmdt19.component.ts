@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 
 import { Pmdt19AService } from './pmdt19A/pmdt19A.service';
@@ -11,14 +11,14 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
 
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmdt19.component.html',
   styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -69,13 +69,30 @@ export class Pmdt19Component implements OnInit {
   ];
 
   totalItems = computed(() => this.filteredVersions().length);
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
-  paginatedVersions = computed(() => {
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
+
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
+    pageSizeOptions: [10, 20, 50, 100],
+    column: [
+      { label: 'เวอร์ชัน', name: 'versionNo', type: 'versionInfo', minWidth: 100 },
+      { label: 'ประเภทเอกสาร', name: 'documentType', type: 'docTypeTag', minWidth: 130 },
+      { label: 'รหัส / ชื่อเอกสาร', name: 'documentCode', type: 'text', minWidth: 130 },
+      { label: 'สรุปการเปลี่ยนแปลง', name: 'changeSummary', type: 'summaryText', minWidth: 180 },
+      { label: 'ผู้บันทึก', name: 'createdBy', type: 'createdByInfo', minWidth: 120 },
+      { label: 'วันที่บันทึก', name: 'createdDate', type: 'dateText', minWidth: 140 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'right', minWidth: 110 },
+    ],
+  };
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     const list = this.filteredVersions();
-    const start = this.currentPage() * this.pageSize();
-    return list.slice(start, start + this.pageSize());
-  });
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
+  }
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
@@ -124,15 +141,20 @@ export class Pmdt19Component implements OnInit {
     const term = (this.filterDocId() || '').trim().toLowerCase();
     if (!term) {
       this.filteredVersions.set(this.versions());
-      return;
+    } else {
+      const filtered = this.versions().filter((v) =>
+        (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
+        (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
+        (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
+        (v.documentId && v.documentId.toLowerCase().includes(term))
+      );
+      this.filteredVersions.set(filtered);
     }
-    const filtered = this.versions().filter((v) =>
-      (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
-      (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
-      (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
-      (v.documentId && v.documentId.toLowerCase().includes(term))
-    );
-    this.filteredVersions.set(filtered);
+    if (this.gridRef?.currentPage === 1) {
+      this.gridRef?.reload();
+    } else {
+      this.gridRef?.goToPage(1);
+    }
   }
 
   onTypeChange(type: any): void {
@@ -145,19 +167,6 @@ export class Pmdt19Component implements OnInit {
   onDocIdChange(docId: string): void {
     this.filterDocId.set(docId);
     this.applyFilter();
-  }
-
-  onPageChange(page: number): void {
-    if (page < 0 || page >= this.totalPages()) return;
-    this.currentPage.set(page);
-  }
-
-  onPageSizeChange(size: any): void {
-    const val = Number(size?.value ?? size?.target?.value ?? size);
-    if (val > 0) {
-      this.pageSize.set(val);
-      this.currentPage.set(0);
-    }
   }
 
   onViewContent(ver: DocumentVersionModel): void {

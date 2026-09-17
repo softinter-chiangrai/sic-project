@@ -9,9 +9,10 @@ import {
   inject,
   OnInit,
   signal,
+  ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize, of, switchMap } from 'rxjs';
+import { finalize } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -26,14 +27,13 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
-import { SicSkeletonComponent } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent, SicDrawerComponent, SicSkeletonComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicDrawerComponent],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -71,7 +71,7 @@ export class Pmrt04Component implements OnInit {
 
   private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
 
-  // guard: ป้องกัน loadContracts() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  // guard: ป้องกัน handleGridLoad ยิงซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
   private syncingUrl = false;
 
   // ===== Quick View Drawer =====
@@ -81,8 +81,7 @@ export class Pmrt04Component implements OnInit {
   // ===== Preset Filter Tabs =====
   protected activePreset = signal<'all' | 'expiring'>('all');
 
-  // ===== Bulk Selection =====
-  protected selectedIds = signal<Set<string>>(new Set());
+  // ===== Bulk Selection — ใช้ selection ในตัวของ grid =====
 
   // ===== Column Visibility =====
   private readonly COLUMN_STORAGE_KEY = 'pmrt04.visibleColumns';
@@ -97,11 +96,29 @@ export class Pmrt04Component implements OnInit {
   protected visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   protected showColumnMenu = signal(false);
 
-  // ===== Computed =====
-  protected filteredContracts = computed(() => this.contracts());
-  protected paginatedContracts = computed(() => this.contracts());
+  @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  gridConfig = computed<SicGridPanelConfig>(() => {
+    const visible = this.visibleColumns();
+    return {
+      id: 'id',
+      selectable: true,
+      showToolbar: false,
+      defaultSortField: 'contractNo',
+      pageSize: this.pageSize(),
+      column: [
+        { label: 'เลขสัญญา', name: 'contractNo', type: 'code', sortable: true, minWidth: 120 },
+        { label: 'ประเภท', name: 'contractType', type: 'text', hidden: !visible.has('contractType'), sortable: true, minWidth: 140 },
+        { label: 'ลูกค้า', name: 'customerName', type: 'text', hidden: !visible.has('customerName'), sortable: true, minWidth: 150 },
+        { label: 'โครงการ', name: 'projectName', type: 'projectLink', hidden: !visible.has('projectName'), sortable: true, minWidth: 130 },
+        { label: 'มูลค่า', name: 'contractValue', type: 'currencyText', hidden: !visible.has('contractValue'), sortable: true, minWidth: 120 },
+        { label: 'ระยะเวลา', name: 'startDate', type: 'dateRangeText', hidden: !visible.has('duration'), minWidth: 140 },
+        { label: 'สถานะ', name: 'signStatus', type: 'statusBadge', sortable: true, minWidth: 100 },
+        { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), minWidth: 100 },
+        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 260 },
+      ],
+    };
+  });
 
   readonly statusSelectOptions = [
     { value: 'Draft', text: 'ฉบับร่าง' },
@@ -117,6 +134,11 @@ export class Pmrt04Component implements OnInit {
   statusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
   signStatusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
 
+  // resolver อาจ preload โครงการ+สัญญาหน้าแรกมาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
+  private initialResolverContracts: { data: Contract[]; totalElements: number } | null = null;
+  // true เมื่อรู้ customerId/ชื่อโครงการของ projectId นี้แล้ว (จาก resolver หรือ fetch เอง) — ป้องกันการยิง contracts ก่อนรู้ customerId
+  private projectResolved = false;
+
   // ===== Lifecycle =====
   ngOnInit() {
     this.loadContractTypes();
@@ -130,11 +152,10 @@ export class Pmrt04Component implements OnInit {
       this.filterProjectId.set(project.id);
       this.filterProjectName.set(project.projectName || '');
       this.filterProjectCode.set(project.projectCode || '');
+      this.projectResolved = true;
       if (contractsRes) {
         const items = contractsRes.data || [];
-        this.contracts.set(items);
-        this.totalItems.set(contractsRes.pageable?.totalElements || items.length || 0);
-        this.loadApprovalStatuses(items);
+        this.initialResolverContracts = { data: items, totalElements: contractsRes.pageable?.totalElements || items.length || 0 };
       }
     }
 
@@ -155,28 +176,17 @@ export class Pmrt04Component implements OnInit {
       if (projectId) {
         this.filterProjectId.set(projectId);
         this.customerState.setProject(projectId);
-
         if (!resolved || !resolved.project) {
-          this.projectService.getProject(projectId).subscribe({
-            next: (project) => {
-              this.filterCustomerId.set(project.customerId);
-              this.filterCustomerName.set(project.customerName);
-              this.filterProjectName.set(project.projectName || '');
-              this.filterProjectCode.set(project.projectCode || '');
-              this.currentPage.set(1);
-              this.loadContracts();
-            },
-            error: (err) => {
-              console.error('Error loading project:', err);
-              this.loadContracts();
-            },
-          });
+          this.projectResolved = false;
         }
       } else {
         this.filterProjectId.set(null);
-        if (!resolved || !resolved.contracts) {
-          this.loadContracts();
-        }
+        this.projectResolved = true;
+      }
+
+      // ข้ามรอบแรก: grid จะ mount และยิง loadData เองอัตโนมัติ — รอบถัดไปจาก URL เปลี่ยนต้อง reload เอง
+      if (this.gridRef) {
+        this.gridRef.reload();
       }
     });
   }
@@ -192,7 +202,7 @@ export class Pmrt04Component implements OnInit {
     ]);
   }
 
-  loadApprovalStatuses(contracts: Contract[]) {
+  loadApprovalStatuses(contracts: Contract[], grid: SicGridPanelComponent, requestId: number): void {
     contracts.forEach((contract) => {
       if (!contract.id) return;
       this.approvalService.getDocumentStatus('CONTRACT', contract.id).subscribe({
@@ -202,6 +212,7 @@ export class Pmrt04Component implements OnInit {
               item.id === contract.id ? { ...item, approvalStatus: approval.status } : item,
             ),
           );
+          grid.setRows(this.contracts() as unknown as SicGridRowData[], { totalElements: this.totalItems() }, requestId);
         },
         error: () => {
           // ไม่มีสถานะอนุมัติ ปล่อย null
@@ -210,12 +221,52 @@ export class Pmrt04Component implements OnInit {
     });
   }
 
-  loadContracts() {
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    const projectId = this.filterProjectId();
+
+    // ยังไม่รู้ customerId ของโครงการนี้ — ต้อง fetch project ก่อนค่อยโหลด contracts (customerId เป็น query param)
+    if (!this.projectResolved && projectId) {
+      this.isLoading.set(true);
+      this.projectService.getProject(projectId).subscribe({
+        next: (project) => {
+          this.filterCustomerId.set(project.customerId);
+          this.filterCustomerName.set(project.customerName);
+          this.filterProjectName.set(project.projectName || '');
+          this.filterProjectCode.set(project.projectCode || '');
+          this.projectResolved = true;
+          this.fetchContracts(request, grid, 1);
+        },
+        error: (err) => {
+          console.error('Error loading project:', err);
+          this.projectResolved = true;
+          this.fetchContracts(request, grid);
+        },
+      });
+      return;
+    }
+
+    if (this.initialResolverContracts) {
+      const { data, totalElements } = this.initialResolverContracts;
+      this.initialResolverContracts = null;
+      this.contracts.set(data);
+      this.totalItems.set(totalElements);
+      grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+      this.loadApprovalStatuses(data, grid, request.requestId);
+      return;
+    }
+
+    this.fetchContracts(request, grid);
+  }
+
+  private fetchContracts(request: SicGridLoadRequest, grid: SicGridPanelComponent, forcePage?: number): void {
     this.isLoading.set(true);
+    const pageNumber = forcePage ?? request.pageNumber;
+    this.currentPage.set(pageNumber);
+    this.syncFiltersToUrl();
 
     let params = new HttpParams()
-      .set('page', this.currentPage().toString())
-      .set('size', this.pageSize().toString());
+      .set('page', pageNumber.toString())
+      .set('size', request.pageSize.toString());
 
     const projectId = this.filterProjectId();
     if (projectId) {
@@ -246,9 +297,8 @@ export class Pmrt04Component implements OnInit {
       params = params.set('expiringWithinDays', '30');
     }
 
-    if (this.sortBy()) {
-      params = params.set('sortBy', this.sortBy()).set('sortDirection', this.sortDir());
-    }
+    const sortField = request.sortField ?? 'contractNo';
+    params = params.set('sortBy', sortField).set('sortDirection', request.sortDescending ? 'desc' : 'asc');
 
     this.http
       .get<PaginationResponse<Contract>>(this.apiUrl, { params })
@@ -259,7 +309,8 @@ export class Pmrt04Component implements OnInit {
           const total = response.pageable?.totalElements ?? (response as any).totalElements ?? 0;
           this.contracts.set(items);
           this.totalItems.set(total);
-          this.loadApprovalStatuses(items);
+          grid.setRows(items as unknown as SicGridRowData[], { totalElements: total }, request.requestId);
+          this.loadApprovalStatuses(items, grid, request.requestId);
 
           if (this.filterCustomerId() && !this.filterCustomerName()) {
             const firstContract = items[0];
@@ -268,7 +319,7 @@ export class Pmrt04Component implements OnInit {
             }
           }
           if (this.filterProjectId() && !this.filterProjectName()) {
-            const firstContract = items.find(c => c.projectName);
+            const firstContract = items.find((c: Contract) => c.projectName);
             if (firstContract?.projectName) {
               this.filterProjectName.set(firstContract.projectName);
             }
@@ -279,8 +330,18 @@ export class Pmrt04Component implements OnInit {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการสัญญาได้');
           this.contracts.set([]);
           this.totalItems.set(0);
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
         },
       });
+  }
+
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
   }
 
   // ===== URL State Sync =====
@@ -301,92 +362,43 @@ export class Pmrt04Component implements OnInit {
   }
 
   // ===== Actions =====
-  onSearch(event: Event) {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadContracts();
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch() {
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadContracts();
+    this.reloadFromPage1(grid);
   }
 
-  onFilterChange(value: any) {
+  onFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadContracts();
+    this.reloadFromPage1(grid);
   }
 
-  onTypeChange(value: any) {
+  onTypeChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterType.set(val || 'all');
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadContracts();
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.loadContracts();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.syncFiltersToUrl();
-    this.loadContracts();
+    this.reloadFromPage1(grid);
   }
 
   // ===== Preset Tabs =====
-  setPreset(preset: 'all' | 'expiring'): void {
+  setPreset(preset: 'all' | 'expiring', grid: SicGridPanelComponent): void {
     this.activePreset.set(preset);
-    this.currentPage.set(1);
     this.syncFiltersToUrl();
-    this.loadContracts();
+    this.reloadFromPage1(grid);
   }
 
-  // ===== Bulk Selection =====
-  toggleSelect(id: string): void {
-    this.selectedIds.update((set) => {
-      const next = new Set(set);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-  }
-
-  isSelected(id: string): boolean {
-    return this.selectedIds().has(id);
-  }
-
-  isAllSelected(): boolean {
-    const items = this.contracts();
-    return items.length > 0 && items.every((c) => this.selectedIds().has(c.id));
-  }
-
-  toggleSelectAll(): void {
-    this.selectedIds.set(
-      this.isAllSelected() ? new Set() : new Set(this.contracts().map((c) => c.id)),
-    );
-  }
-
-  clearSelection(): void {
-    this.selectedIds.set(new Set());
-  }
-
-  bulkExportPdf(): void {
-    const ids = Array.from(this.selectedIds());
+  // ===== Bulk Export (ใช้ selection ในตัวของ grid) =====
+  bulkExportPdf(grid: SicGridPanelComponent): void {
+    const ids = Array.from(grid.selectedRowIds);
     if (ids.length === 0) return;
 
     this.isLoading.set(true);
@@ -408,7 +420,7 @@ export class Pmrt04Component implements OnInit {
           remaining -= 1;
           if (remaining === 0) {
             this.isLoading.set(false);
-            this.clearSelection();
+            grid.selectedRowIds.clear();
           }
         },
       });
@@ -584,7 +596,7 @@ export class Pmrt04Component implements OnInit {
   }
 
   // ✅ เพิ่ม method ลบสัญญา (อ้างอิงจาก pmrt01)
-  deleteContract(contract: Contract) {
+  deleteContract(contract: Contract, grid: SicGridPanelComponent) {
     if (!contract.id) {
       this.dialog.warn('ไม่พบรหัสสัญญา', 'ไม่สามารถลบข้อมูลได้');
       return;
@@ -603,7 +615,7 @@ export class Pmrt04Component implements OnInit {
             .subscribe({
               next: () => {
                 this.dialog.success('ลบสำเร็จ', `สัญญา ${contract.contractNo} ถูกลบเรียบร้อย`);
-                this.loadContracts(); // โหลดรายการใหม่
+                grid.reload();
               },
               error: (error) => {
                 console.error('Delete contract error:', error);

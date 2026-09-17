@@ -32,11 +32,11 @@
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
         placeholder="ค้นหาผู้ใช้, การกระทำ, รายละเอียด..."
         [value]="searchTerm()"
-        (input)="onSearch($event)"
+        (input)="onSearch($event, grid)"
       />
       @if (searchTerm()) {
         <button
-          (click)="clearSearch()"
+          (click)="clearSearch(grid)"
           class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
           <i class="bi bi-x-lg text-xs"></i>
@@ -49,7 +49,7 @@
       <sic-combobox
         [options]="moduleSelectOptions()"
         [ngModel]="filterModule()"
-        (ngModelChange)="onModuleChange($event)"
+        (ngModelChange)="onModuleChange($event, grid)"
         placeholder="📋 ทุกโมดูล"
         [clearable]="true"
       ></sic-combobox>
@@ -60,7 +60,7 @@
       <sic-combobox
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
-        (ngModelChange)="onStatusChange($event)"
+        (ngModelChange)="onStatusChange($event, grid)"
         placeholder="📊 ทุกสถานะ"
         [clearable]="true"
       ></sic-combobox>
@@ -71,130 +71,47 @@
       <sic-combobox
         [options]="userSelectOptions()"
         [ngModel]="filterUser()"
-        (ngModelChange)="onUserChange($event)"
+        (ngModelChange)="onUserChange($event, grid)"
         placeholder="👤 ทุกคน"
         [clearable]="true"
       ></sic-combobox>
     </div>
   </div>
 
-  <!-- ===== LOADING ===== -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
+  <!-- GRID -->
+  <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
+    <sic-gridpanel
+      #grid
+      [config]="gridConfig"
+      (loadData)="handleGridLoad($event, grid)"
+    >
+      <ng-template sicGridPanelTemplate="userInfo" section="cell" let-row>
+        @let r = $any(row);
+        <span class="font-medium text-[var(--text-active)]">{{ r.user }}</span>
+        @if (r.ipAddress) {
+          <div class="text-xs text-[var(--text-muted)]">{{ r.ipAddress }}</div>
+        }
+      </ng-template>
 
-  <!-- ===== TABLE ===== -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th
-              (click)="onSortChange('user')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
-            >
-              ผู้ใช้
-              @if (sortBy() === 'user') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('action')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
-              การกระทำ
-              @if (sortBy() === 'action') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('module')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
-            >
-              โมดูล
-              @if (sortBy() === 'module') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[200px]"
-            >
-              รายละเอียด
-            </th>
-            <th
-              (click)="onSortChange('timestamp')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px] hidden md:table-cell"
-            >
-              วันที่-เวลา
-              @if (sortBy() === 'timestamp') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('status')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]"
-            >
-              สถานะ
-              @if (sortBy() === 'status') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (log of paginatedLogs(); track log.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="font-medium text-[var(--text-active)]">{{ log.user }}</span>
-                @if (log.ipAddress) {
-                  <div class="text-xs text-[var(--text-muted)]">{{ log.ipAddress }}</div>
-                }
-              </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text)]">{{ log.action }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text)]">{{ log.module }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="text-sm text-[var(--text)] truncate max-w-[300px]" [title]="log.description">
-                  {{ log.description }}
-                </div>
-              </td>
-              <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
-                {{ formatDate(log.timestamp) }}
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(log.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ log.status }}
-                </span>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="6" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Audit Log</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือรอข้อมูลเพิ่มเติม</p>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+      <ng-template sicGridPanelTemplate="descText" section="cell" let-row>
+        @let r = $any(row);
+        <div class="text-sm text-[var(--text)] truncate max-w-[300px]" [title]="r.description">
+          {{ r.description }}
+        </div>
+      </ng-template>
 
-  <!-- ===== PAGINATION ===== -->
-  <sic-pagination
-    [currentPage]="currentPage()"
-    [pageSize]="pageSize()"
-    [totalItems]="totalItems()"
-    (pageChange)="onPageChange($event)"
-  ></sic-pagination>
+      <ng-template sicGridPanelTemplate="dateText" section="cell" let-row>
+        @let r = $any(row);
+        <span class="text-sm text-[var(--text-muted)] font-mono">{{ formatDate(r.timestamp) }}</span>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ r.status }}
+        </span>
+      </ng-template>
+    </sic-gridpanel>
+  </div>
 
 </div>

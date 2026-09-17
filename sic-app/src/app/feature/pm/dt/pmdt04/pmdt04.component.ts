@@ -18,12 +18,12 @@ import { RequirementItem } from './pmdt04.model';
 import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
@@ -41,8 +41,6 @@ export class Pmdt04Component implements OnInit {
   protected filterStatus = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('requirementCode');
-  protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
   protected requirements = signal<RequirementItem[]>([]);
 
@@ -57,33 +55,68 @@ export class Pmdt04Component implements OnInit {
     { value: 'Cancelled', text: 'ยกเลิก' },
   ];
 
-  // ===== Computed =====
-  protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  // ===== Grid =====
+  protected gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    defaultSortField: 'requirementCode',
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'รหัส', name: 'requirementCode', type: 'code', sortable: true, minWidth: 100 },
+      { label: 'ชื่อ', name: 'title', type: 'text', sortable: true, minWidth: 150 },
+      { label: 'โครงการ', name: 'projectName', type: 'text', sortable: true, minWidth: 120 },
+      { label: 'Priority', name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 80 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', sortable: true, minWidth: 100 },
+      { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
+      { label: 'เวอร์ชัน', name: 'version', type: 'text', minWidth: 100 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+    ],
+  };
+
+  // resolver อาจ preload ข้อมูลหน้าแรกมาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
+  private initialResolverData: { data: RequirementItem[]; totalElements: number } | null = null;
 
   ngOnInit() {
     const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
     if (resolved && resolved.data) {
       const data = resolved.data || [];
-      this.requirements.set(data);
-      this.totalItems.set(resolved.pageable?.totalElements || data.length || 0);
-      this.loadApprovalStatuses(data);
+      this.initialResolverData = { data, totalElements: resolved.pageable?.totalElements || data.length || 0 };
+    }
+  }
+
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
     } else {
-      this.loadRequirements();
+      grid.goToPage(1);
     }
   }
 
   // ===== Load Data =====
-  loadRequirements() {
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    if (this.initialResolverData) {
+      const { data, totalElements } = this.initialResolverData;
+      this.initialResolverData = null;
+      this.requirements.set(data);
+      this.totalItems.set(totalElements);
+      grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+      this.loadApprovalStatuses(data, grid, request.requestId);
+      return;
+    }
+
     const projectId = resolveProjectId(this.route, this.customerState);
 
     this.isLoading.set(true);
+    this.currentPage.set(request.pageNumber);
     let params = new HttpParams()
-      .set('page', this.currentPage().toString())
-      .set('size', this.pageSize().toString())
+      .set('page', request.pageNumber.toString())
+      .set('size', request.pageSize.toString())
       .set('keyword', this.searchTerm() || '')
       .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
-      .set('sortBy', this.sortBy())
-      .set('sortDirection', this.sortDir());
+      .set('sortBy', request.sortField ?? 'requirementCode')
+      .set('sortDirection', request.sortDescending ? 'desc' : 'asc');
 
     if (projectId) {
       params = params.set('projectId', projectId);
@@ -95,20 +128,22 @@ export class Pmdt04Component implements OnInit {
       .subscribe({
         next: (res) => {
           const data = res.data || [];
+          const totalElements = res.pageable?.totalElements || 0;
           this.requirements.set(data);
-          this.totalItems.set(res.pageable?.totalElements || 0);
-          this.loadApprovalStatuses(data);
+          this.totalItems.set(totalElements);
+          grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+          this.loadApprovalStatuses(data, grid, request.requestId);
         },
         error: () => {
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Requirement ได้');
           this.requirements.set([]);
           this.totalItems.set(0);
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
         },
       });
   }
 
-  loadApprovalStatuses(requirements: RequirementItem[]) {
-
+  loadApprovalStatuses(requirements: RequirementItem[], grid: SicGridPanelComponent, requestId: number) {
     requirements.forEach((req) => {
       this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
         next: (approval) => {
@@ -117,6 +152,7 @@ export class Pmdt04Component implements OnInit {
               item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
             ),
           );
+          grid.setRows(this.requirements() as unknown as SicGridRowData[], { totalElements: this.totalItems() }, requestId);
         },
         error: () => {
           // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
@@ -126,40 +162,21 @@ export class Pmdt04Component implements OnInit {
   }
 
   // ===== Event Handlers =====
-  onSearch(event: Event) {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadRequirements();
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch() {
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadRequirements();
+    this.reloadFromPage1(grid);
   }
 
-  onFilterChange(value: any) {
+  onFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
-    this.loadRequirements();
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.loadRequirements();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadRequirements();
+    this.reloadFromPage1(grid);
   }
 
   // ===== Navigation =====
@@ -217,13 +234,13 @@ export class Pmdt04Component implements OnInit {
       });
   }
 
-  deleteRequirement(id: string) {
+  deleteRequirement(id: string, grid: SicGridPanelComponent) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Requirement นี้ใช่หรือไม่?').then((ok) => {
       if (ok) {
         this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
           next: () => {
             this.dialog.success('ลบสำเร็จ', 'Requirement ถูกลบแล้ว');
-            this.loadRequirements();
+            grid.reload();
           },
           error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
         });

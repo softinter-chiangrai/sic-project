@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { SicButtonComponent } from 'sic-ng';
+import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { burt04Service } from './burt04.service';
 import { MemberWithUI, TeamMember } from './burt04.model';
@@ -12,12 +12,11 @@ import { MemberWithUI, TeamMember } from './burt04.model';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-burt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicGridPanelComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04.component.html',
 })
@@ -51,39 +50,20 @@ export class Burt04AComponent implements OnInit {
     { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
   ];
 
-  filteredMembers = computed(() => {
-    let list = this.members();
-    const term = this.searchTerm().toLowerCase();
-    if (term) {
-      list = list.filter(
-        (m) => m.userName.toLowerCase().includes(term) || m.userEmail.toLowerCase().includes(term),
-      );
-    }
-    const status = this.filterStatus();
-    if (status === 'active') list = list.filter((m) => m.isActive);
-    if (status === 'inactive') list = list.filter((m) => !m.isActive);
-
-    const role = this.filterRole();
-    if (role !== 'all') {
-      list = list.filter((m) => m.roleNames && m.roleNames.includes(role));
-    }
-
-    const by = this.sortBy();
-    const dir = this.sortDir();
-    list.sort((a, b) => {
-      const va = String(a[by as keyof MemberWithUI] ?? '');
-      const vb = String(b[by as keyof MemberWithUI] ?? '');
-      return dir === 'asc' ? va.localeCompare(vb) : vb.localeCompare(va);
-    });
-    return list;
-  });
-
-  paginatedMembers = computed(() => {
-    const start = (this.currentPage() - 1) * this.pageSize();
-    return this.filteredMembers().slice(start, start + this.pageSize());
-  });
-
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    defaultSortField: 'userName',
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'ชื่อ-นามสกุล', name: 'userName', type: 'memberName', sortable: true, minWidth: 150 },
+      { label: 'อีเมล', name: 'userEmail', type: 'text', sortable: true, minWidth: 200 },
+      { label: 'บทบาท', name: 'roleNames', type: 'roleBadges', minWidth: 150 },
+      { label: 'สถานะ', name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 200 },
+    ],
+  };
 
   ngOnInit() {
     this.loadBusinessId();
@@ -93,7 +73,6 @@ export class Burt04AComponent implements OnInit {
     let id = this.burt04Service.getBusinessId();
     if (id) {
       this.businessId = id;
-      this.loadMembers();
       this.loadRoleOptions();
       return;
     }
@@ -104,7 +83,6 @@ export class Burt04AComponent implements OnInit {
           const defaultBiz = businesses.find((b) => b.isDefault) || businesses[0];
           this.businessId = defaultBiz.id;
           this.burt04Service.setBusinessId(this.businessId);
-          this.loadMembers();
           this.loadRoleOptions();
         } else {
           this.router.navigate(['/management/business']);
@@ -125,19 +103,29 @@ export class Burt04AComponent implements OnInit {
     });
   }
 
-  loadMembers() {
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     if (!this.businessId) {
-      console.warn('No businessId, cannot load members');
+      grid.setRows([], { totalElements: 0 }, request.requestId);
       return;
     }
+
     this.isLoading.set(true);
     this.burt04Service
-      .getMembers(this.businessId, this.currentPage() - 1, this.pageSize())
+      .getMembers(this.businessId, request.pageNumber - 1, request.pageSize)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
           const membersList = res?.data || [];
-          const mapped = membersList.map((m) => ({
+          const mapped: MemberWithUI[] = membersList.map((m) => ({
             ...m,
             userName: m.userName || m.userId,
             userEmail: m.userEmail || '',
@@ -145,11 +133,39 @@ export class Burt04AComponent implements OnInit {
             isDefault: m.isDefault || false,
           }));
           this.members.set(mapped);
-          this.totalItems.set(res?.pageable?.totalElements ?? membersList.length);
+
+          // filter/sort ภายในหน้าที่ดึงมา (ตาม logic เดิม — server ไม่รองรับ filter/sort param)
+          let list = mapped;
+          const term = this.searchTerm().toLowerCase();
+          if (term) {
+            list = list.filter(
+              (m) => m.userName.toLowerCase().includes(term) || m.userEmail.toLowerCase().includes(term),
+            );
+          }
+          const status = this.filterStatus();
+          if (status === 'active') list = list.filter((m) => m.isActive);
+          if (status === 'inactive') list = list.filter((m) => !m.isActive);
+          const role = this.filterRole();
+          if (role !== 'all') {
+            list = list.filter((m) => m.roleNames && m.roleNames.includes(role));
+          }
+
+          const by = (request.sortField ?? this.sortBy()) as keyof MemberWithUI;
+          const desc = request.sortDescending;
+          list = [...list].sort((a, b) => {
+            const va = String(a[by] ?? '');
+            const vb = String(b[by] ?? '');
+            return desc ? vb.localeCompare(va) : va.localeCompare(vb);
+          });
+
+          const totalElements = res?.pageable?.totalElements ?? membersList.length;
+          this.totalItems.set(totalElements);
+          grid.setRows(list as unknown as SicGridRowData[], { totalElements }, request.requestId);
         },
         error: (err) => {
           console.error('Load members error', err);
           this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายชื่อสมาชิกได้');
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
         },
       });
   }
@@ -164,13 +180,14 @@ export class Burt04AComponent implements OnInit {
     this.router.navigate(['/feature/bu/team', id, 'edit']);
   }
 
-  toggleActive(member: MemberWithUI) {
+  toggleActive(member: MemberWithUI, grid: SicGridPanelComponent) {
     const updated = { ...member, isActive: !member.isActive };
     const roleIds = member.roleIds || [];
     this.burt04Service.updateMember(member.id, roleIds, updated.isActive).subscribe({
       next: () => {
         this.members.update((list) => list.map((m) => (m.id === member.id ? updated : m)));
         this.dialog.success('อัปเดตสถานะ', 'สถานะสมาชิกถูกเปลี่ยนเรียบร้อย');
+        grid.reload();
       },
       error: (err) => {
         console.error('Toggle error', err);
@@ -179,16 +196,15 @@ export class Burt04AComponent implements OnInit {
     });
   }
 
-  removeMember(id: string) {
+  removeMember(id: string, grid: SicGridPanelComponent) {
     this.dialog
       .confirm('ยืนยันการลบ', 'คุณต้องการลบสมาชิกรายนี้ออกจากทีมใช่หรือไม่?')
       .then((confirmed) => {
         if (confirmed) {
           this.burt04Service.deleteMember(id).subscribe({
             next: () => {
-              this.members.update((list) => list.filter((m) => m.id !== id));
-              this.totalItems.update((v) => v - 1);
               this.dialog.success('ลบสำเร็จ', 'สมาชิกถูกลบออกจากทีมเรียบร้อย');
+              grid.reload();
             },
             error: (err) => {
               console.error('Delete error', err);
@@ -213,42 +229,26 @@ export class Burt04AComponent implements OnInit {
 
   // ===== Event Handlers =====
 
-  onSearch(event: Event) {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  clearSearch() {
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadMembers();
-  }
-
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-  }
-
-  onFilterChange(value: any) {
+  onFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
-    this.loadMembers();
+    this.reloadFromPage1(grid);
   }
 
-  onRoleFilterChange(value: any) {
+  onRoleFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterRole.set(val || 'all');
-    this.currentPage.set(1);
+    this.reloadFromPage1(grid);
   }
 }

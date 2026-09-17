@@ -15,14 +15,6 @@
     </div>
     <div class="flex gap-2">
       <button
-        (click)="onFilterChange($event)"
-        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-      >
-        <i class="bi bi-funnel"></i>
-        กรอง
-      </button>
-
-      <button
         (click)="exportCsv()"
         class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         title="ส่งออกรายการในแท็บปัจจุบันเป็น CSV"
@@ -57,21 +49,21 @@
   <!-- ===== TAB SWITCHER ===== -->
   <div class="flex gap-1 border-b border-[var(--border)]">
     <button
-      (click)="viewMode.set('pending')"
+      (click)="setViewMode('pending', grid)"
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'pending' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
       <i class="bi bi-clock-history mr-1"></i> รอฉันอนุมัติ
     </button>
     <button
-      (click)="viewMode.set('approvedHistory')"
+      (click)="setViewMode('approvedHistory', grid)"
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'approvedHistory' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
       <i class="bi bi-check2-all mr-1"></i> ประวัติการอนุมัติของฉัน
     </button>
     <button
-      (click)="viewMode.set('myRequests')"
+      (click)="setViewMode('myRequests', grid)"
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'myRequests' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
@@ -89,11 +81,11 @@
         class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
         placeholder="ค้นหารหัส, ชื่อ, ผู้ขอ..."
         [value]="searchTerm()"
-        (input)="onSearch($event)"
+        (input)="onSearch($event, grid)"
       />
       @if (searchTerm()) {
         <button
-          (click)="clearSearch()"
+          (click)="clearSearch(grid)"
           class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
           <i class="bi bi-x-lg text-xs"></i>
@@ -106,7 +98,7 @@
       <sic-combobox
         [options]="documentTypeOptions"
         [ngModel]="filterType()"
-        (ngModelChange)="onTypeChange($event)"
+        (ngModelChange)="onTypeChange($event, grid)"
         placeholder="📋 ทุกประเภท"
         [clearable]="true"
       ></sic-combobox>
@@ -117,7 +109,7 @@
       <sic-combobox
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
-        (ngModelChange)="onFilterChange($event)"
+        (ngModelChange)="onFilterChange($event, grid)"
         placeholder="📊 ทุกสถานะ"
         [clearable]="true"
       ></sic-combobox>
@@ -128,221 +120,104 @@
       <sic-combobox
         [options]="projectSelectOptions"
         [ngModel]="filterProject()"
-        (ngModelChange)="onProjectChange($event)"
+        (ngModelChange)="onProjectChange($event, grid)"
         placeholder="📁 ทุกโครงการ"
         [clearable]="true"
       ></sic-combobox>
     </div>
   </div>
 
-  <!-- ===== LOADING (Skeleton) ===== -->
-  @if (isLoading()) {
-    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      @for (i of [1,2,3,4,5]; track i) {
-        <div class="border-b border-[var(--border)] px-4 py-3 last:border-b-0">
-          <sic-skeleton height="20px" width="100%"></sic-skeleton>
+  <!-- ===== GRID ===== -->
+  <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
+    <sic-gridpanel
+      #grid
+      [config]="gridConfig()"
+      (loadData)="handleGridLoad($event, grid)"
+    >
+      <ng-template sicGridPanelTemplate="docInfo" section="cell" let-row>
+        @let r = $any(row);
+        <div class="flex items-center gap-2">
+          <i class="bi text-[var(--crm-primary)]" [class]="getDocumentIcon(r.documentType)"></i>
+          <div>
+            <div class="text-xs text-[var(--text-muted)]">{{ r.documentType }}</div>
+            <div class="text-sm font-mono font-semibold text-[var(--text-active)]">{{ r.documentCode }}</div>
+          </div>
         </div>
-      }
-    </div>
-  }
+      </ng-template>
 
-  <!-- ===== TABLE ===== -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            @if (viewMode() === 'pending') {
-              <th class="px-4 py-3 w-10">
-                <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="เลือกทั้งหมด" />
-              </th>
-            }
-            <th
-              (click)="onSortChange('documentCode')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
-              ประเภท/รหัส
-              @if (sortBy() === 'documentCode') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('title')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[180px]"
-            >
-              รายการ
-              @if (sortBy() === 'title') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            @if (isColumnVisible('projectName')) {
-              <th
-                (click)="onSortChange('projectName')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px] hidden md:table-cell"
-              >
-                โครงการ
-                @if (sortBy() === 'projectName') {
-                  <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-                }
-              </th>
-            }
-            @if (isColumnVisible('requester')) {
-              <th
-                (click)="onSortChange('requester')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px] hidden lg:table-cell"
-              >
-                ผู้ขอ
-                @if (sortBy() === 'requester') {
-                  <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-                }
-              </th>
-            }
-            @if (isColumnVisible('requestedDate')) {
-              <th
-                (click)="onSortChange('requestedDate')"
-                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px] hidden lg:table-cell"
-              >
-                วันที่ขอ
-                @if (sortBy() === 'requestedDate') {
-                  <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-                }
-              </th>
-            }
-            <th
-              (click)="onSortChange('status')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[110px]"
-            >
-              สถานะ
-              @if (sortBy() === 'status') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
-              ดำเนินการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (item of paginatedApprovals(); track item.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              @if (viewMode() === 'pending') {
-                <td class="px-4 py-3">
-                  <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" [attr.aria-label]="'เลือก ' + item.documentCode" />
-                </td>
-              }
-              <td class="px-4 py-3">
-                <div class="flex items-center gap-2">
-                  <i class="bi text-[var(--crm-primary)]" [class]="getDocumentIcon(item.documentType)"></i>
-                  <div>
-                    <div class="text-xs text-[var(--text-muted)]">{{ item.documentType }}</div>
-                    <div class="text-sm font-mono font-semibold text-[var(--text-active)]">{{ item.documentCode }}</div>
-                  </div>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <div>
-                  <div class="font-medium text-[var(--text-active)]">{{ item.title }}</div>
-                  <div class="text-xs text-[var(--text-muted)]">ผู้อนุมัติ: {{ item.approver }}</div>
-                </div>
-              </td>
-              @if (isColumnVisible('projectName')) {
-                <td class="px-4 py-3 hidden md:table-cell">
-                  <span class="text-[var(--text)]">{{ item.projectName }}</span>
-                </td>
-              }
-              @if (isColumnVisible('requester')) {
-                <td class="px-4 py-3 hidden lg:table-cell">
-                  <span class="text-[var(--text-active)]">{{ item.requester }}</span>
-                </td>
-              }
-              @if (isColumnVisible('requestedDate')) {
-                <td class="px-4 py-3 hidden lg:table-cell">
-                  <div>
-                    <span class="text-sm text-[var(--text-muted)]">{{ formatDate(item.requestedDate) }}</span>
-                    @if (item.dueDate && item.status === 'PENDING') {
-                      <div class="mt-0.5">
-                        @if (isOverdue(item.dueDate, item.status)) {
-                          <span class="inline-flex items-center gap-1 text-xs text-[var(--crm-danger)] font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
-                            <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด ({{ formatDate(item.dueDate) }})
-                          </span>
-                        } @else if (isDueSoon(item.dueDate, item.status)) {
-                          <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
-                            <i class="bi bi-clock-history"></i> ใกล้ครบกำหนด
-                          </span>
-                        } @else {
-                          <span class="text-xs text-[var(--text-muted)] block">
-                            ครบกำหนด: {{ formatDate(item.dueDate) }}
-                          </span>
-                        }
-                      </div>
-                    }
-                  </div>
-                </td>
-              }
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(item.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(item.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3 text-center">
-                @if (item.status === 'PENDING') {
-                  <button
-                    (click)="goToApproval(item.id)"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-check2"></i>
-                    อนุมัติ
-                  </button>
-                } @else {
-                  <button
-                    (click)="goToApproval(item.id)"
-                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-                  >
-                    <i class="bi bi-eye"></i>
-                    ดู
-                  </button>
-                }
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="10" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบรายการอนุมัติ</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือรอรายการใหม่</p>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+      <ng-template sicGridPanelTemplate="titleInfo" section="cell" let-row>
+        @let r = $any(row);
+        <div class="font-medium text-[var(--text-active)]">{{ r.title }}</div>
+        <div class="text-xs text-[var(--text-muted)]">ผู้อนุมัติ: {{ r.approver }}</div>
+      </ng-template>
 
-  <!-- ===== PAGINATION ===== -->
-  <sic-pagination
-    [currentPage]="currentPage()"
-    [pageSize]="pageSize()"
-    [totalItems]="totalItems()"
-    (pageChange)="onPageChange($event)"
-  ></sic-pagination>
+      <ng-template sicGridPanelTemplate="dateInfo" section="cell" let-row>
+        @let r = $any(row);
+        <span class="text-sm text-[var(--text-muted)]">{{ formatDate(r.requestedDate) }}</span>
+        @if (r.dueDate && r.status === 'PENDING') {
+          <div class="mt-0.5">
+            @if (isOverdue(r.dueDate, r.status)) {
+              <span class="inline-flex items-center gap-1 text-xs text-[var(--crm-danger)] font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
+                <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด ({{ formatDate(r.dueDate) }})
+              </span>
+            } @else if (isDueSoon(r.dueDate, r.status)) {
+              <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
+                <i class="bi bi-clock-history"></i> ใกล้ครบกำหนด
+              </span>
+            } @else {
+              <span class="text-xs text-[var(--text-muted)] block">
+                ครบกำหนด: {{ formatDate(r.dueDate) }}
+              </span>
+            }
+          </div>
+        }
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getStatusText(r.status) }}
+        </span>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+        @let r = $any(row);
+        @if (r.status === 'PENDING') {
+          <button
+            (click)="goToApproval(r.id)"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+          >
+            <i class="bi bi-check2"></i>
+            อนุมัติ
+          </button>
+        } @else {
+          <button
+            (click)="goToApproval(r.id)"
+            class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+          >
+            <i class="bi bi-eye"></i>
+            ดู
+          </button>
+        }
+      </ng-template>
+    </sic-gridpanel>
+  </div>
 
   <!-- ===== BULK ACTION BAR (เฉพาะแท็บ "รอฉันอนุมัติ") ===== -->
-  @if (viewMode() === 'pending' && selectedIds().size > 0) {
+  @if (viewMode() === 'pending' && grid.selectedRowIds.size > 0) {
     <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
       <span class="text-sm font-medium text-[var(--text-active)]">
-        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ selectedIds().size }} รายการ
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ grid.selectedRowIds.size }} รายการ
       </span>
-      <button type="button" [disabled]="isBulkActing()" (click)="bulkApprove()"
+      <button type="button" [disabled]="isBulkActing()" (click)="bulkApprove(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all disabled:opacity-50">
         <i class="bi bi-check2"></i> อนุมัติทั้งหมด
       </button>
-      <button type="button" [disabled]="isBulkActing()" (click)="bulkReject()"
+      <button type="button" [disabled]="isBulkActing()" (click)="bulkReject(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--crm-danger)] text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-50">
         <i class="bi bi-x-lg"></i> ปฏิเสธทั้งหมด
       </button>
-      <button type="button" (click)="clearSelection()"
+      <button type="button" (click)="grid.reload()"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
         <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
       </button>

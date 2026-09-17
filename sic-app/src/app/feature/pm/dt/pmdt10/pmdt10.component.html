@@ -86,7 +86,8 @@
         <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]"></i>
         <input
           type="text"
-          [(ngModel)]="searchQuery"
+          [ngModel]="searchQuery()"
+          (ngModelChange)="onSearchQueryChange($event)"
           placeholder="ค้นหาชื่อ Task, รหัสงาน..."
           class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"
         />
@@ -98,7 +99,7 @@
           <sic-combobox
             [options]="specOptions()"
             [ngModel]="selectedSpecId()"
-            (ngModelChange)="selectedSpecId.set($event)"
+            (ngModelChange)="onSpecFilterChange($event)"
             placeholder="📜 ทุก Specification"
             [clearable]="true"
           ></sic-combobox>
@@ -111,7 +112,7 @@
           <sic-combobox
             [options]="wpOptions()"
             [ngModel]="selectedWpId()"
-            (ngModelChange)="selectedWpId.set($event)"
+            (ngModelChange)="onWpFilterChange($event)"
             placeholder="📦 ทุก Work Package"
             [clearable]="true"
           ></sic-combobox>
@@ -123,7 +124,7 @@
         <sic-combobox
           [options]="priorityOptions"
           [ngModel]="selectedPriority()"
-          (ngModelChange)="selectedPriority.set($event)"
+          (ngModelChange)="onPriorityFilterChange($event)"
           placeholder="🚩 ทุกความสำคัญ"
           [clearable]="true"
         ></sic-combobox>
@@ -135,7 +136,7 @@
           <sic-combobox
             [options]="assigneeOptions()"
             [ngModel]="selectedAssignee()"
-            (ngModelChange)="selectedAssignee.set($event)"
+            (ngModelChange)="onAssigneeFilterChange($event)"
             placeholder="👤 ทุกผู้รับผิดชอบ"
             [clearable]="true"
           ></sic-combobox>
@@ -206,115 +207,123 @@
     <!-- === 4.2 TABLE LIST VIEW === -->
     @if (viewType() === 'list') {
       <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm">
-            <thead class="bg-[var(--bg)]/70 text-xs font-bold text-[var(--text-muted)] uppercase tracking-wider border-b border-[var(--border)]">
-              <tr>
-                <th class="px-5 py-3.5">รหัส Task</th>
-                <th class="px-5 py-3.5">ชื่อ Task</th>
-                <th class="px-5 py-3.5">Specification (Trace)</th>
-                <th class="px-5 py-3.5">Work Package</th>
-                <th class="px-5 py-3.5">ผู้รับผิดชอบ</th>
-                <th class="px-5 py-3.5">Manday (จริง/แผน)</th>
-                <th class="px-5 py-3.5">สถานะ</th>
-                <th class="px-5 py-3.5">ความสำคัญ</th>
-                <th class="px-5 py-3.5">กำหนดส่ง</th>
-                <th class="px-5 py-3.5 text-right">จัดการ</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-[var(--border)]">
-              @for (task of filteredTasks(); track task.id) {
-                <tr
-                  (click)="openEditTask(task)"
-                  class="hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer"
-                >
-                  <td class="px-5 py-3.5 font-mono text-xs font-bold text-[var(--crm-primary)]">
-                    {{ task.taskCode }}
-                  </td>
-                  <td class="px-5 py-3.5 font-semibold text-[var(--text-active)]">
-                    {{ task.taskName }}
-                  </td>
-                  <td class="px-5 py-3.5 text-xs text-[var(--text)]">
-                    @if (task.specificationCode) {
-                      <span class="px-2 py-0.5 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium">
-                        [{{ task.specificationCode }}] {{ task.specificationTitle }}
-                      </span>
-                    } @else {
-                      <span class="text-[var(--text-muted)]">-</span>
-                    }
-                  </td>
-                  <td class="px-5 py-3.5 text-xs text-[var(--text-muted)]">
-                    {{ task.workPackageName || '-' }}
-                  </td>
-                  <td class="px-5 py-3.5">
-                    @let assignees = getTaskAssignees(task);
-                    @if (assignees.length > 0) {
-                      <div class="flex items-center gap-2">
-                        <div class="flex items-center -space-x-1.5 flex-shrink-0">
-                          @for (person of assignees.slice(0, 3); track person) {
-                            <sic-avatar
-                              [name]="person"
-                              [src]="getAssigneeAvatar(task, person)"
-                              size="sm"
-                              [title]="person"
-                              class="!w-[22px] !h-[22px] !text-[0.65rem] ring-1 ring-[var(--bg,#0f172a)] rounded-full flex-shrink-0"
-                            ></sic-avatar>
-                          }
-                          @if (assignees.length > 3) {
-                            <span class="w-[22px] h-[22px] rounded-full bg-gray-600 text-white flex items-center justify-center text-[0.6rem] font-bold" [title]="assignees.slice(3).join(', ')">
-                              +{{ assignees.length - 3 }}
-                            </span>
-                          }
-                        </div>
-                        <span class="text-xs text-[var(--text)] truncate max-w-[120px]" [title]="assignees.join(', ')">
-                          {{ assignees.join(', ') }}
-                        </span>
-                      </div>
-                    } @else {
-                      <span class="text-xs text-[var(--text-muted)]">-</span>
-                    }
-                  </td>
-                  <td class="px-5 py-3.5 text-xs font-mono">
-                    <span class="font-semibold text-[var(--text-active)]">{{ task.actualManday || 0 }}</span>
-                    <span class="text-[var(--text-muted)]"> / {{ task.estimateManday || 0 }}</span>
-                  </td>
-                  <td class="px-5 py-3.5">
-                    <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold {{ getStatusClass(task.status) }}">
-                      {{ task.status || 'Todo' }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-3.5">
-                    <span class="px-2 py-0.5 rounded-md text-xs font-semibold {{ getPriorityClass(task.priority) }}">
-                      {{ task.priority || 'Medium' }}
-                    </span>
-                  </td>
-                  <td class="px-5 py-3.5 text-xs font-mono" [class.text-[var(--crm-danger)]]="isOverdue(task.endDate, task.status)" [class.text-[var(--text-muted)]]="!isOverdue(task.endDate, task.status)">
-                    {{ formatDate(task.endDate) }}
-                  </td>
-                  <td class="px-5 py-3.5 text-right">
-                    <button
-                      type="button"
-                      (click)="deleteTask(task, $event)"
-                      class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all"
-                      title="ลบ Task"
-                    >
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </td>
-                </tr>
-              }
+        <sic-gridpanel
+          #grid
+          [config]="gridConfig"
+          (loadData)="handleGridLoad($event, grid)"
+        >
+          <ng-template sicGridPanelTemplate="taskCode" section="cell" let-row>
+            @let r = $any(row);
+            <span (click)="openEditTask(r)" class="cursor-pointer font-mono text-xs font-bold text-[var(--crm-primary)]">
+              {{ r.taskCode }}
+            </span>
+          </ng-template>
 
-              @if (filteredTasks().length === 0) {
-                <tr>
-                  <td colspan="9" class="px-5 py-12 text-center text-xs text-[var(--text-muted)]">
-                    <i class="bi bi-inbox text-3xl block mb-2 opacity-50"></i>
-                    ไม่พบรายการ Task ตามเงื่อนไขที่เลือก
-                  </td>
-                </tr>
+          <ng-template sicGridPanelTemplate="taskName" section="cell" let-row>
+            @let r = $any(row);
+            <span (click)="openEditTask(r)" class="cursor-pointer font-semibold text-[var(--text-active)]">
+              {{ r.taskName }}
+            </span>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="specTrace" section="cell" let-row>
+            @let r = $any(row);
+            <div (click)="openEditTask(r)" class="cursor-pointer text-xs text-[var(--text)]">
+              @if (r.specificationCode) {
+                <span class="px-2 py-0.5 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium">
+                  [{{ r.specificationCode }}] {{ r.specificationTitle }}
+                </span>
+              } @else {
+                <span class="text-[var(--text-muted)]">-</span>
               }
-            </tbody>
-          </table>
-        </div>
+            </div>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="wpName" section="cell" let-row>
+            @let r = $any(row);
+            <span (click)="openEditTask(r)" class="cursor-pointer text-xs text-[var(--text-muted)]">
+              {{ r.workPackageName || '-' }}
+            </span>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="assigneeList" section="cell" let-row>
+            @let r = $any(row);
+            @let assignees = getTaskAssignees(r);
+            <div (click)="openEditTask(r)" class="cursor-pointer">
+              @if (assignees.length > 0) {
+                <div class="flex items-center gap-2">
+                  <div class="flex items-center -space-x-1.5 flex-shrink-0">
+                    @for (person of assignees.slice(0, 3); track person) {
+                      <sic-avatar
+                        [name]="person"
+                        [src]="getAssigneeAvatar(r, person)"
+                        size="sm"
+                        [title]="person"
+                        class="!w-[22px] !h-[22px] !text-[0.65rem] ring-1 ring-[var(--bg,#0f172a)] rounded-full flex-shrink-0"
+                      ></sic-avatar>
+                    }
+                    @if (assignees.length > 3) {
+                      <span class="w-[22px] h-[22px] rounded-full bg-gray-600 text-white flex items-center justify-center text-[0.6rem] font-bold" [title]="assignees.slice(3).join(', ')">
+                        +{{ assignees.length - 3 }}
+                      </span>
+                    }
+                  </div>
+                  <span class="text-xs text-[var(--text)] truncate max-w-[120px]" [title]="assignees.join(', ')">
+                    {{ assignees.join(', ') }}
+                  </span>
+                </div>
+              } @else {
+                <span class="text-xs text-[var(--text-muted)]">-</span>
+              }
+            </div>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="mandayText" section="cell" let-row>
+            @let r = $any(row);
+            <div (click)="openEditTask(r)" class="cursor-pointer text-xs font-mono">
+              <span class="font-semibold text-[var(--text-active)]">{{ r.actualManday || 0 }}</span>
+              <span class="text-[var(--text-muted)]"> / {{ r.estimateManday || 0 }}</span>
+            </div>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+            @let r = $any(row);
+            <span (click)="openEditTask(r)" class="cursor-pointer px-2.5 py-0.5 rounded-full text-xs font-semibold {{ getStatusClass(r.status) }}">
+              {{ r.status || 'Todo' }}
+            </span>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="priorityBadge" section="cell" let-row>
+            @let r = $any(row);
+            <span (click)="openEditTask(r)" class="cursor-pointer px-2 py-0.5 rounded-md text-xs font-semibold {{ getPriorityClass(r.priority) }}">
+              {{ r.priority || 'Medium' }}
+            </span>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="endDateText" section="cell" let-row>
+            @let r = $any(row);
+            <span
+              (click)="openEditTask(r)"
+              class="cursor-pointer text-xs font-mono"
+              [class.text-[var(--crm-danger)]]="isOverdue(r.endDate, r.status)"
+              [class.text-[var(--text-muted)]]="!isOverdue(r.endDate, r.status)"
+            >
+              {{ formatDate(r.endDate) }}
+            </span>
+          </ng-template>
+
+          <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+            @let r = $any(row);
+            <button
+              type="button"
+              (click)="deleteTask(r, $event, grid)"
+              class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all"
+              title="ลบ Task"
+            >
+              <i class="bi bi-trash"></i>
+            </button>
+          </ng-template>
+        </sic-gridpanel>
       </div>
     }
 

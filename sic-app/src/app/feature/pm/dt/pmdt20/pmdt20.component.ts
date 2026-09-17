@@ -23,12 +23,12 @@ interface AuditLog {
 import { FormsModule } from '@angular/forms';
 import { AuditLogService } from './audit-log.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridRowData } from 'sic-ng';
 
 @Component({
   selector: 'app-pmdt20',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent],
   templateUrl: './pmdt20.component.html',
   styleUrls: ['./pmdt20.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -44,8 +44,6 @@ export class Pmdt20Component implements OnInit {
   protected filterUser = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
-  protected sortBy = signal('createdDate');
-  protected sortDir = signal<'asc' | 'desc'>('desc');
   protected isLoading = signal(false);
 
   // ===== Data =====
@@ -62,7 +60,6 @@ export class Pmdt20Component implements OnInit {
 
   ngOnInit() {
     this.loadFilterOptions();
-    this.loadLogs();
   }
 
   loadFilterOptions() {
@@ -97,21 +94,48 @@ export class Pmdt20Component implements OnInit {
 
   // ===== Server Pagination State =====
   protected totalItems = signal(0);
-  protected totalPages = signal(1);
 
-  loadLogs() {
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    defaultSortField: 'createdDate',
+    defaultSortDescending: true,
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'ผู้ใช้', name: 'user', type: 'userInfo', sortable: true, minWidth: 100 },
+      { label: 'การกระทำ', name: 'action', type: 'text', sortable: true, minWidth: 120 },
+      { label: 'โมดูล', name: 'module', type: 'text', sortable: true, minWidth: 130 },
+      { label: 'รายละเอียด', name: 'description', type: 'descText', minWidth: 200 },
+      { label: 'วันที่-เวลา', name: 'timestamp', type: 'dateText', sortable: true, minWidth: 150 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', sortable: true, minWidth: 80 },
+    ],
+  };
+
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent) {
     this.isLoading.set(true);
+    this.currentPage.set(request.pageNumber);
     this.auditLogService.getLogs({
       searchTerm: this.searchTerm(),
       module: this.filterModule(),
       status: this.filterStatus(),
       username: this.filterUser(),
-      page: this.currentPage(),
-      size: this.pageSize(),
-      sortBy: this.sortBy(),
-      sortDir: this.sortDir(),
+      page: request.pageNumber,
+      size: request.pageSize,
+      sortBy: request.sortField ?? 'createdDate',
+      sortDir: request.sortDescending ? 'desc' : 'asc',
     }).subscribe({
       next: (res) => {
+        let totalElements = 0;
         if (res && res.content) {
           const mappedLogs: AuditLog[] = res.content.map(item => ({
             id: item.id,
@@ -130,12 +154,13 @@ export class Pmdt20Component implements OnInit {
             details: item.details,
           }));
           this.logs.set(mappedLogs);
-          this.totalItems.set(res.totalElements ?? mappedLogs.length);
-          this.totalPages.set(res.totalPages && res.totalPages > 0 ? res.totalPages : 1);
+          totalElements = res.totalElements ?? mappedLogs.length;
+          this.totalItems.set(totalElements);
+          grid.setRows(mappedLogs as unknown as SicGridRowData[], { totalElements }, request.requestId);
         } else {
           this.logs.set([]);
           this.totalItems.set(0);
-          this.totalPages.set(1);
+          grid.setRows([], { totalElements: 0 }, request.requestId);
         }
         this.isLoading.set(false);
       },
@@ -144,63 +169,39 @@ export class Pmdt20Component implements OnInit {
         this.isLoading.set(false);
         this.logs.set([]);
         this.totalItems.set(0);
-        this.totalPages.set(1);
+        grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
       }
     });
   }
 
-  // Display logs from server response directly
-  protected paginatedLogs = computed(() => this.logs());
-
   // ===== Actions =====
-  onSearch(event: Event) {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.loadLogs();
+    this.reloadFromPage1(grid);
   }
 
-  onModuleChange(value: any) {
+  onModuleChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterModule.set(val || 'all');
-    this.currentPage.set(1);
-    this.loadLogs();
+    this.reloadFromPage1(grid);
   }
 
-  onStatusChange(value: any) {
+  onStatusChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
-    this.loadLogs();
+    this.reloadFromPage1(grid);
   }
 
-  onUserChange(value: any) {
+  onUserChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterUser.set(val || 'all');
-    this.currentPage.set(1);
-    this.loadLogs();
+    this.reloadFromPage1(grid);
   }
 
-  onSortChange(field: string) {
-    if (this.sortBy() === field) {
-      this.sortDir.set(this.sortDir() === 'asc' ? 'desc' : 'asc');
-    } else {
-      this.sortBy.set(field);
-      this.sortDir.set('asc');
-    }
-    this.loadLogs();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.loadLogs();
-  }
-
-  clearSearch() {
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.loadLogs();
+    this.reloadFromPage1(grid);
   }
 
   // ===== Utility =====

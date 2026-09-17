@@ -29,11 +29,11 @@
         class="w-full h-[3.15rem] pl-9 pr-9 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-[0.95rem] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
         placeholder="ค้นหารหัส, ชื่อ..."
         [value]="searchTerm()"
-        (input)="onSearch($event)"
+        (input)="onSearch($event, grid)"
       />
       @if (searchTerm()) {
         <button
-          (click)="clearSearch()"
+          (click)="clearSearch(grid)"
           class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
           <i class="bi bi-x-lg text-xs"></i>
@@ -45,158 +45,80 @@
       <sic-combobox
         [options]="statusOptions"
         [ngModel]="filterStatus()"
-        (ngModelChange)="onFilterChange($event)"
+        (ngModelChange)="onFilterChange($event, grid)"
         placeholder="📊 ทุกสถานะ"
         [clearable]="true"
       ></sic-combobox>
     </div>
   </div>
 
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
+  <!-- GRID -->
+  <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
+    <sic-gridpanel
+      #grid
+      [config]="gridConfig"
+      (loadData)="handleGridLoad($event, grid)"
+    >
+      <ng-template sicGridPanelTemplate="code" section="cell" let-row>
+        @let r = $any(row);
+        <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+          {{ r.requirementCode }}
+        </span>
+      </ng-template>
 
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th (click)="onSortChange('requirementCode')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
-              รหัส
-              @if (sortBy() === 'requirementCode') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('title')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]">
-              ชื่อ
-              @if (sortBy() === 'title') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('projectName')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]">
-              โครงการ
-              @if (sortBy() === 'projectName') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('priority')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]">
-              Priority
-              @if (sortBy() === 'priority') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th (click)="onSortChange('status')" class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]">
-              สถานะ
-              @if (sortBy() === 'status') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]">
-              อนุมัติ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px] hidden md:table-cell">
-              เวอร์ชัน
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (req of requirements(); track req.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  {{ req.requirementCode }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div>
-                  <div class="font-medium text-[var(--text-active)]">{{ req.title }}</div>
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text)]">{{ req.projectName }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getPriorityClass(req.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ req.priority }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(req.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(req.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                @if (req.status?.toUpperCase() === 'CHANGED') {
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    รอส่งอนุมัติ
-                  </span>
-                } @else if (req.status?.toUpperCase() === 'DRAFT') {
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                    ยังไม่อนุมัติ
-                  </span>
-                } @else if (req.approvalStatus) {
-                  <span [class]="getApprovalStatusClass(req.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                    {{ getApprovalStatusText(req.approvalStatus) }}
-                  </span>
-                } @else {
-                  <span class="text-xs text-[var(--text-muted)]">-</span>
-                }
-              </td>
-              <td class="px-4 py-3 text-[var(--text-muted)] font-mono text-sm hidden md:table-cell">
-                {{ req.version }}
-              </td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1">
-                  <!-- ปุ่ม View รายละเอียด Trace/Diagram (pmrt05) -->
-                  <button
-                    (click)="goToView(req.id)"
-                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="ดูผังความสัมพันธ์ (pmrt05)"
-                  >
-                    <i class="bi bi-file-earmark-text"></i>
-                  </button>
-                  <!-- Reusable Table Actions Component -->
-                  <sic-table-actions
-                    (onView)="goToViewOnly(req.id)"
-                    (onPrint)="printDocument(req)"
-                    (onEdit)="goToEdit(req.id)"
-                    (onDelete)="deleteRequirement(req.id)"
-                  ></sic-table-actions>
-                </div>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="8" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Requirement</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Requirement ใหม่</p>
-                  <button (click)="goToAdd()" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all">
-                    <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
-                  </button>
-                </div>
-              </td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-  }
+      <ng-template sicGridPanelTemplate="priorityBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getPriorityClass(r.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ r.priority }}
+        </span>
+      </ng-template>
 
-  <!-- PAGINATION -->
-  <sic-pagination
-    [currentPage]="currentPage()"
-    [pageSize]="pageSize()"
-    [totalItems]="totalItems()"
-    (pageChange)="onPageChange($event)"
-  ></sic-pagination>
+      <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getStatusText(r.status) }}
+        </span>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="approvalBadge" section="cell" let-row>
+        @let r = $any(row);
+        @if (r.status?.toUpperCase() === 'CHANGED') {
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+            รอส่งอนุมัติ
+          </span>
+        } @else if (r.status?.toUpperCase() === 'DRAFT') {
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+            ยังไม่อนุมัติ
+          </span>
+        } @else if (r.approvalStatus) {
+          <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            {{ getApprovalStatusText(r.approvalStatus) }}
+          </span>
+        } @else {
+          <span class="text-xs text-[var(--text-muted)]">-</span>
+        }
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+        @let r = $any(row);
+        <div class="flex items-center justify-center gap-1">
+          <!-- ปุ่ม View รายละเอียด Trace/Diagram (pmrt05) -->
+          <button
+            (click)="goToView(r.id)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+            title="ดูผังความสัมพันธ์ (pmrt05)"
+          >
+            <i class="bi bi-file-earmark-text"></i>
+          </button>
+          <!-- Reusable Table Actions Component -->
+          <sic-table-actions
+            (onView)="goToViewOnly(r.id)"
+            (onPrint)="printDocument(r)"
+            (onEdit)="goToEdit(r.id)"
+            (onDelete)="deleteRequirement(r.id, grid)"
+          ></sic-table-actions>
+        </div>
+      </ng-template>
+    </sic-gridpanel>
+  </div>
 </div>

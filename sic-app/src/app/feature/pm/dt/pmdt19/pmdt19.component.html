@@ -50,115 +50,82 @@
     </div>
   </div>
 
-  <!-- Version Data Grid Table -->
+  <!-- Version Data Grid -->
   <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)]">
-    @if (isLoading()) {
-      <div class="flex flex-col items-center justify-center py-12 gap-3">
-        <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-        <p class="text-sm text-[var(--text-muted)]">กำลังโหลดประวัติเวอร์ชัน...</p>
-      </div>
-    } @else if (filteredVersions().length === 0) {
-      <div class="text-center py-12 text-[var(--text-muted)] space-y-3">
-        <i class="bi bi-journal-code text-5xl block mb-2 opacity-30 text-[var(--crm-primary)]"></i>
-        <div class="text-base font-medium text-[var(--text-active)]">ยังไม่มีประวัติเวอร์ชันสำหรับเงื่อนไขนี้</div>
-        <p class="text-xs">เมื่อมีการสร้างหรือแก้ไขเอกสารในโครงการ ระบบจะจัดเก็บประวัติเวอร์ชันที่นี่โดยอัตโนมัติ</p>
-      </div>
-    } @else {
-      <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)]">
-        <table class="w-full text-sm">
-          <thead class="bg-[var(--bg)] border-b border-[var(--border)] text-[var(--text-muted)] uppercase text-[11px] font-semibold tracking-wider">
-            <tr>
-              <th class="px-4 py-3 text-left">เวอร์ชัน</th>
-              <th class="px-4 py-3 text-left">ประเภทเอกสาร</th>
-              <th class="px-4 py-3 text-left">รหัส / ชื่อเอกสาร</th>
-              <th class="px-4 py-3 text-left">สรุปการเปลี่ยนแปลง</th>
-              <th class="px-4 py-3 text-left">ผู้บันทึก</th>
-              <th class="px-4 py-3 text-left">วันที่บันทึก</th>
-              <th class="px-4 py-3 text-right">จัดการ</th>
-            </tr>
-          </thead>
-          <tbody class="divide-y divide-[var(--border)]">
-            @for (ver of paginatedVersions(); track ver.id) {
-              <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-                <td class="px-4 py-3.5">
-                  <div class="flex items-center gap-1.5">
-                    <span class="font-mono font-bold text-[var(--text-active)]">{{ ver.versionNo }}</span>
-                    @if (ver.isActive) {
-                      <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-                        Active
-                      </span>
-                    }
-                  </div>
-                </td>
-                <td class="px-4 py-3.5">
-                  <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-                    {{ ver.documentType }}
-                  </span>
-                </td>
-                <td class="px-4 py-3.5 font-medium text-[var(--text-active)]">
-                  {{ ver.documentCode || '-' }}
-                </td>
-                <td class="px-4 py-3.5 text-xs text-[var(--text)] max-w-xs truncate" [title]="ver.changeSummary || ''">
-                  {{ ver.changeSummary || '-' }}
-                </td>
-                <td class="px-4 py-3.5 text-xs text-[var(--text)]">
-                  <div class="flex items-center gap-1.5">
-                    <i class="bi bi-person text-[var(--crm-primary)]"></i>
-                    <span>{{ ver.createdBy || 'System' }}</span>
-                  </div>
-                </td>
-                <td class="px-4 py-3.5 text-xs text-[var(--text-muted)] whitespace-nowrap">
-                  {{ ver.createdDate ? (ver.createdDate | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}
-                </td>
-                <td class="px-4 py-3.5 text-right whitespace-nowrap">
-                  <div class="flex items-center justify-end gap-1.5">
-                    <button
-                      (click)="onViewContent(ver)"
-                      class="p-1.5 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 rounded-lg transition-all flex items-center gap-1 text-xs font-medium"
-                      title="เปิดดูเนื้อหาเอกสารเวอร์ชันนี้"
-                    >
-                      <i class="bi bi-eye text-base"></i>
-                    </button>
-                    @if (!ver.isActive) {
-                      <button
-                        (click)="onActivate(ver.id)"
-                        class="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-all"
-                        title="ตั้งเป็น Active Version"
-                      >
-                        <i class="bi bi-check-circle text-base"></i>
-                      </button>
-                    }
-                    <button
-                      (click)="onDelete(ver.id)"
-                      class="p-1.5 text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded-lg transition-all"
-                      title="ลบ"
-                    >
-                      <i class="bi bi-trash text-base"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
+    <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] overflow-hidden">
+      <sic-gridpanel
+        #grid
+        [config]="gridConfig"
+        (loadData)="handleGridLoad($event, grid)"
+      >
+        <ng-template sicGridPanelTemplate="versionInfo" section="cell" let-row>
+          @let r = $any(row);
+          <div class="flex items-center gap-1.5">
+            <span class="font-mono font-bold text-[var(--text-active)]">{{ r.versionNo }}</span>
+            @if (r.isActive) {
+              <span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
+                Active
+              </span>
             }
-          </tbody>
-        </table>
-      </div>
+          </div>
+        </ng-template>
 
-      <!-- Pagination -->
-      <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-[var(--border)] mt-4">
-        <div class="w-36">
-          <sic-combobox
-            [options]="pageSizeOptions"
-            [ngModel]="pageSize()"
-            (ngModelChange)="onPageSizeChange($event)"
-          ></sic-combobox>
-        </div>
-        <sic-pagination
-          [currentPage]="currentPage() + 1"
-          [pageSize]="pageSize()"
-          [totalItems]="totalItems()"
-          (pageChange)="onPageChange($event - 1)"
-        ></sic-pagination>
-      </div>
-    }
+        <ng-template sicGridPanelTemplate="docTypeTag" section="cell" let-row>
+          @let r = $any(row);
+          <span class="px-2 py-0.5 rounded text-xs font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+            {{ r.documentType }}
+          </span>
+        </ng-template>
+
+        <ng-template sicGridPanelTemplate="summaryText" section="cell" let-row>
+          @let r = $any(row);
+          <span class="text-xs text-[var(--text)] max-w-xs truncate block" [title]="r.changeSummary || ''">{{ r.changeSummary || '-' }}</span>
+        </ng-template>
+
+        <ng-template sicGridPanelTemplate="createdByInfo" section="cell" let-row>
+          @let r = $any(row);
+          <div class="flex items-center gap-1.5 text-xs text-[var(--text)]">
+            <i class="bi bi-person text-[var(--crm-primary)]"></i>
+            <span>{{ r.createdBy || 'System' }}</span>
+          </div>
+        </ng-template>
+
+        <ng-template sicGridPanelTemplate="dateText" section="cell" let-row>
+          @let r = $any(row);
+          <span class="text-xs text-[var(--text-muted)] whitespace-nowrap">
+            {{ r.createdDate ? (r.createdDate | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}
+          </span>
+        </ng-template>
+
+        <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+          @let r = $any(row);
+          <div class="flex items-center justify-end gap-1.5">
+            <button
+              (click)="onViewContent(r)"
+              class="p-1.5 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 rounded-lg transition-all flex items-center gap-1 text-xs font-medium"
+              title="เปิดดูเนื้อหาเอกสารเวอร์ชันนี้"
+            >
+              <i class="bi bi-eye text-base"></i>
+            </button>
+            @if (!r.isActive) {
+              <button
+                (click)="onActivate(r.id)"
+                class="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-all"
+                title="ตั้งเป็น Active Version"
+              >
+                <i class="bi bi-check-circle text-base"></i>
+              </button>
+            }
+            <button
+              (click)="onDelete(r.id)"
+              class="p-1.5 text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded-lg transition-all"
+              title="ลบ"
+            >
+              <i class="bi bi-trash text-base"></i>
+            </button>
+          </div>
+        </ng-template>
+      </sic-gridpanel>
+    </div>
   </div>
 </div>
