@@ -23,4 +23,6 @@ public interface PmMaTicketRepository extends JpaRepository<PmMaTicket, UUID>, J
             UUID businessId, UUID projectId, String ticketNo);
 
     long countByBusinessIdAndStatusNotInAndIsDeleteFalse(UUID businessId, Collection<MaTicketStatus> closedStatuses);
+
+    long countByProjectIdAndStatusNotInAndIsDeleteFalse(UUID projectId, Collection<MaTicketStatus> closedStatuses);
 }

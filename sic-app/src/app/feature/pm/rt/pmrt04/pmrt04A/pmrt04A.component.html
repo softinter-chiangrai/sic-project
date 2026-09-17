@@ -43,6 +43,7 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <sic-copy-link></sic-copy-link>
         @if (!isView && !isLocked) {
           <button
             type="button"
@@ -60,6 +61,10 @@
         }
       </div>
     </div>
+
+    @if (contractId && (summary() || summaryLoading())) {
+      <sic-entity-summary [cards]="summaryCards()" [isLoading]="summaryLoading()"></sic-entity-summary>
+    }
 
     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
       <!-- Single Unified Form Card -->

@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface PmMaTicketService {
     Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, Pageable pageable);
+
+    Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable);
     PmMaTicketResponse findById(UUID id, UUID businessId);
     UUID save(PmMaTicketRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);

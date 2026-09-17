@@ -69,9 +69,28 @@ export class Pmdt14Component implements OnInit {
   totalPages = computed(() => Math.ceil(this.totalElements() / this.size()) || 1);
 
   ngOnInit(): void {
+    const qp = this.route.snapshot.queryParams;
+    if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
+    if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
+    if (qp['page'] !== undefined) this.page.set(+qp['page'] || 1);
+
     const projId = resolveProjectId(this.route, this.customerState);
     this.projectId.set(projId);
     this.loadData();
+  }
+
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        page: this.page() > 1 ? this.page() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   loadData(): void {
@@ -108,10 +127,12 @@ export class Pmdt14Component implements OnInit {
   onSearch(event: Event): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.syncFiltersToUrl();
   }
 
   clearSearch(): void {
     this.searchTerm.set('');
+    this.syncFiltersToUrl();
   }
 
   readonly statusOptions = [
@@ -126,11 +147,13 @@ export class Pmdt14Component implements OnInit {
   onFilterChange(value: any): void {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
+    this.syncFiltersToUrl();
   }
 
   onPageChange(p: number): void {
     if (p < 1 || p > this.totalPages()) return;
     this.page.set(p);
+    this.syncFiltersToUrl();
     this.loadData();
   }
 

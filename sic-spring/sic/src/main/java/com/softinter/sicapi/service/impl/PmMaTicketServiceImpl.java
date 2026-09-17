@@ -52,13 +52,43 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     @Override
     @Transactional(readOnly = true)
     public Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
-        Page<PmMaTicket> page;
-        if (projectId != null) {
-            page = ticketRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-        } else {
-            page = ticketRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+        return findAll(businessId, projectId, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (status == null || status.isBlank() || "all".equals(status))) {
+            Page<PmMaTicket> page;
+            if (projectId != null) {
+                page = ticketRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
+            } else {
+                page = ticketRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+            }
+            return page.map(this::toResponse);
         }
-        return page.map(this::toResponse);
+
+        org.springframework.data.jpa.domain.Specification<PmMaTicket> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (keyword != null && !keyword.isBlank()) {
+                String pattern = "%" + keyword.toLowerCase() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("ticketNo")), pattern),
+                        cb.like(cb.lower(root.get("title")), pattern)
+                ));
+            }
+            if (status != null && !status.isBlank() && !"all".equals(status)) {
+                predicates.add(cb.equal(root.get("status"), MaTicketStatus.valueOf(status)));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return ticketRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override

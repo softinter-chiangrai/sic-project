@@ -1,0 +1,101 @@
+@if (search.isOpen()) {
+  <div
+    class="fixed inset-0 z-[1100] flex items-start justify-center bg-[color-mix(in_srgb,var(--text-active)_28%,transparent)] px-4 pt-[10vh] backdrop-blur-sm"
+    (click)="onBackdropClick()"
+  >
+    <div
+      class="w-full max-w-xl overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center gap-3 border-b border-[var(--border)] px-4 py-3">
+        <i class="bi bi-search text-[var(--text-muted)]"></i>
+        <input
+          #searchInput
+          type="text"
+          autofocus
+          [ngModel]="keyword()"
+          (ngModelChange)="onKeywordChange($event)"
+          placeholder="ค้นหาหรือกดคำสั่ง..."
+          class="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
+        />
+        <button
+          type="button"
+          (click)="close()"
+          class="rounded-md border border-[var(--border)] px-2 py-0.5 text-[0.7rem] text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] cursor-pointer"
+        >
+          Esc
+        </button>
+      </div>
+
+      <div class="max-h-[60vh] overflow-y-auto py-2">
+        @if (search.isLoading()) {
+          <div class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">กำลังค้นหา...</div>
+        } @else if (rows().length === 0) {
+          <div class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
+            @if (keyword().trim()) {
+              ไม่พบผลลัพธ์สำหรับ "{{ keyword() }}"
+            } @else {
+              พิมพ์เพื่อค้นหาโครงการ สัญญา ลูกค้า หรือเมนู
+            }
+          </div>
+        } @else {
+          @for (section of sections(); track section.title) {
+            <div class="px-2 pb-1 pt-2 text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              <i class="bi" [class]="section.icon"></i> {{ section.title }}
+            </div>
+            @for (entry of section.rows; track trackByRow(entry.index, entry.row)) {
+              <button
+                type="button"
+                class="flex w-full items-center gap-3 px-4 py-2 text-left transition-colors hover:bg-[var(--sidebar-hover)] cursor-pointer"
+                [class.bg-[var(--sidebar-hover)]]="activeIndex() === entry.index"
+                (mouseenter)="activeIndex.set(entry.index)"
+                (click)="selectRow(entry.row)"
+              >
+                @switch (entry.row.kind) {
+                  @case ('recent') {
+                    <i class="bi bi-clock-history text-[var(--text-muted)]"></i>
+                    <span class="truncate text-sm text-[var(--text)]">{{ entry.row.item }}</span>
+                  }
+                  @case ('menu') {
+                    <i class="bi text-[var(--crm-primary)]" [class]="entry.row.item.icon || 'bi-link-45deg'"></i>
+                    <span class="truncate text-sm text-[var(--text-active)]">{{ entry.row.item.label }}</span>
+                  }
+                  @case ('project') {
+                    <i class="bi bi-folder2-open text-[var(--crm-primary)]"></i>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm text-[var(--text-active)]">{{ entry.row.item.projectName }}</span>
+                      <span class="block truncate text-xs text-[var(--text-muted)]">{{ entry.row.item.customerName }} · {{ entry.row.item.projectCode }}</span>
+                    </span>
+                  }
+                  @case ('contract') {
+                    <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate font-mono text-sm text-[var(--text-active)]">{{ entry.row.item.contractNo }}</span>
+                      <span class="block truncate text-xs text-[var(--text-muted)]">{{ entry.row.item.customerName }} · {{ entry.row.item.contractType }}</span>
+                    </span>
+                  }
+                  @case ('customer') {
+                    <i class="bi bi-building text-[var(--crm-primary)]"></i>
+                    <span class="min-w-0 flex-1">
+                      <span class="block truncate text-sm text-[var(--text-active)]">{{ entry.row.item.name }}</span>
+                      <span class="block truncate text-xs text-[var(--text-muted)]">{{ entry.row.item.customerCode }}</span>
+                    </span>
+                  }
+                }
+              </button>
+            }
+          }
+        }
+      </div>
+
+      <div class="flex items-center justify-between border-t border-[var(--border)] px-4 py-2 text-[0.68rem] text-[var(--text-muted)]">
+        <span><i class="bi bi-arrow-down-up"></i> เลื่อน &nbsp; <i class="bi bi-arrow-return-left"></i> เลือก</span>
+        @if (search.recentSearches().length > 0 && !keyword().trim()) {
+          <button type="button" (click)="search.clearRecent()" class="hover:text-[var(--text-active)] cursor-pointer">
+            ล้างประวัติการค้นหา
+          </button>
+        }
+      </div>
+    </div>
+  </div>
+}

@@ -60,8 +60,20 @@ export class Pmdt06Component implements OnInit {
   // Computed
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
 
+  // guard: ป้องกัน loadChangeRequests() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  private syncingUrl = false;
+
   ngOnInit() {
     this.route.queryParams.subscribe((queryParams) => {
+      if (this.syncingUrl) {
+        this.syncingUrl = false;
+        return;
+      }
+
+      if (queryParams['q'] !== undefined) this.searchTerm.set(queryParams['q']);
+      if (queryParams['status'] !== undefined) this.filterStatus.set(queryParams['status']);
+      if (queryParams['page'] !== undefined) this.currentPage.set(+queryParams['page'] || 1);
+
       // ดึง projectId จาก queryParams ก่อน ถ้าไม่มีค่อย fallback ไป customerState
       const projectId = queryParams['projectId'] || this.customerState.getProjectId();
       this.projectId.set(projectId || null);
@@ -69,6 +81,21 @@ export class Pmdt06Component implements OnInit {
         this.customerState.setProject(projectId);
       }
       this.loadChangeRequests();
+    });
+  }
+
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.syncingUrl = true;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
     });
   }
 
@@ -121,12 +148,14 @@ export class Pmdt06Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadChangeRequests();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadChangeRequests();
   }
 
@@ -143,12 +172,14 @@ export class Pmdt06Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadChangeRequests();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
     this.loadChangeRequests();
   }
 

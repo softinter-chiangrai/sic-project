@@ -8,6 +8,7 @@ import {
   ChangeDetectorRef,
   Component,
   OnInit,
+  computed,
   inject,
 } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
@@ -31,8 +32,10 @@ import { ApprovalService } from '../../../dt/pmdt03/approval.service';
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt04AForm } from './pmrt04A.form';
 import { ContractModel } from './pmrt04A.model';
-import { Pmrt04AService } from './pmrt04A.service';
+import { Pmrt04AService, ContractSummary } from './pmrt04A.service';
+import { SicEntitySummaryComponent, EntitySummaryCard } from '../../../../../core/component/sic-entity-summary/sic-entity-summary.component';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 
 @Component({
   selector: 'app-pmrt04a',
@@ -48,6 +51,8 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicInputComponent,
     SicTiptapEditorComponent,
     SicDatepickerComponent,
+    SicCopyLinkComponent,
+    SicEntitySummaryComponent,
   ],
   templateUrl: './pmrt04A.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -81,6 +86,61 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   customerName: string | null = null;
   projectId: string | null = null;
   projectName: string | null = null;
+
+  // ===== Cross-Entity Summary =====
+  summary = signal<ContractSummary | null>(null);
+  summaryLoading = signal(false);
+
+  summaryCards = computed<EntitySummaryCard[]>(() => {
+    const s = this.summary();
+    if (!s) return [];
+    const projectId = this.projectId;
+    const cards: EntitySummaryCard[] = [
+      {
+        icon: 'bi-flag',
+        label: 'Milestone',
+        value: `${s.milestones.completed}/${s.milestones.total}`,
+        sublabel: 'เสร็จแล้ว/ทั้งหมด',
+        actionLabel: 'ดู Phase',
+        action: () => this.navigation.navigate(['/feature/pm/phase'], { queryParams: { projectId } }),
+      },
+      {
+        icon: 'bi-receipt',
+        label: 'ใบแจ้งหนี้',
+        value: String(s.invoices.total),
+        sublabel: s.invoices.pending > 0 ? `${s.invoices.pending} ค้างชำระ` : 'ชำระครบแล้ว',
+        variant: s.invoices.pending > 0 ? 'warning' : 'default',
+        actionLabel: 'ดูใบแจ้งหนี้',
+        action: () => this.navigation.navigate(['/feature/pm/invoice'], { queryParams: { projectId } }),
+      },
+      {
+        icon: 'bi-ticket-perforated',
+        label: 'MA Ticket',
+        value: String(s.maTickets.total),
+        sublabel: s.maTickets.open > 0 ? `${s.maTickets.open} เปิดอยู่` : 'ไม่มีที่เปิดอยู่',
+        variant: s.maTickets.open > 0 ? 'warning' : 'default',
+        actionLabel: 'ดู MA Ticket',
+        action: () => this.navigation.navigate(['/feature/pm/ma-ticket'], { queryParams: { projectId } }),
+      },
+    ];
+
+    if (s.daysUntilExpiry !== null) {
+      const expiring = s.daysUntilExpiry <= 30;
+      cards.push({
+        icon: 'bi-clock-history',
+        label: 'อายุสัญญา',
+        value: s.daysUntilExpiry >= 0 ? `อีก ${s.daysUntilExpiry} วัน` : 'หมดอายุแล้ว',
+        sublabel: expiring ? 'ใกล้หมดอายุ' : undefined,
+        variant: s.daysUntilExpiry < 0 ? 'danger' : expiring ? 'warning' : 'default',
+        actionLabel: this.contractId ? 'ต่อสัญญา' : undefined,
+        action: this.contractId
+          ? () => this.navigation.navigate(['/feature/pm/contract/renew', this.contractId!])
+          : undefined,
+      });
+    }
+
+    return cards;
+  });
 
   // ===== AI Assistant =====
   showAiModal = signal(false);
@@ -208,6 +268,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
             this.form.enable();
           }
           this.cdr.detectChanges();
+          this.loadSummary(id);
         },
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
@@ -215,6 +276,17 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           this.navigation.navigate(['/feature/pm/contract']);
         },
       });
+  }
+
+  loadSummary(id: string): void {
+    this.summaryLoading.set(true);
+    this.service.getContractSummary(id).subscribe({
+      next: (data) => {
+        this.summary.set(data);
+        this.summaryLoading.set(false);
+      },
+      error: () => this.summaryLoading.set(false),
+    });
   }
 
   onBack(): void {

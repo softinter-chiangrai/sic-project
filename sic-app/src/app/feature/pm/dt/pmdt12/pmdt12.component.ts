@@ -262,7 +262,32 @@ export class Pmdt12Component implements OnInit {
     if (bId) {
       this.businessId.set(bId);
     }
+
+    // อ่านสถานะ filter จาก query params เพื่อคงค่าไว้เมื่อ refresh หน้า
+    const qp = this.route.snapshot.queryParams;
+    if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
+    if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
+    if (qp['priority'] !== undefined) this.filterPriority.set(qp['priority']);
+    if (qp['taskStatus'] !== undefined) this.filterTaskStatus.set(qp['taskStatus']);
+    if (qp['type'] !== undefined) this.filterTestType.set(qp['type'] as 'All' | 'SIT' | 'UAT');
+
     this.loadData();
+  }
+
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        priority: this.filterPriority() !== 'all' ? this.filterPriority() : null,
+        taskStatus: this.filterTaskStatus() !== 'all' ? this.filterTaskStatus() : null,
+        type: this.filterTestType() !== 'All' ? this.filterTestType() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   loadData() {
@@ -431,29 +456,34 @@ export class Pmdt12Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   onFilterStatusChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   onFilterPriorityChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterPriority.set(val || 'all');
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   onFilterTaskStatusChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterTaskStatus.set(val || 'all');
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   setQuickFilterReady() {
@@ -463,11 +493,13 @@ export class Pmdt12Component implements OnInit {
       this.filterTaskStatus.set('ready');
     }
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   setFilterTestType(type: 'All' | 'SIT' | 'UAT') {
     this.filterTestType.set(type);
     this.scenarioPageMap.set(new Map());
+    this.syncFiltersToUrl();
   }
 
   toggleExportDropdown(event?: MouseEvent): void {

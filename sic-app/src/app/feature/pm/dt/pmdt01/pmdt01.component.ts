@@ -7,11 +7,13 @@ import { PhaseModel } from './pmdt01.model';
 import { Pmdt01Service } from './pmdt01.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
+import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [CommonModule, SicStripHtmlPipe],
+  imports: [CommonModule, SicStripHtmlPipe, SicDrawerComponent],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {
@@ -20,10 +22,15 @@ export class Pmdt01Component implements OnInit {
   private phaseService = inject(Pmdt01Service);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
+  private recentItems = inject(RecentItemsService);
 
   projectId = signal<string>('');
   phases = signal<PhaseModel[]>([]);
   isLoading = signal(false);
+
+  // ===== Quick View Drawer =====
+  showDrawer = signal(false);
+  selectedPhase = signal<PhaseModel | null>(null);
 
   ngOnInit() {
     const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
@@ -55,7 +62,28 @@ export class Pmdt01Component implements OnInit {
     });
   }
 
+  openQuickView(phase: PhaseModel, event: Event) {
+    event.stopPropagation();
+    this.selectedPhase.set(phase);
+    this.showDrawer.set(true);
+  }
+
+  closeQuickView() {
+    this.showDrawer.set(false);
+  }
+
   goToDetail(phaseId: string) {
+    const phase = this.phases().find((p) => p.id === phaseId) || this.selectedPhase();
+    if (phase) {
+      this.recentItems.record({
+        id: phase.id,
+        label: phase.phaseName,
+        type: 'phase',
+        path: `/feature/pm/phase/${phaseId}`,
+        queryParams: { projectId: this.projectId() },
+        icon: 'bi-layers',
+      });
+    }
     this.router.navigate(['/feature/pm/phase', phaseId], {
       queryParams: { projectId: this.projectId() },
     });

@@ -27,6 +27,7 @@ import { PmInvoiceModel, PmInvoiceItemModel } from './pmdt16A.model';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 
 @Component({
   selector: 'app-pmdt16a',
@@ -44,6 +45,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicTiptapEditorComponent,
     SicDatepickerComponent,
     SicUploadComponent,
+    SicCopyLinkComponent,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],

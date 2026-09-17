@@ -69,6 +69,7 @@ import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.PaginationUtil;
 
+import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -267,28 +268,109 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, Pageable pageable) {
-        Page<PmApproval> pageResult = approvalRepository.findPendingByApprover(userId, pageable);
-        List<ApprovalResponse> data = pageResult.getContent().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return PaginationUtil.of(data, pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements());
+        return getPendingApprovals(userId, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, String keyword, String documentType, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank())) {
+            Page<PmApproval> pageResult = approvalRepository.findPendingByApprover(userId, pageable);
+            return toPaginationResponse(pageResult, pageable);
+        }
+
+        Specification<PmApproval> spec = (root, query, cb) -> {
+            query.distinct(true);
+            Join<PmApproval, PmApprovalStepStatus> steps = root.join("stepStatuses");
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(steps.get("approver"), userId));
+            predicates.add(cb.equal(steps.get("status"), ApprovalStatus.PENDING));
+            predicates.add(cb.isTrue(root.get("isActive")));
+            predicates.add(root.get("status").in(List.of(ApprovalStatus.PENDING, ApprovalStatus.PARTIALLY_APPROVED)));
+            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<PmApproval> pageResult = approvalRepository.findAll(spec, pageable);
+        return toPaginationResponse(pageResult, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, Pageable pageable) {
-        Page<PmApproval> pageResult = approvalRepository.findApprovedHistoryByApprover(userId, pageable);
-        List<ApprovalResponse> data = pageResult.getContent().stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
-        return PaginationUtil.of(data, pageable.getPageNumber(), pageable.getPageSize(), pageResult.getTotalElements());
+        return getApprovedHistory(userId, null, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, String keyword, String documentType, String status, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && (status == null || status.isBlank())) {
+            Page<PmApproval> pageResult = approvalRepository.findApprovedHistoryByApprover(userId, pageable);
+            return toPaginationResponse(pageResult, pageable);
+        }
+
+        Specification<PmApproval> spec = (root, query, cb) -> {
+            query.distinct(true);
+            Join<PmApproval, PmApprovalStepStatus> steps = root.join("stepStatuses");
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(steps.get("approver"), userId));
+            predicates.add(cb.notEqual(steps.get("status"), ApprovalStatus.PENDING));
+            predicates.add(cb.isTrue(root.get("isActive")));
+            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(root.get("status"), ApprovalStatus.valueOf(status)));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<PmApproval> pageResult = approvalRepository.findAll(spec, pageable);
+        return toPaginationResponse(pageResult, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getMyRequests(String userId, Pageable pageable) {
-        Page<PmApproval> pageResult = approvalRepository
-                .findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
+        return getMyRequests(userId, null, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PaginationResponse<ApprovalResponse> getMyRequests(String userId, String keyword, String documentType, String status, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && (status == null || status.isBlank())) {
+            Page<PmApproval> pageResult = approvalRepository
+                    .findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
+            return toPaginationResponse(pageResult, pageable);
+        }
+
+        Specification<PmApproval> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("requestedBy"), userId));
+            predicates.add(cb.isTrue(root.get("isActive")));
+            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
+            if (status != null && !status.isBlank()) {
+                predicates.add(cb.equal(root.get("status"), ApprovalStatus.valueOf(status)));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+        Page<PmApproval> pageResult = approvalRepository.findAll(spec, pageable);
+        return toPaginationResponse(pageResult, pageable);
+    }
+
+    private void addKeywordAndTypeFilters(jakarta.persistence.criteria.CriteriaBuilder cb,
+                                           jakarta.persistence.criteria.Root<PmApproval> root,
+                                           List<Predicate> predicates,
+                                           String keyword,
+                                           String documentType) {
+        if (documentType != null && !documentType.isBlank()) {
+            predicates.add(cb.equal(root.get("documentType"), documentType));
+        }
+        if (keyword != null && !keyword.isBlank()) {
+            String pattern = "%" + keyword.toLowerCase() + "%";
+            predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("documentCode")), pattern),
+                    cb.like(cb.lower(root.get("documentTitle")), pattern)));
+        }
+    }
+
+    private PaginationResponse<ApprovalResponse> toPaginationResponse(Page<PmApproval> pageResult, Pageable pageable) {
         List<ApprovalResponse> data = pageResult.getContent().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

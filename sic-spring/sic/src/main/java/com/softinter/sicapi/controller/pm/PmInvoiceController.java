@@ -51,6 +51,8 @@ public class PmInvoiceController {
     @Operation(summary = "Get invoice list with pagination")
     public ResponseEntity<PaginationResponse<PmInvoiceResponse>> getPaging(
             @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String paymentStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -59,7 +61,7 @@ public class PmInvoiceController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmInvoice.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
-        Page<PmInvoiceResponse> pageResult = invoiceService.findAll(businessId, projectId, pageable);
+        Page<PmInvoiceResponse> pageResult = invoiceService.findAll(businessId, projectId, keyword, paymentStatus, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 

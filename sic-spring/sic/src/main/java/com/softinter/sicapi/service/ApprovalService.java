@@ -25,9 +25,15 @@ public interface ApprovalService {
 
     PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, Pageable pageable);
 
+    PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, String keyword, String documentType, Pageable pageable);
+
     PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, Pageable pageable);
 
+    PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, String keyword, String documentType, String status, Pageable pageable);
+
     PaginationResponse<ApprovalResponse> getMyRequests(String userId, Pageable pageable);
+
+    PaginationResponse<ApprovalResponse> getMyRequests(String userId, String keyword, String documentType, String status, Pageable pageable);
 
     PaginationResponse<ApprovalResponse> searchApprovals(ApprovalSearchRequest request);
 

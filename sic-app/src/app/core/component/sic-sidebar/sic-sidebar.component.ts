@@ -24,6 +24,10 @@ import { SicCardComponent } from '../sic-card/sic-card.component';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 import { ChatService } from '../../services/chat.service';
 import { SicNotificationPanelComponent } from '../sic-notification-panel/sic-notification-panel.component';
+import { SicContextSwitcherComponent } from '../sic-context-switcher/sic-context-switcher.component';
+import { GlobalSearchService } from '../../services/global-search.service';
+import { RecentItemsService } from '../../services/recent-items.service';
+import { KeyboardShortcutService } from '../../services/keyboard-shortcut.service';
 import {
   BusinessInfoModel,
   MenuItemModel,
@@ -45,6 +49,7 @@ import { BreadcrumbService } from '../../services/breadcrumb.service';
     FormsModule,
     DatePipe,
     SicNotificationPanelComponent,
+    SicContextSwitcherComponent,
   ],
   templateUrl: './sic-sidebar.component.html',
   styleUrl: './sic-sidebar.component.css',
@@ -64,6 +69,9 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   public readonly router = inject(Router);
   public readonly notificationSvc = inject(NotificationService);
   public readonly chatSvc = inject(ChatService);
+  public readonly globalSearch = inject(GlobalSearchService);
+  public readonly recentItems = inject(RecentItemsService);
+  public readonly shortcutService = inject(KeyboardShortcutService);
 
   private readonly ngZone = inject(NgZone);
   private clockTimer?: ReturnType<typeof setInterval>;

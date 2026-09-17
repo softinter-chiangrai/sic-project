@@ -93,24 +93,32 @@ export class ApprovalService {
         return this.http.get<PaginationResponse<Approval>>(`${this.baseUrl}/document`, { params });
     }
 
-    getPending(page = 0, size = 10): Observable<PaginationResponse<Approval>> {
-        const params = new HttpParams()
+    getPending(page = 0, size = 10, filters?: { keyword?: string; documentType?: string }): Observable<PaginationResponse<Approval>> {
+        let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
+        if (filters?.keyword) params = params.set('keyword', filters.keyword);
+        if (filters?.documentType) params = params.set('documentType', filters.documentType);
         return this.http.get<PaginationResponse<Approval>>(`${this.baseUrl}/pending`, { params });
     }
 
-    getApprovedHistory(page = 0, size = 10): Observable<PaginationResponse<Approval>> {
-        const params = new HttpParams()
+    getApprovedHistory(page = 0, size = 10, filters?: { keyword?: string; documentType?: string; status?: string }): Observable<PaginationResponse<Approval>> {
+        let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
+        if (filters?.keyword) params = params.set('keyword', filters.keyword);
+        if (filters?.documentType) params = params.set('documentType', filters.documentType);
+        if (filters?.status) params = params.set('status', filters.status);
         return this.http.get<PaginationResponse<Approval>>(`${this.baseUrl}/history`, { params });
     }
 
-    getMyRequests(page = 0, size = 10): Observable<PaginationResponse<Approval>> {
-        const params = new HttpParams()
+    getMyRequests(page = 0, size = 10, filters?: { keyword?: string; documentType?: string; status?: string }): Observable<PaginationResponse<Approval>> {
+        let params = new HttpParams()
             .set('page', page.toString())
             .set('size', size.toString());
+        if (filters?.keyword) params = params.set('keyword', filters.keyword);
+        if (filters?.documentType) params = params.set('documentType', filters.documentType);
+        if (filters?.status) params = params.set('status', filters.status);
         return this.http.get<PaginationResponse<Approval>>(`${this.baseUrl}/my-requests`, { params });
     }
 

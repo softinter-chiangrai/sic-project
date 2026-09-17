@@ -5,11 +5,13 @@ import { ResolveFn } from '@angular/router';
 import { catchError, map, of, switchMap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 export const pmrt04Resolver: ResolveFn<any> = (route) => {
   const http = inject(HttpClient);
   const projectService = inject(Pmrt02Service);
-  const projectId = route.queryParams['projectId'];
+  const customerState = inject(CustomerStateService);
+  const projectId = route.queryParams['projectId'] || customerState.getProjectId();
 
   if (!projectId) {
     return of(null);

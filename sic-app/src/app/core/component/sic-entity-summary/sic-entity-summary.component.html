@@ -1,0 +1,35 @@
+<div class="grid gap-3" [style.gridTemplateColumns]="'repeat(auto-fit, minmax(140px, 1fr))'">
+  @if (isLoading) {
+    @for (i of [1,2,3,4]; track i) {
+      <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] p-3">
+        <div class="h-4 w-2/3 animate-pulse rounded bg-[var(--border)]"></div>
+        <div class="mt-2 h-6 w-1/2 animate-pulse rounded bg-[var(--border)]"></div>
+      </div>
+    }
+  } @else {
+    @for (card of cards; track card.label) {
+      <div
+        class="flex flex-col gap-1 rounded-xl border bg-[var(--sidebar)] p-3 transition-all"
+        [class]="variantClass(card)"
+      >
+        <div class="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
+          <i class="bi" [class]="card.icon"></i>
+          <span>{{ card.label }}</span>
+        </div>
+        <div class="text-lg font-semibold" [class]="valueClass(card)">{{ card.value }}</div>
+        @if (card.sublabel) {
+          <div class="text-xs text-[var(--text-muted)]">{{ card.sublabel }}</div>
+        }
+        @if (card.actionLabel && card.action) {
+          <button
+            type="button"
+            (click)="card.action()"
+            class="mt-1 self-start text-xs font-medium text-[var(--crm-primary)] hover:underline cursor-pointer"
+          >
+            {{ card.actionLabel }} →
+          </button>
+        }
+      </div>
+    }
+  }
+</div>

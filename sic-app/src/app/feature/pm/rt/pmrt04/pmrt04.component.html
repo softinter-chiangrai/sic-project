@@ -46,6 +46,37 @@
           กลับ
         </button>
       }
+
+      <button
+        (click)="exportCsv()"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        title="ส่งออกรายการที่กรองอยู่เป็น CSV"
+      >
+        <i class="bi bi-download"></i>
+        Export CSV
+      </button>
+
+      <div class="relative">
+        <button
+          (click)="showColumnMenu.set(!showColumnMenu())"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-layout-three-columns"></i>
+          คอลัมน์
+        </button>
+        @if (showColumnMenu()) {
+          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" aria-label="ปิดเมนูคอลัมน์"></button>
+          <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-56 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
+            @for (col of allColumns; track col.key) {
+              <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
+                <input type="checkbox" [checked]="isColumnVisible(col.key)" (change)="toggleColumn(col.key)" />
+                {{ col.label }}
+              </label>
+            }
+          </div>
+        }
+      </div>
+
       <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
@@ -54,6 +85,24 @@
         เพิ่มสัญญา
       </button>
     </div>
+  </div>
+
+  <!-- PRESET TABS -->
+  <div class="flex flex-wrap gap-2">
+    <button type="button" (click)="setPreset('all')"
+      class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
+      [class]="activePreset() === 'all'
+        ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
+        : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
+      ทั้งหมด <span class="opacity-80">{{ totalItems() }}</span>
+    </button>
+    <button type="button" (click)="setPreset('expiring')"
+      class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
+      [class]="activePreset() === 'expiring'
+        ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
+        : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
+      หมดอายุใน 30 วัน
+    </button>
   </div>
 
   <!-- FILTERS -->
@@ -100,13 +149,14 @@
     </div>
   </div>
 
-  <!-- LOADING -->
+  <!-- LOADING (Skeleton) -->
   @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div
-        class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-      ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="border-b border-[var(--border)] px-4 py-3 last:border-b-0">
+          <sic-skeleton height="20px" width="100%"></sic-skeleton>
+        </div>
+      }
     </div>
   }
 
@@ -118,6 +168,9 @@
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
+            <th class="px-4 py-3 w-10">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="เลือกทั้งหมด" />
+            </th>
             <th
               (click)="onSortChange('contractNo')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
@@ -131,63 +184,73 @@
                 ></i>
               }
             </th>
-            <th
-              (click)="onSortChange('contractType')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[140px]"
-            >
-              ประเภท
-              @if (sortBy() === 'contractType') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('customerName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
-            >
-              ลูกค้า
-              @if (sortBy() === 'customerName') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('projectName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
-            >
-              โครงการ
-              @if (sortBy() === 'projectName') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('contractValue')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
-            >
-              มูลค่า
-              @if (sortBy() === 'contractValue') {
-                <i
-                  class="bi text-xs ml-1 text-[var(--crm-primary)]"
-                  [class.bi-chevron-up]="sortDir() === 'asc'"
-                  [class.bi-chevron-down]="sortDir() === 'desc'"
-                ></i>
-              }
-            </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px] hidden md:table-cell"
-            >
-              ระยะเวลา
-            </th>
+            @if (isColumnVisible('contractType')) {
+              <th
+                (click)="onSortChange('contractType')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[140px]"
+              >
+                ประเภท
+                @if (sortBy() === 'contractType') {
+                  <i
+                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                    [class.bi-chevron-up]="sortDir() === 'asc'"
+                    [class.bi-chevron-down]="sortDir() === 'desc'"
+                  ></i>
+                }
+              </th>
+            }
+            @if (isColumnVisible('customerName')) {
+              <th
+                (click)="onSortChange('customerName')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
+              >
+                ลูกค้า
+                @if (sortBy() === 'customerName') {
+                  <i
+                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                    [class.bi-chevron-up]="sortDir() === 'asc'"
+                    [class.bi-chevron-down]="sortDir() === 'desc'"
+                  ></i>
+                }
+              </th>
+            }
+            @if (isColumnVisible('projectName')) {
+              <th
+                (click)="onSortChange('projectName')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[130px]"
+              >
+                โครงการ
+                @if (sortBy() === 'projectName') {
+                  <i
+                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                    [class.bi-chevron-up]="sortDir() === 'asc'"
+                    [class.bi-chevron-down]="sortDir() === 'desc'"
+                  ></i>
+                }
+              </th>
+            }
+            @if (isColumnVisible('contractValue')) {
+              <th
+                (click)="onSortChange('contractValue')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
+              >
+                มูลค่า
+                @if (sortBy() === 'contractValue') {
+                  <i
+                    class="bi text-xs ml-1 text-[var(--crm-primary)]"
+                    [class.bi-chevron-up]="sortDir() === 'asc'"
+                    [class.bi-chevron-down]="sortDir() === 'desc'"
+                  ></i>
+                }
+              </th>
+            }
+            @if (isColumnVisible('duration')) {
+              <th
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px] hidden md:table-cell"
+              >
+                ระยะเวลา
+              </th>
+            }
             <th
               (click)="onSortChange('signStatus')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
@@ -201,11 +264,13 @@
                 ></i>
               }
             </th>
-            <th
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
-            >
-              อนุมัติ
-            </th>
+            @if (isColumnVisible('approvalStatus')) {
+              <th
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[100px]"
+              >
+                อนุมัติ
+              </th>
+            }
             <th
               class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[260px]"
             >
@@ -215,7 +280,10 @@
         </thead>
         <tbody class="divide-y divide-[var(--border)]">
           @for (contract of paginatedContracts(); track contract.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors" [class.bg-[rgba(59,130,246,0.06)]]="isSelected(contract.id)">
+              <td class="px-4 py-3">
+                <input type="checkbox" [checked]="isSelected(contract.id)" (change)="toggleSelect(contract.id)" [attr.aria-label]="'เลือก ' + contract.contractNo" />
+              </td>
               <td class="px-4 py-3">
                 <span
                   class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10"
@@ -223,30 +291,40 @@
                   {{ contract.contractNo }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text-active)]">{{ contract.contractType }}</span>
-              </td>
-              <td class="px-4 py-3">
-                <span class="text-[var(--text-active)]">{{ contract.customerName }}</span>
-              </td>
-              <td class="px-4 py-3">
-                @if (contract.projectName) {
-                  <button
-                    (click)="goToProject(contract.projectId)"
-                    class="text-[var(--crm-primary)] hover:underline transition-colors"
-                  >
-                    {{ contract.projectName }}
-                  </button>
-                } @else {
-                  <span class="text-[var(--text-muted)]">-</span>
-                }
-              </td>
-              <td class="px-4 py-3 font-mono text-[var(--text-active)]">
-                {{ formatCurrency(contract.contractValue) }}
-              </td>
-              <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
-                {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
-              </td>
+              @if (isColumnVisible('contractType')) {
+                <td class="px-4 py-3">
+                  <span class="text-[var(--text-active)]">{{ contract.contractType }}</span>
+                </td>
+              }
+              @if (isColumnVisible('customerName')) {
+                <td class="px-4 py-3">
+                  <span class="text-[var(--text-active)]">{{ contract.customerName }}</span>
+                </td>
+              }
+              @if (isColumnVisible('projectName')) {
+                <td class="px-4 py-3">
+                  @if (contract.projectName) {
+                    <button
+                      (click)="goToProject(contract.projectId)"
+                      class="text-[var(--crm-primary)] hover:underline transition-colors"
+                    >
+                      {{ contract.projectName }}
+                    </button>
+                  } @else {
+                    <span class="text-[var(--text-muted)]">-</span>
+                  }
+                </td>
+              }
+              @if (isColumnVisible('contractValue')) {
+                <td class="px-4 py-3 font-mono text-[var(--text-active)]">
+                  {{ formatCurrency(contract.contractValue) }}
+                </td>
+              }
+              @if (isColumnVisible('duration')) {
+                <td class="px-4 py-3 text-sm text-[var(--text-muted)] font-mono hidden md:table-cell">
+                  {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
+                </td>
+              }
               <td class="px-4 py-3">
                 <span
                   [class]="
@@ -257,28 +335,39 @@
                   {{ getStatusText(contract.signStatus) }}
                 </span>
               </td>
-              <td class="px-4 py-3">
-                @if (contract.signStatus === 'Changed') {
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    รอส่งอนุมัติ
-                  </span>
-                } @else if (contract.approvalStatus) {
-                  <span
-                    [class]="
-                      getApprovalStatusClass(contract.approvalStatus) +
-                      ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
-                    "
-                  >
-                    {{ getApprovalStatusText(contract.approvalStatus) }}
-                  </span>
-                } @else {
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                    ยังไม่อนุมัติ
-                  </span>
-                }
-              </td>
+              @if (isColumnVisible('approvalStatus')) {
+                <td class="px-4 py-3">
+                  @if (contract.signStatus === 'Changed') {
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+                      รอส่งอนุมัติ
+                    </span>
+                  } @else if (contract.approvalStatus) {
+                    <span
+                      [class]="
+                        getApprovalStatusClass(contract.approvalStatus) +
+                        ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'
+                      "
+                    >
+                      {{ getApprovalStatusText(contract.approvalStatus) }}
+                    </span>
+                  } @else {
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                      ยังไม่อนุมัติ
+                    </span>
+                  }
+                </td>
+              }
               <td class="px-4 py-3">
                 <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                  <!-- ปุ่มดูสรุปด่วน (Quick View Drawer) -->
+                  <button
+                    (click)="openQuickView(contract)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                    title="ดูสรุปด่วน"
+                  >
+                    <i class="bi bi-layout-sidebar-inset"></i>
+                  </button>
+
                   <!-- ปุ่มดูข้อมูล -->
                   <button
                     (click)="goToView(contract.id)"
@@ -328,7 +417,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="9" class="px-4 py-12 text-center">
+              <td colspan="12" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลสัญญา</p>
@@ -356,4 +445,106 @@
     [totalItems]="totalItems()"
     (pageChange)="onPageChange($event)"
   ></sic-pagination>
+
+  <!-- BULK ACTION BAR -->
+  @if (selectedIds().size > 0) {
+    <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
+      <span class="text-sm font-medium text-[var(--text-active)]">
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ selectedIds().size }} รายการ
+      </span>
+      <button type="button" (click)="bulkExportPdf()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+        <i class="bi bi-file-earmark-pdf"></i> Export PDF ทั้งหมด
+      </button>
+      <button type="button" (click)="clearSelection()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
+        <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
+      </button>
+    </div>
+  }
+
+  <!-- QUICK VIEW DRAWER -->
+  <sic-drawer
+    [isOpen]="showDrawer()"
+    [title]="selectedContract() ? 'สรุปสัญญา ' + selectedContract()!.contractNo : 'สรุปสัญญา'"
+    size="md"
+    (closed)="closeQuickView()"
+  >
+    @if (selectedContract(); as contract) {
+      <div class="space-y-5">
+        <div class="flex items-center gap-3">
+          <span
+            [class]="
+              getStatusClass(contract.signStatus) +
+              ' inline-block px-3 py-1 rounded-full text-xs font-medium'
+            "
+          >
+            {{ getStatusText(contract.signStatus) }}
+          </span>
+          @if (contract.approvalStatus) {
+            <span
+              [class]="
+                getApprovalStatusClass(contract.approvalStatus) +
+                ' inline-block px-3 py-1 rounded-full text-xs font-medium'
+              "
+            >
+              {{ getApprovalStatusText(contract.approvalStatus) }}
+            </span>
+          }
+        </div>
+
+        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+          <div>
+            <dt class="text-[var(--text-muted)]">เลขสัญญา</dt>
+            <dd class="font-mono font-semibold text-[var(--text-active)]">{{ contract.contractNo }}</dd>
+          </div>
+          <div>
+            <dt class="text-[var(--text-muted)]">ประเภท</dt>
+            <dd class="text-[var(--text-active)]">{{ contract.contractType }}</dd>
+          </div>
+          <div>
+            <dt class="text-[var(--text-muted)]">ลูกค้า</dt>
+            <dd class="text-[var(--text-active)]">{{ contract.customerName }}</dd>
+          </div>
+          <div>
+            <dt class="text-[var(--text-muted)]">โครงการ</dt>
+            <dd class="text-[var(--text-active)]">{{ contract.projectName || '-' }}</dd>
+          </div>
+          <div>
+            <dt class="text-[var(--text-muted)]">มูลค่าสัญญา</dt>
+            <dd class="font-mono text-[var(--text-active)]">{{ formatCurrency(contract.contractValue) }}</dd>
+          </div>
+          <div>
+            <dt class="text-[var(--text-muted)]">ระยะเวลา</dt>
+            <dd class="font-mono text-[var(--text-active)]">
+              {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
+            </dd>
+          </div>
+        </dl>
+      </div>
+    }
+
+    @if (selectedContract(); as contract) {
+      <div drawer-footer class="flex flex-wrap items-center justify-end gap-2">
+        <button
+          (click)="printContract(contract); "
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-printer"></i> พิมพ์
+        </button>
+        <button
+          (click)="closeQuickView(); goToEdit(contract.id)"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-pencil"></i> แก้ไข
+        </button>
+        <button
+          (click)="closeQuickView(); goToView(contract.id)"
+          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+        >
+          <i class="bi bi-arrow-up-right-square"></i> ดูฉบับเต็ม
+        </button>
+      </div>
+    }
+  </sic-drawer>
 </div>

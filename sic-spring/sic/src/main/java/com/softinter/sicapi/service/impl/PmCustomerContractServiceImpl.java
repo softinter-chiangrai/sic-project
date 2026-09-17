@@ -22,6 +22,12 @@ import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
+import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
+import com.softinter.sicapi.entity.enums.PaymentStatus;
+import com.softinter.sicapi.entity.enums.MaTicketStatus;
+import com.softinter.sicapi.dto.response.PmContractSummaryResponse;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.service.PmCustomerContractService;
@@ -44,6 +50,9 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
+    private final PmMilestoneRepository milestoneRepository;
+    private final PmInvoiceRepository invoiceRepository;
+    private final PmMaTicketRepository maTicketRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -66,6 +75,20 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             String status,
             String contractType,
             Pageable pageable) {
+        return getContracts(businessId, customerId, projectId, keyword, status, contractType, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Integer expiringWithinDays,
+            Pageable pageable) {
 
         Specification<PmCustomerContract> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -87,6 +110,11 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             if (contractType != null && !contractType.isBlank() && !"all".equals(contractType)) {
                 predicates.add(cb.equal(root.get("contractType"), contractType));
             }
+            if (expiringWithinDays != null) {
+                java.time.LocalDate today = java.time.LocalDate.now();
+                java.time.LocalDate until = today.plusDays(expiringWithinDays);
+                predicates.add(cb.between(root.get("endDate"), today, until));
+            }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
@@ -99,6 +127,44 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         PmCustomerContract contract = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));
         return toResponse(contract);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PmContractSummaryResponse getContractSummary(UUID id) {
+        PmCustomerContract contract = contractRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));
+
+        UUID projectId = contract.getProjectId();
+
+        long milestoneTotal = projectId != null ? milestoneRepository.countByProjectId(projectId) : 0;
+        long milestoneCompleted = projectId != null ? milestoneRepository.countCompletedByProjectId(projectId) : 0;
+
+        long invoiceTotal = projectId != null ? invoiceRepository.countByProjectIdAndIsDeleteFalse(projectId) : 0;
+        long invoicePending = projectId != null
+                ? invoiceRepository.countByProjectIdAndPaymentStatusInAndIsDeleteFalse(
+                        projectId, java.util.List.of(PaymentStatus.UNPAID, PaymentStatus.PARTIAL, PaymentStatus.OVERDUE))
+                : 0;
+
+        long ticketTotal = projectId != null ? maTicketRepository.countByProjectIdAndIsDeleteFalse(projectId) : 0;
+        long ticketOpen = projectId != null
+                ? maTicketRepository.countByProjectIdAndStatusNotInAndIsDeleteFalse(
+                        projectId, java.util.List.of(MaTicketStatus.RESOLVED, MaTicketStatus.CLOSED))
+                : 0;
+
+        Long daysUntilExpiry = contract.getEndDate() != null
+                ? java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), contract.getEndDate())
+                : null;
+
+        return PmContractSummaryResponse.builder()
+                .milestones(PmContractSummaryResponse.MilestoneSummary.builder()
+                        .total(milestoneTotal).completed(milestoneCompleted).build())
+                .invoices(PmContractSummaryResponse.InvoiceSummary.builder()
+                        .total(invoiceTotal).pending(invoicePending).build())
+                .maTickets(PmContractSummaryResponse.MaTicketSummary.builder()
+                        .total(ticketTotal).open(ticketOpen).build())
+                .daysUntilExpiry(daysUntilExpiry)
+                .build();
     }
 
     @Override

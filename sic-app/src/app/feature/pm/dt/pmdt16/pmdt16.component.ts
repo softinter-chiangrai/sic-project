@@ -15,11 +15,14 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { HttpParams } from '@angular/common/http';
+import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
 
 @Component({
   selector: 'app-pmdt16',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicPaginationComponent, SicSkeletonComponent],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -32,6 +35,7 @@ export class Pmdt16Component implements OnInit {
   private http = inject(HttpClient);
   private approvalService = inject(ApprovalService);
   private customerState = inject(CustomerStateService);
+  private recentItems = inject(RecentItemsService);
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});
@@ -48,8 +52,29 @@ export class Pmdt16Component implements OnInit {
     if (projectId) {
       url += `&projectId=${projectId}`;
     }
+    const keyword = this.searchTerm().trim();
+    if (keyword) {
+      url += `&keyword=${encodeURIComponent(keyword)}`;
+    }
+    if (this.filterStatus() !== 'all') {
+      url += `&paymentStatus=${this.filterStatus()}`;
+    }
     return url;
   });
+
+  // ===== Bulk Selection =====
+  selectedIds = signal<Set<string>>(new Set());
+
+  // ===== Column Visibility =====
+  private readonly COLUMN_STORAGE_KEY = 'pmdt16.visibleColumns';
+  readonly allColumns: { key: string; label: string }[] = [
+    { key: 'billingType', label: 'ประเภทบิล' },
+    { key: 'dueDate', label: 'วันครบกำหนด' },
+    { key: 'paidAmount', label: 'ชำระแล้ว' },
+    { key: 'approvalStatus', label: 'การอนุมัติ' },
+  ];
+  visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
+  showColumnMenu = signal(false);
 
   constructor() {
     effect(() => {
@@ -77,31 +102,25 @@ export class Pmdt16Component implements OnInit {
 
   totalItems = computed(() => this.invoicesResource.value()?.pageable?.totalElements || 0);
 
-  filteredInvoices = computed(() => {
-    const res = this.invoicesResource.value();
-    let list: any[] = res?.data || [];
-    const term = this.searchTerm().trim().toLowerCase();
-    const status = this.filterStatus();
-
-    if (term) {
-      list = list.filter(
-        (item) =>
-          item.invoiceNo?.toLowerCase().includes(term) ||
-          item.customerName?.toLowerCase().includes(term) ||
-          item.projectName?.toLowerCase().includes(term) ||
-          item.billingType?.toLowerCase().includes(term)
-      );
-    }
-    if (status !== 'all') {
-      list = list.filter((item) => item.paymentStatus === status);
-    }
-    return list;
-  });
+  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว (ผ่าน invoicesResource) เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
+  filteredInvoices = computed(() => this.invoicesResource.value()?.data || []);
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
+  // guard: ป้องกัน reload ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  private syncingUrl = false;
+
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
+      if (this.syncingUrl) {
+        this.syncingUrl = false;
+        return;
+      }
+
+      if (params['q'] !== undefined) this.searchTerm.set(params['q']);
+      if (params['status'] !== undefined) this.filterStatus.set(params['status']);
+      if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
+
       const projectId = params['projectId'] || this.customerState.getProjectId();
       if (projectId) {
         this.filterProjectId.set(projectId);
@@ -110,13 +129,30 @@ export class Pmdt16Component implements OnInit {
     });
   }
 
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.syncingUrl = true;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.syncFiltersToUrl();
   }
 
   clearSearch() {
     this.searchTerm.set('');
+    this.syncFiltersToUrl();
   }
 
   readonly statusOptions = [
@@ -129,11 +165,142 @@ export class Pmdt16Component implements OnInit {
   onFilterChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
+    this.syncFiltersToUrl();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
+  }
+
+  // ===== Preset Tabs (reuse filterStatus โดยตรง) =====
+  setPreset(status: string): void {
+    this.filterStatus.set(status);
+    this.currentPage.set(1);
+    this.syncFiltersToUrl();
+  }
+
+  // ===== Bulk Selection =====
+  toggleSelect(id: string): void {
+    this.selectedIds.update((set) => {
+      const next = new Set(set);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  isSelected(id: string): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  isAllSelected(): boolean {
+    const items = this.filteredInvoices();
+    return items.length > 0 && items.every((i: any) => this.selectedIds().has(i.id));
+  }
+
+  toggleSelectAll(): void {
+    this.selectedIds.set(
+      this.isAllSelected() ? new Set() : new Set(this.filteredInvoices().map((i: any) => i.id)),
+    );
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  bulkExportPdf(): void {
+    const ids = Array.from(this.selectedIds());
+    if (ids.length === 0) return;
+
+    this.isLoading.set(true);
+    let remaining = ids.length;
+    ids.forEach((id) => {
+      const url = `${apiBaseUrl}/api/pm/invoices/${id}/export-pdf`;
+      this.http.get(url, { responseType: 'blob' }).subscribe({
+        next: (blob) => {
+          const pdfUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+          const a = document.createElement('a');
+          a.href = pdfUrl;
+          a.download = `invoice-${id}.pdf`;
+          a.click();
+          URL.revokeObjectURL(pdfUrl);
+        },
+        error: () => {
+          this.dialog.error('ส่งออกไม่สำเร็จ', `ไม่สามารถส่งออกใบแจ้งหนี้รหัส ${id} ได้`);
+        },
+        complete: () => {
+          remaining -= 1;
+          if (remaining === 0) {
+            this.isLoading.set(false);
+            this.clearSelection();
+          }
+        },
+      });
+    });
+  }
+
+  // ===== Column Visibility =====
+  private loadVisibleColumns(): Set<string> {
+    try {
+      const raw = localStorage.getItem(this.COLUMN_STORAGE_KEY);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch { /* ignore */ }
+    return new Set(this.allColumns.map((c) => c.key));
+  }
+
+  toggleColumn(key: string): void {
+    this.visibleColumns.update((set) => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+    try {
+      localStorage.setItem(this.COLUMN_STORAGE_KEY, JSON.stringify(Array.from(this.visibleColumns())));
+    } catch { /* ignore */ }
+  }
+
+  isColumnVisible(key: string): boolean {
+    return this.visibleColumns().has(key);
+  }
+
+  // ===== Export CSV (ตามตัวกรองปัจจุบันทั้งหมด ไม่ใช่แค่หน้าปัจจุบัน) =====
+  exportCsv(): void {
+    this.isLoading.set(true);
+
+    let params = new HttpParams().set('page', '1').set('size', '1000');
+    const projectId = this.filterProjectId();
+    if (projectId) params = params.set('projectId', projectId);
+    const keyword = this.searchTerm();
+    if (keyword) params = params.set('keyword', keyword);
+    if (this.filterStatus() !== 'all') params = params.set('paymentStatus', this.filterStatus());
+
+    this.http
+      .get<any>(`${apiBaseUrl}/api/pm/invoices/paging`, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => this.downloadCsv(res.data || []),
+        error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการใบแจ้งหนี้ได้'),
+      });
+  }
+
+  private downloadCsv(items: any[]): void {
+    const headers = ['เลขที่ใบแจ้งหนี้', 'ลูกค้า', 'โครงการ', 'ประเภทบิล', 'วันครบกำหนด', 'ยอดรวม', 'ชำระแล้ว', 'สถานะ'];
+    const rows = items.map((i) => [
+      i.invoiceNo, i.customerName || '', i.projectName || '', i.billingType || '',
+      i.dueDate || '', String(i.totalAmount ?? ''), String(i.paidAmount ?? ''), this.getStatusText(i.paymentStatus),
+    ]);
+    const csvLines = [headers, ...rows].map((r) =>
+      r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','),
+    );
+    const csvContent = '﻿' + csvLines.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `invoices-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   goToAdd() {
@@ -144,6 +311,16 @@ export class Pmdt16Component implements OnInit {
   }
 
   goToView(id: string) {
+    const invoice = (this.invoicesResource.value()?.data || []).find((item: any) => item.id === id);
+    if (invoice) {
+      this.recentItems.record({
+        id,
+        label: invoice.invoiceNo,
+        type: 'invoice',
+        path: `/feature/pm/invoice/${id}/view`,
+        icon: 'bi-receipt',
+      });
+    }
     this.router.navigate(['/feature/pm/invoice', id, 'view']);
   }
 

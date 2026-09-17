@@ -1,0 +1,30 @@
+@if (shortcutService.isHelpOpen()) {
+  <div
+    class="fixed inset-0 z-[1200] flex items-center justify-center bg-[color-mix(in_srgb,var(--text-active)_28%,transparent)] px-4 backdrop-blur-sm"
+    (click)="close()"
+  >
+    <div
+      class="w-full max-w-md overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] shadow-2xl"
+      (click)="$event.stopPropagation()"
+    >
+      <div class="flex items-center justify-between border-b border-[var(--border)] px-5 py-4">
+        <h2 class="text-base font-semibold text-[var(--text-active)]">
+          <i class="bi bi-keyboard text-[var(--crm-primary)]"></i> คีย์ลัด
+        </h2>
+        <button type="button" (click)="close()" class="grid h-8 w-8 place-items-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="divide-y divide-[var(--border)]">
+        @for (s of shortcutService.shortcuts; track s.keys) {
+          <div class="flex items-center justify-between px-5 py-3">
+            <span class="text-sm text-[var(--text)]">{{ s.description }}</span>
+            <span class="rounded-md border border-[var(--border)] bg-[var(--sidebar)] px-2 py-1 text-xs font-mono text-[var(--text-active)]">
+              {{ s.keys }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+}

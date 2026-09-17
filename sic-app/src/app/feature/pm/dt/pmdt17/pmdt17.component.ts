@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
@@ -13,21 +13,36 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { HttpParams } from '@angular/common/http';
+import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
 
 @Component({
   selector: 'app-pmdt17',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicPaginationComponent],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    SicTableActionsComponent,
+    SicComboboxComponent,
+    SicPaginationComponent,
+    SicDrawerComponent,
+    SicSkeletonComponent,
+  ],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt17Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private service = inject(Pmdt17AService);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
   private approvalService = inject(ApprovalService);
+  private recentItems = inject(RecentItemsService);
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});
@@ -37,9 +52,31 @@ export class Pmdt17Component implements OnInit {
   searchTerm = signal('');
   filterStatus = signal('all');
 
-  ticketsResource = httpResource<any>(
-    () => `${apiBaseUrl}/api/pm/ma-tickets/paging?page=${this.currentPage()}&size=${this.pageSize()}`
-  );
+  // ===== Quick View Drawer =====
+  showDrawer = signal(false);
+  selectedTicket = signal<any | null>(null);
+
+  ticketsResource = httpResource<any>(() => {
+    let url = `${apiBaseUrl}/api/pm/ma-tickets/paging?page=${this.currentPage()}&size=${this.pageSize()}`;
+    const keyword = this.searchTerm().trim();
+    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
+    if (this.filterStatus() !== 'all') url += `&status=${this.filterStatus()}`;
+    return url;
+  });
+
+  // ===== Bulk Selection =====
+  selectedIds = signal<Set<string>>(new Set());
+
+  // ===== Column Visibility =====
+  private readonly COLUMN_STORAGE_KEY = 'pmdt17.visibleColumns';
+  readonly allColumns: { key: string; label: string }[] = [
+    { key: 'ticketType', label: 'ประเภท' },
+    { key: 'severity', label: 'ความรุนแรง' },
+    { key: 'approvalStatus', label: 'การอนุมัติ' },
+    { key: 'assignedTo', label: 'ผู้รับผิดชอบ' },
+  ];
+  visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
+  showColumnMenu = signal(false);
 
   constructor() {
     effect(() => {
@@ -67,39 +104,41 @@ export class Pmdt17Component implements OnInit {
 
   totalItems = computed(() => this.ticketsResource.value()?.pageable?.totalElements || 0);
 
-  filteredTickets = computed(() => {
-    const res = this.ticketsResource.value();
-    let list: any[] = res?.data || [];
-    const term = this.searchTerm().trim().toLowerCase();
-    const status = this.filterStatus();
-
-    if (term) {
-      list = list.filter(
-        (item) =>
-          item.ticketNo?.toLowerCase().includes(term) ||
-          item.title?.toLowerCase().includes(term) ||
-          item.customerName?.toLowerCase().includes(term) ||
-          item.projectName?.toLowerCase().includes(term) ||
-          item.assignedTo?.toLowerCase().includes(term)
-      );
-    }
-    if (status !== 'all') {
-      list = list.filter((item) => item.status === status);
-    }
-    return list;
-  });
+  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว (ผ่าน ticketsResource) เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
+  filteredTickets = computed(() => this.ticketsResource.value()?.data || []);
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
-  ngOnInit() {}
+  ngOnInit() {
+    const qp = this.route.snapshot.queryParams;
+    if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
+    if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
+    if (qp['page'] !== undefined) this.currentPage.set(+qp['page'] || 1);
+  }
+
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
 
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.syncFiltersToUrl();
   }
 
   clearSearch() {
     this.searchTerm.set('');
+    this.syncFiltersToUrl();
   }
 
   readonly statusOptions = [
@@ -114,11 +153,149 @@ export class Pmdt17Component implements OnInit {
   onFilterChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
+    this.syncFiltersToUrl();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
+  }
+
+  // ===== Preset Tabs (reuse filterStatus โดยตรง) =====
+  setPreset(status: string): void {
+    this.filterStatus.set(status);
+    this.currentPage.set(1);
+    this.syncFiltersToUrl();
+  }
+
+  // ===== Bulk Selection =====
+  toggleSelect(id: string): void {
+    this.selectedIds.update((set) => {
+      const next = new Set(set);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  isSelected(id: string): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  isAllSelected(): boolean {
+    const items = this.filteredTickets();
+    return items.length > 0 && items.every((i: any) => this.selectedIds().has(i.id));
+  }
+
+  toggleSelectAll(): void {
+    this.selectedIds.set(
+      this.isAllSelected() ? new Set() : new Set(this.filteredTickets().map((i: any) => i.id)),
+    );
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  bulkExportPdf(): void {
+    const ids = Array.from(this.selectedIds());
+    if (ids.length === 0) return;
+
+    this.isLoading.set(true);
+    let remaining = ids.length;
+    ids.forEach((id) => {
+      const url = `${apiBaseUrl}/api/pm/ma-tickets/${id}/export-pdf`;
+      this.http.get(url, { responseType: 'blob' }).subscribe({
+        next: (blob) => {
+          const pdfUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+          const a = document.createElement('a');
+          a.href = pdfUrl;
+          a.download = `ma-ticket-${id}.pdf`;
+          a.click();
+          URL.revokeObjectURL(pdfUrl);
+        },
+        error: () => {
+          this.dialog.error('ส่งออกไม่สำเร็จ', `ไม่สามารถส่งออกตั๋ว MA รหัส ${id} ได้`);
+        },
+        complete: () => {
+          remaining -= 1;
+          if (remaining === 0) {
+            this.isLoading.set(false);
+            this.clearSelection();
+          }
+        },
+      });
+    });
+  }
+
+  // ===== Column Visibility =====
+  private loadVisibleColumns(): Set<string> {
+    try {
+      const raw = localStorage.getItem(this.COLUMN_STORAGE_KEY);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch { /* ignore */ }
+    return new Set(this.allColumns.map((c) => c.key));
+  }
+
+  toggleColumn(key: string): void {
+    this.visibleColumns.update((set) => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+    try {
+      localStorage.setItem(this.COLUMN_STORAGE_KEY, JSON.stringify(Array.from(this.visibleColumns())));
+    } catch { /* ignore */ }
+  }
+
+  isColumnVisible(key: string): boolean {
+    return this.visibleColumns().has(key);
+  }
+
+  // ===== Export CSV (ตามตัวกรองปัจจุบันทั้งหมด ไม่ใช่แค่หน้าปัจจุบัน) =====
+  exportCsv(): void {
+    this.isLoading.set(true);
+
+    let params = new HttpParams().set('page', '1').set('size', '1000');
+    const keyword = this.searchTerm();
+    if (keyword) params = params.set('keyword', keyword);
+    if (this.filterStatus() !== 'all') params = params.set('status', this.filterStatus());
+
+    this.http
+      .get<any>(`${apiBaseUrl}/api/pm/ma-tickets/paging`, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => this.downloadCsv(res.data || []),
+        error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการตั๋ว MA ได้'),
+      });
+  }
+
+  private downloadCsv(items: any[]): void {
+    const headers = ['เลขที่ Ticket', 'หัวข้อปัญหา', 'ลูกค้า', 'โครงการ', 'ประเภท', 'ความรุนแรง', 'สถานะ', 'ผู้รับผิดชอบ'];
+    const rows = items.map((i) => [
+      i.ticketNo, i.title || '', i.customerName || '', i.projectName || '',
+      i.ticketType || '', i.severity || '', this.getStatusText(i.status), i.assignedTo || '',
+    ]);
+    const csvLines = [headers, ...rows].map((r) =>
+      r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','),
+    );
+    const csvContent = '﻿' + csvLines.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ma-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  openQuickView(item: any): void {
+    this.selectedTicket.set(item);
+    this.showDrawer.set(true);
+  }
+
+  closeQuickView(): void {
+    this.showDrawer.set(false);
   }
 
   goToAdd() {
@@ -126,6 +303,16 @@ export class Pmdt17Component implements OnInit {
   }
 
   goToView(id: string) {
+    const ticket = (this.ticketsResource.value()?.data || []).find((item: any) => item.id === id) || this.selectedTicket();
+    if (ticket) {
+      this.recentItems.record({
+        id,
+        label: ticket.ticketNo,
+        type: 'ma-ticket',
+        path: `/feature/pm/ma-ticket/${id}/view`,
+        icon: 'bi-headset',
+      });
+    }
     this.router.navigate(['/feature/pm/ma-ticket', id, 'view']);
   }
 

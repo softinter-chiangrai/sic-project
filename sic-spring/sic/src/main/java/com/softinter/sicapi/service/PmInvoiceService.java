@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface PmInvoiceService {
     Page<PmInvoiceResponse> findAll(UUID businessId, UUID projectId, Pageable pageable);
+
+    Page<PmInvoiceResponse> findAll(UUID businessId, UUID projectId, String keyword, String paymentStatus, Pageable pageable);
     PmInvoiceResponse findById(UUID id, UUID businessId);
     UUID save(PmInvoiceRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);

@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient, httpResource } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
@@ -14,6 +14,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
 
 @Component({
   selector: 'app-pmdt18',
@@ -25,10 +26,12 @@ import { SicPaginationComponent } from '../../../../core/component/sic-paginatio
 })
 export class Pmdt18Component implements OnInit {
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
   private service = inject(Pmdt18AService);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
   private approvalService = inject(ApprovalService);
+  private recentItems = inject(RecentItemsService);
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});
@@ -91,15 +94,36 @@ export class Pmdt18Component implements OnInit {
 
   totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
-  ngOnInit() {}
+  ngOnInit() {
+    const qp = this.route.snapshot.queryParams;
+    if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
+    if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
+    if (qp['page'] !== undefined) this.currentPage.set(+qp['page'] || 1);
+  }
+
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
 
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.syncFiltersToUrl();
   }
 
   clearSearch() {
     this.searchTerm.set('');
+    this.syncFiltersToUrl();
   }
 
   readonly statusOptions = [
@@ -113,11 +137,13 @@ export class Pmdt18Component implements OnInit {
   onFilterChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
+    this.syncFiltersToUrl();
   }
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
   }
 
   goToAdd() {
@@ -125,6 +151,16 @@ export class Pmdt18Component implements OnInit {
   }
 
   goToView(id: string) {
+    const renewal = (this.renewalsResource.value()?.data || []).find((item: any) => item.id === id);
+    if (renewal) {
+      this.recentItems.record({
+        id,
+        label: renewal.renewalNo,
+        type: 'renewal',
+        path: `/feature/pm/renewal/${id}/view`,
+        icon: 'bi-arrow-repeat',
+      });
+    }
     this.router.navigate(['/feature/pm/renewal', id, 'view']);
   }
 

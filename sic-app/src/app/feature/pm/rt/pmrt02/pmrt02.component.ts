@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
 
 @Component({
   selector: 'app-pmrt02',
@@ -35,6 +36,7 @@ export class Pmrt02Component implements OnInit {
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
   private navigation = inject(NavigationService);
+  private recentItems = inject(RecentItemsService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -49,6 +51,9 @@ export class Pmrt02Component implements OnInit {
   protected isLoading = signal(false);
   protected projects = signal<PmCustomerProject[]>([]);
   protected totalItems = signal(0);
+
+  // guard: ป้องกัน loadProjects() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  private syncingUrl = false;
 
   // ===== Computed =====
   protected totalPages = computed(() => {
@@ -124,6 +129,16 @@ export class Pmrt02Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
+      if (this.syncingUrl) {
+        this.syncingUrl = false;
+        return;
+      }
+
+      if (params['q'] !== undefined) this.searchTerm.set(params['q']);
+      if (params['status'] !== undefined) this.filterStatus.set(params['status']);
+      if (params['priority'] !== undefined) this.filterPriority.set(params['priority']);
+      if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
+
       const customerId = params['customerId'] || this.customerState.getCustomerId() || null;
       if (customerId) {
         this.customerState.setCustomer(customerId);
@@ -174,17 +189,35 @@ export class Pmrt02Component implements OnInit {
       });
   }
 
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.syncingUrl = true;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        priority: this.filterPriority() !== 'all' ? this.filterPriority() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   // ===== Event Handlers =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadProjects();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadProjects();
   }
 
@@ -192,6 +225,7 @@ export class Pmrt02Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadProjects();
   }
 
@@ -199,6 +233,7 @@ export class Pmrt02Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterPriority.set(val || 'all');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadProjects();
   }
 
@@ -215,6 +250,7 @@ export class Pmrt02Component implements OnInit {
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
     this.loadProjects();
   }
 
@@ -239,6 +275,17 @@ export class Pmrt02Component implements OnInit {
   }
 
   goToDetailView(id: string) {
+    const project = this.projects().find(p => p.id === id);
+    if (project) {
+      this.recentItems.record({
+        id: project.id,
+        label: project.projectCode,
+        type: 'project',
+        path: `/feature/pm/project/${id}/edit`,
+        queryParams: { mode: 'view' },
+        icon: 'bi-briefcase-fill',
+      });
+    }
     this.navigation.navigate(['/feature/pm/project', id, 'edit'], {
       queryParams: { mode: 'view' }
     });

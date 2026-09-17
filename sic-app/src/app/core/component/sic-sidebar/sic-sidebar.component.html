@@ -269,6 +269,23 @@
         <ng-container *ngTemplateOutlet="menuNode; context: { items: mainMenu(), depth: 0 }">
         </ng-container>
 
+        <!-- ── เพิ่งเข้าชม ── -->
+        @if (recentItems.items().length > 0) {
+          <div class="mt-4 border-t border-[var(--border)] pt-3">
+            <p class="mb-1 px-3.5 text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
+              เพิ่งเข้าชม
+            </p>
+            @for (item of recentItems.items(); track item.type + item.id) {
+              <a [routerLink]="item.path"
+                [queryParams]="item.queryParams || null"
+                class="flex items-center gap-3 rounded-lg px-3.5 py-2 text-[0.8rem] text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer">
+                <i class="bi text-[0.85rem] text-[var(--text-muted)]" [class]="item.icon"></i>
+                <span class="truncate">{{ item.label }}</span>
+              </a>
+            }
+          </div>
+        }
+
       </nav>
 
       <div class="border-t border-[var(--border)] bg-[var(--sidebar)] px-3 py-3">
@@ -318,6 +335,19 @@
         </nav>
 
         <div class="flex items-center gap-2 text-[var(--text-muted)]">
+          <sic-context-switcher></sic-context-switcher>
+          <button type="button" (click)="globalSearch.open()"
+            class="hidden md:flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[0.8rem] text-[var(--text-muted)] transition-colors hover:bg-[var(--sidebar-hover)] cursor-pointer"
+            title="ค้นหา (Ctrl+K)">
+            <i class="bi bi-search"></i>
+            <span>ค้นหา...</span>
+            <span class="rounded-md border border-[var(--border)] px-1.5 py-0.5 text-[0.65rem]">Ctrl+K</span>
+          </button>
+          <button type="button" (click)="shortcutService.toggleHelp()"
+            class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"
+            title="คีย์ลัด (Ctrl+/)">
+            <i class="bi bi-keyboard text-lg"></i>
+          </button>
           @if (isBack) {
             <button type="button" tooltip="ย้อนกลับ" (click)="onActionClick('back')"
               class="flex h-9 w-9 items-center justify-center rounded-lg transition-colors hover:bg-black/10 dark:hover:bg-white/10 hover:text-[var(--text-active)] cursor-pointer"

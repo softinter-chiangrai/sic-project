@@ -1,0 +1,53 @@
+<div class="relative">
+  <button type="button"
+    class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-left text-[0.8rem] transition-colors hover:bg-[var(--sidebar-hover)] max-w-[220px] cursor-pointer"
+    (click)="toggle()">
+    <i class="bi bi-folder2-open text-[var(--crm-primary)] flex-shrink-0"></i>
+    <span class="min-w-0 flex-1">
+      @if (currentProjectId()) {
+        <span class="block truncate font-medium text-[var(--text-active)]">{{ currentProjectName() || currentProjectId() }}</span>
+        <span class="block truncate text-[0.7rem] text-[var(--text-muted)]">{{ currentCustomerName() }}</span>
+      } @else {
+        <span class="text-[var(--text-muted)]">เลือกโปรเจกต์...</span>
+      }
+    </span>
+    <i class="bi bi-chevron-down text-[0.7rem] flex-shrink-0 transition-transform" [class.rotate-180]="isOpen()"></i>
+  </button>
+
+  @if (isOpen()) {
+    <div class="absolute left-0 top-[calc(100%+0.4rem)] z-[1000] w-80 max-w-[90vw] rounded-xl border border-[var(--border)] bg-[var(--bg)] shadow-lg">
+      <div class="border-b border-[var(--border)] p-2">
+        <input type="text" [ngModel]="keyword()" (ngModelChange)="onKeywordChange($event)"
+          placeholder="ค้นหาโปรเจกต์..." autofocus
+          class="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] outline-none focus:border-[var(--crm-primary)]" />
+      </div>
+
+      <div class="max-h-72 overflow-y-auto p-1">
+        @if (isLoading()) {
+          <div class="px-3 py-4 text-center text-[0.8rem] text-[var(--text-muted)]">กำลังค้นหา...</div>
+        } @else if (results().length === 0) {
+          <div class="px-3 py-4 text-center text-[0.8rem] text-[var(--text-muted)]">ไม่พบโปรเจกต์</div>
+        } @else {
+          @for (project of results(); track project.id) {
+            <button type="button"
+              class="flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-[var(--sidebar-hover)] cursor-pointer"
+              [class.bg-[var(--sidebar-hover)]]="project.id === currentProjectId()"
+              (click)="selectProject(project)">
+              <span class="truncate text-[0.85rem] font-medium text-[var(--text-active)]">{{ project.projectName }}</span>
+              <span class="truncate text-[0.72rem] text-[var(--text-muted)]">{{ project.customerName }} · {{ project.projectCode }}</span>
+            </button>
+          }
+        }
+      </div>
+
+      @if (currentProjectId()) {
+        <div class="border-t border-[var(--border)] p-2">
+          <button type="button" (click)="clearContext($event)"
+            class="w-full rounded-lg px-3 py-1.5 text-center text-[0.78rem] text-[var(--text-muted)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-danger)] cursor-pointer">
+            ล้างโปรเจกต์ที่เลือก
+          </button>
+        </div>
+      }
+    </div>
+  }
+</div>

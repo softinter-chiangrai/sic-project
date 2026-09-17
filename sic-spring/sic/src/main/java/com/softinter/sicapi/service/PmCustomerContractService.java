@@ -29,7 +29,21 @@ public interface PmCustomerContractService {
             Pageable pageable
     );
 
+    // expiringWithinDays: กรองสัญญาที่ endDate อยู่ภายใน N วันนับจากวันนี้ (สำหรับ Preset Tab "หมดอายุเดือนนี้")
+    Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Integer expiringWithinDays,
+            Pageable pageable
+    );
+
     PmCustomerContractResponse getContract(UUID id);
+
+    com.softinter.sicapi.dto.response.PmContractSummaryResponse getContractSummary(UUID id);
 
     UUID saveContract(UUID businessId, PmCustomerContractRequest request);
 

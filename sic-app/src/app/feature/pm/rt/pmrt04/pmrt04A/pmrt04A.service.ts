@@ -5,6 +5,13 @@ import { Observable } from 'rxjs';
 import { ContractModel, Pmrt04AModel } from './pmrt04A.model';
 import { environment } from '../../../../../../environments/environment';
 
+export interface ContractSummary {
+  milestones: { total: number; completed: number };
+  invoices: { total: number; pending: number };
+  maTickets: { total: number; open: number };
+  daysUntilExpiry: number | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class Pmrt04AService {
   private http = inject(HttpClient);
@@ -17,6 +24,10 @@ export class Pmrt04AService {
 
   getContract(id: string): Observable<ContractModel> {
     return this.http.get<ContractModel>(`${this.apiUrl}/${id}`);
+  }
+
+  getContractSummary(id: string): Observable<ContractSummary> {
+    return this.http.get<ContractSummary>(`${this.apiUrl}/${id}/summary`);
   }
 
   getLovContractType(): string {

@@ -21,6 +21,36 @@
         <i class="bi bi-funnel"></i>
         กรอง
       </button>
+
+      <button
+        (click)="exportCsv()"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        title="ส่งออกรายการในแท็บปัจจุบันเป็น CSV"
+      >
+        <i class="bi bi-download"></i>
+        Export CSV
+      </button>
+
+      <div class="relative">
+        <button
+          (click)="showColumnMenu.set(!showColumnMenu())"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-layout-three-columns"></i>
+          คอลัมน์
+        </button>
+        @if (showColumnMenu()) {
+          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" aria-label="ปิดเมนูคอลัมน์"></button>
+          <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-52 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
+            @for (col of allColumns; track col.key) {
+              <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
+                <input type="checkbox" [checked]="isColumnVisible(col.key)" (change)="toggleColumn(col.key)" />
+                {{ col.label }}
+              </label>
+            }
+          </div>
+        }
+      </div>
     </div>
   </div>
 
@@ -105,11 +135,14 @@
     </div>
   </div>
 
-  <!-- ===== LOADING ===== -->
+  <!-- ===== LOADING (Skeleton) ===== -->
   @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="border-b border-[var(--border)] px-4 py-3 last:border-b-0">
+          <sic-skeleton height="20px" width="100%"></sic-skeleton>
+        </div>
+      }
     </div>
   }
 
@@ -119,6 +152,11 @@
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
+            @if (viewMode() === 'pending') {
+              <th class="px-4 py-3 w-10">
+                <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="เลือกทั้งหมด" />
+              </th>
+            }
             <th
               (click)="onSortChange('documentCode')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px]"
@@ -137,33 +175,39 @@
                 <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
               }
             </th>
-            <th
-              (click)="onSortChange('projectName')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px] hidden md:table-cell"
-            >
-              โครงการ
-              @if (sortBy() === 'projectName') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('requester')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px] hidden lg:table-cell"
-            >
-              ผู้ขอ
-              @if (sortBy() === 'requester') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
-            <th
-              (click)="onSortChange('requestedDate')"
-              class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px] hidden lg:table-cell"
-            >
-              วันที่ขอ
-              @if (sortBy() === 'requestedDate') {
-                <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
-              }
-            </th>
+            @if (isColumnVisible('projectName')) {
+              <th
+                (click)="onSortChange('projectName')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px] hidden md:table-cell"
+              >
+                โครงการ
+                @if (sortBy() === 'projectName') {
+                  <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                }
+              </th>
+            }
+            @if (isColumnVisible('requester')) {
+              <th
+                (click)="onSortChange('requester')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px] hidden lg:table-cell"
+              >
+                ผู้ขอ
+                @if (sortBy() === 'requester') {
+                  <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                }
+              </th>
+            }
+            @if (isColumnVisible('requestedDate')) {
+              <th
+                (click)="onSortChange('requestedDate')"
+                class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[120px] hidden lg:table-cell"
+              >
+                วันที่ขอ
+                @if (sortBy() === 'requestedDate') {
+                  <i class="bi text-xs ml-1 text-[var(--crm-primary)]" [class.bi-chevron-up]="sortDir() === 'asc'" [class.bi-chevron-down]="sortDir() === 'desc'"></i>
+                }
+              </th>
+            }
             <th
               (click)="onSortChange('status')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[110px]"
@@ -181,6 +225,11 @@
         <tbody class="divide-y divide-[var(--border)]">
           @for (item of paginatedApprovals(); track item.id) {
             <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
+              @if (viewMode() === 'pending') {
+                <td class="px-4 py-3">
+                  <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" [attr.aria-label]="'เลือก ' + item.documentCode" />
+                </td>
+              }
               <td class="px-4 py-3">
                 <div class="flex items-center gap-2">
                   <i class="bi text-[var(--crm-primary)]" [class]="getDocumentIcon(item.documentType)"></i>
@@ -196,34 +245,40 @@
                   <div class="text-xs text-[var(--text-muted)]">ผู้อนุมัติ: {{ item.approver }}</div>
                 </div>
               </td>
-              <td class="px-4 py-3 hidden md:table-cell">
-                <span class="text-[var(--text)]">{{ item.projectName }}</span>
-              </td>
-              <td class="px-4 py-3 hidden lg:table-cell">
-                <span class="text-[var(--text-active)]">{{ item.requester }}</span>
-              </td>
-              <td class="px-4 py-3 hidden lg:table-cell">
-                <div>
-                  <span class="text-sm text-[var(--text-muted)]">{{ formatDate(item.requestedDate) }}</span>
-                  @if (item.dueDate && item.status === 'PENDING') {
-                    <div class="mt-0.5">
-                      @if (isOverdue(item.dueDate, item.status)) {
-                        <span class="inline-flex items-center gap-1 text-xs text-[var(--crm-danger)] font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
-                          <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด ({{ formatDate(item.dueDate) }})
-                        </span>
-                      } @else if (isDueSoon(item.dueDate, item.status)) {
-                        <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
-                          <i class="bi bi-clock-history"></i> ใกล้ครบกำหนด
-                        </span>
-                      } @else {
-                        <span class="text-xs text-[var(--text-muted)] block">
-                          ครบกำหนด: {{ formatDate(item.dueDate) }}
-                        </span>
-                      }
-                    </div>
-                  }
-                </div>
-              </td>
+              @if (isColumnVisible('projectName')) {
+                <td class="px-4 py-3 hidden md:table-cell">
+                  <span class="text-[var(--text)]">{{ item.projectName }}</span>
+                </td>
+              }
+              @if (isColumnVisible('requester')) {
+                <td class="px-4 py-3 hidden lg:table-cell">
+                  <span class="text-[var(--text-active)]">{{ item.requester }}</span>
+                </td>
+              }
+              @if (isColumnVisible('requestedDate')) {
+                <td class="px-4 py-3 hidden lg:table-cell">
+                  <div>
+                    <span class="text-sm text-[var(--text-muted)]">{{ formatDate(item.requestedDate) }}</span>
+                    @if (item.dueDate && item.status === 'PENDING') {
+                      <div class="mt-0.5">
+                        @if (isOverdue(item.dueDate, item.status)) {
+                          <span class="inline-flex items-center gap-1 text-xs text-[var(--crm-danger)] font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
+                            <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด ({{ formatDate(item.dueDate) }})
+                          </span>
+                        } @else if (isDueSoon(item.dueDate, item.status)) {
+                          <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
+                            <i class="bi bi-clock-history"></i> ใกล้ครบกำหนด
+                          </span>
+                        } @else {
+                          <span class="text-xs text-[var(--text-muted)] block">
+                            ครบกำหนด: {{ formatDate(item.dueDate) }}
+                          </span>
+                        }
+                      </div>
+                    }
+                  </div>
+                </td>
+              }
               <td class="px-4 py-3">
                 <span [class]="getStatusClass(item.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
                   {{ getStatusText(item.status) }}
@@ -251,7 +306,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="7" class="px-4 py-12 text-center">
+              <td colspan="10" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบรายการอนุมัติ</p>
@@ -272,5 +327,26 @@
     [totalItems]="totalItems()"
     (pageChange)="onPageChange($event)"
   ></sic-pagination>
+
+  <!-- ===== BULK ACTION BAR (เฉพาะแท็บ "รอฉันอนุมัติ") ===== -->
+  @if (viewMode() === 'pending' && selectedIds().size > 0) {
+    <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
+      <span class="text-sm font-medium text-[var(--text-active)]">
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ selectedIds().size }} รายการ
+      </span>
+      <button type="button" [disabled]="isBulkActing()" (click)="bulkApprove()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all disabled:opacity-50">
+        <i class="bi bi-check2"></i> อนุมัติทั้งหมด
+      </button>
+      <button type="button" [disabled]="isBulkActing()" (click)="bulkReject()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--crm-danger)] text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-50">
+        <i class="bi bi-x-lg"></i> ปฏิเสธทั้งหมด
+      </button>
+      <button type="button" (click)="clearSelection()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
+        <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
+      </button>
+    </div>
+  }
 
 </div>

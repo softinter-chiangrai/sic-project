@@ -1,6 +1,8 @@
 package com.softinter.sicapi.repository.pm;
 
 import com.softinter.sicapi.entity.pm.PmCustomerContract;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -14,6 +16,10 @@ public interface PmCustomerContractRepository
                 JpaSpecificationExecutor<PmCustomerContract> {
 
     List<PmCustomerContract> findByCustomerIdAndIsDeleteFalse(UUID customerId);
+
+    // สำหรับ Global Search
+    Page<PmCustomerContract> findByBusinessIdAndIsDeleteFalseAndContractNoContainingIgnoreCase(
+            UUID businessId, String keyword, Pageable pageable);
 
     List<PmCustomerContract> findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId);
 

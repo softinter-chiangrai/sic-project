@@ -10,13 +10,58 @@
         {{ totalItems() }} รายการ
       </span>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      สร้างใบแจ้งหนี้ใหม่
-    </button>
+    <div class="flex gap-2">
+      <button
+        (click)="exportCsv()"
+        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        title="ส่งออกรายการที่กรองอยู่เป็น CSV"
+      >
+        <i class="bi bi-download"></i>
+        Export CSV
+      </button>
+
+      <div class="relative">
+        <button
+          (click)="showColumnMenu.set(!showColumnMenu())"
+          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
+        >
+          <i class="bi bi-layout-three-columns"></i>
+          คอลัมน์
+        </button>
+        @if (showColumnMenu()) {
+          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" aria-label="ปิดเมนูคอลัมน์"></button>
+          <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-52 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
+            @for (col of allColumns; track col.key) {
+              <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
+                <input type="checkbox" [checked]="isColumnVisible(col.key)" (change)="toggleColumn(col.key)" />
+                {{ col.label }}
+              </label>
+            }
+          </div>
+        }
+      </div>
+
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+      >
+        <i class="bi bi-plus-lg"></i>
+        สร้างใบแจ้งหนี้ใหม่
+      </button>
+    </div>
+  </div>
+
+  <!-- PRESET TABS -->
+  <div class="flex flex-wrap gap-2">
+    @for (preset of [{v:'all', l:'ทั้งหมด'}, {v:'UNPAID', l:'ค้างชำระ'}, {v:'PAID', l:'รับเงินแล้ว'}, {v:'OVERDUE', l:'เกินกำหนด'}]; track preset.v) {
+      <button type="button" (click)="setPreset(preset.v)"
+        class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
+        [class]="filterStatus() === preset.v
+          ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
+          : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
+        {{ preset.l }}
+      </button>
+    }
   </div>
 
   <!-- Filters & Search -->
@@ -51,11 +96,14 @@
     </div>
   </div>
 
-  <!-- Loading State -->
+  <!-- Loading State (Skeleton) -->
   @if (invoicesResource.isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูลใบแจ้งหนี้...</p>
+    <div class="overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+      @for (i of [1,2,3,4,5]; track i) {
+        <div class="border-b border-[var(--border)] px-4 py-3 last:border-b-0">
+          <sic-skeleton height="20px" width="100%"></sic-skeleton>
+        </div>
+      }
     </div>
   } @else if (invoicesResource.value(); as res) {
     <!-- Table -->
@@ -63,30 +111,41 @@
       <table class="w-full text-sm">
         <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
           <tr>
+            <th class="px-4 py-3 w-10">
+              <input type="checkbox" [checked]="isAllSelected()" (change)="toggleSelectAll()" aria-label="เลือกทั้งหมด" />
+            </th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[140px]">
               เลขที่ใบแจ้งหนี้
             </th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]">
               ลูกค้า / โครงการ
             </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
-              ประเภทบิล
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
-              วันครบกำหนด
-            </th>
+            @if (isColumnVisible('billingType')) {
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
+                ประเภทบิล
+              </th>
+            }
+            @if (isColumnVisible('dueDate')) {
+              <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
+                วันครบกำหนด
+              </th>
+            }
             <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
               ยอดรวม
             </th>
-            <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
-              ชำระแล้ว
-            </th>
+            @if (isColumnVisible('paidAmount')) {
+              <th class="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
+                ชำระแล้ว
+              </th>
+            }
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
               สถานะ
             </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
-              การอนุมัติ
-            </th>
+            @if (isColumnVisible('approvalStatus')) {
+              <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[120px]">
+                การอนุมัติ
+              </th>
+            }
             <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[110px]">
               จัดการ
             </th>
@@ -96,6 +155,9 @@
           @for (item of filteredInvoices(); track item.id) {
             <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
               <td class="px-4 py-3">
+                <input type="checkbox" [checked]="isSelected(item.id)" (change)="toggleSelect(item.id)" [attr.aria-label]="'เลือก ' + item.invoiceNo" />
+              </td>
+              <td class="px-4 py-3">
                 <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
                   {{ item.invoiceNo }}
                 </span>
@@ -104,38 +166,46 @@
                 <div class="font-medium text-[var(--text-active)]">{{ item.customerName || 'N/A' }}</div>
                 <div class="text-xs text-[var(--text-muted)]">{{ item.projectName || 'N/A' }}</div>
               </td>
-              <td class="px-4 py-3 text-xs text-[var(--text)]">
-                {{ item.billingType }}
-              </td>
-              <td class="px-4 py-3 text-xs text-[var(--text)]">
-                {{ item.dueDate ? (item.dueDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
-              </td>
+              @if (isColumnVisible('billingType')) {
+                <td class="px-4 py-3 text-xs text-[var(--text)]">
+                  {{ item.billingType }}
+                </td>
+              }
+              @if (isColumnVisible('dueDate')) {
+                <td class="px-4 py-3 text-xs text-[var(--text)]">
+                  {{ item.dueDate ? (item.dueDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
+                </td>
+              }
               <td class="px-4 py-3 text-right font-semibold text-[var(--text-active)]">
                 {{ item.totalAmount | currency:'THB':'symbol':'1.2-2' }}
               </td>
-              <td class="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400 font-medium">
-                {{ item.paidAmount | currency:'THB':'symbol':'1.2-2' }}
-              </td>
+              @if (isColumnVisible('paidAmount')) {
+                <td class="px-4 py-3 text-right text-emerald-600 dark:text-emerald-400 font-medium">
+                  {{ item.paidAmount | currency:'THB':'symbol':'1.2-2' }}
+                </td>
+              }
               <td class="px-4 py-3 text-center">
                 <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(item.paymentStatus)">
                   {{ getStatusText(item.paymentStatus) }}
                 </span>
               </td>
-              <td class="px-4 py-3 text-center">
-                @if (approvalStatusMap()[item.id]) {
-                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[item.id])">
-                    {{ getApprovalStatusText(approvalStatusMap()[item.id]) }}
-                  </span>
-                } @else if (item.approvalStatus) {
-                  <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(item.approvalStatus)">
-                    {{ getApprovalStatusText(item.approvalStatus) }}
-                  </span>
-                } @else {
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                    ยังไม่อนุมัติ
-                  </span>
-                }
-              </td>
+              @if (isColumnVisible('approvalStatus')) {
+                <td class="px-4 py-3 text-center">
+                  @if (approvalStatusMap()[item.id]) {
+                    <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[item.id])">
+                      {{ getApprovalStatusText(approvalStatusMap()[item.id]) }}
+                    </span>
+                  } @else if (item.approvalStatus) {
+                    <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(item.approvalStatus)">
+                      {{ getApprovalStatusText(item.approvalStatus) }}
+                    </span>
+                  } @else {
+                    <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                      ยังไม่อนุมัติ
+                    </span>
+                  }
+                </td>
+              }
               <td class="px-4 py-3 text-center">
                 <sic-table-actions
                   [showView]="true"
@@ -151,7 +221,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="9" class="px-4 py-12 text-center">
+              <td colspan="12" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-receipt text-5xl text-[var(--text-muted)] opacity-30"></i>
                   <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบรายการใบแจ้งหนี้</p>
@@ -177,5 +247,22 @@
       [totalItems]="totalItems()"
       (pageChange)="onPageChange($event)"
     ></sic-pagination>
+  }
+
+  <!-- BULK ACTION BAR -->
+  @if (selectedIds().size > 0) {
+    <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
+      <span class="text-sm font-medium text-[var(--text-active)]">
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ selectedIds().size }} รายการ
+      </span>
+      <button type="button" (click)="bulkExportPdf()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
+        <i class="bi bi-file-earmark-pdf"></i> Export PDF ทั้งหมด
+      </button>
+      <button type="button" (click)="clearSelection()"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
+        <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
+      </button>
+    </div>
   }
 </div>

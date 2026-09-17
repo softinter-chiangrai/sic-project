@@ -33,16 +33,19 @@
         }
       </div>
 
-      <!-- AI Assistant Button -->
-      @if (!isViewOnly && !isLocked) {
-        <button
-          type="button"
-          (click)="openAiAssist()"
-          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-sm hover:shadow transition-all cursor-pointer">
-          <i class="bi bi-stars text-amber-300"></i>
-          <span>สร้างด้วย AI</span>
-        </button>
-      }
+      <div class="flex items-center gap-2">
+        <sic-copy-link></sic-copy-link>
+        <!-- AI Assistant Button -->
+        @if (!isViewOnly && !isLocked) {
+          <button
+            type="button"
+            (click)="openAiAssist()"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-sm hover:shadow transition-all cursor-pointer">
+            <i class="bi bi-stars text-amber-300"></i>
+            <span>สร้างด้วย AI</span>
+          </button>
+        }
+      </div>
     </div>
 
     <!-- FORM GRID -->

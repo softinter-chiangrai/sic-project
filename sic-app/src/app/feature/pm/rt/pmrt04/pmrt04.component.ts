@@ -22,15 +22,18 @@ import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract } from './pmrt04.model';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
+import { SicSkeletonComponent } from '../../../../core/component/sic-skeleton/sic-skeleton.component';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent, SicDrawerComponent, SicSkeletonComponent],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -44,6 +47,7 @@ export class Pmrt04Component implements OnInit {
   private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);
   private customerState = inject(CustomerStateService);
+  private recentItems = inject(RecentItemsService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -66,6 +70,32 @@ export class Pmrt04Component implements OnInit {
   protected contractTypes = signal<string[]>([]);
 
   private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
+
+  // guard: ป้องกัน loadContracts() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  private syncingUrl = false;
+
+  // ===== Quick View Drawer =====
+  protected showDrawer = signal(false);
+  protected selectedContract = signal<Contract | null>(null);
+
+  // ===== Preset Filter Tabs =====
+  protected activePreset = signal<'all' | 'expiring'>('all');
+
+  // ===== Bulk Selection =====
+  protected selectedIds = signal<Set<string>>(new Set());
+
+  // ===== Column Visibility =====
+  private readonly COLUMN_STORAGE_KEY = 'pmrt04.visibleColumns';
+  protected readonly allColumns: { key: string; label: string }[] = [
+    { key: 'contractType', label: 'ประเภท' },
+    { key: 'customerName', label: 'ลูกค้า' },
+    { key: 'projectName', label: 'โครงการ' },
+    { key: 'contractValue', label: 'มูลค่า' },
+    { key: 'duration', label: 'ระยะเวลา' },
+    { key: 'approvalStatus', label: 'อนุมัติ' },
+  ];
+  protected visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
+  protected showColumnMenu = signal(false);
 
   // ===== Computed =====
   protected filteredContracts = computed(() => this.contracts());
@@ -109,6 +139,17 @@ export class Pmrt04Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
+      if (this.syncingUrl) {
+        this.syncingUrl = false;
+        return;
+      }
+
+      if (params['q'] !== undefined) this.searchTerm.set(params['q']);
+      if (params['status'] !== undefined) this.filterStatus.set(params['status']);
+      if (params['type'] !== undefined) this.filterType.set(params['type']);
+      if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
+      if (params['preset'] !== undefined) this.activePreset.set(params['preset'] === 'expiring' ? 'expiring' : 'all');
+
       const projectId = params['projectId'] || this.customerState.getProjectId();
 
       if (projectId) {
@@ -201,6 +242,10 @@ export class Pmrt04Component implements OnInit {
       params = params.set('contractType', type);
     }
 
+    if (this.activePreset() === 'expiring') {
+      params = params.set('expiringWithinDays', '30');
+    }
+
     if (this.sortBy()) {
       params = params.set('sortBy', this.sortBy()).set('sortDirection', this.sortDir());
     }
@@ -238,17 +283,36 @@ export class Pmrt04Component implements OnInit {
       });
   }
 
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.syncingUrl = true;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        type: this.filterType() !== 'all' ? this.filterType() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+        preset: this.activePreset() !== 'all' ? this.activePreset() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   // ===== Actions =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadContracts();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadContracts();
   }
 
@@ -256,6 +320,7 @@ export class Pmrt04Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadContracts();
   }
 
@@ -263,6 +328,7 @@ export class Pmrt04Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterType.set(val || 'all');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadContracts();
   }
 
@@ -279,7 +345,149 @@ export class Pmrt04Component implements OnInit {
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
     this.loadContracts();
+  }
+
+  // ===== Preset Tabs =====
+  setPreset(preset: 'all' | 'expiring'): void {
+    this.activePreset.set(preset);
+    this.currentPage.set(1);
+    this.syncFiltersToUrl();
+    this.loadContracts();
+  }
+
+  // ===== Bulk Selection =====
+  toggleSelect(id: string): void {
+    this.selectedIds.update((set) => {
+      const next = new Set(set);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  }
+
+  isSelected(id: string): boolean {
+    return this.selectedIds().has(id);
+  }
+
+  isAllSelected(): boolean {
+    const items = this.contracts();
+    return items.length > 0 && items.every((c) => this.selectedIds().has(c.id));
+  }
+
+  toggleSelectAll(): void {
+    this.selectedIds.set(
+      this.isAllSelected() ? new Set() : new Set(this.contracts().map((c) => c.id)),
+    );
+  }
+
+  clearSelection(): void {
+    this.selectedIds.set(new Set());
+  }
+
+  bulkExportPdf(): void {
+    const ids = Array.from(this.selectedIds());
+    if (ids.length === 0) return;
+
+    this.isLoading.set(true);
+    let remaining = ids.length;
+    ids.forEach((id) => {
+      this.contractService.exportContractPdf(id).subscribe({
+        next: (blob) => {
+          const pdfUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+          const a = document.createElement('a');
+          a.href = pdfUrl;
+          a.download = `contract-${id}.pdf`;
+          a.click();
+          URL.revokeObjectURL(pdfUrl);
+        },
+        error: () => {
+          this.dialog.error('ส่งออกไม่สำเร็จ', `ไม่สามารถส่งออกเอกสารสัญญารหัส ${id} ได้`);
+        },
+        complete: () => {
+          remaining -= 1;
+          if (remaining === 0) {
+            this.isLoading.set(false);
+            this.clearSelection();
+          }
+        },
+      });
+    });
+  }
+
+  // ===== Column Visibility =====
+  private loadVisibleColumns(): Set<string> {
+    try {
+      const raw = localStorage.getItem(this.COLUMN_STORAGE_KEY);
+      if (raw) return new Set(JSON.parse(raw));
+    } catch { /* ignore */ }
+    return new Set(this.allColumns.map((c) => c.key));
+  }
+
+  toggleColumn(key: string): void {
+    this.visibleColumns.update((set) => {
+      const next = new Set(set);
+      next.has(key) ? next.delete(key) : next.add(key);
+      return next;
+    });
+    try {
+      localStorage.setItem(this.COLUMN_STORAGE_KEY, JSON.stringify(Array.from(this.visibleColumns())));
+    } catch { /* ignore */ }
+  }
+
+  isColumnVisible(key: string): boolean {
+    return this.visibleColumns().has(key);
+  }
+
+  // ===== Export CSV (ตามตัวกรองปัจจุบันทั้งหมด ไม่ใช่แค่หน้าปัจจุบัน) =====
+  exportCsv(): void {
+    this.isLoading.set(true);
+
+    let params = new HttpParams().set('page', '1').set('size', '1000');
+    const projectId = this.filterProjectId();
+    if (projectId) params = params.set('projectId', projectId);
+    const customerId = this.filterCustomerId();
+    if (customerId) params = params.set('customerId', customerId);
+    const keyword = this.searchTerm();
+    if (keyword) params = params.set('keyword', keyword);
+    const status = this.filterStatus();
+    if (status !== 'all') params = params.set('status', status);
+    const type = this.filterType();
+    if (type !== 'all') params = params.set('contractType', type);
+    if (this.activePreset() === 'expiring') params = params.set('expiringWithinDays', '30');
+
+    this.http
+      .get<PaginationResponse<Contract>>(this.apiUrl, { params })
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => this.downloadCsv(res.data || []),
+        error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการสัญญาได้'),
+      });
+  }
+
+  private downloadCsv(items: Contract[]): void {
+    const headers = ['เลขสัญญา', 'ประเภท', 'ลูกค้า', 'โครงการ', 'มูลค่า', 'วันที่เริ่ม', 'วันที่สิ้นสุด', 'สถานะ'];
+    const rows = items.map((c) => [
+      c.contractNo,
+      c.contractType,
+      c.customerName,
+      c.projectName || '',
+      String(c.contractValue ?? ''),
+      c.startDate,
+      c.endDate,
+      this.getStatusText(c.signStatus),
+    ]);
+    const csvLines = [headers, ...rows].map((r) =>
+      r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','),
+    );
+    const csvContent = '﻿' + csvLines.join('\r\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `contracts-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   // ===== Navigation =====
@@ -299,6 +507,16 @@ export class Pmrt04Component implements OnInit {
   }
 
   goToView(id: string) {
+    const contract = this.contracts().find((c) => c.id === id) || this.selectedContract();
+    if (contract) {
+      this.recentItems.record({
+        id: contract.id,
+        label: contract.contractNo,
+        type: 'contract',
+        path: `/feature/pm/contract/${id}/view`,
+        icon: 'bi-file-earmark-text',
+      });
+    }
     this.navigation.navigate(['/feature/pm/contract', id, 'view']);
   }
 
@@ -348,6 +566,15 @@ export class Pmrt04Component implements OnInit {
     } else {
       this.navigation.navigate(['/feature/pm/project']);
     }
+  }
+
+  openQuickView(contract: Contract): void {
+    this.selectedContract.set(contract);
+    this.showDrawer.set(true);
+  }
+
+  closeQuickView(): void {
+    this.showDrawer.set(false);
   }
 
   goToProject(projectId: string) {

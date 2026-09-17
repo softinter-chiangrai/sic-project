@@ -72,6 +72,7 @@ public class PmCustomerContractController {
             @RequestParam(required = false) String contractType,
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) Integer expiringWithinDays,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -81,7 +82,8 @@ public class PmCustomerContractController {
         Sort sort = com.softinter.sicapi.util.SortValidator.build(
                 com.softinter.sicapi.entity.pm.PmCustomerContract.class, sortBy, sortDirection, "contractNo");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
-        Page<PmCustomerContractResponse> pageResult = contractService.getContracts(businessId, customerId, projectId, keyword, status, contractType, pageable);
+        Page<PmCustomerContractResponse> pageResult = contractService.getContracts(
+                businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
@@ -90,6 +92,12 @@ public class PmCustomerContractController {
     @Operation(summary = "ดึงข้อมูลสัญญาตาม ID")
     public ResponseEntity<PmCustomerContractResponse> getContract(@PathVariable UUID id) {
         return ResponseEntity.ok(contractService.getContract(id));
+    }
+
+    @GetMapping("/{id}/summary")
+    @Operation(summary = "สรุปข้อมูลที่เกี่ยวข้องกับสัญญา (Milestone, ใบแจ้งหนี้, MA Ticket, วันหมดอายุ)")
+    public ResponseEntity<com.softinter.sicapi.dto.response.PmContractSummaryResponse> getContractSummary(@PathVariable UUID id) {
+        return ResponseEntity.ok(contractService.getContractSummary(id));
     }
 
     @PostMapping("/{id}/create-revision")

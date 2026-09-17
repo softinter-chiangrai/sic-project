@@ -54,13 +54,39 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     @Override
     @Transactional(readOnly = true)
     public Page<PmInvoiceResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
-        Page<PmInvoice> page;
-        if (projectId != null) {
-            page = invoiceRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-        } else {
-            page = invoiceRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+        return findAll(businessId, projectId, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmInvoiceResponse> findAll(UUID businessId, UUID projectId, String keyword, String paymentStatus, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (paymentStatus == null || paymentStatus.isBlank() || "all".equals(paymentStatus))) {
+            Page<PmInvoice> page;
+            if (projectId != null) {
+                page = invoiceRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
+            } else {
+                page = invoiceRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
+            }
+            return page.map(this::toResponse);
         }
-        return page.map(this::toResponse);
+
+        org.springframework.data.jpa.domain.Specification<PmInvoice> spec = (root, query, cb) -> {
+            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (keyword != null && !keyword.isBlank()) {
+                predicates.add(cb.like(cb.lower(root.get("invoiceNo")), "%" + keyword.toLowerCase() + "%"));
+            }
+            if (paymentStatus != null && !paymentStatus.isBlank() && !"all".equals(paymentStatus)) {
+                predicates.add(cb.equal(root.get("paymentStatus"), PaymentStatus.valueOf(paymentStatus)));
+            }
+            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+        };
+
+        return invoiceRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override

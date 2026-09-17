@@ -14,6 +14,14 @@ export class CustomerStateService {
   private readonly requirementId = signal<string | null>(null);   // ✅ เพิ่ม
   private readonly requirementTitle = signal<string>('');        // ✅ เพิ่ม
 
+  // Template ที่ subscribe การเปลี่ยนแปลง context ได้โดยตรง (Global Context Switcher เป็นต้น)
+  readonly currentCustomerId = this.customerId.asReadonly();
+  readonly currentCustomerName = this.customerName.asReadonly();
+  readonly currentProjectId = this.projectId.asReadonly();
+  readonly currentProjectName = this.projectName.asReadonly();
+  readonly currentRequirementId = this.requirementId.asReadonly();
+  readonly currentRequirementTitle = this.requirementTitle.asReadonly();
+
   constructor() {
     this.loadFromStorage();
   }
@@ -31,7 +39,7 @@ export class CustomerStateService {
   clearCustomer(): void {
     this.customerId.set(null);
     this.customerName.set('');
-    sessionStorage.removeItem(this.CUSTOMER_KEY);
+    localStorage.removeItem(this.CUSTOMER_KEY);
   }
 
   // ===== Project =====
@@ -47,7 +55,7 @@ export class CustomerStateService {
   clearProject(): void {
     this.projectId.set(null);
     this.projectName.set('');
-    sessionStorage.removeItem(this.PROJECT_KEY);
+    localStorage.removeItem(this.PROJECT_KEY);
   }
 
   // ===== Requirement =====
@@ -63,7 +71,16 @@ export class CustomerStateService {
   clearRequirement(): void {
     this.requirementId.set(null);
     this.requirementTitle.set('');
-    sessionStorage.removeItem(this.REQUIREMENT_KEY);
+    localStorage.removeItem(this.REQUIREMENT_KEY);
+  }
+
+  // ===== Context (customer + project พร้อมกันใน call เดียว) =====
+  setContext(customerId: string, customerName: string | undefined, projectId: string, projectName?: string): void {
+    this.customerId.set(customerId);
+    if (customerName) this.customerName.set(customerName);
+    this.projectId.set(projectId);
+    if (projectName) this.projectName.set(projectName);
+    this.saveToStorage();
   }
 
   // ===== Clear All =====
@@ -75,15 +92,15 @@ export class CustomerStateService {
 
   // ===== Storage =====
   private saveToStorage(): void {
-    sessionStorage.setItem(this.CUSTOMER_KEY, JSON.stringify({
+    localStorage.setItem(this.CUSTOMER_KEY, JSON.stringify({
       id: this.customerId(),
       name: this.customerName(),
     }));
-    sessionStorage.setItem(this.PROJECT_KEY, JSON.stringify({
+    localStorage.setItem(this.PROJECT_KEY, JSON.stringify({
       id: this.projectId(),
       name: this.projectName(),
     }));
-    sessionStorage.setItem(this.REQUIREMENT_KEY, JSON.stringify({
+    localStorage.setItem(this.REQUIREMENT_KEY, JSON.stringify({
       id: this.requirementId(),
       title: this.requirementTitle(),
     }));
@@ -91,7 +108,7 @@ export class CustomerStateService {
 
   private loadFromStorage(): void {
     // Customer
-    const customerRaw = sessionStorage.getItem(this.CUSTOMER_KEY);
+    const customerRaw = localStorage.getItem(this.CUSTOMER_KEY);
     if (customerRaw) {
       try {
         const data = JSON.parse(customerRaw);
@@ -101,7 +118,7 @@ export class CustomerStateService {
     }
 
     // Project
-    const projectRaw = sessionStorage.getItem(this.PROJECT_KEY);
+    const projectRaw = localStorage.getItem(this.PROJECT_KEY);
     if (projectRaw) {
       try {
         const data = JSON.parse(projectRaw);
@@ -111,7 +128,7 @@ export class CustomerStateService {
     }
 
     // ✅ Requirement
-    const requirementRaw = sessionStorage.getItem(this.REQUIREMENT_KEY);
+    const requirementRaw = localStorage.getItem(this.REQUIREMENT_KEY);
     if (requirementRaw) {
       try {
         const data = JSON.parse(requirementRaw);

@@ -22,6 +22,7 @@ import type { ApprovalFlow } from '../../../dt/pmdt03/approval.model';
 import { Pmrt02AService } from './pmrt02A.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 
 import { ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
@@ -42,6 +43,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     SicComboboxComponent,
     SicTiptapEditorComponent,
     SicVersionBadgeComponent,
+    SicCopyLinkComponent,
   ],
   templateUrl: './pmrt02A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,

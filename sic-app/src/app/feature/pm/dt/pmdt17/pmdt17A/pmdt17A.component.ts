@@ -25,6 +25,7 @@ import { PmMaTicketModel } from './pmdt17A.model';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 
 @Component({
   selector: 'app-pmdt17a',
@@ -41,6 +42,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicTiptapEditorComponent,
+    SicCopyLinkComponent,
   ],
   templateUrl: './pmdt17A.component.html',
   styleUrls: ['./pmdt17A.component.css'],

@@ -21,6 +21,7 @@ import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { RecentItemsService } from '../../../../core/services/recent-items.service';
 
 @Component({
   selector: 'app-pmrt01',
@@ -36,6 +37,7 @@ export class Pmrt01Component implements OnInit {
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
   private navigation = inject(NavigationService);
+  private recentItems = inject(RecentItemsService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -48,6 +50,9 @@ export class Pmrt01Component implements OnInit {
   protected customers = signal<CustomerModel[]>([]);
   protected totalItems = signal(0);
   protected businessId = '';
+
+  // guard: ป้องกัน loadCustomers() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  private syncingUrl = false;
 
   // ===== Computed =====
   protected paginatedCustomers = computed(() => {
@@ -62,9 +67,22 @@ export class Pmrt01Component implements OnInit {
     if (resolved && resolved.data) {
       this.customers.set(resolved.data || []);
       this.totalItems.set(resolved.pageable?.totalElements || resolved.data.length || 0);
-    } else if (this.businessId) {
-      this.loadCustomers();
     }
+
+    this.route.queryParams.subscribe((params) => {
+      if (this.syncingUrl) {
+        this.syncingUrl = false;
+        return;
+      }
+
+      if (params['q'] !== undefined) this.searchTerm.set(params['q']);
+      if (params['status'] !== undefined) this.filterStatus.set(params['status']);
+      if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
+
+      if ((!resolved || !resolved.data) && this.businessId) {
+        this.loadCustomers();
+      }
+    });
   }
 
   loadCustomers() {
@@ -92,17 +110,34 @@ export class Pmrt01Component implements OnInit {
       });
   }
 
+  // ===== URL State Sync =====
+  private syncFiltersToUrl(): void {
+    this.syncingUrl = true;
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: {
+        q: this.searchTerm() || null,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+        page: this.currentPage() > 1 ? this.currentPage() : null,
+      },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
+  }
+
   // ===== Event Handlers =====
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadCustomers();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadCustomers();
   }
 
@@ -115,6 +150,7 @@ export class Pmrt01Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.currentPage.set(1);
+    this.syncFiltersToUrl();
     this.loadCustomers();
   }
 
@@ -131,6 +167,7 @@ export class Pmrt01Component implements OnInit {
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
     this.currentPage.set(page);
+    this.syncFiltersToUrl();
     this.loadCustomers();
   }
 
@@ -143,7 +180,17 @@ export class Pmrt01Component implements OnInit {
       this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
       return;
     }
-    this.navigation.navigate(['/feature/pm/customer', id, 'edit']); 
+    const customer = this.customers().find((c) => c.id === id);
+    if (customer) {
+      this.recentItems.record({
+        id,
+        label: customer.customerCode,
+        type: 'customer',
+        path: `/feature/pm/customer/${id}/edit`,
+        icon: 'bi-people-fill',
+      });
+    }
+    this.navigation.navigate(['/feature/pm/customer', id, 'edit']);
   }
 
   toggleActive(customer: CustomerModel) {

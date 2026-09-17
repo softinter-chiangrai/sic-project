@@ -55,10 +55,23 @@ export class Pmdt07Component implements OnInit {
             this.customerState.setProject(qProjId);
         }
 
+        // อ่านสถานะ filter/pagination จาก query params เพื่อคงค่าไว้เมื่อ refresh หน้า
+        const qKeyword = this.route.snapshot.queryParams['q'];
+        const qStatus = this.route.snapshot.queryParams['status'];
+        const qPage = this.route.snapshot.queryParams['page'];
+        if (qKeyword !== undefined) this.searchTerm.set(qKeyword);
+        if (qStatus !== undefined) this.filterStatus.set(qStatus);
+        if (qPage !== undefined) this.currentPage.set(+qPage || 1);
+
         if (qReqId || qProjId) {
+            // ล้าง requirementId/projectId ออกจาก URL แต่คงค่า q/status/page ไว้
             this.router.navigate([], {
                 relativeTo: this.route,
-                queryParams: {},
+                queryParams: {
+                    q: qKeyword !== undefined ? qKeyword : null,
+                    status: qStatus !== undefined ? qStatus : null,
+                    page: qPage !== undefined ? qPage : null,
+                },
                 replaceUrl: true,
             });
         }
@@ -72,6 +85,20 @@ export class Pmdt07Component implements OnInit {
         } else {
             this.loadData();
         }
+    }
+
+    // ===== URL State Sync =====
+    private syncFiltersToUrl(): void {
+        this.router.navigate([], {
+            relativeTo: this.route,
+            queryParams: {
+                q: this.searchTerm() || null,
+                status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
+                page: this.currentPage() > 1 ? this.currentPage() : null,
+            },
+            queryParamsHandling: 'merge',
+            replaceUrl: true,
+        });
     }
 
     loadData(): void {
@@ -128,12 +155,14 @@ export class Pmdt07Component implements OnInit {
         const input = event.target as HTMLInputElement;
         this.searchTerm.set(input.value);
         this.currentPage.set(1);
+        this.syncFiltersToUrl();
         this.loadData();
     }
 
     clearSearch(): void {
         this.searchTerm.set('');
         this.currentPage.set(1);
+        this.syncFiltersToUrl();
         this.loadData();
     }
 
@@ -149,12 +178,14 @@ export class Pmdt07Component implements OnInit {
         const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
         this.filterStatus.set(val || 'all');
         this.currentPage.set(1);
+        this.syncFiltersToUrl();
         this.loadData();
     }
 
     onPageChange(page: number): void {
         if (page < 1 || page > this.totalPages()) return;
         this.currentPage.set(page);
+        this.syncFiltersToUrl();
         this.loadData();
     }
 
