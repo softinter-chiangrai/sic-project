@@ -36,12 +36,13 @@
   align-items: center;
   gap: 0.75rem;
   width: 100%;
-  min-height: 2.9rem;
+  min-height: 3.15rem;
   padding: 0.35rem 0.45rem 0.35rem 0.45rem;
   border: 1px solid var(--border);
   border-radius: 0.95rem;
   background: transparent;
   color: var(--text-active);
+  box-sizing: border-box;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
   overflow: visible;
 }

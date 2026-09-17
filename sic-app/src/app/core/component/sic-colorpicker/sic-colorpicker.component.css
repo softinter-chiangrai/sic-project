@@ -32,7 +32,7 @@
   justify-content: space-between;
   gap: 0.75rem;
   width: 100%;
-  min-height: 2.9rem;
+  min-height: 3.15rem;
   padding: 0.45rem 0.55rem 0.45rem 0.45rem;
   border: 1px solid var(--border);
   border-radius: 0.95rem;
@@ -40,6 +40,7 @@
     linear-gradient(135deg, color-mix(in srgb, var(--sidebar) 24%, var(--bg)), var(--bg));
   color: var(--text-active);
   outline: none;
+  box-sizing: border-box;
   transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 

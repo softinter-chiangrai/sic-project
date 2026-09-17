@@ -180,9 +180,8 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex gap-3 pt-2 border-t border-[var(--border)]">
+            <div class="flex items-center justify-end gap-3 pt-2 border-t border-[var(--border)]">
               <sic-button
-                [block]="isViewOnly"
                 type="button"
                 variant="outline" color="primary"
                 (click)="onBack()"
@@ -192,7 +191,6 @@
               </sic-button>
               @if (isLocked) {
                 <sic-button
-                  [block]="true"
                   type="button"
                   variant="solid" color="primary"
                   (click)="requestChange()"
@@ -202,7 +200,6 @@
                 </sic-button>
               } @else if (!isViewOnly) {
                 <sic-button
-                  [block]="true"
                   type="submit"
                   variant="solid" color="primary"
                   [disabled]="isSaving || form.invalid"

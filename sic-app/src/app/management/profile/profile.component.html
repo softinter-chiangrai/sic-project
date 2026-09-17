@@ -192,11 +192,9 @@
 
       <!-- Submit -->
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
       >
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'submit'" variant="solid" color="primary">บันทึก</sic-button>
-        </div>
+        <sic-button [type]="'submit'" variant="solid" color="primary">บันทึก</sic-button>
       </div>
     </div>
   </form>
@@ -236,16 +234,12 @@
         </div>
       </div>
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6 mt-5"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
       >
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="back()">
-            ย้อนกลับ
-          </sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'submit'" variant="solid" color="primary"> ยืนยัน </sic-button>
-        </div>
+        <sic-button [type]="'button'" variant="outline" color="primary" (click)="back()">
+          ย้อนกลับ
+        </sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary"> ยืนยัน </sic-button>
       </div>
     </div>
   </form>

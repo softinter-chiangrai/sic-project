@@ -237,6 +237,14 @@ html, body {
   --crm-secondary: #3b82f6;    /* ✅ เพิ่ม */
   --crm-info: #3b82f6;          /* ✅ เพิ่ม */
 
+  /* ✅ sic-ng control heights (combobox base)
+     !important จำเป็น — sic-ng/theme/default-theme.css กำหนดค่าเหล่านี้ไว้เองด้วย
+     (2.2/2.9/3.4rem) แล้วชนะ override นี้เฉยๆ ถ้าไม่ใส่ !important */
+  --sic-control-height-sm: 2.2rem !important;
+  --sic-control-height-md: 3.15rem !important;
+  --sic-control-height-lg: 3.6rem !important;
+  --sic-radius-md: 0.95rem !important;
+
   /* Light Theme */
   --light-bg: #f8fafc;
   --light-sidebar: #ffffff;
@@ -317,4 +325,68 @@ html, body {
 [class*="prose"] li > p {
   display: inline !important;
   margin: 0 !important;
-}
+}
+
+/* ========================================================
+   Unified Form Controls Sizing & Spacing (sic-ng & Core)
+   ======================================================== */
+.sic-field,
+.sic-input,
+.sic-combobox,
+.sic-datepicker {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 0.45rem !important;
+  width: 100% !important;
+}
+
+.sic-field__label,
+.sic-input__label,
+.sic-combobox__label,
+.sic-datepicker__label {
+  color: var(--text-active) !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+}
+
+.sic-input__field,
+.sic-control-field,
+.sic-combobox__field,
+.sic-datepicker__field,
+.sic-datepicker__trigger,
+.sic-input-number__wrap,
+.sic-input-password__wrap,
+.sic-input-phone__wrap {
+  min-height: var(--sic-control-height-md, 3.15rem) !important;
+  height: var(--sic-control-height-md, 3.15rem) !important;
+  border-radius: var(--sic-radius-md, 0.95rem) !important;
+  box-sizing: border-box !important;
+  font-size: 0.95rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Base text inputs padding */
+.sic-input__field {
+  padding: 0.8rem 1rem !important;
+}
+
+/* Combobox and Datepicker wrapper inputs */
+.sic-combobox__field-input,
+.sic-datepicker__field-input {
+  height: calc(var(--sic-control-height-md, 3.15rem) - 2px) !important;
+  font-size: 0.95rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+/* Datepicker trigger inside sic-ng */
+.sic-control-field.sic-datepicker__trigger {
+  padding-left: 1rem !important;
+  padding-right: 0.75rem !important;
+}
+
+.sic-control-field__reset-btn {
+  font-size: 0.95rem !important;
+  font-family: var(--font-sans) !important;
+}
+

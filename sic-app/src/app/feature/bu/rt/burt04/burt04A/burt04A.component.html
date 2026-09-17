@@ -46,11 +46,11 @@
     </label>
 
     <!-- Buttons -->
-    <div class="flex gap-4 pt-4">
-      <sic-button [block]="true" type="button" variant="outline" color="primary" (click)="onBack()">
+    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+      <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> ย้อนกลับ
       </sic-button>
-      <sic-button [block]="true" type="submit" variant="solid" color="primary" [disabled]="isSaving()">
+      <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving()">
         @if (isSaving()) {
           <i class="bi bi-arrow-repeat animate-spin"></i>
         } @else {

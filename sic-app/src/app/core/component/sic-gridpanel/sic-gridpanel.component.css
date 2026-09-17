@@ -8,7 +8,7 @@
   width: 100%;
   --sic-gridpanel-cell-padding-block: 0.8rem;
   --sic-gridpanel-cell-padding-inline: 0.9rem;
-  --sic-gridpanel-field-height: 2.9rem;
+  --sic-gridpanel-field-height: 3.15rem;
   --sic-gridpanel-row-height: calc(var(--sic-gridpanel-field-height) + (var(--sic-gridpanel-cell-padding-block) * 2));
 }
 

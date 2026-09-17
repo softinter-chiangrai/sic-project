@@ -31,17 +31,19 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.5rem;
   width: 100%;
-  min-height: 2.9rem;
-  padding-right: 0.55rem;
-  border: 1px solid var(--border);
+  min-height: var(--sic-control-height-md, 2.9rem);
+  height: var(--sic-control-height-md, 2.9rem);
+  padding-right: 0.65rem;
+  border: 1px solid var(--sic-color-border, var(--border));
   border-radius: 0.95rem;
-  background: transparent;
+  background: var(--sic-color-bg, transparent);
   color: var(--text-active);
   font-family: var(--font-sans);
   font-size: 0.95rem;
-  line-height: 1.3;
+  line-height: 1.4;
+  box-sizing: border-box;
   transition:
     border-color 0.18s ease,
     box-shadow 0.18s ease,
@@ -55,14 +57,24 @@
 .sic-combobox__field-input {
   flex: 1 1 auto;
   min-width: 0;
-  min-height: 2.9rem;
-  padding: 0.8rem 0.95rem;
+  height: calc(var(--sic-control-height-md, 2.9rem) - 2px);
+  padding: 0 1rem;
   border: 0;
   outline: none;
   background: transparent;
   color: inherit;
   font: inherit;
-  line-height: 1.3;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  box-sizing: border-box;
+}
+
+.sic-combobox__field-input::placeholder {
+  color: var(--text-muted);
+}
+
+.sic-combobox__field-input:disabled {
+  cursor: not-allowed;
 }
 
 .sic-combobox__control:focus-within .sic-combobox__field {
@@ -79,25 +91,6 @@
 .sic-combobox__field[data-invalid='true'] {
   border-color: color-mix(in srgb, var(--crm-danger) 46%, var(--border));
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-danger) 12%, transparent);
-}
-
-.sic-combobox__field-input {
-  flex: 1 1 auto;
-  min-width: 0;
-  border: 0;
-  outline: none;
-  background: transparent;
-  color: inherit;
-  font: inherit;
-  line-height: inherit;
-}
-
-.sic-combobox__field-input::placeholder {
-  color: var(--text-muted);
-}
-
-.sic-combobox__field-input:disabled {
-  cursor: not-allowed;
 }
 
 .sic-combobox__field-actions {
@@ -240,7 +233,7 @@
   align-items: center;
   padding: 0.35rem 0.55rem 0.35rem 0.6rem;
   row-gap: 0.35rem;
-  min-height: 2.9rem;
+  min-height: var(--sic-control-height-md, 2.9rem);
 }
 
 .sic-combobox__field--multiple .sic-combobox__field-input {

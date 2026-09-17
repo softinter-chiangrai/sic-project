@@ -22,8 +22,10 @@
   background: transparent;
   border: 1px solid var(--border);
   border-radius: 0.95rem;
-  padding: 0.1rem 0.95rem;
-  min-height: 2.9rem;
+  padding: 0.1rem 1rem;
+  min-height: 3.15rem;
+  height: 3.15rem;
+  box-sizing: border-box;
   box-shadow: 0 2px 8px 0 rgba(80,120,200,0.04);
   font-family: var(--font-sans);
   transition: border-color 0.18s, box-shadow 0.18s, background-color 0.18s;

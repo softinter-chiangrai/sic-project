@@ -209,29 +209,24 @@
         </div>
 
         <!-- Buttons -->
-        <div class="flex gap-4 pt-2">
-          <div class="flex-1">
-            <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="onBack()">
-              <i class="bi bi-arrow-left"></i>
-              ย้อนกลับ
-            </sic-button>
-          </div>
-          <div class="flex-[2]">
-            <sic-button
-              [block]="true"
-              [type]="'submit'"
-              variant="solid" color="primary"
-              [disabled]="isSaving || form.invalid"
-            >
-              @if (isSaving) {
-                <i class="bi bi-arrow-repeat animate-spin"></i>
-                กำลังบันทึก...
-              } @else {
-                <i class="bi bi-check-lg"></i>
-                ยืนยันการต่อสัญญา
-              }
-            </sic-button>
-          </div>
+        <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+          <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">
+            <i class="bi bi-arrow-left"></i>
+            ย้อนกลับ
+          </sic-button>
+          <sic-button
+            [type]="'submit'"
+            variant="solid" color="primary"
+            [disabled]="isSaving || form.invalid"
+          >
+            @if (isSaving) {
+              <i class="bi bi-arrow-repeat animate-spin"></i>
+              กำลังบันทึก...
+            } @else {
+              <i class="bi bi-check-lg"></i>
+              ยืนยันการต่อสัญญา
+            }
+          </sic-button>
         </div>
       </div>
     </form>

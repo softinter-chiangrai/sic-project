@@ -27,14 +27,14 @@
       <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
       <input
         type="text"
-        class="w-full pl-9 pr-9 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        class="w-full h-[3.15rem] pl-9 pr-9 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-[0.95rem] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
         placeholder="ค้นหารหัส, ชื่อ, โครงการ..."
         [value]="searchTerm()"
-        (input)="onSearch($event)"
+        (input)="onSearch($event, grid)"
       />
       @if (searchTerm()) {
         <button
-          (click)="clearSearch()"
+          (click)="clearSearch(grid)"
           class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
           <i class="bi bi-x-lg text-xs"></i>
@@ -46,174 +46,119 @@
       <sic-combobox
         [options]="statusOptions"
         [ngModel]="filterStatus()"
-        (ngModelChange)="onFilterChange($event)"
+        (ngModelChange)="onFilterChange($event, grid)"
         placeholder="📊 ทุกสถานะ"
         [clearable]="true"
       ></sic-combobox>
     </div>
   </div>
 
-  <!-- LOADING -->
-  @if (isLoading()) {
-    <div class="flex flex-col items-center justify-center py-12 gap-3">
-      <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
-    </div>
-  }
+  <!-- GRID -->
+  <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
+    <sic-gridpanel
+      #grid
+      [config]="gridConfig"
+      (loadData)="handleGridLoad($event, grid)"
+    >
+      <ng-template sicGridPanelTemplate="code" section="cell" let-row>
+        @let r = $any(row);
+        <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
+          {{ r.crCode || ('CR-' + r.id.substring(0, 8).toUpperCase()) }}
+        </span>
+      </ng-template>
 
-  <!-- TABLE -->
-  @if (!isLoading()) {
-    <div class="overflow-x-auto rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
-      <table class="w-full text-sm">
-        <thead class="bg-[var(--bg)] border-b border-[var(--border)]">
-          <tr>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              รหัส
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
-              ชื่อคำขอ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]">
-              โครงการ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[140px]">
-              ประเภทเอกสาร
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              ความสำคัญ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[150px]">
-              ผู้เกี่ยวข้อง / ผู้แก้ไข
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              สถานะ
-            </th>
-            <th class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]">
-              อนุมัติ
-            </th>
-            <th class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[250px]">
-              จัดการ
-            </th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-[var(--border)]">
-          @for (cr of changeRequests(); track cr.id) {
-            <tr class="hover:bg-[var(--sidebar-hover)] transition-colors">
-              <td class="px-4 py-3">
-                <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold font-mono tracking-wide text-[var(--crm-primary)] bg-[var(--crm-primary)]/10">
-                  {{ cr.crCode || ('CR-' + cr.id.substring(0, 8).toUpperCase()) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="font-medium text-[var(--text-active)]">{{ cr.title }}</div>
-                <div class="text-xs text-[var(--text-muted)] truncate max-w-xs">
-                  {{ cr.description | sicStripHtml }}
-                </div>
-              </td>
-              <td class="px-4 py-3">{{ cr.projectName || '-' }}</td>
-              <td class="px-4 py-3">
-                <span [class]="getTargetTypeBadgeClass(cr.targetType) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getTargetTypeText(cr.targetType) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getPriorityClass(cr.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getPriorityText(cr.priority) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                <div class="space-y-1.5">
-                  @for (assignee of cr.assignees; track assignee.id) {
-                    <div class="flex items-center justify-between gap-2 text-xs py-0.5 border-b border-[var(--border)]/40 last:border-0">
-                      <div class="flex items-center gap-1.5">
-                        <span class="font-medium text-[var(--text-active)]">{{ assignee.userName }}</span>
-                      </div>
-                      <div class="flex items-center gap-1.5">
-                        @if (assignee.status === 'COMPLETED') {
-                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
-                            <i class="bi bi-check-circle-fill text-[9px]"></i> เสร็จแล้ว
-                          </span>
-                        } @else {
-                          <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-medium">
-                            <i class="bi bi-clock-history text-[9px]"></i> รอดำเนินการ
-                          </span>
-                          @if (cr.status === 'APPROVED') {
-                            <button
-                              (click)="completeAssigneeTask(cr.id, assignee.userId, assignee.targetId)"
-                              title="คลิกเพื่อยืนยันว่าคุณแก้ไขเอกสารนี้เสร็จแล้ว"
-                              class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] hover:bg-blue-500/20 active:scale-95 transition-all"
-                            >
-                              <i class="bi bi-check2"></i> กดเมื่อทำเสร็จ
-                            </button>
-                          }
-                        }
-                      </div>
-                    </div>
-                  } @empty {
-                    <span class="text-xs text-[var(--text-muted)]">-</span>
-                  }
-                </div>
-              </td>
-              <td class="px-4 py-3">
-                <span [class]="getStatusClass(cr.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                  {{ getStatusText(cr.status) }}
-                </span>
-              </td>
-              <td class="px-4 py-3">
-                @if (cr.approvalStatus) {
-                  <span [class]="getApprovalStatusClass(cr.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-                    {{ getApprovalStatusText(cr.approvalStatus) }}
+      <ng-template sicGridPanelTemplate="titleDesc" section="cell" let-row>
+        @let r = $any(row);
+        <div class="font-medium text-[var(--text-active)]">{{ r.title }}</div>
+        <div class="text-xs text-[var(--text-muted)] truncate max-w-xs">
+          {{ r.description | sicStripHtml }}
+        </div>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="targetTypeBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getTargetTypeBadgeClass(r.targetType) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getTargetTypeText(r.targetType) }}
+        </span>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="priorityBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getPriorityClass(r.priority) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getPriorityText(r.priority) }}
+        </span>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="assigneeList" section="cell" let-row>
+        @let r = $any(row);
+        <div class="space-y-1.5">
+          @for (assignee of r.assignees; track assignee.id) {
+            <div class="flex items-center justify-between gap-2 text-xs py-0.5 border-b border-[var(--border)]/40 last:border-0">
+              <div class="flex items-center gap-1.5">
+                <span class="font-medium text-[var(--text-active)]">{{ assignee.userName }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                @if (assignee.status === 'COMPLETED') {
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-medium">
+                    <i class="bi bi-check-circle-fill text-[9px]"></i> เสร็จแล้ว
                   </span>
                 } @else {
-                  <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                    ยังไม่อนุมัติ
+                  <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-medium">
+                    <i class="bi bi-clock-history text-[9px]"></i> รอดำเนินการ
                   </span>
+                  @if (r.status === 'APPROVED') {
+                    <button
+                      (click)="completeAssigneeTask(r.id, assignee.userId, assignee.targetId, grid)"
+                      title="คลิกเพื่อยืนยันว่าคุณแก้ไขเอกสารนี้เสร็จแล้ว"
+                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] hover:bg-blue-500/20 active:scale-95 transition-all"
+                    >
+                      <i class="bi bi-check2"></i> กดเมื่อทำเสร็จ
+                    </button>
+                  }
                 }
-              </td>
-              <td class="px-4 py-3 text-center">
-                <div class="flex items-center justify-center gap-1 flex-wrap">
-
-                  <sic-table-actions
-                    [showPrint]="true"
-                    [showEdit]="cr.status === 'DRAFT' || cr.status === 'REJECTED'"
-                    [showDelete]="cr.status === 'DRAFT' || cr.status === 'REJECTED'"
-                    (onView)="goToView(cr.id)"
-                    (onPrint)="exportPdf(cr.id)"
-                    (onEdit)="goToEdit(cr.id)"
-                    (onDelete)="deleteChangeRequest(cr.id)"
-                  ></sic-table-actions>
-                </div>
-              </td>
-            </tr>
+              </div>
+            </div>
           } @empty {
-            <tr>
-              <td colspan="7" class="px-4 py-12 text-center">
-                <div class="flex flex-col items-center gap-3">
-                  <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบ Change Request</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือเพิ่ม Change Request ใหม่</p>
-                  <button
-                    (click)="goToAdd()"
-                    class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-                  >
-                    <i class="bi bi-plus-lg"></i>
-                    เพิ่ม Change Request
-                  </button>
-                </div>
-              </td>
-            </tr>
+            <span class="text-xs text-[var(--text-muted)]">-</span>
           }
-        </tbody>
-      </table>
-    </div>
-  }
+        </div>
+      </ng-template>
 
-  <!-- PAGINATION -->
-  <sic-pagination
-    [currentPage]="currentPage()"
-    [pageSize]="pageSize()"
-    [totalItems]="totalItems()"
-    (pageChange)="onPageChange($event)"
-  ></sic-pagination>
+      <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
+        @let r = $any(row);
+        <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getStatusText(r.status) }}
+        </span>
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="approvalBadge" section="cell" let-row>
+        @let r = $any(row);
+        @if (r.approvalStatus) {
+          <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            {{ getApprovalStatusText(r.approvalStatus) }}
+          </span>
+        } @else {
+          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+            ยังไม่อนุมัติ
+          </span>
+        }
+      </ng-template>
+
+      <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
+        @let r = $any(row);
+        <div class="flex items-center justify-center gap-1 flex-wrap">
+          <sic-table-actions
+            [showPrint]="true"
+            [showEdit]="r.status === 'DRAFT' || r.status === 'REJECTED'"
+            [showDelete]="r.status === 'DRAFT' || r.status === 'REJECTED'"
+            (onView)="goToView(r.id)"
+            (onPrint)="exportPdf(r.id)"
+            (onEdit)="goToEdit(r.id)"
+            (onDelete)="deleteChangeRequest(r.id, grid)"
+          ></sic-table-actions>
+        </div>
+      </ng-template>
+    </sic-gridpanel>
+  </div>
 
 </div>

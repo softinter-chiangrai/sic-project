@@ -15,10 +15,15 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt06.model';
 
 import { FormsModule } from '@angular/forms';
+import {
+  SicGridLoadRequest,
+  SicGridPanelComponent,
+  SicGridPanelConfig,
+  SicGridRowData,
+} from 'sic-ng';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
-import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 
 @Component({
   selector: 'app-pmdt06',
@@ -30,7 +35,7 @@ import { SicPaginationComponent } from '../../../../core/component/sic-paginatio
     SicTableActionsComponent,
     SicComboboxComponent,
     SicStripHtmlPipe,
-    SicPaginationComponent,
+    SicGridPanelComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',
@@ -48,7 +53,6 @@ export class Pmdt06Component implements OnInit {
 
   // State
   isLoading = signal(false);
-  changeRequests = signal<ChangeRequestItem[]>([]);
 
   totalItems = signal(0);
   currentPage = signal(1);
@@ -57,11 +61,29 @@ export class Pmdt06Component implements OnInit {
   filterStatus = signal('all');
   projectId = signal<string | null>(null);
 
-  // Computed
-  totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
-
-  // guard: ป้องกัน loadChangeRequests() ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
+  // guard: ป้องกัน reload ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
   private syncingUrl = false;
+
+  // rows ล่าสุดที่ grid แสดงอยู่ — เก็บไว้ patch approvalStatus ทีหลังโดยไม่ต้อง reload ใหม่ทั้งหน้า
+  private latestRows: ChangeRequestItem[] = [];
+
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    selectable: false,
+    showToolbar: false,
+    pageSize: this.pageSize(),
+    column: [
+      { label: 'รหัส', name: 'crCode', type: 'code', minWidth: 100 },
+      { label: 'ชื่อคำขอ', name: 'title', type: 'titleDesc', minWidth: 150 },
+      { label: 'โครงการ', name: 'projectName', type: 'text', minWidth: 120 },
+      { label: 'ประเภทเอกสาร', name: 'targetType', type: 'targetTypeBadge', minWidth: 140 },
+      { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', minWidth: 100 },
+      { label: 'ผู้เกี่ยวข้อง / ผู้แก้ไข', name: 'assignees', type: 'assigneeList', minWidth: 150 },
+      { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
+      { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 250 },
+    ],
+  };
 
   ngOnInit() {
     this.route.queryParams.subscribe((queryParams) => {
@@ -72,7 +94,12 @@ export class Pmdt06Component implements OnInit {
 
       if (queryParams['q'] !== undefined) this.searchTerm.set(queryParams['q']);
       if (queryParams['status'] !== undefined) this.filterStatus.set(queryParams['status']);
-      if (queryParams['page'] !== undefined) this.currentPage.set(+queryParams['page'] || 1);
+      if (queryParams['page'] !== undefined) {
+        const page = +queryParams['page'] || 1;
+        this.currentPage.set(page);
+        // ตั้งหน้าเริ่มต้นให้ grid ก่อน sic-gridpanel จะ mount และยิง loadData ครั้งแรก
+        this.gridConfig = { ...this.gridConfig, pageNumber: page };
+      }
 
       // ดึง projectId จาก queryParams ก่อน ถ้าไม่มีค่อย fallback ไป customerState
       const projectId = queryParams['projectId'] || this.customerState.getProjectId();
@@ -80,7 +107,6 @@ export class Pmdt06Component implements OnInit {
       if (projectId) {
         this.customerState.setProject(projectId);
       }
-      this.loadChangeRequests();
     });
   }
 
@@ -99,11 +125,11 @@ export class Pmdt06Component implements OnInit {
     });
   }
 
-  loadChangeRequests() {
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.isLoading.set(true);
     let params = new HttpParams()
-      .set('page', (this.currentPage() - 1).toString())
-      .set('size', this.pageSize().toString())
+      .set('page', (request.pageNumber - 1).toString())
+      .set('size', request.pageSize.toString())
       .set('keyword', this.searchTerm() || '')
       .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus());
 
@@ -111,31 +137,37 @@ export class Pmdt06Component implements OnInit {
       params = params.set('projectId', this.projectId()!);
     }
 
+    this.currentPage.set(request.pageNumber);
+    this.syncFiltersToUrl();
+
     this.http
       .get<any>(this.baseUrl, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          const data = res.data || [];
-          this.changeRequests.set(data);
-          this.totalItems.set(res.pageable?.totalElements || 0);
-          this.loadApprovalStatuses(data);
+          const data: ChangeRequestItem[] = res.data || [];
+          const totalElements = res.pageable?.totalElements || 0;
+          this.totalItems.set(totalElements);
+          this.latestRows = data;
+          grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+          this.loadApprovalStatuses(data, grid, request.requestId);
         },
-        error: () =>
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้'),
+        error: () => {
+          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้');
+          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+        },
       });
   }
 
-  loadApprovalStatuses(crs: ChangeRequestItem[]) {
+  loadApprovalStatuses(crs: ChangeRequestItem[], grid: SicGridPanelComponent, requestId: number) {
     crs.forEach((cr) => {
       if (!cr.id) return;
       this.approvalService.getDocumentStatus('CHANGE_REQUEST', cr.id).subscribe({
         next: (approval) => {
-          this.changeRequests.update((list) =>
-            list.map((item) =>
-              item.id === cr.id ? { ...item, approvalStatus: approval.status } : item
-            )
+          this.latestRows = this.latestRows.map((item) =>
+            item.id === cr.id ? { ...item, approvalStatus: approval.status } : item
           );
+          grid.setRows(this.latestRows as unknown as SicGridRowData[], { totalElements: this.totalItems() }, requestId);
         },
         error: () => {
           // ไม่มีสถานะอนุมัติ ปล่อย null
@@ -144,19 +176,24 @@ export class Pmdt06Component implements OnInit {
     });
   }
 
-  onSearch(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.searchTerm.set(input.value);
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadChangeRequests();
+  // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว (ต้อง reload() เองเพื่อให้ keyword/filter ใหม่มีผล)
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
   }
 
-  clearSearch() {
+  onSearch(event: Event, grid: SicGridPanelComponent) {
+    const input = event.target as HTMLInputElement;
+    this.searchTerm.set(input.value);
+    this.reloadFromPage1(grid);
+  }
+
+  clearSearch(grid: SicGridPanelComponent) {
     this.searchTerm.set('');
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadChangeRequests();
+    this.reloadFromPage1(grid);
   }
 
   // Options
@@ -168,19 +205,10 @@ export class Pmdt06Component implements OnInit {
     { value: 'Implemented', text: 'ดำเนินการแล้ว' },
   ];
 
-  onFilterChange(value: any) {
+  onFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
-    this.syncFiltersToUrl();
-    this.loadChangeRequests();
-  }
-
-  onPageChange(page: number) {
-    if (page < 1 || page > this.totalPages()) return;
-    this.currentPage.set(page);
-    this.syncFiltersToUrl();
-    this.loadChangeRequests();
+    this.reloadFromPage1(grid);
   }
 
   goToAdd() {
@@ -236,13 +264,13 @@ export class Pmdt06Component implements OnInit {
     this.router.navigate(['/feature/pm/approval', crId]);
   }
 
-  deleteChangeRequest(id: string) {
+  deleteChangeRequest(id: string, grid?: SicGridPanelComponent) {
     this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
       if (ok) {
         this.http.delete(`${this.baseUrl}/${id}`).subscribe({
           next: () => {
             this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว');
-            this.loadChangeRequests();
+            grid?.reload();
           },
           error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
         });
@@ -252,31 +280,31 @@ export class Pmdt06Component implements OnInit {
 
   // ===== CRUD Actions (เฉพาะที่เกี่ยวข้องกับสถานะ CR โดยตรง) =====
 
-  submitRequest(id: string) {
+  submitRequest(id: string, grid?: SicGridPanelComponent) {
     this.crService.submitForApproval(id).subscribe({
       next: () => {
         this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
-        this.loadChangeRequests();
+        grid?.reload();
       },
       error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
     });
   }
 
-  implementRequest(id: string) {
+  implementRequest(id: string, grid?: SicGridPanelComponent) {
     this.crService.implement(id).subscribe({
       next: () => {
         this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
-        this.loadChangeRequests();
+        grid?.reload();
       },
       error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
     });
   }
 
-  completeAssigneeTask(id: string, userId: string, targetId: string) {
+  completeAssigneeTask(id: string, userId: string, targetId: string, grid?: SicGridPanelComponent) {
     this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
       next: () => {
         this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
-        this.loadChangeRequests();
+        grid?.reload();
       },
       error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
     });

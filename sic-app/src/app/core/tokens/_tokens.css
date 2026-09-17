@@ -34,8 +34,8 @@
   --sic-space-4: 1rem;
 
   --sic-control-height-sm: 2.2rem;
-  --sic-control-height-md: 2.9rem;
-  --sic-control-height-lg: 3.4rem;
+  --sic-control-height-md: 3.15rem;
+  --sic-control-height-lg: 3.6rem;
 
   --sic-shadow-sm: 0 1px 2px color-mix(in srgb, #000 8%, transparent);
   --sic-shadow-md: 0 8px 24px color-mix(in srgb, #000 12%, transparent);

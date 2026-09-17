@@ -34,13 +34,9 @@
         [paging]="false">
       </sic-combobox>
       <sic-input label="อีเมลที่รับเชิญ" formControlName="inviteEmail"></sic-input>
-      <div class="flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">สร้าง Email Invite</sic-button>
-        </div>
+      <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
+        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">สร้าง Email Invite</sic-button>
       </div>
     </form>
   }
@@ -61,13 +57,9 @@
         hint="ว่าง = ไม่จำกัด"
         placeholder="เช่น 10">
       </sic-number>
-      <div class="flex gap-6 mt-5">
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
-        </div>
-        <div class="flex-1">
-          <sic-button [block]="true" [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">สร้าง Token Invite</sic-button>
-        </div>
+      <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
+        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">สร้าง Token Invite</sic-button>
       </div>
     </form>
   }
