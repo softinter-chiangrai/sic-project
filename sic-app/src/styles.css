@@ -11,6 +11,10 @@ html, body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* กันแถบ scrollbar แนวนอนที่ระดับหน้าเว็บ (ไม่ใช่ของ .sic-gridpanel__table) ซึ่งโผล่ตายตัว
+     กดลากไม่ได้ เกิดจาก layout บางจุดล้นออกไปไม่กี่พิกเซล — ตารางที่กว้างเกินยังเลื่อนดูได้ปกติ
+     ผ่าน scrollbar ภายในของ .sic-gridpanel__table เอง ไม่กระทบ */
+  overflow-x: hidden;
 }
 
 
@@ -397,5 +401,20 @@ html, body {
 .sic-gridpanel__sort {
   justify-content: flex-start !important;
   text-align: left !important;
+}
+
+/* Gridpanel: .sic-gridpanel__table เผื่อ padding-bottom ไว้ตายตัวสำหรับ scrollbar แนวนอนเสมอ
+   แม้เนื้อหาจะไม่ล้นก็ตาม รวมกับพื้นหลังโทนสีเข้มของตัวตาราง ทำให้เห็นเป็นแถบทึบด้านล่างที่กดลากไม่ได้
+   (ไม่ใช่ scrollbar จริง) ตัดช่องว่างนี้ออก ให้ scrollbar จริงแสดงเฉพาะตอนเนื้อหาล้นเท่านั้น */
+.sic-gridpanel__table {
+  padding-bottom: 0 !important;
+}
+
+/* Gridpanel: element <sic-gridpanel> เองมี margin-bottom: var(--sic-space-4) ติดตัวมาจาก library
+   (:host { margin-bottom: ... }) พอเราครอบด้วย div การ์ดที่มีพื้นหลังเข้ม (overflow-hidden, ไม่ตั้งความสูงตายตัว)
+   div การ์ดจะขยายสูงตามลูกรวม margin นั้นด้วย ทำให้เห็นเป็นแถบพื้นหลังทึบโผล่ใต้ตารางแบบกดอะไรไม่ได้
+   (ไม่ใช่ scrollbar) ตัด margin นี้ออกเพราะการ์ดครอบให้ spacing แยกอยู่แล้ว */
+sic-gridpanel {
+  margin-bottom: 0 !important;
 }
 
