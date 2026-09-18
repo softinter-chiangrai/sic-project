@@ -1,0 +1,127 @@
+<div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
+  <!-- Header with Jira-style Title and Tabs -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center">
+        <i class="bi bi-briefcase-fill text-sm"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-base text-[var(--text-active)]">
+          ศูนย์งานของฉัน (Your Work & Focus)
+        </h3>
+        <p class="text-xs text-[var(--text-muted)] mt-0.5">
+          งานที่ได้รับมอบหมายและต้องดำเนินการในวันนี้
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick action links -->
+    <div class="flex items-center gap-2">
+      <a routerLink="/feature/pm/task-board" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline flex items-center gap-1">
+        บอร์ดงานทั้งหมด <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Jira Tabs -->
+  <div class="flex items-center gap-1 border-b border-[var(--border)] pb-2 mb-4 overflow-x-auto">
+    <button
+      (click)="setTab('ASSIGNED')"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+      [ngClass]="activeTab() === 'ASSIGNED' ? 'bg-[var(--crm-primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
+    >
+      <i class="bi bi-check2-circle"></i>
+      <span>งานที่ต้องทำ</span>
+      <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="activeTab() === 'ASSIGNED' ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-[var(--text-muted)]'">
+        {{ allWorkItems().length }}
+      </span>
+    </button>
+
+    <button
+      (click)="setTab('REVIEWS')"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+      [ngClass]="activeTab() === 'REVIEWS' ? 'bg-[var(--crm-primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
+    >
+      <i class="bi bi-code-square"></i>
+      <span>รอตรวจแบบ (Design Review)</span>
+      <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="activeTab() === 'REVIEWS' ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-[var(--text-muted)]'">
+        {{ reviewItems().length }}
+      </span>
+    </button>
+
+    <button
+      (click)="setTab('APPROVALS')"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+      [ngClass]="activeTab() === 'APPROVALS' ? 'bg-[var(--crm-primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
+    >
+      <i class="bi bi-shield-check"></i>
+      <span>รออนุมัติ (Approvals)</span>
+      <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="activeTab() === 'APPROVALS' ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-[var(--text-muted)]'">
+        {{ approvalItems().length }}
+      </span>
+    </button>
+
+    <button
+      (click)="setTab('DEADLINES')"
+      class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+      [ngClass]="activeTab() === 'DEADLINES' ? 'bg-red-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
+    >
+      <i class="bi bi-alarm-fill"></i>
+      <span>ด่วน / ใกล้ครบกำหนด</span>
+    </button>
+  </div>
+
+  <!-- Work Items List -->
+  <div class="space-y-2.5">
+    @for (item of filteredItems(); track item.id + item.code) {
+      <a
+        [routerLink]="item.link"
+        [queryParams]="item.queryParams || null"
+        class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/50 transition-all cursor-pointer group"
+      >
+        <div class="flex items-start sm:items-center gap-3 min-w-0">
+          <!-- Priority Icon -->
+          <div
+            class="w-7 h-7 rounded-lg border flex items-center justify-center shrink-0 mt-0.5 sm:mt-0 {{ getPriorityBadge(item.priority).bg }}"
+            [title]="getPriorityBadge(item.priority).label"
+          >
+            <i class="bi {{ getPriorityBadge(item.priority).icon }} {{ getPriorityBadge(item.priority).text }} text-xs"></i>
+          </div>
+
+          <div class="min-w-0">
+            <div class="flex items-center gap-2 flex-wrap mb-0.5">
+              <span class="text-[11px] font-mono font-bold text-[var(--crm-primary)]">
+                {{ item.code }}
+              </span>
+              @if (item.project) {
+                <span class="text-[10px] text-[var(--text-muted)] font-medium">
+                  &bull; {{ item.project }}
+                </span>
+              }
+            </div>
+            <h4 class="text-xs font-semibold text-[var(--text-active)] group-hover:text-[var(--crm-primary)] transition-colors line-clamp-1">
+              {{ item.title }}
+            </h4>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2.5 mt-2 sm:mt-0 self-end sm:self-auto shrink-0">
+          @if (item.dueDate) {
+            <span class="text-[10px] text-[var(--text-muted)] font-mono flex items-center gap-1">
+              <i class="bi bi-calendar-event"></i> {{ item.dueDate }}
+            </span>
+          }
+          <span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full border {{ getStatusBadge(item.status).bg }} {{ getStatusBadge(item.status).text }}">
+            {{ item.status }}
+          </span>
+          <i class="bi bi-chevron-right text-xs text-[var(--text-muted)] group-hover:translate-x-0.5 transition-transform"></i>
+        </div>
+      </a>
+    } @empty {
+      <div class="py-10 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
+        <i class="bi bi-inbox text-3xl mb-2 block opacity-40"></i>
+        ไม่มีรายการงานค้างในหมวดหมู่นี้ คุณจัดการงานเรียบร้อยหมดแล้ว! ✨
+      </div>
+    }
+  </div>
+</div>

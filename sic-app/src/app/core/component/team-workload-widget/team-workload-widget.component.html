@@ -1,0 +1,87 @@
+<div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm h-full flex flex-col justify-between">
+  <div>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 flex items-center justify-center">
+          <i class="bi bi-people-fill text-sm"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-[var(--text-active)]">
+            ภาระงานทีม & อัตราการแก้ไข (Workload & Quality)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+            สัดส่วนการกระจายงานสมาชิกในระบบจริง (BURT04)
+          </p>
+        </div>
+      </div>
+      <a routerLink="/feature/bu/rt/burt04" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
+        จัดการสมาชิก &rarr;
+      </a>
+    </div>
+
+    <!-- Real Team Member Capacity List -->
+    <div class="space-y-2.5 mb-5 max-h-[260px] overflow-y-auto pr-1">
+      @for (member of teamMembers(); track member.id) {
+        <div class="p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+          <div class="flex items-center justify-between text-xs mb-1.5">
+            <div class="flex items-center gap-2 min-w-0">
+              <i class="bi {{ member.avatar }} text-[var(--crm-primary)] shrink-0"></i>
+              <span class="font-semibold text-[var(--text-active)] truncate">{{ member.name }}</span>
+              <span class="text-[10px] text-[var(--text-muted)] truncate">({{ member.role }})</span>
+            </div>
+            <div class="flex items-center gap-2 shrink-0">
+              <span class="text-[10px] font-bold font-mono text-[var(--text-active)]">
+                {{ member.activeTasks }} รายการ
+              </span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded border font-semibold {{ getStatusClass(member.status).bg }} {{ getStatusClass(member.status).text }}">
+                {{ getStatusClass(member.status).label }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Capacity Bar -->
+          <div class="w-full bg-[var(--sidebar)] h-1.5 rounded-full overflow-hidden border border-[var(--border)]">
+            <div
+              class="h-full rounded-full transition-all duration-500"
+              [ngClass]="{
+                'bg-red-500': member.status === 'OVERLOADED',
+                'bg-amber-500': member.status === 'BUSY',
+                'bg-emerald-500': member.status === 'OPTIMAL'
+              }"
+              [style.width.%]="member.activeTasks > 0 ? (member.activeTasks / member.maxCapacity) * 100 : 5"
+            ></div>
+          </div>
+        </div>
+      } @empty {
+        <div class="py-8 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
+          <i class="bi bi-people text-2xl mb-1.5 block opacity-40"></i>
+          ยังไม่มีข้อมูลสมาชิกในระบบ สามารถเพิ่มสมาชิกได้ที่เมนู <a routerLink="/feature/bu/rt/burt04" class="text-[var(--crm-primary)] underline">จัดการสมาชิก (BURT04)</a>
+        </div>
+      }
+    </div>
+
+    <!-- Created vs Resolved Defect Snapshot (100% Real API data) -->
+    <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)]">
+      <div class="flex items-center justify-between text-xs mb-2">
+        <span class="font-bold text-[var(--text-active)] flex items-center gap-1.5">
+          <i class="bi bi-shield-check text-emerald-500"></i>
+          อัตราการปิด Bug สำเร็จ (Resolved Rate)
+        </span>
+        <span class="font-bold text-emerald-500">{{ resolvedRate() }}%</span>
+      </div>
+
+      <div class="w-full bg-[var(--sidebar)] h-2 rounded-full overflow-hidden border border-[var(--border)] mb-2.5">
+        <div
+          class="h-full rounded-full bg-emerald-500 transition-all duration-500"
+          [style.width.%]="resolvedRate()"
+        ></div>
+      </div>
+
+      <div class="flex items-center justify-between text-[11px] text-[var(--text-muted)] pt-1">
+        <span>ปิดแล้ว {{ summary()?.closedBugs || 0 }} รายการ</span>
+        <span>คงเหลือเปิดอยู่ {{ summary()?.openBugs || 0 }} รายการ (Critical: {{ summary()?.criticalOpenBugs || 0 }})</span>
+      </div>
+    </div>
+  </div>
+</div>

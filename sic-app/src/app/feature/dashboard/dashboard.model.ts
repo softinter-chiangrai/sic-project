@@ -9,15 +9,7 @@ import { PmCustomerProject } from '../pm/rt/pmrt02/pmrt02.model';
 import { DesignReview } from '../pm/dt/pmdt09/pmdt09.model';
 import { AuditLog } from '../pm/dt/pmdt20/audit-log.service';
 
-export interface SmartProgramTile {
-  code: string;
-  name: string;
-  path: string;
-  icon: string;
-  category: string;
-  badgeCount?: number;
-  badgeType?: 'danger' | 'warning' | 'info' | 'success';
-}
+
 
 export interface SdlcStageSummary {
   stage: string;

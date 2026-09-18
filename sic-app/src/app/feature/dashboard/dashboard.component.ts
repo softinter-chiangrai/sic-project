@@ -40,13 +40,26 @@ import {
   DashboardPageData,
   DashboardProjectHealthItem,
   SdlcStageSummary,
-  SmartProgramTile,
 } from './dashboard.model';
+import { TeamMember } from '../bu/rt/burt04/burt04.model';
+
+import { MyWorkWidgetComponent } from '../../core/component/my-work-widget/my-work-widget.component';
+import { SprintHealthWidgetComponent } from '../../core/component/sprint-health-widget/sprint-health-widget.component';
+import { TeamWorkloadWidgetComponent } from '../../core/component/team-workload-widget/team-workload-widget.component';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, ReactiveFormsModule, SicDatePipe],
+  imports: [
+    CommonModule,
+    RouterModule,
+    FormsModule,
+    ReactiveFormsModule,
+    SicDatePipe,
+    MyWorkWidgetComponent,
+    SprintHealthWidgetComponent,
+    TeamWorkloadWidgetComponent,
+  ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -71,6 +84,7 @@ export class DashboardComponent implements OnInit {
   readonly realProjects = signal<PmCustomerProject[]>([]);
   readonly realDesignReviews = signal<DesignReview[]>([]);
   readonly realAuditLogs = signal<AuditLog[]>([]);
+  readonly realMembers = signal<TeamMember[]>([]);
 
   // Org-wide KPI / Action Queue Signals (real data, no mock)
   readonly orgSummary = signal<DashboardOrgSummary | null>(null);
@@ -80,12 +94,12 @@ export class DashboardComponent implements OnInit {
   readonly approvalSummaryTotal = signal(0);
 
   readonly quickActions = [
-    { label: 'โครงการทั้งหมด', icon: 'bi-plus-circle', route: '/feature/pm/project', color: 'primary' },
-    { label: 'Requirement', icon: 'bi-clipboard-plus', route: '/feature/pm/requirement', color: 'primary' },
-    { label: 'Bug / Test Case', icon: 'bi-bug', route: '/feature/pm/test-management', color: 'danger' },
-    { label: 'ใบแจ้งหนี้', icon: 'bi-receipt', route: '/feature/pm/invoice', color: 'primary' },
-    { label: 'MA Ticket', icon: 'bi-headset', route: '/feature/pm/ma-ticket', color: 'warning' },
-    { label: 'Audit Log', icon: 'bi-clock-history', route: '/feature/pm/audit', color: 'secondary' },
+    { label: 'โครงการ (PMRT02)', icon: 'bi-kanban-fill', route: '/feature/pm/rt/pmrt02', color: 'primary' },
+    { label: 'Requirement (PMDT01)', icon: 'bi-clipboard2-plus-fill', route: '/feature/pm/dt/pmdt01', color: 'info' },
+    { label: 'Task Board (PMDT02)', icon: 'bi-check2-square', route: '/feature/pm/dt/pmdt02', color: 'primary' },
+    { label: 'แจ้ง Bug (PMDT06)', icon: 'bi-bug-fill', route: '/feature/pm/dt/pmdt06', color: 'danger' },
+    { label: 'ขออนุมัติ (PMDT03)', icon: 'bi-shield-check', route: '/feature/pm/dt/pmdt03', color: 'warning' },
+    { label: 'ใบแจ้งหนี้ (PMDT07)', icon: 'bi-receipt-cutoff', route: '/feature/pm/dt/pmdt07', color: 'success' },
   ];
 
   // Real Role Signals
@@ -93,8 +107,6 @@ export class DashboardComponent implements OnInit {
   readonly realRoleName = signal<string>('');
 
   // UI Control Signals
-  readonly searchQuery = signal('');
-  readonly selectedCategory = signal<string>('ALL');
   readonly isLoading = signal(false);
 
   // Role View Filter Signal ('ALL' | 'EXEC' | 'PM' | 'DEV_QA')
@@ -139,46 +151,46 @@ export class DashboardComponent implements OnInit {
     return [
       {
         stage: 'Planning & Req',
-        thStage: 'วิเคราะห์ความต้องการ',
+        thStage: 'วิเคราะห์ความต้องการ (PMDT01)',
         icon: 'bi-clipboard-data',
         count: reqCount || 0,
-        route: '/feature/pm/requirement',
+        route: '/feature/pm/dt/pmdt01',
         colorClass: 'text-[var(--crm-info,#3b82f6)]',
         bgClass: 'bg-[var(--crm-info,#3b82f6)]/10 border-[var(--crm-info,#3b82f6)]/20',
       },
       {
         stage: 'Design & Review',
-        thStage: 'ตรวจแบบ & สถาปัตยกรรม',
+        thStage: 'ตรวจแบบสถาปัตยกรรม (PMDT09)',
         icon: 'bi-palette2',
         count: reviewCount || 0,
-        route: '/feature/pm/design-review',
+        route: '/feature/pm/dt/pmdt09',
         colorClass: 'text-purple-500',
         bgClass: 'bg-purple-500/10 border-purple-500/20',
       },
       {
         stage: 'Development',
-        thStage: 'กำลังพัฒนาโค้ดและระบบ',
+        thStage: 'พัฒนาโค้ด & งาน (PMDT02)',
         icon: 'bi-code-slash',
         count: devCount || 0,
-        route: '/feature/pm/task-board',
+        route: '/feature/pm/dt/pmdt02',
         colorClass: 'text-[var(--crm-primary)]',
         bgClass: 'bg-[var(--crm-primary)]/10 border-[var(--crm-primary)]/20',
       },
       {
         stage: 'Testing & QA',
-        thStage: 'ทดสอบ & ตรวจรับงาน',
+        thStage: 'ทดสอบ & ตรวจรับ (PMDT05)',
         icon: 'bi-shield-check',
         count: qaCount || 0,
-        route: '/feature/pm/test-management',
+        route: '/feature/pm/dt/pmdt05',
         colorClass: 'text-[var(--crm-warning)]',
         bgClass: 'bg-[var(--crm-warning)]/10 border-[var(--crm-warning)]/20',
       },
       {
-        stage: 'Release / Prod',
-        thStage: 'ส่งมอบและขึ้นระบบ',
+        stage: 'Release / Delivery',
+        thStage: 'ส่งมอบ & ขึ้นระบบ (PMDT04)',
         icon: 'bi-rocket-takeoff',
         count: releaseCount || 0,
-        route: '/feature/pm/delivery',
+        route: '/feature/pm/dt/pmdt04',
         colorClass: 'text-[var(--crm-success)]',
         bgClass: 'bg-[var(--crm-success)]/10 border-[var(--crm-success)]/20',
       },
@@ -222,57 +234,7 @@ export class DashboardComponent implements OnInit {
       .slice(0, 5);
   });
 
-  // =========================================================================
-  // 3. SMART ROLE-BASED PROGRAM HUB WITH REAL NOTIFICATION BADGES
-  // =========================================================================
-  readonly smartProgramTiles = computed<SmartProgramTile[]>(() => {
-    const tiles: SmartProgramTile[] = [];
-    const pendingReviewsCount = this.pendingDesignReviews().length;
-    const activeProjectsCount = this.realProjects().length;
 
-    const traverse = (items: MenuItemModel[], categoryName: string = 'General') => {
-      for (const item of items) {
-        const currentCategory = item.children?.length ? item.name : categoryName;
-        if (item.path && item.path.trim().length > 0) {
-          const code = (item.code || 'PROG').toUpperCase();
-          tiles.push({
-            code: item.code || 'PROG',
-            name: item.name,
-            path: item.path.startsWith('/') ? item.path : `/feature/${item.path}`,
-            icon: item.icon || this.getDefaultIcon(item.code),
-            category: categoryName,
-          });
-        }
-        if (item.children && item.children.length > 0) {
-          traverse(item.children, item.name);
-        }
-      }
-    };
-
-    traverse(this.rawMenu());
-    return tiles;
-  });
-
-  readonly categories = computed<string[]>(() => {
-    const list = this.smartProgramTiles().map((p) => p.category || 'General');
-    return ['ALL', ...Array.from(new Set(list))];
-  });
-
-  readonly filteredTiles = computed<SmartProgramTile[]>(() => {
-    const query = this.searchQuery().toLowerCase().trim();
-    const cat = this.selectedCategory();
-
-    return this.smartProgramTiles().filter((p) => {
-      const matchQuery =
-        !query ||
-        p.name.toLowerCase().includes(query) ||
-        p.code.toLowerCase().includes(query) ||
-        (p.category && p.category.toLowerCase().includes(query));
-
-      const matchCat = cat === 'ALL' || p.category === cat;
-      return matchQuery && matchCat;
-    });
-  });
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
@@ -331,6 +293,7 @@ export class DashboardComponent implements OnInit {
         if (res.projects?.data) this.realProjects.set(res.projects.data);
         if (res.designReviews?.data) this.realDesignReviews.set(res.designReviews.data);
         if (res.auditLogs?.content) this.realAuditLogs.set(res.auditLogs.content);
+        if (res.members?.data) this.realMembers.set(res.members.data);
 
         this.orgSummary.set(res.orgSummary);
         this.orgDeadlines.set(res.orgDeadlines || []);
@@ -396,9 +359,7 @@ export class DashboardComponent implements OnInit {
     }
   }
 
-  setCategory(cat: string): void {
-    this.selectedCategory.set(cat);
-  }
+
 
   calcProjectProgress(proj: PmCustomerProject): number {
     if (!proj.budgetManday || proj.budgetManday <= 0) return 0;
@@ -447,13 +408,4 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/feature/pm/project-dashboard'], { queryParams: { projectId } });
   }
 
-  private getDefaultIcon(code: string): string {
-    if (!code) return 'bi-grid';
-    const c = code.toUpperCase();
-    if (c.startsWith('PMDT')) return 'bi-kanban';
-    if (c.startsWith('PMRT')) return 'bi-file-earmark-bar-graph';
-    if (c.startsWith('BU')) return 'bi-briefcase';
-    if (c.startsWith('DB')) return 'bi-database';
-    return 'bi-app-indicator';
-  }
 }

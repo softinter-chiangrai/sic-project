@@ -1,0 +1,90 @@
+<div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm h-full flex flex-col justify-between">
+  <div>
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-4">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-[var(--crm-info,#3b82f6)]/10 text-[var(--crm-info,#3b82f6)] flex items-center justify-center">
+          <i class="bi bi-activity text-sm"></i>
+        </div>
+        <div>
+          <h3 class="font-bold text-base text-[var(--text-active)]">
+            สุขภาพ Sprint & การส่งมอบ (Sprint Health)
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+            ติดตามความคืบหน้าของรอบการส่งมอบปัจจุบัน
+          </p>
+        </div>
+      </div>
+      <a routerLink="/feature/pm/project" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
+        ดู Release &rarr;
+      </a>
+    </div>
+
+    <!-- Active Sprint Overview -->
+    <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] mb-4">
+      <div class="flex items-center justify-between mb-2">
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-bold text-[var(--text-active)]">Active Sprint Progress</span>
+          <span class="text-[10px] px-2 py-0.5 rounded font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            ON TRACK
+          </span>
+        </div>
+        <span class="text-xs font-bold text-[var(--crm-primary)]">{{ sprintProgress() }}%</span>
+      </div>
+
+      <!-- Burndown / Progress Bar -->
+      <div class="w-full bg-[var(--sidebar)] h-2.5 rounded-full overflow-hidden border border-[var(--border)] mb-3">
+        <div
+          class="h-full rounded-full transition-all duration-500 bg-gradient-to-r from-[var(--crm-primary)] to-[var(--crm-info,#3b82f6)]"
+          [style.width.%]="sprintProgress()"
+        ></div>
+      </div>
+
+      <!-- 4 Quick Stats -->
+      <div class="grid grid-cols-4 gap-2 pt-2 border-t border-[var(--border)] text-center">
+        <div>
+          <span class="text-[10px] text-[var(--text-muted)] block">Req / Specs</span>
+          <span class="text-xs font-bold text-[var(--text-active)]">{{ summary()?.stageRequirementsCount || 0 }}</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-[var(--text-muted)] block">Reviews</span>
+          <span class="text-xs font-bold text-purple-500">{{ summary()?.stageDesignReviewsCount || 0 }}</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-[var(--text-muted)] block">Dev Tasks</span>
+          <span class="text-xs font-bold text-[var(--crm-primary)]">{{ summary()?.stageDevTasksCount || 0 }}</span>
+        </div>
+        <div>
+          <span class="text-[10px] text-[var(--text-muted)] block">Test Cases</span>
+          <span class="text-xs font-bold text-emerald-500">{{ summary()?.stageTestCasesCount || 0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Release Readiness Checklist -->
+    <div>
+      <h4 class="text-xs font-bold text-[var(--text-active)] mb-2.5 flex items-center gap-1.5">
+        <i class="bi bi-patch-check-fill text-[var(--crm-primary)]"></i>
+        เกณฑ์ความพร้อมในการส่งมอบ (Release Readiness)
+      </h4>
+      <div class="space-y-2">
+        @for (item of checklistItems(); track item.label) {
+          <div class="flex items-center justify-between p-2.5 rounded-lg bg-[var(--bg)] border border-[var(--border)] text-xs">
+            <div class="flex items-center gap-2">
+              <i class="bi" [ngClass]="item.passed ? 'bi-check-circle-fill text-emerald-500' : 'bi-exclamation-triangle-fill text-amber-500'"></i>
+              <span class="text-[var(--text-active)] font-medium">{{ item.label }}</span>
+            </div>
+            <span class="text-[11px] font-semibold" [ngClass]="item.passed ? 'text-emerald-500' : 'text-amber-500'">
+              {{ item.detail }}
+            </span>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="pt-4 mt-4 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-muted)]">
+    <span>เป้าหมาย Go-Live งวดถัดไป:</span>
+    <span class="font-bold text-[var(--text-active)] font-mono">สิ้นเดือนนี้ 🚀</span>
+  </div>
+</div>
