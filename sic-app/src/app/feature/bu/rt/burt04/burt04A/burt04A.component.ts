@@ -17,6 +17,7 @@ import { burt04Service } from '../burt04.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Burt04AForm, Burt04AFormModel } from './burt04A.form';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-burt04A',
@@ -28,6 +29,7 @@ import { Burt04AForm, Burt04AFormModel } from './burt04A.form';
     SicButtonComponent,
     SicInputComponent,
     SicComboboxComponent,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04A.component.html',
@@ -38,6 +40,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   private service = inject(burt04Service);
   private dialog = inject(DialogService);
   private fb = inject(FormBuilder);
+  private translate = inject(TranslateService);
 
   // ✅ URL สำหรับ combobox บทบาท
   roleComboboxUrl = this.service.getRoleComboboxUrl();
@@ -60,7 +63,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
 
   ngOnInit() {
     if (!this.businessId) {
-      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+      this.dialog.error(this.translate.instant('BURT04A_NO_BUSINESS_TITLE'), this.translate.instant('BURT04A_SELECT_BUSINESS_MSG'));
       this.router.navigate(['/feature/bu/burt04']);
       return;
     }
@@ -105,7 +108,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
         },
         error: (err: any) => {
           console.error('Load member error', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสมาชิก');
+          this.dialog.error(this.translate.instant('BURT04A_LOAD_FAILED_TITLE'), this.translate.instant('BURT04A_MEMBER_NOT_FOUND_MSG'));
           this.router.navigate(['/feature/bu/team']);
         },
       });
@@ -118,7 +121,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท');
+      this.dialog.warn(this.translate.instant('BURT04A_INCOMPLETE_FORM_TITLE'), this.translate.instant('BURT04A_ROLE_REQUIRED_MSG'));
       return;
     }
 
@@ -132,11 +135,11 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'แก้ไขข้อมูลสมาชิกเรียบร้อย');
+          this.dialog.success(this.translate.instant('BURT04A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT04A_SAVE_SUCCESS_MSG'));
           this.router.navigate(['/feature/bu/team']);
         },
         error: (err: any) => {
-          this.dialog.error('ผิดพลาด', err.message || 'ไม่สามารถบันทึกได้');
+          this.dialog.error(this.translate.instant('BURT04A_ERROR_TITLE'), err.message || this.translate.instant('BURT04A_SAVE_ERROR_MSG'));
           console.error('Update error', err);
         },
       });

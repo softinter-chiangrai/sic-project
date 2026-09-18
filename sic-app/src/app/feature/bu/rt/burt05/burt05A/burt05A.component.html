@@ -7,18 +7,18 @@
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
         @if (isPermissionMode()) {
-          กำหนดสิทธิ์เริ่มต้น
+          {{ 'BURT05A_TITLE_PERMISSION' | translate }}
         } @else if (isEditMode()) {
-          แก้ไขโปรแกรม
+          {{ 'BURT05A_TITLE_EDIT' | translate }}
         } @else {
-          เพิ่มโปรแกรมใหม่
+          {{ 'BURT05A_TITLE_ADD' | translate }}
         }
       </h1>
       <p class="text-sm text-[var(--text-muted)] mt-1">
         @if (isPermissionMode()) {
-          กำหนดระดับสิทธิ์ให้แต่ละบทบาทสำหรับโปรแกรมนี้
+          {{ 'BURT05A_SUBTITLE_PERMISSION' | translate }}
         } @else {
-          กรอกข้อมูลโปรแกรมให้ครบถ้วน
+          {{ 'BURT05A_SUBTITLE_FORM' | translate }}
         }
       </p>
     </div>
@@ -31,7 +31,7 @@
       <div
         class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-[var(--text-muted)]">{{ 'BURT05A_LOADING_TEXT' | translate }}</p>
     </div>
   }
 
@@ -45,38 +45,38 @@
         <!-- Program Code & Program Name EN -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-input
-            label="รหัสโปรแกรม"
+            [label]="'BURT05A_CODE_LABEL' | translate"
             formControlName="programCode"
-            placeholder="เช่น PMRT30"
+            [placeholder]="'BURT05A_CODE_PLACEHOLDER' | translate"
             [required]="true"
-            [errorMessages]="{ required: 'กรุณากรอกรหัสโปรแกรม' }"
+            [errorMessages]="{ required: ('BURT05A_CODE_REQUIRED_MSG' | translate) }"
           ></sic-input>
 
           <sic-input
-            label="ชื่อ (ภาษาอังกฤษ)"
+            [label]="'BURT05A_NAME_EN_LABEL' | translate"
             formControlName="programNameEn"
-            placeholder="เช่น Permission Management"
+            [placeholder]="'BURT05A_NAME_EN_PLACEHOLDER' | translate"
             [required]="true"
-            [errorMessages]="{ required: 'กรุณากรอกชื่อโปรแกรม (ภาษาอังกฤษ)' }"
+            [errorMessages]="{ required: ('BURT05A_NAME_EN_REQUIRED_MSG' | translate) }"
           ></sic-input>
         </div>
 
         <!-- Name Local -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-input
-            label="ชื่อ (ภาษาไทย)"
+            [label]="'BURT05A_NAME_LOCAL_LABEL' | translate"
             formControlName="programNameLocal"
-            placeholder="เช่น จัดการสิทธิ์"
+            [placeholder]="'BURT05A_NAME_LOCAL_PLACEHOLDER' | translate"
             [required]="true"
-            [errorMessages]="{ required: 'กรุณากรอกชื่อโปรแกรม (ภาษาไทย)' }"
+            [errorMessages]="{ required: ('BURT05A_NAME_LOCAL_REQUIRED_MSG' | translate) }"
           ></sic-input>
 
           <div>
             <sic-combobox
-              label="โปรแกรมแม่"
+              [label]="'BURT05A_PARENT_LABEL' | translate"
               formControlName="parentProgramId"
               [options]="programOptions()"
-              placeholder="ไม่มี (Root)"
+              [placeholder]="'BURT05A_PARENT_PLACEHOLDER' | translate"
               [clearable]="true"
             ></sic-combobox>
           </div>
@@ -85,29 +85,29 @@
         <!-- Icon & Route -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-input
-            label="ไอคอน"
+            [label]="'BURT05A_ICON_LABEL' | translate"
             formControlName="programIcon"
-            placeholder="เช่น bi bi-shield-lock-fill"
+            [placeholder]="'BURT05A_ICON_PLACEHOLDER' | translate"
           ></sic-input>
 
           <sic-input
-            label="Route Path"
+            [label]="'BURT05A_ROUTE_LABEL' | translate"
             formControlName="routePath"
-            placeholder="เช่น pm/pmrt30"
+            [placeholder]="'BURT05A_ROUTE_PLACEHOLDER' | translate"
           ></sic-input>
         </div>
 
         <!-- Sort Order & Active -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
           <sic-input-number
-            label="ลำดับ"
+            [label]="'BURT05A_ORDER_LABEL' | translate"
             formControlName="sortOrder"
             [min]="0"
           ></sic-input-number>
 
           <div class="pt-5">
             <sic-checkbox
-              label="เปิดใช้งานโปรแกรม"
+              [label]="'BURT05A_ACTIVE_PROGRAM_LABEL' | translate"
               formControlName="isActive"
             ></sic-checkbox>
           </div>
@@ -120,10 +120,10 @@
           <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
             <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-shield-check text-[var(--crm-primary)]"></i>
-              ระดับสิทธิ์เริ่มต้นของแต่ละบทบาท
+              {{ 'BURT05A_DEFAULT_PERM_TITLE' | translate }}
             </h3>
             <span class="text-xs text-[var(--text-muted)]">
-              {{ roles().length }} บทบาท
+              {{ roles().length }} {{ 'BURT05A_ROLES_UNIT' | translate }}
             </span>
           </div>
 
@@ -131,8 +131,8 @@
           @if (roles().length === 0) {
             <div class="text-center py-8 text-[var(--text-muted)]">
               <i class="bi bi-exclamation-triangle text-4xl block mb-2 text-[var(--crm-warning)]"></i>
-              <p class="font-medium text-[var(--text-active)]">ยังไม่มีบทบาทในระบบ</p>
-              <p class="text-xs mt-1">กรุณาสร้างบทบาทที่หน้า <strong>burt03</strong> ก่อน</p>
+              <p class="font-medium text-[var(--text-active)]">{{ 'BURT05A_NO_ROLES_TITLE' | translate }}</p>
+              <p class="text-xs mt-1">{{ 'BURT05A_CREATE_ROLE_HINT_PREFIX' | translate }} <strong>burt03</strong> {{ 'BURT05A_CREATE_ROLE_HINT_SUFFIX' | translate }}</p>
             </div>
           }
 
@@ -152,7 +152,7 @@
                       [ngModel]="rp.level"
                       [ngModelOptions]="{standalone: true}"
                       (ngModelChange)="updateRolePermission(rp.roleId, $event)"
-                      placeholder="เลือกระดับสิทธิ์"
+                      [placeholder]="'BURT05A_SELECT_LEVEL_PLACEHOLDER' | translate"
                     ></sic-combobox>
                   </div>
                 </div>
@@ -169,7 +169,7 @@
           variant="outline" color="primary"
           (click)="goBack()"
         >
-          <i class="bi bi-arrow-left"></i> ยกเลิก
+          <i class="bi bi-arrow-left"></i> {{ 'BURT05A_CANCEL_BTN' | translate }}
         </sic-button>
         <sic-button
           type="submit"
@@ -180,7 +180,7 @@
           @if (!isSaving()) {
             <i class="bi bi-floppy"></i>
           }
-          {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+          {{ isSaving() ? ('BURT05A_SAVING_TEXT' | translate) : ('BURT05A_SAVE_BTN' | translate) }}
         </sic-button>
       </div>
     </form>

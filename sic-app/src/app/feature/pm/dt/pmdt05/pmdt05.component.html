@@ -28,19 +28,19 @@
       <button
         (click)="generateSql()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)]"
-        title="Generate SQL from ER Diagram"
+        [title]="'PMDT05_GENERATE_SQL_TITLE' | translate"
       >
         <i class="bi bi-database-fill text-lg"></i>
-        <span>Generate SQL</span>
+        <span>{{ 'PMDT05_GENERATE_SQL_BTN' | translate }}</span>
       </button>
 
       <button
         (click)="toggleChat()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] relative hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.2)] max-sm:[&>span]:hidden max-sm:[&>i]:text-[1.3rem]"
-        title="AI Chat History"
+        [title]="'PMDT05_CHAT_TITLE' | translate"
       >
         <i class="bi bi-chat-dots-fill text-lg"></i>
-        <span>Chat</span>
+        <span>{{ 'PMDT05_CHAT_BTN' | translate }}</span>
         @if (unreadCount > 0) {
           <span
             class="absolute -top-1.5 -right-1.5 bg-[var(--crm-danger,#e74c3c)] text-white text-[10px] font-bold rounded-full px-1.5 py-0.5 min-w-[18px] text-center leading-[1.2]"
@@ -54,19 +54,19 @@
       <button
         (click)="saveDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
-        title="Save diagram now"
+        [title]="'PMDT05_SAVE_TITLE' | translate"
       >
         <i class="bi bi-check-circle-fill text-lg"></i>
-        <span>Save</span>
+        <span>{{ 'PMDT05_SAVE_BTN' | translate }}</span>
       </button>
 
       <button
         (click)="loadExistingDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
-        title="Reload from server"
+        [title]="'PMDT05_RELOAD_TITLE' | translate"
       >
         <i class="bi bi-arrow-repeat text-lg"></i>
-        <span>Reload</span>
+        <span>{{ 'PMDT05_RELOAD_BTN' | translate }}</span>
       </button>
     </div>
   </div>
@@ -80,7 +80,7 @@
         <div
           class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
         ></div>
-        Loading tabs...
+        {{ 'PMDT05_LOADING_TABS' | translate }}
       </div>
     }
 
@@ -116,34 +116,34 @@
         @if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-            title="Approved"
+            [title]="'PMDT05_APPROVED_TITLE' | translate"
           >
             <i class="bi bi-check-circle-fill text-[9px]"></i>
-            <span>Approved</span>
+            <span>{{ 'PMDT05_APPROVED_BADGE' | translate }}</span>
           </span>
         } @else if (tab.approvalStatus === 'PENDING' || tab.approvalStatus === 'IN_REVIEW' || tab.approvalStatus === 'In Review' || tab.approvalStatus === 'PARTIALLY_APPROVED') {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-            title="Pending Approval"
+            [title]="'PMDT05_PENDING_TITLE' | translate"
           >
             <i class="bi bi-clock-history text-[9px]"></i>
-            <span>Pending</span>
+            <span>{{ 'PMDT05_PENDING_BADGE' | translate }}</span>
           </span>
         } @else if (tab.approvalStatus === 'REJECTED' || tab.approvalStatus === 'NEED_REVISION') {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
-            title="Rejected / Needs Revision"
+            [title]="'PMDT05_REJECTED_TITLE' | translate"
           >
             <i class="bi bi-x-circle-fill text-[9px]"></i>
-            <span>{{ tab.approvalStatus === 'NEED_REVISION' ? 'Needs Revision' : 'Rejected' }}</span>
+            <span>{{ (tab.approvalStatus === 'NEED_REVISION' ? 'PMDT05_NEEDS_REVISION_BADGE' : 'PMDT05_REJECTED_BADGE') | translate }}</span>
           </span>
         } @else {
           <span
             class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-400 dark:text-sky-300 border border-sky-500/30"
-            title="Draft"
+            [title]="'PMDT05_DRAFT_TITLE' | translate"
           >
             <i class="bi bi-file-earmark-text text-[9px] text-sky-400"></i>
-            <span>Draft</span>
+            <span>{{ 'PMDT05_DRAFT_BADGE' | translate }}</span>
           </span>
         }
 
@@ -153,7 +153,7 @@
             (click)="editTab(tab.id); $event.stopPropagation()"
             class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
             [class.opacity-100]="currentTabId === tab.id"
-            title="Edit / Submit for Approval"
+            [title]="'PMDT05_EDIT_TAB_TITLE' | translate"
           >
             <i class="bi bi-pencil text-xs"></i>
           </button>
@@ -165,7 +165,7 @@
             (click)="deleteTab(tab.id, $event)"
             class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
             [class.opacity-100]="currentTabId === tab.id"
-            title="Delete Diagram"
+            [title]="'PMDT05_DELETE_TAB_TITLE' | translate"
           >
             <i class="bi bi-x text-sm"></i>
           </button>
@@ -178,7 +178,7 @@
       class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] transition-all whitespace-nowrap"
     >
       <i class="bi bi-plus-lg"></i>
-      New Diagram
+      {{ 'PMDT05_NEW_DIAGRAM_BTN' | translate }}
     </button>
   </div>
 
@@ -191,7 +191,7 @@
         class="w-2 h-2 rounded-full transition-colors duration-300 flex-shrink-0"
         [style.background]="drawioReady ? '#2ecc71' : '#ffc107'"
       ></span>
-      <span class="font-medium text-xs">{{ drawioReady ? 'Draw.io Ready' : 'Connecting...' }}</span>
+      <span class="font-medium text-xs">{{ (drawioReady ? 'PMDT05_DRAWIO_READY' : 'PMDT05_CONNECTING') | translate }}</span>
       @if (currentTabId) {
         <span class="text-[var(--text-muted)] mx-2">|</span>
         <span class="font-mono text-[0.6rem] text-[var(--text-muted)]"
@@ -206,7 +206,7 @@
       }
     </div>
     <div class="flex items-center gap-3">
-      <span>{{ tabs().length }} diagram</span>
+      <span>{{ tabs().length }} {{ 'PMDT05_DIAGRAM_COUNT' | translate }}</span>
       <!-- ✅ แสดงสถานะ auto‑save / manual save -->
       <span class="text-xs text-[var(--text-muted)]">{{ autoSaveStatus }}</span>
     </div>
@@ -221,7 +221,7 @@
         <div
           class="w-9 h-9 border-[3px] border-[var(--border,#d0d7de)] border-t-[var(--crm-primary,#1a73e8)] rounded-full animate-spin"
         ></div>
-        <span>Loading diagram…</span>
+        <span>{{ 'PMDT05_LOADING_DIAGRAM' | translate }}</span>
       </div>
     }
     <iframe
@@ -237,14 +237,14 @@
       <div class="absolute inset-x-0 top-0 z-10 flex items-center justify-between gap-3 px-4 py-2 bg-amber-50 border-b border-amber-300 text-sm text-amber-800">
         <div class="flex items-center gap-2">
           <i class="bi bi-lock-fill"></i>
-          Diagram นี้ผ่านการอนุมัติแล้ว (ล็อก Baseline) ไม่สามารถแก้ไขได้โดยตรง
+          {{ 'PMDT05_LOCKED_MSG' | translate }}
         </div>
         <button
           (click)="requestChangeForCurrentTab()"
           class="flex items-center gap-1.5 px-3 py-1 rounded-md bg-amber-600 text-white text-xs font-medium hover:bg-amber-700 transition-colors"
         >
           <i class="bi bi-pencil-square"></i>
-          ขอแก้ไข
+          {{ 'PMDT05_REQUEST_CHANGE_BTN' | translate }}
         </button>
       </div>
     }
@@ -260,12 +260,12 @@
     >
       <span class="flex items-center gap-2">
         <i class="bi bi-robot text-[var(--crm-primary,#1a73e8)]"></i>
-        AI Assistant
+        {{ 'PMDT05_AI_ASSISTANT_TITLE' | translate }}
       </span>
       <button
         (click)="toggleChat()"
         class="bg-transparent border-none text-xl cursor-pointer text-[var(--text-muted,#6c757d)] px-2 py-1 rounded-md transition-all duration-200 hover:bg-[var(--sidebar-hover,#e9ecef)] hover:text-[var(--text-active,#1e293b)]"
-        title="Close chat"
+        [title]="'PMDT05_CLOSE_CHAT_TITLE' | translate"
       >
         <i class="bi bi-x-lg"></i>
       </button>

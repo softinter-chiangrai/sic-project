@@ -6,17 +6,17 @@
         <button
           (click)="goBack()"
           class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-          title="กลับไปหน้ารายการโครงการ"
+          [title]="'PMDT14_BACK_TOOLTIP' | translate"
         >
           <i class="bi bi-arrow-left text-xl"></i>
         </button>
       }
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-box-seam text-[var(--crm-primary)]"></i>
-        เอกสารการส่งมอบ
+        {{ 'PMDT14_PAGE_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalElements() }} รายการ
+        {{ totalElements() }} {{ 'PMDT14_ITEMS_SUFFIX' | translate }}
       </span>
     </div>
     <button
@@ -24,7 +24,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
       <i class="bi bi-plus-lg"></i>
-      สร้างเอกสารส่งมอบ
+      {{ 'PMDT14_CREATE_BUTTON' | translate }}
     </button>
   </div>
 
@@ -35,7 +35,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัสเอกสาร, หัวข้อการส่งมอบ..."
+        [placeholder]="'PMDT14_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -54,7 +54,7 @@
         [options]="statusOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMDT14_ALL_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -101,17 +101,17 @@
           </span>
           @if (r.status === 'CONFIRMED') {
             <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              <i class="bi bi-check-circle-fill text-emerald-500"></i> ยืนยันรับมอบสมบูรณ์
+              <i class="bi bi-check-circle-fill text-emerald-500"></i> {{ 'PMDT14_CONFIRMED_COMPLETE' | translate }}
             </span>
           } @else if (r.isGatePassed && r.isChecklistPassed) {
             <span class="inline-flex items-center gap-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              <i class="bi bi-check-circle-fill text-emerald-500"></i> ผ่านเกณฑ์สมบูรณ์
+              <i class="bi bi-check-circle-fill text-emerald-500"></i> {{ 'PMDT14_GATE_PASSED' | translate }}
             </span>
           } @else if (r.totalGateChecks || r.totalChecklistCount) {
-            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" title="Delivery Gate Check หรือ Checklist ยังไม่ผ่านครบทั้งหมด">
-              <i class="bi bi-exclamation-triangle-fill text-amber-500"></i> ยังไม่เสร็จสมบูรณ์
+            <span class="inline-flex items-center gap-1 text-[11px] font-medium text-amber-700 dark:text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20" [title]="'PMDT14_GATE_INCOMPLETE_TIP' | translate">
+              <i class="bi bi-exclamation-triangle-fill text-amber-500"></i> {{ 'PMDT14_NOT_COMPLETE' | translate }}
               @if (r.totalGateChecks) {
-                <span class="text-[10px] opacity-80">({{ r.passedGateChecks ?? 0 }}/{{ r.totalGateChecks }} Gate)</span>
+                <span class="text-[10px] opacity-80">({{ r.passedGateChecks ?? 0 }}/{{ r.totalGateChecks }} {{ 'PMDT14_GATE_LABEL' | translate }})</span>
               }
             </span>
           }
@@ -122,7 +122,7 @@
         @let r = $any(row);
         @if (r.status?.toUpperCase() === 'CHANGED') {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            รอส่งอนุมัติ
+            {{ 'PMDT14_PENDING_SUBMIT' | translate }}
           </span>
         } @else if (approvalStatusMap()[r.id]) {
           <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[r.id])">
@@ -134,7 +134,7 @@
           </span>
         } @else {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            ยังไม่อนุมัติ
+            {{ 'PMDT14_NOT_APPROVED' | translate }}
           </span>
         }
       </ng-template>

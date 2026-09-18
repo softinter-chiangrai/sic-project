@@ -7,13 +7,13 @@
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-briefcase-fill text-[var(--crm-primary)]"></i>
         @if (filterCustomerName()) {
-          โครงการของ: {{ filterCustomerName() }}
+          {{ 'PMRT02_TITLE_FOR_CUSTOMER' | translate }} {{ filterCustomerName() }}
         } @else {
-          รายการโครงการ
+          {{ 'PMRT02_PAGE_TITLE' | translate }}
         }
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMRT02_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <div class="flex gap-2">
@@ -23,7 +23,7 @@
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
           <i class="bi bi-arrow-left"></i>
-          กลับ
+          {{ 'PMRT02_BACK_BUTTON' | translate }}
         </button>
       }
       <button
@@ -31,7 +31,7 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
       >
         <i class="bi bi-plus-lg"></i>
-        เพิ่มโครงการ
+        {{ 'PMRT02_ADD_BUTTON' | translate }}
       </button>
     </div>
   </div>
@@ -43,7 +43,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัส, ชื่อโครงการ..."
+        [placeholder]="'PMRT02_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -63,7 +63,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMRT02_STATUS_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -74,7 +74,7 @@
         [options]="prioritySelectOptions"
         [ngModel]="filterPriority()"
         (ngModelChange)="onPriorityChange($event, grid)"
-        placeholder="⚡ ทุกระดับความสำคัญ"
+        [placeholder]="'PMRT02_PRIORITY_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -108,7 +108,7 @@
           </span>
         } @else {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            ยังไม่อนุมัติ
+            {{ 'PMRT02_NOT_APPROVED_YET' | translate }}
           </span>
         }
       </ng-template>
@@ -152,7 +152,7 @@
             type="button"
             (click)="goToDashboard(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            title="ดู Dashboard โครงการ"
+            [title]="'PMRT02_VIEW_DASHBOARD_TITLE' | translate"
           >
             <i class="bi bi-speedometer2"></i>
           </button>
@@ -163,10 +163,10 @@
             [showPrint]="true"
             [showEdit]="true"
             [showDelete]="true"
-            viewTitle="ดูรายละเอียดโครงการ (อ่านอย่างเดียว)"
-            printTitle="พิมพ์ข้อมูลโครงการ"
-            editTitle="แก้ไขโครงการ"
-            deleteTitle="ลบโครงการ"
+            [viewTitle]="'PMRT02_VIEW_DETAIL_TITLE' | translate"
+            [printTitle]="'PMRT02_PRINT_TITLE' | translate"
+            [editTitle]="'PMRT02_EDIT_TITLE' | translate"
+            [deleteTitle]="'PMRT02_DELETE_TITLE' | translate"
             (onView)="goToDetailView(r.id)"
             (onPrint)="printProject(r)"
             (onEdit)="goToEdit(r.id)"

@@ -2,7 +2,7 @@
   <form [formGroup]="data1.formGroup" (ngSubmit)="submit()">
     <div class="grid grid-cols-6 gap-4">
       <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold">ข้อมูลธุรกิจ</h2>
+        <h2 class="text-4xl font-semibold">{{ 'BUSINESS_CREATE_HEADER' | translate }}</h2>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-profile
@@ -17,84 +17,84 @@
         <sic-radio formControlName="personType" direction="horizontal" alignment="center" [apiUrl]="service.apiGetLovPersonType" ></sic-radio>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
-        <sic-input label="รหัส/อักษรย่อ" formControlName="businessCode"></sic-input>
+        <sic-input [label]="'BUSINESS_CREATE_CODE_LABEL' | translate" formControlName="businessCode"></sic-input>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-3">
-          <sic-input label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง" mask="0-0000-00000-00-0" formControlName="taxId"></sic-input>
+          <sic-input [label]="'BUSINESS_CREATE_TAXID_LABEL' | translate" mask="0-0000-00000-00-0" formControlName="taxId"></sic-input>
         </div>
         @if (data1.formGroup.get('personType')?.value == 'CORPORATE') {
           <div class="flex-1">
-            <sic-input label="สาขา" mask="00000"  formControlName="branchCode"></sic-input>
+            <sic-input [label]="'BUSINESS_CREATE_BRANCH_LABEL' | translate" mask="00000"  formControlName="branchCode"></sic-input>
           </div>
         }
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox label="คำนำหน้า" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle" [params]="{ personType: $safeNavigationMigration(data1.formGroup.get('personType')?.value) }">
+        <sic-combobox [label]="'BUSINESS_CREATE_TITLE_LABEL' | translate" formControlName="titleId" [apiUrl]="service.apiGetComboboxTitle" [params]="{ personType: $safeNavigationMigration(data1.formGroup.get('personType')?.value) }">
         </sic-combobox>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-2">
-          <sic-input label="ชื่อ (อังกฤษ)" formControlName="firstNameEn"></sic-input>
+          <sic-input [label]="'BUSINESS_CREATE_FIRSTNAME_EN_LABEL' | translate" formControlName="firstNameEn"></sic-input>
         </div>
          @if(data1.formGroup.get('personType')?.value == 'INDIVIDUAL') {
           <div class="flex-1">
-            <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
+            <sic-input [label]="'BUSINESS_CREATE_MIDDLENAME_LABEL' | translate" formControlName="middleNameEn"></sic-input>
           </div>
           <div class="flex-2">
-            <sic-input label="นามสกุล" formControlName="lastNameEn"></sic-input>
+            <sic-input [label]="'BUSINESS_CREATE_LASTNAME_LABEL' | translate" formControlName="lastNameEn"></sic-input>
           </div>
         }
-      </div>  
+      </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-2">
-          <sic-input label="ชื่อ (ท้องถิ่น)" formControlName="firstNameLocal"></sic-input>
+          <sic-input [label]="'BUSINESS_CREATE_FIRSTNAME_LOCAL_LABEL' | translate" formControlName="firstNameLocal"></sic-input>
         </div>
          @if(data1.formGroup.get('personType')?.value == 'INDIVIDUAL') {
           <div class="flex-1">
-            <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
+            <sic-input [label]="'BUSINESS_CREATE_MIDDLENAME_LABEL' | translate" formControlName="middleNameLocal"></sic-input>
           </div>
           <div class="flex-2">
-            <sic-input label="นามสกุล" formControlName="lastNameLocal"></sic-input>
+            <sic-input [label]="'BUSINESS_CREATE_LASTNAME_LABEL' | translate" formControlName="lastNameLocal"></sic-input>
           </div>
         }
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-combobox label="ประเทศ" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry" (selectionChanged)="onCountryChange($event)">
+        <sic-combobox [label]="'BUSINESS_CREATE_COUNTRY_LABEL' | translate" formControlName="countryId" [apiUrl]="service.apiGetComboboxCountry" (selectionChanged)="onCountryChange($event)">
         </sic-combobox>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
+        <sic-input-area [label]="'BUSINESS_CREATE_ADDRESS_EN_LABEL' | translate" formControlName="addressEn"></sic-input-area>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
+        <sic-input-area [label]="'BUSINESS_CREATE_ADDRESS_LOCAL_LABEL' | translate" formControlName="addressLocal"></sic-input-area>
       </div>
       @if(data1.formGroup.get('supportLocalAddress')?.value) {
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="จังหวัด" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince" [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }" (selectionChanged)="onProvinceChange($event)">
+          <sic-combobox [label]="'BUSINESS_CREATE_PROVINCE_LABEL' | translate" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince" [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }" (selectionChanged)="onProvinceChange($event)">
           </sic-combobox>
         </div>
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="อำเภอ" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict" [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }" (selectionChanged)="onDistrictChange($event)">
+          <sic-combobox [label]="'BUSINESS_CREATE_DISTRICT_LABEL' | translate" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict" [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }" (selectionChanged)="onDistrictChange($event)">
           </sic-combobox>
         </div>
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox label="ตำบล" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict" [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }" (selectionChanged)="onSubDistrictChange($event)">
+          <sic-combobox [label]="'BUSINESS_CREATE_SUBDISTRICT_LABEL' | translate" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict" [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }" (selectionChanged)="onSubDistrictChange($event)">
           </sic-combobox>
         </div>
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+          <sic-input [label]="'BUSINESS_CREATE_ZIPCODE_LABEL' | translate" formControlName="zipCode"></sic-input>
         </div>
       }
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input label="อีเมล" formControlName="email"></sic-input>
+        <sic-input [label]="'BUSINESS_CREATE_EMAIL_LABEL' | translate" formControlName="email"></sic-input>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-        <sic-input-phone label="เบอร์โทรศัพท์" formControlName="phoneNumber"></sic-input-phone>
+        <sic-input-phone [label]="'BUSINESS_CREATE_PHONE_LABEL' | translate" formControlName="phoneNumber"></sic-input-phone>
       </div>
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
-        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary">สร้าง</sic-button>
+        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">{{ 'BUSINESS_CREATE_BACK_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary">{{ 'BUSINESS_CREATE_CREATE_BUTTON' | translate }}</sic-button>
       </div>
     </div>
   </form>

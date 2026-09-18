@@ -2,10 +2,10 @@
   <!-- Header -->
   <div class="sic-notif-header">
     <div class="sic-notif-title-row">
-      <h2 class="sic-notif-title">การแจ้งเตือน</h2>
-      
+      <h2 class="sic-notif-title">{{ 'NOTIFICATION_PANEL_TITLE' | translate }}</h2>
+
       <div class="sic-notif-actions">
-        <button type="button" class="sic-notif-more-btn" (click)="toggleMenu($event)" title="ตัวเลือก">
+        <button type="button" class="sic-notif-more-btn" (click)="toggleMenu($event)" [title]="'NOTIFICATION_PANEL_OPTIONS_LABEL' | translate">
           <i class="bi bi-three-dots"></i>
         </button>
 
@@ -14,11 +14,11 @@
           <div class="sic-notif-dropdown-menu">
             <button type="button" class="sic-notif-menu-item" (click)="markAllAsRead()">
               <i class="bi bi-check2-all text-base text-[var(--crm-primary)]"></i>
-              <span>ทำเครื่องหมายว่าอ่านแล้วทั้งหมด</span>
+              <span>{{ 'NOTIFICATION_PANEL_MARK_ALL_READ_LABEL' | translate }}</span>
             </button>
             <button type="button" class="sic-notif-menu-item" (click)="closePanel.emit(); showMenu.set(false)">
               <i class="bi bi-x-lg text-sm text-[var(--text-muted)]"></i>
-              <span>ปิดหน้าต่าง</span>
+              <span>{{ 'NOTIFICATION_PANEL_CLOSE_WINDOW_LABEL' | translate }}</span>
             </button>
           </div>
         }
@@ -32,7 +32,7 @@
         class="sic-notif-tab-pill"
         [class.active]="activeTab() === 'all'"
         (click)="setTab('all')">
-        ทั้งหมด
+        {{ 'NOTIFICATION_PANEL_TAB_ALL_LABEL' | translate }}
       </button>
 
       <button
@@ -40,7 +40,7 @@
         class="sic-notif-tab-pill"
         [class.active]="activeTab() === 'unread'"
         (click)="setTab('unread')">
-        ยังไม่ได้อ่าน
+        {{ 'NOTIFICATION_PANEL_TAB_UNREAD_LABEL' | translate }}
         @if (unreadCount() > 0) {
           <span class="sic-notif-pill-count">{{ unreadCount() }}</span>
         }
@@ -57,9 +57,9 @@
         </div>
         <p class="sic-notif-empty-text">
           @if (activeTab() === 'unread') {
-            ไม่มีการแจ้งเตือนที่ยังไม่ได้อ่าน
+            {{ 'NOTIFICATION_PANEL_NO_UNREAD_TEXT' | translate }}
           } @else {
-            ไม่มีประวัติการแจ้งเตือน
+            {{ 'NOTIFICATION_PANEL_NO_HISTORY_TEXT' | translate }}
           }
         </p>
       </div>
@@ -68,9 +68,9 @@
       @if (newNotifications().length > 0) {
         <div class="sic-notif-section">
           <div class="sic-notif-section-header">
-            <span class="sic-notif-section-title">ใหม่</span>
+            <span class="sic-notif-section-title">{{ 'NOTIFICATION_PANEL_NEW_SECTION_TITLE' | translate }}</span>
             <button type="button" class="sic-notif-view-all-btn" (click)="onViewAllClick()">
-              ดูทั้งหมด
+              {{ 'NOTIFICATION_PANEL_VIEW_ALL_LABEL' | translate }}
             </button>
           </div>
 
@@ -97,7 +97,7 @@
                 <!-- Content -->
                 <div class="sic-notif-body">
                   <p class="sic-notif-text">
-                    <span class="sic-notif-sender">{{ item.title || item.senderName || 'ระบบ' }}</span>
+                    <span class="sic-notif-sender">{{ item.title || item.senderName || ('NOTIFICATION_PANEL_SYSTEM_SENDER_LABEL' | translate) }}</span>
                     {{ item.message }}
                   </p>
 
@@ -105,7 +105,7 @@
                     <span class="sic-notif-time">{{ formatRelativeTime(item.createdDate) }}</span>
                     @if (resolveLinkUrl(item.linkUrl); as resolvedUrl) {
                       <a [routerLink]="resolvedUrl" (click)="$event.stopPropagation(); closePanel.emit()" class="sic-notif-link">
-                        ดูรายละเอียด
+                        {{ 'NOTIFICATION_PANEL_VIEW_DETAILS_LABEL' | translate }}
                       </a>
                     }
                   </div>
@@ -113,7 +113,7 @@
 
                 <!-- Unread Blue Dot -->
                 @if (!item.read) {
-                  <div class="sic-notif-unread-dot" title="ยังไม่ได้อ่าน"></div>
+                  <div class="sic-notif-unread-dot" [title]="'NOTIFICATION_PANEL_UNREAD_LABEL' | translate"></div>
                 }
               </div>
             }
@@ -125,7 +125,7 @@
       @if (earlierNotifications().length > 0) {
         <div class="sic-notif-section" [class.mt-3]="newNotifications().length > 0">
           <div class="sic-notif-section-header">
-            <span class="sic-notif-section-title">ก่อนหน้านี้</span>
+            <span class="sic-notif-section-title">{{ 'NOTIFICATION_PANEL_EARLIER_SECTION_TITLE' | translate }}</span>
           </div>
 
           <div class="sic-notif-list">
@@ -151,7 +151,7 @@
                 <!-- Content -->
                 <div class="sic-notif-body">
                   <p class="sic-notif-text">
-                    <span class="sic-notif-sender">{{ item.title || item.senderName || 'ระบบ' }}</span>
+                    <span class="sic-notif-sender">{{ item.title || item.senderName || ('NOTIFICATION_PANEL_SYSTEM_SENDER_LABEL' | translate) }}</span>
                     {{ item.message }}
                   </p>
 
@@ -159,7 +159,7 @@
                     <span class="sic-notif-time">{{ formatRelativeTime(item.createdDate) }}</span>
                     @if (resolveLinkUrl(item.linkUrl); as resolvedUrl) {
                       <a [routerLink]="resolvedUrl" (click)="$event.stopPropagation(); closePanel.emit()" class="sic-notif-link">
-                        ดูรายละเอียด
+                        {{ 'NOTIFICATION_PANEL_VIEW_DETAILS_LABEL' | translate }}
                       </a>
                     }
                   </div>
@@ -167,7 +167,7 @@
 
                 <!-- Unread Blue Dot -->
                 @if (!item.read) {
-                  <div class="sic-notif-unread-dot" title="ยังไม่ได้อ่าน"></div>
+                  <div class="sic-notif-unread-dot" [title]="'NOTIFICATION_PANEL_UNREAD_LABEL' | translate"></div>
                 }
               </div>
             }
@@ -180,7 +180,7 @@
     @if (isLoading()) {
       <div class="sic-notif-loading-indicator">
         <i class="bi bi-arrow-repeat animate-spin"></i>
-        <span>กำลังโหลด...</span>
+        <span>{{ 'NOTIFICATION_PANEL_LOADING_TEXT' | translate }}</span>
       </div>
     }
   </div>

@@ -3,7 +3,7 @@
   <form [formGroup]="data1.formGroup" (ngSubmit)="submit()">
     <div class="grid grid-cols-6 gap-4">
       <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold">ข้อมูลส่วนตัว</h2>
+        <h2 class="text-4xl font-semibold">{{ 'PROFILE_HEADER' | translate }}</h2>
       </div>
 
       <!-- Profile Picture -->
@@ -18,12 +18,12 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
       >
         <sic-input
-          label="เลขประจำตัวผู้เสียภาษี / เลขหนังสือเดินทาง"
+          [label]="'PROFILE_TAXID_LABEL' | translate"
           mask="0-0000-00000-00-0"
           formControlName="taxId"
           [errorMessages]="{
-            required: 'กรุณากรอกเลขประจำตัวผู้เสียภาษี',
-            duplicate: 'เลขประจำตัวผู้เสียภาษีนี้ถูกใช้งานแล้ว',
+            required: ('PROFILE_TAXID_REQUIRED' | translate),
+            duplicate: ('PROFILE_TAXID_DUPLICATE' | translate),
           }"
         >
         </sic-input>
@@ -34,7 +34,7 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-combobox
-          label="คำนำหน้า"
+          [label]="'PROFILE_TITLE_LABEL' | translate"
           formControlName="titleId"
           [apiUrl]="service.apiGetComboboxTitle"
           [params]="{ personType: 'INDIVIDUAL' }"
@@ -48,19 +48,19 @@
       >
         <div class="flex-2">
           <sic-input
-            label="ชื่อ (อังกฤษ)"
+            [label]="'PROFILE_FIRSTNAME_EN_LABEL' | translate"
             formControlName="firstNameEn"
-            [errorMessages]="{ required: 'กรุณากรอกชื่อ' }"
+            [errorMessages]="{ required: ('PROFILE_REQUIRED_FIRSTNAME' | translate) }"
           ></sic-input>
         </div>
         <div class="flex-1">
-          <sic-input label="ชื่อกลาง" formControlName="middleNameEn"></sic-input>
+          <sic-input [label]="'PROFILE_MIDDLENAME_LABEL' | translate" formControlName="middleNameEn"></sic-input>
         </div>
         <div class="flex-2">
           <sic-input
-            label="นามสกุล"
+            [label]="'PROFILE_LASTNAME_LABEL' | translate"
             formControlName="lastNameEn"
-            [errorMessages]="{ required: 'กรุณากรอกนามสกุล' }"
+            [errorMessages]="{ required: ('PROFILE_REQUIRED_LASTNAME' | translate) }"
           ></sic-input>
         </div>
       </div>
@@ -71,19 +71,19 @@
       >
         <div class="flex-2">
           <sic-input
-            label="ชื่อ (ท้องถิ่น)"
+            [label]="'PROFILE_FIRSTNAME_LOCAL_LABEL' | translate"
             formControlName="firstNameLocal"
-            [errorMessages]="{ required: 'กรุณากรอกชื่อ' }"
+            [errorMessages]="{ required: ('PROFILE_REQUIRED_FIRSTNAME' | translate) }"
           ></sic-input>
         </div>
         <div class="flex-1">
-          <sic-input label="ชื่อกลาง" formControlName="middleNameLocal"></sic-input>
+          <sic-input [label]="'PROFILE_MIDDLENAME_LABEL' | translate" formControlName="middleNameLocal"></sic-input>
         </div>
         <div class="flex-2">
           <sic-input
-            label="นามสกุล"
+            [label]="'PROFILE_LASTNAME_LABEL' | translate"
             formControlName="lastNameLocal"
-            [errorMessages]="{ required: 'กรุณากรอกนามสกุล' }"
+            [errorMessages]="{ required: ('PROFILE_REQUIRED_LASTNAME' | translate) }"
           ></sic-input>
         </div>
       </div>
@@ -93,11 +93,11 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-combobox
-          label="ประเทศ"
+          [label]="'PROFILE_COUNTRY_LABEL' | translate"
           formControlName="countryId"
           [apiUrl]="service.apiGetComboboxCountry"
           (selectionChanged)="onCountryChange($event)"
-          [errorMessages]="{ required: 'กรุณาเลือกประเทศ' }"
+          [errorMessages]="{ required: ('PROFILE_REQUIRED_COUNTRY' | translate) }"
         >
         </sic-combobox>
       </div>
@@ -106,12 +106,12 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input-area label="ที่อยู่ (อังกฤษ)" formControlName="addressEn"></sic-input-area>
+        <sic-input-area [label]="'PROFILE_ADDRESS_EN_LABEL' | translate" formControlName="addressEn"></sic-input-area>
       </div>
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input-area label="ที่อยู่ (ท้องถิ่น)" formControlName="addressLocal"></sic-input-area>
+        <sic-input-area [label]="'PROFILE_ADDRESS_LOCAL_LABEL' | translate" formControlName="addressLocal"></sic-input-area>
       </div>
 
       <!-- Local Address -->
@@ -120,7 +120,7 @@
           class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
         >
           <sic-combobox
-            label="จังหวัด"
+            [label]="'PROFILE_PROVINCE_LABEL' | translate"
             formControlName="provinceId"
             [apiUrl]="service.apiGetComboboxProvince"
             [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }"
@@ -132,7 +132,7 @@
           class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
         >
           <sic-combobox
-            label="อำเภอ"
+            [label]="'PROFILE_DISTRICT_LABEL' | translate"
             formControlName="districtId"
             [apiUrl]="service.apiGetComboboxDistrict"
             [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }"
@@ -144,7 +144,7 @@
           class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
         >
           <sic-combobox
-            label="ตำบล"
+            [label]="'PROFILE_SUBDISTRICT_LABEL' | translate"
             formControlName="subDistrictId"
             [apiUrl]="service.apiGetComboboxSubDistrict"
             [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }"
@@ -155,7 +155,7 @@
         <div
           class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
         >
-          <sic-input label="รหัสไปรษณีย์" formControlName="zipCode"></sic-input>
+          <sic-input [label]="'PROFILE_ZIPCODE_LABEL' | translate" formControlName="zipCode"></sic-input>
         </div>
       }
 
@@ -164,12 +164,12 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="อีเมล"
+          [label]="'PROFILE_EMAIL_LABEL' | translate"
           formControlName="email"
           [errorMessages]="{
-            required: 'กรุณากรอกอีเมล',
-            email: 'กรุณากรอกอีเมลให้ถูกต้อง',
-            duplicate: 'อีเมลนี้ถูกใช้งานแล้ว',
+            required: ('PROFILE_REQUIRED_EMAIL' | translate),
+            email: ('PROFILE_EMAIL_INVALID' | translate),
+            duplicate: ('PROFILE_EMAIL_DUPLICATE' | translate),
           }"
         >
         </sic-input>
@@ -180,11 +180,11 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input-phone
-          label="เบอร์โทรศัพท์"
+          [label]="'PROFILE_PHONE_LABEL' | translate"
           formControlName="phoneNumber"
           [errorMessages]="{
-            required: 'กรุณากรอกเบอร์โทรศัพท์',
-            duplicate: 'เบอร์โทรนี้ถูกใช้งานแล้ว',
+            required: ('PROFILE_REQUIRED_PHONE' | translate),
+            duplicate: ('PROFILE_PHONE_DUPLICATE' | translate),
           }"
         >
         </sic-input-phone>
@@ -194,7 +194,7 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
       >
-        <sic-button [type]="'submit'" variant="solid" color="primary">บันทึก</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary">{{ 'PROFILE_SAVE_BUTTON' | translate }}</sic-button>
       </div>
     </div>
   </form>
@@ -205,7 +205,7 @@
   <form [formGroup]="data2.formGroup" (ngSubmit)="verify()">
     <div class="grid grid-cols-6 gap-4">
       <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold">ยืนยันอีเมลผู้ใช้งาน</h2>
+        <h2 class="text-4xl font-semibold">{{ 'PROFILE_VERIFY_HEADER' | translate }}</h2>
       </div>
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold">
@@ -218,17 +218,17 @@
         <div class="flex gap-4">
           <div class="flex-1">
             <sic-input
-              label="รหัสยืนยัน"
+              [label]="'PROFILE_VERIFY_CODE_LABEL' | translate"
               formControlName="verifyToken"
-              placeholder="กรอกรหัสยืนยัน"
+              [placeholder]="'PROFILE_VERIFY_CODE_PLACEHOLDER' | translate"
               [errorMessages]="{
-                required: 'กรุณากรอกรหัสยืนยัน',
+                required: ('PROFILE_REQUIRED_VERIFY_CODE' | translate),
               }"
             ></sic-input>
           </div>
           <div class="w-50">
             <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="resend()">
-              ส่งรหัสยืนยันใหม่
+              {{ 'PROFILE_RESEND_BUTTON' | translate }}
             </sic-button>
           </div>
         </div>
@@ -237,9 +237,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
       >
         <sic-button [type]="'button'" variant="outline" color="primary" (click)="back()">
-          ย้อนกลับ
+          {{ 'PROFILE_BACK_BUTTON' | translate }}
         </sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary"> ยืนยัน </sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary"> {{ 'PROFILE_CONFIRM_BUTTON' | translate }} </sic-button>
       </div>
     </div>
   </form>

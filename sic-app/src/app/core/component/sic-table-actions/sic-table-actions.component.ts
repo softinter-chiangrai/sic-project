@@ -1,6 +1,7 @@
 // src/app/core/component/sic-table-actions/sic-table-actions.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, inject, Input, Output } from '@angular/core';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'sic-table-actions',
@@ -56,15 +57,17 @@ import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from 
     changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class SicTableActionsComponent {
+    private readonly translate = inject(TranslateService);
+
     @Input() showView = true;
     @Input() showPrint = true;
     @Input() showEdit = true;
     @Input() showDelete = true;
 
-    @Input() viewTitle = 'ดูข้อมูล';
-    @Input() printTitle = 'พิมพ์เอกสาร';
-    @Input() editTitle = 'แก้ไข';
-    @Input() deleteTitle = 'ลบ';
+    @Input() viewTitle = this.translate.instant('TABLE_ACTIONS_VIEW_TITLE');
+    @Input() printTitle = this.translate.instant('TABLE_ACTIONS_PRINT_TITLE');
+    @Input() editTitle = this.translate.instant('TABLE_ACTIONS_EDIT_TITLE');
+    @Input() deleteTitle = this.translate.instant('TABLE_ACTIONS_DELETE_TITLE');
 
     @Input() disabled = false;
 

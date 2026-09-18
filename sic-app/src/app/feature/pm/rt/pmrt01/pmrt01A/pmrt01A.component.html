@@ -6,7 +6,7 @@
       <!-- HEADER -->
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูลลูกค้า' : 'เพิ่มข้อมูลลูกค้า' }}
+          {{ isEdit ? ('PMRT01A_EDIT_TITLE' | translate) : ('PMRT01A_ADD_TITLE' | translate) }}
         </h2>
       </div>
 
@@ -21,7 +21,7 @@
           [src]="profileImageUrl"
         >
         </sic-profile>
-        <p class="text-center text-xs text-[var(--text-muted)] mt-2">คลิกเพื่ออัปโหลดรูปโปรไฟล์</p>
+        <p class="text-center text-xs text-[var(--text-muted)] mt-2">{{ 'PMRT01A_UPLOAD_PHOTO_HINT' | translate }}</p>
       </div>
       <!-- ✅ ประเภทลูกค้า (บุคคลธรรมดา / นิติบุคคล) -->
       <div
@@ -40,13 +40,13 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="รหัสลูกค้า"
+          [label]="'PMRT01A_CUSTOMER_CODE_LABEL' | translate"
           formControlName="customerCode"
-          placeholder="เช่น CUS-001"
+          [placeholder]="'PMRT01A_CUSTOMER_CODE_PLACEHOLDER' | translate"
           [required]="true"
           [errorMessages]="{
-            required: 'กรุณากรอกรหัสลูกค้า',
-            maxlength: 'รหัสลูกค้าต้องไม่เกิน 30 ตัวอักษร',
+            required: ('PMRT01A_REQUIRED_CUSTOMER_CODE' | translate),
+            maxlength: ('PMRT01A_MAXLEN_CUSTOMER_CODE' | translate),
           }"
         ></sic-input>
       </div>
@@ -56,7 +56,7 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="เลขประจำตัวผู้เสียภาษี"
+          [label]="'PMRT01A_TAX_ID_LABEL' | translate"
           placeholder="0-0000-00000-00-0"
           [mask]="'0-0000-00000-00-0'"
           formControlName="taxId"
@@ -68,13 +68,13 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="ชื่อบริษัท (อังกฤษ)"
+          [label]="'PMRT01A_COMPANY_NAME_EN_LABEL' | translate"
           formControlName="companyNameEn"
           placeholder="ABC Corporation"
           [required]="true"
           [errorMessages]="{
-            required: 'กรุณากรอกชื่อบริษัท (อังกฤษ)',
-            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร',
+            required: ('PMRT01A_REQUIRED_COMPANY_NAME_EN' | translate),
+            maxlength: ('PMRT01A_MAXLEN_COMPANY_NAME' | translate),
           }"
         ></sic-input>
       </div>
@@ -84,13 +84,13 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="ชื่อบริษัท (ไทย)"
+          [label]="'PMRT01A_COMPANY_NAME_LOCAL_LABEL' | translate"
           formControlName="companyNameLocal"
-          placeholder="บริษัท เอบีซี จำกัด"
+          [placeholder]="'PMRT01A_COMPANY_NAME_LOCAL_PLACEHOLDER' | translate"
           [required]="true"
           [errorMessages]="{
-            required: 'กรุณากรอกชื่อบริษัท (ไทย)',
-            maxlength: 'ชื่อบริษัทต้องไม่เกิน 255 ตัวอักษร',
+            required: ('PMRT01A_REQUIRED_COMPANY_NAME_LOCAL' | translate),
+            maxlength: ('PMRT01A_MAXLEN_COMPANY_NAME' | translate),
           }"
         ></sic-input>
       </div>
@@ -100,9 +100,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="ผู้ติดต่อ"
+          [label]="'PMRT01A_CONTACT_PERSON_LABEL' | translate"
           formControlName="contactPerson"
-          placeholder="ชื่อผู้ประสานงาน"
+          [placeholder]="'PMRT01A_CONTACT_PERSON_PLACEHOLDER' | translate"
         ></sic-input>
       </div>
 
@@ -111,9 +111,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-combobox
-          label="ประเทศ"
+          [label]="'PMRT01A_COUNTRY_LABEL' | translate"
           formControlName="countryId"
-          placeholder="เลือกประเทศ"
+          [placeholder]="'PMRT01A_COUNTRY_PLACEHOLDER' | translate"
           [apiUrl]="service.apiGetComboboxCountry"
           (selectionChanged)="onCountryChange($event)"
         >
@@ -125,7 +125,7 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input-area
-          label="ที่อยู่ (อังกฤษ)"
+          [label]="'PMRT01A_ADDRESS_EN_LABEL' | translate"
           formControlName="addressEn"
           placeholder="123 Main Street"
           [rows]="2"
@@ -137,9 +137,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input-area
-          label="ที่อยู่ (ไทย)"
+          [label]="'PMRT01A_ADDRESS_LOCAL_LABEL' | translate"
           formControlName="addressLocal"
-          placeholder="123 ถนนสุขุมวิท"
+          [placeholder]="'PMRT01A_ADDRESS_LOCAL_PLACEHOLDER' | translate"
           [rows]="2"
         ></sic-input-area>
       </div>
@@ -149,9 +149,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-combobox
-          label="จังหวัด"
+          [label]="'PMRT01A_PROVINCE_LABEL' | translate"
           formControlName="provinceId"
-          placeholder="เลือกจังหวัด"
+          [placeholder]="'PMRT01A_PROVINCE_PLACEHOLDER' | translate"
           [apiUrl]="service.apiGetComboboxProvince"
           [params]="{ countryId: $safeNavigationMigration(data.formGroup.get('countryId')?.value) }"
           (selectionChanged)="onProvinceChange($event)"
@@ -162,9 +162,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-combobox
-          label="อำเภอ"
+          [label]="'PMRT01A_DISTRICT_LABEL' | translate"
           formControlName="districtId"
-          placeholder="เลือกอำเภอ"
+          [placeholder]="'PMRT01A_DISTRICT_PLACEHOLDER' | translate"
           [apiUrl]="service.apiGetComboboxDistrict"
           [params]="{ provinceId: $safeNavigationMigration(data.formGroup.get('provinceId')?.value) }"
           (selectionChanged)="onDistrictChange($event)"
@@ -175,9 +175,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-combobox
-          label="ตำบล"
+          [label]="'PMRT01A_SUBDISTRICT_LABEL' | translate"
           formControlName="subDistrictId"
-          placeholder="เลือกตำบล"
+          [placeholder]="'PMRT01A_SUBDISTRICT_PLACEHOLDER' | translate"
           [apiUrl]="service.apiGetComboboxSubDistrict"
           [params]="{ districtId: $safeNavigationMigration(data.formGroup.get('districtId')?.value) }"
           (selectionChanged)="onSubDistrictChange($event)"
@@ -189,7 +189,7 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input label="รหัสไปรษณีย์" formControlName="zipCode" placeholder="10110"></sic-input>
+        <sic-input [label]="'PMRT01A_ZIPCODE_LABEL' | translate" formControlName="zipCode" placeholder="10110"></sic-input>
       </div>
 
       <!-- Email -->
@@ -197,12 +197,12 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input
-          label="อีเมล"
+          [label]="'PMRT01A_EMAIL_LABEL' | translate"
           formControlName="email"
           placeholder="example@company.com"
           [errorMessages]="{
-            email: 'กรุณากรอกอีเมลให้ถูกต้อง',
-            maxlength: 'อีเมลต้องไม่เกิน 320 ตัวอักษร',
+            email: ('PMRT01A_INVALID_EMAIL' | translate),
+            maxlength: ('PMRT01A_MAXLEN_EMAIL' | translate),
           }"
         ></sic-input>
       </div>
@@ -212,7 +212,7 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-input-phone
-          label="เบอร์โทรศัพท์"
+          [label]="'PMRT01A_PHONE_LABEL' | translate"
           formControlName="phoneNumber"
           placeholder="081-234-5678"
         ></sic-input-phone>
@@ -230,9 +230,9 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
         <sic-tiptap-editor
-          label="หมายเหตุ"
+          [label]="'PMRT01A_REMARK_LABEL' | translate"
           formControlName="remark"
-          placeholderInput="ข้อมูลเพิ่มเติม (ถ้ามี)..."
+          [placeholderInput]="'PMRT01A_REMARK_PLACEHOLDER' | translate"
           minHeightInput="120px"
         ></sic-tiptap-editor>
       </div>
@@ -247,7 +247,7 @@
             formControlName="isActive"
             class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
           />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+          <span class="text-[var(--text-active)]">{{ 'PMRT01A_ACTIVE_LABEL' | translate }}</span>
         </label>
       </div>
 
@@ -256,11 +256,11 @@
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]"
       >
         <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">
-          <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          <i class="bi bi-arrow-left"></i> {{ 'PMRT01A_BACK_BUTTON' | translate }}
         </sic-button>
         <sic-button [type]="'submit'" variant="solid" color="primary">
           <i class="bi bi-floppy"></i>
-          {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+          {{ isEdit ? ('PMRT01A_SAVE_BUTTON' | translate) : ('PMRT01A_CREATE_BUTTON' | translate) }}
         </sic-button>
       </div>
     </div>

@@ -3,6 +3,7 @@ import { Component, OnInit, ViewChild, computed, inject, signal, ChangeDetection
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import {
   SicKanbanComponent,
@@ -34,6 +35,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     SicGridPanelComponent,
     SicGridPanelTemplate,
     Pmdt10AComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt10.component.html',
   styleUrls: ['./pmdt10.component.css'],
@@ -46,6 +48,7 @@ export class Pmdt10Component implements OnInit {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   @ViewChild('taskModal') taskModal?: Pmdt10AComponent;
 
@@ -123,12 +126,14 @@ export class Pmdt10Component implements OnInit {
   ];
 
   // Options
-  readonly priorityOptions = [
-    { value: 'Critical', text: '🔥 วิกฤต' },
-    { value: 'High', text: '🔴 สูง' },
-    { value: 'Medium', text: '🟡 ปานกลาง' },
-    { value: 'Low', text: '🟢 ต่ำ' },
-  ];
+  get priorityOptions() {
+    return [
+      { value: 'Critical', text: this.translate.instant('PMDT10_PRIO_CRITICAL') },
+      { value: 'High', text: this.translate.instant('PMDT10_PRIO_HIGH') },
+      { value: 'Medium', text: this.translate.instant('PMDT10_PRIO_MEDIUM') },
+      { value: 'Low', text: this.translate.instant('PMDT10_PRIO_LOW') },
+    ];
+  }
 
   // Computed Specifications Options
   specOptions = computed(() => {
@@ -410,16 +415,16 @@ export class Pmdt10Component implements OnInit {
     selectable: false,
     showToolbar: false,
     column: [
-      { label: 'รหัส Task', name: 'taskCode', type: 'taskCode', minWidth: 100 },
-      { label: 'ชื่อ Task', name: 'taskName', type: 'taskName', minWidth: 150 },
+      { label: this.translate.instant('PMDT10_COL_TASK_CODE'), name: 'taskCode', type: 'taskCode', minWidth: 100 },
+      { label: this.translate.instant('PMDT10_COL_TASK_NAME'), name: 'taskName', type: 'taskName', minWidth: 150 },
       { label: 'Specification (Trace)', name: 'specificationCode', type: 'specTrace', minWidth: 160 },
       { label: 'Work Package', name: 'workPackageName', type: 'wpName', minWidth: 120 },
-      { label: 'ผู้รับผิดชอบ', name: 'assignees', type: 'assigneeList', minWidth: 160 },
-      { label: 'Manday (จริง/แผน)', name: 'actualManday', type: 'mandayText', minWidth: 120 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
-      { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', minWidth: 100 },
-      { label: 'กำหนดส่ง', name: 'endDate', type: 'endDateText', minWidth: 110 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 80 },
+      { label: this.translate.instant('PMDT10_COL_ASSIGNEE'), name: 'assignees', type: 'assigneeList', minWidth: 160 },
+      { label: this.translate.instant('PMDT10_COL_MANDAY'), name: 'actualManday', type: 'mandayText', minWidth: 120 },
+      { label: this.translate.instant('PMDT10_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 100 },
+      { label: this.translate.instant('PMDT10_COL_PRIORITY'), name: 'priority', type: 'priorityBadge', minWidth: 100 },
+      { label: this.translate.instant('PMDT10_COL_DUE_DATE'), name: 'endDate', type: 'endDateText', minWidth: 110 },
+      { label: this.translate.instant('PMDT10_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 80 },
     ],
   };
 
@@ -461,16 +466,16 @@ export class Pmdt10Component implements OnInit {
   deleteTask(task: TaskResponse, event?: Event, grid?: SicGridPanelComponent): void {
     if (event) event.stopPropagation();
     this.dialog
-      .confirm('ยืนยันการลบ', `คุณต้องการลบ Task "${task.taskName}" (${task.taskCode}) ใช่หรือไม่?`)
+      .confirm(this.translate.instant('PMDT10_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT10_CONFIRM_DELETE_MSG', { name: task.taskName, code: task.taskCode }))
       .then((confirmed) => {
         if (!confirmed) return;
         this.service.deleteTask(task.id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบ Task เรียบร้อย');
+            this.dialog.success(this.translate.instant('PMDT10_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT10_DELETE_SUCCESS_MSG'));
             this.allTasks.set(this.allTasks().filter((t) => t.id !== task.id));
             grid?.reload();
           },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+          error: (err) => this.dialog.error(this.translate.instant('PMDT10_DELETE_ERROR_TITLE'), err.message),
         });
       });
   }
@@ -508,7 +513,7 @@ export class Pmdt10Component implements OnInit {
         }
       },
       error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        this.dialog.error(this.translate.instant('PMDT10_UPDATE_STATUS_ERROR_TITLE'), err.message);
         this.loadProjectData(this.projectId()!);
       },
     });

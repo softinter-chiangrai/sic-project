@@ -6,7 +6,7 @@
     @if (isLoading()) {
         <div class="flex items-center justify-center py-8">
             <div class="w-8 h-8 border-3 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-            <span class="ml-3 text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</span>
+            <span class="ml-3 text-sm text-[var(--text-muted)]">{{ 'APPROVAL_LOADING_TEXT' | translate }}</span>
         </div>
     }
 
@@ -14,13 +14,13 @@
     @if (!isLoading() && !approval()) {
         <div class="text-center py-8">
             <i class="bi bi-inbox text-4xl text-[var(--text-muted)] opacity-30"></i>
-            <p class="mt-2 text-sm text-[var(--text-muted)]">ไม่พบข้อมูลการอนุมัติ</p>
+            <p class="mt-2 text-sm text-[var(--text-muted)]">{{ 'APPROVAL_NO_DATA_TEXT' | translate }}</p>
             <button
                 (click)="loadApproval()"
                 class="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
             >
                 <i class="bi bi-arrow-repeat"></i>
-                โหลดใหม่
+                {{ 'APPROVAL_RELOAD_BUTTON' | translate }}
             </button>
         </div>
     }
@@ -49,7 +49,7 @@
             </div>
 
             <div class="text-sm text-[var(--text-muted)]">
-                <span>ขอโดย: </span>
+                <span>{{ 'APPROVAL_REQUESTED_BY_LABEL' | translate }} </span>
                 <span class="font-medium text-[var(--text-active)]">{{ approvalData.requestedByName }}</span>
                 <span class="mx-1">·</span>
                 <span>{{ approvalData.requestedDate | sicDate: null : 'DD/MM/YYYY HH:mm' }}</span>
@@ -65,7 +65,7 @@
 
         @if (approvalData.comment) {
             <div class="text-sm text-[var(--text)] bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
-                <span class="text-[var(--text-muted)]">หมายเหตุ: </span>
+                <span class="text-[var(--text-muted)]">{{ 'APPROVAL_COMMENT_LABEL' | translate }} </span>
                 {{ approvalData.comment }}
             </div>
         }
@@ -74,7 +74,7 @@
         <div class="border-t border-[var(--border)] pt-4">
             <h4 class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
                 <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-                ขั้นตอนการอนุมัติ
+                {{ 'APPROVAL_STEPS_TITLE' | translate }}
             </h4>
 
             <div class="space-y-0">
@@ -104,12 +104,12 @@
                                 </span>
                                 @if (step.isCurrent) {
                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                                        ดำเนินการ
+                                        {{ 'APPROVAL_IN_PROGRESS_BADGE' | translate }}
                                     </span>
                                 }
                                 @if (step.status === 'SKIPPED') {
                                     <span class="inline-block px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-400">
-                                        ข้าม
+                                        {{ 'APPROVAL_SKIPPED_BADGE' | translate }}
                                     </span>
                                 }
                                 @if (step.approverRole) {
@@ -121,7 +121,7 @@
 
                             @if (step.approverName) {
                                 <div class="text-sm text-[var(--text)]">
-                                    <span class="text-[var(--text-muted)]">ผู้ดำเนินการ: </span>
+                                    <span class="text-[var(--text-muted)]">{{ 'APPROVAL_APPROVER_LABEL' | translate }} </span>
                                     {{ step.approverName }}
                                 </div>
                             }
@@ -141,7 +141,7 @@
                             @if (step.timeoutDays) {
                                 <div class="text-xs text-[var(--text-muted)] mt-0.5 flex items-center gap-1">
                                     <i class="bi bi-clock"></i>
-                                    <span>กำหนดภายใน {{ step.timeoutDays }} วัน</span>
+                                    <span>{{ 'APPROVAL_TIMEOUT_TEXT' | translate: { days: step.timeoutDays } }}</span>
                                     @if (step.timeoutAction && step.timeoutAction !== 'NONE') {
                                         <span class="text-[10px] px-1.5 py-0.2 bg-[var(--border)] rounded text-[var(--text)]">
                                             ({{ step.timeoutAction }})
@@ -160,16 +160,16 @@
             <div class="border-t border-[var(--border)] pt-4">
                 <h4 class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
                     <i class="bi bi-tools text-[var(--crm-primary)]"></i>
-                    ดำเนินการ
+                    {{ 'APPROVAL_ACTIONS_TITLE' | translate }}
                 </h4>
 
                 <!-- Comment Input -->
                 <sic-input-area
-                    label="ความคิดเห็น (สำหรับปฏิเสธ/ขอแก้ไข)"
+                    [label]="'APPROVAL_COMMENT_INPUT_LABEL' | translate"
                     [(ngModel)]="comment"
                     [ngModelOptions]="{ standalone: true }"
                     [rows]="2"
-                    placeholder="เพิ่มความคิดเห็น..."
+                    [placeholder]="'APPROVAL_COMMENT_PLACEHOLDER' | translate"
                     class="mb-3"
                 ></sic-input-area>
 
@@ -183,7 +183,7 @@
                             (click)="approve()"
                         >
                             <i class="bi bi-check2"></i>
-                            อนุมัติ
+                            {{ 'APPROVAL_APPROVE_BUTTON' | translate }}
                         </sic-button>
                     }
 
@@ -195,7 +195,7 @@
                             (click)="reject()"
                         >
                             <i class="bi bi-x-lg"></i>
-                            ปฏิเสธ
+                            {{ 'APPROVAL_REJECT_BUTTON' | translate }}
                         </sic-button>
                     }
 
@@ -207,7 +207,7 @@
                             (click)="requestRevision()"
                         >
                             <i class="bi bi-pencil"></i>
-                            ขอแก้ไข
+                            {{ 'APPROVAL_REVISE_BUTTON' | translate }}
                         </sic-button>
                     }
 
@@ -219,7 +219,7 @@
                             (click)="cancel()"
                         >
                             <i class="bi bi-x-lg"></i>
-                            ยกเลิก
+                            {{ 'APPROVAL_CANCEL_BUTTON' | translate }}
                         </sic-button>
                     }
 
@@ -230,7 +230,7 @@
                         (click)="refresh()"
                     >
                         <i class="bi bi-arrow-repeat"></i>
-                        รีเฟรช
+                        {{ 'APPROVAL_REFRESH_BUTTON' | translate }}
                     </sic-button>
                 </div>
             </div>
@@ -241,7 +241,7 @@
             <div class="border-t border-[var(--border)] pt-4">
                 <h4 class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
                     <i class="bi bi-list-ul text-[var(--crm-primary)]"></i>
-                    ประวัติการดำเนินการ
+                    {{ 'APPROVAL_HISTORY_TITLE' | translate }}
                 </h4>
 
                 <div class="space-y-2 max-h-48 overflow-y-auto">

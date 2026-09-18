@@ -7,13 +7,13 @@
         <div>
           <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-palette2 text-[var(--crm-primary)]"></i>
-            การตรวจทานการออกแบบ
+            {{ 'PMDT09_PAGE_TITLE' | translate }}
             <span class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
               Figma Ready
             </span>
           </h1>
           <p class="text-sm text-[var(--text-muted)] mt-0.5">
-            ตรวจทานดีไซน์ UI/UX, Mockup, Flow Diagram และ Interactive Prototypes จาก Figma แบบเรียลไทม์
+            {{ 'PMDT09_PAGE_DESC' | translate }}
           </p>
         </div>
       </div>
@@ -27,7 +27,7 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md active:scale-95"
       >
         <i class="bi bi-plus-lg"></i>
-        <span>สร้าง Design Review</span>
+        <span>{{ 'PMDT09_CREATE_BTN' | translate }}</span>
       </button>
     </div>
   </div>
@@ -40,7 +40,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัส, ชื่องาน, ผู้สร้าง, รายการที่ตรวจ..."
+        [placeholder]="'PMDT09_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -60,7 +60,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMDT09_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -71,7 +71,7 @@
         [options]="typeSelectOptions"
         [ngModel]="filterType()"
         (ngModelChange)="onTypeChange($event)"
-        placeholder="📋 ทุกประเภท"
+        [placeholder]="'PMDT09_TYPE_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -82,7 +82,7 @@
         [options]="severitySelectOptions"
         [ngModel]="filterSeverity()"
         (ngModelChange)="onSeverityChange($event)"
-        placeholder="⚠️ ทุกระดับความรุนแรง"
+        [placeholder]="'PMDT09_SEVERITY_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -92,7 +92,7 @@
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-20 gap-3.5">
       <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm font-medium text-[var(--text-muted)] animate-pulse">กำลังโหลดข้อมูล Design Review & Figma Canvas...</p>
+      <p class="text-sm font-medium text-[var(--text-muted)] animate-pulse">{{ 'PMDT09_LOADING_TEXT' | translate }}</p>
     </div>
   }
 
@@ -127,7 +127,7 @@
                   type="button"
                   (click)="openExternalFigma(review.figmaUrl)"
                   class="p-2 rounded-xl bg-white/20 text-white backdrop-blur-md hover:bg-white/30 transition-all shadow-md"
-                  title="เปิดในแท็บใหม่ Figma"
+                  [title]="'PMDT09_OPEN_FIGMA_NEW_TAB' | translate"
                 >
                   <i class="bi bi-box-arrow-up-right"></i>
                 </button>
@@ -148,8 +148,8 @@
               <!-- Fallback Mockup Placeholder when no Figma link is set -->
               <div class="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900 text-neutral-400 p-6 text-center">
                 <i class="bi bi-image text-3xl opacity-40 mb-1.5"></i>
-                <span class="text-xs font-medium text-neutral-300">ไม่มีลิงก์ Figma Design</span>
-                <span class="text-[10px] text-neutral-500 mt-0.5">กดแก้ไขเพื่อแนบลิงก์ Figma Prototype</span>
+                <span class="text-xs font-medium text-neutral-300">{{ 'PMDT09_NO_FIGMA_LINK' | translate }}</span>
+                <span class="text-[10px] text-neutral-500 mt-0.5">{{ 'PMDT09_ATTACH_FIGMA_HINT' | translate }}</span>
               </div>
             }
 
@@ -160,7 +160,7 @@
               </span>
               @if (review.status?.toUpperCase() === 'CHANGED') {
                 <span class="text-[11px] px-2.5 py-0.5 rounded-full font-semibold shadow-sm backdrop-blur-md bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                  รอส่งอนุมัติ
+                  {{ 'PMDT09_PENDING_APPROVAL' | translate }}
                 </span>
               } @else if (review.approvalStatus) {
                 <span [class]="getApprovalStatusClass(review.approvalStatus) + ' text-[11px] px-2.5 py-0.5 rounded-full font-semibold shadow-sm backdrop-blur-md'">
@@ -194,7 +194,7 @@
 
               <!-- Cleaned Description (HTML stripped) -->
               <p class="text-xs text-[var(--text-muted)] line-clamp-2 mt-1 leading-relaxed">
-                {{ cleanHtml(review.description) || 'ไม่มีรายละเอียดเพิ่มเติม' }}
+                {{ cleanHtml(review.description) || ('PMDT09_NO_DESC' | translate) }}
               </p>
             </div>
 
@@ -205,12 +205,12 @@
                 <div class="flex items-center gap-1.5 min-w-0 flex-1">
                   <i class="bi bi-person-circle text-[var(--crm-primary)] text-sm shrink-0"></i>
                   <div class="truncate">
-                    <span class="text-[var(--text-active)] font-medium" [title]="review.createdBy || 'ไม่ระบุผู้สร้าง'">
-                      {{ review.createdBy || 'ไม่ระบุผู้สร้าง' }}
+                    <span class="text-[var(--text-active)] font-medium" [title]="review.createdBy || ('PMDT09_NO_CREATOR' | translate)">
+                      {{ review.createdBy || ('PMDT09_NO_CREATOR' | translate) }}
                     </span>
                     @if (review.reviewer && review.reviewer !== review.createdBy) {
-                      <span class="text-[10px] text-[var(--text-muted)] ml-1" [title]="'ผู้ตรวจ: ' + review.reviewer">
-                        (ตรวจ: {{ review.reviewer }})
+                      <span class="text-[10px] text-[var(--text-muted)] ml-1" [title]="('PMDT09_REVIEWER_PREFIX' | translate) + review.reviewer">
+                        ({{ 'PMDT09_REVIEW_TAG' | translate }}{{ review.reviewer }})
                       </span>
                     }
                   </div>
@@ -218,7 +218,7 @@
 
                 <!-- Severity -->
                 <div class="flex items-center gap-1.5 shrink-0">
-                  <span class="text-[11px] text-[var(--text-muted)]">ระดับ:</span>
+                  <span class="text-[11px] text-[var(--text-muted)]">{{ 'PMDT09_SEVERITY_LABEL' | translate }}</span>
                   <span [class]="getSeverityClass(review.severity) + ' px-2.5 py-0.5 rounded text-[11px] font-semibold'">
                     {{ review.severity }}
                   </span>
@@ -233,10 +233,10 @@
               >
                 <span class="flex items-center gap-1.5 font-medium">
                   <i class="bi bi-chat-dots-fill"></i>
-                  <span>{{ (review.comments?.length || 0) }} ความคิดเห็น</span>
+                  <span>{{ (review.comments?.length || 0) }} {{ 'PMDT09_COMMENTS_COUNT_SUFFIX' | translate }}</span>
                 </span>
                 <span class="text-[11px] flex items-center gap-1 font-semibold">
-                  {{ activeCommentCardId() === review.id ? 'ซ่อน' : '+ แสดง/เพิ่มความเห็น' }}
+                  {{ activeCommentCardId() === review.id ? ('PMDT09_HIDE' | translate) : ('PMDT09_SHOW_ADD_COMMENT' | translate) }}
                   <i class="bi" [class.bi-chevron-up]="activeCommentCardId() === review.id" [class.bi-chevron-down]="activeCommentCardId() !== review.id"></i>
                 </span>
               </button>
@@ -262,7 +262,7 @@
                     }
                   </div>
                 } @else {
-                  <p class="text-[11px] text-[var(--text-muted)] text-center py-1">ยังไม่มีความคิดเห็น</p>
+                  <p class="text-[11px] text-[var(--text-muted)] text-center py-1">{{ 'PMDT09_NO_COMMENTS' | translate }}</p>
                 }
 
                 <!-- Add Comment Input Box (Simple comment, no type) -->
@@ -270,7 +270,7 @@
                   <div class="flex items-center gap-2">
                     <input
                       type="text"
-                      placeholder="พิมพ์ความคิดเห็นของคุณ..."
+                      [placeholder]="'PMDT09_COMMENT_PLACEHOLDER' | translate"
                       [value]="newCommentText()[review.id] || ''"
                       (input)="setCommentText(review.id, $any($event.target).value)"
                       (keyup.enter)="addCardComment(review.id)"
@@ -287,7 +287,7 @@
                       } @else {
                         <i class="bi bi-send-fill text-[11px]"></i>
                       }
-                      <span>ส่ง</span>
+                      <span>{{ 'PMDT09_SEND' | translate }}</span>
                     </button>
                   </div>
                 </div>
@@ -308,7 +308,7 @@
                     type="button"
                     (click)="openLivePreview(review)"
                     class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 hover:bg-[var(--crm-primary)]/20 transition-all flex items-center gap-1"
-                    title="เปิดหน้าจอ Figma Live"
+                    [title]="'PMDT09_LIVE_PREVIEW_TITLE' | translate"
                   >
                     <i class="bi bi-arrows-angle-expand"></i>
                     <span>Live Preview</span>
@@ -318,7 +318,7 @@
                   type="button"
                   (click)="goToEdit(review.id)"
                   class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-                  title="แก้ไข / ตรวจแบบ"
+                  [title]="'PMDT09_EDIT_REVIEW_TITLE' | translate"
                 >
                   <i class="bi bi-pencil-square text-sm"></i>
                 </button>
@@ -326,7 +326,7 @@
                   type="button"
                   (click)="onDeleteDesignReview(review)"
                   class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-                  title="ลบ Design Review"
+                  [title]="'PMDT09_DELETE_REVIEW_TITLE' | translate"
                 >
                   <i class="bi bi-trash text-sm"></i>
                 </button>
@@ -338,14 +338,14 @@
       } @empty {
         <div class="col-span-full py-16 text-center border border-dashed border-[var(--border)] rounded-2xl bg-[var(--sidebar)]/50 p-8">
           <i class="bi bi-palette text-5xl text-[var(--text-muted)] opacity-30 block mb-3"></i>
-          <h3 class="text-lg font-semibold text-[var(--text-active)]">ไม่พบรายการ Design Review</h3>
-          <p class="text-sm text-[var(--text-muted)] mt-1">ปรับตัวกรองค้นหา หรือเริ่มต้นสร้างรายการ Design Review ใหม่</p>
+          <h3 class="text-lg font-semibold text-[var(--text-active)]">{{ 'PMDT09_EMPTY_TITLE' | translate }}</h3>
+          <p class="text-sm text-[var(--text-muted)] mt-1">{{ 'PMDT09_EMPTY_DESC' | translate }}</p>
           <button
             (click)="goToAdd()"
             class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all shadow-sm"
           >
             <i class="bi bi-plus-lg"></i>
-            <span>สร้าง Design Review</span>
+            <span>{{ 'PMDT09_CREATE_BTN' | translate }}</span>
           </button>
         </div>
       }
@@ -392,7 +392,7 @@
                 </span>
                 @if (review.status?.toUpperCase() === 'CHANGED') {
                   <span class="text-[10px] px-2 py-0.2 rounded-full font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                    รอส่งอนุมัติ
+                    {{ 'PMDT09_PENDING_APPROVAL' | translate }}
                   </span>
                 } @else if (review.approvalStatus) {
                   <span [class]="getApprovalStatusClass(review.approvalStatus) + ' text-[10px] px-2 py-0.2 rounded-full font-medium'">
@@ -417,7 +417,7 @@
                 type="button"
                 (click)="modalPrev()"
                 class="px-2.5 py-1 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                title="ย้อนกลับ"
+                [title]="'PMDT09_BACK_TITLE' | translate"
               >
                 <i class="bi bi-skip-backward-fill"></i>
                 <span class="hidden sm:inline">Prev</span>
@@ -426,7 +426,7 @@
                 type="button"
                 (click)="modalNext()"
                 class="px-2.5 py-1 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                title="ถัดไป"
+                [title]="'PMDT09_NEXT_TITLE' | translate"
               >
                 <span class="hidden sm:inline">Next</span>
                 <i class="bi bi-skip-forward-fill"></i>
@@ -436,7 +436,7 @@
                 type="button"
                 (click)="modalRestart()"
                 class="px-2.5 py-1 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-amber-500 transition-all flex items-center gap-1"
-                title="เริ่มใหม่"
+                [title]="'PMDT09_RESTART_TITLE' | translate"
               >
                 <i class="bi bi-arrow-counterclockwise"></i>
                 <span class="hidden sm:inline">Restart</span>
@@ -445,7 +445,7 @@
                 type="button"
                 (click)="modalToggleHints()"
                 class="px-2.5 py-1 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-indigo-500 transition-all flex items-center gap-1"
-                title="เปิด/ปิด Hotspot Hints"
+                [title]="'PMDT09_HINTS_TITLE' | translate"
               >
                 <i class="bi bi-lightbulb"></i>
                 <span class="hidden sm:inline">Hints</span>
@@ -456,7 +456,7 @@
               type="button"
               (click)="openExternalFigma(review.figmaUrl)"
               class="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all flex items-center gap-1.5 shadow-xs"
-              title="เปิดในแท็บใหม่ Figma"
+              [title]="'PMDT09_OPEN_FIGMA_NEW_TAB' | translate"
             >
               <i class="bi bi-box-arrow-up-right"></i>
               <span class="hidden md:inline">Open in Figma</span>
@@ -466,7 +466,7 @@
               type="button"
               (click)="toggleModalFullscreen()"
               class="p-1.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all shadow-xs"
-              [title]="isModalFullscreen() ? 'ย่อหน้าต่าง' : 'ขยายเต็มจอ'"
+              [title]="isModalFullscreen() ? ('PMDT09_COLLAPSE_TITLE' | translate) : ('PMDT09_EXPAND_TITLE' | translate)"
             >
               <i [class]="isModalFullscreen() ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
             </button>
@@ -475,7 +475,7 @@
               type="button"
               (click)="closeLivePreview()"
               class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
-              title="ปิดหน้าต่าง"
+              [title]="'PMDT09_CLOSE_TITLE' | translate"
             >
               <i class="bi bi-x-lg text-base"></i>
             </button>
@@ -487,7 +487,7 @@
           @if (isModalFigmaLoading()) {
             <div class="absolute inset-0 bg-neutral-950/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 text-white">
               <div class="w-10 h-10 border-4 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
-              <span class="text-sm tracking-wide text-neutral-300 font-medium">กำลังโหลด Figma Interactive Canvas...</span>
+              <span class="text-sm tracking-wide text-neutral-300 font-medium">{{ 'PMDT09_LOADING_CANVAS' | translate }}</span>
             </div>
           }
 
@@ -502,12 +502,12 @@
           } @else {
             <div class="text-center text-neutral-400 p-8">
               <i class="bi bi-exclamation-triangle text-4xl block mb-2 text-amber-500"></i>
-              <p class="text-base font-semibold text-white">ไม่พบลิงก์ Figma Design ในรายการนี้</p>
+              <p class="text-base font-semibold text-white">{{ 'PMDT09_NO_FIGMA_IN_ITEM' | translate }}</p>
               <button
                 (click)="goToEdit(review.id); closeLivePreview()"
                 class="mt-4 px-4 py-2 rounded-xl bg-[var(--crm-primary)] text-white text-xs font-medium"
               >
-                ไปที่หน้าแก้ไขเพื่อเพิ่มลิงก์ Figma
+                {{ 'PMDT09_GO_TO_EDIT_ADD_LINK' | translate }}
               </button>
             </div>
           }
@@ -524,7 +524,7 @@
               (click)="goToEdit(review.id); closeLivePreview()"
               class="text-[var(--crm-primary)] hover:underline font-medium"
             >
-              แก้ไขรายละเอียด &rarr;
+              {{ 'PMDT09_EDIT_DETAIL_LINK' | translate }} &rarr;
             </button>
           </div>
         </div>

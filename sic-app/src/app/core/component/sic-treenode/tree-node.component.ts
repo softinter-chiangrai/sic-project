@@ -2,6 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output, signal, ChangeDetectionStrategy } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 export interface TreeNode {
   id: string;
@@ -20,7 +21,7 @@ export interface TreeNode {
 @Component({
   selector: 'app-tree-node',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <tr class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
@@ -85,7 +86,7 @@ export interface TreeNode {
           [class.dark:bg-gray-700]="!node.isActive"
           [class.dark:text-gray-400]="!node.isActive"
         >
-          {{ node.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+          {{ node.isActive ? ('TREE_NODE_STATUS_ACTIVE' | translate) : ('TREE_NODE_STATUS_INACTIVE' | translate) }}
         </span>
       </td>
       <td class="px-4 py-3 text-center">
@@ -93,21 +94,21 @@ export interface TreeNode {
           <button
             (click)="onEdit.emit(node)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-            title="แก้ไข"
+            [title]="'TREE_NODE_EDIT_TITLE' | translate"
           >
             <i class="bi bi-pencil"></i>
           </button>
           <button
             (click)="onPermissions.emit(node)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-purple-500 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-all"
-            title="กำหนดสิทธิ์"
+            [title]="'TREE_NODE_PERMISSIONS_TITLE' | translate"
           >
             <i class="bi bi-shield-lock"></i>
           </button>
           <button
             (click)="onDelete.emit(node)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            title="ลบ"
+            [title]="'TREE_NODE_DELETE_TITLE' | translate"
             [disabled]="node.children.length > 0"
           >
             <i class="bi bi-trash"></i>

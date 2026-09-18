@@ -20,7 +20,7 @@
     <button
       type="button"
       class="grid h-8 w-8 flex-shrink-0 place-items-center rounded-lg text-[var(--text-muted)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer"
-      aria-label="ปิด"
+      [attr.aria-label]="'DRAWER_CLOSE_LABEL' | translate"
       (click)="close()"
     >
       <i class="bi bi-x-lg"></i>

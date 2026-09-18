@@ -11,9 +11,9 @@
           </div>
           <div>
             <h3 class="text-lg font-bold text-[var(--text-active)]">
-              {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
+              {{ isEdit ? ('PMDT10_EDIT_TASK_TITLE' | translate) : ('PMDT10_NEW_TASK_TITLE' | translate) }}
             </h3>
-            <p class="text-xs text-[var(--text-muted)]">กำหนดรายละเอียดงานและผูกโยงเข้ากับ Specification</p>
+            <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_MODAL_DESC' | translate }}</p>
           </div>
         </div>
         <button
@@ -31,16 +31,16 @@
         <!-- Specification (Required Link) -->
         <div class="p-3.5 rounded-xl border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5">
           <label class="block text-xs font-semibold text-[var(--crm-primary)] uppercase tracking-wider mb-1">
-            <i class="bi bi-file-earmark-code mr-1"></i> ผูกโยงกับ Specification (Requirement Traceability) <span class="text-red-500">*</span>
+            <i class="bi bi-file-earmark-code mr-1"></i> {{ 'PMDT10_SPEC_TRACE_LABEL' | translate }} <span class="text-red-500">*</span>
           </label>
           <sic-combobox
             formControlName="specificationId"
             [options]="specOptions"
-            placeholder="เลือก Specification ที่เกี่ยวข้อง..."
+            [placeholder]="'PMDT10_SPEC_SELECT_PH' | translate"
             [clearable]="false"
           ></sic-combobox>
           @if (form.get('specificationId')?.touched && form.get('specificationId')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือก Specification</p>
+            <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT10_SPEC_REQUIRED_MSG' | translate }}</p>
           }
         </div>
 
@@ -52,11 +52,11 @@
           <sic-combobox
             formControlName="workPackageId"
             [options]="wpOptions"
-            placeholder="เลือก Work Package..."
+            [placeholder]="'PMDT10_WP_SELECT_PH' | translate"
             [clearable]="false"
           ></sic-combobox>
           @if (form.get('workPackageId')?.touched && form.get('workPackageId')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาเลือก Work Package</p>
+            <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT10_WP_REQUIRED_MSG' | translate }}</p>
           }
         </div>
 
@@ -64,40 +64,40 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              รหัส Task <span class="text-red-500">*</span>
+              {{ 'PMDT10_TASK_CODE_LABEL' | translate }} <span class="text-red-500">*</span>
             </label>
             <input
               type="text"
               formControlName="taskCode"
-              placeholder="เช่น TK-001"
+              [placeholder]="'PMDT10_TASK_CODE_PH' | translate"
               class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
             />
             @if (form.get('taskCode')?.touched && form.get('taskCode')?.invalid) {
-              <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Task</p>
+              <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT10_TASK_CODE_REQUIRED_MSG' | translate }}</p>
             }
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              ชื่อ Task <span class="text-red-500">*</span>
+              {{ 'PMDT10_TASK_NAME_LABEL' | translate }} <span class="text-red-500">*</span>
             </label>
             <input
               type="text"
               formControlName="taskName"
-              placeholder="ระบุชื่องานที่ต้องทำ..."
+              [placeholder]="'PMDT10_TASK_NAME_PH' | translate"
               class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
             />
             @if (form.get('taskName')?.touched && form.get('taskName')?.invalid) {
-              <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Task</p>
+              <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT10_TASK_NAME_REQUIRED_MSG' | translate }}</p>
             }
           </div>
         </div>
 
         <!-- Description -->
         <div>
-          <label class="block text-sm font-medium text-[var(--text)] mb-1">คำอธิบายรายละเอียดงาน</label>
+          <label class="block text-sm font-medium text-[var(--text)] mb-1">{{ 'PMDT10_TASK_DESC_LABEL' | translate }}</label>
           <sic-tiptap-editor
             formControlName="description"
-            placeholderInput="ระบุรายละเอียด แนวทางการทำงาน หรือสิ่งที่ต้องส่งมอบ..."
+            [placeholderInput]="'PMDT10_TASK_DESC_PH' | translate"
             minHeightInput="120px"
           ></sic-tiptap-editor>
         </div>
@@ -105,12 +105,12 @@
         <!-- Assignees -->
         <div>
           <sic-combobox
-            label="ผู้รับผิดชอบร่วม"
+            [label]="'PMDT10_ASSIGNEE_FIELD_LABEL' | translate"
             formControlName="assigneeIds"
             [apiUrl]="assignedToApiUrl"
             valueField="value"
             textField="text"
-            placeholder="พิมพ์หรือเลือกสมาชิกทีม..."
+            [placeholder]="'PMDT10_ASSIGNEE_FIELD_PH' | translate"
             [clearable]="true"
             [multiple]="true"
             (selectionChanged)="onAssigneeSelectionChanged($event)"
@@ -121,17 +121,17 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <sic-datepicker
-              label="วันที่เริ่ม"
+              [label]="'PMDT10_START_DATE_LABEL' | translate"
               formControlName="startDate"
               [required]="true"
-              placeholder="เลือกวันที่เริ่ม"
+              [placeholder]="'PMDT10_START_DATE_PH' | translate"
             ></sic-datepicker>
           </div>
           <div>
             <sic-timepicker
-              label="เวลาเริ่ม"
+              [label]="'PMDT10_START_TIME_LABEL' | translate"
               formControlName="startTime"
-              placeholder="เลือกเวลา"
+              [placeholder]="'PMDT10_TIME_PH' | translate"
             ></sic-timepicker>
           </div>
         </div>
@@ -140,17 +140,17 @@
         <div class="grid grid-cols-2 gap-4">
           <div>
             <sic-datepicker
-              label="วันที่สิ้นสุด (กำหนดส่ง)"
+              [label]="'PMDT10_END_DATE_LABEL' | translate"
               formControlName="endDate"
               [required]="true"
-              placeholder="เลือกวันที่สิ้นสุด"
+              [placeholder]="'PMDT10_END_DATE_PH' | translate"
             ></sic-datepicker>
           </div>
           <div>
             <sic-timepicker
-              label="เวลาสิ้นสุด"
+              [label]="'PMDT10_END_TIME_LABEL' | translate"
               formControlName="endTime"
-              placeholder="เลือกเวลา"
+              [placeholder]="'PMDT10_TIME_PH' | translate"
             ></sic-timepicker>
           </div>
         </div>
@@ -159,7 +159,7 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div>
             <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              Manday ประมาณการ <span class="text-red-500">*</span>
+              {{ 'PMDT10_ESTIMATE_MANDAY_LABEL' | translate }} <span class="text-red-500">*</span>
             </label>
             <input
               type="number"
@@ -171,7 +171,7 @@
           </div>
           <div>
             <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              Manday ใช้จริง
+              {{ 'PMDT10_ACTUAL_MANDAY_LABEL' | translate }}
             </label>
             <input
               type="number"
@@ -184,10 +184,10 @@
           </div>
           <div>
             <sic-combobox
-              label="ความสำคัญ"
+              [label]="'PMDT10_PRIORITY_FIELD_LABEL' | translate"
               formControlName="priority"
               [options]="priorityOptions"
-              placeholder="เลือกความสำคัญ"
+              [placeholder]="'PMDT10_PRIORITY_SELECT_PH' | translate"
             ></sic-combobox>
           </div>
         </div>
@@ -195,7 +195,7 @@
         <!-- Color Picker -->
         <div>
           <sic-colorpicker
-            label="สีแท็กของ Task"
+            [label]="'PMDT10_COLOR_TAG_LABEL' | translate"
             formControlName="color"
             placeholder="#3B82F6"
           ></sic-colorpicker>
@@ -217,7 +217,7 @@
             [disabled]="isSaving"
             class="px-5 py-2.5 rounded-xl text-sm font-medium border border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
           >
-            ยกเลิก
+            {{ 'PMDT10_CANCEL_BTN' | translate }}
           </button>
           <button
             type="submit"
@@ -226,10 +226,10 @@
           >
             @if (isSaving) {
               <i class="bi bi-arrow-repeat animate-spin"></i>
-              <span>กำลังบันทึก...</span>
+              <span>{{ 'PMDT10_SAVING_TEXT' | translate }}</span>
             } @else {
               <i class="bi bi-check-lg"></i>
-              <span>{{ isEdit ? 'บันทึกการแก้ไข' : 'สร้าง Task' }}</span>
+              <span>{{ isEdit ? ('PMDT10_SAVE_EDIT_BTN' | translate) : ('PMDT10_CREATE_TASK_BTN' | translate) }}</span>
             }
           </button>
         </div>

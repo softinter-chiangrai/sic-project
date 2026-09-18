@@ -26,6 +26,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt17a',
@@ -43,12 +44,14 @@ import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-lin
     SicTimepickerComponent,
     SicTiptapEditorComponent,
     SicCopyLinkComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt17A.component.html',
   styleUrls: ['./pmdt17A.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
+  private translate = inject(TranslateService);
   private service = inject(Pmdt17AService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -73,25 +76,25 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   isLoadingFlows = signal(false);
 
   ticketTypeOptions = [
-    { value: 'BUG_SUPPORT', label: 'แจ้งปัญหาระบบ' },
-    { value: 'DATA_ISSUE', label: 'ข้อมูลผิดพลาด' },
-    { value: 'USER_SUPPORT', label: 'การใช้งานผู้ใช้' },
-    { value: 'CHANGE_REQUEST', label: 'ขอปรับเปลี่ยน' },
+    { value: 'BUG_SUPPORT', label: this.translate.instant('PMDT17_TYPE_BUG_SUPPORT') },
+    { value: 'DATA_ISSUE', label: this.translate.instant('PMDT17_TYPE_DATA_ISSUE') },
+    { value: 'USER_SUPPORT', label: this.translate.instant('PMDT17_TYPE_USER_SUPPORT') },
+    { value: 'CHANGE_REQUEST', label: this.translate.instant('PMDT17_TYPE_CHANGE_REQUEST') },
   ];
 
   severityOptions = [
-    { value: 'LOW', label: 'ต่ำ (ภายใน 48 ชม.)' },
-    { value: 'MEDIUM', label: 'ปานกลาง (ภายใน 24 ชม.)' },
-    { value: 'HIGH', label: 'สูง (ภายใน 8 ชม.)' },
-    { value: 'CRITICAL', label: 'วิกฤต (ภายใน 2 ชม.)' },
+    { value: 'LOW', label: this.translate.instant('PMDT17_SEV_LOW') },
+    { value: 'MEDIUM', label: this.translate.instant('PMDT17_SEV_MEDIUM') },
+    { value: 'HIGH', label: this.translate.instant('PMDT17_SEV_HIGH') },
+    { value: 'CRITICAL', label: this.translate.instant('PMDT17_SEV_CRITICAL') },
   ];
 
   statusOptions = [
-    { value: 'OPEN', label: 'เปิดรับเรื่อง' },
-    { value: 'IN_PROGRESS', label: 'กำลังดำเนินการ' },
-    { value: 'WAITING_CUSTOMER', label: 'รอลูกค้า' },
-    { value: 'RESOLVED', label: 'แก้ไขเรียบร้อย' },
-    { value: 'CLOSED', label: 'ปิดงาน' },
+    { value: 'OPEN', label: this.translate.instant('PMDT17_STATUS_OPEN_INTAKE') },
+    { value: 'IN_PROGRESS', label: this.translate.instant('PMDT17_STATUS_IN_PROGRESS') },
+    { value: 'WAITING_CUSTOMER', label: this.translate.instant('PMDT17_STATUS_WAITING_CUST_SHORT') },
+    { value: 'RESOLVED', label: this.translate.instant('PMDT17_STATUS_RESOLVED_DONE') },
+    { value: 'CLOSED', label: this.translate.instant('PMDT17_STATUS_CLOSED_WORK') },
   ];
 
   apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;
@@ -122,7 +125,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   deleteAiHistory(id: string, e: MouseEvent): void {
     e.stopPropagation();
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(
+      this.translate.instant('PMDT17_CONFIRM_DELETE_TITLE'),
+      this.translate.instant('PMDT17_CONFIRM_DELETE_HISTORY_MSG'),
+    ).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.deleteHistory('ma_ticket', targetId, id);
         this.loadAiHistory();
@@ -132,7 +138,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
   clearAllAiHistory(): void {
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของตั๋วนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(
+      this.translate.instant('PMDT17_CONFIRM_CLEAR_HISTORY_TITLE'),
+      this.translate.instant('PMDT17_CONFIRM_CLEAR_HISTORY_MSG'),
+    ).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.clearHistories('ma_ticket', targetId);
         this.loadAiHistory();
@@ -142,7 +151,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
   openAiModal(): void {
     if (this.isLocked() || this.isView()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(
+        this.translate.instant('PMDT17_CANNOT_PERFORM_TITLE'),
+        this.translate.instant('PMDT17_DOC_VIEW_LOCKED_MSG'),
+      );
       return;
     }
     const currentType = (this.formData?.form?.value as any)?.ticketType || 'BUG_SUPPORT';
@@ -180,7 +192,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAi.set(false);
         if (!draft) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาตั๋วได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(
+            this.translate.instant('PMDT17_NO_DATA_FOUND_TITLE'),
+            this.translate.instant('PMDT17_AI_GENERATE_FAILED_MSG'),
+          );
           return;
         }
 
@@ -199,12 +214,18 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         // ดึงข้อมูลหัวข้อ (Title) ประเภท ระดับความเร่งด่วน รายละเอียดปัญหา (Tiptap) และแนวทางแก้ไข (Tiptap) ลงในฟอร์มทันที
         this.applyDraftToForm(draft);
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลตั๋วแจ้งปัญหา (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.dialog.success(
+          this.translate.instant('PMDT17_AI_GENERATE_SUCCESS_TITLE'),
+          this.translate.instant('PMDT17_AI_DRAFT_APPLIED_MSG').replace('{version}', String(historyItem.versionNo)),
+        );
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
         console.error('AI ma ticket generation error:', err);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.dialog.error(
+          this.translate.instant('PMDT17_ERROR_TITLE'),
+          err?.error?.message || err?.message || this.translate.instant('PMDT17_AI_CONTENT_FAILED_MSG'),
+        );
       },
     });
   }
@@ -224,17 +245,26 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
   pasteMaTicketDraft(draft: any): void {
     if (this.isLocked() || this.isView()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(
+        this.translate.instant('PMDT17_CANNOT_PERFORM_TITLE'),
+        this.translate.instant('PMDT17_DOC_VIEW_LOCKED_MSG'),
+      );
       return;
     }
     if (!draft) {
-      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      this.dialog.warn(
+        this.translate.instant('PMDT17_NO_DATA_FOUND_TITLE'),
+        this.translate.instant('PMDT17_NO_PASTE_DATA_MSG'),
+      );
       return;
     }
 
     this.applyDraftToForm(draft);
     this.showAiModal.set(false);
-    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูล MA Ticket จาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(
+      this.translate.instant('PMDT17_PASTE_SUCCESS_TITLE'),
+      this.translate.instant('PMDT17_PASTE_SUCCESS_MSG'),
+    );
   }
 
   copyDraft(draft: any, historyId?: string): void {
@@ -318,7 +348,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถโหลดข้อมูลตั๋วได้');
+        this.dialog.error(this.translate.instant('PMDT17_ERROR_TITLE'), err.message || this.translate.instant('PMDT17_LOAD_TICKET_FAILED_MSG'));
       },
     });
   }
@@ -347,7 +377,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     this.formData.form.markAllAsTouched();
     if (this.formData.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูล', 'โปรดตรวจสอบข้อมูลในฟอร์มให้ครบถ้วน');
+      this.dialog.warn(
+        this.translate.instant('PMDT17_FILL_DATA_TITLE'),
+        this.translate.instant('PMDT17_CHECK_FORM_MSG'),
+      );
       return;
     }
 
@@ -370,20 +403,20 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
             documentCode: formValue.ticketNo,
             documentTitle: formValue.title || (formValue.ticketNo ? ('MA Ticket ' + formValue.ticketNo) : 'MA Ticket'),
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติปิดตั๋ว/ดำเนินงาน MA Ticket'
+            comment: this.translate.instant('PMDT17_SUBMIT_APPROVAL_COMMENT')
           }).subscribe({
             next: () => {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
+              this.dialog.success(this.translate.instant('PMDT17_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT17_SAVE_TICKET_SUCCESS_MSG'));
               this.router.navigate(['/feature/pm/ma-ticket']);
             },
             error: (err) => {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
+              this.dialog.success(this.translate.instant('PMDT17_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT17_SAVE_TICKET_SUCCESS_MSG'));
               this.router.navigate(['/feature/pm/ma-ticket']);
             }
           });
@@ -391,13 +424,13 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
           this.isSaving.set(false);
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลตั๋วแจ้งปัญหา MA เรียบร้อย');
+          this.dialog.success(this.translate.instant('PMDT17_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT17_SAVE_TICKET_SUCCESS_MSG'));
           this.router.navigate(['/feature/pm/ma-ticket']);
         }
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกข้อมูลได้');
+        this.dialog.error(this.translate.instant('PMDT17_ERROR_TITLE'), err.message || this.translate.instant('PMDT17_SAVE_FAILED_MSG'));
       },
     });
   }

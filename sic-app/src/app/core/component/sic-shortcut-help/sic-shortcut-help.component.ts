@@ -2,11 +2,12 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, HostListener, inject } from '@angular/core';
 import { KeyboardShortcutService } from '../../services/keyboard-shortcut.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'sic-shortcut-help',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-shortcut-help.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

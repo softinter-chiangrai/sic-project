@@ -6,7 +6,7 @@
     <div
       class="w-14 h-14 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
     ></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
+    <p class="text-[var(--text-muted)]">{{ 'PMRT03_LOADING_TEXT' | translate }}</p>
   </div>
 }
 
@@ -20,7 +20,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
     >
       <i class="bi bi-arrow-left"></i>
-      กลับไปหน้ารายการ
+      {{ 'PMRT03_ERROR_BACK_BTN' | translate }}
     </button>
   </div>
 }
@@ -34,7 +34,7 @@
         <button
           (click)="goBack()"
           class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-          title="กลับ"
+          [title]="'PMRT03_BACK_TITLE' | translate"
         >
           <i class="bi bi-arrow-left text-xl"></i>
         </button>
@@ -58,7 +58,7 @@
               <span
                 class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
               >
-                ปิดใช้งาน
+                {{ 'PMRT03_INACTIVE_BADGE' | translate }}
               </span>
             }
           </div>
@@ -67,7 +67,7 @@
               <span><i class="bi bi-person"></i> {{ p.customerName }}</span>
             }
             @if (p.contractNo) {
-              <span><i class="bi bi-file-earmark-text"></i> สัญญา: {{ p.contractNo }}</span>
+              <span><i class="bi bi-file-earmark-text"></i> {{ 'PMRT03_CONTRACT_PREFIX' | translate }} {{ p.contractNo }}</span>
             }
             @if (p.projectManager) {
               <span><i class="bi bi-person-badge"></i> PM: {{ p.projectManager }}</span>
@@ -86,7 +86,7 @@
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
         >
           <i class="bi bi-pencil"></i>
-          แก้ไขโครงการ
+          {{ 'PMRT03_EDIT_PROJECT_BTN' | translate }}
         </button>
       </div>
     </div>
@@ -145,7 +145,7 @@
       <div class="flex items-center justify-between mb-4">
         <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-heart-pulse text-[var(--crm-danger)]"></i>
-          สุขภาพโครงการ
+          {{ 'PMRT03_HEALTH_TITLE' | translate }}
         </h3>
         <span
           [class]="
@@ -192,7 +192,7 @@
               </span>
             </div>
           </div>
-          <p class="text-sm font-medium text-[var(--text-muted)] mt-2">คะแนนสุขภาพรวม</p>
+          <p class="text-sm font-medium text-[var(--text-muted)] mt-2">{{ 'PMRT03_HEALTH_SCORE_LABEL' | translate }}</p>
         </div>
         <div class="md:col-span-2">
           <div class="space-y-3">
@@ -233,7 +233,7 @@
     <div>
       <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
         <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
-        เมนูด่วน
+        {{ 'PMRT03_QUICK_ACTIONS_TITLE' | translate }}
       </h2>
       <div
         class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 gap-2"
@@ -347,10 +347,10 @@
         <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
           <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-layers text-[var(--crm-primary)]"></i>
-            Phase ล่าสุด
+            {{ 'PMRT03_RECENT_PHASES_TITLE' | translate }}
           </h3>
           <button (click)="goToPhases()" class="text-xs text-[var(--crm-primary)] hover:underline">
-            ดูทั้งหมด →
+            {{ 'PMRT03_VIEW_ALL_BTN' | translate }} →
           </button>
         </div>
         <div class="divide-y divide-[var(--border)]">
@@ -389,7 +389,7 @@
               </div>
             </div>
           } @empty {
-            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">ไม่มี Phase</div>
+            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">{{ 'PMRT03_NO_PHASE_TEXT' | translate }}</div>
           }
         </div>
       </div>
@@ -401,10 +401,10 @@
         <div class="flex items-center justify-between px-5 py-3 border-b border-[var(--border)]">
           <h3 class="font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
-            งานล่าสุด
+            {{ 'PMRT03_RECENT_TASKS_TITLE' | translate }}
           </h3>
           <button (click)="goToTasks()" class="text-xs text-[var(--crm-primary)] hover:underline">
-            ดูทั้งหมด →
+            {{ 'PMRT03_VIEW_ALL_BTN' | translate }} →
           </button>
         </div>
         <div class="divide-y divide-[var(--border)]">
@@ -441,7 +441,7 @@
               </div>
             </div>
           } @empty {
-            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">ไม่มีงาน</div>
+            <div class="px-5 py-6 text-center text-[var(--text-muted)] text-sm">{{ 'PMRT03_NO_TASK_TEXT' | translate }}</div>
           }
         </div>
       </div>
@@ -455,15 +455,15 @@
       <i class="bi bi-kanban"></i>
     </div>
     <div class="text-center">
-      <h3 class="text-lg font-semibold text-[var(--text-active)]">ยังไม่ได้เลือกโครงการ</h3>
-      <p class="text-sm text-[var(--text-muted)] mt-1">กรุณาเลือกโครงการจากหน้ารายการโครงการเพื่อดูภาพรวม Dashboard</p>
+      <h3 class="text-lg font-semibold text-[var(--text-active)]">{{ 'PMRT03_NO_PROJECT_TITLE' | translate }}</h3>
+      <p class="text-sm text-[var(--text-muted)] mt-1">{{ 'PMRT03_NO_PROJECT_DESC' | translate }}</p>
     </div>
     <button
       (click)="goBack()"
       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all shadow-sm cursor-pointer"
     >
       <i class="bi bi-briefcase"></i>
-      ไปหน้ารายการโครงการ
+      {{ 'PMRT03_GO_TO_PROJECT_LIST_BTN' | translate }}
     </button>
   </div>
 }

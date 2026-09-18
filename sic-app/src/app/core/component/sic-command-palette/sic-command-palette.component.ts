@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import {
   ContractHit,
   CustomerHit,
@@ -30,12 +31,13 @@ type PaletteRow =
 @Component({
   selector: 'sic-command-palette',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './sic-command-palette.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SicCommandPaletteComponent {
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
   protected readonly search = inject(GlobalSearchService);
 
   @ViewChild('searchInput') searchInputRef?: ElementRef<HTMLInputElement>;
@@ -57,13 +59,15 @@ export class SicCommandPaletteComponent {
     ];
   });
 
-  private readonly sectionMeta: Record<PaletteRow['kind'], { title: string; icon: string }> = {
-    recent: { title: 'ค้นหาล่าสุด', icon: 'bi-clock-history' },
-    menu: { title: 'เมนู', icon: 'bi-compass' },
-    project: { title: 'โครงการ', icon: 'bi-folder2-open' },
-    contract: { title: 'สัญญา', icon: 'bi-file-earmark-text' },
-    customer: { title: 'ลูกค้า', icon: 'bi-building' },
-  };
+  private get sectionMeta(): Record<PaletteRow['kind'], { title: string; icon: string }> {
+    return {
+      recent: { title: this.translate.instant('COMMAND_PALETTE_SECTION_RECENT'), icon: 'bi-clock-history' },
+      menu: { title: this.translate.instant('COMMAND_PALETTE_SECTION_MENU'), icon: 'bi-compass' },
+      project: { title: this.translate.instant('COMMAND_PALETTE_SECTION_PROJECT'), icon: 'bi-folder2-open' },
+      contract: { title: this.translate.instant('COMMAND_PALETTE_SECTION_CONTRACT'), icon: 'bi-file-earmark-text' },
+      customer: { title: this.translate.instant('COMMAND_PALETTE_SECTION_CUSTOMER'), icon: 'bi-building' },
+    };
+  }
 
   readonly sections = computed(() => {
     const out: { title: string; icon: string; rows: { row: PaletteRow; index: number }[] }[] = [];

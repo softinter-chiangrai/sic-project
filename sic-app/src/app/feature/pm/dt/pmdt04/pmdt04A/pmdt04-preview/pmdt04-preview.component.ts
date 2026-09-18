@@ -1,13 +1,14 @@
 import { Component, inject, Input, OnChanges, SimpleChanges, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicDatePipe } from '../../../../../../core/pipes/sic-date.pipe';
 import { RequirementPreviewData } from '../pmdt04A.model';
 
 @Component({
   selector: 'sic-requirement-preview',
   standalone: true,
-  imports: [CommonModule, SicDatePipe],
+  imports: [CommonModule, SicDatePipe, TranslateModule],
   template: `
     <div class="requirement-preview">
       <div class="requirement-preview__header">
@@ -29,14 +30,14 @@ import { RequirementPreviewData } from '../pmdt04A.model';
 
       <div class="requirement-preview__body">
         <div class="requirement-preview__section">
-          <h3 class="section-title">📋 ข้อมูลทั่วไป</h3>
+          <h3 class="section-title">📋 {{ 'PMDT04_GENERAL_INFO_HEADING' | translate }}</h3>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">ประเภท</span>
+              <span class="info-label">{{ 'PMDT04_TYPE_LABEL' | translate }}</span>
               <span class="info-value">{{ data.requirementType || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">ลำดับความสำคัญ</span>
+              <span class="info-label">{{ 'PMDT04_PRIORITY_LABEL' | translate }}</span>
               <span class="info-value" [class]="'priority--' + data.priority.toLowerCase()">
                 {{ getPriorityLabel(data.priority) }}
               </span>
@@ -45,21 +46,21 @@ import { RequirementPreviewData } from '../pmdt04A.model';
         </div>
 
         <div class="requirement-preview__section">
-          <h3 class="section-title">📝 รายละเอียด</h3>
+          <h3 class="section-title">📝 {{ 'PMDT04_DESCRIPTION_LABEL' | translate }}</h3>
           <div class="content-body" [innerHTML]="sanitizeHtml(data.description)"></div>
         </div>
 
         @if (data.acceptanceCriteria) {
           <div class="requirement-preview__section">
-            <h3 class="section-title">✅ เงื่อนไขการยอมรับ</h3>
+            <h3 class="section-title">✅ {{ 'PMDT04_ACCEPTANCE_CRITERIA_HEADING' | translate }}</h3>
             <div class="content-body" [innerHTML]="sanitizeHtml(data.acceptanceCriteria)"></div>
           </div>
         }
       </div>
 
       <div class="requirement-preview__footer">
-        <span class="text-muted">เอกสารนี้ใช้เพื่อการตรวจสอบและอนุมัติ</span>
-        <span class="text-muted">สร้างเมื่อ {{ data.createdAt | sicDate : null : 'DD/MM/YYYY HH:mm' }}</span>
+        <span class="text-muted">{{ 'PMDT04_PREVIEW_FOOTER_NOTE' | translate }}</span>
+        <span class="text-muted">{{ 'PMDT04_CREATED_AT_PREFIX' | translate }}{{ data.createdAt | sicDate : null : 'DD/MM/YYYY HH:mm' }}</span>
       </div>
     </div>
   `,
@@ -226,6 +227,7 @@ export class SicRequirementPreviewComponent implements OnChanges {
   @Input() data!: RequirementPreviewData;
 
   private sanitizer = inject(DomSanitizer);
+  private translate = inject(TranslateService);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
@@ -250,20 +252,20 @@ export class SicRequirementPreviewComponent implements OnChanges {
 
   getStatusText(status: string): string {
     const s = (status || '').trim().toLowerCase();
-    if (['draft', 'ร่าง'].includes(s)) return 'ร่าง';
-    if (['in review', 'in_review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'อยู่ระหว่างตรวจสอบ';
-    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
-    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
-    if (['cancelled', 'ยกเลิก'].includes(s)) return 'ยกเลิก';
+    if (['draft', 'ร่าง'].includes(s)) return this.translate.instant('PMDT04_STATUS_DRAFT');
+    if (['in review', 'in_review', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return this.translate.instant('PMDT04_STATUS_IN_REVIEW');
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return this.translate.instant('PMDT04_STATUS_APPROVED');
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return this.translate.instant('PMDT04_STATUS_CHANGED');
+    if (['cancelled', 'ยกเลิก'].includes(s)) return this.translate.instant('PMDT04_STATUS_CANCELLED');
     return status || '-';
   }
 
   getPriorityLabel(priority: string): string {
     const map: Record<string, string> = {
-      Must: 'ต้องมี',
-      Should: 'ควรมี',
-      Could: 'อาจมี',
-      "Won't": 'ไม่มี',
+      Must: this.translate.instant('PMDT04_PRIORITY_MUST'),
+      Should: this.translate.instant('PMDT04_PRIORITY_SHOULD'),
+      Could: this.translate.instant('PMDT04_PRIORITY_COULD'),
+      "Won't": this.translate.instant('PMDT04_PRIORITY_WONT'),
     };
     return map[priority] || priority;
   }

@@ -19,6 +19,7 @@ import {
   FormsModule,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, of, Subscription, interval, takeWhile } from 'rxjs';
 import { delay, finalize, tap } from 'rxjs/operators';
 import { environment } from '../../../../../../environments/environment';
@@ -121,9 +122,10 @@ export class Pmdt04AService {
     SicRequirementPreviewComponent,
     SicCardComponent,
     SicCheckboxComponent,
-    SicTiptapEditorComponent,      
+    SicTiptapEditorComponent,
     SicUploadComponent,
     SicDatePipe,
+    TranslateModule,
   ],
   templateUrl: './pmdt04A.component.html',
   styleUrls: ['./pmdt04A.component.css'],
@@ -143,6 +145,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   private readonly customerState = inject(CustomerStateService);
   private readonly http = inject(HttpClient);
   private readonly auth = inject(AuthService);
+  private readonly translate = inject(TranslateService);
   readonly aiHistoryService = inject(AiHistoryService);
 
   // ===== Form =====
@@ -176,7 +179,12 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   private autoSaveInterval = 30000; // 30 seconds
 
   // ===== Source Options =====
-  sourceOptions = ['ลูกค้า', 'BA', 'เอกสาร', 'ประชุม'];
+  sourceOptions = [
+    this.translate.instant('PMDT04_SOURCE_CUSTOMER'),
+    'BA',
+    this.translate.instant('PMDT04_SOURCE_DOCUMENT'),
+    this.translate.instant('PMDT04_SOURCE_MEETING'),
+  ];
 
   // ===== AI Assistant =====
   showAiAssistModal = false;
@@ -239,7 +247,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     })).subscribe({
       next: (draft) => {
         if (!draft) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหา Requirement ได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(this.translate.instant('PMDT04_NO_DATA_TITLE'), this.translate.instant('PMDT04_AI_GENERATE_FAIL_MSG'));
           return;
         }
 
@@ -281,7 +289,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+        this.dialog.error(this.translate.instant('PMDT04_AI_CONTENT_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT04_AI_CONTACT_ERROR_MSG'));
       }
     });
   }
@@ -302,7 +310,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     this.form.markAsDirty();
     this.closeAiAssist();
-    this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูลเวอร์ชันที่เลือกเข้าสู่แบบฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMDT04_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT04_PASTE_SUCCESS_MSG'));
   }
 
   deleteAiHistory(id: string, event: Event): void {
@@ -440,7 +448,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.isLoading = false;
         this.cdr.detectChanges();
         console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Requirement รหัสนี้');
+        this.dialog.error(this.translate.instant('PMDT04_LOAD_FAIL_TITLE'), this.translate.instant('PMDT04_REQ_NOT_FOUND_MSG'));
         this.navigation.navigate(['/feature/pm/requirement']);
       },
     });
@@ -489,7 +497,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       },
       error: () => {
         this.isLoadingFlows = false;
-        console.warn('ไม่สามารถโหลด Approval Flow ได้');
+        console.warn(this.translate.instant('PMDT04_LOAD_APPROVAL_FLOW_FAIL'));
       },
     });
   }
@@ -566,21 +574,21 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     const status = this.getAutoSaveStatus();
     switch (status) {
       case 'saving':
-        return '💾 กำลังบันทึกอัตโนมัติ...';
+        return this.translate.instant('PMDT04_AUTOSAVE_SAVING');
       case 'saved':
-        return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
+        return this.translate.instant('PMDT04_AUTOSAVE_SAVED') + ' ' + this.formatTimeDiff(this.lastAutoSaveTime);
       case 'dirty':
-        return '⏳ ยังไม่ได้บันทึก';
+        return this.translate.instant('PMDT04_AUTOSAVE_DIRTY');
       default:
-        return '💾 บันทึกอัตโนมัติ';
+        return this.translate.instant('PMDT04_AUTOSAVE_IDLE');
     }
   }
 
   private formatTimeDiff(date: Date | null): string {
     if (!date) return '';
     const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-    if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
-    return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
+    if (diff < 60) return this.translate.instant('PMDT04_SECONDS_AGO', { count: diff });
+    return this.translate.instant('PMDT04_MINUTES_AGO', { count: Math.floor(diff / 60) });
   }
 
   // ===== View Mode =====
@@ -595,27 +603,27 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     return {
       requirementCode: value.requirementCode || '...',
       title: value.title || '...',
-      description: value.description || '<em>กรุณากรอกรายละเอียด</em>',
+      description: value.description || `<em>${this.translate.instant('PMDT04_PLEASE_ENTER_DESCRIPTION')}</em>`,
       acceptanceCriteria: value.acceptanceCriteria || '',
       priority: value.priority || 'Must',
       requirementType: value.requirementType || '',
       source: value.source || '',
       businessValue: value.businessValue || '',
-      createdBy: value.createdBy || 'ผู้ใช้งาน',
+      createdBy: value.createdBy || this.translate.instant('PMDT04_DEFAULT_USER_LABEL'),
       version: value.version || 'v1.0',
       status: value.status || 'Draft',
-      projectName: value.projectName || 'กำลังโหลด...',
+      projectName: value.projectName || this.translate.instant('PMDT04_LOADING_ELLIPSIS'),
       createdAt: new Date().toISOString(),
     };
   }
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
+      Draft: this.translate.instant('PMDT04_STATUS_DRAFT'),
+      'In Review': this.translate.instant('PMDT04_STATUS_IN_REVIEW'),
+      Approved: this.translate.instant('PMDT04_STATUS_APPROVED'),
+      Changed: this.translate.instant('PMDT04_STATUS_CHANGED'),
+      Cancelled: this.translate.instant('PMDT04_STATUS_CANCELLED'),
     };
     return map[status] || status;
   }
@@ -635,7 +643,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   async exportRequirement(): Promise<void> {
     const id = this.reqId || this.form.get('id')?.value;
     if (!id) {
-      this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Requirement ก่อนส่งออกเอกสาร');
+      this.dialog.warn(this.translate.instant('PMDT04_NOT_SAVED_TITLE'), this.translate.instant('PMDT04_SAVE_BEFORE_EXPORT_MSG'));
       return;
     }
 
@@ -674,7 +682,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       }
     } catch (error: any) {
       console.error('Export error:', error);
-      this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+      this.dialog.error(this.translate.instant('PMDT04_EXPORT_FAIL_TITLE'), this.translate.instant('PMDT04_JASPER_FAIL_MSG'));
     } finally {
       this.isSaving = false;
       this.cdr.markForCheck();
@@ -684,13 +692,13 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // ===== Submit =====
   submitForApproval() {
     if (!this.selectedFlowId) {
-      this.dialog.warn('กรุณาเลือก Approval Flow', 'ต้องเลือกกระบวนการอนุมัติก่อนส่ง');
+      this.dialog.warn(this.translate.instant('PMDT04_SELECT_APPROVAL_FLOW_TITLE'), this.translate.instant('PMDT04_SELECT_FLOW_BEFORE_SUBMIT_MSG'));
       return;
     }
 
     const data = this.form.value as RequirementModel;
     if (!data.id) {
-      this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Requirement ก่อนส่งขออนุมัติ');
+      this.dialog.warn(this.translate.instant('PMDT04_NOT_SAVED_TITLE'), this.translate.instant('PMDT04_SAVE_BEFORE_SUBMIT_MSG'));
       return;
     }
 
@@ -702,15 +710,15 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         documentTitle: data.title,
         version: data.version,
         flowId: this.selectedFlowId,
-        comment: 'ส่งขออนุมัติ Requirement',
+        comment: this.translate.instant('PMDT04_SUBMIT_APPROVAL_COMMENT'),
       })
       .subscribe({
         next: () => {
-          this.dialog.success('ส่งขออนุมัติสำเร็จ', 'Requirement ถูกส่งเข้าสู่กระบวนการอนุมัติแล้ว');
+          this.dialog.success(this.translate.instant('PMDT04_SUBMIT_SUCCESS_TITLE'), this.translate.instant('PMDT04_SUBMIT_SUCCESS_MSG'));
           this.form.patchValue({ status: 'In Review' });
         },
         error: (err) => {
-          this.dialog.error('ส่งขออนุมัติไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMDT04_SUBMIT_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT04_GENERIC_ERROR_MSG'));
         },
       });
   }
@@ -746,7 +754,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   submit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      this.dialog.warn(this.translate.instant('PMDT04_INVALID_FORM_TITLE'), this.translate.instant('PMDT04_FILL_VALID_FIELDS_MSG'));
       return;
     }
 
@@ -791,32 +799,32 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               documentTitle: data.title,
               version: data.version,
               flowId: this.selectedFlowId,
-              comment: 'ส่งขออนุมัติ Requirement อัตโนมัติขณะบันทึก',
+              comment: this.translate.instant('PMDT04_AUTO_SUBMIT_APPROVAL_COMMENT'),
             })
             .subscribe({
               next: () => {
                 this.isSaving = false;
-                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Requirement เรียบร้อยแล้ว').then(() => {
+                this.dialog.success(this.translate.instant('PMDT04_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT04_SAVE_SUCCESS_MSG')).then(() => {
                   this.navigateBack(data.projectId);
                 });
               },
               error: (err) => {
                 this.isSaving = false;
-                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Requirement เรียบร้อยแล้ว').then(() => {
+                this.dialog.success(this.translate.instant('PMDT04_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT04_SAVE_SUCCESS_MSG')).then(() => {
                   this.navigateBack(data.projectId);
                 });
               },
             });
         } else {
           this.isSaving = false;
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Requirement เรียบร้อยแล้ว').then(() => {
+          this.dialog.success(this.translate.instant('PMDT04_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT04_SAVE_SUCCESS_MSG')).then(() => {
             this.navigateBack(data.projectId);
           });
         }
       },
       error: (error) => {
         this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาด');
+        this.dialog.error(this.translate.instant('PMDT04_SAVE_FAIL_TITLE'), error.message || this.translate.instant('PMDT04_GENERIC_ERROR_MSG'));
       },
     });
   }

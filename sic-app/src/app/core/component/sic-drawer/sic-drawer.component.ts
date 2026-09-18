@@ -8,13 +8,14 @@ import {
   Input,
   Output,
 } from '@angular/core';
+import { TranslateModule } from '@ngx-translate/core';
 
 export type SicDrawerSize = 'sm' | 'md' | 'lg' | 'xl';
 
 @Component({
   selector: 'sic-drawer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-drawer.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

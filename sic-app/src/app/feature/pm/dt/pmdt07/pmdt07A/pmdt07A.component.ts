@@ -34,6 +34,7 @@ import { HttpClient } from '@angular/common/http';
 import { SicCheckboxComponent } from 'sic-ng';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -54,7 +55,8 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
         SicApprovalComponent,
         SicDatePipe,
         Pmdt07PreviewComponent,
-        SicTraceLinkPanelComponent
+        SicTraceLinkPanelComponent,
+        TranslateModule
     ],
     templateUrl: './pmdt07A.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -143,6 +145,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     private readonly http = inject(HttpClient);
     private readonly auth = inject(AuthService);
     readonly aiHistoryService = inject(AiHistoryService);
+    private readonly translate = inject(TranslateService);
 
     apiBaseUrl = environment.apiBaseUrl;
     userApiUrl = '';
@@ -328,7 +331,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         })).subscribe({
             next: (draft) => {
                 if (!draft) {
-                    this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหา Specification ได้ กรุณาลองใหม่อีกครั้ง');
+                    this.dialog.warn(this.translate.instant('PMDT07_AI_NO_DATA_TITLE'), this.translate.instant('PMDT07_AI_NO_DATA_MSG'));
                     return;
                 }
 
@@ -386,7 +389,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.cdr.markForCheck();
             },
             error: (err) => {
-                this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+                this.dialog.error(this.translate.instant('PMDT07_AI_GEN_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT07_AI_CONNECT_ERROR_MSG'));
             }
         });
     }
@@ -420,7 +423,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         this.form.markAsDirty();
         this.closeAiAssist();
-        this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูล Specification เวอร์ชันที่เลือกลงในแบบฟอร์มเรียบร้อยแล้ว');
+        this.dialog.success(this.translate.instant('PMDT07_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT07_PASTE_SUCCESS_MSG'));
     }
 
     deleteAiHistory(id: string, event: Event): void {
@@ -500,7 +503,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             },
             error: () => {
                 this.isLoading = false;
-                this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Specification นี้');
+                this.dialog.error(this.translate.instant('PMDT07_LOAD_FAIL_TITLE'), this.translate.instant('PMDT07_SPEC_NOT_FOUND_MSG'));
                 this.navigation.navigate(['/feature/pm/specification']);
             }
         });
@@ -644,18 +647,18 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     getAutoSaveText(): string {
         const status = this.getAutoSaveStatus();
         switch (status) {
-            case 'saving': return '💾 กำลังบันทึกอัตโนมัติ...';
-            case 'saved': return '✅ บันทึกอัตโนมัติ ' + this.formatTimeDiff(this.lastAutoSaveTime);
-            case 'dirty': return '⏳ ยังไม่ได้บันทึก';
-            default: return '💾 บันทึกอัตโนมัติ';
+            case 'saving': return this.translate.instant('PMDT07_AUTOSAVE_SAVING');
+            case 'saved': return this.translate.instant('PMDT07_AUTOSAVE_SAVED') + ' ' + this.formatTimeDiff(this.lastAutoSaveTime);
+            case 'dirty': return this.translate.instant('PMDT07_AUTOSAVE_DIRTY');
+            default: return this.translate.instant('PMDT07_AUTOSAVE_IDLE');
         }
     }
 
     private formatTimeDiff(date: Date | null): string {
         if (!date) return '';
         const diff = Math.floor((Date.now() - date.getTime()) / 1000);
-        if (diff < 60) return `(${diff} วินาทีที่แล้ว)`;
-        return `(${Math.floor(diff / 60)} นาทีที่แล้ว)`;
+        if (diff < 60) return `(${diff} ${this.translate.instant('PMDT07_SECONDS_AGO')})`;
+        return `(${Math.floor(diff / 60)} ${this.translate.instant('PMDT07_MINUTES_AGO')})`;
     }
 
     // ===== View Mode =====
@@ -673,7 +676,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     printSpecification(): void {
         const id = this.specId || this.form.getRawValue().id;
         if (!id) {
-            this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Specification ก่อนพิมพ์เอกสาร');
+            this.dialog.warn(this.translate.instant('PMDT07_NOT_SAVED_TITLE'), this.translate.instant('PMDT07_SAVE_BEFORE_PRINT_MSG'));
             return;
         }
 
@@ -698,7 +701,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 },
                 error: (err) => {
                     console.error('Print specification error:', err);
-                    this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+                    this.dialog.error(this.translate.instant('PMDT07_PRINT_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
                 },
             });
     }
@@ -707,7 +710,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     exportSpecification(): void {
         const id = this.specId || this.form.getRawValue().id;
         if (!id) {
-            this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Specification ก่อนส่งออกเอกสาร');
+            this.dialog.warn(this.translate.instant('PMDT07_NOT_SAVED_TITLE'), this.translate.instant('PMDT07_SAVE_BEFORE_EXPORT_MSG'));
             return;
         }
 
@@ -732,7 +735,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 },
                 error: (err) => {
                     console.error('Export specification error:', err);
-                    this.dialog.error('เปิดเอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+                    this.dialog.error(this.translate.instant('PMDT07_OPEN_DOC_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
                 },
             });
     }
@@ -741,7 +744,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     submit() {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
-            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+            this.dialog.warn(this.translate.instant('PMDT07_FORM_INVALID_TITLE'), this.translate.instant('PMDT07_FILL_ALL_FIELDS_MSG'));
             return;
         }
 
@@ -783,28 +786,28 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     }).subscribe({
                         next: () => {
                             this.isSaving = false;
-                            this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Specification เรียบร้อยแล้ว').then(() => {
+                            this.dialog.success(this.translate.instant('PMDT07_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT07_SAVE_SUCCESS_MSG')).then(() => {
                                 this.navigateBack(data.projectId);
                             });
                         },
                         error: (err) => {
                             this.isSaving = false;
-                            this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Specification เรียบร้อยแล้ว').then(() => {
+                            this.dialog.success(this.translate.instant('PMDT07_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT07_SAVE_SUCCESS_MSG')).then(() => {
                                 this.navigateBack(data.projectId);
                             });
                         }
                     });
                 } else {
                     this.isSaving = false;
-                    this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Specification เรียบร้อยแล้ว').then(() => {
+                    this.dialog.success(this.translate.instant('PMDT07_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT07_SAVE_SUCCESS_MSG')).then(() => {
                         this.navigateBack(data.projectId);
                     });
                 }
             },
             error: (error) => {
                 this.isSaving = false;
-                const errorMsg = error.error?.message || error.error?.detail || error.message || 'เกิดข้อผิดพลาดในการบันทึก';
-                this.dialog.error('บันทึกไม่สำเร็จ', errorMsg);
+                const errorMsg = error.error?.message || error.error?.detail || error.message || this.translate.instant('PMDT07_SAVE_ERROR_MSG');
+                this.dialog.error(this.translate.instant('PMDT07_SAVE_FAIL_TITLE'), errorMsg);
             }
         });
     }

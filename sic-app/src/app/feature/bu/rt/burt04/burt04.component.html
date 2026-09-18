@@ -6,12 +6,12 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
-        จัดการทีม
+        {{ 'BURT04_TITLE' | translate }}
       </h1>
       <span
         class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
       >
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'BURT04_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <button
@@ -19,7 +19,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
       <i class="bi bi-plus-lg"></i>
-      เพิ่มสมาชิก
+      {{ 'BURT04_ADD_MEMBER_BTN' | translate }}
     </button>
   </div>
 
@@ -33,7 +33,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาชื่อ, อีเมล..."
+        [placeholder]="'BURT04_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -53,7 +53,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="🌐 สถานะทั้งหมด"
+        [placeholder]="'BURT04_STATUS_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -64,7 +64,7 @@
         [options]="roleSelectOptions()"
         [ngModel]="filterRole()"
         (ngModelChange)="onRoleFilterChange($event, grid)"
-        placeholder="📋 ทุกบทบาท"
+        [placeholder]="'BURT04_ROLE_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -87,7 +87,7 @@
           <div>
             <span class="font-medium text-[var(--text-active)]">{{ r.userName }}</span>
             @if (r.isDefault) {
-              <span class="ml-1 text-xs text-[var(--crm-primary)] font-medium">(หลัก)</span>
+              <span class="ml-1 text-xs text-[var(--crm-primary)] font-medium">{{ 'BURT04_DEFAULT_TAG' | translate }}</span>
             }
           </div>
         </div>
@@ -102,7 +102,7 @@
             </span>
           }
           @if (!r.roleNames || r.roleNames.length === 0) {
-            <span class="text-xs text-[var(--text-muted)]">ไม่มีบทบาท</span>
+            <span class="text-xs text-[var(--text-muted)]">{{ 'BURT04_NO_ROLE_TEXT' | translate }}</span>
           }
         </div>
       </ng-template>
@@ -121,7 +121,7 @@
           <button
             (click)="goToEdit(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
-            title="จัดการบทบาท"
+            [title]="'BURT04_MANAGE_ROLE_TITLE' | translate"
           >
             <i class="bi bi-person-gear"></i>
           </button>
@@ -135,7 +135,7 @@
             [class.hover:bg-gray-100]="!r.isActive"
             [class.dark:hover:bg-emerald-500/10]="r.isActive"
             [class.dark:hover:bg-gray-700]="!r.isActive"
-            [title]="r.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
+            [title]="r.isActive ? ('BURT04_DEACTIVATE_TITLE' | translate) : ('BURT04_ACTIVATE_TITLE' | translate)"
           >
             <i class="bi" [class.bi-check-circle-fill]="r.isActive" [class.bi-x-circle]="!r.isActive"></i>
           </button>
@@ -143,7 +143,7 @@
           <button
             (click)="removeMember(r.id, grid)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            title="ลบออกจากทีม"
+            [title]="'BURT04_REMOVE_TITLE' | translate"
           >
             <i class="bi bi-person-dash"></i>
           </button>

@@ -6,7 +6,7 @@
       <button
         (click)="goBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMRT05_BACK_TITLE' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
@@ -32,7 +32,7 @@
             <span
               class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400"
             >
-              ปิดใช้งาน
+              {{ 'PMRT05_INACTIVE_BADGE' | translate }}
             </span>
           }
         </div>
@@ -57,7 +57,7 @@
       <div
         class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'PMRT05_LOADING_TEXT' | translate }}</p>
     </div>
   }
 
@@ -65,7 +65,7 @@
   @if (!isLoading() && requirement(); as req) {
     <sic-card>
       <div>
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-2">คำอธิบาย</p>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider font-semibold mb-2">{{ 'PMRT05_DESCRIPTION_LABEL' | translate }}</p>
 
         <!-- แสดงเนื้อหาแบบเต็มเมื่อขยาย -->
         @if (isExpanded()) {
@@ -81,7 +81,7 @@
             (click)="toggleExpand()"
             class="text-xs font-medium text-[var(--crm-primary)] hover:underline mt-3 inline-flex items-center gap-1.5 focus:outline-none"
           >
-            <span>{{ isExpanded() ? 'ย่อเนื้อหา' : 'ดูเนื้อหาเพิ่มเติม' }}</span>
+            <span>{{ isExpanded() ? ('PMRT05_COLLAPSE_BTN' | translate) : ('PMRT05_SHOW_MORE_BTN' | translate) }}</span>
             <i class="bi" [class.bi-chevron-up]="isExpanded()" [class.bi-chevron-down]="!isExpanded()"></i>
           </button>
         }
@@ -93,7 +93,7 @@
   <div>
     <h2 class="text-lg font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
       <i class="bi bi-grid-3x3-gap-fill text-[var(--crm-primary)]"></i>
-      สร้างเอกสารที่เกี่ยวข้อง
+      {{ 'PMRT05_CREATE_RELATED_DOC_TITLE' | translate }}
     </h2>
     <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
       <!-- ปุ่มสร้าง Diagram (รวม DFD + ER) -->
@@ -142,14 +142,14 @@
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-lg font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-        ความสัมพันธ์
+        {{ 'PMRT05_RELATIONS_TITLE' | translate }}
       </h2>
       <button
         (click)="openAddLinkDialog()"
         class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--crm-primary)] text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
       >
         <i class="bi bi-plus-lg"></i>
-        เพิ่มความสัมพันธ์
+        {{ 'PMRT05_ADD_RELATION_BTN' | translate }}
       </button>
     </div>
 
@@ -158,8 +158,8 @@
         class="text-center py-8 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl"
       >
         <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
-        <p>ยังไม่มีเอกสารที่เชื่อมโยงกับ Requirement นี้</p>
-        <p class="text-sm">สร้างเอกสารใหม่ด้วยปุ่มด้านบน หรือกด "เพิ่มความสัมพันธ์" เพื่อเชื่อมกับเอกสารที่มีอยู่แล้ว</p>
+        <p>{{ 'PMRT05_NO_LINKED_DOCS_TEXT' | translate }}</p>
+        <p class="text-sm">{{ 'PMRT05_NO_LINKED_DOCS_HINT' | translate }}</p>
       </div>
     } @else {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -171,7 +171,7 @@
                 <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
                 Diagrams
               </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ diagrams().length }} รายการ</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ diagrams().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span>
             </div>
             <ul class="mt-2 space-y-1">
               @for (item of diagrams(); track item.id) {
@@ -206,7 +206,7 @@
                 <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
                 Specification
               </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ specList().length }} รายการ</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ specList().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span>
             </div>
             <ul class="mt-2 space-y-1">
               @for (item of specList(); track item.id) {
@@ -232,7 +232,7 @@
                 <i class="bi bi-list-task text-[var(--crm-primary)]"></i>
                 Task
               </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ taskList().length }} รายการ</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ taskList().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span>
             </div>
             <ul class="mt-2 space-y-1">
               @for (item of taskList(); track item.id) {
@@ -258,7 +258,7 @@
                 <i class="bi bi-clipboard-data text-[var(--crm-primary)]"></i>
                 Test Case
               </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ testList().length }} รายการ</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ testList().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span>
             </div>
             <ul class="mt-2 space-y-1">
               @for (item of testList(); track item.id) {
@@ -284,7 +284,7 @@
                 <i class="bi bi-bug text-[var(--crm-danger)]"></i>
                 Bug
               </span>
-              <span class="text-xs text-[var(--text-muted)]">{{ bugList().length }} รายการ</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ bugList().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span>
             </div>
             <ul class="mt-2 space-y-1">
               @for (item of bugList(); track item.id) {
@@ -311,7 +311,7 @@
                 Change Request
               </span>
               <span class="text-xs text-[var(--text-muted)]"
-                >{{ changeRequestList().length }} รายการ</span
+                >{{ changeRequestList().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span
               >
             </div>
             <ul class="mt-2 space-y-1">
@@ -339,7 +339,7 @@
                 Design Review
               </span>
               <span class="text-xs text-[var(--text-muted)]"
-                >{{ designReviewList().length }} รายการ</span
+                >{{ designReviewList().length }} {{ 'PMRT05_ITEMS_UNIT' | translate }}</span
               >
             </div>
             <ul class="mt-2 space-y-1">

@@ -10,7 +10,7 @@
             <i class="bi bi-kanban text-[var(--crm-primary)]"></i>
             Task Board
           </h1>
-          <p class="text-sm text-[var(--text-muted)] mt-0.5">ติดตามสถานะจริงของงานอัตโนมัติตามผลการทดสอบ & Traceability</p>
+          <p class="text-sm text-[var(--text-muted)] mt-0.5">{{ 'PMDT10_PAGE_DESC' | translate }}</p>
         </div>
       </div>
     </div>
@@ -20,36 +20,36 @@
       <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
         <div class="w-2.5 h-2.5 rounded-full bg-blue-500"></div>
         <div>
-          <div class="text-xs text-[var(--text-muted)]">ทั้งหมด</div>
-          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().total }} งาน</div>
+          <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_TOTAL_LABEL' | translate }}</div>
+          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().total }} {{ 'PMDT10_UNIT_TASK' | translate }}</div>
         </div>
       </div>
       <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
         <div class="w-2.5 h-2.5 rounded-full bg-amber-500"></div>
         <div>
-          <div class="text-xs text-[var(--text-muted)]">กำลังทำ</div>
-          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().inProgress }} งาน</div>
+          <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_INPROGRESS_LABEL' | translate }}</div>
+          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().inProgress }} {{ 'PMDT10_UNIT_TASK' | translate }}</div>
         </div>
       </div>
       <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
         <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
         <div>
-          <div class="text-xs text-[var(--text-muted)]">Bug / แก้ไข</div>
-          <div class="text-sm font-bold text-rose-600 dark:text-rose-400">{{ metrics().bug }} งาน</div>
+          <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_BUG_LABEL' | translate }}</div>
+          <div class="text-sm font-bold text-rose-600 dark:text-rose-400">{{ metrics().bug }} {{ 'PMDT10_UNIT_TASK' | translate }}</div>
         </div>
       </div>
       <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
         <div class="w-2.5 h-2.5 rounded-full bg-teal-500"></div>
         <div>
-          <div class="text-xs text-[var(--text-muted)]">Bug แก้ไขเสร็จ</div>
-          <div class="text-sm font-bold text-teal-600 dark:text-teal-400">{{ metrics().bugComplete }} งาน</div>
+          <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_BUG_DONE_LABEL' | translate }}</div>
+          <div class="text-sm font-bold text-teal-600 dark:text-teal-400">{{ metrics().bugComplete }} {{ 'PMDT10_UNIT_TASK' | translate }}</div>
         </div>
       </div>
       <div class="flex items-center gap-3 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
         <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
         <div>
-          <div class="text-xs text-[var(--text-muted)]">สำเร็จ</div>
-          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().done }} งาน ({{ metrics().progress }}%)</div>
+          <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_DONE_LABEL' | translate }}</div>
+          <div class="text-sm font-bold text-[var(--text-active)]">{{ metrics().done }} {{ 'PMDT10_UNIT_TASK' | translate }} ({{ metrics().progress }}%)</div>
         </div>
       </div>
 
@@ -60,7 +60,7 @@
         class="px-4 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all flex items-center gap-2 shadow-lg shadow-[var(--crm-primary)]/20"
       >
         <i class="bi bi-plus-lg"></i>
-        <span>สร้าง Task</span>
+        <span>{{ 'PMDT10_CREATE_TASK_BTN' | translate }}</span>
       </button>
     </div>
   </div>
@@ -68,10 +68,10 @@
   @if (!projectId()) {
     <div class="flex flex-col items-center justify-center gap-3 py-16 text-center border border-dashed border-[var(--border)] rounded-2xl bg-[var(--sidebar)]">
       <i class="bi bi-kanban text-4xl text-[var(--text-muted)] opacity-40"></i>
-      <p class="text-[var(--text)] font-medium">กรุณาเลือกโปรเจกต์ก่อนดู Task Board</p>
-      <p class="text-sm text-[var(--text-muted)]">ไปที่หน้ารายการโปรเจกต์แล้วเลือกโปรเจกต์ที่ต้องการ</p>
+      <p class="text-[var(--text)] font-medium">{{ 'PMDT10_SELECT_PROJECT_MSG' | translate }}</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT10_SELECT_PROJECT_HINT' | translate }}</p>
       <a routerLink="/feature/pm/project" class="mt-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all">
-        ไปหน้ารายการโปรเจกต์
+        {{ 'PMDT10_GO_PROJECT_LIST_BTN' | translate }}
       </a>
     </div>
   } @else {
@@ -88,7 +88,7 @@
           type="text"
           [ngModel]="searchQuery()"
           (ngModelChange)="onSearchQueryChange($event)"
-          placeholder="ค้นหาชื่อ Task, รหัสงาน..."
+          [placeholder]="'PMDT10_SEARCH_PH' | translate"
           class="sic-search-input pl-10 pr-3"
         />
       </div>
@@ -100,7 +100,7 @@
             [options]="specOptions()"
             [ngModel]="selectedSpecId()"
             (ngModelChange)="onSpecFilterChange($event)"
-            placeholder="📜 ทุก Specification"
+            [placeholder]="'PMDT10_SPEC_PH' | translate"
             [clearable]="true"
           ></sic-combobox>
         </div>
@@ -113,7 +113,7 @@
             [options]="wpOptions()"
             [ngModel]="selectedWpId()"
             (ngModelChange)="onWpFilterChange($event)"
-            placeholder="📦 ทุก Work Package"
+            [placeholder]="'PMDT10_WP_PH' | translate"
             [clearable]="true"
           ></sic-combobox>
         </div>
@@ -125,7 +125,7 @@
           [options]="priorityOptions"
           [ngModel]="selectedPriority()"
           (ngModelChange)="onPriorityFilterChange($event)"
-          placeholder="🚩 ทุกความสำคัญ"
+          [placeholder]="'PMDT10_PRIORITY_PH' | translate"
           [clearable]="true"
         ></sic-combobox>
       </div>
@@ -137,7 +137,7 @@
             [options]="assigneeOptions()"
             [ngModel]="selectedAssignee()"
             (ngModelChange)="onAssigneeFilterChange($event)"
-            placeholder="👤 ทุกผู้รับผิดชอบ"
+            [placeholder]="'PMDT10_ASSIGNEE_PH' | translate"
             [clearable]="true"
           ></sic-combobox>
         </div>
@@ -149,7 +149,7 @@
           (click)="clearFilters()"
           class="px-2.5 py-1.5 rounded-lg text-xs font-medium text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all flex items-center gap-1"
         >
-          <i class="bi bi-arrow-counterclockwise"></i> ล้างตัวกรอง
+          <i class="bi bi-arrow-counterclockwise"></i> {{ 'PMDT10_CLEAR_FILTER_BTN' | translate }}
         </button>
       }
     </div>
@@ -170,7 +170,7 @@
         class="px-3 py-1.5 rounded-md text-xs font-medium transition-all flex items-center gap-1.5"
         [class]="viewType() === 'list' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
       >
-        <i class="bi bi-list-task"></i> ตาราง
+        <i class="bi bi-list-task"></i> {{ 'PMDT10_TABLE_VIEW_BTN' | translate }}
       </button>
     </div>
 
@@ -180,7 +180,7 @@
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-20 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-xs text-[var(--text-muted)]">กำลังโหลดข้อมูล Task...</p>
+      <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT10_LOADING_TASK' | translate }}</p>
     </div>
   } @else {
 
@@ -318,7 +318,7 @@
                 type="button"
                 (click)="deleteTask(r, $event, grid)"
                 class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all"
-                title="ลบ Task"
+                [title]="'PMDT10_DELETE_TASK_TITLE' | translate"
               >
                 <i class="bi bi-trash"></i>
               </button>

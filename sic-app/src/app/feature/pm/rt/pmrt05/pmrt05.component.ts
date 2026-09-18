@@ -14,11 +14,12 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { RequirementDetail, TraceLink, RelatedItem, Pmrt05PageData } from './pmrt05.model';
 import { SicTraceLinkPickerComponent } from '../../../../core/component/sic-trace-link-picker/sic-trace-link-picker.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmrt05',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe],
+  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe, TranslateModule],
   templateUrl: './pmrt05.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./pmrt05.component.css'],
@@ -30,6 +31,7 @@ export class Pmrt05Component implements OnInit {
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
   private customerState = inject(CustomerStateService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   isLoading = signal(false);
@@ -115,7 +117,7 @@ export class Pmrt05Component implements OnInit {
         },
         error: (err) => {
           console.error('Load requirement error:', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement นี้');
+          this.dialog.error(this.translate.instant('PMRT05_LOAD_ERROR_TITLE'), this.translate.instant('PMRT05_LOAD_ERROR_MSG'));
           this.navigation.navigate(['/feature/pm/project']);
         },
       });
@@ -328,7 +330,7 @@ export class Pmrt05Component implements OnInit {
     const projId = this.projectId();
     const reqTitle = this.requirement()?.title || '';
     if (!reqId || !projId) {
-      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
+      this.dialog.warn(this.translate.instant('PMRT05_NO_DATA_TITLE'), this.translate.instant('PMRT05_NO_DATA_MSG'));
       return;
     }
     this.customerState.setProject(projId);
@@ -381,7 +383,7 @@ export class Pmrt05Component implements OnInit {
     const reqId = this.requirementId();
     const projId = this.projectId();
     if (!reqId || !projId) {
-      this.dialog.warn('ไม่พบข้อมูล', 'กรุณาระบุ Requirement และ Project');
+      this.dialog.warn(this.translate.instant('PMRT05_NO_DATA_TITLE'), this.translate.instant('PMRT05_NO_DATA_MSG'));
       return;
     }
     this.dialog.open({
@@ -412,11 +414,11 @@ export class Pmrt05Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      Approved: 'อนุมัติแล้ว',
-      Changed: 'เปลี่ยนแปลง',
-      Cancelled: 'ยกเลิก',
+      Draft: this.translate.instant('PMRT05_STATUS_DRAFT'),
+      'In Review': this.translate.instant('PMRT05_STATUS_IN_REVIEW'),
+      Approved: this.translate.instant('PMRT05_STATUS_APPROVED'),
+      Changed: this.translate.instant('PMRT05_STATUS_CHANGED'),
+      Cancelled: this.translate.instant('PMRT05_STATUS_CANCELLED'),
     };
     return map[status] || status;
   }

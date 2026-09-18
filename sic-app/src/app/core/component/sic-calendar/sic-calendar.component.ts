@@ -20,6 +20,7 @@ import type { Subscription } from 'rxjs';
 import dayjs from '../../dayjs';
 import { DateTimeUtil, type CalendarEra } from '../../utils/datetime.util';
 import { DialogService } from '../../services/dialog.service';
+import { TranslateService } from '@ngx-translate/core';
 import { SicButtonComponent } from 'sic-ng';
 import { SicColorpickerComponent } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
@@ -191,6 +192,7 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
   constructor(
     private readonly cdr: ChangeDetectorRef,
     private readonly dialogService: DialogService,
+    private readonly translate: TranslateService,
   ) {
     this.isWideScreen = typeof window !== 'undefined' && window.innerWidth >= 768;
     const now = this.createLocalizedDay();
@@ -520,8 +522,24 @@ export class SicCalendarComponent implements OnInit, OnDestroy, OnChanges {
 
   private generateWeekDays(): void {
     if (this.resolveLocale(this.era) === 'th') {
-      this.weekDays = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
-      this.weekDaysFull = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+      this.weekDays = [
+        this.translate.instant('CALENDAR_WEEKDAY_SUN_SHORT'),
+        this.translate.instant('CALENDAR_WEEKDAY_MON_SHORT'),
+        this.translate.instant('CALENDAR_WEEKDAY_TUE_SHORT'),
+        this.translate.instant('CALENDAR_WEEKDAY_WED_SHORT'),
+        this.translate.instant('CALENDAR_WEEKDAY_THU_SHORT'),
+        this.translate.instant('CALENDAR_WEEKDAY_FRI_SHORT'),
+        this.translate.instant('CALENDAR_WEEKDAY_SAT_SHORT'),
+      ];
+      this.weekDaysFull = [
+        this.translate.instant('CALENDAR_WEEKDAY_SUN_FULL'),
+        this.translate.instant('CALENDAR_WEEKDAY_MON_FULL'),
+        this.translate.instant('CALENDAR_WEEKDAY_TUE_FULL'),
+        this.translate.instant('CALENDAR_WEEKDAY_WED_FULL'),
+        this.translate.instant('CALENDAR_WEEKDAY_THU_FULL'),
+        this.translate.instant('CALENDAR_WEEKDAY_FRI_FULL'),
+        this.translate.instant('CALENDAR_WEEKDAY_SAT_FULL'),
+      ];
       return;
     }
     this.weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];

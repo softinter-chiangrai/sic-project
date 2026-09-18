@@ -5,10 +5,10 @@
         <div class="flex items-center gap-3">
             <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
                 <i class="bi bi-file-text text-[var(--crm-primary)]"></i>
-                รายการ Specification
+                {{ 'PMDT07_HEADER_TITLE' | translate }}
             </h1>
             <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-                {{ totalItems() }} รายการ
+                {{ totalItems() }} {{ 'PMDT07_ITEMS_SUFFIX' | translate }}
             </span>
         </div>
         <div class="flex items-center gap-2">
@@ -16,7 +16,7 @@
                 (click)="goToAdd()"
                 class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
             >
-                <i class="bi bi-plus-lg"></i> เพิ่ม Specification
+                <i class="bi bi-plus-lg"></i> {{ 'PMDT07_ADD_BTN' | translate }}
             </button>
         </div>
     </div>
@@ -28,7 +28,7 @@
             <input
                 type="text"
                 class="sic-search-input pl-10 pr-9"
-                placeholder="ค้นหารหัส, ชื่อ, โมดูล..."
+                [placeholder]="'PMDT07_SEARCH_PLACEHOLDER' | translate"
                 [value]="searchTerm()"
                 (input)="onSearch($event, grid)"
             />
@@ -47,7 +47,7 @@
                 [options]="statusOptions"
                 [ngModel]="filterStatus()"
                 (ngModelChange)="onFilterChange($event, grid)"
-                placeholder="📊 ทุกสถานะ"
+                [placeholder]="'PMDT07_ALL_STATUS_PLACEHOLDER' | translate"
                 [clearable]="true"
             ></sic-combobox>
         </div>
@@ -91,11 +91,11 @@
                 @let r = $any(row);
                 @if (r.status?.toUpperCase() === 'CHANGED') {
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-                        รอส่งอนุมัติ
+                        {{ 'PMDT07_PENDING_SUBMIT_LABEL' | translate }}
                     </span>
                 } @else if (r.status?.toUpperCase() === 'DRAFT') {
                     <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                        ยังไม่อนุมัติ
+                        {{ 'PMDT07_NOT_APPROVED_LABEL' | translate }}
                     </span>
                 } @else if (r.approvalStatus) {
                     <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">

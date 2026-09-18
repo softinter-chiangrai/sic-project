@@ -10,6 +10,7 @@ import { SicInputComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt08a',
@@ -21,6 +22,7 @@ import { SicInputUploadComponent } from '../../../../../core/component/sic-input
     SicInputComponent,
     SicTiptapEditorComponent,
     SicInputUploadComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt08A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -30,12 +32,13 @@ export class Pmdt08AComponent implements OnInit {
   private fb = inject(FormBuilder);
   private service = inject(DiscussionService);
   private dialog = inject(DialogService);
+  private translate = inject(TranslateService);
 
   // ✅ Input properties - ต้องเป็น public (หรือไม่ใส่ modifier)
   @Input() projectId!: string;
   @Input() postToEdit: Post | null = null;   // ✅ ไม่ต้องมี private
   @Input() currentUserAvatar: string | null = null;
-  @Input() currentUserName: string = 'ผู้ใช้งาน';
+  @Input() currentUserName: string = 'User';
 
   @Output() saved = new EventEmitter<Post>();
   @Output() closed = new EventEmitter<void>();
@@ -61,7 +64,7 @@ export class Pmdt08AComponent implements OnInit {
 
   submitPost(): void {
     if (this.postForm.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูลให้ครบถ้วน', 'กรุณาระบุหัวข้อและเนื้อหาข้อความ');
+      this.dialog.warn(this.translate.instant('PMDT08A_FORM_INCOMPLETE_TITLE'), this.translate.instant('PMDT08A_FORM_INCOMPLETE_MSG'));
       return;
     }
 
@@ -99,18 +102,18 @@ export class Pmdt08AComponent implements OnInit {
               content: formValue.content,
               attachmentGroupId: attachmentGroupId || this.postToEdit!.attachmentGroupId,
             };
-            this.dialog.success('สำเร็จ', 'อัปเดตโพสต์เรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT08A_SUCCESS_TITLE'), this.translate.instant('PMDT08A_UPDATE_SUCCESS_MSG'));
             this.saved.emit(result);
           },
           error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถบันทึกข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT08A_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08A_SAVE_FAILED_MSG'));
           },
         });
     } else {
       // สร้างโพสต์ใหม่
       if (!this.projectId) {
         this.isSubmitting = false;
-        this.dialog.warn('ไม่พบรหัสโครงการ', 'ไม่สามารถสร้างโพสต์ได้เนื่องจากไม่พบข้อมูลโครงการ');
+        this.dialog.warn(this.translate.instant('PMDT08A_PROJECT_ID_NOT_FOUND_TITLE'), this.translate.instant('PMDT08A_PROJECT_ID_NOT_FOUND_MSG'));
         return;
       }
 
@@ -126,11 +129,11 @@ export class Pmdt08AComponent implements OnInit {
         .pipe(finalize(() => (this.isSubmitting = false)))
         .subscribe({
           next: (newPost) => {
-            this.dialog.success('สำเร็จ', 'สร้างโพสต์ใหม่เรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT08A_SUCCESS_TITLE'), this.translate.instant('PMDT08A_CREATE_SUCCESS_MSG'));
             this.saved.emit(newPost);
           },
           error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถสร้างโพสต์ได้');
+            this.dialog.error(this.translate.instant('PMDT08A_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08A_CREATE_FAILED_MSG'));
           },
         });
     }

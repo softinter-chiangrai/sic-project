@@ -17,6 +17,7 @@ import {
 } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { gantt } from 'dhtmlx-gantt';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface DhtmlxGanttTask {
   id: string;
@@ -44,6 +45,7 @@ export type GanttViewMode = 'day' | 'week' | 'month';
 @Component({
   selector: 'app-dhtmlx-gantt',
   standalone: true,
+  imports: [TranslateModule],
   templateUrl: './dhtmlx-gantt.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./dhtmlx-gantt.component.css'],
@@ -65,6 +67,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
   private isInitialized = false;
   private eventIds: string[] = [];
 
@@ -201,6 +204,9 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     };
 
     // ✅ Tooltip (ปรับขนาดฟอนต์ให้เล็กลง)
+    const translate = this.translate;
+    const assigneeLabel = translate.instant('GANTTCHART_TOOLTIP_ASSIGNEE_LABEL');
+    const progressLabel = translate.instant('GANTTCHART_TOOLTIP_PROGRESS_LABEL');
     gantt.templates['tooltip_text'] = function (start: Date, end: Date, task: any) {
       const format = (d: Date) => {
         if (!d || isNaN(d.getTime())) return '-';
@@ -216,9 +222,9 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
       return `
         <div style="font-weight:600; font-size:12px; color:var(--text-active, #111827);">${task.text}</div>
         <div style="display:flex; flex-direction:column; gap:3px; font-size:11px; color:var(--text-muted, #9ca3af); margin-top:3px;">
-          <span>👤 ผู้รับผิดชอบ: ${assigneeText}</span>
+          <span>👤 ${assigneeLabel}: ${assigneeText}</span>
           <span>📅 ${format(start)} - ${format(end)}</span>
-          <span>📊 ความคืบหน้า: ${pct}%</span>
+          <span>📊 ${progressLabel}: ${pct}%</span>
         </div>
         ${task.status ? `<div style="font-size:10px; color:var(--crm-primary, #29C296); margin-top:2px;">Status: ${task.status}</div>` : ''}
       `;
@@ -372,7 +378,7 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
     } else if (mode === 'week') {
       gantt.config['scale_unit'] = 'month';
       gantt.config['date_scale'] = '%F %Y';
-      gantt.config['subscales'] = [{ unit: 'week', step: 1, date: 'สัปดาห์ที่ %W' }];
+      gantt.config['subscales'] = [{ unit: 'week', step: 1, date: this.translate.instant('GANTTCHART_WEEK_LABEL_FORMAT') }];
       gantt.config['scale_height'] = 35;
     } else {
       gantt.config['scale_unit'] = 'day';

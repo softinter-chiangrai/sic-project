@@ -11,6 +11,7 @@ import { SicNumberComponent } from '../../../core/component/sic-number/sic-numbe
 import { environment } from '../../../../environments/environment';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { ToForm } from '../../../core/types/form.type';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-business-invite',
@@ -24,6 +25,7 @@ import { ToForm } from '../../../core/types/form.type';
     SicNumberComponent,
     SicGridPanelComponent,
     SicGridPanelTemplate,
+    TranslateModule,
   ],
   templateUrl: './business-invite.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -36,6 +38,7 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
   readonly service = inject(BusinessInviteService);
   readonly dialog = inject(DialogService);
   readonly router = inject(Router);
+  readonly translate = inject(TranslateService);
 
   readonly apiBaseUrl = environment.apiBaseUrl;
 
@@ -47,20 +50,22 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
 
   pageDirty = () => this.emailForm.dirty || this.tokenForm.dirty;
 
-  readonly inviteGridConfig: SicGridPanelConfig = {
-    id: 'id',
-    lazy: false,
-    selectable: false,
-    showToolbar: false,
-    pageable: false,
-    column: [
-      { label: 'ประเภท', name: 'inviteType', type: 'text', minWidth: 100, sortable: true },
-      { label: 'ตำแหน่ง', name: 'roleName', type: 'text', minWidth: 180, sortable: true },
-      { label: 'Email / Token', name: 'inviteEmail', type: 'inviteContact', minWidth: 180 },
-      { label: 'สถานะ / ครั้งที่ใช้', name: 'isActivated', type: 'inviteStatus', minWidth: 160 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
-    ],
-  };
+  get inviteGridConfig(): SicGridPanelConfig {
+    return {
+      id: 'id',
+      lazy: false,
+      selectable: false,
+      showToolbar: false,
+      pageable: false,
+      column: [
+        { label: this.translate.instant('BUSINESS_INVITE_COL_TYPE'), name: 'inviteType', type: 'text', minWidth: 100, sortable: true },
+        { label: this.translate.instant('BUSINESS_INVITE_ROLE_LABEL'), name: 'roleName', type: 'text', minWidth: 180, sortable: true },
+        { label: this.translate.instant('BUSINESS_INVITE_COL_EMAIL_TOKEN'), name: 'inviteEmail', type: 'inviteContact', minWidth: 180 },
+        { label: this.translate.instant('BUSINESS_INVITE_COL_STATUS'), name: 'isActivated', type: 'inviteStatus', minWidth: 160 },
+        { label: this.translate.instant('BUSINESS_INVITE_COL_MANAGE'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
+      ],
+    };
+  }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.service.getInvites().subscribe({
@@ -99,7 +104,7 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
       },
       error: async () => {
         this.loading.set(false);
-        await this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถสร้าง Email Invite ได้');
+        await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), this.translate.instant('BUSINESS_INVITE_CREATE_EMAIL_FAIL_MSG'));
       },
     });
   }
@@ -120,7 +125,7 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
       },
       error: async () => {
         this.loading.set(false);
-        await this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถสร้าง Token Invite ได้');
+        await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), this.translate.instant('BUSINESS_INVITE_CREATE_TOKEN_FAIL_MSG'));
       },
     });
   }
@@ -131,18 +136,18 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
 
     if (event.action === 'revoke') {
       const label = row['inviteType'] === 'email' ? row['inviteEmail'] : row['inviteToken'];
-      const ok = await this.dialog.confirm('ยืนยันการลบ', `ลบ invite ${label}?`);
+      const ok = await this.dialog.confirm(this.translate.instant('BUSINESS_INVITE_CONFIRM_DELETE_TITLE'), this.translate.instant('BUSINESS_INVITE_CONFIRM_DELETE_MSG', { label }));
       if (!ok) return;
       this.service.deleteInvite(row['id'] as string).subscribe({
         next: () => this.grid?.reload(),
-        error: async () => { await this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถลบ Invite ได้'); },
+        error: async () => { await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), this.translate.instant('BUSINESS_INVITE_DELETE_FAIL_MSG')); },
       });
     }
 
     if (event.action === 'copy') {
       const token = row['inviteToken'] as string;
       if (token) navigator.clipboard.writeText(token);
-      await this.dialog.info('คัดลอกสำเร็จ', 'Token ถูกคัดลอกไปยังคลิปบอร์ดแล้ว');
+      await this.dialog.info(this.translate.instant('BUSINESS_INVITE_COPY_SUCCESS_TITLE'), this.translate.instant('BUSINESS_INVITE_COPY_SUCCESS_MSG'));
     }
   }
 

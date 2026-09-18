@@ -2,7 +2,7 @@
 
   <!-- Title -->
   <div class="col-span-6 text-center">
-    <h2 class="text-4xl font-semibold">เชิญสมาชิก</h2>
+    <h2 class="text-4xl font-semibold">{{ 'BUSINESS_INVITE_HEADER' | translate }}</h2>
   </div>
 
   <!-- Tab toggle -->
@@ -13,13 +13,13 @@
         [class.bg-blue-600]="activeTab() === 'email'"
         [class.text-white]="activeTab() === 'email'"
         [class.text-[var(--text-muted)]]="activeTab() !== 'email'"
-        (click)="setTab('email')">Email Invite</button>
+        (click)="setTab('email')">{{ 'BUSINESS_INVITE_EMAIL_TAB' | translate }}</button>
       <button type="button"
         class="px-5 py-2 text-sm font-medium transition-colors"
         [class.bg-blue-600]="activeTab() === 'token'"
         [class.text-white]="activeTab() === 'token'"
         [class.text-[var(--text-muted)]]="activeTab() !== 'token'"
-        (click)="setTab('token')">Token Invite</button>
+        (click)="setTab('token')">{{ 'BUSINESS_INVITE_TOKEN_TAB' | translate }}</button>
     </div>
   </div>
 
@@ -28,15 +28,15 @@
     <form [formGroup]="emailForm" (ngSubmit)="submitEmail()"
       class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col gap-4">
       <sic-combobox
-        label="ตำแหน่ง"
+        [label]="'BUSINESS_INVITE_ROLE_LABEL' | translate"
         formControlName="roleId"
         [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
         [paging]="false">
       </sic-combobox>
-      <sic-input label="อีเมลที่รับเชิญ" formControlName="inviteEmail"></sic-input>
+      <sic-input [label]="'BUSINESS_INVITE_EMAIL_LABEL' | translate" formControlName="inviteEmail"></sic-input>
       <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
-        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">สร้าง Email Invite</sic-button>
+        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">{{ 'BUSINESS_INVITE_BACK_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">{{ 'BUSINESS_INVITE_CREATE_EMAIL_BUTTON' | translate }}</sic-button>
       </div>
     </form>
   }
@@ -46,27 +46,27 @@
     <form [formGroup]="tokenForm" (ngSubmit)="submitToken()"
       class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col gap-4">
       <sic-combobox
-        label="ตำแหน่ง"
+        [label]="'BUSINESS_INVITE_ROLE_LABEL' | translate"
         formControlName="roleId"
         [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
         [paging]="false">
       </sic-combobox>
       <sic-number
-        label="จำนวนครั้งสูงสุด"
+        [label]="'BUSINESS_INVITE_MAXUSES_LABEL' | translate"
         formControlName="maxUses"
-        hint="ว่าง = ไม่จำกัด"
-        placeholder="เช่น 10">
+        [hint]="'BUSINESS_INVITE_MAXUSES_HINT' | translate"
+        [placeholder]="'BUSINESS_INVITE_MAXUSES_PLACEHOLDER' | translate">
       </sic-number>
       <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
-        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">ย้อนกลับ</sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">สร้าง Token Invite</sic-button>
+        <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">{{ 'BUSINESS_INVITE_BACK_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">{{ 'BUSINESS_INVITE_CREATE_TOKEN_BUTTON' | translate }}</sic-button>
       </div>
     </form>
   }
 
   <!-- Invite list -->
   <div class="col-span-6">
-    <h2 class="text-2xl font-semibold mb-3">รายการ Invite</h2>
+    <h2 class="text-2xl font-semibold mb-3">{{ 'BUSINESS_INVITE_LIST_HEADER' | translate }}</h2>
     <sic-gridpanel
       [config]="inviteGridConfig"
       (loadData)="handleGridLoad($event, grid)"
@@ -83,7 +83,7 @@
         @let r = $any(row);
         @if (r.inviteType === 'email') {
           <span class="text-sm" [class.text-green-600]="r.isActivated">
-            {{ r.isActivated ? 'ใช้แล้ว' : 'ยังไม่ได้ใช้' }}
+            {{ r.isActivated ? ('BUSINESS_INVITE_USED_STATUS' | translate) : ('BUSINESS_INVITE_NOT_USED_STATUS' | translate) }}
           </span>
         } @else {
           <span class="text-sm text-[var(--text-muted)]">{{ r.useCount }} / {{ r.maxUses ?? '∞' }}</span>
@@ -94,10 +94,10 @@
         <div class="flex items-center justify-center gap-2">
           @if (r.inviteType === 'token') {
             <button type="button" class="text-xs text-blue-500 hover:text-blue-700 font-medium"
-              (click)="onGridAction({ action: 'copy', row: r })">คัดลอก</button>
+              (click)="onGridAction({ action: 'copy', row: r })">{{ 'BUSINESS_INVITE_COPY_BUTTON' | translate }}</button>
           }
           <button type="button" class="text-xs text-red-500 hover:text-red-700 font-medium"
-            (click)="onGridAction({ action: 'revoke', row: r })">ลบ</button>
+            (click)="onGridAction({ action: 'revoke', row: r })">{{ 'BUSINESS_INVITE_DELETE_BUTTON' | translate }}</button>
         </div>
       </ng-template>
     </sic-gridpanel>

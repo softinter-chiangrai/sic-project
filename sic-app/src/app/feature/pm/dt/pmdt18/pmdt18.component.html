@@ -4,10 +4,10 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
-        ข้อเสนอต่อสัญญา MA (MA Renewal Proposals)
+        {{ 'PMDT18_PAGE_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMDT18_ITEMS_SUFFIX' | translate }}
       </span>
     </div>
     <button
@@ -15,7 +15,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
       <i class="bi bi-plus-lg"></i>
-      สร้างข้อเสนอต่อสัญญาใหม่
+      {{ 'PMDT18_NEW_RENEWAL_BUTTON' | translate }}
     </button>
   </div>
 
@@ -26,7 +26,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาเลขที่ข้อเสนอ, เลขที่สัญญาเดิม, โครงการ..."
+        [placeholder]="'PMDT18_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -45,7 +45,7 @@
         [options]="statusOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event)"
-        placeholder="📊 ทุกสถานะข้อเสนอ"
+        [placeholder]="'PMDT18_ALL_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -78,7 +78,7 @@
       <ng-template sicGridPanelTemplate="dateRangeText" section="cell" let-row>
         @let r = $any(row);
         <span class="text-xs text-[var(--text)]">
-          {{ r.newStartDate ? (r.newStartDate | sicDate: null : 'DD/MM/YYYY') : '-' }} ถึง {{ r.newEndDate ? (r.newEndDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
+          {{ r.newStartDate ? (r.newStartDate | sicDate: null : 'DD/MM/YYYY') : '-' }} {{ 'PMDT18_DATE_RANGE_TO' | translate }} {{ r.newEndDate ? (r.newEndDate | sicDate: null : 'DD/MM/YYYY') : '-' }}
         </span>
       </ng-template>
 

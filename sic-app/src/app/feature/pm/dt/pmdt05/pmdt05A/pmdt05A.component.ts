@@ -23,11 +23,12 @@ import { DiagramService, PmChatResponse } from '../diagram.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt05a',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarkdownModule, SicComboboxComponent],
+  imports: [CommonModule, FormsModule, MarkdownModule, SicComboboxComponent, TranslateModule],
   templateUrl: './pmdt05A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt05A.component.css'],
@@ -51,6 +52,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
 
   private diagramService = inject(DiagramService);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
   private destroy$ = new Subject<void>();
 
   // AI Models state
@@ -106,10 +108,10 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
 
   // Suggested prompt pills
   promptSuggestions = [
-    { title: 'สร้าง ER Diagram', prompt: 'ช่วยออกแบบ ER Diagram สำหรับระบบนี้แบบละเอียด พร้อม Entity และ Relationship' },
-    { title: 'สร้าง Flowchart', prompt: 'ช่วยสร้าง Flowchart แสดงขั้นตอนการทำงานหลักของระบบ' },
-    { title: 'สร้าง Sequence Diagram', prompt: 'ช่วยสร้าง Sequence Diagram แสดง Flow การทำงานและการเชื่อมต่อระหว่าง Component' },
-    { title: 'วิเคราะห์และปรับปรุง', prompt: 'ช่วยวิเคราะห์ Diagram นี้และแนะนำจุดที่ควรปรับปรุงหรือเพิ่มเติม' },
+    { title: this.translate.instant('PMDT05_PROMPT_ER_TITLE'), prompt: this.translate.instant('PMDT05_PROMPT_ER_TEXT') },
+    { title: this.translate.instant('PMDT05_PROMPT_FLOWCHART_TITLE'), prompt: this.translate.instant('PMDT05_PROMPT_FLOWCHART_TEXT') },
+    { title: this.translate.instant('PMDT05_PROMPT_SEQUENCE_TITLE'), prompt: this.translate.instant('PMDT05_PROMPT_SEQUENCE_TEXT') },
+    { title: this.translate.instant('PMDT05_PROMPT_ANALYZE_TITLE'), prompt: this.translate.instant('PMDT05_PROMPT_ANALYZE_TEXT') },
   ];
 
   ngOnInit() {
@@ -208,7 +210,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
               const fullSessions: DiagramChatSession[] = backendSessions.map((bs, index) => ({
                 id: bs.sessionId,
                 diagramId: diagramId,
-                title: bs.title || 'บทสนทนา',
+                title: bs.title || this.translate.instant('PMDT05_DEFAULT_SESSION_TITLE'),
                 createdAt: bs.createdAt,
                 updatedAt: bs.updatedAt,
                 messages: results[index] || [],
@@ -259,7 +261,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
     const newSession: DiagramChatSession = {
       id: crypto.randomUUID(),
       diagramId: this.diagramId,
-      title: 'บทสนทนาใหม่',
+      title: this.translate.instant('PMDT05_NEW_SESSION_TITLE_DEFAULT'),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       messages: [],
@@ -347,7 +349,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
       const freshSession: DiagramChatSession = {
         id: crypto.randomUUID(),
         diagramId: this.diagramId,
-        title: 'บทสนทนาใหม่',
+        title: this.translate.instant('PMDT05_NEW_SESSION_TITLE_DEFAULT'),
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         messages: [],
@@ -392,7 +394,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
 
     // Auto-update title if it's new
     let sessionTitle = currentSession.title;
-    if (isFirstMessage || sessionTitle === 'บทสนทนาใหม่') {
+    if (isFirstMessage || sessionTitle === this.translate.instant('PMDT05_NEW_SESSION_TITLE_DEFAULT')) {
       sessionTitle = input.slice(0, 35).trim() + (input.length > 35 ? '...' : '');
     }
 
@@ -453,7 +455,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
             diagramId: this.diagramId!,
             userId: 'system',
             role: 'assistant',
-            content: '❌ เกิดข้อผิดพลาดในการเชื่อมต่อกับ AI กรุณาลองใหม่อีกครั้ง',
+            content: this.translate.instant('PMDT05_AI_CONNECT_ERROR_MSG'),
             createdAt: new Date().toISOString(),
           };
 

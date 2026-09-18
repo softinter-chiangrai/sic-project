@@ -5,33 +5,33 @@
     <div
       class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
     ></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    <p class="text-[var(--text-muted)]">{{ 'BURT04A_LOADING_TEXT' | translate }}</p>
   </div>
 }
 
 @if (!isLoading()) {
   <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-2xl mx-auto p-4 space-y-6">
     <h2 class="text-3xl font-semibold text-center text-[var(--text-active)]">
-      {{ isEdit ? 'แก้ไขข้อมูลสมาชิก' : 'เพิ่มสมาชิกในธุรกิจ' }}
+      {{ isEdit ? ('BURT04A_EDIT_TITLE' | translate) : ('BURT04A_ADD_TITLE' | translate) }}
     </h2>
 
     <!-- User Info (readonly) -->
-    <sic-input label="ชื่อผู้ใช้" formControlName="userName" [disabled]="true"></sic-input>
+    <sic-input [label]="'BURT04A_USERNAME_LABEL' | translate" formControlName="userName" [disabled]="true"></sic-input>
 
-    <sic-input label="อีเมล" formControlName="userEmail" [disabled]="true"></sic-input>
+    <sic-input [label]="'BURT04A_EMAIL_LABEL' | translate" formControlName="userEmail" [disabled]="true"></sic-input>
 
     <!-- ✅ เลือกบทบาท -->
     <div>
       <sic-combobox
-        label="บทบาทในธุรกิจ"
+        [label]="'BURT04A_ROLE_LABEL' | translate"
         formControlName="roleIds"
         [apiUrl]="roleComboboxUrl"
         valueField="value"
         textField="text"
-        placeholder="พิมพ์หรือเลือกบทบาท..."
+        [placeholder]="'BURT04A_ROLE_PLACEHOLDER' | translate"
         [clearable]="true"
         [multiple]="true"
-        [errorMessages]="{ required: 'กรุณาเลือกบทบาทอย่างน้อย 1 บทบาท' }"
+        [errorMessages]="{ required: ('BURT04A_ROLE_REQUIRED_MSG' | translate) }"
       ></sic-combobox>
     </div>
 
@@ -42,13 +42,13 @@
         formControlName="isActive"
         class="w-4 h-4 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20"
       />
-      <span class="text-[var(--text-active)]">เปิดใช้งานสมาชิก</span>
+      <span class="text-[var(--text-active)]">{{ 'BURT04A_ACTIVE_MEMBER_LABEL' | translate }}</span>
     </label>
 
     <!-- Buttons -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> ย้อนกลับ
+        <i class="bi bi-arrow-left"></i> {{ 'BURT04A_BACK_BTN' | translate }}
       </sic-button>
       <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving()">
         @if (isSaving()) {
@@ -56,7 +56,7 @@
         } @else {
           <i class="bi bi-floppy"></i>
         }
-        {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+        {{ isSaving() ? ('BURT04A_SAVING_TEXT' | translate) : ('BURT04A_SAVE_BTN' | translate) }}
       </sic-button>
     </div>
   </form>

@@ -1,13 +1,13 @@
 @if (totalItems > 0) {
   <div class="sic-pagination flex flex-wrap items-center justify-between gap-3 pt-1">
     <div class="text-sm text-[var(--text-muted)]">
-      แสดง
+      {{ 'PAGINATION_SHOWING_LABEL' | translate }}
       <strong class="text-[var(--text-active)]">{{ rangeStart }}</strong>
       -
       <strong class="text-[var(--text-active)]">{{ rangeEnd }}</strong>
-      จาก
+      {{ 'PAGINATION_OF_LABEL' | translate }}
       <strong class="text-[var(--text-active)]">{{ totalItems }}</strong>
-      รายการ
+      {{ 'PAGINATION_ITEMS_LABEL' | translate }}
     </div>
 
     <div class="flex flex-wrap items-center gap-1">
@@ -63,7 +63,7 @@
 
       @if (totalPages > 1) {
         <form class="flex items-center gap-1 ml-2" (ngSubmit)="onJumpSubmit()">
-          <span class="text-sm text-[var(--text-muted)] whitespace-nowrap">ไปที่หน้า</span>
+          <span class="text-sm text-[var(--text-muted)] whitespace-nowrap">{{ 'PAGINATION_GO_TO_PAGE_LABEL' | translate }}</span>
           <input
             type="number"
             min="1"
@@ -76,7 +76,7 @@
           <button
             type="submit"
             class="h-9 px-3 flex items-center justify-center rounded-lg border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all text-sm"
-          >ไป</button>
+          >{{ 'PAGINATION_GO_BUTTON_LABEL' | translate }}</button>
         </form>
       }
     </div>

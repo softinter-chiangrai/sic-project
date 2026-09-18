@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../environments/environment';
 
 import { Pmdt14AService } from './pmdt14A/pmdt14A.service';
@@ -23,7 +24,7 @@ import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -36,6 +37,7 @@ export class Pmdt14Component implements OnInit {
   private readonly approvalService = inject(ApprovalService);
   private readonly customerState = inject(CustomerStateService);
   private readonly route = inject(ActivatedRoute);
+  private readonly translate = inject(TranslateService);
 
   deliveries = signal<PmDeliveryModel[]>([]);
   approvalStatusMap = signal<Record<string, string>>({});
@@ -72,13 +74,13 @@ export class Pmdt14Component implements OnInit {
     showToolbar: false,
     pageSize: this.size(),
     column: [
-      { label: 'รหัส / หัวข้อ', name: 'deliveryCode', type: 'codeTitle', minWidth: 140 },
-      { label: 'ประเภท', name: 'deliveryType', type: 'typeTag', minWidth: 100 },
-      { label: 'เวอร์ชัน', name: 'deliveryVersion', type: 'versionText', minWidth: 90 },
-      { label: 'วันที่ส่งมอบ', name: 'deliveryDate', type: 'dateText', minWidth: 110 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 140 },
-      { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
+      { label: this.translate.instant('PMDT14_COL_CODE_TITLE'), name: 'deliveryCode', type: 'codeTitle', minWidth: 140 },
+      { label: this.translate.instant('PMDT14_COL_TYPE'), name: 'deliveryType', type: 'typeTag', minWidth: 100 },
+      { label: this.translate.instant('PMDT14_COL_VERSION'), name: 'deliveryVersion', type: 'versionText', minWidth: 90 },
+      { label: this.translate.instant('PMDT14_COL_DELIVERY_DATE'), name: 'deliveryDate', type: 'dateText', minWidth: 110 },
+      { label: this.translate.instant('PMDT14_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 140 },
+      { label: this.translate.instant('PMDT14_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
+      { label: this.translate.instant('PMDT14_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
     ],
   };
 
@@ -124,7 +126,7 @@ export class Pmdt14Component implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+        grid.setLoadError(this.translate.instant('PMDT14_LOAD_ERROR'), request.requestId);
       },
     });
   }
@@ -158,12 +160,12 @@ export class Pmdt14Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'DRAFT', text: 'ฉบับร่าง' },
-    { value: 'PREPARING', text: 'กำลังเตรียมงาน' },
-    { value: 'READY', text: 'พร้อมส่งมอบ' },
-    { value: 'DELIVERED', text: 'ส่งมอบแล้ว' },
-    { value: 'CONFIRMED', text: 'ลูกค้ายืนยันรับมอบแล้ว' },
-    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ' },
+    { value: 'DRAFT', text: this.translate.instant('PMDT14_STATUS_DRAFT') },
+    { value: 'PREPARING', text: this.translate.instant('PMDT14_STATUS_PREPARING') },
+    { value: 'READY', text: this.translate.instant('PMDT14_STATUS_READY') },
+    { value: 'DELIVERED', text: this.translate.instant('PMDT14_STATUS_DELIVERED') },
+    { value: 'CONFIRMED', text: this.translate.instant('PMDT14_STATUS_CONFIRMED') },
+    { value: 'CHANGED', text: this.translate.instant('PMDT14_STATUS_CHANGED') },
   ];
 
   onFilterChange(value: any, grid: SicGridPanelComponent): void {
@@ -193,7 +195,7 @@ export class Pmdt14Component implements OnInit {
 
   printDocument(item: PmDeliveryModel): void {
     if (!item.id) {
-      this.dialog.warn('ไม่พบรหัสเอกสารส่งมอบ', 'ไม่สามารถพิมพ์เอกสารได้');
+      this.dialog.warn(this.translate.instant('PMDT14_NO_DELIVERY_ID'), this.translate.instant('PMDT14_PRINT_FAILED_TITLE'));
       return;
     }
 
@@ -215,22 +217,22 @@ export class Pmdt14Component implements OnInit {
         },
         error: (err) => {
           console.error('Print delivery error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+          this.dialog.error(this.translate.instant('PMDT14_PRINT_ERROR_TITLE'), this.translate.instant('PMDT14_JASPER_ERROR'));
         },
       });
   }
 
   onDelete(id: string | undefined, grid: SicGridPanelComponent): void {
     if (!id) return;
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบเอกสารส่งมอบนี้ใช่หรือไม่?').then((confirmed: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT14_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT14_CONFIRM_DELETE_MSG')).then((confirmed: boolean) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบเอกสารส่งมอบเรียบร้อย');
+            this.dialog.success(this.translate.instant('PMDT14_SUCCESS_TITLE'), this.translate.instant('PMDT14_DELETE_SUCCESS_MSG'));
             grid.reload();
           },
           error: (err) => {
-            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT14_ERROR_TITLE'), err.message || this.translate.instant('PMDT14_DELETE_FAILED_MSG'));
           },
         });
       }
@@ -251,12 +253,12 @@ export class Pmdt14Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ฉบับร่าง',
-      PREPARING: 'กำลังเตรียมงาน',
-      READY: 'พร้อมส่งมอบ',
-      DELIVERED: 'ส่งมอบแล้ว',
-      CONFIRMED: 'ลูกค้ายืนยันรับมอบแล้ว',
-      CHANGED: 'แก้ไขหลังอนุมัติ',
+      DRAFT: this.translate.instant('PMDT14_STATUS_DRAFT'),
+      PREPARING: this.translate.instant('PMDT14_STATUS_PREPARING'),
+      READY: this.translate.instant('PMDT14_STATUS_READY'),
+      DELIVERED: this.translate.instant('PMDT14_STATUS_DELIVERED'),
+      CONFIRMED: this.translate.instant('PMDT14_STATUS_CONFIRMED'),
+      CHANGED: this.translate.instant('PMDT14_STATUS_CHANGED'),
     };
     return map[status] || status;
   }
@@ -277,12 +279,12 @@ export class Pmdt14Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ฉบับร่าง',
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      DRAFT: this.translate.instant('PMDT14_STATUS_DRAFT'),
+      PENDING: this.translate.instant('PMDT14_APPROVAL_PENDING'),
+      APPROVED: this.translate.instant('PMDT14_APPROVAL_APPROVED'),
+      REJECTED: this.translate.instant('PMDT14_APPROVAL_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT14_APPROVAL_REVISION'),
+      CANCELLED: this.translate.instant('PMDT14_APPROVAL_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
   }

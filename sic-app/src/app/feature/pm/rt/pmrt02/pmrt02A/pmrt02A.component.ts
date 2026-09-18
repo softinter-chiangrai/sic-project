@@ -26,6 +26,7 @@ import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-lin
 
 import { ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
 @Component({
@@ -44,6 +45,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     SicTiptapEditorComponent,
     SicVersionBadgeComponent,
     SicCopyLinkComponent,
+    TranslateModule,
   ],
   templateUrl: './pmrt02A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -60,6 +62,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   private navigation = inject(NavigationService);
   private cdr = inject(ChangeDetectorRef);
   private aiHistoryService = inject(AiHistoryService);
+  private translate = inject(TranslateService);
 
   formData!: SicFromData<any>;
   get form(): FormGroup {
@@ -258,7 +261,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         },
         error: (err) => {
           console.error('Load project error:', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโครงการ');
+          this.dialog.error(this.translate.instant('PMRT02A_LOAD_ERROR_TITLE'), this.translate.instant('PMRT02A_LOAD_ERROR_MSG'));
           this.navigation.navigate(['/feature/pm/project']);
         },
       });
@@ -290,7 +293,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMRT02A_INVALID_FORM_TITLE'), this.translate.instant('PMRT02A_INVALID_FORM_MSG'));
       return;
     }
 
@@ -315,16 +318,16 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
               documentType: 'PROJECT',
               documentId: id,
               documentCode: data.projectCode || ('PRJ-' + id.substring(0, 8).toUpperCase()),
-              documentTitle: data.projectName || 'โครงการใหม่',
+              documentTitle: data.projectName || this.translate.instant('PMRT02A_NEW_PROJECT_DEFAULT_NAME'),
               flowId: this.selectedFlowId,
-              comment: 'ส่งขออนุมัติโครงการใหม่',
+              comment: this.translate.instant('PMRT02A_SUBMIT_NEW_PROJECT_COMMENT'),
             })
             .pipe(finalize(() => (this.isSaving = false)))
             .subscribe({
               next: () => {
                 this.isSaved = true;
                 this.formData.markAsPristine();
-                this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการและรายการขออนุมัติถูกบันทึกเรียบร้อย').then(() => {
+                this.dialog.success(this.translate.instant('PMRT02A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT02A_SAVE_WITH_APPROVAL_MSG')).then(() => {
                   const customerId = this.form.get('customerId')?.value;
                   if (customerId) this.customerState.setCustomer(customerId);
                   this.navigation.navigate(['/feature/pm/project']);
@@ -333,7 +336,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
               error: () => {
                 this.isSaved = true;
                 this.formData.markAsPristine();
-                this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย').then(() => {
+                this.dialog.success(this.translate.instant('PMRT02A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT02A_SAVE_SUCCESS_MSG')).then(() => {
                   const customerId = this.form.get('customerId')?.value;
                   if (customerId) this.customerState.setCustomer(customerId);
                   this.navigation.navigate(['/feature/pm/project']);
@@ -344,7 +347,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
           this.isSaving = false;
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลโครงการถูกบันทึกเรียบร้อย').then(() => {
+          this.dialog.success(this.translate.instant('PMRT02A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT02A_SAVE_SUCCESS_MSG')).then(() => {
             const customerId = this.form.get('customerId')?.value;
             if (customerId) this.customerState.setCustomer(customerId);
             this.navigation.navigate(['/feature/pm/project']);
@@ -353,7 +356,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err) => {
         this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        this.dialog.error(this.translate.instant('PMRT02A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT02A_GENERIC_ERROR_MSG'));
       },
     });
   }
@@ -377,7 +380,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
   deleteAiHistory(id: string, event: Event): void {
     event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้ใช่หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMRT02A_CONFIRM_DELETE_HISTORY_TITLE'), this.translate.instant('PMRT02A_CONFIRM_DELETE_HISTORY_MSG')).then((ok: boolean) => {
       if (ok) {
         const targetId = this.projectId || this.form?.get('id')?.value || 'new';
         this.aiHistoryService.deleteHistory('project', targetId, id);
@@ -387,7 +390,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   }
 
   clearAllAiHistories(): void {
-    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้าง AI ทั้งหมดของโครงการนี้ใช่หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMRT02A_CONFIRM_CLEAR_HISTORY_TITLE'), this.translate.instant('PMRT02A_CONFIRM_CLEAR_HISTORY_MSG')).then((ok: boolean) => {
       if (ok) {
         const targetId = this.projectId || this.form?.get('id')?.value || 'new';
         this.aiHistoryService.clearHistories('project', targetId);
@@ -415,7 +418,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAi.set(false);
         if (!draft || (!draft.projectName && !draft.description && !draft.projectCode)) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาโครงการได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(this.translate.instant('PMRT02A_NO_DATA_TITLE'), this.translate.instant('PMRT02A_AI_GENERATE_FAILED_MSG'));
           return;
         }
 
@@ -434,13 +437,13 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         // ดึงข้อมูลหัวข้อและเนื้อหา TipTap ลงในฟอร์มทันที
         this.applyDraftToForm(draft);
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลโครงการ (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.dialog.success(this.translate.instant('PMRT02A_AI_GENERATE_SUCCESS_TITLE'), this.translate.instant('PMRT02A_AI_GENERATE_SUCCESS_MSG', { version: historyItem.versionNo }));
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
         console.error('AI project generation error:', err);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.dialog.error(this.translate.instant('PMRT02A_GENERIC_ERROR_TITLE'), err?.error?.message || err?.message || this.translate.instant('PMRT02A_AI_GENERATE_ERROR_MSG'));
       },
     });
   }
@@ -460,17 +463,17 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
   pasteProjectDraft(draft: any): void {
     if (this.isLocked || this.isViewOnly) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMRT02A_ACTION_NOT_ALLOWED_TITLE'), this.translate.instant('PMRT02A_DOC_LOCKED_MSG'));
       return;
     }
     if (!draft) {
-      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      this.dialog.warn(this.translate.instant('PMRT02A_NO_DATA_TITLE'), this.translate.instant('PMRT02A_NO_DRAFT_MSG'));
       return;
     }
 
     this.applyDraftToForm(draft);
     this.showAiModal.set(false);
-    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลโครงการจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMRT02A_PASTE_SUCCESS_TITLE'), this.translate.instant('PMRT02A_PASTE_SUCCESS_MSG'));
   }
 
   copyDraft(draft: any, historyId?: string): void {

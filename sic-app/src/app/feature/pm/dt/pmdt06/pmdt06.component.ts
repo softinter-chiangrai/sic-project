@@ -25,6 +25,7 @@ import {
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt06',
@@ -38,6 +39,7 @@ import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
     SicStripHtmlPipe,
     SicGridPanelComponent,
     SicGridPanelTemplate,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',
@@ -51,6 +53,7 @@ export class Pmdt06Component implements OnInit {
   private customerState = inject(CustomerStateService);
   private crService = inject(ChangeRequestService);
   private approvalService = inject(ApprovalService);
+  private translate = inject(TranslateService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
   // State
@@ -75,15 +78,15 @@ export class Pmdt06Component implements OnInit {
     showToolbar: false,
     pageSize: this.pageSize(),
     column: [
-      { label: 'รหัส', name: 'crCode', type: 'code', minWidth: 100 },
-      { label: 'ชื่อคำขอ', name: 'title', type: 'titleDesc', minWidth: 150 },
-      { label: 'โครงการ', name: 'projectName', type: 'text', minWidth: 120 },
-      { label: 'ประเภทเอกสาร', name: 'targetType', type: 'targetTypeBadge', minWidth: 140 },
-      { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', minWidth: 100 },
-      { label: 'ผู้เกี่ยวข้อง / ผู้แก้ไข', name: 'assignees', type: 'assigneeList', minWidth: 150 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
-      { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
+      { label: this.translate.instant('PMDT06_COL_CODE'), name: 'crCode', type: 'code', minWidth: 100 },
+      { label: this.translate.instant('PMDT06_COL_TITLE'), name: 'title', type: 'titleDesc', minWidth: 150 },
+      { label: this.translate.instant('PMDT06_COL_PROJECT'), name: 'projectName', type: 'text', minWidth: 120 },
+      { label: this.translate.instant('PMDT06_COL_TARGET_TYPE'), name: 'targetType', type: 'targetTypeBadge', minWidth: 140 },
+      { label: this.translate.instant('PMDT06_COL_PRIORITY'), name: 'priority', type: 'priorityBadge', minWidth: 100 },
+      { label: this.translate.instant('PMDT06_COL_ASSIGNEES'), name: 'assignees', type: 'assigneeList', minWidth: 150 },
+      { label: this.translate.instant('PMDT06_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 100 },
+      { label: this.translate.instant('PMDT06_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
+      { label: this.translate.instant('PMDT06_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
     ],
   };
 
@@ -155,8 +158,8 @@ export class Pmdt06Component implements OnInit {
           this.loadApprovalStatuses(data, grid, request.requestId);
         },
         error: () => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Change Request ได้');
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          this.dialog.error(this.translate.instant('PMDT06_LOAD_FAIL_TITLE'), this.translate.instant('PMDT06_LOAD_FAIL_MSG'));
+          grid.setLoadError(this.translate.instant('PMDT06_LOAD_FAIL_TITLE'), request.requestId);
         },
       });
   }
@@ -200,11 +203,11 @@ export class Pmdt06Component implements OnInit {
 
   // Options
   readonly statusOptions = [
-    { value: 'Draft', text: 'ร่าง' },
-    { value: 'Submitted', text: 'รออนุมัติ' },
-    { value: 'Approved', text: 'อนุมัติ' },
-    { value: 'Rejected', text: 'ปฏิเสธ' },
-    { value: 'Implemented', text: 'ดำเนินการแล้ว' },
+    { value: 'Draft', text: this.translate.instant('PMDT06_STATUS_DRAFT') },
+    { value: 'Submitted', text: this.translate.instant('PMDT06_STATUS_SUBMITTED') },
+    { value: 'Approved', text: this.translate.instant('PMDT06_STATUS_APPROVED') },
+    { value: 'Rejected', text: this.translate.instant('PMDT06_STATUS_REJECTED') },
+    { value: 'Implemented', text: this.translate.instant('PMDT06_STATUS_IMPLEMENTED') },
   ];
 
   onFilterChange(value: any, grid: SicGridPanelComponent) {
@@ -250,7 +253,7 @@ export class Pmdt06Component implements OnInit {
         },
         error: (err) => {
           console.error('Print change request error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
+          this.dialog.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT06_PRINT_FAIL_MSG'));
         },
       });
   }
@@ -267,14 +270,14 @@ export class Pmdt06Component implements OnInit {
   }
 
   deleteChangeRequest(id: string, grid?: SicGridPanelComponent) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
+    this.dialog.confirm(this.translate.instant('PMDT06_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT06_CONFIRM_DELETE_MSG')).then((ok) => {
       if (ok) {
         this.http.delete(`${this.baseUrl}/${id}`).subscribe({
           next: () => {
-            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว');
+            this.dialog.success(this.translate.instant('PMDT06_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT06_DELETE_SUCCESS_MSG'));
             grid?.reload();
           },
-          error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด'),
+          error: () => this.dialog.error(this.translate.instant('PMDT06_DELETE_FAIL_TITLE'), this.translate.instant('PMDT06_GENERIC_ERROR')),
         });
       }
     });
@@ -285,30 +288,30 @@ export class Pmdt06Component implements OnInit {
   submitRequest(id: string, grid?: SicGridPanelComponent) {
     this.crService.submitForApproval(id).subscribe({
       next: () => {
-        this.dialog.success('สำเร็จ', 'ส่งขออนุมัติเรียบร้อยแล้ว');
+        this.dialog.success(this.translate.instant('PMDT06_SUCCESS_TITLE'), this.translate.instant('PMDT06_SUBMIT_SUCCESS_MSG'));
         grid?.reload();
       },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถส่งขออนุมัติได้')
+      error: (err) => this.dialog.error(this.translate.instant('PMDT06_GENERIC_ERROR'), err.error?.message || this.translate.instant('PMDT06_SUBMIT_FAIL_MSG'))
     });
   }
 
   implementRequest(id: string, grid?: SicGridPanelComponent) {
     this.crService.implement(id).subscribe({
       next: () => {
-        this.dialog.success('สำเร็จ', 'ดำเนินการแก้ไขและปิด Change Request เรียบร้อยแล้ว');
+        this.dialog.success(this.translate.instant('PMDT06_SUCCESS_TITLE'), this.translate.instant('PMDT06_IMPLEMENT_SUCCESS_MSG'));
         grid?.reload();
       },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถปิด Change Request ได้')
+      error: (err) => this.dialog.error(this.translate.instant('PMDT06_GENERIC_ERROR'), err.error?.message || this.translate.instant('PMDT06_IMPLEMENT_FAIL_MSG'))
     });
   }
 
   completeAssigneeTask(id: string, userId: string, targetId: string, grid?: SicGridPanelComponent) {
     this.crService.markAssigneeComplete(id, userId, targetId).subscribe({
       next: () => {
-        this.dialog.success('สำเร็จ', 'ยืนยันการแก้ไขเสร็จสิ้นเรียบร้อย');
+        this.dialog.success(this.translate.instant('PMDT06_SUCCESS_TITLE'), this.translate.instant('PMDT06_ASSIGNEE_COMPLETE_MSG'));
         grid?.reload();
       },
-      error: (err) => this.dialog.error('เกิดข้อผิดพลาด', err.error?.message || 'ไม่สามารถยืนยันการแก้ไขได้')
+      error: (err) => this.dialog.error(this.translate.instant('PMDT06_GENERIC_ERROR'), err.error?.message || this.translate.instant('PMDT06_ASSIGNEE_COMPLETE_FAIL_MSG'))
     });
   }
 
@@ -317,11 +320,11 @@ export class Pmdt06Component implements OnInit {
   getTargetTypeText(type?: string): string {
     if (!type) return '-';
     const map: Record<string, string> = {
-      REQUIREMENT: 'ความต้องการ',
-      SPECIFICATION: 'ข้อกำหนด',
-      TASK: 'งาน',
-      DFD: 'DFD',
-      ER: 'ER Diagram',
+      REQUIREMENT: this.translate.instant('PMDT06_TARGET_REQUIREMENT'),
+      SPECIFICATION: this.translate.instant('PMDT06_TARGET_SPECIFICATION'),
+      TASK: this.translate.instant('PMDT06_TARGET_TASK'),
+      DFD: this.translate.instant('PMDT06_TARGET_DFD'),
+      ER: this.translate.instant('PMDT06_TARGET_ER'),
     };
     return map[type.toUpperCase()] || type;
   }
@@ -356,26 +359,26 @@ export class Pmdt06Component implements OnInit {
   }
 
   getStatusText(status: string): string {
-    if (!status) return 'ร่าง';
+    if (!status) return this.translate.instant('PMDT06_STATUS_DRAFT');
     const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      DRAFT: 'ร่าง',
-      Submitted: 'รออนุมัติ',
-      SUBMITTED: 'รออนุมัติ',
-      'In Review': 'อยู่ระหว่างตรวจสอบ',
-      IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
-      Pending: 'รอดำเนินการ',
-      PENDING: 'รอดำเนินการ',
-      Approved: 'อนุมัติ',
-      APPROVED: 'อนุมัติ',
-      Rejected: 'ปฏิเสธ',
-      REJECTED: 'ปฏิเสธ',
-      Implemented: 'ดำเนินการแล้ว',
-      IMPLEMENTED: 'ดำเนินการแล้ว',
-      'Need Revision': 'ต้องแก้ไข',
-      NEED_REVISION: 'ต้องแก้ไข',
-      Cancelled: 'ยกเลิก',
-      CANCELLED: 'ยกเลิก',
+      Draft: this.translate.instant('PMDT06_STATUS_DRAFT'),
+      DRAFT: this.translate.instant('PMDT06_STATUS_DRAFT'),
+      Submitted: this.translate.instant('PMDT06_STATUS_SUBMITTED'),
+      SUBMITTED: this.translate.instant('PMDT06_STATUS_SUBMITTED'),
+      'In Review': this.translate.instant('PMDT06_STATUS_IN_REVIEW'),
+      IN_REVIEW: this.translate.instant('PMDT06_STATUS_IN_REVIEW'),
+      Pending: this.translate.instant('PMDT06_STATUS_PENDING'),
+      PENDING: this.translate.instant('PMDT06_STATUS_PENDING'),
+      Approved: this.translate.instant('PMDT06_STATUS_APPROVED'),
+      APPROVED: this.translate.instant('PMDT06_STATUS_APPROVED'),
+      Rejected: this.translate.instant('PMDT06_STATUS_REJECTED'),
+      REJECTED: this.translate.instant('PMDT06_STATUS_REJECTED'),
+      Implemented: this.translate.instant('PMDT06_STATUS_IMPLEMENTED'),
+      IMPLEMENTED: this.translate.instant('PMDT06_STATUS_IMPLEMENTED'),
+      'Need Revision': this.translate.instant('PMDT06_STATUS_NEED_REVISION'),
+      NEED_REVISION: this.translate.instant('PMDT06_STATUS_NEED_REVISION'),
+      Cancelled: this.translate.instant('PMDT06_STATUS_CANCELLED'),
+      CANCELLED: this.translate.instant('PMDT06_STATUS_CANCELLED'),
     };
     return map[status] || status;
   }
@@ -395,11 +398,11 @@ export class Pmdt06Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMDT06_STATUS_SUBMITTED'),
+      APPROVED: this.translate.instant('PMDT06_APPROVAL_APPROVED'),
+      REJECTED: this.translate.instant('PMDT06_STATUS_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT06_STATUS_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT06_STATUS_CANCELLED'),
     };
     return status ? map[status] || '-' : '-';
   }
@@ -420,11 +423,11 @@ export class Pmdt06Component implements OnInit {
   getPriorityText(priority?: string): string {
     if (!priority) return '-';
     const map: Record<string, string> = {
-      LOW: 'ต่ำ',
-      MEDIUM: 'ปานกลาง',
-      HIGH: 'สูง',
-      CRITICAL: 'วิกฤต',
-      URGENT: 'ด่วน',
+      LOW: this.translate.instant('PMDT06_PRIORITY_LOW'),
+      MEDIUM: this.translate.instant('PMDT06_PRIORITY_MEDIUM'),
+      HIGH: this.translate.instant('PMDT06_PRIORITY_HIGH'),
+      CRITICAL: this.translate.instant('PMDT06_PRIORITY_CRITICAL'),
+      URGENT: this.translate.instant('PMDT06_PRIORITY_URGENT'),
     };
     return map[priority.toUpperCase()] || priority;
   }

@@ -4,6 +4,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, ViewChild, ChangeDetectionStrategy, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from 'sic-ng';
@@ -32,7 +33,8 @@ import { SicButtonComponent } from "sic-ng";
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
-    SicButtonComponent
+    SicButtonComponent,
+    TranslateModule
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02C.component.html',
@@ -46,6 +48,7 @@ export class Pmdt02CComponent implements OnInit {
   private router = inject(Router);
   private businessService = inject(BusinessService);
   private customerState = inject(CustomerStateService);
+  private translate = inject(TranslateService);
   workPackageId = '';
   projectId = '';
   phaseId = '';
@@ -59,10 +62,10 @@ export class Pmdt02CComponent implements OnInit {
   expandedSteps = signal<Set<string>>(new Set());
 
   priorityOptions = [
-    { value: 'Low', text: 'ต่ำ' },
-    { value: 'Medium', text: 'ปานกลาง' },
-    { value: 'High', text: 'สูง' },
-    { value: 'Critical', text: 'วิกฤต' },
+    { value: 'Low', text: this.translate.instant('PMDT02_PRIORITY_LOW') },
+    { value: 'Medium', text: this.translate.instant('PMDT02_PRIORITY_MEDIUM') },
+    { value: 'High', text: this.translate.instant('PMDT02_PRIORITY_HIGH') },
+    { value: 'Critical', text: this.translate.instant('PMDT02_PRIORITY_CRITICAL') },
   ];
 
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)
@@ -153,7 +156,7 @@ export class Pmdt02CComponent implements OnInit {
         this.patchForm(data);
         this.loadLinkedTestCases(id, data.projectId || this.projectId);
       },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+      error: (err) => this.dialog.error(this.translate.instant('PMDT02_LOAD_FAIL_TITLE'), err.message),
     });
   }
 
@@ -192,10 +195,10 @@ export class Pmdt02CComponent implements OnInit {
 
   getTestStatusLabel(status?: string): string {
     const s = (status || '').toLowerCase();
-    if (s === 'pass' || s === 'passed') return '✅ ผ่าน';
-    if (s === 'fail' || s === 'failed') return '❌ ไม่ผ่าน';
-    if (s === 'blocked') return '🚧 ติดปัญหา';
-    return '⏳ รอทดสอบ';
+    if (s === 'pass' || s === 'passed') return this.translate.instant('PMDT02_TEST_STATUS_PASS');
+    if (s === 'fail' || s === 'failed') return this.translate.instant('PMDT02_TEST_STATUS_FAIL');
+    if (s === 'blocked') return this.translate.instant('PMDT02_TEST_STATUS_BLOCKED');
+    return this.translate.instant('PMDT02_TEST_STATUS_PENDING');
   }
 
   isStepExpanded(tcId: string): boolean {
@@ -270,7 +273,7 @@ export class Pmdt02CComponent implements OnInit {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.error(this.translate.instant('PMDT02_INVALID_DATA_TITLE'), this.translate.instant('PMDT02_FILL_ALL_FIELDS'));
       return;
     }
 
@@ -296,12 +299,12 @@ export class Pmdt02CComponent implements OnInit {
 
     request.subscribe({
       next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task เรียบร้อย');
+        this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_TASK_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_TASK_SUCCESS_MSG'));
         this.router.navigate(['/feature/pm/phase', this.phaseId], {
           queryParams: { projectId: this.projectId },
         });
       },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+      error: (err) => this.dialog.error(this.translate.instant('PMDT02_FAIL_TITLE'), err.message),
     });
   }
 

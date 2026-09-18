@@ -12,11 +12,12 @@ import { MemberWithUI, TeamMember } from './burt04.model';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-burt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt04.component.html',
 })
@@ -24,6 +25,7 @@ export class Burt04AComponent implements OnInit {
   private router = inject(Router);
   private burt04Service = inject(burt04Service);
   private dialog = inject(DialogService);
+  private translate = inject(TranslateService);
 
   businessId = '';
 
@@ -45,27 +47,33 @@ export class Burt04AComponent implements OnInit {
     return this.roleOptions().map((r) => ({ value: r, text: r }));
   });
 
-  readonly statusSelectOptions = [
-    { value: 'active', text: 'ใช้งาน (Active)' },
-    { value: 'inactive', text: 'ไม่ใช้งาน (Inactive)' },
-  ];
+  statusSelectOptions: { value: string; text: string }[] = [];
 
-  gridConfig: SicGridPanelConfig = {
-    id: 'id',
-    selectable: false,
-    showToolbar: false,
-    defaultSortField: 'userName',
-    pageSize: this.pageSize(),
-    column: [
-      { label: 'ชื่อ-นามสกุล', name: 'userName', type: 'memberName', sortable: true, minWidth: 150 },
-      { label: 'อีเมล', name: 'userEmail', type: 'text', sortable: true, minWidth: 200 },
-      { label: 'บทบาท', name: 'roleNames', type: 'roleBadges', minWidth: 150 },
-      { label: 'สถานะ', name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
-    ],
-  };
+  gridConfig!: SicGridPanelConfig;
+
+  private buildGridConfig(): SicGridPanelConfig {
+    return {
+      id: 'id',
+      selectable: false,
+      showToolbar: false,
+      defaultSortField: 'userName',
+      pageSize: this.pageSize(),
+      column: [
+        { label: this.translate.instant('BURT04_COL_NAME'), name: 'userName', type: 'memberName', sortable: true, minWidth: 150 },
+        { label: this.translate.instant('BURT04_COL_EMAIL'), name: 'userEmail', type: 'text', sortable: true, minWidth: 200 },
+        { label: this.translate.instant('BURT04_COL_ROLE'), name: 'roleNames', type: 'roleBadges', minWidth: 150 },
+        { label: this.translate.instant('BURT04_COL_STATUS'), name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
+        { label: this.translate.instant('BURT04_COL_ACTION'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
+      ],
+    };
+  }
 
   ngOnInit() {
+    this.statusSelectOptions = [
+      { value: 'active', text: this.translate.instant('BURT04_ACTIVE_OPT') },
+      { value: 'inactive', text: this.translate.instant('BURT04_INACTIVE_OPT') },
+    ];
+    this.gridConfig = this.buildGridConfig();
     this.loadBusinessId();
   }
 
@@ -164,8 +172,8 @@ export class Burt04AComponent implements OnInit {
         },
         error: (err) => {
           console.error('Load members error', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายชื่อสมาชิกได้');
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          this.dialog.error(this.translate.instant('BURT04_LOAD_FAILED_TITLE'), this.translate.instant('BURT04_LOAD_MEMBERS_FAILED_MSG'));
+          grid.setLoadError(this.translate.instant('BURT04_LOAD_FAILED_TITLE'), request.requestId);
         },
       });
   }
@@ -186,29 +194,29 @@ export class Burt04AComponent implements OnInit {
     this.burt04Service.updateMember(member.id, roleIds, updated.isActive).subscribe({
       next: () => {
         this.members.update((list) => list.map((m) => (m.id === member.id ? updated : m)));
-        this.dialog.success('อัปเดตสถานะ', 'สถานะสมาชิกถูกเปลี่ยนเรียบร้อย');
+        this.dialog.success(this.translate.instant('BURT04_UPDATE_STATUS_TITLE'), this.translate.instant('BURT04_UPDATE_STATUS_MSG'));
         grid.reload();
       },
       error: (err) => {
         console.error('Toggle error', err);
-        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถเปลี่ยนสถานะได้');
+        this.dialog.error(this.translate.instant('BURT04_ERROR_TITLE'), this.translate.instant('BURT04_TOGGLE_FAILED_MSG'));
       },
     });
   }
 
   removeMember(id: string, grid: SicGridPanelComponent) {
     this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบสมาชิกรายนี้ออกจากทีมใช่หรือไม่?')
+      .confirm(this.translate.instant('BURT04_CONFIRM_REMOVE_TITLE'), this.translate.instant('BURT04_CONFIRM_REMOVE_MSG'))
       .then((confirmed) => {
         if (confirmed) {
           this.burt04Service.deleteMember(id).subscribe({
             next: () => {
-              this.dialog.success('ลบสำเร็จ', 'สมาชิกถูกลบออกจากทีมเรียบร้อย');
+              this.dialog.success(this.translate.instant('BURT04_REMOVE_SUCCESS_TITLE'), this.translate.instant('BURT04_REMOVE_SUCCESS_MSG'));
               grid.reload();
             },
             error: (err) => {
               console.error('Delete error', err);
-              this.dialog.error('ลบไม่สำเร็จ', 'ไม่สามารถลบสมาชิกได้');
+              this.dialog.error(this.translate.instant('BURT04_REMOVE_FAILED_TITLE'), this.translate.instant('BURT04_REMOVE_FAILED_MSG'));
             },
           });
         }
@@ -224,7 +232,7 @@ export class Burt04AComponent implements OnInit {
   }
 
   getStatusText(active: boolean) {
-    return active ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    return active ? this.translate.instant('BURT04_ACTIVE_TEXT') : this.translate.instant('BURT04_INACTIVE_TEXT');
   }
 
   // ===== Event Handlers =====

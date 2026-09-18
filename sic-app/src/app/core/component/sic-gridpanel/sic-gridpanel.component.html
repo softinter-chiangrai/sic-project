@@ -2,20 +2,20 @@
   <div #surface class="sic-gridpanel__surface">
     <div class="sic-gridpanel__toolbar">
       <div class="sic-gridpanel__toolbar-start">
-          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--primary sic-gridpanel__toolbar-button--icon" [disabled]="!canSaveChanges" (click)="saveChanges()" aria-label="บันทึกข้อมูล" [tooltip]="saving ? 'กำลังบันทึก' : 'บันทึกข้อมูล'" tooltipPosition="bottom" [tooltipDisabled]="!canSaveChanges && !saving">
+          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--primary sic-gridpanel__toolbar-button--icon" [disabled]="!canSaveChanges" (click)="saveChanges()" [attr.aria-label]="'GRIDPANEL_SAVE_LABEL' | translate" [tooltip]="saving ? ('GRIDPANEL_SAVING_LABEL' | translate) : ('GRIDPANEL_SAVE_LABEL' | translate)" tooltipPosition="bottom" [tooltipDisabled]="!canSaveChanges && !saving">
             <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 4h11l3 3v13H5z"></path>
               <path d="M8 4v6h8"></path>
               <path d="M8 18v-5h8v5"></path>
             </svg>
           </button>
-          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--icon" [disabled]="isBusy" (click)="addRow()" aria-label="เพิ่มรายการ" [tooltip]="'เพิ่มรายการ'" tooltipPosition="bottom" [tooltipDisabled]="isBusy">
+          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--icon" [disabled]="isBusy" (click)="addRow()" [attr.aria-label]="'GRIDPANEL_ADD_ROW_LABEL' | translate" [tooltip]="'GRIDPANEL_ADD_ROW_LABEL' | translate" tooltipPosition="bottom" [tooltipDisabled]="isBusy">
             <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M12 5v14"></path>
               <path d="M5 12h14"></path>
             </svg>
           </button>
-          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--danger sic-gridpanel__toolbar-button--icon" [disabled]="isBusy || !canDeleteSelected" (click)="deleteSelectedRows()" aria-label="ลบรายการที่เลือก" [tooltip]="'ลบรายการที่เลือก'" tooltipPosition="bottom" [tooltipDisabled]="isBusy || !canDeleteSelected">
+          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--danger sic-gridpanel__toolbar-button--icon" [disabled]="isBusy || !canDeleteSelected" (click)="deleteSelectedRows()" [attr.aria-label]="'GRIDPANEL_DELETE_SELECTED_LABEL' | translate" [tooltip]="'GRIDPANEL_DELETE_SELECTED_LABEL' | translate" tooltipPosition="bottom" [tooltipDisabled]="isBusy || !canDeleteSelected">
             <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 6h18"></path>
               <path d="M8 6V4h8v2"></path>
@@ -24,7 +24,7 @@
               <path d="M14 11v6"></path>
             </svg>
           </button>
-          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--icon" [class.sic-gridpanel__toolbar-button--active]="reviewChangesOnly" [disabled]="isBusy || !canReviewChanges" (click)="toggleReviewChanges()" aria-label="Review changed rows" [tooltip]="reviewChangesOnly ? 'กลับไปแสดงข้อมูลทั้งหมด' : 'แสดงเฉพาะข้อมูลที่มีการลบ เพิ่ม หรือแก้ไข ' + changedRowsCount + ' รายการ'" tooltipPosition="bottom" [tooltipDisabled]="isBusy || !canReviewChanges">
+          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--icon" [class.sic-gridpanel__toolbar-button--active]="reviewChangesOnly" [disabled]="isBusy || !canReviewChanges" (click)="toggleReviewChanges()" aria-label="Review changed rows" [tooltip]="reviewChangesOnly ? ('GRIDPANEL_REVIEW_ALL_LABEL' | translate) : ('GRIDPANEL_REVIEW_CHANGES_TOOLTIP' | translate: { count: changedRowsCount })" tooltipPosition="bottom" [tooltipDisabled]="isBusy || !canReviewChanges">
             <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M3 12c2.6-4.2 5.6-6.3 9-6.3s6.4 2.1 9 6.3c-2.6 4.2-5.6 6.3-9 6.3S5.6 16.2 3 12"></path>
               <circle cx="12" cy="12" r="2.8"></circle>
@@ -79,8 +79,8 @@
               <path d="M14.5 11.5v4"></path>
             </svg>
           </div>
-          <div class="sic-gridpanel__state-title">{{ reviewChangesOnly ? 'No changed data' : 'No data found' }}</div>
-          <div class="sic-gridpanel__state-subtitle">{{ reviewChangesOnly ? 'Try turning off review mode to see all rows.' : 'Try adjusting your search or add a new row.' }}</div>
+          <div class="sic-gridpanel__state-title">{{ (reviewChangesOnly ? 'GRIDPANEL_NO_CHANGED_DATA_TITLE' : 'GRIDPANEL_NO_DATA_TITLE') | translate }}</div>
+          <div class="sic-gridpanel__state-subtitle">{{ (reviewChangesOnly ? 'GRIDPANEL_TRY_REVIEW_OFF_SUBTITLE' : 'GRIDPANEL_TRY_ADJUST_SEARCH_SUBTITLE') | translate }}</div>
         </div>
       } @else {
         @for (row of rows; track trackRow($index, row)) {
@@ -91,7 +91,7 @@
                   type="button"
                   class="sic-gridpanel__reset-row-button"
                   (click)="resetRow(row)"
-                  aria-label="รีเซ็ตข้อมูลกลับค่าเดิม">
+                  [attr.aria-label]="'GRIDPANEL_RESET_ROW_LABEL' | translate">
                   <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
                 </button>
               } @else {
@@ -376,20 +376,20 @@
 
     <div class="sic-gridpanel__footer-bar">
       <div class="sic-gridpanel__summary">
-        <span>Total {{ totalElements }} rows</span>
+        <span>{{ 'GRIDPANEL_TOTAL_ROWS_TEXT' | translate: { count: totalElements } }}</span>
       </div>
 
       @if (showPager) {
         <div class="sic-gridpanel__pager">
           <div class="sic-gridpanel__pager-group sic-gridpanel__pager-group--nav">
             <button type="button" class="sic-gridpanel__pager-button" [disabled]="currentPage <= 1 || loading" (click)="goToPage(1)">
-              First
+              {{ 'GRIDPANEL_PAGER_FIRST' | translate }}
             </button>
             <button type="button" class="sic-gridpanel__pager-button" [disabled]="currentPage <= 1 || loading" (click)="goToPreviousPage()">
-              Prev
+              {{ 'GRIDPANEL_PAGER_PREV' | translate }}
             </button>
 
-            <div class="sic-gridpanel__pager-pages" aria-label="Pagination pages">
+            <div class="sic-gridpanel__pager-pages" [attr.aria-label]="'GRIDPANEL_PAGINATION_PAGES_LABEL' | translate">
               @for (item of pagerItems; track $index) {
                 @if (item === 'start-ellipsis' || item === 'end-ellipsis') {
                   <span class="sic-gridpanel__pager-ellipsis">...</span>
@@ -407,10 +407,10 @@
             </div>
 
             <button type="button" class="sic-gridpanel__pager-button" [disabled]="currentPage >= totalPages || loading" (click)="goToNextPage()">
-              Next
+              {{ 'GRIDPANEL_PAGER_NEXT' | translate }}
             </button>
             <button type="button" class="sic-gridpanel__pager-button" [disabled]="currentPage >= totalPages || loading" (click)="goToPage(totalPages)">
-              Last
+              {{ 'GRIDPANEL_PAGER_LAST' | translate }}
             </button>
           </div>
         </div>
@@ -420,7 +420,7 @@
     @if (isBusy) {
       <output class="sic-gridpanel__loading-overlay" aria-live="polite" aria-busy="true">
         <span class="sic-gridpanel__loading-spinner" aria-hidden="true"></span>
-        <span class="sic-gridpanel__loading-text">{{ saving ? 'Saving data...' : 'Loading data...' }}</span>
+        <span class="sic-gridpanel__loading-text">{{ (saving ? 'GRIDPANEL_SAVING_DATA_TEXT' : 'GRIDPANEL_LOADING_DATA_TEXT') | translate }}</span>
       </output>
     }
   </div>

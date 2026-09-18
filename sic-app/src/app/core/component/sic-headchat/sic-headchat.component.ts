@@ -18,6 +18,7 @@ import { Subject, firstValueFrom, takeUntil } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../auth/auth.service';
 import { SicToastService } from '../sic-toast/sic-toast.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { CallStatus, ChatService, ChatMember, ChatMessage, ChatGroup, ChatGroupMessage, IncomingCallInfo, StorageUploadReference } from '../../services/chat.service';
 
 // ── Directive: bind MediaStream to <video>.srcObject ──────────────────────
@@ -59,7 +60,7 @@ interface OpenGroupChat {
 @Component({
   selector: 'sic-headchat',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicStreamDirective],
+  imports: [CommonModule, FormsModule, SicStreamDirective, TranslateModule],
   templateUrl: './sic-headchat.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-headchat.component.css',
@@ -69,6 +70,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   private readonly auth = inject(AuthService);
   private readonly chatSvc = inject(ChatService);
   private readonly toastSvc = inject(SicToastService);
+  private readonly translate = inject(TranslateService);
   private readonly http = inject(HttpClient);
   private readonly destroy$ = new Subject<void>();
 
@@ -204,8 +206,8 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
 
     let finalMessage = text;
     if (chat.replyingTo) {
-      const quoted = chat.replyingTo.message?.split('\n')[0] ?? 'ไฟล์แนบ';
-      finalMessage = `> ตอบกลับ: "${quoted}"\n${text}`;
+      const quoted = chat.replyingTo.message?.split('\n')[0] ?? this.translate.instant('HEADCHAT_ATTACHMENT_DEFAULT_NAME');
+      finalMessage = `> ${this.translate.instant('HEADCHAT_REPLY_PREFIX_TEXT')} "${quoted}"\n${text}`;
       chat.replyingTo = null;
     }
 
@@ -666,7 +668,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
         if (isIncoming && msg.messageType !== 3) {
           const sender = this.members().find(m => m.userId === msg.senderId);
           const senderName = sender?.displayName ?? msg.senderId;
-          const previewText = msg.messageType === 1 ? 'ส่งรูปภาพ' : (msg.messageType === 2 ? 'ส่งไฟล์แนบ' : msg.message);
+          const previewText = msg.messageType === 1 ? this.translate.instant('HEADCHAT_SENT_IMAGE_PREVIEW') : (msg.messageType === 2 ? this.translate.instant('HEADCHAT_SENT_ATTACHMENT_PREVIEW') : msg.message);
           this.toastSvc.show(`💬 ${senderName}: ${previewText}`, 'info', 4000);
         }
 
@@ -806,7 +808,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
           const group = this.groups().find(g => g.id === msg.groupId);
           const newChat: OpenGroupChat = {
             groupId: msg.groupId,
-            groupName: group?.name ?? 'Group',
+            groupName: group?.name ?? this.translate.instant('HEADCHAT_DEFAULT_GROUP_NAME'),
             memberUserIds: group?.memberUserIds ?? [],
             messages: [msg],
             inputText: '',

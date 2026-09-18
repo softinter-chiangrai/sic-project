@@ -18,6 +18,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { SicButtonComponent } from 'sic-ng';
 import { SicInputAreaComponent } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { DialogService } from '../../services/dialog.service';
 import { SicDatePipe } from '../../pipes/sic-date.pipe';
@@ -34,6 +35,7 @@ import type { Observable } from 'rxjs';
         SicButtonComponent,
         SicInputAreaComponent,
         SicDatePipe,
+        TranslateModule,
     ],
     templateUrl: './sic-approval.component.html',
     styleUrls: ['./sic-approval.component.css'],
@@ -60,6 +62,7 @@ export class SicApprovalComponent implements OnInit, OnChanges {
     private readonly approvalService = inject(ApprovalService);
     private readonly dialogService = inject(DialogService);
     private readonly cdr = inject(ChangeDetectorRef);
+    private readonly translate = inject(TranslateService);
 
     // ===== State =====
     protected isLoading = signal(false);
@@ -137,7 +140,10 @@ export class SicApprovalComponent implements OnInit, OnChanges {
         if (!approval) return;
 
         this.dialogService
-            .confirm('ยืนยันการอนุมัติ', `คุณต้องการอนุมัติเอกสาร "${approval.documentTitle || approval.documentCode}" ใช่หรือไม่?`)
+            .confirm(
+                this.translate.instant('APPROVAL_CONFIRM_APPROVE_TITLE'),
+                this.translate.instant('APPROVAL_CONFIRM_APPROVE_MSG', { doc: approval.documentTitle || approval.documentCode })
+            )
             .then((confirmed) => {
                 if (confirmed) {
                     this.executeAction('approve', () =>
@@ -152,12 +158,18 @@ export class SicApprovalComponent implements OnInit, OnChanges {
         if (!approval) return;
 
         if (!this.comment()) {
-            this.dialogService.warn('กรุณาใส่ความคิดเห็น', 'ต้องระบุเหตุผลในการปฏิเสธ');
+            this.dialogService.warn(
+                this.translate.instant('APPROVAL_WARN_TITLE'),
+                this.translate.instant('APPROVAL_REJECT_REASON_MSG')
+            );
             return;
         }
 
         this.dialogService
-            .confirm('ยืนยันการปฏิเสธ', `คุณต้องการปฏิเสธเอกสาร "${approval.documentTitle || approval.documentCode}" ใช่หรือไม่?`)
+            .confirm(
+                this.translate.instant('APPROVAL_CONFIRM_REJECT_TITLE'),
+                this.translate.instant('APPROVAL_CONFIRM_REJECT_MSG', { doc: approval.documentTitle || approval.documentCode })
+            )
             .then((confirmed) => {
                 if (confirmed) {
                     this.executeAction('reject', () =>
@@ -172,12 +184,18 @@ export class SicApprovalComponent implements OnInit, OnChanges {
         if (!approval) return;
 
         if (!this.comment()) {
-            this.dialogService.warn('กรุณาใส่ความคิดเห็น', 'ต้องระบุเหตุผลในการขอแก้ไข');
+            this.dialogService.warn(
+                this.translate.instant('APPROVAL_WARN_TITLE'),
+                this.translate.instant('APPROVAL_REVISE_REASON_MSG')
+            );
             return;
         }
 
         this.dialogService
-            .confirm('ยืนยันการขอแก้ไข', `คุณต้องการขอให้แก้ไขเอกสาร "${approval.documentTitle || approval.documentCode}" ใช่หรือไม่?`)
+            .confirm(
+                this.translate.instant('APPROVAL_CONFIRM_REVISE_TITLE'),
+                this.translate.instant('APPROVAL_CONFIRM_REVISE_MSG', { doc: approval.documentTitle || approval.documentCode })
+            )
             .then((confirmed) => {
                 if (confirmed) {
                     this.executeAction('revise', () =>
@@ -192,7 +210,10 @@ export class SicApprovalComponent implements OnInit, OnChanges {
         if (!approval) return;
 
         this.dialogService
-            .confirm('ยืนยันการยกเลิก', `คุณต้องการยกเลิกการขออนุมัติเอกสาร "${approval.documentTitle || approval.documentCode}" ใช่หรือไม่?`)
+            .confirm(
+                this.translate.instant('APPROVAL_CONFIRM_CANCEL_TITLE'),
+                this.translate.instant('APPROVAL_CONFIRM_CANCEL_MSG', { doc: approval.documentTitle || approval.documentCode })
+            )
             .then((confirmed) => {
                 if (confirmed) {
                     this.executeAction('cancel', () =>
@@ -213,30 +234,30 @@ export class SicApprovalComponent implements OnInit, OnChanges {
                 this.statusChange.emit({ status: result.status, approval: result });
                 this.actionTaken.emit({ action, approval: result });
 
-                this.dialogService.success('ดำเนินการสำเร็จ', this.getSuccessMessage(action, result));
+                this.dialogService.success(this.translate.instant('APPROVAL_SUCCESS_TITLE'), this.getSuccessMessage(action, result));
                 this.cdr.markForCheck();
             },
             error: (error) => {
                 this.isSubmitting.set(false);
-                this.dialogService.error('ดำเนินการไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+                this.dialogService.error(this.translate.instant('APPROVAL_ERROR_TITLE'), error.error?.message || this.translate.instant('APPROVAL_GENERIC_ERROR'));
                 this.cdr.markForCheck();
             },
         });
     }
 
     private getSuccessMessage(action: string, approval: Approval): string {
-        const doc = approval.documentTitle || approval.documentCode || 'เอกสาร';
+        const doc = approval.documentTitle || approval.documentCode || this.translate.instant('APPROVAL_DEFAULT_DOC_NAME');
         switch (action) {
             case 'approve':
-                return `อนุมัติ ${doc} เรียบร้อย`;
+                return this.translate.instant('APPROVAL_SUCCESS_APPROVE_MSG', { doc });
             case 'reject':
-                return `ปฏิเสธ ${doc} เรียบร้อย`;
+                return this.translate.instant('APPROVAL_SUCCESS_REJECT_MSG', { doc });
             case 'revise':
-                return `ขอให้แก้ไข ${doc} เรียบร้อย`;
+                return this.translate.instant('APPROVAL_SUCCESS_REVISE_MSG', { doc });
             case 'cancel':
-                return `ยกเลิกการขออนุมัติ ${doc} เรียบร้อย`;
+                return this.translate.instant('APPROVAL_SUCCESS_CANCEL_MSG', { doc });
             default:
-                return 'ดำเนินการสำเร็จ';
+                return this.translate.instant('APPROVAL_SUCCESS_TITLE');
         }
     }
 
@@ -282,26 +303,26 @@ export class SicApprovalComponent implements OnInit, OnChanges {
 
     getActionLabel(action: string): string {
         const map: Record<string, string> = {
-            SUBMIT: 'ส่งขออนุมัติ',
-            APPROVE: 'อนุมัติ',
-            REJECT: 'ปฏิเสธ',
-            REVISE: 'ขอแก้ไข',
-            CANCEL: 'ยกเลิก',
-            DELEGATE: 'มอบหมาย',
-            RESUBMIT: 'ส่งใหม่',
+            SUBMIT: this.translate.instant('APPROVAL_ACTION_SUBMIT'),
+            APPROVE: this.translate.instant('APPROVAL_APPROVE_BUTTON'),
+            REJECT: this.translate.instant('APPROVAL_REJECT_BUTTON'),
+            REVISE: this.translate.instant('APPROVAL_REVISE_BUTTON'),
+            CANCEL: this.translate.instant('APPROVAL_CANCEL_BUTTON'),
+            DELEGATE: this.translate.instant('APPROVAL_ACTION_DELEGATE'),
+            RESUBMIT: this.translate.instant('APPROVAL_ACTION_RESUBMIT'),
         };
         return map[action] || action;
     }
 
     getStatusText(status: string): string {
         const map: Record<string, string> = {
-            PENDING: 'รอดำเนินการ',
-            PARTIALLY_APPROVED: 'อนุมัติบางส่วน',
-            APPROVED: 'อนุมัติแล้ว',
-            REJECTED: 'ปฏิเสธ',
-            NEED_REVISION: 'ต้องแก้ไข',
-            CANCELLED: 'ยกเลิก',
-            EXPIRED: 'หมดอายุ',
+            PENDING: this.translate.instant('APPROVAL_STATUS_PENDING'),
+            PARTIALLY_APPROVED: this.translate.instant('APPROVAL_STATUS_PARTIALLY_APPROVED'),
+            APPROVED: this.translate.instant('APPROVAL_STATUS_APPROVED'),
+            REJECTED: this.translate.instant('APPROVAL_REJECT_BUTTON'),
+            NEED_REVISION: this.translate.instant('APPROVAL_STATUS_NEED_REVISION'),
+            CANCELLED: this.translate.instant('APPROVAL_CANCEL_BUTTON'),
+            EXPIRED: this.translate.instant('APPROVAL_STATUS_EXPIRED'),
         };
         return map[status] || status;
     }

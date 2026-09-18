@@ -5,6 +5,7 @@ import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/a
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
@@ -39,6 +40,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicInputComponent,
     SicTiptapEditorComponent,
     SicUploadComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt15A.component.html',
   styleUrls: ['./pmdt15A.component.css'],
@@ -54,6 +56,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private readonly approvalService = inject(ApprovalService);
   private readonly http = inject(HttpClient);
   private readonly aiHistoryService = inject(AiHistoryService);
+  private readonly translate = inject(TranslateService);
 
   formData!: SicFromData<PmUserManualModel>;
   id = signal<string | null>(null);
@@ -92,11 +95,11 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   typeOptions = [
-    { label: 'คู่มือสำหรับผู้ใช้งานทั่วไป', value: 'USER' },
-    { label: 'คู่มือสำหรับผู้ดูแลระบบ', value: 'ADMIN' },
-    { label: 'คู่มือการติดตั้งระบบ', value: 'INSTALLATION' },
-    { label: 'คู่มือการปฏิบัติงาน', value: 'OPERATION' },
-    { label: 'คู่มือการแก้ปัญหา', value: 'TROUBLESHOOT' },
+    { label: this.translate.instant('PMDT15_TYPE_USER_A'), value: 'USER' },
+    { label: this.translate.instant('PMDT15_TYPE_ADMIN_A'), value: 'ADMIN' },
+    { label: this.translate.instant('PMDT15_TYPE_INSTALL_A'), value: 'INSTALLATION' },
+    { label: this.translate.instant('PMDT15_TYPE_OPERATION'), value: 'OPERATION' },
+    { label: this.translate.instant('PMDT15_TYPE_TROUBLESHOOT'), value: 'TROUBLESHOOT' },
   ];
 
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
@@ -192,7 +195,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   deleteAiHistory(id: string, e: MouseEvent): void {
     e.stopPropagation();
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT15_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT15_CONFIRM_DEL_HIST_MSG')).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.deleteHistory('user_manual', targetId, id);
         this.loadAiHistory();
@@ -203,7 +206,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   clearAllAiHistory(): void {
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของคู่มือนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT15_CONFIRM_CLEAR_TITLE'), this.translate.instant('PMDT15_CONFIRM_CLEAR_MSG')).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.clearHistories('user_manual', targetId);
         this.loadAiHistory();
@@ -214,7 +217,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   openAiModal(): void {
     if (this.isLocked()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้ถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMDT15_CANNOT_PROCEED_TITLE'), this.translate.instant('PMDT15_DOC_LOCKED_MSG'));
       return;
     }
     const currentType = (this.formData?.form?.value as any)?.manualType || 'USER';
@@ -264,7 +267,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     ).subscribe({
       next: (draft) => {
         if (!draft || !draft.sections || draft.sections.length === 0) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาคู่มือได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(this.translate.instant('PMDT15_NO_DATA_TITLE'), this.translate.instant('PMDT15_AI_GEN_FAILED_MSG'));
           return;
         }
 
@@ -283,23 +286,23 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         // ดึงข้อมูลหัวข้อคู่มือและเนื้อหาแต่ละ Section (Tiptap) ลงในฟอร์มทันที
         this.pasteDraftToForm(draft, 'replace');
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างเนื้อหาคู่มือการใช้งาน (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.dialog.success(this.translate.instant('PMDT15_GEN_SUCCESS_TITLE'), this.translate.instant('PMDT15_AI_DRAFT_SUCCESS_MSG', { v: historyItem.versionNo }));
         this.cdr.markForCheck();
       },
       error: (err) => {
         console.error('AI manual generation error:', err);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.dialog.error(this.translate.instant('PMDT15_ERROR_OCCURRED_TITLE'), err?.error?.message || err?.message || this.translate.instant('PMDT15_AI_GEN_ERROR_MSG'));
       },
     });
   }
 
   pasteDraftToForm(draft: any, mode: 'replace' | 'append' = 'replace'): void {
     if (this.isLocked()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้ถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMDT15_CANNOT_PROCEED_TITLE'), this.translate.instant('PMDT15_DOC_LOCKED_MSG'));
       return;
     }
     if (!draft || !draft.sections || draft.sections.length === 0) {
-      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลหัวข้อคู่มือที่จะวางลงในฟอร์ม');
+      this.dialog.warn(this.translate.instant('PMDT15_NO_DATA_TITLE'), this.translate.instant('PMDT15_NO_SECTION_DATA_MSG'));
       return;
     }
 
@@ -315,7 +318,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
     const newSectionsList: PmUserManualSectionModel[] = draft.sections.map((s: any, idx: number) => ({
       sectionCode: s.sectionCode || `SEC-${idx + 1}`,
-      sectionTitle: s.sectionTitle || `${idx + 1}. หัวข้อ`,
+      sectionTitle: s.sectionTitle || this.translate.instant('PMDT15_DEFAULT_SECTION_TITLE', { n: idx + 1 }),
       content: s.content || '',
       sortOrder: s.sortOrder || (idx + 1),
       state: SicEntityState.Added,
@@ -342,7 +345,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
     this.formData.markAsDirty();
     this.showAiModal.set(false);
-    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลคู่มือจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMDT15_APPLY_SUCCESS_TITLE'), this.translate.instant('PMDT15_APPLY_SUCCESS_MSG'));
     this.cdr.markForCheck();
   }
 
@@ -412,7 +415,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.cdr.markForCheck();
       },
       error: (err) => {
-        this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลได้');
+        this.dialog.error(this.translate.instant('PMDT15_ERROR_WORD'), err.message || this.translate.instant('PMDT15_LOAD_DATA_FAILED_MSG'));
         this.cdr.markForCheck();
       },
     });

@@ -6,7 +6,7 @@
     <div
       class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
     ></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลโครงการ...</p>
+    <p class="text-[var(--text-muted)]">{{ 'PMRT02A_LOADING_TEXT' | translate }}</p>
   </div>
 }
 
@@ -19,7 +19,7 @@
       <div class="space-y-1">
         <div class="flex items-center gap-2 flex-wrap">
           <h2 class="text-2xl font-bold text-[var(--text-active)]">
-            {{ isViewOnly && !isLocked ? 'รายละเอียดโครงการ' : (isLocked ? 'ข้อมูลโครงการ (อนุมัติแล้ว)' : (isEdit ? 'แก้ไขข้อมูลโครงการ' : 'เพิ่มข้อมูลโครงการ')) }}
+            {{ isViewOnly && !isLocked ? ('PMRT02A_TITLE_VIEW' | translate) : (isLocked ? ('PMRT02A_TITLE_APPROVED' | translate) : (isEdit ? ('PMRT02A_TITLE_EDIT' | translate) : ('PMRT02A_TITLE_ADD' | translate))) }}
           </h2>
           @if (isEdit || isViewOnly) {
             <sic-version-badge [status]="form.get('status')?.value" [isLocked]="isLocked"></sic-version-badge>
@@ -28,7 +28,7 @@
         @if (customerName()) {
           <p class="text-sm text-[var(--text-muted)] flex items-center gap-1.5">
             <i class="bi bi-building"></i>
-            ลูกค้า: <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
+            {{ 'PMRT02A_CUSTOMER_LABEL' | translate }} <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
           </p>
         }
       </div>
@@ -42,7 +42,7 @@
             (click)="openAiAssist()"
             class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-sm hover:shadow transition-all cursor-pointer">
             <i class="bi bi-stars text-amber-300"></i>
-            <span>สร้างด้วย AI</span>
+            <span>{{ 'PMRT02A_GENERATE_WITH_AI_BUTTON' | translate }}</span>
           </button>
         }
       </div>
@@ -53,14 +53,14 @@
       <!-- Project Code -->
       <div>
         <sic-input
-          label="รหัสโครงการ"
+          [label]="'PMRT02A_PROJECT_CODE_LABEL' | translate"
           formControlName="projectCode"
-          placeholder="เช่น PRJ-001"
+          [placeholder]="'PMRT02A_PROJECT_CODE_PLACEHOLDER' | translate"
           [required]="true"
           [disabled]="isViewOnly || isLocked"
           [errorMessages]="{
-            required: 'กรุณากรอกรหัสโครงการ',
-            maxlength: 'รหัสโครงการต้องไม่เกิน 30 ตัวอักษร'
+            required: ('PMRT02A_REQUIRED_PROJECT_CODE' | translate),
+            maxlength: ('PMRT02A_MAXLEN_PROJECT_CODE' | translate)
           }"
         ></sic-input>
       </div>
@@ -68,14 +68,14 @@
       <!-- Project Name -->
       <div>
         <sic-input
-          label="ชื่อโครงการ"
+          [label]="'PMRT02A_PROJECT_NAME_LABEL' | translate"
           formControlName="projectName"
-          placeholder="เช่น ระบบซื้อขายสินค้าออนไลน์"
+          [placeholder]="'PMRT02A_PROJECT_NAME_PLACEHOLDER' | translate"
           [required]="true"
           [disabled]="isViewOnly || isLocked"
           [errorMessages]="{
-            required: 'กรุณากรอกชื่อโครงการ',
-            maxlength: 'ชื่อโครงการต้องไม่เกิน 255 ตัวอักษร'
+            required: ('PMRT02A_REQUIRED_PROJECT_NAME' | translate),
+            maxlength: ('PMRT02A_MAXLEN_PROJECT_NAME' | translate)
           }"
         ></sic-input>
       </div>
@@ -83,61 +83,61 @@
       <!-- Status -->
       <div>
         <sic-combobox
-          label="สถานะโครงการ"
+          [label]="'PMRT02A_STATUS_LABEL' | translate"
           formControlName="status"
           [options]="statusOptions"
           valueField="value"
           textField="text"
           [required]="true"
           [disabled]="isViewOnly || isLocked"
-          [errorMessages]="{ required: 'กรุณาเลือกสถานะ' }"
+          [errorMessages]="{ required: ('PMRT02A_REQUIRED_STATUS' | translate) }"
         ></sic-combobox>
       </div>
 
       <!-- Priority -->
       <div>
         <sic-combobox
-          label="ระดับความสำคัญ"
+          [label]="'PMRT02A_PRIORITY_LABEL' | translate"
           formControlName="priority"
           [options]="priorityOptions"
           valueField="value"
           textField="text"
           [required]="true"
           [disabled]="isViewOnly || isLocked"
-          [errorMessages]="{ required: 'กรุณาเลือกระดับความสำคัญ' }"
+          [errorMessages]="{ required: ('PMRT02A_REQUIRED_PRIORITY' | translate) }"
         ></sic-combobox>
       </div>
 
       <!-- Start Date -->
       <div>
         <sic-datepicker
-          label="วันที่เริ่มโครงการ"
+          [label]="'PMRT02A_START_DATE_LABEL' | translate"
           formControlName="startDate"
           [required]="true"
-          placeholder="เลือกวันที่เริ่ม"
+          [placeholder]="'PMRT02A_START_DATE_PLACEHOLDER' | translate"
           [disabled]="isViewOnly || isLocked"
-          [errorMessages]="{ required: 'กรุณาระบุวันที่เริ่ม' }"
+          [errorMessages]="{ required: ('PMRT02A_REQUIRED_START_DATE' | translate) }"
         ></sic-datepicker>
       </div>
 
       <!-- Planned End Date -->
       <div>
         <sic-datepicker
-          label="วันที่สิ้นสุดตามแผน"
+          [label]="'PMRT02A_PLANNED_END_DATE_LABEL' | translate"
           formControlName="plannedEndDate"
           [required]="true"
-          placeholder="เลือกวันที่สิ้นสุดตามแผน"
+          [placeholder]="'PMRT02A_PLANNED_END_DATE_PLACEHOLDER' | translate"
           [disabled]="isViewOnly || isLocked"
-          [errorMessages]="{ required: 'กรุณาระบุวันที่สิ้นสุดตามแผน' }"
+          [errorMessages]="{ required: ('PMRT02A_REQUIRED_PLANNED_END_DATE' | translate) }"
         ></sic-datepicker>
       </div>
 
       <!-- Actual End Date -->
       <div>
         <sic-datepicker
-          label="วันที่สิ้นสุดจริง"
+          [label]="'PMRT02A_ACTUAL_END_DATE_LABEL' | translate"
           formControlName="actualEndDate"
-          placeholder="เลือกวันที่สิ้นสุดจริง (ถ้ามี)"
+          [placeholder]="'PMRT02A_ACTUAL_END_DATE_PLACEHOLDER' | translate"
           [disabled]="isViewOnly || isLocked"
         ></sic-datepicker>
       </div>
@@ -145,22 +145,22 @@
       <!-- Budget Manday -->
       <div>
         <sic-number
-          label="Manday ตามแผน"
+          [label]="'PMRT02A_BUDGET_MANDAY_LABEL' | translate"
           formControlName="budgetManday"
           [decimal]="0"
           placeholder="0"
           [required]="true"
           [disabled]="isViewOnly || isLocked"
-          [errorMessages]="{ required: 'กรุณาระบุ Manday ตามแผน' }"
+          [errorMessages]="{ required: ('PMRT02A_REQUIRED_BUDGET_MANDAY' | translate) }"
         ></sic-number>
       </div>
 
       <!-- Description -->
       <div class="md:col-span-2">
         <sic-tiptap-editor
-          label="คำอธิบายเพิ่มเติม"
+          [label]="'PMRT02A_DESCRIPTION_LABEL' | translate"
           formControlName="description"
-          placeholder="ระบุคำอธิบาย ขอบเขต หรือรายละเอียดเพิ่มเติมของโครงการ..."
+          [placeholder]="'PMRT02A_DESCRIPTION_PLACEHOLDER' | translate"
           minHeight="140px"
           [disabled]="isViewOnly || isLocked"
         ></sic-tiptap-editor>
@@ -175,7 +175,7 @@
             [disabled]="isViewOnly || isLocked"
             class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded"
           />
-          <span class="text-[var(--text-active)]">เปิดใช้งานโครงการ</span>
+          <span class="text-[var(--text-active)]">{{ 'PMRT02A_ACTIVE_PROJECT_LABEL' | translate }}</span>
         </label>
       </div>
 
@@ -184,16 +184,16 @@
         <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
           <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ
+            {{ 'PMRT02A_APPROVAL_PROCESS_LABEL' | translate }}
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <sic-combobox
-              label="เลือกกระบวนการอนุมัติ"
+              [label]="'PMRT02A_SELECT_APPROVAL_FLOW_LABEL' | translate"
               [apiUrl]="documenttypeapiUrl"
               valueField="id"
               textField="flowName"
-              placeholder="เลือกกระบวนการอนุมัติโครงการ"
+              [placeholder]="'PMRT02A_SELECT_APPROVAL_FLOW_PLACEHOLDER' | translate"
               [clearable]="true"
               formControlName="approvalFlowId"
               (selectionChanged)="onFlowChange($event)"
@@ -202,7 +202,7 @@
 
           @if (!selectedFlowId && flows.length > 0) {
             <p class="text-xs text-[var(--text-muted)] mt-1">
-              * สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติโครงการไปยัง Approval Center หลังบันทึก
+              {{ 'PMRT02A_APPROVAL_FLOW_HINT' | translate }}
             </p>
           }
         </div>
@@ -216,7 +216,7 @@
         variant="outline" color="primary"
         (click)="onBack()"
       >
-        <i class="bi bi-arrow-left"></i> ย้อนกลับ
+        <i class="bi bi-arrow-left"></i> {{ 'PMRT02A_BACK_BUTTON' | translate }}
       </sic-button>
 
       @if (isLocked) {
@@ -225,7 +225,7 @@
           variant="solid" color="primary"
           (click)="requestChange()"
         >
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข
+          <i class="bi bi-pencil-square"></i> {{ 'PMRT02A_REQUEST_CHANGE_BUTTON' | translate }}
         </sic-button>
       } @else if (!isViewOnly) {
         <sic-button
@@ -240,8 +240,8 @@
           }
           {{
             isSaving
-              ? 'กำลังบันทึก...'
-              : (selectedFlowId ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ') : (isEdit ? 'บันทึก' : 'สร้าง'))
+              ? ('PMRT02A_SAVING_TEXT' | translate)
+              : (selectedFlowId ? (isEdit ? ('PMRT02A_SAVE_AND_SUBMIT_BUTTON' | translate) : ('PMRT02A_CREATE_AND_SUBMIT_BUTTON' | translate)) : (isEdit ? ('PMRT02A_SAVE_BUTTON' | translate) : ('PMRT02A_CREATE_BUTTON' | translate)))
           }}
         </sic-button>
       }
@@ -250,7 +250,7 @@
     @if (isLocked) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        โครงการนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+        {{ 'PMRT02A_LOCKED_NOTICE' | translate }}
       </div>
     }
 
@@ -275,7 +275,7 @@
                 PRO
               </span>
             </h3>
-            <p class="text-xs text-[var(--text-muted)]">สร้างข้อมูลโครงการ วัตถุประสงค์ และขอบเขตงานอัตโนมัติด้วย AI</p>
+            <p class="text-xs text-[var(--text-muted)]">{{ 'PMRT02A_AI_MODAL_SUBTITLE' | translate }}</p>
           </div>
         </div>
         <button
@@ -293,14 +293,14 @@
           (click)="aiActiveTab.set('generate')"
           [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
           <i class="bi bi-magic"></i>
-          สร้างเนื้อหา (Generate)
+          {{ 'PMRT02A_TAB_GENERATE' | translate }}
         </button>
         <button
           type="button"
           (click)="aiActiveTab.set('history')"
           [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
           <i class="bi bi-clock-history"></i>
-          ประวัติเวอร์ชัน (History Log)
+          {{ 'PMRT02A_TAB_HISTORY' | translate }}
           @if (aiHistories().length > 0) {
             <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold">
               {{ aiHistories().length }}
@@ -316,7 +316,7 @@
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               <i class="bi bi-cpu text-purple-500 mr-1"></i>
-              โมเดล AI ที่ต้องการใช้
+              {{ 'PMRT02A_AI_MODEL_LABEL' | translate }}
             </label>
             <sic-combobox
               [options]="aiModels"
@@ -324,7 +324,7 @@
               textField="name"
               [ngModel]="aiModel()"
               (ngModelChange)="aiModel.set($event)"
-              placeholder="เลือกโมเดล AI"
+              [placeholder]="'PMRT02A_AI_MODEL_PLACEHOLDER' | translate"
               [clearable]="false">
             </sic-combobox>
           </div>
@@ -333,13 +333,13 @@
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
               <i class="bi bi-chat-left-text text-indigo-500 mr-1"></i>
-              รายละเอียดโครงการ / ความต้องการเพิ่มเติม
+              {{ 'PMRT02A_AI_PROMPT_LABEL' | translate }}
             </label>
             <textarea
               [ngModel]="aiPrompt()"
               (ngModelChange)="aiPrompt.set($event)"
               rows="3"
-              placeholder="เช่น พัฒนาระบบ CRM พร้อมระบบสะสมแต้มและแดชบอร์ดสรุปยอดขาย รองรับผู้ใช้งาน 10,000 คน..."
+              [placeholder]="'PMRT02A_AI_PROMPT_PLACEHOLDER' | translate"
               class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"></textarea>
           </div>
 
@@ -347,8 +347,8 @@
             <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
               <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">AI กำลังร่างข้อมูลโครงการ...</p>
-                <p class="text-xs text-[var(--text-muted)]">กำลังวิเคราะห์เป้าหมายและจัดทำขอบเขตงานโครงการ</p>
+                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ 'PMRT02A_AI_DRAFTING_TEXT' | translate }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ 'PMRT02A_AI_DRAFTING_SUBTEXT' | translate }}</p>
               </div>
             </div>
           }
@@ -359,7 +359,7 @@
               <div class="flex items-center justify-between border-b border-[var(--border)] pb-2 flex-wrap gap-2">
                 <span class="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                   <i class="bi bi-check-circle-fill"></i>
-                  ผลลัพธ์ล่าสุด (เวอร์ชัน v{{ aiCurrentVersionNo() }})
+                  {{ 'PMRT02A_LATEST_RESULT_LABEL' | translate }} v{{ aiCurrentVersionNo() }})
                 </span>
                 <div class="flex items-center gap-2">
                   <button
@@ -367,21 +367,21 @@
                     (click)="copyDraft(aiCurrentDraft())"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--sidebar)] border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
                     <i class="bi" [ngClass]="copiedId() === 'current' ? 'bi-check text-emerald-500' : 'bi-clipboard'"></i>
-                    {{ copiedId() === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}
+                    {{ copiedId() === 'current' ? ('PMRT02A_COPIED_TEXT' | translate) : ('PMRT02A_COPY_BUTTON' | translate) }}
                   </button>
                   <button
                     type="button"
                     (click)="pasteProjectDraft(aiCurrentDraft())"
                     class="px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer">
                     <i class="bi bi-arrow-down-circle"></i>
-                    วางลงในฟอร์ม
+                    {{ 'PMRT02A_PASTE_INTO_FORM_BUTTON' | translate }}
                   </button>
                 </div>
               </div>
 
               <div class="text-xs text-[var(--text-active)] space-y-1.5">
-                <p><strong>ชื่อโครงการ:</strong> {{ aiCurrentDraft().projectName }} ({{ aiCurrentDraft().projectCode }})</p>
-                <p><strong>สถานะ:</strong> {{ aiCurrentDraft().status }} | <strong>ระยะเวลา:</strong> {{ aiCurrentDraft().startDate }} ถึง {{ aiCurrentDraft().endDate }}</p>
+                <p><strong>{{ 'PMRT02A_PROJECT_NAME_FIELD_LABEL' | translate }}</strong> {{ aiCurrentDraft().projectName }} ({{ aiCurrentDraft().projectCode }})</p>
+                <p><strong>{{ 'PMRT02A_STATUS_FIELD_LABEL' | translate }}</strong> {{ aiCurrentDraft().status }} | <strong>{{ 'PMRT02A_DURATION_FIELD_LABEL' | translate }}</strong> {{ aiCurrentDraft().startDate }} {{ 'PMRT02A_TO_TEXT' | translate }} {{ aiCurrentDraft().endDate }}</p>
                 @if (aiCurrentDraft().description) {
                   <div class="mt-2 p-2 bg-[var(--sidebar)] rounded-lg text-xs text-[var(--text-muted)] line-clamp-4" [innerHTML]="aiCurrentDraft().description"></div>
                 }
@@ -396,7 +396,7 @@
             type="button"
             (click)="closeAiAssist()"
             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-            ยกเลิก
+            {{ 'PMRT02A_CANCEL_BUTTON' | translate }}
           </button>
           <button
             type="button"
@@ -405,10 +405,10 @@
             class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-2">
             @if (isGeneratingAi()) {
               <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>กำลังสร้าง...</span>
+              <span>{{ 'PMRT02A_GENERATING_TEXT' | translate }}</span>
             } @else {
               <i class="bi bi-stars text-amber-300"></i>
-              <span>สร้างเนื้อหาด้วย AI</span>
+              <span>{{ 'PMRT02A_GENERATE_WITH_AI_LONG_BUTTON' | translate }}</span>
             }
           </button>
         </div>
@@ -420,17 +420,17 @@
           @if (aiHistories().length === 0) {
             <div class="text-center py-12 text-[var(--text-muted)]">
               <i class="bi bi-clock-history text-4xl block mb-2 opacity-40"></i>
-              <p class="text-sm font-medium">ยังไม่มีประวัติการสร้างเนื้อหา AI</p>
-              <p class="text-xs mt-1">ประวัติจะถูกบันทึกอัตโนมัติเมื่อสร้างเนื้อหาในแท็บ "สร้างเนื้อหา"</p>
+              <p class="text-sm font-medium">{{ 'PMRT02A_NO_AI_HISTORY_TEXT' | translate }}</p>
+              <p class="text-xs mt-1">{{ 'PMRT02A_NO_AI_HISTORY_HINT' | translate }}</p>
             </div>
           } @else {
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs text-[var(--text-muted)]">มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ 'PMRT02A_TOTAL_HISTORY_LABEL' | translate }} {{ aiHistories().length }} {{ 'PMRT02A_VERSION_UNIT' | translate }}</span>
               <button
                 type="button"
                 (click)="clearAllAiHistories()"
                 class="text-xs text-rose-500 hover:underline cursor-pointer flex items-center gap-1">
-                <i class="bi bi-trash3"></i> ล้างประวัติทั้งหมด
+                <i class="bi bi-trash3"></i> {{ 'PMRT02A_CLEAR_ALL_HISTORY_BUTTON' | translate }}
               </button>
             </div>
 
@@ -442,7 +442,7 @@
                       v{{ item.versionNo }}
                     </span>
                     <span class="text-xs font-semibold text-[var(--text-active)]">
-                      {{ item.data?.projectName || 'โครงการใหม่' }}
+                      {{ item.data?.projectName || ('PMRT02A_NEW_PROJECT_DEFAULT_NAME' | translate) }}
                     </span>
                   </div>
                   <span class="text-[11px] text-[var(--text-muted)]">
@@ -465,21 +465,21 @@
                     type="button"
                     (click)="deleteAiHistory(item.id, $event)"
                     class="px-2 py-1 rounded-lg text-xs text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer">
-                    <i class="bi bi-trash"></i> ลบ
+                    <i class="bi bi-trash"></i> {{ 'PMRT02A_DELETE_BUTTON' | translate }}
                   </button>
                   <button
                     type="button"
                     (click)="copyDraft(item.data, item.id)"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--sidebar)] border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
                     <i class="bi" [ngClass]="copiedId() === item.id ? 'bi-check text-emerald-500' : 'bi-clipboard'"></i>
-                    {{ copiedId() === item.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}
+                    {{ copiedId() === item.id ? ('PMRT02A_COPIED_TEXT' | translate) : ('PMRT02A_COPY_BUTTON' | translate) }}
                   </button>
                   <button
                     type="button"
                     (click)="pasteProjectDraft(item.data)"
                     class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer flex items-center gap-1.5">
                     <i class="bi bi-arrow-down-circle"></i>
-                    วางลงในฟอร์ม
+                    {{ 'PMRT02A_PASTE_INTO_FORM_BUTTON' | translate }}
                   </button>
                 </div>
               </div>
@@ -493,10 +493,10 @@
             type="button"
             (click)="closeAiAssist()"
             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-            ปิด
+            {{ 'PMRT02A_CLOSE_BUTTON' | translate }}
           </button>
           <span class="text-xs text-[var(--text-muted)]">
-            มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน
+            {{ 'PMRT02A_TOTAL_HISTORY_LABEL' | translate }} {{ aiHistories().length }} {{ 'PMRT02A_VERSION_UNIT' | translate }}
           </span>
         </div>
       }

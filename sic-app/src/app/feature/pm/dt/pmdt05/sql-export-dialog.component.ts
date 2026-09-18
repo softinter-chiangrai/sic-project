@@ -8,6 +8,7 @@ import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { DiagramPage } from './pmdt05.model';
 
@@ -28,7 +29,7 @@ export interface DiagramSqlHistoryItem {
 @Component({
   selector: 'app-sql-export-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent, SicComboboxComponent],
+  imports: [CommonModule, FormsModule, SicButtonComponent, SicComboboxComponent, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div
@@ -42,7 +43,7 @@ export interface DiagramSqlHistoryItem {
         <div class="flex items-center justify-between">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-database-fill text-[var(--crm-primary)]"></i>
-            ER Diagram SQL Generator
+            {{ 'PMDT05_SQL_GEN_TITLE' | translate }}
           </h3>
           <button
             type="button"
@@ -66,7 +67,7 @@ export interface DiagramSqlHistoryItem {
             (click)="activeTab.set('generate')"
           >
             <i class="bi bi-lightning-charge-fill"></i>
-            Generate SQL
+            {{ 'PMDT05_GENERATE_SQL_BTN' | translate }}
           </button>
           <button
             type="button"
@@ -79,7 +80,7 @@ export interface DiagramSqlHistoryItem {
             (click)="openHistoryTab()"
           >
             <i class="bi bi-clock-history"></i>
-            History Log
+            {{ 'PMDT05_HISTORY_LOG_TAB' | translate }}
             @if (histories().length > 0) {
               <span class="ml-1 px-1.5 py-0.5 text-xs rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-bold">
                 {{ histories().length }}
@@ -96,42 +97,42 @@ export interface DiagramSqlHistoryItem {
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <sic-combobox
-                label="Select ER Diagram Page"
+                [label]="'PMDT05_SELECT_ER_PAGE_LABEL' | translate"
                 [options]="pages()"
                 valueField="id"
                 textField="name"
                 [ngModel]="selectedPageId"
                 (selectionChanged)="onPageSelected($event)"
-                placeholder="Select ER Diagram Page"
+                [placeholder]="'PMDT05_SELECT_ER_PAGE_LABEL' | translate"
                 [clearable]="false"
               ></sic-combobox>
               @if (pages().length === 0) {
                 <p class="text-xs text-[var(--text-muted)] mt-1">
-                  ไม่พบ ER Diagram (ชื่อหน้าต้องมีคำว่า ER, er, database, schema)
+                  {{ 'PMDT05_NO_ER_PAGE_MSG' | translate }}
                 </p>
               }
             </div>
 
             <div>
               <sic-combobox
-                label="Database Vendor"
+                [label]="'PMDT05_DB_VENDOR_LABEL' | translate"
                 [options]="vendorOptions"
                 valueField="value"
                 textField="text"
                 [(ngModel)]="vendor"
-                placeholder="Database Vendor"
+                [placeholder]="'PMDT05_DB_VENDOR_LABEL' | translate"
                 [clearable]="false"
               ></sic-combobox>
             </div>
 
             <div>
               <sic-combobox
-                label="AI Model"
+                [label]="'PMDT05_AI_MODEL_LABEL' | translate"
                 [options]="aiModels"
                 valueField="id"
                 textField="name"
                 [(ngModel)]="selectedAiModel"
-                placeholder="เลือกโมเดล AI"
+                [placeholder]="'PMDT05_AI_MODEL_PLACEHOLDER' | translate"
                 [clearable]="false"
               ></sic-combobox>
             </div>
@@ -143,9 +144,9 @@ export interface DiagramSqlHistoryItem {
               <div class="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
                 <i class="bi bi-stars text-lg"></i>
                 <div>
-                  <span class="block text-sm font-semibold">Initial Setup Mode (v1)</span>
+                  <span class="block text-sm font-semibold">{{ 'PMDT05_INITIAL_SETUP_MODE' | translate }}</span>
                   <span class="block text-xs text-[var(--text-muted)]">
-                    ระบบจะสร้าง Full Database Schema (CREATE TABLE) สำหรับเริ่มต้นโปรเจกต์
+                    {{ 'PMDT05_INITIAL_SETUP_DESC' | translate }}
                   </span>
                 </div>
               </div>
@@ -155,13 +156,13 @@ export interface DiagramSqlHistoryItem {
                   <i class="bi bi-arrow-repeat text-lg"></i>
                   <div>
                     <div class="flex items-center gap-2">
-                      <span class="text-sm font-semibold">Auto Migration Mode (v{{ histories()[0].versionNo + 1 }})</span>
+                      <span class="text-sm font-semibold">{{ ('PMDT05_AUTO_MIGRATION_MODE' | translate).replace('{0}', histories()[0].versionNo + 1) }}</span>
                       <span class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-                        อิงจากประวัติทั้งหมด v1 - v{{ histories()[0].versionNo }}
+                        {{ ('PMDT05_MIGRATION_BASED_ON' | translate).replace('{0}', histories()[0].versionNo) }}
                       </span>
                     </div>
                     <span class="block text-xs text-[var(--text-muted)] mt-0.5">
-                      ระบบจะนำประวัติ Script ทั้งหมดที่เคยรันมาวิเคราะห์ เพื่อเจนเฉพาะคำสั่ง ALTER TABLE / ADD COLUMN ใหม่ให้โดยไม่พังข้อมูลเดิม
+                      {{ 'PMDT05_MIGRATION_MODE_DESC' | translate }}
                     </span>
                   </div>
                 </div>
@@ -172,14 +173,14 @@ export interface DiagramSqlHistoryItem {
           <!-- Engine Selection (Parser vs AI) -->
           <div class="flex items-center justify-between p-3 rounded-lg border border-[var(--border)]">
             <div class="flex items-center gap-4">
-              <span class="text-sm font-medium text-[var(--text-active)]">Engine:</span>
+              <span class="text-sm font-medium text-[var(--text-active)]">{{ 'PMDT05_ENGINE_LABEL' | translate }}</span>
               <label class="flex items-center gap-2 cursor-pointer text-sm">
                 <input type="radio" value="ai" [(ngModel)]="engine" />
-                <span><i class="bi bi-stars text-amber-500"></i> AI (Smart types & constraints)</span>
+                <span><i class="bi bi-stars text-amber-500"></i> {{ 'PMDT05_ENGINE_AI_LABEL' | translate }}</span>
               </label>
               <label class="flex items-center gap-2 cursor-pointer text-sm">
                 <input type="radio" value="parser" [(ngModel)]="engine" />
-                <span>Parser (Direct XML)</span>
+                <span>{{ 'PMDT05_ENGINE_PARSER_LABEL' | translate }}</span>
               </label>
             </div>
 
@@ -190,9 +191,9 @@ export interface DiagramSqlHistoryItem {
               (click)="generate()"
             >
               @if (loading()) {
-                <i class="bi bi-arrow-repeat animate-spin mr-1"></i> Generating...
+                <i class="bi bi-arrow-repeat animate-spin mr-1"></i> {{ 'PMDT05_GENERATING_TEXT' | translate }}
               } @else {
-                <i class="bi bi-play-fill mr-1"></i> Generate SQL
+                <i class="bi bi-play-fill mr-1"></i> {{ 'PMDT05_GENERATE_SQL_BTN' | translate }}
               }
             </sic-button>
           </div>
@@ -202,10 +203,10 @@ export interface DiagramSqlHistoryItem {
             <div class="space-y-2 pt-2 border-t border-[var(--border)]">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium text-[var(--text-active)]">Generated SQL Result</span>
+                  <span class="text-sm font-medium text-[var(--text-active)]">{{ 'PMDT05_GENERATED_SQL_RESULT' | translate }}</span>
                   @if (lastGeneratedVersion()) {
                     <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
-                      v{{ lastGeneratedVersion() }} (Saved)
+                      v{{ lastGeneratedVersion() }}{{ 'PMDT05_SAVED_SUFFIX' | translate }}
                     </span>
                   }
                 </div>
@@ -216,14 +217,14 @@ export interface DiagramSqlHistoryItem {
                     (click)="copyToClipboard(sql())"
                   >
                     <i class="bi" [ngClass]="copied() ? 'bi-check-lg text-emerald-500' : 'bi-clipboard'"></i>
-                    <span [ngClass]="copied() ? 'text-emerald-500 font-semibold' : ''">{{ copied() ? 'Copied!' : 'Copy' }}</span>
+                    <span [ngClass]="copied() ? 'text-emerald-500 font-semibold' : ''">{{ (copied() ? 'PMDT05_COPIED_TEXT' : 'PMDT05_COPY_TEXT') | translate }}</span>
                   </button>
                   <button
                     type="button"
                     class="text-xs px-2.5 py-1 rounded bg-[var(--bg-muted)] text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 font-medium flex items-center gap-1 transition-all"
                     (click)="downloadSql(sql(), 'generated_schema')"
                   >
-                    <i class="bi bi-download"></i> Download .sql
+                    <i class="bi bi-download"></i> {{ 'PMDT05_DOWNLOAD_SQL_BTN' | translate }}
                   </button>
                 </div>
               </div>
@@ -242,18 +243,18 @@ export interface DiagramSqlHistoryItem {
           @if (loadingHistory()) {
             <div class="py-12 text-center text-[var(--text-muted)] flex flex-col items-center gap-2">
               <i class="bi bi-arrow-repeat animate-spin text-2xl text-[var(--crm-primary)]"></i>
-              <span class="text-sm">Loading history log...</span>
+              <span class="text-sm">{{ 'PMDT05_LOADING_HISTORY_LOG' | translate }}</span>
             </div>
           } @else if (histories().length === 0) {
             <div class="py-12 text-center text-[var(--text-muted)] flex flex-col items-center gap-2">
               <i class="bi bi-clock-history text-3xl opacity-40"></i>
-              <p class="text-sm">ยังไม่มีประวัติการ Generate SQL สำหรับหน้านี้</p>
+              <p class="text-sm">{{ 'PMDT05_NO_HISTORY_MSG' | translate }}</p>
               <button
                 type="button"
                 class="text-xs text-[var(--crm-primary)] underline hover:opacity-80"
                 (click)="activeTab.set('generate')"
               >
-                คลิกที่นี่เพื่อเริ่ม Generate เวอร์ชันแรก
+                {{ 'PMDT05_START_FIRST_GEN_BTN' | translate }}
               </button>
             </div>
           } @else {
@@ -286,7 +287,7 @@ export interface DiagramSqlHistoryItem {
                       <i class="bi bi-calendar3"></i>
                       {{ item.createdAt | date: 'medium' }}
                       @if (item.createdBy) {
-                        <span class="text-[var(--text-active)] ml-1">by {{ item.createdBy }}</span>
+                        <span class="text-[var(--text-active)] ml-1">{{ 'PMDT05_BY_PREFIX' | translate }}{{ item.createdBy }}</span>
                       }
                     </div>
                   </div>
@@ -305,7 +306,7 @@ export interface DiagramSqlHistoryItem {
                       (click)="togglePreview(item.id)"
                     >
                       <i class="bi" [ngClass]="previewHistoryId() === item.id ? 'bi-chevron-up' : 'bi-chevron-down'"></i>
-                      {{ previewHistoryId() === item.id ? 'Hide SQL Script' : 'Preview SQL Script' }}
+                      {{ (previewHistoryId() === item.id ? 'PMDT05_HIDE_SQL_SCRIPT' : 'PMDT05_PREVIEW_SQL_SCRIPT') | translate }}
                     </button>
 
                     <div class="flex gap-2">
@@ -316,7 +317,7 @@ export interface DiagramSqlHistoryItem {
                       >
                         <i class="bi" [ngClass]="copiedHistoryId() === item.id ? 'bi-check-lg text-emerald-500' : 'bi-clipboard'"></i>
                         <span [ngClass]="copiedHistoryId() === item.id ? 'text-emerald-500 font-semibold' : ''">
-                          {{ copiedHistoryId() === item.id ? 'Copied!' : 'Copy' }}
+                          {{ (copiedHistoryId() === item.id ? 'PMDT05_COPIED_TEXT' : 'PMDT05_COPY_TEXT') | translate }}
                         </span>
                       </button>
                       <button
@@ -324,7 +325,7 @@ export interface DiagramSqlHistoryItem {
                         class="text-xs px-2 py-1 rounded bg-[var(--bg-muted)] text-[var(--text-active)] hover:bg-[var(--crm-primary)]/10 hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
                         (click)="downloadSql(item.generatedSql, 'v' + item.versionNo + '_' + item.generationType.toLowerCase())"
                       >
-                        <i class="bi bi-download"></i> Download
+                        <i class="bi bi-download"></i> {{ 'PMDT05_DOWNLOAD_BTN' | translate }}
                       </button>
                     </div>
                   </div>
@@ -347,10 +348,10 @@ export interface DiagramSqlHistoryItem {
       <div class="border-t px-5 py-3.5 flex justify-between items-center" style="border-color: var(--border);">
         <span class="text-xs text-[var(--text-muted)]">
           @if (tabId) {
-            Tab ID: <code class="font-mono text-[11px]">{{ tabId }}</code>
+            {{ 'PMDT05_TAB_ID_LABEL' | translate }} <code class="font-mono text-[11px]">{{ tabId }}</code>
           }
         </span>
-        <sic-button variant="outline" color="primary" size="sm" (click)="close()">Close</sic-button>
+        <sic-button variant="outline" color="primary" size="sm" (click)="close()">{{ 'PMDT05_CLOSE_BTN' | translate }}</sic-button>
       </div>
     </div>
   `,
@@ -358,6 +359,7 @@ export interface DiagramSqlHistoryItem {
 export class SqlExportDialogComponent implements OnInit {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
+  private translate = inject(TranslateService);
 
   @Input() xml: string = '';
   @Input() tabId: string = '';
@@ -478,13 +480,13 @@ export class SqlExportDialogComponent implements OnInit {
 
   generate() {
     if (!this.selectedPageId) {
-      this.dialogService.warn('No page selected', 'Please select a diagram page.');
+      this.dialogService.warn(this.translate.instant('PMDT05_NO_PAGE_SELECTED_TITLE'), this.translate.instant('PMDT05_SELECT_PAGE_MSG'));
       return;
     }
 
     const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
     if (!selectedPage) {
-      this.dialogService.warn('Page not found', 'Selected page does not exist.');
+      this.dialogService.warn(this.translate.instant('PMDT05_PAGE_NOT_FOUND_TITLE'), this.translate.instant('PMDT05_PAGE_NOT_EXIST_MSG'));
       return;
     }
 
@@ -523,8 +525,8 @@ export class SqlExportDialogComponent implements OnInit {
       error: (err) => {
         console.error('❌ Generation Error:', err);
         this.loading.set(false);
-        const msg = err.error?.message || err.message || 'Could not generate SQL.';
-        this.dialogService.error('Generation Failed', msg);
+        const msg = err.error?.message || err.message || this.translate.instant('PMDT05_GEN_SQL_FAIL_MSG');
+        this.dialogService.error(this.translate.instant('PMDT05_GEN_FAILED_TITLE'), msg);
       },
     });
   }

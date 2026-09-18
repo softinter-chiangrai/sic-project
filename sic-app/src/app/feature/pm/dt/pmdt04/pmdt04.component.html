@@ -6,17 +6,17 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
-        รายการ Requirement
+        {{ 'PMDT04_PAGE_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMDT04_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <button
       (click)="goToAdd()"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
-      <i class="bi bi-plus-lg"></i> เพิ่ม Requirement
+      <i class="bi bi-plus-lg"></i> {{ 'PMDT04_ADD_REQUIREMENT_BTN' | translate }}
     </button>
   </div>
 
@@ -27,7 +27,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัส, ชื่อ..."
+        [placeholder]="'PMDT04_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -46,7 +46,7 @@
         [options]="statusOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMDT04_ALL_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -83,11 +83,11 @@
         @let r = $any(row);
         @if (r.status?.toUpperCase() === 'CHANGED') {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            รอส่งอนุมัติ
+            {{ 'PMDT04_APPROVAL_PENDING_SUBMIT' | translate }}
           </span>
         } @else if (r.status?.toUpperCase() === 'DRAFT') {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            ยังไม่อนุมัติ
+            {{ 'PMDT04_APPROVAL_NOT_YET' | translate }}
           </span>
         } @else if (r.approvalStatus) {
           <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
@@ -105,7 +105,7 @@
           <button
             (click)="goToView(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            title="ดูผังความสัมพันธ์ (pmrt05)"
+            [title]="'PMDT04_VIEW_TRACE_DIAGRAM_TITLE' | translate"
           >
             <i class="bi bi-file-earmark-text"></i>
           </button>

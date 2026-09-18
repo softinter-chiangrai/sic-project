@@ -7,20 +7,20 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-        ศูนย์อนุมัติ
+        {{ 'PMDT03_PAGE_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMDT03_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <div class="flex gap-2">
       <button
         (click)="exportCsv()"
         class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        title="ส่งออกรายการในแท็บปัจจุบันเป็น CSV"
+        [title]="'PMDT03_EXPORT_CSV_TITLE' | translate"
       >
         <i class="bi bi-download"></i>
-        Export CSV
+        {{ 'PMDT03_EXPORT_CSV_BTN' | translate }}
       </button>
 
       <div class="relative">
@@ -29,10 +29,10 @@
           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
           <i class="bi bi-layout-three-columns"></i>
-          คอลัมน์
+          {{ 'PMDT03_COLUMNS_BTN' | translate }}
         </button>
         @if (showColumnMenu()) {
-          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" aria-label="ปิดเมนูคอลัมน์"></button>
+          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" [attr.aria-label]="'PMDT03_CLOSE_COLUMN_MENU_ARIA' | translate"></button>
           <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-52 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
             @for (col of allColumns; track col.key) {
               <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
@@ -53,21 +53,21 @@
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'pending' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
-      <i class="bi bi-clock-history mr-1"></i> รอฉันอนุมัติ
+      <i class="bi bi-clock-history mr-1"></i> {{ 'PMDT03_TAB_PENDING' | translate }}
     </button>
     <button
       (click)="setViewMode('approvedHistory', grid)"
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'approvedHistory' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
-      <i class="bi bi-check2-all mr-1"></i> ประวัติการอนุมัติของฉัน
+      <i class="bi bi-check2-all mr-1"></i> {{ 'PMDT03_TAB_HISTORY' | translate }}
     </button>
     <button
       (click)="setViewMode('myRequests', grid)"
       class="px-4 py-2 text-sm font-medium transition-colors border-b-2"
       [class]="viewMode() === 'myRequests' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
-      <i class="bi bi-send mr-1"></i> คำขอของฉัน
+      <i class="bi bi-send mr-1"></i> {{ 'PMDT03_TAB_MY_REQUESTS' | translate }}
     </button>
   </div>
 
@@ -79,7 +79,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัส, ชื่อ, ผู้ขอ..."
+        [placeholder]="'PMDT03_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -99,7 +99,7 @@
         [options]="documentTypeOptions"
         [ngModel]="filterType()"
         (ngModelChange)="onTypeChange($event, grid)"
-        placeholder="📋 ทุกประเภท"
+        [placeholder]="'PMDT03_ALL_TYPES_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -110,7 +110,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMDT03_ALL_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -121,7 +121,7 @@
         [options]="projectSelectOptions"
         [ngModel]="filterProject()"
         (ngModelChange)="onProjectChange($event, grid)"
-        placeholder="📁 ทุกโครงการ"
+        [placeholder]="'PMDT03_ALL_PROJECTS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -147,7 +147,7 @@
       <ng-template sicGridPanelTemplate="titleInfo" section="cell" let-row>
         @let r = $any(row);
         <div class="font-medium text-[var(--text-active)]">{{ r.title }}</div>
-        <div class="text-xs text-[var(--text-muted)]">ผู้อนุมัติ: {{ r.approver }}</div>
+        <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT03_APPROVER_PREFIX' | translate }}{{ r.approver }}</div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="dateInfo" section="cell" let-row>
@@ -157,15 +157,15 @@
           <div class="mt-0.5">
             @if (isOverdue(r.dueDate, r.status)) {
               <span class="inline-flex items-center gap-1 text-xs text-[var(--crm-danger)] font-medium bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded">
-                <i class="bi bi-exclamation-triangle-fill"></i> เกินกำหนด ({{ formatDate(r.dueDate) }})
+                <i class="bi bi-exclamation-triangle-fill"></i> {{ 'PMDT03_OVERDUE_LABEL' | translate }} ({{ formatDate(r.dueDate) }})
               </span>
             } @else if (isDueSoon(r.dueDate, r.status)) {
               <span class="inline-flex items-center gap-1 text-xs text-amber-600 dark:text-amber-400 font-medium bg-amber-50 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
-                <i class="bi bi-clock-history"></i> ใกล้ครบกำหนด
+                <i class="bi bi-clock-history"></i> {{ 'PMDT03_DUE_SOON_LABEL' | translate }}
               </span>
             } @else {
               <span class="text-xs text-[var(--text-muted)] block">
-                ครบกำหนด: {{ formatDate(r.dueDate) }}
+                {{ 'PMDT03_DUE_DATE_PREFIX' | translate }}{{ formatDate(r.dueDate) }}
               </span>
             }
           </div>
@@ -188,7 +188,7 @@
               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
             >
               <i class="bi bi-check2"></i>
-              อนุมัติ
+              {{ 'PMDT03_APPROVE_BTN' | translate }}
             </button>
           } @else {
             <button
@@ -196,7 +196,7 @@
               class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
             >
               <i class="bi bi-eye"></i>
-              ดู
+              {{ 'PMDT03_VIEW_BTN' | translate }}
             </button>
           }
         </div>
@@ -207,19 +207,19 @@
   @if (viewMode() === 'pending' && grid.selectedRowIds.size > 0) {
     <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
       <span class="text-sm font-medium text-[var(--text-active)]">
-        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ grid.selectedRowIds.size }} รายการ
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> {{ 'PMDT03_SELECTED_COUNT_PREFIX' | translate }}{{ grid.selectedRowIds.size }} {{ 'PMDT03_ITEMS_UNIT' | translate }}
       </span>
       <button type="button" [disabled]="isBulkActing()" (click)="bulkApprove(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all disabled:opacity-50">
-        <i class="bi bi-check2"></i> อนุมัติทั้งหมด
+        <i class="bi bi-check2"></i> {{ 'PMDT03_APPROVE_ALL_BTN' | translate }}
       </button>
       <button type="button" [disabled]="isBulkActing()" (click)="bulkReject(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--crm-danger)] text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-50">
-        <i class="bi bi-x-lg"></i> ปฏิเสธทั้งหมด
+        <i class="bi bi-x-lg"></i> {{ 'PMDT03_REJECT_ALL_BTN' | translate }}
       </button>
       <button type="button" (click)="grid.reload()"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
-        <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
+        <i class="bi bi-x-lg"></i> {{ 'PMDT03_CLEAR_SELECTION_BTN' | translate }}
       </button>
     </div>
   }

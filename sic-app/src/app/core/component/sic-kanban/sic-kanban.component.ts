@@ -22,6 +22,7 @@ import type { MilestoneResponse } from '../../../feature/pm/dt/pmdt02/pmdt02A/pm
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import { SicAvatarComponent } from 'sic-ng';
 import { SicStripHtmlPipe } from '../../pipes/sic-strip-html.pipe';
+import { TranslateModule } from '@ngx-translate/core';
 
 export type KanbanViewMode = 'task' | 'workPackage' | 'milestone';
 
@@ -66,6 +67,7 @@ export interface KanbanMilestoneStatusChangeEvent {
     SicComboboxComponent,
     SicAvatarComponent,
     SicStripHtmlPipe,
+    TranslateModule,
   ],
   templateUrl: './sic-kanban.component.html',
   styleUrl: './sic-kanban.component.css',

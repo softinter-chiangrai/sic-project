@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService, AppNotification } from '../../services/notification.service';
 import dayjs from '../../../core/dayjs';
 
@@ -28,6 +28,7 @@ export class SicNotificationPanelComponent {
   private readonly elementRef = inject(ElementRef);
   private readonly router = inject(Router);
   readonly notificationSvc = inject(NotificationService);
+  private readonly translate = inject(TranslateService);
 
   @Input() isOpen = false;
   @Output() closePanel = new EventEmitter<void>();
@@ -148,12 +149,12 @@ export class SicNotificationPanelComponent {
     const diffHours = now.diff(target, 'hour');
     const diffDays = now.diff(target, 'day');
 
-    if (diffMinutes < 1) return 'เพิ่งเมื่อสักครู่';
-    if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
-    if (diffHours < 24) return `${diffHours} ชั่วโมง`;
-    if (diffDays === 1) return '1 วัน';
-    if (diffDays < 7) return `${diffDays} วัน`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} สัปดาห์`;
+    if (diffMinutes < 1) return this.translate.instant('NOTIFICATION_PANEL_JUST_NOW_TEXT');
+    if (diffMinutes < 60) return this.translate.instant('NOTIFICATION_PANEL_MINUTES_AGO_TEXT', { count: diffMinutes });
+    if (diffHours < 24) return this.translate.instant('NOTIFICATION_PANEL_HOURS_AGO_TEXT', { count: diffHours });
+    if (diffDays === 1) return this.translate.instant('NOTIFICATION_PANEL_ONE_DAY_AGO_TEXT');
+    if (diffDays < 7) return this.translate.instant('NOTIFICATION_PANEL_DAYS_AGO_TEXT', { count: diffDays });
+    if (diffDays < 30) return this.translate.instant('NOTIFICATION_PANEL_WEEKS_AGO_TEXT', { count: Math.floor(diffDays / 7) });
     return target.format('DD/MM/YYYY');
   }
 

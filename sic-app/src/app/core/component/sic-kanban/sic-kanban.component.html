@@ -12,7 +12,7 @@
             class="kanban-view-mode-btn"
             [class.active]="viewMode() === 'milestone'"
             (click)="setViewMode('milestone')"
-            title="มุมมอง Milestone"
+            [title]="'KANBAN_VIEW_MILESTONE_LABEL' | translate"
           >
             <i class="bi bi-flag"></i> Milestone
           </button>
@@ -21,7 +21,7 @@
             class="kanban-view-mode-btn"
             [class.active]="viewMode() === 'workPackage'"
             (click)="setViewMode('workPackage')"
-            title="มุมมอง Work Package"
+            [title]="'KANBAN_VIEW_WORKPACKAGE_LABEL' | translate"
           >
             <i class="bi bi-box"></i> Work Package
           </button>
@@ -30,7 +30,7 @@
             class="kanban-view-mode-btn"
             [class.active]="viewMode() === 'task'"
             (click)="setViewMode('task')"
-            title="มุมมอง Task"
+            [title]="'KANBAN_VIEW_TASK_LABEL' | translate"
           >
             <i class="bi bi-check2-square"></i> Task
           </button>
@@ -42,7 +42,7 @@
           <input
             type="text"
             class="kanban-search-input"
-            [placeholder]="viewMode() === 'task' ? 'ค้นหา Task...' : (viewMode() === 'workPackage' ? 'ค้นหา Work Package...' : 'ค้นหา Milestone...')"
+            [placeholder]="viewMode() === 'task' ? ('KANBAN_SEARCH_TASK_PLACEHOLDER' | translate) : (viewMode() === 'workPackage' ? ('KANBAN_SEARCH_WORKPACKAGE_PLACEHOLDER' | translate) : ('KANBAN_SEARCH_MILESTONE_PLACEHOLDER' | translate))"
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
           />
@@ -57,7 +57,7 @@
                 [options]="specOptions()"
                 [ngModel]="selectedSpecFilter()"
                 (ngModelChange)="selectedSpecFilter.set($event)"
-                placeholder="📜 ทุก Specification"
+                [placeholder]="'KANBAN_FILTER_ALL_SPEC_PLACEHOLDER' | translate"
                 [clearable]="true"
               >
               </sic-combobox>
@@ -71,7 +71,7 @@
                 [options]="wpOptions()"
                 [ngModel]="selectedWpFilter()"
                 (ngModelChange)="selectedWpFilter.set($event)"
-                placeholder="📦 ทุก Work Package"
+                [placeholder]="'KANBAN_FILTER_ALL_WP_PLACEHOLDER' | translate"
                 [clearable]="true"
               >
               </sic-combobox>
@@ -87,7 +87,7 @@
                 [options]="milestoneOptions()"
                 [ngModel]="selectedMilestoneFilter()"
                 (ngModelChange)="selectedMilestoneFilter.set($event)"
-                placeholder="🚩 ทุก Milestone"
+                [placeholder]="'KANBAN_FILTER_ALL_MILESTONE_PLACEHOLDER' | translate"
                 [clearable]="true"
               >
               </sic-combobox>
@@ -101,7 +101,7 @@
             [options]="priorityOptions"
             [ngModel]="selectedPriorityFilter()"
             (ngModelChange)="selectedPriorityFilter.set($event)"
-            placeholder="🚩 ทุกความสำคัญ"
+            [placeholder]="'KANBAN_FILTER_ALL_PRIORITY_PLACEHOLDER' | translate"
             [clearable]="true"
           >
           </sic-combobox>
@@ -114,7 +114,7 @@
               [options]="assigneeOptions()"
               [ngModel]="selectedAssigneeFilter()"
               (ngModelChange)="selectedAssigneeFilter.set($event)"
-              placeholder="👤 ทุกผู้รับผิดชอบ"
+              [placeholder]="'KANBAN_FILTER_ALL_ASSIGNEE_PLACEHOLDER' | translate"
               [clearable]="true"
             >
             </sic-combobox>
@@ -130,7 +130,7 @@
             class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all shadow-sm cursor-pointer"
           >
             <i class="bi bi-plus-lg"></i>
-            {{ viewMode() === 'task' ? 'เพิ่ม Task' : (viewMode() === 'workPackage' ? 'เพิ่ม Work Package' : 'เพิ่ม Milestone') }}
+            {{ (viewMode() === 'task' ? 'KANBAN_ADD_TASK_LABEL' : (viewMode() === 'workPackage' ? 'KANBAN_ADD_WORKPACKAGE_LABEL' : 'KANBAN_ADD_MILESTONE_LABEL')) | translate }}
           </button>
         }
       </div>
@@ -163,7 +163,7 @@
               type="button"
               class="kanban-column-add-btn"
               (click)="onAddItem(column.statuses[0])"
-              [title]="'เพิ่มในสถานะ ' + column.name"
+              [title]="('KANBAN_ADD_IN_STATUS_TITLE' | translate: { status: column.name })"
             >
               <i class="bi bi-plus-lg"></i>
             </button>
@@ -211,7 +211,7 @@
                         type="button"
                         class="kanban-card-action-btn"
                         (click)="onEditClick(task, $event)"
-                        title="แก้ไข Task"
+                        [title]="'KANBAN_EDIT_TASK_LABEL' | translate"
                       >
                         <i class="bi bi-pencil"></i>
                       </button>
@@ -219,7 +219,7 @@
                         type="button"
                         class="kanban-card-action-btn delete"
                         (click)="onDeleteClick(task, $event)"
-                        title="ลบ Task"
+                        [title]="'KANBAN_DELETE_TASK_LABEL' | translate"
                       >
                         <i class="bi bi-trash"></i>
                       </button>
@@ -252,7 +252,7 @@
                       <span
                         class="kanban-card-date"
                         [class.overdue]="isOverdue(task.endDate, task.status)"
-                        [title]="'กำหนดส่ง: ' + formatDate(task.endDate)"
+                        [title]="('KANBAN_DUE_DATE_TITLE' | translate: { date: formatDate(task.endDate) })"
                       >
                         <i class="bi bi-calendar3"></i>
                         {{ formatDate(task.endDate) }}
@@ -264,7 +264,7 @@
                       <span
                         class="kanban-priority-flag"
                         [ngClass]="getPriorityClass(task.priority)"
-                        [title]="'ระดับความสำคัญ: ' + task.priority"
+                        [title]="('KANBAN_PRIORITY_LEVEL_TITLE' | translate: { priority: task.priority })"
                       >
                         <i class="bi bi-flag-fill"></i>
                         {{ getPriorityLabel(task.priority) }}
@@ -283,7 +283,7 @@
                     <!-- Assignee Avatars -->
                     @let assignees = getTaskAssignees(task);
                     @if (assignees.length > 0) {
-                      <div class="flex items-center -space-x-1.5 flex-shrink-0" [title]="'ผู้รับผิดชอบ: ' + assignees.join(', ')">
+                      <div class="flex items-center -space-x-1.5 flex-shrink-0" [title]="('KANBAN_ASSIGNEE_TITLE' | translate: { names: assignees.join(', ') })">
                         @for (person of assignees.slice(0, 3); track person) {
                           <sic-avatar
                             [name]="person"
@@ -311,9 +311,9 @@
                       type="button"
                       (click)="onTaskQuickStatusChange(task, 'In Progress', $event)"
                       class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:hover:bg-blue-900/60 dark:text-blue-300 font-medium transition-colors cursor-pointer"
-                      title="เริ่มลงมือทำงาน"
+                      [title]="'KANBAN_START_WORKING_TITLE' | translate"
                     >
-                      <i class="bi bi-play-fill text-sm"></i> เริ่มทำงาน
+                      <i class="bi bi-play-fill text-sm"></i> {{ 'KANBAN_START_LABEL' | translate }}
                     </button>
                   } @else if (isInProgressStatus(task.status)) {
                     @if (isBugTask(task)) {
@@ -321,35 +321,35 @@
                         type="button"
                         (click)="onTaskQuickStatusChange(task, 'complete', $event)"
                         class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-emerald-50 hover:bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:hover:bg-emerald-900/60 dark:text-emerald-300 font-medium transition-colors cursor-pointer"
-                        title="แก้ Bug เสร็จสิ้นและปิดงาน"
+                        [title]="'KANBAN_BUG_FIX_COMPLETE_TITLE' | translate"
                       >
-                        <i class="bi bi-check-circle-fill text-xs"></i> แก้ไขเสร็จสิ้น
+                        <i class="bi bi-check-circle-fill text-xs"></i> {{ 'KANBAN_MARK_FIXED_LABEL' | translate }}
                       </button>
                     } @else {
                       <button
                         type="button"
                         (click)="onTaskQuickStatusChange(task, 'Testing', $event)"
                         class="w-full inline-flex items-center justify-center gap-1 py-1 px-2 rounded-md bg-amber-50 hover:bg-amber-100 text-amber-700 dark:bg-amber-950/50 dark:hover:bg-amber-900/60 dark:text-amber-300 font-medium transition-colors cursor-pointer"
-                        title="ส่งงานให้ Tester ตรวจ"
+                        [title]="'KANBAN_SEND_TO_QA_TITLE' | translate"
                       >
-                        <i class="bi bi-send-check text-xs"></i> ส่งตรวจ QA
+                        <i class="bi bi-send-check text-xs"></i> {{ 'KANBAN_SEND_TO_QA_LABEL' | translate }}
                       </button>
                     }
                   } @else if (isWaitingFixStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-rose-600 dark:text-rose-400 font-medium">
-                      <i class="bi bi-bug-fill text-xs"></i> กำลังรอแก้ไข Bug
+                      <i class="bi bi-bug-fill text-xs"></i> {{ 'KANBAN_WAITING_BUG_FIX_TEXT' | translate }}
                     </span>
                   } @else if (isTestingStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-amber-600 dark:text-amber-400 font-medium">
-                      <i class="bi bi-hourglass-split"></i> รอผลทดสอบจาก QA
+                      <i class="bi bi-hourglass-split"></i> {{ 'KANBAN_AWAITING_QA_RESULTS_TEXT' | translate }}
                     </span>
                   } @else if (isBugCompleteTask(task)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-emerald-600 dark:text-emerald-400 font-medium flex items-center justify-center gap-1">
-                      <i class="bi bi-patch-check-fill text-xs"></i> แก้ไข & ปิดบั๊กเรียบร้อย
+                      <i class="bi bi-patch-check-fill text-xs"></i> {{ 'KANBAN_BUG_FIXED_AND_CLOSED_TEXT' | translate }}
                     </span>
                   } @else if (isCompletedStatus(task.status)) {
                     <span class="w-full text-center py-0.5 text-[0.7rem] text-emerald-600 dark:text-emerald-400 font-medium">
-                      <i class="bi bi-check2-all text-xs"></i> ผ่านการทดสอบเรียบร้อย
+                      <i class="bi bi-check2-all text-xs"></i> {{ 'KANBAN_PASSED_TESTING_TEXT' | translate }}
                     </span>
                   }
                 </div>
@@ -359,7 +359,7 @@
 
             @if (colTasks.length === 0) {
               <div class="kanban-empty-column">
-                ไม่มีงานในสถานะนี้
+                {{ 'KANBAN_NO_TASKS_IN_STATUS_TEXT' | translate }}
               </div>
             }
           </div>
@@ -394,7 +394,7 @@
                         type="button"
                         class="kanban-card-action-btn"
                         (click)="onWpEditClick(wp, $event)"
-                        title="แก้ไข Work Package"
+                        [title]="'KANBAN_EDIT_WORKPACKAGE_LABEL' | translate"
                       >
                         <i class="bi bi-pencil"></i>
                       </button>
@@ -402,7 +402,7 @@
                         type="button"
                         class="kanban-card-action-btn delete"
                         (click)="onWpDeleteClick(wp, $event)"
-                        title="ลบ Work Package"
+                        [title]="'KANBAN_DELETE_WORKPACKAGE_LABEL' | translate"
                       >
                         <i class="bi bi-trash"></i>
                       </button>
@@ -432,8 +432,8 @@
                     }
                   </div>
                   <div class="kanban-card-meta-right">
-                    <span class="kanban-manday-tag" title="จำนวนงานใน Work Package">
-                      <i class="bi bi-list-task mr-0.5"></i> {{ wp.tasks?.length || 0 }} งาน
+                    <span class="kanban-manday-tag" [title]="'KANBAN_TASK_COUNT_IN_WP_TITLE' | translate">
+                      <i class="bi bi-list-task mr-0.5"></i> {{ 'KANBAN_TASK_COUNT_TEXT' | translate: { count: (wp.tasks?.length || 0) } }}
                     </span>
                   </div>
                 </div>
@@ -442,7 +442,7 @@
 
             @if (colWps.length === 0) {
               <div class="kanban-empty-column">
-                ไม่มี Work Package ในสถานะนี้
+                {{ 'KANBAN_NO_WORKPACKAGES_IN_STATUS_TEXT' | translate }}
               </div>
             }
           </div>
@@ -477,7 +477,7 @@
                         type="button"
                         class="kanban-card-action-btn"
                         (click)="onMilestoneEditClick(ms, $event)"
-                        title="แก้ไข Milestone"
+                        [title]="'KANBAN_EDIT_MILESTONE_LABEL' | translate"
                       >
                         <i class="bi bi-pencil"></i>
                       </button>
@@ -485,7 +485,7 @@
                         type="button"
                         class="kanban-card-action-btn delete"
                         (click)="onMilestoneDeleteClick(ms, $event)"
-                        title="ลบ Milestone"
+                        [title]="'KANBAN_DELETE_MILESTONE_LABEL' | translate"
                       >
                         <i class="bi bi-trash"></i>
                       </button>
@@ -504,14 +504,14 @@
                 <div class="kanban-card-meta">
                   <div class="kanban-card-meta-left">
                     @if (ms.dueDate) {
-                      <span class="kanban-card-date" [title]="'กำหนดส่ง: ' + formatDate(ms.dueDate)">
+                      <span class="kanban-card-date" [title]="('KANBAN_DUE_DATE_TITLE' | translate: { date: formatDate(ms.dueDate) })">
                         <i class="bi bi-calendar-check"></i>
                         {{ formatDate(ms.dueDate) }}
                       </span>
                     }
                   </div>
                   <div class="kanban-card-meta-right">
-                    <span class="kanban-manday-tag" title="จำนวน Work Package ใน Milestone">
+                    <span class="kanban-manday-tag" [title]="'KANBAN_WP_COUNT_IN_MILESTONE_TITLE' | translate">
                       <i class="bi bi-box mr-0.5"></i> {{ ms.workPackages?.length || 0 }} WPs
                     </span>
                   </div>
@@ -521,7 +521,7 @@
 
             @if (colMs.length === 0) {
               <div class="kanban-empty-column">
-                ไม่มี Milestone ในสถานะนี้
+                {{ 'KANBAN_NO_MILESTONES_IN_STATUS_TEXT' | translate }}
               </div>
             }
           </div>
@@ -536,7 +536,7 @@
               (click)="onAddItem(column.statuses[0])"
             >
               <i class="bi bi-plus-lg"></i>
-              {{ viewMode() === 'task' ? 'เพิ่ม Task' : (viewMode() === 'workPackage' ? 'เพิ่ม Work Package' : 'เพิ่ม Milestone') }}
+              {{ (viewMode() === 'task' ? 'KANBAN_ADD_TASK_LABEL' : (viewMode() === 'workPackage' ? 'KANBAN_ADD_WORKPACKAGE_LABEL' : 'KANBAN_ADD_MILESTONE_LABEL')) | translate }}
             </button>
           </div>
         }

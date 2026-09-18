@@ -3,6 +3,7 @@ import { Component, inject, signal, effect, OnInit, ChangeDetectionStrategy } fr
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
@@ -42,6 +43,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicDatepickerComponent,
     SicUploadComponent,
     SicTiptapEditorComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt14A.component.html',
   styleUrls: ['./pmdt14A.component.css'],
@@ -56,6 +58,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   private readonly customerState = inject(CustomerStateService);
   private readonly approvalService = inject(ApprovalService);
   private readonly aiHistoryService = inject(AiHistoryService);
+  private readonly translate = inject(TranslateService);
 
   formData!: SicFromData<PmDeliveryModel>;
   id = signal<string | null>(null);
@@ -78,17 +81,17 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   // Delivery options
   typeOptions = [
-    { label: 'ส่งมอบงวดสุดท้าย', value: 'FINAL' },
-    { label: 'ส่งมอบบางส่วน', value: 'PARTIAL' },
-    { label: 'ส่งมอบตามงวดงาน', value: 'MILESTONE' },
+    { label: this.translate.instant('PMDT14_TYPE_FINAL'), value: 'FINAL' },
+    { label: this.translate.instant('PMDT14_TYPE_PARTIAL'), value: 'PARTIAL' },
+    { label: this.translate.instant('PMDT14_TYPE_MILESTONE'), value: 'MILESTONE' },
   ];
 
   statusOptions = [
-    { label: 'ฉบับร่าง', value: 'DRAFT' },
-    { label: 'กำลังเตรียมเอกสาร', value: 'PREPARING' },
-    { label: 'พร้อมส่งมอบ', value: 'READY' },
-    { label: 'ส่งมอบแล้ว', value: 'DELIVERED' },
-    { label: 'ลูกค้ายืนยันรับมอบ', value: 'CONFIRMED' },
+    { label: this.translate.instant('PMDT14_STATUS_DRAFT'), value: 'DRAFT' },
+    { label: this.translate.instant('PMDT14_STATUS_PREPARING_DOC'), value: 'PREPARING' },
+    { label: this.translate.instant('PMDT14_STATUS_READY'), value: 'READY' },
+    { label: this.translate.instant('PMDT14_STATUS_DELIVERED'), value: 'DELIVERED' },
+    { label: this.translate.instant('PMDT14_STAT_CONFIRMED_SHORT'), value: 'CONFIRMED' },
   ];
 
   // AI Assistant State
@@ -114,7 +117,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   deleteAiHistory(id: string, e: MouseEvent): void {
     e.stopPropagation();
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT14_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT14_CONFIRM_DEL_HIST_MSG')).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.deleteHistory('delivery', targetId, id);
         this.loadAiHistory();
@@ -124,7 +127,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   clearAllAiHistory(): void {
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของเอกสารส่งมอบนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT14_CONFIRM_CLEAR_TITLE'), this.translate.instant('PMDT14_CONFIRM_CLEAR_MSG')).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.clearHistories('delivery', targetId);
         this.loadAiHistory();
@@ -134,7 +137,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   openAiModal(): void {
     if (this.isLocked() || this.isView()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMDT14_CANNOT_PROCEED_TITLE'), this.translate.instant('PMDT14_LOCKED_OR_VIEW_MSG'));
       return;
     }
     this.aiPrompt.set('');
@@ -166,7 +169,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAi.set(false);
         if (!draft) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาเอกสารส่งมอบได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(this.translate.instant('PMDT14_NO_DATA_TITLE'), this.translate.instant('PMDT14_AI_GEN_FAILED_MSG'));
           return;
         }
 
@@ -185,12 +188,12 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         // ดึงข้อมูลหัวข้อการส่งมอบ รายการ Release Note / Summary (Tiptap) และ Checklist ลงในฟอร์มทันที
         this.applyDraftToForm(draft);
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลส่งมอบงาน (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.dialog.success(this.translate.instant('PMDT14_GEN_SUCCESS_TITLE'), this.translate.instant('PMDT14_AI_DRAFT_SUCCESS_MSG', { v: historyItem.versionNo }));
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
         console.error('AI delivery generation error:', err);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.dialog.error(this.translate.instant('PMDT14_ERROR_OCCURRED_TITLE'), err?.error?.message || err?.message || this.translate.instant('PMDT14_AI_GEN_ERROR_MSG'));
       },
     });
   }
@@ -208,7 +211,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     const rawItems = draft.items || draft.checklists;
     if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {
       const newItems: PmDeliveryChecklistModel[] = rawItems.map((it: any, idx: number) => ({
-        itemName: typeof it === 'string' ? it : (it.itemName || it.checklistName || it.name || `รายการที่ ${idx + 1}`),
+        itemName: typeof it === 'string' ? it : (it.itemName || it.checklistName || it.name || this.translate.instant('PMDT14_DEFAULT_ITEM_NAME', { n: idx + 1 })),
         isChecked: typeof it === 'object' && it.isPassed !== undefined ? it.isPassed : false,
         sortOrder: idx + 1,
         state: SicEntityState.Added,
@@ -221,17 +224,17 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   pasteDeliveryDraft(draft: any): void {
     if (this.isLocked() || this.isView()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMDT14_CANNOT_PROCEED_TITLE'), this.translate.instant('PMDT14_LOCKED_OR_VIEW_MSG'));
       return;
     }
     if (!draft) {
-      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      this.dialog.warn(this.translate.instant('PMDT14_NO_DATA_TITLE'), this.translate.instant('PMDT14_NO_DATA_TO_PASTE_MSG'));
       return;
     }
 
     this.applyDraftToForm(draft);
     this.showAiModal.set(false);
-    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลการส่งมอบจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMDT14_APPLY_SUCCESS_TITLE'), this.translate.instant('PMDT14_APPLY_SUCCESS_MSG'));
   }
 
   copyDraft(draft: any, historyId?: string): void {
@@ -329,7 +332,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         }
       },
       error: (err) => {
-        this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลได้');
+        this.dialog.error(this.translate.instant('PMDT14_ERROR_WORD'), err.message || this.translate.instant('PMDT14_LOAD_DATA_FAILED_MSG'));
       },
     });
   }
@@ -337,7 +340,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   runGateCheck(projectId?: string, deliveryId?: string): void {
     const projId = projectId || this.formData?.form?.controls['projectId']?.value || this.customerState.getProjectId();
     if (!projId) {
-      this.dialog.warn('ไม่พบโครงการ', 'กรุณาเลือกโครงการที่ต้องการตรวจสอบเงื่อนไขส่งมอบก่อน');
+      this.dialog.warn(this.translate.instant('PMDT14_NO_PROJECT_TITLE'), this.translate.instant('PMDT14_SELECT_PROJECT_MSG'));
       return;
     }
 
@@ -350,7 +353,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err) => {
         this.isLoadingGateCheck.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถตรวจสอบเงื่อนไข Gate ได้');
+        this.dialog.error(this.translate.instant('PMDT14_ERROR_OCCURRED_TITLE'), err?.error?.message || err?.message || this.translate.instant('PMDT14_GATE_CHECK_FAILED_MSG'));
       },
     });
   }
@@ -385,7 +388,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     if (this.isView()) return;
     const list = [...this.checklists()];
     list.push({
-      itemName: 'เอกสาร/รายการส่งมอบเพิ่มเติม',
+      itemName: this.translate.instant('PMDT14_DEFAULT_ADDITIONAL_ITEM'),
       isChecked: false,
       sortOrder: list.length + 1,
       state: SicEntityState.Added,
@@ -435,7 +438,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     this.formData.form.markAllAsTouched();
     if (this.formData.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูล', 'โปรดตรวจสอบความถูกต้องของฟอร์มส่งมอบ');
+      this.dialog.warn(this.translate.instant('PMDT14_FILL_DATA_TITLE'), this.translate.instant('PMDT14_CHECK_FORM_MSG'));
       return;
     }
 
@@ -470,14 +473,14 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารส่งมอบงานเรียบร้อย');
+              this.dialog.success(this.translate.instant('PMDT14_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT14_SAVE_SUCCESS_MSG'));
               this.router.navigate(['/feature/pm/delivery']);
             },
             error: (err) => {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารส่งมอบงานเรียบร้อย');
+              this.dialog.success(this.translate.instant('PMDT14_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT14_SAVE_SUCCESS_MSG'));
               this.router.navigate(['/feature/pm/delivery']);
             }
           });
@@ -485,13 +488,13 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
           this.isSaving.set(false);
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกเอกสารส่งมอบงานเรียบร้อย');
+          this.dialog.success(this.translate.instant('PMDT14_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT14_SAVE_SUCCESS_MSG'));
           this.router.navigate(['/feature/pm/delivery']);
         }
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกเอกสารได้');
+        this.dialog.error(this.translate.instant('PMDT14_ERROR_OCCURRED_TITLE'), err.message || this.translate.instant('PMDT14_SAVE_FAILED_MSG'));
       },
     });
   }

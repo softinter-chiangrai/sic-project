@@ -6,22 +6,23 @@ import { Router, RouterModule } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Program, TreeNode } from './burt05.model';
 import { burt05Service } from './burt05.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 /** FlatNode = TreeNode + level */
 type FlatNode = TreeNode & { level: number };
 
 /** Helper: ดึงชื่อจาก Program หรือ TreeNode */
-function getProgramName(program: Program | TreeNode): string {
+function getProgramName(program: Program | TreeNode, fallback: string): string {
   if ('name' in program) {
     return program.name; // TreeNode
   }
-  return program.programNameEn || 'ไม่ระบุชื่อ'; // Program
+  return program.programNameEn || fallback; // Program
 }
 
 @Component({
   selector: 'app-burt05',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   templateUrl: './burt05.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./burt05.component.css'],
@@ -30,6 +31,7 @@ export class Burt05Component implements OnInit {
   private service = inject(burt05Service);
   private dialog = inject(DialogService);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   isLoading = signal(false);
   programs = signal<Program[]>([]);
@@ -71,7 +73,7 @@ export class Burt05Component implements OnInit {
       },
       error: () => {
         this.isLoading.set(false);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการโปรแกรมได้');
+        this.dialog.error(this.translate.instant('BURT05_LOAD_FAILED_TITLE'), this.translate.instant('BURT05_LOAD_PROGRAMS_FAILED_MSG'));
       },
     });
   }
@@ -175,23 +177,23 @@ export class Burt05Component implements OnInit {
   deleteProgram(program: Program | TreeNode) {
     const hasChildren = this.programs().some((p) => p.parentProgramId === program.id);
     if (hasChildren) {
-      this.dialog.error('ไม่สามารถลบได้', 'โปรแกรมนี้มีโปรแกรมย่อย กรุณาลบโปรแกรมย่อยก่อน');
+      this.dialog.error(this.translate.instant('BURT05_CANNOT_DELETE_TITLE'), this.translate.instant('BURT05_HAS_CHILDREN_MSG'));
       return;
     }
 
-    const programName = getProgramName(program);
+    const programName = getProgramName(program, this.translate.instant('BURT05_UNNAMED_FALLBACK'));
 
     this.dialog
-      .confirm('ยืนยันการลบ', `คุณต้องการลบโปรแกรม "${programName}" ใช่หรือไม่?`)
+      .confirm(this.translate.instant('BURT05_CONFIRM_DELETE_TITLE'), this.translate.instant('BURT05_CONFIRM_DELETE_MSG', { name: programName }))
       .then((confirmed) => {
         if (confirmed) {
           this.service.deleteProgram(program.id!).subscribe({
             next: () => {
-              this.dialog.success('ลบสำเร็จ', 'โปรแกรมถูกลบเรียบร้อย');
+              this.dialog.success(this.translate.instant('BURT05_DELETE_SUCCESS_TITLE'), this.translate.instant('BURT05_DELETE_SUCCESS_MSG'));
               this.loadData();
             },
             error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialog.error(this.translate.instant('BURT05_DELETE_FAILED_TITLE'), err.error?.message || this.translate.instant('BURT05_GENERIC_ERROR_MSG'));
             },
           });
         }
@@ -206,7 +208,7 @@ export class Burt05Component implements OnInit {
   }
 
   getStatusText(isActive: boolean): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    return isActive ? this.translate.instant('BURT05_ACTIVE_TEXT') : this.translate.instant('BURT05_INACTIVE_TEXT');
   }
 }
 

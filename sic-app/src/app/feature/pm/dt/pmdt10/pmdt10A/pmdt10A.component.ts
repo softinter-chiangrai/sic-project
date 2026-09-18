@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output, inject } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Pmdt10Service } from '../pmdt10.service';
 import { Pmdt10Form } from '../pmdt10.form';
 import type { TaskModel, TaskRequest, TaskResponse, SpecificationSummary, WorkPackageOption } from '../pmdt10.model';
@@ -26,6 +27,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
     SicColorpickerComponent,
     SicTiptapEditorComponent,
     SicTraceLinkPanelComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt10A.component.html',
   styleUrls: ['./pmdt10A.component.css'],
@@ -35,6 +37,7 @@ export class Pmdt10AComponent implements OnInit {
   private service = inject(Pmdt10Service);
   private dialog = inject(DialogService);
   private businessService = inject(BusinessService);
+  private translate = inject(TranslateService);
 
   @Input() isOpen = false;
   @Input() isEdit = false;
@@ -69,12 +72,14 @@ export class Pmdt10AComponent implements OnInit {
     }));
   }
 
-  readonly priorityOptions = [
-    { value: 'Low', text: 'ต่ำ' },
-    { value: 'Medium', text: 'ปานกลาง' },
-    { value: 'High', text: 'สูง' },
-    { value: 'Critical', text: 'วิกฤต' },
-  ];
+  get priorityOptions() {
+    return [
+      { value: 'Low', text: this.translate.instant('PMDT10_PRIO_LOW_PLAIN') },
+      { value: 'Medium', text: this.translate.instant('PMDT10_PRIO_MEDIUM_PLAIN') },
+      { value: 'High', text: this.translate.instant('PMDT10_PRIO_HIGH_PLAIN') },
+      { value: 'Critical', text: this.translate.instant('PMDT10_PRIO_CRITICAL_PLAIN') },
+    ];
+  }
 
   ngOnInit(): void {
     this.updateAssignedToApiUrl();
@@ -149,7 +154,7 @@ export class Pmdt10AComponent implements OnInit {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณาระบุ Specification, Work Package และข้อมูลที่จำเป็นให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMDT10_INCOMPLETE_DATA_TITLE'), this.translate.instant('PMDT10_INCOMPLETE_DATA_MSG'));
       return;
     }
 
@@ -179,13 +184,13 @@ export class Pmdt10AComponent implements OnInit {
     req$.subscribe({
       next: (res) => {
         this.isSaving = false;
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Task เรียบร้อย' : 'สร้าง Task พร้อมผูก Specification เรียบร้อย');
+        this.dialog.success(this.translate.instant('PMDT10_SAVE_SUCCESS_TITLE_A'), this.isEdit ? this.translate.instant('PMDT10_UPDATE_TASK_SUCCESS_MSG') : this.translate.instant('PMDT10_CREATE_TASK_SUCCESS_MSG'));
         this.saved.emit(res);
         this.closeModal();
       },
       error: (err) => {
         this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึก Task');
+        this.dialog.error(this.translate.instant('PMDT10_SAVE_ERROR_TITLE_A'), err.message || this.translate.instant('PMDT10_SAVE_TASK_ERROR_MSG'));
       },
     });
   }

@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterModule } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { NotificationService, AppNotification } from '../../../../core/services/notification.service';
 import dayjs from '../../../../core/dayjs';
 
@@ -25,6 +25,7 @@ import dayjs from '../../../../core/dayjs';
 export class Pmrt07Component implements OnInit {
   private readonly elementRef = inject(ElementRef);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
   readonly notificationSvc = inject(NotificationService);
 
   readonly activeTab = signal<'all' | 'unread'>('all');
@@ -185,12 +186,12 @@ export class Pmrt07Component implements OnInit {
     const diffHours = now.diff(target, 'hour');
     const diffDays = now.diff(target, 'day');
 
-    if (diffMinutes < 1) return 'เพิ่งเมื่อสักครู่';
-    if (diffMinutes < 60) return `${diffMinutes} นาทีที่แล้ว`;
-    if (diffHours < 24) return `${diffHours} ชั่วโมงที่แล้ว`;
-    if (diffDays === 1) return '1 วันที่แล้ว';
-    if (diffDays < 7) return `${diffDays} วันที่แล้ว`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} สัปดาห์ที่แล้ว`;
+    if (diffMinutes < 1) return this.translate.instant('PMRT07_TIME_JUST_NOW');
+    if (diffMinutes < 60) return this.translate.instant('PMRT07_TIME_MINUTES_AGO', { minutes: diffMinutes });
+    if (diffHours < 24) return this.translate.instant('PMRT07_TIME_HOURS_AGO', { hours: diffHours });
+    if (diffDays === 1) return this.translate.instant('PMRT07_TIME_ONE_DAY_AGO');
+    if (diffDays < 7) return this.translate.instant('PMRT07_TIME_DAYS_AGO', { days: diffDays });
+    if (diffDays < 30) return this.translate.instant('PMRT07_TIME_WEEKS_AGO', { weeks: Math.floor(diffDays / 7) });
     return target.format('DD/MM/YYYY HH:mm');
   }
 

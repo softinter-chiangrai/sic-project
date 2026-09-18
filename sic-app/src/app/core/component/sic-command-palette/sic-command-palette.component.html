@@ -15,7 +15,7 @@
           autofocus
           [ngModel]="keyword()"
           (ngModelChange)="onKeywordChange($event)"
-          placeholder="ค้นหาหรือกดคำสั่ง..."
+          [placeholder]="'COMMAND_PALETTE_SEARCH_PLACEHOLDER' | translate"
           class="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-muted)]"
         />
         <button
@@ -29,13 +29,13 @@
 
       <div class="max-h-[60vh] overflow-y-auto py-2">
         @if (search.isLoading()) {
-          <div class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">กำลังค้นหา...</div>
+          <div class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">{{ 'COMMAND_PALETTE_SEARCHING_TEXT' | translate }}</div>
         } @else if (rows().length === 0) {
           <div class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
             @if (keyword().trim()) {
-              ไม่พบผลลัพธ์สำหรับ "{{ keyword() }}"
+              {{ 'COMMAND_PALETTE_NO_RESULTS' | translate: { keyword: keyword() } }}
             } @else {
-              พิมพ์เพื่อค้นหาโครงการ สัญญา ลูกค้า หรือเมนู
+              {{ 'COMMAND_PALETTE_HINT_TEXT' | translate }}
             }
           </div>
         } @else {
@@ -89,10 +89,10 @@
       </div>
 
       <div class="flex items-center justify-between border-t border-[var(--border)] px-4 py-2 text-[0.68rem] text-[var(--text-muted)]">
-        <span><i class="bi bi-arrow-down-up"></i> เลื่อน &nbsp; <i class="bi bi-arrow-return-left"></i> เลือก</span>
+        <span><i class="bi bi-arrow-down-up"></i> {{ 'COMMAND_PALETTE_NAVIGATE_HINT' | translate }} &nbsp; <i class="bi bi-arrow-return-left"></i> {{ 'COMMAND_PALETTE_SELECT_HINT' | translate }}</span>
         @if (search.recentSearches().length > 0 && !keyword().trim()) {
           <button type="button" (click)="search.clearRecent()" class="hover:text-[var(--text-active)] cursor-pointer">
-            ล้างประวัติการค้นหา
+            {{ 'COMMAND_PALETTE_CLEAR_RECENT' | translate }}
           </button>
         }
       </div>

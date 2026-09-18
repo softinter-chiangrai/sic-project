@@ -1,7 +1,7 @@
 <!-- src/app/feature/pm/dt/pmdt02/pmdt02C/pmdt02C.component.html -->
 <div class="max-w-2xl mx-auto">
   <h2 class="text-xl font-semibold text-[var(--text-active)] mb-4">
-    {{ isEdit ? 'แก้ไข Task' : 'สร้าง Task ใหม่' }}
+    {{ isEdit ? ('PMDT02_EDIT_TASK_TITLE_H' | translate) : ('PMDT02_CREATE_TASK_TITLE_H' | translate) }}
   </h2>
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
@@ -12,7 +12,7 @@
       <sic-combobox
         formControlName="specificationId"
         [options]="specOptions()"
-        placeholder="เลือก Specification..."
+        [placeholder]="'PMDT02_SELECT_SPEC_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -20,11 +20,11 @@
     <!-- Task Code & Name -->
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium text-[var(--text)]">รหัส Task <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-medium text-[var(--text)]">{{ 'PMDT02_TASK_CODE_LABEL' | translate }} <span class="text-red-500">*</span></label>
         <input type="text" formControlName="taskCode" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
       </div>
       <div>
-        <label class="block text-sm font-medium text-[var(--text)]">ชื่อ Task <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-medium text-[var(--text)]">{{ 'PMDT02_TASK_NAME_LABEL' | translate }} <span class="text-red-500">*</span></label>
         <input type="text" formControlName="taskName" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
       </div>
     </div>
@@ -32,9 +32,9 @@
     <!-- Description -->
     <div>
       <sic-tiptap-editor
-        label="คำอธิบาย"
+        [label]="'PMDT02_DESCRIPTION_LABEL' | translate"
         formControlName="description"
-        placeholder="ระบุคำอธิบายหรือขั้นตอนของ Task..."
+        [placeholder]="'PMDT02_TASK_DESCRIPTION_PLACEHOLDER' | translate"
         minHeight="140px"
       ></sic-tiptap-editor>
     </div>
@@ -42,12 +42,12 @@
     <!-- ✅ ผู้รับผิดชอบ (หลายคน) -->
     <div>
       <sic-combobox
-        label="ผู้รับผิดชอบร่วม"
+        [label]="'PMDT02_CO_ASSIGNEE_LABEL' | translate"
         formControlName="assigneeIds"
         [apiUrl]="assignedToApiUrl"
         valueField="value"
         textField="text"
-        placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
+        [placeholder]="'PMDT02_ASSIGNEE_PLACEHOLDER' | translate"
         [clearable]="true"
         [multiple]="true"
         (selectionChanged)="onAssigneeSelectionChanged($event)"
@@ -58,20 +58,20 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <sic-datepicker
-          label="วันที่เริ่ม"
+          [label]="'PMDT02_START_DATE_LABEL' | translate"
           formControlName="startDate"
           [required]="true"
-          placeholder="เลือกวันที่เริ่ม"
+          [placeholder]="'PMDT02_START_DATE_PLACEHOLDER' | translate"
         ></sic-datepicker>
         @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+          <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_START_DATE_REQUIRED' | translate }}</p>
         }
       </div>
       <div>
         <sic-timepicker
-          label="เวลาเริ่ม"
+          [label]="'PMDT02_START_TIME_LABEL' | translate"
           formControlName="startTime"
-          placeholder="เลือกเวลา"
+          [placeholder]="'PMDT02_SELECT_TIME_PLACEHOLDER' | translate"
         ></sic-timepicker>
       </div>
     </div>
@@ -80,20 +80,20 @@
     <div class="grid grid-cols-2 gap-4">
       <div>
         <sic-datepicker
-          label="วันที่สิ้นสุด"
+          [label]="'PMDT02_END_DATE_LABEL' | translate"
           formControlName="endDate"
           [required]="true"
-          placeholder="เลือกวันที่สิ้นสุด"
+          [placeholder]="'PMDT02_END_DATE_PLACEHOLDER' | translate"
         ></sic-datepicker>
         @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+          <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_END_DATE_REQUIRED' | translate }}</p>
         }
       </div>
       <div>
         <sic-timepicker
-          label="เวลาสิ้นสุด"
+          [label]="'PMDT02_END_TIME_LABEL' | translate"
           formControlName="endTime"
-          placeholder="เลือกเวลา"
+          [placeholder]="'PMDT02_SELECT_TIME_PLACEHOLDER' | translate"
         ></sic-timepicker>
       </div>
     </div>
@@ -101,18 +101,18 @@
     <!-- Estimate Manday & Priority -->
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium text-[var(--text)]">Manday โดยประมาณ <span class="text-red-500">*</span></label>
+        <label class="block text-sm font-medium text-[var(--text)]">{{ 'PMDT02_MANDAY_LABEL' | translate }} <span class="text-red-500">*</span></label>
         <input type="number" min="1" step="1" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
         @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุ Manday (มากกว่า 0)</p>
+          <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_MANDAY_REQUIRED' | translate }}</p>
         }
       </div>
       <div>
         <sic-combobox
-          label="ความสำคัญ"
+          [label]="'PMDT02_PRIORITY_LABEL' | translate"
           formControlName="priority"
           [options]="priorityOptions"
-          placeholder="เลือกความสำคัญ"
+          [placeholder]="'PMDT02_SELECT_PRIORITY_PLACEHOLDER' | translate"
         ></sic-combobox>
       </div>
     </div>
@@ -120,7 +120,7 @@
     <!-- Color Picker -->
     <div>
       <sic-colorpicker
-        label="เลือกสี Task"
+        [label]="'PMDT02_TASK_COLOR_LABEL' | translate"
         formControlName="color"
         placeholder="#2ECC71"
       ></sic-colorpicker>
@@ -132,18 +132,18 @@
         <div class="flex items-center justify-between">
           <h3 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-clipboard2-check text-[var(--crm-primary)]"></i>
-            รายการเคสทดสอบและผลการทดสอบ
+            {{ 'PMDT02_TEST_CASE_LIST_HEADING' | translate }}
           </h3>
           <span class="text-xs text-[var(--text-muted)] bg-[var(--bg)] px-2 py-0.5 rounded border border-[var(--border)]">
-            {{ linkedTestCases().length }} เคส
+            {{ linkedTestCases().length }} {{ 'PMDT02_CASES_UNIT' | translate }}
           </span>
         </div>
 
         @if (testCasesLoading()) {
-          <div class="text-xs text-[var(--text-muted)] py-3 text-center">กำลังโหลดรายการ Test Cases...</div>
+          <div class="text-xs text-[var(--text-muted)] py-3 text-center">{{ 'PMDT02_LOADING_TEST_CASES' | translate }}</div>
         } @else if (linkedTestCases().length === 0) {
           <div class="text-xs text-[var(--text-muted)] p-3 text-center bg-[var(--bg)]/40 rounded-lg border border-dashed border-[var(--border)]">
-            <i class="bi bi-info-circle mr-1"></i> ยังไม่มี Test Case ที่ผูกกับ Task นี้
+            <i class="bi bi-info-circle mr-1"></i> {{ 'PMDT02_NO_LINKED_TEST_CASE' | translate }}
           </div>
         } @else {
           <div class="space-y-2.5 max-h-72 overflow-y-auto pr-1">
@@ -169,7 +169,7 @@
                   <div class="text-[var(--text-muted)] text-[0.75rem] bg-[var(--sidebar)] p-2.5 rounded-lg border border-[var(--border)] transition-all">
                     <div class="flex items-center justify-between gap-2 mb-1">
                       <span class="font-bold text-[var(--text)] flex items-center gap-1.5">
-                        <i class="bi bi-list-ol text-[var(--crm-primary)]"></i> ขั้นตอนการทดสอบ:
+                        <i class="bi bi-list-ol text-[var(--crm-primary)]"></i> {{ 'PMDT02_TEST_STEP_LABEL' | translate }}
                       </span>
                       <button
                         type="button"
@@ -177,10 +177,10 @@
                         class="text-[0.7rem] font-medium text-[var(--crm-primary)] hover:underline flex items-center gap-1 cursor-pointer bg-transparent border-none p-0"
                       >
                         @if (isStepExpanded(tc.id)) {
-                          <span>ย่อเนื้อหา</span>
+                          <span>{{ 'PMDT02_COLLAPSE_CONTENT' | translate }}</span>
                           <i class="bi bi-chevron-up text-[0.65rem]"></i>
                         } @else {
-                          <span>ดูเพิ่มเติม</span>
+                          <span>{{ 'PMDT02_SHOW_MORE' | translate }}</span>
                           <i class="bi bi-chevron-down text-[0.65rem]"></i>
                         }
                       </button>
@@ -197,7 +197,7 @@
                 @if (tc.actualResult) {
                   <div class="p-2 rounded-lg text-[0.7rem]" [ngClass]="(tc.testStatus || '').toLowerCase() === 'fail' ? 'bg-rose-100/70 dark:bg-rose-900/30 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-700' : 'bg-blue-50 dark:bg-blue-950/30 text-blue-800 dark:text-blue-200 border border-blue-200 dark:border-blue-800'">
                     <span class="font-bold flex items-center gap-1 mb-0.5">
-                      <i class="bi bi-bug-fill text-rose-500"></i> ผลที่พบจริงจากการทดสอบ (Actual / ปัญหาที่พบ):
+                      <i class="bi bi-bug-fill text-rose-500"></i> {{ 'PMDT02_ACTUAL_RESULT_LABEL' | translate }}
                     </span>
                     <div [innerHTML]="tc.actualResult"></div>
                   </div>
@@ -213,11 +213,11 @@
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button type="button" variant="outline" color="primary" (click)="cancel()">
         <i class="bi bi-arrow-left"></i>
-        ยกเลิก
+        {{ 'PMDT02_CANCEL' | translate }}
       </sic-button>
       <sic-button type="submit" variant="solid" color="primary" [disabled]="form.invalid">
         <i class="bi bi-floppy"></i>
-        {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+        {{ isEdit ? ('PMDT02_SAVE' | translate) : ('PMDT02_CREATE' | translate) }}
       </sic-button>
     </div>
 

@@ -6,21 +6,21 @@
       <button
         (click)="onBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMDT09_BACK_BTN_TITLE' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-clipboard-check text-[var(--crm-primary)]"></i>
-          {{ isEdit ? 'แก้ไขการตรวจทานการออกแบบ' : 'สร้างการตรวจทานการออกแบบใหม่' }}
+          {{ isEdit ? ('PMDT09_EDIT_PAGE_TITLE' | translate) : ('PMDT09_ADD_PAGE_TITLE' | translate) }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          ตรวจทานการออกแบบ UI/UX, Prototype, และโครงสร้างระบบ พร้อมเชื่อมต่อ Figma Live Canvas
+          {{ 'PMDT09_FORM_PAGE_DESC' | translate }}
         </p>
         @if (isEdit) {
           <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
-            <span>รหัส: {{ form.getRawValue().reviewCode }}</span>
+            <span>{{ 'PMDT09_CODE_LABEL' | translate }} {{ form.getRawValue().reviewCode }}</span>
             <sic-version-badge [status]="form.getRawValue().status" [isLocked]="isLocked"></sic-version-badge>
           </p>
         }
@@ -32,7 +32,7 @@
   @if (isLoading) {
     <div class="flex flex-col items-center justify-center py-16 gap-4 bg-[var(--sidebar)] border border-[var(--border)] rounded-xl">
       <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล Design Review...</p>
+      <p class="text-[var(--text-muted)]">{{ 'PMDT09_FORM_LOADING' | translate }}</p>
     </div>
   }
 
@@ -43,52 +43,52 @@
         <!-- Form Inputs Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <sic-input
-            label="รหัส Design Review"
+            [label]="'PMDT09_REVIEW_CODE_LABEL' | translate"
             formControlName="reviewCode"
             [required]="true"
-            placeholder="เช่น DR-001"
+            [placeholder]="'PMDT09_REVIEW_CODE_PLACEHOLDER' | translate"
           ></sic-input>
 
           <sic-input
-            label="ชื่อเรื่อง"
+            [label]="'PMDT09_TITLE_LABEL' | translate"
             formControlName="title"
             [required]="true"
-            placeholder="เช่น Review UI Dashboard & Design Tokens"
+            [placeholder]="'PMDT09_TITLE_PLACEHOLDER' | translate"
           ></sic-input>
 
           <sic-combobox
-            label="Specification ที่เกี่ยวข้อง"
+            [label]="'PMDT09_REVIEWABLE_LABEL' | translate"
             formControlName="reviewableId"
             [apiUrl]="service.apiGetComboboxReviewable"
             [params]="{
               projectId: form.get('projectId')?.value
             }"
             [required]="true"
-            placeholder="เลือกรายการที่ต้องการตรวจสอบ"
+            [placeholder]="'PMDT09_REVIEWABLE_PLACEHOLDER' | translate"
           ></sic-combobox>
 
           <sic-combobox
-            label="ระดับความรุนแรง"
+            [label]="'PMDT09_SEVERITY_FIELD_LABEL' | translate"
             formControlName="severity"
             [items]="service.severityOptions"
             valueField="value"
             textField="label"
             [required]="true"
-            placeholder="เลือกระดับความรุนแรง"
+            [placeholder]="'PMDT09_SEV_SELECT_PH' | translate"
           ></sic-combobox>
 
           <sic-combobox
-            label="สถานะ"
+            [label]="'PMDT09_STATUS_LABEL' | translate"
             formControlName="status"
             [items]="service.statusOptions"
             valueField="value"
             textField="label"
             [required]="true"
-            placeholder="เลือกสถานะ"
+            [placeholder]="'PMDT09_STATUS_SELECT_PH' | translate"
           ></sic-combobox>
 
           <sic-datepicker
-            label="กำหนดส่ง"
+            [label]="'PMDT09_DUE_DATE_LABEL' | translate"
             formControlName="dueDate"
             [required]="true"
             placeholder="DD/MM/YYYY"
@@ -96,23 +96,23 @@
 
           <div class="md:col-span-2 lg:col-span-2">
             <sic-combobox
-              label="ผู้รับผิดชอบแก้ไข"
+              [label]="'PMDT09_ASSIGNED_TO_LABEL' | translate"
               formControlName="assignedTo"
               [apiUrl]="service.apiGetUsers"
               valueField="name"
               textField="name"
               [multiple]="true"
               [required]="true"
-              placeholder="เลือกผู้รับผิดชอบแก้ไข (เลือกได้หลายคน)"
+              [placeholder]="'PMDT09_ASSIGNED_TO_PH' | translate"
             ></sic-combobox>
           </div>
 
           <sic-combobox
-            label="กระบวนการอนุมัติ"
+            [label]="'PMDT09_APPROVAL_FLOW_LABEL' | translate"
             [apiUrl]="service.apiGetApprovalFlows"
             valueField="id"
             textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
+            [placeholder]="'PMDT09_APPROVAL_FLOW_PH' | translate"
             [clearable]="true"
             formControlName="approvalFlowId"
             (selectionChanged)="onFlowChange($event)"
@@ -123,10 +123,10 @@
         <!-- Description (Tiptap Editor) -->
         <div class="space-y-1.5">
           <sic-tiptap-editor
-            label="คำอธิบาย"
+            [label]="'PMDT09_DESC_LABEL' | translate"
             [required]="true"
             formControlName="description"
-            placeholder="อธิบายรายละเอียดของงาน วัตถุประสงค์ และสิ่งที่ต้องการให้ตรวจสอบ..."
+            [placeholder]="'PMDT09_DESC_PH' | translate"
             minHeight="160px"
           ></sic-tiptap-editor>
         </div>
@@ -136,7 +136,7 @@
           <sic-input
             label="Figma File / Prototype URL"
             formControlName="figmaUrl"
-            placeholder="https://www.figma.com/proto/... หรือ https://www.figma.com/design/..."
+            [placeholder]="'PMDT09_FIGMA_URL_PH' | translate"
           ></sic-input>
 
           @if (activeEmbedUrl) {
@@ -161,7 +161,7 @@
                         Embed API Active
                       </span>
                     </h3>
-                    <span class="text-xs text-[var(--text-muted)]">ควบคุมและทดสอบ Interactive Prototype ได้แบบเรียลไทม์</span>
+                    <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT09_CONTROL_TEST_DESC' | translate }}</span>
                   </div>
                 </div>
 
@@ -172,7 +172,7 @@
                       type="button"
                       (click)="prototypePrev()"
                       class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                      title="ย้อนกลับหน้าเดิม (Embed API: prev)"
+                      [title]="'PMDT09_PREV_PAGE_TITLE' | translate"
                     >
                       <i class="bi bi-skip-backward-fill"></i>
                       <span class="hidden sm:inline">Prev</span>
@@ -181,7 +181,7 @@
                       type="button"
                       (click)="prototypeNext()"
                       class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                      title="ถัดไป (Embed API: next)"
+                      [title]="'PMDT09_NEXT_PAGE_TITLE' | translate"
                     >
                       <span class="hidden sm:inline">Next</span>
                       <i class="bi bi-skip-forward-fill"></i>
@@ -191,7 +191,7 @@
                       type="button"
                       (click)="prototypeRestart()"
                       class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-amber-500 transition-all flex items-center gap-1"
-                      title="รีสตาร์ท Prototype (Embed API: restart)"
+                      [title]="'PMDT09_RESTART_PROTO_TITLE' | translate"
                     >
                       <i class="bi bi-arrow-counterclockwise"></i>
                       <span class="hidden sm:inline">Restart</span>
@@ -200,7 +200,7 @@
                       type="button"
                       (click)="prototypeToggleHints()"
                       class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-indigo-500 transition-all flex items-center gap-1"
-                      title="เปิด/ปิด Hotspot Hints (Embed API: toggleHints)"
+                      [title]="'PMDT09_TOGGLE_HINTS_TITLE' | translate"
                     >
                       <i class="bi bi-lightbulb"></i>
                       <span class="hidden sm:inline">Hints</span>
@@ -211,7 +211,7 @@
                     type="button"
                     (click)="openExternalFigma()"
                     class="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all flex items-center gap-1.5 shadow-sm"
-                    title="เปิดในแท็บใหม่ Figma"
+                    [title]="'PMDT09_OPEN_FIGMA_NEW_TAB' | translate"
                   >
                     <i class="bi bi-box-arrow-up-right"></i>
                     <span class="hidden md:inline">Open Figma</span>
@@ -220,7 +220,7 @@
                     type="button"
                     (click)="toggleFullscreen()"
                     class="p-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all shadow-sm"
-                    [title]="isFullscreen ? 'ย่อหน้าต่าง' : 'ขยายเต็มจอ'"
+                    [title]="isFullscreen ? ('PMDT09_COLLAPSE_TITLE' | translate) : ('PMDT09_EXPAND_TITLE' | translate)"
                   >
                     <i [class]="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
                   </button>
@@ -235,7 +235,7 @@
                 @if (isFigmaLoading) {
                   <div class="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 text-white">
                     <div class="w-8 h-8 border-3 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-xs tracking-wide text-neutral-300">กำลังเชื่อมต่อกับ Figma Embed...</span>
+                    <span class="text-xs tracking-wide text-neutral-300">{{ 'PMDT09_CONNECTING_FIGMA' | translate }}</span>
                   </div>
                 }
                 <iframe
@@ -258,12 +258,12 @@
               formControlName="isActive"
               class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20"
             />
-            <span class="text-[var(--text-active)] font-medium">เปิดใช้งาน Design Review นี้</span>
+            <span class="text-[var(--text-active)] font-medium">{{ 'PMDT09_ACTIVE_TOGGLE_LABEL' | translate }}</span>
           </label>
 
           @if (!selectedFlowId && flows.length > 0) {
             <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
-              <i class="bi bi-info-circle"></i> สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก
+              <i class="bi bi-info-circle"></i> {{ 'PMDT09_APPROVAL_FLOW_HINT' | translate }}
             </span>
           }
         </div>
@@ -283,7 +283,7 @@
           <div class="pt-4 border-t border-[var(--border)] space-y-3">
             <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-chat-dots text-[var(--crm-primary)]"></i>
-              ความคิดเห็นและการตรวจสอบ
+              {{ 'PMDT09_COMMENTS_SECTION_TITLE' | translate }}
             </h3>
             <div class="space-y-2.5">
               @for (comment of form.get('comments')?.value; track comment.id) {
@@ -312,21 +312,21 @@
           <div>
             @if (isEdit && !isLocked) {
               <sic-button variant="solid" color="danger" (click)="onDelete()" [disabled]="isLoading || isSaving">
-                <i class="bi bi-trash"></i> ลบ
+                <i class="bi bi-trash"></i> {{ 'PMDT09_DELETE_BTN' | translate }}
               </sic-button>
             }
           </div>
           <div class="flex items-center gap-3">
             <sic-button variant="outline" (click)="onBack()">
-              <i class="bi bi-arrow-left"></i> {{ isLocked ? 'กลับ' : 'ยกเลิก' }}
+              <i class="bi bi-arrow-left"></i> {{ isLocked ? ('PMDT09_BACK_BTN_TITLE' | translate) : ('PMDT09_CANCEL_BTN' | translate) }}
             </sic-button>
             @if (isLocked) {
               <sic-button variant="solid" color="primary" (click)="requestChange()">
-                <i class="bi bi-pencil-square"></i> ขอแก้ไข
+                <i class="bi bi-pencil-square"></i> {{ 'PMDT09_REQUEST_CHANGE_BTN' | translate }}
               </sic-button>
             } @else {
               <sic-button variant="solid" color="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
-                <i class="bi bi-check-lg"></i> {{ isEdit ? 'บันทึกข้อมูล' : 'สร้างรายการ' }}
+                <i class="bi bi-check-lg"></i> {{ isEdit ? ('PMDT09_SAVE_BTN' | translate) : ('PMDT09_CREATE_ITEM_BTN' | translate) }}
               </sic-button>
             }
           </div>
@@ -335,7 +335,7 @@
         @if (isLocked) {
           <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
             <i class="bi bi-lock-fill"></i>
-            เอกสารนี้ผ่านการอนุมัติแล้ว (ล็อก Baseline) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+            {{ 'PMDT09_LOCKED_DOC_NOTICE' | translate }}
           </div>
         }
       </div>

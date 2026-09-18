@@ -8,12 +8,13 @@ import { HttpClient } from '@angular/common/http';
 import { PmSpecificationModel } from '../pmdt07.model';
 import { environment } from '../../../../../../environments/environment';
 import { BusinessService } from '../../../../../core/services/business.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
 @Component({
     selector: 'sic-specification-preview',
     standalone: true,
-    imports: [CommonModule, SicDatePipe],
+    imports: [CommonModule, SicDatePipe, TranslateModule],
     template: `
     <div class="spec-preview">
       <div class="spec-preview__header">
@@ -39,18 +40,18 @@ import { BusinessService } from '../../../../../core/services/business.service';
 
       <div class="spec-preview__body">
         <div class="spec-preview__section">
-          <h3 class="section-title">📋 ข้อมูลทั่วไป</h3>
+          <h3 class="section-title">📋 {{ 'PMDT07_PREVIEW_GENERAL_INFO' | translate }}</h3>
           <div class="info-grid">
             <div class="info-item">
-              <span class="info-label">ประเภท Spec</span>
+              <span class="info-label">{{ 'PMDT07_PREVIEW_SPEC_TYPE_LABEL' | translate }}</span>
               <span class="info-value">{{ data.specificationType || data.specType || '-' }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">Manday โดยประมาณ</span>
-              <span class="info-value">{{ data.estimatedManday || 0 }} วัน</span>
+              <span class="info-label">{{ 'PMDT07_PREVIEW_ESTIMATED_MANDAY_LABEL' | translate }}</span>
+              <span class="info-value">{{ data.estimatedManday || 0 }} {{ 'PMDT07_PREVIEW_DAYS_UNIT' | translate }}</span>
             </div>
             <div class="info-item">
-              <span class="info-label">สถานะ</span>
+              <span class="info-label">{{ 'PMDT07_PREVIEW_STATUS_LABEL' | translate }}</span>
               <span class="info-value" [class]="'status--' + getStatusClass(data.status)">
                 {{ getStatusText(data.status) }}
               </span>
@@ -59,14 +60,14 @@ import { BusinessService } from '../../../../../core/services/business.service';
         </div>
 
         <div class="spec-preview__section">
-          <h3 class="section-title">📝 รายละเอียด Specification</h3>
+          <h3 class="section-title">📝 {{ 'PMDT07_PREVIEW_SPEC_DETAILS' | translate }}</h3>
           <div class="content-body" [innerHTML]="sanitizeHtml(data.description)"></div>
         </div>
       </div>
 
       <div class="spec-preview__footer">
-        <span class="text-muted">เอกสารนี้ใช้เพื่อการตรวจสอบและอนุมัติ</span>
-        <span class="text-muted">สร้างเมื่อ {{ (data.createdDate || data.createdAt) ? ((data.createdDate || data.createdAt) | sicDate : null : 'DD/MM/YYYY HH:mm') : '-' }}</span>
+        <span class="text-muted">{{ 'PMDT07_PREVIEW_DOC_PURPOSE_NOTE' | translate }}</span>
+        <span class="text-muted">{{ 'PMDT07_PREVIEW_CREATED_ON_PREFIX' | translate }} {{ (data.createdDate || data.createdAt) ? ((data.createdDate || data.createdAt) | sicDate : null : 'DD/MM/YYYY HH:mm') : '-' }}</span>
       </div>
     </div>
   `,
@@ -194,6 +195,7 @@ export class Pmdt07PreviewComponent implements OnChanges {
     private sanitizer = inject(DomSanitizer);
     private http = inject(HttpClient);
     private businessService = inject(BusinessService);
+    private translate = inject(TranslateService);
 
     private memberMap = new Map<string, string>();
 
@@ -259,11 +261,11 @@ export class Pmdt07PreviewComponent implements OnChanges {
 
     getStatusText(status?: string): string {
         const map: Record<string, string> = {
-            Draft: 'ร่าง',
-            Review: 'ตรวจสอบ',
-            Approved: 'อนุมัติ',
-            Released: 'เผยแพร่'
+            Draft: this.translate.instant('PMDT07_PREVIEW_STATUS_DRAFT'),
+            Review: this.translate.instant('PMDT07_PREVIEW_STATUS_REVIEW'),
+            Approved: this.translate.instant('PMDT07_PREVIEW_STATUS_APPROVED'),
+            Released: this.translate.instant('PMDT07_PREVIEW_STATUS_RELEASED')
         };
-        return map[status || 'Draft'] || status || 'ร่าง';
+        return map[status || 'Draft'] || status || this.translate.instant('PMDT07_PREVIEW_STATUS_DRAFT');
     }
 }

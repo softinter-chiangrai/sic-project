@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from 'sic-ng';
@@ -25,7 +26,8 @@ import { SicButtonComponent } from "sic-ng";
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
-    SicButtonComponent
+    SicButtonComponent,
+    TranslateModule
 ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02B.component.html',
@@ -36,6 +38,7 @@ export class Pmdt02BComponent implements OnInit {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private translate = inject(TranslateService);
 
   milestoneId = '';
   projectId = '';
@@ -82,7 +85,7 @@ export class Pmdt02BComponent implements OnInit {
         this.data = data;
         this.patchForm(data);
       },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+      error: (err) => this.dialog.error(this.translate.instant('PMDT02_LOAD_FAIL_TITLE'), err.message),
     });
   }
 
@@ -112,7 +115,7 @@ export class Pmdt02BComponent implements OnInit {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.error(this.translate.instant('PMDT02_INVALID_DATA_TITLE'), this.translate.instant('PMDT02_FILL_ALL_FIELDS'));
       return;
     }
 
@@ -132,12 +135,12 @@ export class Pmdt02BComponent implements OnInit {
 
     request.subscribe({
       next: (res) => {
-        this.dialog.success('สำเร็จ', this.isEdit ? 'อัปเดต Work Package เรียบร้อย' : 'สร้าง Work Package เรียบร้อย');
+        this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_WP_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_WP_SUCCESS_MSG'));
         this.router.navigate(['/feature/pm/phase', this.phaseId], {
           queryParams: { projectId: this.projectId },
         });
       },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+      error: (err) => this.dialog.error(this.translate.instant('PMDT02_FAIL_TITLE'), err.message),
     });
   }
 

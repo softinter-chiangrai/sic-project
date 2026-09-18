@@ -11,6 +11,7 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import type { PaginationResponse } from '../../../../core/model/pagination.model';
@@ -23,7 +24,7 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 @Component({
   selector: 'app-pmdt03',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt03.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -33,6 +34,7 @@ export class Pmdt03Component implements OnInit {
   private approvalService = inject(ApprovalService);
   private dialog = inject(DialogService);
   private authService = inject(AuthService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -54,9 +56,9 @@ export class Pmdt03Component implements OnInit {
   // ===== Column Visibility =====
   private readonly COLUMN_STORAGE_KEY = 'pmdt03.visibleColumns';
   protected readonly allColumns: { key: string; label: string }[] = [
-    { key: 'projectName', label: 'โครงการ' },
-    { key: 'requester', label: 'ผู้ขอ' },
-    { key: 'requestedDate', label: 'วันที่ขอ' },
+    { key: 'projectName', label: this.translate.instant('PMDT03_COL_PROJECT') },
+    { key: 'requester', label: this.translate.instant('PMDT03_COL_REQUESTER') },
+    { key: 'requestedDate', label: this.translate.instant('PMDT03_COL_REQUESTED_DATE') },
   ];
   protected visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   protected showColumnMenu = signal(false);
@@ -75,13 +77,13 @@ export class Pmdt03Component implements OnInit {
       showToolbar: false,
       pageSize: this.pageSize(),
       column: [
-        { label: 'ประเภท/รหัส', name: 'documentCode', type: 'docInfo', minWidth: 120 },
-        { label: 'รายการ', name: 'title', type: 'titleInfo', minWidth: 180 },
-        { label: 'โครงการ', name: 'projectName', type: 'text', hidden: !visible.has('projectName'), minWidth: 120 },
-        { label: 'ผู้ขอ', name: 'requester', type: 'text', hidden: !visible.has('requester'), minWidth: 100 },
-        { label: 'วันที่ขอ', name: 'requestedDate', type: 'dateInfo', hidden: !visible.has('requestedDate'), minWidth: 140 },
-        { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 110 },
-        { label: 'ดำเนินการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
+        { label: this.translate.instant('PMDT03_COL_TYPE_CODE'), name: 'documentCode', type: 'docInfo', minWidth: 120 },
+        { label: this.translate.instant('PMDT03_COL_ITEM'), name: 'title', type: 'titleInfo', minWidth: 180 },
+        { label: this.translate.instant('PMDT03_COL_PROJECT'), name: 'projectName', type: 'text', hidden: !visible.has('projectName'), minWidth: 120 },
+        { label: this.translate.instant('PMDT03_COL_REQUESTER'), name: 'requester', type: 'text', hidden: !visible.has('requester'), minWidth: 100 },
+        { label: this.translate.instant('PMDT03_COL_REQUESTED_DATE'), name: 'requestedDate', type: 'dateInfo', hidden: !visible.has('requestedDate'), minWidth: 140 },
+        { label: this.translate.instant('PMDT03_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 110 },
+        { label: this.translate.instant('PMDT03_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
       ],
     };
   });
@@ -104,16 +106,16 @@ export class Pmdt03Component implements OnInit {
   ];
 
   readonly statusSelectOptions = [
-    { value: 'PENDING', text: 'รอดำเนินการ' },
-    { value: 'APPROVED', text: 'อนุมัติ' },
-    { value: 'REJECTED', text: 'ไม่อนุมัติ' },
-    { value: 'NEED_REVISION', text: 'ขอให้แก้ไข' },
-    { value: 'CANCELLED', text: 'ยกเลิก' },
+    { value: 'PENDING', text: this.translate.instant('PMDT03_STATUS_PENDING') },
+    { value: 'APPROVED', text: this.translate.instant('PMDT03_STATUS_APPROVED') },
+    { value: 'REJECTED', text: this.translate.instant('PMDT03_STATUS_REJECTED') },
+    { value: 'NEED_REVISION', text: this.translate.instant('PMDT03_STATUS_NEED_REVISION_OPT') },
+    { value: 'CANCELLED', text: this.translate.instant('PMDT03_STATUS_CANCELLED') },
   ];
 
   readonly projectSelectOptions = [
-    { value: '1', text: 'ระบบ CRM' },
-    { value: '2', text: 'ระบบ HR' },
+    { value: '1', text: this.translate.instant('PMDT03_PROJECT_CRM') },
+    { value: '2', text: this.translate.instant('PMDT03_PROJECT_HR') },
   ];
 
   documentTypes = [
@@ -134,8 +136,8 @@ export class Pmdt03Component implements OnInit {
   statusOptions = ['PENDING', 'APPROVED', 'REJECTED', 'NEED_REVISION', 'CANCELLED'];
 
   projectOptions = [
-    { id: '1', name: 'ระบบ CRM' },
-    { id: '2', name: 'ระบบ HR' },
+    { id: '1', name: this.translate.instant('PMDT03_PROJECT_CRM') },
+    { id: '2', name: this.translate.instant('PMDT03_PROJECT_HR') },
   ];
 
   ngOnInit(): void {
@@ -175,7 +177,7 @@ export class Pmdt03Component implements OnInit {
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     const userId = this.authService.getUserId();
     if (!userId) {
-      this.dialog.error('ไม่พบข้อมูลผู้ใช้', 'กรุณาเข้าสู่ระบบใหม่');
+      this.dialog.error(this.translate.instant('PMDT03_NO_USER_TITLE'), this.translate.instant('PMDT03_RELOGIN_MSG'));
       return;
     }
 
@@ -212,8 +214,8 @@ export class Pmdt03Component implements OnInit {
           console.error('Load approvals error:', error);
           this.approvals.set([]);
           this.totalElements.set(0);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการอนุมัติได้');
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          this.dialog.error(this.translate.instant('PMDT03_LOAD_FAIL_TITLE'), this.translate.instant('PMDT03_LOAD_APPROVALS_FAIL_MSG'));
+          grid.setLoadError(this.translate.instant('PMDT03_LOAD_FAIL_TITLE'), request.requestId);
         },
       });
   }
@@ -306,7 +308,7 @@ export class Pmdt03Component implements OnInit {
   bulkApprove(grid: SicGridPanelComponent): void {
     const ids = Array.from(grid.selectedRowIds) as string[];
     if (ids.length === 0) return;
-    this.dialog.confirm('ยืนยันการอนุมัติ', `คุณต้องการอนุมัติ ${ids.length} รายการที่เลือกใช่หรือไม่?`).then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT03_CONFIRM_APPROVE_TITLE'), this.translate.instant('PMDT03_CONFIRM_APPROVE_MSG', { count: ids.length })).then((confirmed) => {
       if (!confirmed) return;
       this.runBulkAction(ids, grid, (id) => this.approvalService.approve(id));
     });
@@ -315,7 +317,7 @@ export class Pmdt03Component implements OnInit {
   bulkReject(grid: SicGridPanelComponent): void {
     const ids = Array.from(grid.selectedRowIds) as string[];
     if (ids.length === 0) return;
-    this.dialog.confirm('ยืนยันการปฏิเสธ', `คุณต้องการปฏิเสธ ${ids.length} รายการที่เลือกใช่หรือไม่?`).then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT03_CONFIRM_REJECT_TITLE'), this.translate.instant('PMDT03_CONFIRM_REJECT_MSG', { count: ids.length })).then((confirmed) => {
       if (!confirmed) return;
       this.runBulkAction(ids, grid, (id) => this.approvalService.reject(id));
     });
@@ -334,9 +336,9 @@ export class Pmdt03Component implements OnInit {
             this.isBulkActing.set(false);
             grid.reload();
             if (failed > 0) {
-              this.dialog.error('ดำเนินการไม่สำเร็จบางรายการ', `${failed} รายการดำเนินการไม่สำเร็จ`);
+              this.dialog.error(this.translate.instant('PMDT03_PARTIAL_FAIL_TITLE'), this.translate.instant('PMDT03_PARTIAL_FAIL_MSG', { count: failed }));
             } else {
-              this.dialog.success('สำเร็จ', 'ดำเนินการกับรายการที่เลือกเรียบร้อยแล้ว');
+              this.dialog.success(this.translate.instant('PMDT03_SUCCESS_TITLE'), this.translate.instant('PMDT03_BULK_SUCCESS_MSG'));
             }
           }
         },
@@ -382,12 +384,20 @@ export class Pmdt03Component implements OnInit {
     }
     request$.pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (response) => this.downloadCsv(response.data.map((a) => this.mapApprovalToItem(a))),
-      error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการอนุมัติได้'),
+      error: () => this.dialog.error(this.translate.instant('PMDT03_EXPORT_FAIL_TITLE'), this.translate.instant('PMDT03_EXPORT_FAIL_MSG')),
     });
   }
 
   private downloadCsv(items: ApprovalItem[]): void {
-    const headers = ['ประเภท', 'รหัสเอกสาร', 'รายการ', 'โครงการ', 'ผู้ขอ', 'วันที่ขอ', 'สถานะ'];
+    const headers = [
+      this.translate.instant('PMDT03_CSV_HEADER_TYPE'),
+      this.translate.instant('PMDT03_CSV_HEADER_DOC_CODE'),
+      this.translate.instant('PMDT03_CSV_HEADER_ITEM'),
+      this.translate.instant('PMDT03_CSV_HEADER_PROJECT'),
+      this.translate.instant('PMDT03_CSV_HEADER_REQUESTER'),
+      this.translate.instant('PMDT03_CSV_HEADER_REQUESTED_DATE'),
+      this.translate.instant('PMDT03_CSV_HEADER_STATUS'),
+    ];
     const rows = items.map((i) => [
       i.documentType, i.documentCode, i.title, i.projectName || '',
       i.requester || '', i.requestedDate || '', this.getStatusText(i.status),
@@ -419,11 +429,11 @@ export class Pmdt03Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รอดำเนินการ',
-      APPROVED: 'อนุมัติ',
-      REJECTED: 'ไม่อนุมัติ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMDT03_STATUS_PENDING'),
+      APPROVED: this.translate.instant('PMDT03_STATUS_APPROVED'),
+      REJECTED: this.translate.instant('PMDT03_STATUS_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT03_STATUS_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT03_STATUS_CANCELLED'),
     };
     return map[status] || status;
   }

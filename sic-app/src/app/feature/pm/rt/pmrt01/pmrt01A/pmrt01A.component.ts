@@ -23,6 +23,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt01AForm } from './pmrt01A.form';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmrt01a',
@@ -39,6 +40,7 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
     SicInputAreaComponent,
     SicInputPhoneComponent,
     SicTiptapEditorComponent,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt01A.component.html',
@@ -51,6 +53,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   private cdr = inject(ChangeDetectorRef);
   private fb = inject(FormBuilder);
    private navigation = inject(NavigationService);
+   private translate = inject(TranslateService);
 
   formCustomerData!: SicFromData<CustomerModel>;
   isEdit = false;
@@ -79,7 +82,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   ngOnInit(): void {
     this.businessId = localStorage.getItem('businessId') || '';
     if (!this.businessId) {
-      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+      this.dialog.error(this.translate.instant('PMRT01A_NO_BUSINESS_TITLE'), this.translate.instant('PMRT01A_NO_BUSINESS_MSG'));
       this.navigation.navigate(['/management/business']);
       return;
     }
@@ -132,7 +135,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         error: (error) => {
           this.isLoading = false;
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลลูกค้ารหัสนี้');
+          this.dialog.error(this.translate.instant('PMRT01A_LOAD_ERROR_TITLE'), this.translate.instant('PMRT01A_LOAD_ERROR_MSG'));
           this.navigation.navigate(['/feature/pm/customer']);
         },
       });
@@ -169,7 +172,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     this.formCustomerData.markAllAsTouched();
     if (this.formCustomerData.invalid) {
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      this.dialog.warn(this.translate.instant('PMRT01A_INVALID_FORM_TITLE'), this.translate.instant('PMRT01A_INVALID_FORM_MSG'));
       return;
     }
 
@@ -191,12 +194,12 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.isSaved = true;
           this.formCustomerData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
+          this.dialog.success(this.translate.instant('PMRT01A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT01A_SAVE_SUCCESS_MSG')).then(() => {
             this.navigation.navigate(['/feature/pm/customer']);
           });
         },
         error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMRT01A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT01A_GENERIC_ERROR_MSG'));
         },
       });
     } else {
@@ -204,12 +207,12 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.isSaved = true;
           this.formCustomerData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลลูกค้าถูกบันทึกเรียบร้อย').then(() => {
+          this.dialog.success(this.translate.instant('PMRT01A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT01A_SAVE_SUCCESS_MSG')).then(() => {
             this.navigation.navigate(['/feature/pm/customer']);
           });
         },
         error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMRT01A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT01A_GENERIC_ERROR_MSG'));
         },
       });
     }

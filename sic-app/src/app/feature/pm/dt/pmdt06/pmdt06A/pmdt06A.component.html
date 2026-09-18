@@ -4,7 +4,7 @@
     <div class="p-3.5 rounded-xl bg-blue-500/10 border border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-between text-xs">
       <div class="flex items-center gap-2">
         <i class="bi bi-info-circle-fill text-sm"></i>
-        <span>คำขอเปลี่ยนแปลงนี้อยู่ในโหมด <b>อ่านอย่างเดียว</b> เนื่องจากอยู่ในกระบวนการอนุมัติหรือผ่านการพิจารณาแล้ว</span>
+        <span>{{ 'PMDT06_VIEW_MODE_PREFIX' | translate }} <b>{{ 'PMDT06_VIEW_MODE_BOLD' | translate }}</b> {{ 'PMDT06_VIEW_MODE_SUFFIX' | translate }}</span>
       </div>
       <sic-version-badge [status]="currentStatus" [isLocked]="currentIsLocked"></sic-version-badge>
     </div>
@@ -14,31 +14,31 @@
         <!-- CR Code -->
         <div>
           <sic-input
-            label="รหัสคำขอเปลี่ยนแปลง"
+            [label]="'PMDT06_CR_CODE_LABEL' | translate"
             formControlName="crCode"
             [required]="true"
-            placeholder="CR-001"
-            [errorMessages]="{ required: 'กรุณากรอกรหัสคำขอเปลี่ยนแปลง' }"
+            [placeholder]="'PMDT06_CR_CODE_PLACEHOLDER' | translate"
+            [errorMessages]="{ required: ('PMDT06_CR_CODE_REQUIRED_MSG' | translate) }"
           ></sic-input>
         </div>
 
         <!-- Target Type Selection -->
         <div>
           <sic-combobox
-            label="ประเภทเอกสารที่ขอแก้ไข"
+            [label]="'PMDT06_TARGET_TYPE_LABEL' | translate"
             formControlName="targetType"
             [options]="targetTypeOptions"
             [required]="true"
             [disabled]="isTargetLocked()"
             [clearable]="!isTargetLocked()"
-            placeholder="เลือกประเภทเอกสาร"
+            [placeholder]="'PMDT06_TARGET_TYPE_PLACEHOLDER' | translate"
           ></sic-combobox>
         </div>
 
         <!-- Target Document Combobox -->
         <div class="md:col-span-2">
           <sic-combobox
-            label="เอกสารที่ขอเปลี่ยนแปลง"
+            [label]="'PMDT06_TARGET_DOC_LABEL' | translate"
             formControlName="targetId"
             [apiUrl]="targetDocumentApiUrl()"
             [options]="targetDocumentOptions()"
@@ -48,69 +48,69 @@
             [required]="true"
             [disabled]="isTargetLocked()"
             [clearable]="!isTargetLocked()"
-            [errorMessages]="{ required: 'กรุณาเลือกเอกสารที่ต้องการเปลี่ยน' }"
+            [errorMessages]="{ required: ('PMDT06_TARGET_DOC_REQUIRED_MSG' | translate) }"
           ></sic-combobox>
         </div>
 
         <!-- Title -->
         <div class="md:col-span-2">
           <sic-input
-            label="หัวข้อคำขอเปลี่ยนแปลง"
+            [label]="'PMDT06_CR_TITLE_LABEL' | translate"
             formControlName="title"
             [required]="true"
-            placeholder="หัวข้อสรุปการเปลี่ยนแปลง"
+            [placeholder]="'PMDT06_CR_TITLE_PLACEHOLDER' | translate"
           ></sic-input>
         </div>
 
         <!-- Description -->
         <div class="md:col-span-2">
           <sic-tiptap-editor
-            label="คำอธิบายรายละเอียดการเปลี่ยนแปลง"
+            [label]="'PMDT06_DESC_LABEL' | translate"
             formControlName="description"
             minHeight="140px"
-            placeholder="อธิบายรายละเอียดการเปลี่ยนแปลงที่ต้องการ"
+            [placeholder]="'PMDT06_DESC_PLACEHOLDER' | translate"
           ></sic-tiptap-editor>
         </div>
 
         <!-- Change Reason & Priority -->
         <div>
           <sic-combobox
-            label="สาเหตุการเปลี่ยนแปลง"
+            [label]="'PMDT06_CHANGE_REASON_LABEL' | translate"
             formControlName="changeReason"
             [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
             valueField="value"
             textField="text"
-            placeholder="เลือกสาเหตุการเปลี่ยนแปลง"
+            [placeholder]="'PMDT06_CHANGE_REASON_PLACEHOLDER' | translate"
             [clearable]="true"
           ></sic-combobox>
         </div>
 
         <div>
           <sic-combobox
-            label="ความสำคัญ"
+            [label]="'PMDT06_COL_PRIORITY' | translate"
             formControlName="priority"
             [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'"
             valueField="value"
             textField="text"
-            placeholder="เลือกระดับความสำคัญ"
+            [placeholder]="'PMDT06_PRIORITY_PLACEHOLDER' | translate"
             [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือกระดับความสำคัญ' }"
+            [errorMessages]="{ required: ('PMDT06_PRIORITY_REQUIRED_MSG' | translate) }"
           ></sic-combobox>
         </div>
 
         <!-- Assignee (Multiple) -->
         <div>
           <sic-combobox
-            label="ผู้รับมอบหมาย"
+            [label]="'PMDT06_ASSIGNEE_LABEL' | translate"
             formControlName="assigneeIds"
             [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
             valueField="value"
             textField="text"
-            placeholder="เลือกผู้รับมอบหมาย..."
+            [placeholder]="'PMDT06_ASSIGNEE_PLACEHOLDER' | translate"
             [clearable]="true"
             [multiple]="true"
             [required]="true"
-            [errorMessages]="{ required: 'กรุณาเลือกผู้รับมอบหมาย' }"
+            [errorMessages]="{ required: ('PMDT06_ASSIGNEE_REQUIRED_MSG' | translate) }"
             (selectionChanged)="onAssigneeSelectionChanged($event)"
           ></sic-combobox>
         </div>
@@ -123,16 +123,16 @@
       <div class="border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
+          {{ 'PMDT06_APPROVAL_PROCESS_LABEL' | translate }}
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="เลือกกระบวนการอนุมัติ"
+            [label]="'PMDT06_SELECT_FLOW_LABEL' | translate"
             [apiUrl]="documenttypeapiUrl"
             valueField="id"
             textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
+            [placeholder]="'PMDT06_SELECT_FLOW_LABEL' | translate"
             [clearable]="true"
             formControlName="approvalFlowId"
             (selectionChanged)="onFlowChange($event)"
@@ -141,7 +141,7 @@
 
         @if (!selectedFlowId && flows.length > 0) {
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            * สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก
+            * {{ 'PMDT06_FLOW_HINT' | translate }}
           </p>
         }
       </div>
@@ -152,10 +152,10 @@
           <div class="flex items-center justify-between">
             <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-              ผลกระทบที่คาดการณ์
+              {{ 'PMDT06_IMPACT_TITLE' | translate }}
               @if (isLoadingImpact()) {
                 <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
-                  <i class="bi bi-arrow-repeat animate-spin"></i> กำลังวิเคราะห์...
+                  <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'PMDT06_ANALYZING_LABEL' | translate }}
                 </span>
               }
             </h4>
@@ -168,7 +168,7 @@
                   class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
                 >
                   <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                  วิเคราะห์ใหม่
+                  {{ 'PMDT06_REANALYZE_BTN' | translate }}
                 </button>
               </div>
             }
@@ -182,44 +182,44 @@
                   <div class="text-xl font-bold text-blue-500 dark:text-blue-400">
                     {{ impact.impactedRequirementIds?.length || 0 }}
                   </div>
-                  <div class="text-xs text-[var(--text-muted)]">Requirement</div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_REQUIREMENT' | translate }}</div>
                 </div>
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
                   <div class="text-xl font-bold text-purple-500 dark:text-purple-400">
                     {{ impact.impactedSpecIds?.length || 0 }}
                   </div>
-                  <div class="text-xs text-[var(--text-muted)]">Specification</div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_SPECIFICATION' | translate }}</div>
                 </div>
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
                   <div class="text-xl font-bold text-orange-500 dark:text-orange-400">
                     {{ impact.impactedDiagramIds?.length || 0 }}
                   </div>
-                  <div class="text-xs text-[var(--text-muted)]">Diagram</div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_DIAGRAM' | translate }}</div>
                 </div>
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
                   <div class="text-xl font-bold text-emerald-500 dark:text-emerald-400">
                     {{ impact.impactedTaskIds?.length || 0 }}
                   </div>
-                  <div class="text-xs text-[var(--text-muted)]">Task</div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_TASK' | translate }}</div>
                 </div>
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
                   <div class="text-xl font-bold text-yellow-500 dark:text-yellow-400">
                     {{ impact.impactedTestCaseIds?.length || 0 }}
                   </div>
-                  <div class="text-xs text-[var(--text-muted)]">Test Case</div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_TESTCASE' | translate }}</div>
                 </div>
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
                   <div class="text-xl font-bold text-red-500 dark:text-red-400">
                     {{ impact.impactedBugIds?.length || 0 }}
                   </div>
-                  <div class="text-xs text-[var(--text-muted)]">Bug</div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_BUG' | translate }}</div>
                 </div>
               </div>
 
               <!-- รายละเอียดเพิ่มเติม -->
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">สถานะ:</span>
+                  <span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_STATUS_LABEL_COLON' | translate }}</span>
                   <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
                     {{ getImpactStatusText(impact.analysisStatus) }}
                   </span>
@@ -230,17 +230,17 @@
                   }
                 </div>
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">Manday เพิ่ม:</span>
-                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} วัน</span>
+                  <span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_MANDAY_LABEL' | translate }}</span>
+                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} {{ 'PMDT06_DAY_UNIT' | translate }}</span>
                   @if (impact.timelineImpact) {
                     <span class="text-[var(--text-muted)] ml-4">
-                      Timeline เลื่อน: {{ impact.timelineImpact }} วัน
+                      {{ 'PMDT06_TIMELINE_LABEL' | translate }} {{ impact.timelineImpact }} {{ 'PMDT06_DAY_UNIT' | translate }}
                     </span>
                   }
                 </div>
                 @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
                   <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                    <p class="font-medium text-[var(--text-active)] mb-1">รายละเอียดผลกระทบ:</p>
+                    <p class="font-medium text-[var(--text-active)] mb-1">{{ 'PMDT06_IMPACT_DETAIL_LABEL' | translate }}</p>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
                       @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
                       @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
@@ -254,7 +254,7 @@
 
               @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length || impact.impactedTestCaseIds?.length || impact.impactedBugIds?.length) {
                 <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-                  <p class="font-medium text-[var(--text-active)]">เอกสารที่ได้รับผลกระทบ</p>
+                  <p class="font-medium text-[var(--text-active)]">{{ 'PMDT06_IMPACTED_DOCS_LABEL' | translate }}</p>
                   <div class="flex flex-wrap gap-1 mt-1">
                     @if (impact.impactedRequirements && impact.impactedRequirements.length > 0) {
                       @for (req of impact.impactedRequirements; track req.id) {
@@ -332,14 +332,14 @@
           } @else if (!isLoadingImpact()) {
             <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
               <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">ยังไม่มีข้อมูลผลกระทบ</p>
+              <p class="text-sm">{{ 'PMDT06_NO_IMPACT_DATA_MSG' | translate }}</p>
               @if (!isView) {
                 <button
                   type="button"
                   (click)="refreshImpact()"
                   class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
                 >
-                  คลิกเพื่อวิเคราะห์อัตโนมัติ
+                  {{ 'PMDT06_CLICK_AUTO_ANALYZE_BTN' | translate }}
                 </button>
               }
             </div>
@@ -367,7 +367,7 @@
                   (click)="deleteChangeRequest()"
                 >
                   <i class="bi bi-trash me-1"></i>
-                  ลบ
+                  {{ 'PMDT06_DELETE_BTN' | translate }}
                 </sic-button>
               }
               <button
@@ -376,7 +376,7 @@
                 class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--text)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] shadow-sm transition-all cursor-pointer"
               >
                 <i class="bi bi-printer text-sm text-[var(--crm-primary)]"></i>
-                <span>พิมพ์เอกสาร</span>
+                <span>{{ 'PMDT06_PRINT_DOC_BTN' | translate }}</span>
               </button>
             </div>
           }
@@ -384,18 +384,14 @@
 
         <div class="flex items-center gap-3">
           @if (isView) {
-            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">ย้อนกลับ</sic-button>
+            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_BACK_BTN' | translate }}</sic-button>
           } @else {
-            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">ยกเลิก</sic-button>
+            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_CANCEL_BTN' | translate }}</sic-button>
             <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving || form.invalid">
               @if (isSaving) {
                 <i class="bi bi-arrow-repeat animate-spin me-1"></i>
               }
-              {{
-                isSaving
-                  ? 'กำลังบันทึก...'
-                  : (selectedFlowId ? (isEdit ? 'บันทึกและส่งขออนุมัติ' : 'สร้างและส่งขออนุมัติ') : (isEdit ? 'บันทึก' : 'สร้าง'))
-              }}
+              {{ getSaveButtonLabel() }}
             </sic-button>
           }
         </div>

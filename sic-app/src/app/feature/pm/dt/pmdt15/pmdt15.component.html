@@ -6,7 +6,7 @@
         <button
           (click)="goBack()"
           class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-          title="กลับไปหน้าแดชบอร์ดโครงการ"
+          [title]="'PMDT15_BACK_TOOLTIP' | translate"
         >
           <i class="bi bi-arrow-left text-xl"></i>
         </button>
@@ -14,14 +14,14 @@
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-book text-[var(--crm-primary)]"></i>
-          คู่มือการใช้งาน
+          {{ 'PMDT15_PAGE_TITLE' | translate }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          คลังเก็บและจัดทำเอกสารคู่มือผู้ใช้ คู่มือผู้ดูแลระบบ และขั้นตอนปฏิบัติงาน
+          {{ 'PMDT15_PAGE_SUBTITLE' | translate }}
         </p>
       </div>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ filteredManuals().length }} รายการ
+        {{ filteredManuals().length }} {{ 'PMDT15_ITEMS_SUFFIX' | translate }}
       </span>
     </div>
     <button
@@ -29,7 +29,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
       <i class="bi bi-plus-lg"></i>
-      สร้างคู่มือการใช้งาน
+      {{ 'PMDT15_CREATE_BUTTON' | translate }}
     </button>
   </div>
 
@@ -40,7 +40,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัสคู่มือ หรือชื่อคู่มือ..."
+        [placeholder]="'PMDT15_SEARCH_PLACEHOLDER' | translate"
         [ngModel]="searchTerm()"
         (ngModelChange)="searchTerm.set($event); onFilterSignalChange()"
       />
@@ -59,7 +59,7 @@
         [options]="typeFilterOptions"
         [ngModel]="filterType()"
         (ngModelChange)="filterType.set($event); onFilterSignalChange()"
-        placeholder="📚 ทุกประเภทคู่มือ"
+        [placeholder]="'PMDT15_ALL_TYPES_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -69,7 +69,7 @@
         [options]="statusFilterOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="filterStatus.set($event); onFilterSignalChange()"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMDT15_ALL_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -112,7 +112,7 @@
         @let r = $any(row);
         @if (r.status?.toUpperCase() === 'CHANGED') {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            รอส่งอนุมัติ
+            {{ 'PMDT15_PENDING_SUBMIT' | translate }}
           </span>
         } @else if (r.approvalStatus) {
           <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(r.approvalStatus)">
@@ -120,7 +120,7 @@
           </span>
         } @else {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            ยังไม่อนุมัติ
+            {{ 'PMDT15_NOT_APPROVED' | translate }}
           </span>
         }
       </ng-template>
@@ -132,8 +132,8 @@
           [showEdit]="true"
           [showPrint]="true"
           [showDelete]="true"
-          editTitle="แก้ไข / เขียนเนื้อหา"
-          printTitle="ส่งออกเอกสารคู่มือ PDF (JasperReports)"
+          [editTitle]="'PMDT15_EDIT_TITLE_TIP' | translate"
+          [printTitle]="'PMDT15_PRINT_TITLE_TIP' | translate"
           (onView)="goToView(r.id)"
           (onEdit)="goToEdit(r.id)"
           (onPrint)="printManual(r)"

@@ -31,7 +31,7 @@
       ></angular-tiptap-editor>
 
       <!-- ปุ่มขยายเพื่อเปิด fullscreen -->
-      <button type="button" class="sic-tiptap-expand-btn" (click)="openFullscreen($event)" title="ขยายเต็มจอ">
+      <button type="button" class="sic-tiptap-expand-btn" (click)="openFullscreen($event)" [title]="'TIPTAP_EDITOR_EXPAND_FULLSCREEN_LABEL' | translate">
         <i class="bi bi-arrows-fullscreen"></i>
       </button>
     </div>
@@ -49,9 +49,9 @@
     <div class="fullscreen-container" (click)="$event.stopPropagation()">
       <!-- Header -->
       <div class="fullscreen-header">
-        <span class="fullscreen-title">✏️ แก้ไขข้อความ</span>
+        <span class="fullscreen-title">✏️ {{ 'TIPTAP_EDITOR_EDIT_TEXT_TITLE' | translate }}</span>
         <button type="button" class="fullscreen-close-btn" (click)="closeFullscreen($event)">
-          <i class="bi bi-x-lg"></i> ปิด
+          <i class="bi bi-x-lg"></i> {{ 'TIPTAP_EDITOR_CLOSE_LABEL' | translate }}
         </button>
       </div>
 

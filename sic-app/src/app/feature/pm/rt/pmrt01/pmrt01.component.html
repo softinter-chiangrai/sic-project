@@ -6,19 +6,19 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-people-fill text-[var(--crm-primary)]"></i>
-        รายการลูกค้า
+        {{ 'PMRT01_PAGE_TITLE' | translate }}
       </h1>
       <span
         class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
       >
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMRT01_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <button
       (click)="goToAdd()"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
     >
-      <i class="bi bi-plus-lg"></i> เพิ่มลูกค้า
+      <i class="bi bi-plus-lg"></i> {{ 'PMRT01_ADD_BUTTON' | translate }}
     </button>
   </div>
 
@@ -31,7 +31,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาชื่อ, อีเมล, เบอร์โทร หรือรหัส..."
+        [placeholder]="'PMRT01_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -50,7 +50,7 @@
         [options]="statusOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="🌐 สถานะทั้งหมด"
+        [placeholder]="'PMRT01_STATUS_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -118,14 +118,14 @@
           <button
             (click)="goToProjects(r)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-            title="ดูโครงการทั้งหมดของลูกค้ารายนี้"
+            [title]="'PMRT01_VIEW_PROJECTS_TITLE' | translate"
           >
             <i class="bi bi-briefcase"></i>
           </button>
           <button
             (click)="goToEdit(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-            title="แก้ไข"
+            [title]="'PMRT01_EDIT_TITLE' | translate"
           >
             <i class="bi bi-pencil"></i>
           </button>
@@ -138,14 +138,14 @@
             [class.hover:bg-gray-100]="!r.isActive"
             [class.dark:hover:bg-emerald-500/10]="r.isActive"
             [class.dark:hover:bg-gray-700]="!r.isActive"
-            [title]="r.isActive ? 'ปิดใช้งาน' : 'เปิดใช้งาน'"
+            [title]="r.isActive ? ('PMRT01_DEACTIVATE_TITLE' | translate) : ('PMRT01_ACTIVATE_TITLE' | translate)"
           >
             <i class="bi" [class.bi-check-circle-fill]="r.isActive" [class.bi-x-circle]="!r.isActive"></i>
           </button>
           <button
             (click)="deleteCustomer(r.id, grid)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            title="ลบ"
+            [title]="'PMRT01_DELETE_TITLE' | translate"
           >
             <i class="bi bi-trash"></i>
           </button>

@@ -15,16 +15,18 @@ import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt18',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt18.component.html',
   styleUrls: ['./pmdt18.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt18Component implements OnInit {
+  private translate = inject(TranslateService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private service = inject(Pmdt18AService);
@@ -53,14 +55,14 @@ export class Pmdt18Component implements OnInit {
     showToolbar: false,
     pageSize: this.pageSize(),
     column: [
-      { label: 'เลขที่ข้อเสนอ', name: 'renewalNo', type: 'code', minWidth: 140 },
-      { label: 'อ้างอิงสัญญาเดิม', name: 'contractNo', type: 'contractText', minWidth: 130 },
-      { label: 'ลูกค้า / โครงการ', name: 'customerName', type: 'customerInfo', minWidth: 160 },
-      { label: 'ระยะเวลาสัญญาใหม่', name: 'newStartDate', type: 'dateRangeText', minWidth: 150 },
-      { label: 'มูลค่าเสนอ', name: 'proposedAmount', type: 'amountText', align: 'right', minWidth: 120 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
-      { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
+      { label: this.translate.instant('PMDT18_COL_RENEWAL_NO'), name: 'renewalNo', type: 'code', minWidth: 140 },
+      { label: this.translate.instant('PMDT18_COL_CONTRACT_REF'), name: 'contractNo', type: 'contractText', minWidth: 130 },
+      { label: this.translate.instant('PMDT18_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', minWidth: 160 },
+      { label: this.translate.instant('PMDT18_COL_NEW_TERM'), name: 'newStartDate', type: 'dateRangeText', minWidth: 150 },
+      { label: this.translate.instant('PMDT18_COL_PROPOSED_AMOUNT'), name: 'proposedAmount', type: 'amountText', align: 'right', minWidth: 120 },
+      { label: this.translate.instant('PMDT18_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
+      { label: this.translate.instant('PMDT18_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
+      { label: this.translate.instant('PMDT18_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
     ],
   };
 
@@ -156,11 +158,11 @@ export class Pmdt18Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'DRAFT', text: 'ร่างข้อเสนอ' },
-    { value: 'PROPOSED', text: 'เสนอราคาแล้ว' },
-    { value: 'CONFIRMED', text: 'ตกลงต่อสัญญาแล้ว' },
-    { value: 'REJECTED', text: 'ปฏิเสธการต่อสัญญา' },
-    { value: 'EXPIRED', text: 'หมดอายุ' },
+    { value: 'DRAFT', text: this.translate.instant('PMDT18_STATUS_DRAFT') },
+    { value: 'PROPOSED', text: this.translate.instant('PMDT18_STATUS_PROPOSED') },
+    { value: 'CONFIRMED', text: this.translate.instant('PMDT18_STATUS_CONFIRMED') },
+    { value: 'REJECTED', text: this.translate.instant('PMDT18_STATUS_REJECTED') },
+    { value: 'EXPIRED', text: this.translate.instant('PMDT18_STATUS_EXPIRED') },
   ];
 
   onFilterChange(value: any) {
@@ -194,7 +196,10 @@ export class Pmdt18Component implements OnInit {
 
   printRenewal(item: any) {
     if (!item.id) {
-      this.dialog.warn('ไม่พบรหัสข้อเสนอต่อสัญญา', 'ไม่สามารถพิมพ์เอกสารได้');
+      this.dialog.warn(
+        this.translate.instant('PMDT18_RENEWAL_ID_NOT_FOUND_TITLE'),
+        this.translate.instant('PMDT18_PRINT_FAILED_MSG'),
+      );
       return;
     }
 
@@ -216,21 +221,27 @@ export class Pmdt18Component implements OnInit {
         },
         error: (err) => {
           console.error('Print renewal error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+          this.dialog.error(
+            this.translate.instant('PMDT18_PRINT_DOC_FAILED_TITLE'),
+            this.translate.instant('PMDT18_JASPER_REPORT_FAILED_MSG'),
+          );
         },
       });
   }
 
   deleteRenewal(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบข้อเสนอต่อสัญญานี้ใช่หรือไม่?').then((confirmed) => {
+    this.dialog.confirm(
+      this.translate.instant('PMDT18_CONFIRM_DELETE_TITLE'),
+      this.translate.instant('PMDT18_CONFIRM_DELETE_MSG'),
+    ).then((confirmed) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบข้อเสนอต่อสัญญาเรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT18_SUCCESS_TITLE'), this.translate.instant('PMDT18_DELETE_SUCCESS_MSG'));
             this.renewalsResource.reload();
           },
           error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT18_ERROR_TITLE'), err.message || this.translate.instant('PMDT18_DELETE_FAILED_MSG'));
           },
         });
       }
@@ -250,11 +261,11 @@ export class Pmdt18Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ร่างข้อเสนอ',
-      PROPOSED: 'เสนอราคาแล้ว',
-      CONFIRMED: 'ตกลงต่อสัญญาแล้ว',
-      REJECTED: 'ปฏิเสธการต่อสัญญา',
-      EXPIRED: 'หมดอายุสัญญา',
+      DRAFT: this.translate.instant('PMDT18_STATUS_DRAFT'),
+      PROPOSED: this.translate.instant('PMDT18_STATUS_PROPOSED'),
+      CONFIRMED: this.translate.instant('PMDT18_STATUS_CONFIRMED'),
+      REJECTED: this.translate.instant('PMDT18_STATUS_REJECTED'),
+      EXPIRED: this.translate.instant('PMDT18_STATUS_EXPIRED_CONTRACT'),
     };
     return map[status] || status || '-';
   }
@@ -274,11 +285,11 @@ export class Pmdt18Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMDT18_APPR_PENDING'),
+      APPROVED: this.translate.instant('PMDT18_APPR_APPROVED'),
+      REJECTED: this.translate.instant('PMDT18_APPR_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT18_APPR_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT18_APPR_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
   }

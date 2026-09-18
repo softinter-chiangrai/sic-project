@@ -33,6 +33,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { ChangeRequestFormModel } from './pmdt06A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-pmdt06a',
@@ -52,6 +53,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
         SicDatePipe,
         SicTiptapEditorComponent,
         SicTraceLinkPanelComponent,
+        TranslateModule,
     ],
     changeDetection: ChangeDetectionStrategy.Eager,
     templateUrl: './pmdt06A.component.html',
@@ -68,6 +70,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     private businessService = inject(BusinessService);
     private impactService = inject(ImpactAnalysisService);
     private cdr = inject(ChangeDetectorRef);
+    private translate = inject(TranslateService);
     private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
     get businessId() {
@@ -120,17 +123,17 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     selectedTargetType = signal('REQUIREMENT');
     readonly targetTypeOptions = [
-        { value: 'PROJECT', text: 'โครงการ' },
-        { value: 'REQUIREMENT', text: 'ข้อกำหนดความต้องการ' },
-        { value: 'SPECIFICATION', text: 'ข้อกำหนดระบบ' },
-        { value: 'DIAGRAM', text: 'แผนภาพระบบ' },
-        { value: 'CONTRACT', text: 'สัญญาโครงการ' },
-        { value: 'DESIGN_REVIEW', text: 'การตรวจทานการออกแบบ' },
-        { value: 'DELIVERY', text: 'การส่งมอบงาน' },
-        { value: 'USER_MANUAL', text: 'คู่มือการใช้งาน' },
-        { value: 'INVOICE', text: 'ใบแจ้งหนี้' },
-        { value: 'MA_TICKET', text: 'ตั๋วแจ้งปัญหา MA' },
-        { value: 'MA_RENEWAL', text: 'การต่ออายุสัญญา MA' },
+        { value: 'PROJECT', text: this.translate.instant('PMDT06_COL_PROJECT') },
+        { value: 'REQUIREMENT', text: this.translate.instant('PMDT06_TARGET_REQ_FULL') },
+        { value: 'SPECIFICATION', text: this.translate.instant('PMDT06_TARGET_SPEC_FULL') },
+        { value: 'DIAGRAM', text: this.translate.instant('PMDT06_TARGET_DIAGRAM_FULL') },
+        { value: 'CONTRACT', text: this.translate.instant('PMDT06_TARGET_CONTRACT') },
+        { value: 'DESIGN_REVIEW', text: this.translate.instant('PMDT06_TARGET_DESIGN_REVIEW') },
+        { value: 'DELIVERY', text: this.translate.instant('PMDT06_TARGET_DELIVERY') },
+        { value: 'USER_MANUAL', text: this.translate.instant('PMDT06_TARGET_USER_MANUAL') },
+        { value: 'INVOICE', text: this.translate.instant('PMDT06_TARGET_INVOICE') },
+        { value: 'MA_TICKET', text: this.translate.instant('PMDT06_TARGET_MA_TICKET') },
+        { value: 'MA_RENEWAL', text: this.translate.instant('PMDT06_TARGET_MA_RENEWAL') },
     ];
     targetDocumentOptions = signal<any[]>([]);
     isTargetLocked = signal(false);
@@ -240,7 +243,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 }
                 this.form.patchValue({
                     targetId: qParams['targetId'],
-                    title: qParams['targetTitle'] ? `คำขอเปลี่ยนแปลง: ${qParams['targetTitle']}` : null,
+                    title: qParams['targetTitle'] ? `${this.translate.instant('PMDT06_CR_TITLE_PREFIX')} ${qParams['targetTitle']}` : null,
                 });
                 this.triggerImpactAnalysis();
             }
@@ -350,7 +353,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     this.isLoading = false;
                 },
                 error: () => {
-                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Change Request นี้');
+                    this.dialog.error(this.translate.instant('PMDT06_LOAD_FAIL_TITLE'), this.translate.instant('PMDT06_CR_NOT_FOUND_MSG'));
                     this.navigation.navigate(['/feature/pm/change-request']);
                 },
             });
@@ -428,7 +431,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     save() {
         if (this.form.invalid) {
             this.form.markAllAsTouched();
-            this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+            this.dialog.warn(this.translate.instant('PMDT06_FORM_INVALID_TITLE'), this.translate.instant('PMDT06_FILL_ALL_FIELDS_MSG'));
             return;
         }
 
@@ -466,7 +469,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                             documentType: 'CHANGE_REQUEST',
                             documentId: id,
                             documentCode: data.crCode || ('CR-' + id.substring(0, 8).toUpperCase()),
-                            documentTitle: data.title || 'คำขอเปลี่ยนแปลง',
+                            documentTitle: data.title || this.translate.instant('PMDT06_DEFAULT_CR_TITLE'),
                             flowId: this.selectedFlowId,
                             comment: 'ส่งขออนุมัติ Change Request',
                         })
@@ -475,14 +478,14 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                             next: () => {
                                 this.isSaved = true;
                                 this.form.markAsPristine();
-                                this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
+                                this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
                                     this.navigateBack();
                                 });
                             },
                             error: (err) => {
                                 this.isSaved = true;
                                 this.form.markAsPristine();
-                                this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
+                                this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
                                     this.navigateBack();
                                 });
                             },
@@ -491,14 +494,14 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     this.isSaving = false;
                     this.isSaved = true;
                     this.form.markAsPristine();
-                    this.dialog.success('บันทึกสำเร็จ', 'Change Request ถูกบันทึกเรียบร้อย').then(() => {
+                    this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
                         this.navigateBack();
                     });
                 }
             },
             error: (err) => {
                 this.isSaving = false;
-                this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+                this.dialog.error(this.translate.instant('PMDT06_SAVE_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT06_GENERIC_ERROR'));
             },
         });
     }
@@ -521,7 +524,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         const id = this.changeRequestId || this.form.get('id')?.value;
         if (!id) return;
 
-        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Change Request นี้ใช่หรือไม่?').then((ok) => {
+        this.dialog.confirm(this.translate.instant('PMDT06_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT06_CONFIRM_DELETE_MSG')).then((ok) => {
             if (ok) {
                 this.isLoading = true;
                 this.http.delete(`${this.baseUrl}/${id}`)
@@ -530,11 +533,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         next: () => {
                             this.isSaved = true;
                             this.form.markAsPristine();
-                            this.dialog.success('ลบสำเร็จ', 'Change Request ถูกลบแล้ว').then(() => {
+                            this.dialog.success(this.translate.instant('PMDT06_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT06_DELETE_SUCCESS_MSG')).then(() => {
                                 this.navigateBack();
                             });
                         },
-                        error: () => this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาดในการลบ Change Request'),
+                        error: () => this.dialog.error(this.translate.instant('PMDT06_DELETE_FAIL_TITLE'), this.translate.instant('PMDT06_DELETE_ERROR_MSG')),
                     });
             }
         });
@@ -543,7 +546,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     exportPdf() {
         const id = this.changeRequestId || this.form.get('id')?.value;
         if (!id) {
-            this.dialog.warn('ยังไม่ได้บันทึกข้อมูล', 'กรุณาบันทึก Change Request ก่อนพิมพ์เอกสาร');
+            this.dialog.warn(this.translate.instant('PMDT06_NOT_SAVED_TITLE'), this.translate.instant('PMDT06_SAVE_BEFORE_PRINT_MSG'));
             return;
         }
 
@@ -567,7 +570,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 },
                 error: (err) => {
                     console.error('Print change request error:', err);
-                    this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
+                    this.dialog.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT06_PRINT_FAIL_MSG'));
                 },
             });
     }
@@ -575,7 +578,15 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     // ===== Helper =====
     getImpactLabel(count: number | undefined, label: string): string {
         if (!count || count === 0) return `${label}: -`;
-        return `${label}: ${count} รายการ`;
+        return `${label}: ${count} ${this.translate.instant('PMDT06_ITEMS_SUFFIX')}`;
+    }
+
+    getSaveButtonLabel(): string {
+        if (this.isSaving) return this.translate.instant('PMDT06_SAVING_LABEL');
+        if (this.selectedFlowId) {
+            return this.isEdit ? this.translate.instant('PMDT06_SAVE_AND_SUBMIT_BTN') : this.translate.instant('PMDT06_CREATE_AND_SUBMIT_BTN');
+        }
+        return this.isEdit ? this.translate.instant('PMDT06_SAVE_BTN') : this.translate.instant('PMDT06_CREATE_BTN');
     }
 
     openItemDetail(type: 'REQ' | 'SPEC' | 'DIAGRAM' | 'TASK' | 'TC' | 'BUG', id?: string) {
@@ -616,6 +627,6 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     }
 
     getImpactStatusText(status?: string): string {
-        return status === 'AUTO' ? 'วิเคราะห์อัตโนมัติ' : 'วิเคราะห์ด้วยตนเอง';
+        return status === 'AUTO' ? this.translate.instant('PMDT06_IMPACT_STATUS_AUTO') : this.translate.instant('PMDT06_IMPACT_STATUS_MANUAL');
     }
 }

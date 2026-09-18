@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
@@ -64,6 +64,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   private readonly themeService = inject(ThemeService);
   private readonly languageService = inject(LanguageService);
   private readonly dialog = inject(DialogService);
+  private readonly translate = inject(TranslateService);
   private readonly service = inject(SicSidebarService);
   private readonly breadcrumbService = inject(BreadcrumbService);
   public readonly router = inject(Router);
@@ -365,7 +366,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.dialog.confirm('ลงชื่ออก', 'ยืนยันการออกจากระบบหรือไม่?').then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('SIDEBAR_CONFIRM_LOGOUT_TITLE'), this.translate.instant('SIDEBAR_CONFIRM_LOGOUT_MSG')).then((confirmed) => {
       if (confirmed) {
         this.closeMobileSidebar();
         this.authService.logout();

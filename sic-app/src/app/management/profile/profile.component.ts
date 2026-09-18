@@ -3,6 +3,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, map } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../core/component/sic-combobox/sic-combobox.component';
@@ -26,6 +27,7 @@ import { ProfileService } from './profile.service';
     SicInputPhoneComponent,
     SicButtonComponent,
     SicInputAreaComponent,
+    TranslateModule,
   ],
   templateUrl: './profile.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -37,6 +39,7 @@ export class Profile implements OnInit {
   readonly authService = inject(AuthService);
   readonly service = inject(ProfileService);
   readonly router = inject(Router);
+  readonly translate = inject(TranslateService);
 
   formProfileData!: SicFromData<ProfileModel>;
   formVerifyData!: SicFromData<EmailVerifyModel>;
@@ -50,11 +53,13 @@ export class Profile implements OnInit {
   private originalTaxId: string = '';
 
   // Map field names to display labels
-  private readonly fieldLabels: Record<string, string> = {
-    email: 'อีเมล',
-    phoneNumber: 'เบอร์โทรศัพท์',
-    taxId: 'เลขประจำตัวผู้เสียภาษี',
-  };
+  private get fieldLabels(): Record<string, string> {
+    return {
+      email: this.translate.instant('PROFILE_EMAIL_LABEL'),
+      phoneNumber: this.translate.instant('PROFILE_PHONE_LABEL'),
+      taxId: this.translate.instant('PROFILE_TAXID_SHORT_LABEL'),
+    };
+  }
 
   ngOnInit(): void {
     const form: ProfileFormData = this.route.snapshot.data['form'];
@@ -106,12 +111,12 @@ export class Profile implements OnInit {
               recipient: generateVerifyToken.recipient,
             });
             this.dialog.success(
-              'ส่งอีเมลยืนยันสำเร็จ',
-              'เราได้ส่งอีเมลยืนยันไปยังที่อยู่อีเมลของคุณ กรุณาตรวจสอบและปฏิบัติตามคำแนะนำ',
+              this.translate.instant('PROFILE_VERIFY_EMAIL_SENT_TITLE'),
+              this.translate.instant('PROFILE_VERIFY_EMAIL_SENT_MSG'),
             );
           },
           error: (error) => {
-            this.dialog.error('ส่งอีเมลไม่สำเร็จ', error?.message || 'ไม่สามารถส่งอีเมลยืนยันได้');
+            this.dialog.error(this.translate.instant('PROFILE_SEND_EMAIL_FAIL_TITLE'), error?.message || this.translate.instant('PROFILE_SEND_EMAIL_FAIL_MSG'));
           },
         });
       }
@@ -128,10 +133,10 @@ export class Profile implements OnInit {
             verifyToken: generateVerifyToken.verifyToken,
             recipient: generateVerifyToken.recipient,
           });
-          this.dialog.success('ส่งรหัสยืนยันใหม่สำเร็จ', 'เราได้ส่งรหัสยืนยันใหม่ไปยังอีเมลของคุณ');
+          this.dialog.success(this.translate.instant('PROFILE_RESEND_SUCCESS_TITLE'), this.translate.instant('PROFILE_RESEND_SUCCESS_MSG'));
         },
         error: (error) => {
-          this.dialog.error('ส่งไม่สำเร็จ', error?.message || 'ไม่สามารถส่งรหัสยืนยันใหม่ได้');
+          this.dialog.error(this.translate.instant('PROFILE_RESEND_FAIL_TITLE'), error?.message || this.translate.instant('PROFILE_RESEND_FAIL_MSG'));
         },
       });
     }
@@ -214,16 +219,16 @@ export class Profile implements OnInit {
           });
 
           if (hasError) {
-            const fieldMessages = duplicateFields.map((f) => `${f}นี้ถูกใช้งานแล้ว`);
+            const fieldMessages = duplicateFields.map((f) => this.translate.instant('PROFILE_ALREADY_IN_USE', { field: f }));
             const message = fieldMessages.join(', ');
-            this.dialog.warn('ข้อมูลซ้ำ', message);
+            this.dialog.warn(this.translate.instant('PROFILE_DUPLICATE_DATA_TITLE'), message);
             resolve(false);
           } else {
             resolve(true);
           }
         },
         error: () => {
-          this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถตรวจสอบข้อมูลได้');
+          this.dialog.error(this.translate.instant('PROFILE_CHECK_ERROR_TITLE'), this.translate.instant('PROFILE_CHECK_ERROR_MSG'));
           resolve(false);
         },
       });
@@ -235,7 +240,7 @@ export class Profile implements OnInit {
     this.formProfileData.markAllAsTouched();
 
     if (this.formProfileData.invalid) {
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณาแก้ไขข้อมูลที่ผิดพลาดก่อนบันทึก');
+      this.dialog.warn(this.translate.instant('PROFILE_FORM_INCOMPLETE_TITLE'), this.translate.instant('PROFILE_FORM_INCOMPLETE_MSG'));
       return;
     }
 
@@ -269,7 +274,7 @@ export class Profile implements OnInit {
 
     this.formVerifyData.markAllAsTouched();
     if (this.formVerifyData.invalid) {
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณากรอกรหัสยืนยันให้ถูกต้อง');
+      this.dialog.warn(this.translate.instant('PROFILE_FORM_INCOMPLETE_TITLE'), this.translate.instant('PROFILE_VERIFY_CODE_INVALID_MSG'));
       return;
     }
 
@@ -288,18 +293,18 @@ export class Profile implements OnInit {
         this.isVerifying.set(false);
 
         if (response?.success === false || response?.error) {
-          const errorMessage = response?.message || response?.error || 'ไม่สามารถบันทึกข้อมูลได้';
+          const errorMessage = response?.message || response?.error || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
           this.handleSaveError(errorMessage);
           return;
         }
 
-        this.dialog.success('บันทึกสำเร็จ', 'โปรไฟล์ของคุณถูกบันทึกเรียบร้อย').then(() => {
+        this.dialog.success(this.translate.instant('PROFILE_SAVE_SUCCESS_TITLE'), this.translate.instant('PROFILE_SAVE_SUCCESS_MSG')).then(() => {
           this.router.navigate(['feature']);
         });
       },
       error: (error) => {
         this.isVerifying.set(false);
-        const errorMessage = error?.error?.message || error?.message || 'ไม่สามารถบันทึกข้อมูลได้';
+        const errorMessage = error?.error?.message || error?.message || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
         this.handleSaveError(errorMessage);
       },
     });
@@ -312,7 +317,7 @@ export class Profile implements OnInit {
     // 1. Token ถูกใช้ไปแล้ว
     if (lowerMsg.includes('token already used')) {
       this.dialog
-        .warn('Token ถูกใช้ไปแล้ว', 'Token นี้ถูกใช้ไปแล้ว กรุณาส่งรหัสยืนยันใหม่')
+        .warn(this.translate.instant('PROFILE_TOKEN_USED_TITLE'), this.translate.instant('PROFILE_TOKEN_USED_MSG'))
         .then(() => {
           this.showProfile.set(false);
           this.resend();
@@ -322,7 +327,7 @@ export class Profile implements OnInit {
 
     // 2. Token หมดอายุ
     if (lowerMsg.includes('token expired')) {
-      this.dialog.warn('Token หมดอายุ', 'รหัสยืนยันหมดอายุแล้ว กรุณาส่งรหัสยืนยันใหม่').then(() => {
+      this.dialog.warn(this.translate.instant('PROFILE_TOKEN_EXPIRED_TITLE'), this.translate.instant('PROFILE_TOKEN_EXPIRED_MSG')).then(() => {
         this.showProfile.set(false);
         this.resend();
       });
@@ -337,8 +342,8 @@ export class Profile implements OnInit {
       lowerMsg.includes('reference number or token')
     ) {
       this.dialog.warn(
-        'รหัสยืนยันไม่ถูกต้อง',
-        'รหัสยืนยันที่คุณกรอกไม่ถูกต้อง กรุณาตรวจสอบและลองอีกครั้ง หรือกด "ส่งรหัสยืนยันใหม่" เพื่อรับรหัสใหม่',
+        this.translate.instant('PROFILE_INVALID_CODE_TITLE'),
+        this.translate.instant('PROFILE_INVALID_CODE_MSG'),
       );
       return;
     }
@@ -348,25 +353,25 @@ export class Profile implements OnInit {
 
     if (lowerMsg.includes('email')) {
       this.formProfileData.formGroup.get('email')?.setErrors({ duplicate: true });
-      duplicateFields.push('อีเมล');
+      duplicateFields.push(this.translate.instant('PROFILE_EMAIL_LABEL'));
     }
     if (lowerMsg.includes('phone number') || lowerMsg.includes('เบอร์โทร')) {
       this.formProfileData.formGroup.get('phoneNumber')?.setErrors({ duplicate: true });
-      duplicateFields.push('เบอร์โทรศัพท์');
+      duplicateFields.push(this.translate.instant('PROFILE_PHONE_LABEL'));
     }
     if (lowerMsg.includes('tax id') || lowerMsg.includes('เลขประจำตัว')) {
       this.formProfileData.formGroup.get('taxId')?.setErrors({ duplicate: true });
-      duplicateFields.push('เลขประจำตัวผู้เสียภาษี');
+      duplicateFields.push(this.translate.instant('PROFILE_TAXID_SHORT_LABEL'));
     }
 
-    let displayMessage = 'ไม่สามารถบันทึกข้อมูลได้';
+    let displayMessage = this.translate.instant('PROFILE_SAVE_FAILED_MSG');
     if (duplicateFields.length > 0) {
-      const fieldMessages = duplicateFields.map((f) => `${f}นี้ถูกใช้งานแล้ว`);
+      const fieldMessages = duplicateFields.map((f) => this.translate.instant('PROFILE_ALREADY_IN_USE', { field: f }));
       displayMessage = fieldMessages.join(', ');
     } else {
-      displayMessage = errorMessage || 'ไม่สามารถบันทึกข้อมูลได้';
+      displayMessage = errorMessage || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
     }
 
-    this.dialog.error('บันทึกไม่สำเร็จ', displayMessage);
+    this.dialog.error(this.translate.instant('PROFILE_SAVE_FAILED_TITLE'), displayMessage);
   }
 }

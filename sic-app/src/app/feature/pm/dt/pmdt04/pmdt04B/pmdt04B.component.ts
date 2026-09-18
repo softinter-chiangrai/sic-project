@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
@@ -32,6 +33,7 @@ import { Requirement } from './pmdt04B.model';
     SicInputComponent,
     SicTiptapEditorComponent,
     SicNumberComponent,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04B.component.html',
@@ -47,6 +49,7 @@ export class Pmdt04BComponent implements OnInit {
   private businessService = inject(BusinessService);
   private projectService = inject(Pmrt02Service);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
   apiBaseUrl = environment.apiBaseUrl;
 
   form!: FormGroup;
@@ -141,7 +144,7 @@ export class Pmdt04BComponent implements OnInit {
         this.cdr.detectChanges();
       },
       error: () => {
-        this.dialog.warn('ไม่พบโครงการ', 'ไม่สามารถโหลดชื่อโครงการได้');
+        this.dialog.warn(this.translate.instant('PMDT04B_PROJECT_NOT_FOUND_TITLE'), this.translate.instant('PMDT04B_PROJECT_NOT_FOUND_MSG'));
       },
     });
   }
@@ -171,7 +174,7 @@ export class Pmdt04BComponent implements OnInit {
           this.cdr.detectChanges();
         },
         error: () => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Requirement');
+          this.dialog.error(this.translate.instant('PMDT04B_LOAD_ERROR_TITLE'), this.translate.instant('PMDT04B_LOAD_ERROR_MSG'));
           this.router.navigate(['/feature/pm/requirement']);
         },
       });
@@ -207,14 +210,14 @@ export class Pmdt04BComponent implements OnInit {
         next: (flows) => {
           this.flows = flows;
         },
-        error: () => console.warn('ไม่สามารถโหลด Approval Flow'),
+        error: () => console.warn(this.translate.instant('PMDT04B_LOAD_FLOW_ERROR')),
       });
   }
 
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      this.dialog.warn(this.translate.instant('PMDT04B_FORM_INVALID_TITLE'), this.translate.instant('PMDT04B_FORM_INVALID_MSG'));
       return;
     }
 
@@ -248,28 +251,28 @@ export class Pmdt04BComponent implements OnInit {
                 documentTitle: data.title,
                 version: data.version,
                 flowId: this.selectedFlowId,
-                comment: 'ส่งขออนุมัติ Requirement',
+                comment: this.translate.instant('PMDT04B_SUBMIT_APPROVAL_COMMENT'),
               })
               .subscribe({
                 next: () => {
-                  this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+                  this.dialog.success(this.translate.instant('PMDT04B_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT04B_SAVE_SUCCESS_MSG'));
                   this.form.markAsPristine();
                   this.navigateBackToRequirementList();
                 },
                 error: (err) => {
-                  this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+                  this.dialog.success(this.translate.instant('PMDT04B_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT04B_SAVE_SUCCESS_MSG'));
                   this.form.markAsPristine();
                   this.navigateBackToRequirementList();
                 }
               });
           } else {
-            this.dialog.success('บันทึกสำเร็จ', 'ข้อมูล Requirement ถูกบันทึกเรียบร้อย');
+            this.dialog.success(this.translate.instant('PMDT04B_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT04B_SAVE_SUCCESS_MSG'));
             this.form.markAsPristine();
             this.navigateBackToRequirementList();
           }
         },
         error: (err) => {
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMDT04B_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT04B_SAVE_ERROR_MSG'));
         },
       });
   }

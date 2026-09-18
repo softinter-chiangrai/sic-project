@@ -17,11 +17,12 @@ import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })
@@ -34,6 +35,7 @@ export class Pmdt07Component implements OnInit {
     public customerState = inject(CustomerStateService);
     private approvalService = inject(ApprovalService);
     private http = inject(HttpClient);
+    private translate = inject(TranslateService);
 
     isLoading = signal(false);
     specs = signal<PmSpecificationModel[]>([]);
@@ -49,14 +51,14 @@ export class Pmdt07Component implements OnInit {
         showToolbar: false,
         pageSize: this.pageSize(),
         column: [
-            { label: 'รหัส', name: 'specificationCode', type: 'code', minWidth: 100 },
-            { label: 'ชื่อเรื่อง', name: 'title', type: 'text', minWidth: 200 },
-            { label: 'ประเภท', name: 'specificationType', type: 'typeTag', minWidth: 140 },
-            { label: 'เวอร์ชัน', name: 'version', type: 'versionText', minWidth: 80 },
-            { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
-            { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
-            { label: 'Manday', name: 'estimatedManday', type: 'mandayText', minWidth: 80 },
-            { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
+            { label: this.translate.instant('PMDT07_COL_CODE'), name: 'specificationCode', type: 'code', minWidth: 100 },
+            { label: this.translate.instant('PMDT07_COL_TITLE'), name: 'title', type: 'text', minWidth: 200 },
+            { label: this.translate.instant('PMDT07_COL_TYPE'), name: 'specificationType', type: 'typeTag', minWidth: 140 },
+            { label: this.translate.instant('PMDT07_COL_VERSION'), name: 'version', type: 'versionText', minWidth: 80 },
+            { label: this.translate.instant('PMDT07_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 100 },
+            { label: this.translate.instant('PMDT07_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
+            { label: this.translate.instant('PMDT07_COL_MANDAY'), name: 'estimatedManday', type: 'mandayText', minWidth: 80 },
+            { label: this.translate.instant('PMDT07_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
         ],
     };
 
@@ -164,10 +166,10 @@ export class Pmdt07Component implements OnInit {
                     this.loadApprovalStatuses(data, grid, request.requestId);
                 },
                 error: () => {
-                    this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการ Specification ได้');
+                    this.dialog.error(this.translate.instant('PMDT07_LOAD_FAIL_TITLE'), this.translate.instant('PMDT07_LOAD_FAIL_MSG'));
                     this.specs.set([]);
                     this.totalItems.set(0);
-                    grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+                    grid.setLoadError(this.translate.instant('PMDT07_LOAD_FAIL_TITLE'), request.requestId);
                 },
             });
     }
@@ -203,11 +205,11 @@ export class Pmdt07Component implements OnInit {
     }
 
     readonly statusOptions = [
-        { value: 'Draft', text: 'ร่าง' },
-        { value: 'Review', text: 'ตรวจสอบ' },
-        { value: 'Approved', text: 'อนุมัติแล้ว' },
-        { value: 'Released', text: 'เผยแพร่' },
-        { value: 'Changed', text: 'เปลี่ยนแปลง' },
+        { value: 'Draft', text: this.translate.instant('PMDT07_STATUS_DRAFT') },
+        { value: 'Review', text: this.translate.instant('PMDT07_STATUS_REVIEW') },
+        { value: 'Approved', text: this.translate.instant('PMDT07_STATUS_APPROVED') },
+        { value: 'Released', text: this.translate.instant('PMDT07_STATUS_RELEASED') },
+        { value: 'Changed', text: this.translate.instant('PMDT07_STATUS_CHANGED') },
     ];
 
     onFilterChange(value: any, grid: SicGridPanelComponent): void {
@@ -230,7 +232,7 @@ export class Pmdt07Component implements OnInit {
 
     printDocument(spec: PmSpecificationModel): void {
         if (!spec.id) {
-            this.dialog.warn('ไม่พบรหัส Specification', 'ไม่สามารถพิมพ์เอกสารได้');
+            this.dialog.warn(this.translate.instant('PMDT07_NO_SPEC_ID_TITLE'), this.translate.instant('PMDT07_PRINT_NO_ID_MSG'));
             return;
         }
 
@@ -252,22 +254,22 @@ export class Pmdt07Component implements OnInit {
                 },
                 error: (err) => {
                     console.error('Print specification error:', err);
-                    this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+                    this.dialog.error(this.translate.instant('PMDT07_PRINT_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
                 },
             });
     }
 
     deleteSpec(id: string, grid: SicGridPanelComponent): void {
-        this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบ Specification นี้ใช่หรือไม่?')
+        this.dialog.confirm(this.translate.instant('PMDT07_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT07_CONFIRM_DELETE_MSG'))
             .then((ok) => {
                 if (ok) {
                     this.service.delete(id).subscribe({
                         next: () => {
-                            this.dialog.success('ลบสำเร็จ', 'Specification ถูกลบแล้ว');
+                            this.dialog.success(this.translate.instant('PMDT07_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT07_DELETE_SUCCESS_MSG'));
                             grid.reload();
                         },
                         error: (err) => {
-                            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+                            this.dialog.error(this.translate.instant('PMDT07_DELETE_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT07_GENERIC_ERROR'));
                         },
                     });
                 }
@@ -287,12 +289,12 @@ export class Pmdt07Component implements OnInit {
 
     getStatusText(status: string): string {
         const s = (status || '').trim().toLowerCase();
-        if (['draft', 'ร่าง'].includes(s)) return 'ร่าง';
-        if (['review', 'in review', 'in_review', 'ตรวจสอบ', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return 'ตรวจสอบ';
-        if (['approved', 'อนุมัติ', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
-        if (['released', 'เผยแพร่'].includes(s)) return 'เผยแพร่';
-        if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
-        if (['cancelled', 'ยกเลิก'].includes(s)) return 'ยกเลิก';
+        if (['draft', 'ร่าง'].includes(s)) return this.translate.instant('PMDT07_STATUS_DRAFT');
+        if (['review', 'in review', 'in_review', 'ตรวจสอบ', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return this.translate.instant('PMDT07_STATUS_REVIEW');
+        if (['approved', 'อนุมัติ', 'อนุมัติแล้ว'].includes(s)) return this.translate.instant('PMDT07_STATUS_APPROVED');
+        if (['released', 'เผยแพร่'].includes(s)) return this.translate.instant('PMDT07_STATUS_RELEASED');
+        if (['changed', 'เปลี่ยนแปลง'].includes(s)) return this.translate.instant('PMDT07_STATUS_CHANGED');
+        if (['cancelled', 'ยกเลิก'].includes(s)) return this.translate.instant('PMDT07_STATUS_CANCELLED');
         return status || '-';
     }
 
@@ -312,12 +314,12 @@ export class Pmdt07Component implements OnInit {
     getApprovalStatusText(status?: string): string {
         const s = (status || '').trim().toUpperCase();
         const map: Record<string, string> = {
-            PENDING: 'รออนุมัติ',
-            IN_REVIEW: 'อยู่ระหว่างตรวจสอบ',
-            APPROVED: 'อนุมัติแล้ว',
-            REJECTED: 'ปฏิเสธ',
-            NEED_REVISION: 'ต้องแก้ไข',
-            CANCELLED: 'ยกเลิก',
+            PENDING: this.translate.instant('PMDT07_APPROVAL_PENDING'),
+            IN_REVIEW: this.translate.instant('PMDT07_APPROVAL_IN_REVIEW'),
+            APPROVED: this.translate.instant('PMDT07_STATUS_APPROVED'),
+            REJECTED: this.translate.instant('PMDT07_APPROVAL_REJECTED'),
+            NEED_REVISION: this.translate.instant('PMDT07_APPROVAL_NEED_REVISION'),
+            CANCELLED: this.translate.instant('PMDT07_STATUS_CANCELLED'),
         };
         return map[s] || status || '-';
     }

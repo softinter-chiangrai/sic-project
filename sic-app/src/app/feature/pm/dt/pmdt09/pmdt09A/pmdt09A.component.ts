@@ -4,6 +4,7 @@ import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ViewChi
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
 
@@ -92,6 +93,7 @@ class Pmdt09AForm {
 @Injectable({ providedIn: 'root' })
 export class Pmdt09AService {
   private http = inject(HttpClient);
+  private translate = inject(TranslateService);
 
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-project`;
   apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
@@ -104,19 +106,23 @@ export class Pmdt09AService {
   apiGetLovSeverity = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-severity`;
   apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-status`;
 
-  readonly severityOptions = [
-    { value: 'Low', label: 'ต่ำ' },
-    { value: 'Medium', label: 'ปานกลาง' },
-    { value: 'High', label: 'สูง' },
-    { value: 'Critical', label: 'วิกฤต' },
-  ];
+  get severityOptions() {
+    return [
+      { value: 'Low', label: this.translate.instant('PMDT09_SEV_LOW') },
+      { value: 'Medium', label: this.translate.instant('PMDT09_SEV_MEDIUM') },
+      { value: 'High', label: this.translate.instant('PMDT09_SEV_HIGH') },
+      { value: 'Critical', label: this.translate.instant('PMDT09_SEV_CRITICAL') },
+    ];
+  }
 
-  readonly statusOptions = [
-    { value: 'Open', label: 'เปิดอยู่' },
-    { value: 'In Progress', label: 'กำลังตรวจสอบ' },
-    { value: 'Resolved', label: 'แก้ไขเรียบร้อย' },
-    { value: 'Closed', label: 'ปิดงาน' },
-  ];
+  get statusOptions() {
+    return [
+      { value: 'Open', label: this.translate.instant('PMDT09_ST_OPEN') },
+      { value: 'In Progress', label: this.translate.instant('PMDT09_ST_INPROGRESS') },
+      { value: 'Resolved', label: this.translate.instant('PMDT09_ST_RESOLVED') },
+      { value: 'Closed', label: this.translate.instant('PMDT09_ST_CLOSED') },
+    ];
+  }
 
   save(data: DesignReviewModel): Observable<any> {
     console.log('📝 Saving design review:', data);
@@ -150,6 +156,7 @@ export class Pmdt09AService {
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
+    TranslateModule,
     SicButtonComponent,
     SicVersionBadgeComponent,
     SicComboboxComponent,
@@ -173,6 +180,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   private readonly sanitizer = inject(DomSanitizer);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly translate = inject(TranslateService);
 
   @ViewChild('figmaIframe') figmaIframe?: ElementRef<HTMLIFrameElement>;
 
@@ -348,7 +356,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       error: (error) => {
         this.isLoading = false;
         console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูล Design Review รหัสนี้');
+        this.dialog.error(this.translate.instant('PMDT09_LOAD_ERROR_TITLE'), this.translate.instant('PMDT09_LOAD_ERROR_MSG'));
         this.router.navigate(['/feature/pm/design-review']);
         this.cdr.markForCheck();
       },
@@ -450,15 +458,15 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       this.formData.markAllAsTouched();
       
       const fieldLabels: Record<string, string> = {
-        reviewCode: 'รหัส Design Review',
-        title: 'ชื่อเรื่อง',
-        description: 'คำอธิบาย',
-        reviewableType: 'ประเภทงานที่ตรวจสอบ',
-        reviewableId: 'Specification/รายการที่ตรวจสอบ',
-        projectId: 'โครงการ',
-        severity: 'ระดับความรุนแรง',
-        status: 'สถานะ',
-        dueDate: 'กำหนดส่ง',
+        reviewCode: this.translate.instant('PMDT09_REVIEW_CODE_LABEL'),
+        title: this.translate.instant('PMDT09_TITLE_LABEL'),
+        description: this.translate.instant('PMDT09_DESC_LABEL'),
+        reviewableType: this.translate.instant('PMDT09_REVIEWABLE_TYPE_LABEL'),
+        reviewableId: this.translate.instant('PMDT09_REVIEWABLE_ID_LABEL'),
+        projectId: this.translate.instant('PMDT09_PROJECT_LABEL'),
+        severity: this.translate.instant('PMDT09_SEVERITY_FIELD_LABEL'),
+        status: this.translate.instant('PMDT09_STATUS_LABEL'),
+        dueDate: this.translate.instant('PMDT09_DUE_DATE_LABEL'),
       };
 
       const invalidControls = Object.keys(this.form.controls)
@@ -468,10 +476,10 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       console.warn('❌ Form Invalid! Invalid fields:', invalidControls);
 
       const errorMsg = invalidControls.length > 0
-        ? `กรุณากรอกข้อมูลในช่องที่จำเป็นให้ครบถ้วน:\n• ${invalidControls.join('\n• ')}`
-        : 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง';
+        ? `${this.translate.instant('PMDT09_REQUIRED_FIELDS_MSG')}\n• ${invalidControls.join('\n• ')}`
+        : this.translate.instant('PMDT09_FILL_FORM_CORRECTLY');
 
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', errorMsg);
+      this.dialog.warn(this.translate.instant('PMDT09_FORM_INVALID_TITLE'), errorMsg);
       return;
     }
 
@@ -503,13 +511,13 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               documentCode: data.reviewCode,
               documentTitle: data.title,
               flowId: this.selectedFlowId,
-              comment: 'ส่งขออนุมัติ Design Review',
+              comment: this.translate.instant('PMDT09_SUBMIT_APPROVAL_COMMENT'),
             })
             .subscribe({
               next: () => {
                 this.isSaving = false;
                 this.isSaved = true;
-                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Design Review เรียบร้อยแล้ว').then(() => {
+                this.dialog.success(this.translate.instant('PMDT09_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT09_SAVE_SUCCESS_MSG')).then(() => {
                   this.formData.markAsPristine();
                   this.router.navigate(['/feature/pm/design-review']);
                 });
@@ -517,7 +525,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               error: (err) => {
                 this.isSaving = false;
                 this.isSaved = true;
-                this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Design Review เรียบร้อยแล้ว').then(() => {
+                this.dialog.success(this.translate.instant('PMDT09_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT09_SAVE_SUCCESS_MSG')).then(() => {
                   this.formData.markAsPristine();
                   this.router.navigate(['/feature/pm/design-review']);
                 });
@@ -526,7 +534,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         } else {
           this.isSaving = false;
           this.isSaved = true;
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Design Review เรียบร้อยแล้ว').then(() => {
+          this.dialog.success(this.translate.instant('PMDT09_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT09_SAVE_SUCCESS_MSG')).then(() => {
             this.formData.markAsPristine();
             this.router.navigate(['/feature/pm/design-review']);
           });
@@ -534,7 +542,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       },
       error: (error) => {
         this.isSaving = false;
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
+        this.dialog.error(this.translate.instant('PMDT09_SAVE_ERROR_TITLE'), error);
       },
     });
   }
@@ -542,21 +550,21 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   onDelete(): void {
     if (!this.reviewId || this.isLocked) return;
     this.dialog.confirm(
-      'ยืนยันการลบ',
-      `คุณต้องการลบรายการ Design Review "${this.form.get('reviewCode')?.value} - ${this.form.get('title')?.value}" ใช่หรือไม่?`
+      this.translate.instant('PMDT09_CONFIRM_DELETE_TITLE'),
+      this.translate.instant('PMDT09_CONFIRM_DELETE_MSG', { code: this.form.get('reviewCode')?.value, title: this.form.get('title')?.value })
     ).then((confirmed) => {
       if (confirmed) {
         this.isLoading = true;
         this.http.delete(`${environment.apiBaseUrl}/api/pm/design-reviews/${this.reviewId}`).subscribe({
           next: () => {
-            this.dialog.success('ลบสำเร็จ', 'ลบรายการ Design Review เรียบร้อยแล้ว').then(() => {
+            this.dialog.success(this.translate.instant('PMDT09_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT09_DELETE_SUCCESS_MSG')).then(() => {
               this.form.markAsPristine();
               this.router.navigate(['/feature/pm/design-review']);
             });
           },
           error: (err) => {
             console.error('Error deleting design review:', err);
-            this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาดในการลบรายการ');
+            this.dialog.error(this.translate.instant('PMDT09_DELETE_ERROR_TITLE'), this.translate.instant('PMDT09_DELETE_ERROR_MSG'));
             this.isLoading = false;
           }
         });

@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { PhaseModel } from './pmdt01.model';
 import { Pmdt01Service } from './pmdt01.service';
@@ -13,7 +14,7 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [CommonModule, SicStripHtmlPipe, SicDrawerComponent],
+  imports: [CommonModule, SicStripHtmlPipe, SicDrawerComponent, TranslateModule],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {
@@ -23,6 +24,7 @@ export class Pmdt01Component implements OnInit {
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);
   private recentItems = inject(RecentItemsService);
+  private translate = inject(TranslateService);
 
   projectId = signal<string>('');
   phases = signal<PhaseModel[]>([]);
@@ -56,7 +58,7 @@ export class Pmdt01Component implements OnInit {
       next: (data) => this.phases.set(data),
       error: (err) => {
         console.error(err);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลด Phase ได้');
+        this.dialog.error(this.translate.instant('PMDT01_LOAD_FAIL_TITLE'), this.translate.instant('PMDT01_LOAD_FAIL_MSG'));
       },
       complete: () => this.isLoading.set(false),
     });
@@ -105,12 +107,15 @@ export class Pmdt01Component implements OnInit {
   deletePhase(phase: PhaseModel, event: Event) {
     event.stopPropagation();
     this.dialog
-      .confirm('ยืนยันการลบ', `คุณต้องการลบ Phase "${phase.phaseName}" ใช่หรือไม่?`)
+      .confirm(
+        this.translate.instant('PMDT01_CONFIRM_DELETE_TITLE'),
+        this.translate.instant('PMDT01_CONFIRM_DELETE_MSG', { name: phase.phaseName }),
+      )
       .then((confirmed) => {
         if (confirmed) {
           this.phaseService.deletePhase(phase.id).subscribe({
             next: () => this.loadPhases(),
-            error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+            error: (err) => this.dialog.error(this.translate.instant('PMDT01_DELETE_FAIL_TITLE'), err.message),
           });
         }
       });
@@ -131,10 +136,10 @@ export class Pmdt01Component implements OnInit {
   getStatusText(status?: string): string {
     if (!status) return '';
     const map: Record<string, string> = {
-      'Not Started': 'ยังไม่เริ่ม',
-      'In Progress': 'กำลังดำเนินการ',
-      Done: 'เสร็จสิ้น',
-      Delayed: 'ล่าช้า',
+      'Not Started': this.translate.instant('PMDT01_STATUS_NOT_STARTED'),
+      'In Progress': this.translate.instant('PMDT01_STATUS_IN_PROGRESS'),
+      Done: this.translate.instant('PMDT01_STATUS_DONE'),
+      Delayed: this.translate.instant('PMDT01_STATUS_DELAYED'),
     };
     return map[status] || status;
   }

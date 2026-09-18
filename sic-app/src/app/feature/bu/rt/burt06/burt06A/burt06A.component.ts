@@ -28,6 +28,7 @@ import { UserOption } from './burt06A.model';
 import { ApprovalFlowStep, ApprovalFlow } from '../burt06.model';
 import { Burt06Service } from '../burt06.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-burt06a',
@@ -42,6 +43,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
     SicCheckboxComponent,
     SicCardComponent,
     SicComboboxComponent,
+    TranslateModule,
   ],
   templateUrl: './burt06A.component.html',
   styleUrl: './burt06A.component.css',
@@ -56,6 +58,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private cdr = inject(ChangeDetectorRef);
   private businessService = inject(BusinessService);
   private http = inject(HttpClient);
+  private translate = inject(TranslateService);
   readonly apiBaseUrl = environment.apiBaseUrl;
 
   readonly approvalModeComboboxConfig = {
@@ -116,6 +119,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   }
 
   ngOnInit(): void {
+    this.timeoutActionOptions = this.buildTimeoutActionOptions();
     const id = this.route.snapshot.params['id'];
     if (id) {
       this.isEdit = true;
@@ -145,18 +149,22 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         error: () => {
           this.isLoading.set(false);
           this.cdr.detectChanges();
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบ Flow ที่ต้องการ');
+          this.dialog.error(this.translate.instant('BURT06A_LOAD_FAILED_TITLE'), this.translate.instant('BURT06A_LOAD_FAILED_MSG'));
           this.router.navigate(['/feature/bu/approval-flow']);
         },
       });
   }
 
-  timeoutActionOptions = [
-    { value: 'NONE', text: 'ไม่ทำอะไร (แจ้งเตือนเท่านั้น)' },
-    { value: 'AUTO_SKIP', text: 'ข้ามขั้นตอนอัตโนมัติ (Auto Skip)' },
-    { value: 'AUTO_APPROVE', text: 'อนุมัติอัตโนมัติ (Auto Approve)' },
-    { value: 'AUTO_REJECT', text: 'ปฏิเสธอัตโนมัติ (Auto Reject)' },
-  ];
+  timeoutActionOptions: { value: string; text: string }[] = [];
+
+  private buildTimeoutActionOptions(): { value: string; text: string }[] {
+    return [
+      { value: 'NONE', text: this.translate.instant('BURT06A_TIMEOUT_NONE') },
+      { value: 'AUTO_SKIP', text: this.translate.instant('BURT06A_TIMEOUT_AUTO_SKIP') },
+      { value: 'AUTO_APPROVE', text: this.translate.instant('BURT06A_TIMEOUT_AUTO_APPROVE') },
+      { value: 'AUTO_REJECT', text: this.translate.instant('BURT06A_TIMEOUT_AUTO_REJECT') },
+    ];
+  }
 
   createStepForm(step?: ApprovalFlowStep): FormGroup {
     return this.fb.group({
@@ -196,7 +204,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
 
   removeStep(index: number): void {
     if (this.steps.length <= 1) {
-      this.dialog.warn('ไม่สามารถลบได้', 'ต้องมีอย่างน้อย 1 ขั้นตอน');
+      this.dialog.warn(this.translate.instant('BURT06A_CANNOT_REMOVE_TITLE'), this.translate.instant('BURT06A_CANNOT_REMOVE_MSG'));
       return;
     }
     this.steps.removeAt(index);
@@ -266,15 +274,15 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   save(): void {
     if (this.hasMissingApprover()) {
       this.dialog.warn(
-        'ยังไม่สมบูรณ์',
-        'ทุกขั้นตอนต้องเลือกบทบาทและเลือกผู้อนุมัติอย่างน้อย 1 คน',
+        this.translate.instant('BURT06A_INCOMPLETE_TITLE'),
+        this.translate.instant('BURT06A_INCOMPLETE_MSG'),
       );
       return;
     }
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('BURT06A_FORM_INVALID_TITLE'), this.translate.instant('BURT06A_FORM_INVALID_MSG'));
       return;
     }
 
@@ -289,7 +297,7 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     const hasEmptyStepName = steps?.some((s: any) => !s.stepName?.trim());
     if (hasEmptyStepName) {
       this.isSaving.set(false);
-      this.dialog.warn('ข้อมูลไม่สมบูรณ์', 'กรุณากรอกชื่อขั้นตอนให้ครบทุกขั้นตอน');
+      this.dialog.warn(this.translate.instant('BURT06A_INCOMPLETE_DATA_TITLE'), this.translate.instant('BURT06A_STEPNAME_REQUIRED_MSG'));
       return;
     }
 
@@ -305,12 +313,12 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         this.isSaving.set(false);
         this.isSaved = true;
         this.form.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', `บันทึก Approval Flow "${data.flowName}" เรียบร้อย`);
+        this.dialog.success(this.translate.instant('BURT06A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT06A_SAVE_SUCCESS_MSG', { name: data.flowName }));
         this.router.navigate(['/feature/bu/approval-flow']);
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        this.dialog.error(this.translate.instant('BURT06A_SAVE_FAILED_TITLE'), err.error?.message || this.translate.instant('BURT06A_GENERIC_ERROR_MSG'));
       },
     });
   }

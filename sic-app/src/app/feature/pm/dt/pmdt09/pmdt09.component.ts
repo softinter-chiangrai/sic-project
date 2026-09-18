@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnIni
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Pmdt09Service } from './pmdt09.service';
@@ -15,7 +16,7 @@ import { SicPaginationComponent } from '../../../../core/component/sic-paginatio
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -27,6 +28,7 @@ export class Pmdt09Component implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private dialog = inject(DialogService);
   private approvalService = inject(ApprovalService);
+  private translate = inject(TranslateService);
 
   @ViewChild('modalFigmaIframe') modalFigmaIframe?: ElementRef<HTMLIFrameElement>;
 
@@ -356,19 +358,19 @@ export class Pmdt09Component implements OnInit {
 
   onDeleteDesignReview(review: DesignReview) {
     this.dialog.confirm(
-      'ยืนยันการลบ',
-      `คุณต้องการลบรายการ Design Review "${review.reviewCode} - ${review.title}" ใช่หรือไม่?`
+      this.translate.instant('PMDT09_CONFIRM_DELETE_TITLE'),
+      this.translate.instant('PMDT09_CONFIRM_DELETE_MSG', { code: review.reviewCode, title: review.title })
     ).then((confirmed) => {
       if (confirmed) {
         this.isLoading.set(true);
         this.service.deleteDesignReview(review.id).subscribe({
           next: () => {
-            this.dialog.success('ลบสำเร็จ', 'ลบรายการ Design Review เรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT09_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT09_DELETE_SUCCESS_MSG'));
             this.loadData();
           },
           error: (err) => {
             console.error('Error deleting design review:', err);
-            this.dialog.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาดในการลบรายการ');
+            this.dialog.error(this.translate.instant('PMDT09_DELETE_ERROR_TITLE'), this.translate.instant('PMDT09_DELETE_ERROR_MSG'));
             this.isLoading.set(false);
           }
         });
@@ -402,11 +404,11 @@ export class Pmdt09Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMDT09_STATUS_PENDING'),
+      APPROVED: this.translate.instant('PMDT09_STATUS_APPROVED'),
+      REJECTED: this.translate.instant('PMDT09_STATUS_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT09_STATUS_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT09_STATUS_CANCELLED'),
     };
     return status ? map[status] || '-' : '-';
   }

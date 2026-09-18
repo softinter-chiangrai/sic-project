@@ -7,14 +7,14 @@
       <button
         (click)="goBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMDT03_BACK_TITLE' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-3">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          รายละเอียดการอนุมัติ
+          {{ 'PMDT03_DETAIL_PAGE_TITLE' | translate }}
         </h1>
         <p class="text-sm text-[var(--text-muted)] mt-0.5">
           @if (approval(); as a) {
@@ -23,7 +23,7 @@
             <span>{{ getDocumentTypeDisplay(a.documentType) }}</span>
             @if (a.version) {
               <span class="mx-2">|</span>
-              <span>เวอร์ชัน {{ a.version }}</span>
+              <span>{{ 'PMDT03_VERSION_PREFIX' | translate }}{{ a.version }}</span>
             }
           }
         </p>
@@ -38,7 +38,7 @@
           [disabled]="!a.documentId"
         >
           <i class="bi bi-file-earmark-text"></i>
-          ดูเอกสารต้นฉบับ
+          {{ 'PMDT03_VIEW_ORIGINAL_DOC_BTN' | translate }}
         </button>
       }
       <button
@@ -46,7 +46,7 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
       >
         <i class="bi bi-arrow-left"></i>
-        กลับ
+        {{ 'PMDT03_BACK_BTN' | translate }}
       </button>
     </div>
   </div>
@@ -57,7 +57,7 @@
       <div
         class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลการอนุมัติ...</p>
+      <p class="text-[var(--text-muted)]">{{ 'PMDT03_LOADING_APPROVAL' | translate }}</p>
     </div>
   }
 
@@ -71,7 +71,7 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
       >
         <i class="bi bi-arrow-left"></i>
-        กลับ
+        {{ 'PMDT03_BACK_BTN' | translate }}
       </button>
     </div>
   }

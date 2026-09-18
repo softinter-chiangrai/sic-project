@@ -3,7 +3,7 @@
 @if (isLoading) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    <p class="text-[var(--text-muted)]">{{ 'PMDT04B_LOADING' | translate }}</p>
   </div>
 }
 
@@ -12,14 +12,14 @@
     <div class="grid grid-cols-6 gap-4">
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          {{ isEdit ? 'แก้ไขข้อมูล Requirement' : 'เพิ่มข้อมูล Requirement' }}
+          {{ isEdit ? ('PMDT04B_EDIT_TITLE' | translate) : ('PMDT04B_ADD_TITLE' | translate) }}
         </h2>
       </div>
 
       <!-- Project Name (read-only) -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="โครงการ"
+          [label]="'PMDT04B_PROJECT_LABEL' | translate"
           formControlName="projectName"
           [disabled]="true"
         ></sic-input>
@@ -29,47 +29,47 @@
       <!-- Requirement Code -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="รหัส Requirement"
+          [label]="'PMDT04B_REQ_CODE_LABEL' | translate"
           formControlName="requirementCode"
           [required]="true"
           placeholder="REQ-001"
         ></sic-input>
         @if (form.get('requirementCode')?.touched && form.get('requirementCode')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรหัส Requirement</p>
+          <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT04B_REQ_CODE_REQUIRED' | translate }}</p>
         }
       </div>
 
       <!-- Title -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="ชื่อ Requirement"
+          [label]="'PMDT04B_TITLE_LABEL' | translate"
           formControlName="title"
           [required]="true"
           placeholder="ระบบ Login"
         ></sic-input>
         @if (form.get('title')?.touched && form.get('title')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุชื่อ Requirement</p>
+          <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT04B_TITLE_REQUIRED' | translate }}</p>
         }
       </div>
 
       <!-- Description -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-tiptap-editor
-          label="รายละเอียด"
+          [label]="'PMDT04B_DESC_LABEL' | translate"
           formControlName="description"
           [required]="true"
           minHeight="140px"
-          placeholder="อธิบายความต้องการโดยละเอียด"
+          [placeholder]="'PMDT04B_DESC_PLACEHOLDER' | translate"
         ></sic-tiptap-editor>
         @if (form.get('description')?.touched && form.get('description')?.invalid) {
-          <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+          <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT04B_DESC_REQUIRED' | translate }}</p>
         }
       </div>
 
       <!-- Priority -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-combobox
-          label="ลำดับความสำคัญ"
+          [label]="'PMDT04B_PRIORITY_LABEL' | translate"
           formControlName="priority"
           [apiUrl]="priorityApiUrl"
           [required]="true"
@@ -79,12 +79,12 @@
       <!-- Business Value -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-combobox
-          label="คุณค่าทางธุรกิจ"
+          [label]="'PMDT04B_BUSINESS_VALUE_LABEL' | translate"
           formControlName="businessValue"
           [apiUrl]="businessValueApiUrl"
           valueField="value"
           textField="text"
-          placeholder="เลือกคุณค่าทางธุรกิจ"
+          [placeholder]="'PMDT04B_BUSINESS_VALUE_PLACEHOLDER' | translate"
           [clearable]="true"
         ></sic-combobox>
       </div>
@@ -92,22 +92,22 @@
       <!-- Acceptance Criteria -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-tiptap-editor
-          label="เงื่อนไขการยอมรับ"
+          [label]="'PMDT04B_ACCEPTANCE_LABEL' | translate"
           formControlName="acceptanceCriteria"
           minHeight="120px"
-          placeholder="ระบุเงื่อนไขที่ต้องผ่าน"
+          [placeholder]="'PMDT04B_ACCEPTANCE_PLACEHOLDER' | translate"
         ></sic-tiptap-editor>
       </div>
 
       <!-- Created By -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-combobox
-          label="ผู้สร้าง"
+          [label]="'PMDT04B_CREATED_BY_LABEL' | translate"
           formControlName="createdBy"
           [apiUrl]="userApiUrl"
           valueField="value"
           textField="text"
-          placeholder="เลือกผู้สร้าง"
+          [placeholder]="'PMDT04B_CREATED_BY_PLACEHOLDER' | translate"
           [clearable]="true"
         ></sic-combobox>
       </div>
@@ -118,7 +118,7 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <label class="flex items-center gap-2 cursor-pointer text-sm">
           <input type="checkbox" formControlName="isActive" class="w-4 h-4 text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 rounded" />
-          <span class="text-[var(--text-active)]">เปิดใช้งาน</span>
+          <span class="text-[var(--text-active)]">{{ 'PMDT04B_ACTIVE_LABEL' | translate }}</span>
         </label>
       </div>
 
@@ -126,31 +126,31 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 border-t border-[var(--border)] pt-4 mt-2">
         <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
           <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          กระบวนการอนุมัติ
+          {{ 'PMDT04B_APPROVAL_FLOW_SECTION' | translate }}
         </div>
         <sic-combobox
-          label="เลือกกระบวนการอนุมัติ"
+          [label]="'PMDT04B_APPROVAL_FLOW_LABEL' | translate"
           [apiUrl]="documenttypeapiUrl"
           valueField="id"
           textField="flowName"
-          placeholder="เลือกกระบวนการอนุมัติ"
+          [placeholder]="'PMDT04B_APPROVAL_FLOW_LABEL' | translate"
           [clearable]="true"
           formControlName="approvalFlowId"
           (selectionChanged)="selectedFlowId = $event?.id"
         ></sic-combobox>
         @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">* สามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก</p>
+          <p class="text-xs text-[var(--text-muted)] mt-1">{{ 'PMDT04B_APPROVAL_FLOW_HINT' | translate }}</p>
         }
       </div>
 
       <!-- Buttons -->
       <div class="col-span-12 flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
         <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
-          <i class="bi bi-arrow-left"></i> ย้อนกลับ
+          <i class="bi bi-arrow-left"></i> {{ 'PMDT04B_BACK_BTN' | translate }}
         </sic-button>
         <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving || form.invalid">
           @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
-          {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+          {{ isSaving ? ('PMDT04B_SAVING_BTN' | translate) : (isEdit ? ('PMDT04B_SAVE_BTN' | translate) : ('PMDT04B_CREATE_BTN' | translate)) }}
         </sic-button>
       </div>
 

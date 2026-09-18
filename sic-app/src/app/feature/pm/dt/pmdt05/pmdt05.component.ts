@@ -16,6 +16,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, take, takeUntil, interval } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { DiagramService } from './diagram.service';
 import { DrawioConnectorService } from './drawio-connector.service';
@@ -30,7 +31,7 @@ import { TraceLinkService, TraceRelationshipType } from '../../../../core/servic
 @Component({
   selector: 'app-pmdt05',
   standalone: true,
-  imports: [CommonModule, FormsModule, Pmdt05AComponent],
+  imports: [CommonModule, FormsModule, Pmdt05AComponent, TranslateModule],
   templateUrl: './pmdt05.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt05.component.css'],
@@ -48,6 +49,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private dialogService = inject(DialogService);
   private customerState = inject(CustomerStateService);
   private traceLinkService = inject(TraceLinkService);
+  private translate = inject(TranslateService);
   private isCreateDialogOpened = false;
 
   // ===== State =====
@@ -302,10 +304,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
-              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+              this.dialogService.success(this.translate.instant('PMDT05_CREATE_SUCCESS_TITLE'), this.translate.instant('PMDT05_CREATE_SUCCESS_MSG').replace('{0}', name));
             },
             error: (err) => {
-              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialogService.error(this.translate.instant('PMDT05_CREATE_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR'));
             },
           });
         },
@@ -331,10 +333,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
-              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+              this.dialogService.success(this.translate.instant('PMDT05_CREATE_SUCCESS_TITLE'), this.translate.instant('PMDT05_CREATE_SUCCESS_MSG').replace('{0}', name));
             },
             error: (err) => {
-              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialogService.error(this.translate.instant('PMDT05_CREATE_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR'));
             },
           });
         },
@@ -358,10 +360,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
-              this.dialogService.success('สร้างสำเร็จ', `สร้าง Diagram "${name}" เรียบร้อย`);
+              this.dialogService.success(this.translate.instant('PMDT05_CREATE_SUCCESS_TITLE'), this.translate.instant('PMDT05_CREATE_SUCCESS_MSG').replace('{0}', name));
             },
             error: (err) => {
-              this.dialogService.error('สร้างไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialogService.error(this.translate.instant('PMDT05_CREATE_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR'));
             },
           });
         },
@@ -421,22 +423,22 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                   })
                   .subscribe({
                     next: () => {
-                      this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+                      this.dialogService.success(this.translate.instant('PMDT05_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT05_UPDATE_SUCCESS_MSG').replace('{0}', res.name));
                       this.loadTabs();
                     },
                     error: (err) => {
-                      this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+                      this.dialogService.success(this.translate.instant('PMDT05_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT05_UPDATE_SUCCESS_MSG').replace('{0}', res.name));
                       this.loadTabs();
                     }
                   });
               } else {
                 this.tabs.update((t) => t.map((item) => (item.id === res.id ? res : item)));
                 if (this.currentTabId === tabId) this.currentDiagram = res;
-                this.dialogService.success('บันทึกสำเร็จ', `อัปเดต Diagram "${res.name}" เรียบร้อย`);
+                this.dialogService.success(this.translate.instant('PMDT05_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT05_UPDATE_SUCCESS_MSG').replace('{0}', res.name));
               }
             },
             error: (err) => {
-              this.dialogService.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialogService.error(this.translate.instant('PMDT05_SAVE_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR'));
             },
           });
         },
@@ -460,11 +462,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;
     if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
-      this.dialogService.warn('เอกสารถูกล็อค', 'Diagram นี้ผ่านการอนุมัติแล้ว ไม่สามารถลบได้ กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request');
+      this.dialogService.warn(this.translate.instant('PMDT05_LOCKED_TITLE'), this.translate.instant('PMDT05_LOCKED_DELETE_MSG'));
       return;
     }
     this.dialogService
-      .confirm('Delete Tab', `Delete diagram "${tab.name}"? This cannot be undone.`)
+      .confirm(this.translate.instant('PMDT05_DELETE_TAB_CONFIRM_TITLE'), this.translate.instant('PMDT05_DELETE_TAB_CONFIRM_MSG').replace('{0}', tab.name))
       .then((confirmed) => {
         if (!confirmed) return;
         this.diagramService.deleteTab(tabId).subscribe({
@@ -479,11 +481,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                 this.drawioService.loadXml('');
               }
             }
-            this.dialogService.success('Deleted', `Tab "${tab.name}" deleted.`);
+            this.dialogService.success(this.translate.instant('PMDT05_DELETED_TITLE'), this.translate.instant('PMDT05_TAB_DELETED_MSG').replace('{0}', tab.name));
           },
           error: (err) => {
             console.error('Failed to delete tab:', err);
-            this.dialogService.error('Failed', err.error?.message || 'Could not delete tab.');
+            this.dialogService.error(this.translate.instant('PMDT05_FAILED_TITLE'), err.error?.message || this.translate.instant('PMDT05_DELETE_TAB_FAIL_MSG'));
           },
         });
       });
@@ -532,7 +534,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     if (!this.projectId) return;
     this.diagramService.getProjectName(this.projectId).subscribe({
       next: (name) => (this.projectName = name),
-      error: () => (this.projectName = 'Unknown Project'),
+      error: () => (this.projectName = this.translate.instant('PMDT05_UNKNOWN_PROJECT')),
     });
   }
 
@@ -589,7 +591,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         console.log('[Diagram] Loaded diagram data:', diagram);
         if (this.projectId && diagram.projectId !== this.projectId) {
           console.warn('[Diagram] Project mismatch');
-          this.dialogService.warn('Project mismatch', 'This diagram does not belong to the selected project.');
+          this.dialogService.warn(this.translate.instant('PMDT05_PROJECT_MISMATCH_TITLE'), this.translate.instant('PMDT05_PROJECT_MISMATCH_MSG'));
           this.isLoading = false;
           this.isLoadingDiagram = false;
           this.drawioService.loadXml('');
@@ -618,7 +620,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         this.isLoading = false;
         this.isLoadingDiagram = false;
         this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
-        this.dialogService.error('โหลด Diagram ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        this.dialogService.error(this.translate.instant('PMDT05_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR'));
       },
     });
   }
@@ -626,7 +628,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   // ===== Save (Manual) =====
   saveDiagram(): void {
     if (!this.currentTabId) {
-      this.dialogService.warn('No Diagram', 'ไม่พบ Diagram ที่จะบันทึก');
+      this.dialogService.warn(this.translate.instant('PMDT05_NO_DIAGRAM_TITLE'), this.translate.instant('PMDT05_NO_DIAGRAM_SAVE_MSG'));
       return;
     }
     // ขอ XML ล่าสุดจาก Draw.io
@@ -634,7 +636,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     // รอ XML แล้วบันทึกทันที (ใช้ take(1) เพื่อรับครั้งเดียว)
     this.drawioService.xml$.pipe(take(1), takeUntil(this.destroy$)).subscribe((xml: string) => {
       if (!xml || xml.trim().length === 0) {
-        this.dialogService.warn('Empty Diagram', 'ไม่พบข้อมูล Diagram');
+        this.dialogService.warn(this.translate.instant('PMDT05_EMPTY_DIAGRAM_TITLE'), this.translate.instant('PMDT05_EMPTY_DIAGRAM_MSG'));
         return;
       }
       const normalized = this.ensureValidDrawioXml(xml);
@@ -647,7 +649,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private autoSaveDiagram(xml: string, manual: boolean = false): void {
     if (this.saving) {
       if (manual) {
-        this.dialogService.warn('กำลังบันทึก', 'ระบบกำลังบันทึกอยู่ กรุณารอสักครู่');
+        this.dialogService.warn(this.translate.instant('PMDT05_SAVING_TITLE'), this.translate.instant('PMDT05_SAVING_MSG'));
       }
       return;
     }
@@ -658,7 +660,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
     if (this.currentTabLocked) {
       if (manual) {
-        this.dialogService.warn('เอกสารถูกล็อค', 'Diagram นี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่าน Change Request');
+        this.dialogService.warn(this.translate.instant('PMDT05_LOCKED_TITLE'), this.translate.instant('PMDT05_LOCKED_SAVE_MSG'));
       }
       return;
     }
@@ -682,7 +684,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     if (!requirementId) {
       console.warn('[AutoSave] No requirementId found for this diagram, cannot save.');
       if (manual) {
-        this.dialogService.warn('Missing Requirement', 'ไม่พบ Requirement ID ที่เชื่อมโยง กรุณาสร้าง Diagram ใหม่ผ่าน Requirement');
+        this.dialogService.warn(this.translate.instant('PMDT05_MISSING_REQ_TITLE'), this.translate.instant('PMDT05_MISSING_REQ_MSG'));
       }
       return;
     }
@@ -705,18 +707,18 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         );
         this.lastSavedXml = res.graphData?.xml ?? xml;
         const now = new Date().toLocaleTimeString();
-        this.autoSaveStatus = manual ? `✅ Saved manually at ${now}` : `✅ Auto-saved at ${now}`;
+        this.autoSaveStatus = manual ? this.translate.instant('PMDT05_SAVED_MANUALLY').replace('{0}', now) : this.translate.instant('PMDT05_AUTO_SAVED').replace('{0}', now);
         this.saving = false;
         if (manual) {
-          this.dialogService.success('บันทึกสำเร็จ', 'Diagram ถูกบันทึกเรียบร้อย');
+          this.dialogService.success(this.translate.instant('PMDT05_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT05_SAVE_SUCCESS_MSG'));
         }
       },
       error: (err) => {
         this.saving = false;
-        const msg = err.error?.message || 'เกิดข้อผิดพลาด';
-        this.autoSaveStatus = `❌ Save failed`;
+        const msg = err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR');
+        this.autoSaveStatus = this.translate.instant('PMDT05_SAVE_FAILED_STATUS');
         if (manual) {
-          this.dialogService.error('บันทึกไม่สำเร็จ', msg);
+          this.dialogService.error(this.translate.instant('PMDT05_SAVE_FAIL_TITLE'), msg);
         } else {
           console.error('[AutoSave] Failed:', err);
         }
@@ -738,7 +740,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   // ===== Generate SQL =====
   generateSql(): void {
     if (!this.currentTabId) {
-      this.dialogService.warn('No Diagram', 'Please open a diagram first.');
+      this.dialogService.warn(this.translate.instant('PMDT05_NO_DIAGRAM_TITLE'), this.translate.instant('PMDT05_OPEN_DIAGRAM_FIRST_MSG'));
       return;
     }
     this.isLoading = true;
@@ -747,7 +749,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       next: (xml: any) => {
         this.isLoading = false;
         if (!xml || xml.trim().length === 0) {
-          this.dialogService.warn('Empty Diagram', 'Please draw an ER diagram first.');
+          this.dialogService.warn(this.translate.instant('PMDT05_EMPTY_DIAGRAM_TITLE'), this.translate.instant('PMDT05_DRAW_ER_FIRST_MSG'));
           return;
         }
         this.dialogService.open({
@@ -761,7 +763,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       },
       error: () => {
         this.isLoading = false;
-        this.dialogService.error('Error', 'Failed to get diagram XML.');
+        this.dialogService.error(this.translate.instant('PMDT05_ERROR_TITLE'), this.translate.instant('PMDT05_GET_XML_FAIL_MSG'));
       },
     });
   }

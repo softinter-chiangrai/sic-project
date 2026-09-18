@@ -25,6 +25,7 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { burt03Service } from '../../burt03/burt03.service';
 import { ModulePermission, RolePermissionData } from './burt02A.model';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // ============================================================
 // Service
@@ -32,6 +33,7 @@ import { ModulePermission, RolePermissionData } from './burt02A.model';
 @Injectable({ providedIn: 'root' })
 export class burt02AService {
   private readonly http = inject(HttpClient);
+  private readonly translate = inject(TranslateService);
 
   getRolePermissions(roleId: string): Observable<RolePermissionData> {
     const url = `${environment.apiBaseUrl}/api/su/business-role-programs`;
@@ -91,7 +93,7 @@ export class burt02AService {
         roleId: data.roleId,
         modules: modulesReq,
       })
-      .pipe(map(() => 'บันทึกสิทธิ์บทบาทสำเร็จ'));
+      .pipe(map(() => this.translate.instant('BURT02A_SAVE_PERM_SUCCESS_MSG')));
   }
 }
 
@@ -109,6 +111,7 @@ export class burt02AService {
     SicComboboxComponent,
     SicGridPanelComponent,
     SicGridPanelTemplate,
+    TranslateModule,
   ],
   templateUrl: './burt02A.component.html',
   styleUrls: ['./burt02A.component.css'],
@@ -120,6 +123,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   readonly service = inject(burt02AService);
   readonly roleService = inject(burt03Service);
   readonly dialog = inject(DialogService);
+  readonly translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
 
   roleId: string | null = null;
@@ -136,12 +140,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   modules = signal<ModulePermission[]>([]);
   private initialModulesSnapshot = signal<string>('');
 
-  readonly groupOptions = [
-    { value: 'all', text: 'All Modules' },
-    { value: 'PM', text: 'PM - Project Management' },
-    { value: 'BU', text: 'BU - Business Management' },
-    { value: 'SU', text: 'SU - System & Settings' },
-  ];
+  groupOptions: { value: string; text: string }[] = [];
 
   filteredModules = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
@@ -165,23 +164,27 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
 
   totalItems = computed(() => this.filteredModules().length);
 
-  gridConfig: SicGridPanelConfig = {
-    id: 'moduleId',
-    lazy: false,
-    selectable: false,
-    showToolbar: false,
-    pageSize: this.pageSize(),
-    column: [
-      { label: 'Program / Module', name: 'moduleName', type: 'moduleInfo', minWidth: 180 },
-      { label: 'Active', name: 'isActive', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Add', name: 'isAdd', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Save', name: 'isSave', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Delete', name: 'isRemove', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Print', name: 'isPrint', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Search', name: 'isSearch', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Actions', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
-    ],
-  };
+  gridConfig!: SicGridPanelConfig;
+
+  private buildGridConfig(): SicGridPanelConfig {
+    return {
+      id: 'moduleId',
+      lazy: false,
+      selectable: false,
+      showToolbar: false,
+      pageSize: this.pageSize(),
+      column: [
+        { label: this.translate.instant('BURT02A_COL_MODULE'), name: 'moduleName', type: 'moduleInfo', minWidth: 180 },
+        { label: this.translate.instant('BURT02A_COL_ACTIVE'), name: 'isActive', type: 'permCheckbox', align: 'center', minWidth: 90 },
+        { label: this.translate.instant('BURT02A_COL_ADD'), name: 'isAdd', type: 'permCheckbox', align: 'center', minWidth: 90 },
+        { label: this.translate.instant('BURT02A_COL_SAVE'), name: 'isSave', type: 'permCheckbox', align: 'center', minWidth: 90 },
+        { label: this.translate.instant('BURT02A_COL_DELETE'), name: 'isRemove', type: 'permCheckbox', align: 'center', minWidth: 90 },
+        { label: this.translate.instant('BURT02A_COL_PRINT'), name: 'isPrint', type: 'permCheckbox', align: 'center', minWidth: 90 },
+        { label: this.translate.instant('BURT02A_COL_SEARCH'), name: 'isSearch', type: 'permCheckbox', align: 'center', minWidth: 90 },
+        { label: this.translate.instant('BURT02A_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
+      ],
+    };
+  }
 
   // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
   private reloadFromPage1(grid: SicGridPanelComponent): void {
@@ -225,6 +228,13 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   }
 
   ngOnInit(): void {
+    this.groupOptions = [
+      { value: 'all', text: this.translate.instant('BURT02A_GROUP_ALL') },
+      { value: 'PM', text: this.translate.instant('BURT02A_GROUP_PM') },
+      { value: 'BU', text: this.translate.instant('BURT02A_GROUP_BU') },
+      { value: 'SU', text: this.translate.instant('BURT02A_GROUP_SU') },
+    ];
+    this.gridConfig = this.buildGridConfig();
     this.route.params.subscribe((params) => {
       const id = params['id'];
       if (id) {
@@ -259,7 +269,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
         },
         error: (error) => {
           console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสิทธิ์ของบทบาทนี้');
+          this.dialog.error(this.translate.instant('BURT02A_LOAD_FAILED_TITLE'), this.translate.instant('BURT02A_LOAD_FAILED_MSG'));
         },
       });
   }
@@ -462,7 +472,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
 
   submit() {
     if (!this.roleId) {
-      this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบรหัสบทบาท');
+      this.dialog.error(this.translate.instant('BURT02A_ERROR_TITLE'), this.translate.instant('BURT02A_ROLE_ID_NOT_FOUND_MSG'));
       this.router.navigate(['/feature/bu/permission']);
       return;
     }
@@ -488,13 +498,13 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       .subscribe({
         next: () => {
           this.initialModulesSnapshot.set(JSON.stringify(this.modules()));
-          this.dialog.success('บันทึกสำเร็จ', 'สิทธิ์การใช้งานของบทบาทถูกบันทึกเรียบร้อย').then(() => {
+          this.dialog.success(this.translate.instant('BURT02A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT02A_SAVE_SUCCESS_MSG')).then(() => {
             this.router.navigate(['/feature/bu/permission']);
           });
         },
         error: (error) => {
           console.error('❌ Save error:', error);
-          this.dialog.error('บันทึกไม่สำเร็จ', error.message || 'เกิดข้อผิดพลาดในการบันทึก');
+          this.dialog.error(this.translate.instant('BURT02A_SAVE_FAILED_TITLE'), error.message || this.translate.instant('BURT02A_SAVE_ERROR_MSG'));
         },
       });
   }

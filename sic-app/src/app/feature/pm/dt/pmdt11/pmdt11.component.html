@@ -2,7 +2,7 @@
 @if (isLoading) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+    <p class="text-[var(--text-muted)]">{{ 'PMDT11_LOADING' | translate }}</p>
   </div>
 }
 
@@ -14,7 +14,7 @@
       <!-- HEADER -->
       <div class="col-span-6 text-center">
         <h2 class="text-4xl font-semibold text-[var(--text-active)]">
-          ✏️ อัปเดตกำหนดการงาน
+          {{ 'PMDT11_PAGE_TITLE' | translate }}
         </h2>
         <p class="text-lg text-[var(--text-muted)] mt-1">{{ taskCode }}: {{ taskName }}</p>
       </div>
@@ -23,14 +23,14 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
           <sic-input
-            label="รหัสงาน"
+            [label]="'PMDT11_TASK_CODE_LABEL' | translate"
             formControlName="taskCode"
             [disabled]="true"
           ></sic-input>
         </div>
         <div class="flex-2">
           <sic-input
-            label="ชื่องาน"
+            [label]="'PMDT11_TASK_NAME_LABEL' | translate"
             formControlName="taskName"
             [disabled]="true"
           ></sic-input>
@@ -40,14 +40,14 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
           <sic-input
-            label="โครงการ"
+            [label]="'PMDT11_PROJECT_LABEL' | translate"
             formControlName="projectName"
             [disabled]="true"
           ></sic-input>
         </div>
         <div class="flex-1">
           <sic-input
-            label="ผู้รับผิดชอบ"
+            [label]="'PMDT11_ASSIGNED_TO_LABEL' | translate"
             formControlName="assignedTo"
             [disabled]="true"
           ></sic-input>
@@ -58,26 +58,26 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
           <sic-input
-            label="วันที่เริ่ม (แผน)"
+            [label]="'PMDT11_PLAN_START_LABEL' | translate"
             type="text"
             formControlName="startDate"
             [required]="true"
             placeholder="DD/MM/YYYY"
           ></sic-input>
           @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+            <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT11_START_REQUIRED_MSG' | translate }}</p>
           }
         </div>
         <div class="flex-1">
           <sic-input
-            label="วันที่สิ้นสุด (แผน)"
+            [label]="'PMDT11_PLAN_END_LABEL' | translate"
             type="text"
             formControlName="endDate"
             [required]="true"
             placeholder="DD/MM/YYYY"
           ></sic-input>
           @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
-            <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+            <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT11_END_REQUIRED_MSG' | translate }}</p>
           }
         </div>
       </div>
@@ -86,7 +86,7 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6">
         <div class="flex-1">
           <sic-input
-            label="วันที่เริ่มจริง"
+            [label]="'PMDT11_ACTUAL_START_LABEL' | translate"
             type="text"
             formControlName="actualStart"
             placeholder="DD/MM/YYYY"
@@ -94,7 +94,7 @@
         </div>
         <div class="flex-1">
           <sic-input
-            label="วันที่สิ้นสุดจริง"
+            [label]="'PMDT11_ACTUAL_END_LABEL' | translate"
             type="text"
             formControlName="actualEnd"
             placeholder="DD/MM/YYYY"
@@ -105,7 +105,7 @@
       <!-- Dependency -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input
-          label="งานที่ต้องทำก่อน"
+          [label]="'PMDT11_DEPENDENCY_LABEL' | translate"
           formControlName="dependency"
           placeholder="TASK-001"
           (change)="onDependencyChange($event)"
@@ -118,10 +118,10 @@
       <!-- Comment -->
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input-area
-          label="หมายเหตุ"
+          [label]="'PMDT11_COMMENT_LABEL' | translate"
           formControlName="comment"
           [rows]="2"
-          placeholder="เพิ่มความคิดเห็นหรือรายละเอียดเพิ่มเติม..."
+          [placeholder]="'PMDT11_COMMENT_PH' | translate"
         ></sic-input-area>
       </div>
 
@@ -133,14 +133,14 @@
           (click)="onBack()"
         >
           <i class="bi bi-arrow-left"></i>
-          ย้อนกลับ
+          {{ 'PMDT11_BACK_BTN' | translate }}
         </sic-button>
         <sic-button
           [type]="'submit'"
           variant="solid" color="primary"
         >
           <i class="bi bi-floppy"></i>
-          บันทึกกำหนดการ
+          {{ 'PMDT11_SAVE_SCHEDULE_BTN' | translate }}
         </sic-button>
       </div>
 

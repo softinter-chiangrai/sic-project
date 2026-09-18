@@ -2,6 +2,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, Input, computed, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 import { DialogService } from '../../services/dialog.service';
 import {
@@ -28,24 +29,24 @@ interface TraceEntityTypeDef {
 @Component({
   selector: 'sic-trace-link-picker',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, SicButtonComponent, SicComboboxComponent],
+  imports: [CommonModule, ReactiveFormsModule, SicButtonComponent, SicComboboxComponent, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-[min(92vw,32rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4" style="border-color: var(--border);">
-        <h3 class="text-base font-semibold text-[var(--text-active)]">เพิ่มความสัมพันธ์ (Add Link)</h3>
-        <p class="text-sm text-[var(--text-muted)]">ค้นหารายการที่มีอยู่แล้วเพื่อเชื่อมโยงความสัมพันธ์</p>
+        <h3 class="text-base font-semibold text-[var(--text-active)]">{{ 'TRACE_LINK_PICKER_TITLE' | translate }}</h3>
+        <p class="text-sm text-[var(--text-muted)]">{{ 'TRACE_LINK_PICKER_SUBTITLE' | translate }}</p>
       </div>
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4 px-5 py-4">
         <div>
-          <label class="mb-1 block text-sm font-medium text-[var(--text)]">ประเภทรายการ</label>
+          <label class="mb-1 block text-sm font-medium text-[var(--text)]">{{ 'TRACE_LINK_PICKER_ENTITY_TYPE_LABEL' | translate }}</label>
           <select
             class="w-full rounded-lg border bg-[var(--bg)] px-3 py-2 text-sm"
             style="border-color: var(--border);"
             [formControl]="form.controls.entityType"
             (change)="onEntityTypeChange()"
           >
-            <option value="" disabled>เลือกประเภทรายการ</option>
+            <option value="" disabled>{{ 'TRACE_LINK_PICKER_ENTITY_TYPE_PLACEHOLDER' | translate }}</option>
             @for (t of availableEntityTypes; track t.type) {
               <option [value]="t.type">{{ t.label }}</option>
             }
@@ -53,7 +54,7 @@ interface TraceEntityTypeDef {
         </div>
 
         <sic-combobox
-          label="รายการ"
+          [label]="'TRACE_LINK_PICKER_ITEM_LABEL' | translate"
           formControlName="itemId"
           [apiUrl]="selectedEntityApiUrl()"
           [params]="selectedEntityParams()"
@@ -62,14 +63,14 @@ interface TraceEntityTypeDef {
           [textField]="selectedEntityTextField()"
           pageNumberParam="page"
           pageSizeParam="size"
-          placeholder="ค้นหารายการ..."
+          [placeholder]="'TRACE_LINK_PICKER_ITEM_PLACEHOLDER' | translate"
           [disabled]="!form.controls.entityType.value"
           (selectionChanged)="onItemSelected($event)"
           [required]="true"
         ></sic-combobox>
 
         <div>
-          <label class="mb-1 block text-sm font-medium text-[var(--text)]">ความสัมพันธ์</label>
+          <label class="mb-1 block text-sm font-medium text-[var(--text)]">{{ 'TRACE_LINK_PICKER_RELATIONSHIP_LABEL' | translate }}</label>
           <select
             class="w-full rounded-lg border bg-[var(--bg)] px-3 py-2 text-sm"
             style="border-color: var(--border);"
@@ -82,9 +83,9 @@ interface TraceEntityTypeDef {
         </div>
 
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">
-          <sic-button variant="outline" color="primary" size="sm" type="button" (click)="cancel()">ยกเลิก</sic-button>
+          <sic-button variant="outline" color="primary" size="sm" type="button" (click)="cancel()">{{ 'TRACE_LINK_PICKER_CANCEL_BUTTON' | translate }}</sic-button>
           <sic-button variant="solid" color="primary" size="sm" type="submit" [disabled]="form.invalid || saving()">
-            {{ saving() ? 'กำลังบันทึก...' : 'เพิ่มความสัมพันธ์' }}
+            {{ saving() ? ('TRACE_LINK_PICKER_SAVING' | translate) : ('TRACE_LINK_PICKER_ADD_BUTTON' | translate) }}
           </sic-button>
         </div>
       </form>
@@ -106,6 +107,7 @@ export class SicTraceLinkPickerComponent {
   private fb = inject(FormBuilder);
   private dialogService = inject(DialogService);
   private traceLinkService = inject(TraceLinkService);
+  private translate = inject(TranslateService);
 
   saving = signal(false);
   relationshipOptions = TRACE_RELATIONSHIP_OPTIONS;
@@ -252,7 +254,7 @@ export class SicTraceLinkPickerComponent {
         },
         error: (err) => {
           this.saving.set(false);
-          this.dialogService.error('เพิ่มความสัมพันธ์ไม่สำเร็จ', err?.error?.message || 'เกิดข้อผิดพลาด กรุณาลองใหม่');
+          this.dialogService.error(this.translate.instant('TRACE_LINK_PICKER_ADD_ERROR_TITLE'), err?.error?.message || this.translate.instant('TRACE_LINK_PICKER_GENERIC_ERROR_MSG'));
         },
       });
   }

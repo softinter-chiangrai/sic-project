@@ -24,6 +24,7 @@ import type { Dayjs } from 'dayjs';
 import { DateTimeUtil, type CalendarEra } from '../../utils/datetime.util';
 import { SicValidator } from '../../validator/sic.validator';
 import type { Subscription } from 'rxjs';
+import { TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'sic-datepicker',
@@ -94,6 +95,7 @@ export class SicDatepickerComponent implements ControlValueAccessor, AfterViewIn
     private readonly cdr: ChangeDetectorRef,
     private readonly elementRef: ElementRef<HTMLElement>,
     private readonly validator: SicValidator,
+    private readonly translate: TranslateService,
   ) {
     this.generateWeekDays();
   }
@@ -608,7 +610,15 @@ export class SicDatepickerComponent implements ControlValueAccessor, AfterViewIn
     const locale = this.resolveLocale(this.getEra());
     
     if (locale === 'th') {
-      this.weekDays = ['อ.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+      this.weekDays = [
+        this.translate.instant('DATEPICKER_WEEKDAY_SUN_SHORT'),
+        this.translate.instant('DATEPICKER_WEEKDAY_MON_SHORT'),
+        this.translate.instant('DATEPICKER_WEEKDAY_TUE_SHORT'),
+        this.translate.instant('DATEPICKER_WEEKDAY_WED_SHORT'),
+        this.translate.instant('DATEPICKER_WEEKDAY_THU_SHORT'),
+        this.translate.instant('DATEPICKER_WEEKDAY_FRI_SHORT'),
+        this.translate.instant('DATEPICKER_WEEKDAY_SAT_SHORT'),
+      ];
     } else {
       this.weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
     }
@@ -623,18 +633,18 @@ export class SicDatepickerComponent implements ControlValueAccessor, AfterViewIn
     const locale = this.resolveLocale(this.getEra());
     if (locale === 'th') {
       this.monthNames = [
-        'มกราคม',
-        'กุมภาพันธ์',
-        'มีนาคม',
-        'เมษายน',
-        'พฤษภาคม',
-        'มิถุนายน',
-        'กรกฎาคม',
-        'สิงหาคม',
-        'กันยายน',
-        'ตุลาคม',
-        'พฤศจิกายน',
-        'ธันวาคม',
+        this.translate.instant('DATEPICKER_MONTH_JANUARY'),
+        this.translate.instant('DATEPICKER_MONTH_FEBRUARY'),
+        this.translate.instant('DATEPICKER_MONTH_MARCH'),
+        this.translate.instant('DATEPICKER_MONTH_APRIL'),
+        this.translate.instant('DATEPICKER_MONTH_MAY'),
+        this.translate.instant('DATEPICKER_MONTH_JUNE'),
+        this.translate.instant('DATEPICKER_MONTH_JULY'),
+        this.translate.instant('DATEPICKER_MONTH_AUGUST'),
+        this.translate.instant('DATEPICKER_MONTH_SEPTEMBER'),
+        this.translate.instant('DATEPICKER_MONTH_OCTOBER'),
+        this.translate.instant('DATEPICKER_MONTH_NOVEMBER'),
+        this.translate.instant('DATEPICKER_MONTH_DECEMBER'),
       ];
     } else {
       this.monthNames = [

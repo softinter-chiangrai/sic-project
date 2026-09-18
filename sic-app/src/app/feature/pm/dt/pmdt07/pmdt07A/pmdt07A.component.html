@@ -6,16 +6,16 @@
             <button
                 (click)="onBack()"
                 class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                title="กลับ">
+                [title]="'PMDT07_BACK_TITLE' | translate">
                 <i class="bi bi-arrow-left text-xl"></i>
             </button>
             <div>
                 <h1 class="text-xl font-bold text-[var(--text-active)]">
-                    {{ isViewOnly ? 'ดูข้อมูล Specification' : (isEdit ? 'แก้ไข Specification' : 'สร้าง Specification ใหม่') }}
+                    {{ (isViewOnly ? 'PMDT07_VIEW_SPEC_TITLE' : (isEdit ? 'PMDT07_EDIT_SPEC_TITLE' : 'PMDT07_CREATE_SPEC_TITLE')) | translate }}
                 </h1>
                 @if (isEdit || isViewOnly) {
                     <p class="text-xs text-[var(--text-muted)] flex items-center gap-2">
-                        <span>รหัส: {{ form.getRawValue().specificationCode || '-' }}</span>
+                        <span>{{ 'PMDT07_CODE_PREFIX' | translate }} {{ form.getRawValue().specificationCode || '-' }}</span>
                         <sic-version-badge [version]="form.getRawValue().version" [status]="form.getRawValue().status" [isLocked]="isLocked"></sic-version-badge>
                     </p>
                 }
@@ -30,13 +30,13 @@
 
             <!-- View Mode Toggle -->
             <div class="view-mode-toggle">
-                <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" title="โหมดแก้ไข">
+                <button (click)="setViewMode('edit')" [class.active]="viewMode === 'edit'" [title]="'PMDT07_EDIT_MODE_TITLE' | translate">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" title="แยกหน้าจอ">
+                <button (click)="setViewMode('split')" [class.active]="viewMode === 'split'" [title]="'PMDT07_SPLIT_MODE_TITLE' | translate">
                     <i class="bi bi-layout-split"></i>
                 </button>
-                <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" title="โหมดดูตัวอย่าง">
+                <button (click)="setViewMode('preview')" [class.active]="viewMode === 'preview'" [title]="'PMDT07_PREVIEW_MODE_TITLE' | translate">
                     <i class="bi bi-eye"></i>
                 </button>
             </div>
@@ -47,9 +47,9 @@
                     type="button"
                     (click)="openAiAssist()"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5"
-                    title="สร้างเนื้อหาและรายละเอียดด้วย AI">
+                    [title]="'PMDT07_AI_ASSIST_TITLE' | translate">
                     <i class="bi bi-stars"></i>
-                    สร้างเนื้อหาด้วย AI
+                    {{ 'PMDT07_AI_ASSIST_BTN' | translate }}
                 </button>
             }
 
@@ -59,7 +59,7 @@
                     (click)="exportSpecification()"
                     [disabled]="isLoading || form.invalid"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
-                    title="เปิดเอกสาร PDF (JasperReports)">
+                    [title]="'PMDT07_PDF_BTN_TITLE' | translate">
                     <i class="bi bi-filetype-pdf"></i>
                     PDF
                 </button>
@@ -71,7 +71,7 @@
     @if (isLoading) {
         <div class="flex flex-col items-center justify-center py-12 gap-3">
             <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-            <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+            <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT07_LOADING_DATA_MSG' | translate }}</p>
         </div>
     }
 

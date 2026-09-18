@@ -13,12 +13,13 @@ import { SicOrganizationalChartNode } from '../../../../core/component/sic-organ
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Role } from './burt03.model';
 import { burt03Service } from './burt03.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
 @Component({
   selector: 'app-burt03',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicOrganizationalChartComponent],
+  imports: [CommonModule, RouterModule, SicOrganizationalChartComponent, TranslateModule],
   templateUrl: './burt03.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt03.component.css',
@@ -27,6 +28,7 @@ export class Burt03Component implements OnInit {
   private router = inject(Router);
   private dialog = inject(DialogService);
   private service = inject(burt03Service);
+  private translate = inject(TranslateService);
 
   isLoading = signal(false);
   isSaving = signal(false);
@@ -109,12 +111,12 @@ export class Burt03Component implements OnInit {
           localStorage.setItem('businessId', activeBiz.id);
           this.loadRoles();
         } else {
-          this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+          this.dialog.error(this.translate.instant('BURT03_NO_BUSINESS_TITLE'), this.translate.instant('BURT03_SELECT_BUSINESS_MSG'));
           this.router.navigate(['/management/business']);
         }
       },
       error: () => {
-        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูลธุรกิจได้');
+        this.dialog.error(this.translate.instant('BURT03_ERROR_TITLE'), this.translate.instant('BURT03_LOAD_BUSINESS_FAILED_MSG'));
         this.router.navigate(['/management/business']);
       },
     });
@@ -134,7 +136,7 @@ export class Burt03Component implements OnInit {
         },
         error: (err) => {
           console.error('Load roles error', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการบทบาทได้');
+          this.dialog.error(this.translate.instant('BURT03_LOAD_FAILED_TITLE'), this.translate.instant('BURT03_LOAD_ROLES_FAILED_MSG'));
         },
       });
   }
@@ -189,7 +191,7 @@ export class Burt03Component implements OnInit {
       (r) => r.roleCode.toUpperCase() === formattedRoleCode
     );
     if (isDuplicate) {
-      this.dialog.error('บันทึกไม่สำเร็จ', 'role_code นี้ถุกใช้เเล้ว');
+      this.dialog.error(this.translate.instant('BURT03_SAVE_FAILED_TITLE'), this.translate.instant('BURT03_DUPLICATE_ROLE_CODE_MSG'));
       return;
     }
 
@@ -214,25 +216,25 @@ export class Burt03Component implements OnInit {
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: () => {
-          this.dialog.success('เพิ่มบทบาทสำเร็จ', `เพิ่มบทบาท "${data.nameEn}" เรียบร้อย`);
+          this.dialog.success(this.translate.instant('BURT03_ADD_ROLE_SUCCESS_TITLE'), this.translate.instant('BURT03_ADD_ROLE_SUCCESS_MSG', { name: data.nameEn }));
           this.loadRoles();
         },
         error: (err) => {
           console.error('Create role error', err);
-          let errorMessage = 'เกิดข้อผิดพลาด';
+          let errorMessage = this.translate.instant('BURT03_GENERIC_ERROR_MSG');
           const errString = JSON.stringify(err);
           if (
             err.error?.message?.includes('already exists') ||
             err.message?.includes('already exists') ||
             errString.includes('already exists')
           ) {
-            errorMessage = 'role_code นี้ถุกใช้เเล้ว';
+            errorMessage = this.translate.instant('BURT03_DUPLICATE_ROLE_CODE_MSG');
           } else if (err.error?.message) {
             errorMessage = err.error.message;
           } else if (err.message) {
             errorMessage = err.message;
           }
-          this.dialog.error('บันทึกไม่สำเร็จ', errorMessage);
+          this.dialog.error(this.translate.instant('BURT03_SAVE_FAILED_TITLE'), errorMessage);
           this.loadRoles();
         },
       });
@@ -254,18 +256,18 @@ export class Burt03Component implements OnInit {
 
   // ===== Event: ลบ Node =====
   onNodeRemoved(event: { parentId: string; nodeId: string }): void {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบบทบาทนี้ใช่หรือไม่?').then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('BURT03_CONFIRM_DELETE_TITLE'), this.translate.instant('BURT03_CONFIRM_DELETE_MSG')).then((confirmed) => {
       if (confirmed) {
         this.isLoading.set(true);
         this.service.deleteRole(event.nodeId).subscribe({
           next: () => {
-            this.dialog.success('ลบสำเร็จ', 'บทบาทถูกลบเรียบร้อย');
+            this.dialog.success(this.translate.instant('BURT03_DELETE_SUCCESS_TITLE'), this.translate.instant('BURT03_DELETE_SUCCESS_MSG'));
             this.loadRoles();
           },
           error: (err) => {
             this.isLoading.set(false);
             console.error('Delete error', err);
-            this.dialog.error('ลบไม่สำเร็จ', 'ไม่สามารถลบบทบาทได้');
+            this.dialog.error(this.translate.instant('BURT03_DELETE_FAILED_TITLE'), this.translate.instant('BURT03_DELETE_FAILED_MSG'));
             this.loadRoles();
           },
         });
@@ -278,7 +280,7 @@ export class Burt03Component implements OnInit {
     const node = event as SicOrganizationalChartNode;
     const role = this.roles().find((r) => r.id === node.id);
     if (!role) {
-      this.dialog.error('ไม่พบข้อมูล', 'ไม่พบบทบาทนี้ในระบบ');
+      this.dialog.error(this.translate.instant('BURT03_NOT_FOUND_TITLE'), this.translate.instant('BURT03_ROLE_NOT_FOUND_MSG'));
       return;
     }
 
@@ -306,7 +308,7 @@ export class Burt03Component implements OnInit {
             (r) => r.roleCode.toUpperCase() === formattedRoleCode && r.id !== role.id
           );
           if (isDuplicate) {
-            this.dialog.error('บันทึกไม่สำเร็จ', 'role_code นี้ถุกใช้เเล้ว');
+            this.dialog.error(this.translate.instant('BURT03_SAVE_FAILED_TITLE'), this.translate.instant('BURT03_DUPLICATE_ROLE_CODE_MSG'));
             return;
           }
 
@@ -326,25 +328,25 @@ export class Burt03Component implements OnInit {
             .pipe(finalize(() => this.isSaving.set(false)))
             .subscribe({
               next: () => {
-                this.dialog.success('แก้ไขสำเร็จ', `อัปเดตบทบาท "${payload.nameEn}" เรียบร้อย`);
+                this.dialog.success(this.translate.instant('BURT03_EDIT_SUCCESS_TITLE'), this.translate.instant('BURT03_EDIT_SUCCESS_MSG', { name: payload.nameEn }));
                 this.loadRoles();
               },
               error: (err) => {
                 console.error('Update role error', err);
-                let errorMessage = 'เกิดข้อผิดพลาด';
+                let errorMessage = this.translate.instant('BURT03_GENERIC_ERROR_MSG');
                 const errString = JSON.stringify(err);
                 if (
                   err.error?.message?.includes('already exists') ||
                   err.message?.includes('already exists') ||
                   errString.includes('already exists')
                 ) {
-                  errorMessage = 'role_code นี้ถุกใช้เเล้ว';
+                  errorMessage = this.translate.instant('BURT03_DUPLICATE_ROLE_CODE_MSG');
                 } else if (err.error?.message) {
                   errorMessage = err.error.message;
                 } else if (err.message) {
                   errorMessage = err.message;
                 }
-                this.dialog.error('บันทึกไม่สำเร็จ', errorMessage);
+                this.dialog.error(this.translate.instant('BURT03_SAVE_FAILED_TITLE'), errorMessage);
                 this.loadRoles();
               },
             });

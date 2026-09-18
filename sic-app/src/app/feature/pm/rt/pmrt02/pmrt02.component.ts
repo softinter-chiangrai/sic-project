@@ -22,11 +22,12 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmrt02',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmrt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -38,6 +39,7 @@ export class Pmrt02Component implements OnInit {
   private customerState = inject(CustomerStateService);
   private navigation = inject(NavigationService);
   private recentItems = inject(RecentItemsService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -63,15 +65,15 @@ export class Pmrt02Component implements OnInit {
     defaultSortField: 'projectCode',
     pageSize: this.pageSize(),
     column: [
-      { label: 'รหัส', name: 'projectCode', type: 'code', sortable: true, minWidth: 100 },
-      { label: 'ชื่อโครงการ', name: 'projectName', type: 'text', sortable: true, minWidth: 150 },
-      { label: 'ลูกค้า', name: 'customerName', type: 'text', sortable: true, minWidth: 120 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', sortable: true, minWidth: 130 },
-      { label: 'สถานะอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 120 },
+      { label: this.translate.instant('PMRT02_COL_CODE'), name: 'projectCode', type: 'code', sortable: true, minWidth: 100 },
+      { label: this.translate.instant('PMRT02_COL_PROJECT_NAME'), name: 'projectName', type: 'text', sortable: true, minWidth: 150 },
+      { label: this.translate.instant('PMRT02_COL_CUSTOMER'), name: 'customerName', type: 'text', sortable: true, minWidth: 120 },
+      { label: this.translate.instant('PMRT02_COL_STATUS'), name: 'status', type: 'statusBadge', sortable: true, minWidth: 130 },
+      { label: this.translate.instant('PMRT02_COL_APPROVAL_STATUS'), name: 'approvalStatus', type: 'approvalBadge', minWidth: 120 },
       { label: 'Manday', name: 'usedManday', type: 'mandayProgress', minWidth: 100 },
-      { label: 'ระยะเวลา', name: 'startDate', type: 'dateRangeText', minWidth: 120 },
-      { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 100 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
+      { label: this.translate.instant('PMRT02_COL_DURATION'), name: 'startDate', type: 'dateRangeText', minWidth: 120 },
+      { label: this.translate.instant('PMRT02_COL_PRIORITY'), name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 100 },
+      { label: this.translate.instant('PMRT02_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
     ],
   };
 
@@ -223,10 +225,10 @@ export class Pmrt02Component implements OnInit {
         },
         error: (err) => {
           console.error('Load projects error:', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMRT02_LOAD_ERROR_TITLE'), err.message || this.translate.instant('PMRT02_GENERIC_ERROR_MSG'));
           this.projects.set([]);
           this.totalItems.set(0);
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          grid.setLoadError(this.translate.instant('PMRT02_LOAD_ERROR_TITLE'), request.requestId);
         },
       });
   }
@@ -318,7 +320,7 @@ export class Pmrt02Component implements OnInit {
 
   printProject(project: PmCustomerProject) {
     if (!project.id) {
-      this.dialog.warn('ไม่พบรหัสโครงการ', 'ไม่สามารถพิมพ์เอกสารได้');
+      this.dialog.warn(this.translate.instant('PMRT02_NO_PROJECT_ID_TITLE'), this.translate.instant('PMRT02_NO_PRINT_MSG'));
       return;
     }
 
@@ -339,21 +341,21 @@ export class Pmrt02Component implements OnInit {
         },
         error: (err) => {
           console.error('Print project error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+          this.dialog.error(this.translate.instant('PMRT02_PRINT_ERROR_TITLE'), this.translate.instant('PMRT02_PRINT_ERROR_MSG'));
         },
       });
   }
 
   deleteProject(id: string, grid: SicGridPanelComponent) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบโครงการนี้ใช่หรือไม่?').then((ok) => {
+    this.dialog.confirm(this.translate.instant('PMRT02_CONFIRM_DELETE_TITLE'), this.translate.instant('PMRT02_CONFIRM_DELETE_MSG')).then((ok) => {
       if (ok) {
         this.service.deleteProject(id).subscribe({
           next: () => {
-            this.dialog.success('ลบสำเร็จ', 'โครงการถูกลบเรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMRT02_DELETE_SUCCESS_TITLE'), this.translate.instant('PMRT02_DELETE_SUCCESS_MSG'));
             grid.reload();
           },
           error: (err) => {
-            this.dialog.error('ลบไม่สำเร็จ', err.error?.message || err.message || 'เกิดข้อผิดพลาด');
+            this.dialog.error(this.translate.instant('PMRT02_DELETE_ERROR_TITLE'), err.error?.message || err.message || this.translate.instant('PMRT02_GENERIC_ERROR_MSG'));
           },
         });
       }
@@ -403,26 +405,26 @@ export class Pmrt02Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      Prospect: 'โอกาส',
-      'Contract Drafting': 'ร่างสัญญา',
-      'Contract Signed': 'เซ็นสัญญา',
-      'Requirement Gathering': 'เก็บ Requirement',
-      'Requirement Approval': 'อนุมัติ Requirement',
-      'System Analysis': 'วิเคราะห์ระบบ',
-      'DFD Design': 'ออกแบบ DFD',
-      'ER Design': 'ออกแบบ ER',
-      'Specification Design': 'ออกแบบ Spec',
-      'Specification Approval': 'อนุมัติ Spec',
-      Planning: 'วางแผน',
-      Development: 'พัฒนา',
-      'Internal Testing': 'ทดสอบภายใน',
-      UAT: 'ทดสอบ UAT',
-      'Bug Fixing': 'แก้ไข Bug',
-      'Ready for Delivery': 'พร้อมส่งมอบ',
-      Delivered: 'ส่งมอบแล้ว',
-      Invoicing: 'ออก Invoice',
-      Closed: 'ปิดโครงการ',
-      'MA Active': 'อยู่ใน MA',
+      Prospect: this.translate.instant('PMRT02_STATUS_PROSPECT'),
+      'Contract Drafting': this.translate.instant('PMRT02_STATUS_CONTRACT_DRAFTING'),
+      'Contract Signed': this.translate.instant('PMRT02_STATUS_CONTRACT_SIGNED'),
+      'Requirement Gathering': this.translate.instant('PMRT02_STATUS_REQ_GATHERING'),
+      'Requirement Approval': this.translate.instant('PMRT02_STATUS_REQ_APPROVAL'),
+      'System Analysis': this.translate.instant('PMRT02_STATUS_SYSTEM_ANALYSIS'),
+      'DFD Design': this.translate.instant('PMRT02_STATUS_DFD_DESIGN'),
+      'ER Design': this.translate.instant('PMRT02_STATUS_ER_DESIGN'),
+      'Specification Design': this.translate.instant('PMRT02_STATUS_SPEC_DESIGN'),
+      'Specification Approval': this.translate.instant('PMRT02_STATUS_SPEC_APPROVAL'),
+      Planning: this.translate.instant('PMRT02_STATUS_PLANNING'),
+      Development: this.translate.instant('PMRT02_STATUS_DEVELOPMENT'),
+      'Internal Testing': this.translate.instant('PMRT02_STATUS_INTERNAL_TESTING'),
+      UAT: this.translate.instant('PMRT02_STATUS_UAT'),
+      'Bug Fixing': this.translate.instant('PMRT02_STATUS_BUG_FIXING'),
+      'Ready for Delivery': this.translate.instant('PMRT02_STATUS_READY_DELIVERY'),
+      Delivered: this.translate.instant('PMRT02_STATUS_DELIVERED'),
+      Invoicing: this.translate.instant('PMRT02_STATUS_INVOICING'),
+      Closed: this.translate.instant('PMRT02_STATUS_CLOSED'),
+      'MA Active': this.translate.instant('PMRT02_STATUS_MA_ACTIVE'),
     };
     return map[status] || status;
   }
@@ -460,12 +462,12 @@ export class Pmrt02Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      PARTIALLY_APPROVED: 'อนุมัติบางส่วน',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ไม่อนุมัติ',
-      NEED_REVISION: 'ขอให้แก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMRT02_APPROVAL_PENDING'),
+      PARTIALLY_APPROVED: this.translate.instant('PMRT02_APPROVAL_PARTIAL'),
+      APPROVED: this.translate.instant('PMRT02_APPROVAL_APPROVED'),
+      REJECTED: this.translate.instant('PMRT02_APPROVAL_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMRT02_APPROVAL_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMRT02_APPROVAL_CANCELLED'),
     };
     return map[status || ''] || status || '-';
   }

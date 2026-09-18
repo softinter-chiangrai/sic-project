@@ -19,11 +19,12 @@ import { burt02AService } from './burt02A/burt02A.component';
 import { RolePermissionSummary, ProgramPermissionSummary } from './burt02.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-burt02',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicPaginationComponent, TranslateModule],
   templateUrl: './burt02.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -32,6 +33,7 @@ export class Burt02Component implements OnInit {
   private roleService = inject(burt03Service);
   private burt04Service = inject(burt04Service);
   private burt02AService = inject(burt02AService);
+  private translate = inject(TranslateService);
 
   protected searchTerm = signal('');
   protected filterStatus = signal('all');
@@ -95,6 +97,14 @@ export class Burt02Component implements OnInit {
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
 
   ngOnInit() {
+    this.statusSelectOptions = [
+      { value: 'active', text: this.translate.instant('BURT02_ACTIVE_OPT') },
+      { value: 'inactive', text: this.translate.instant('BURT02_INACTIVE_OPT') },
+    ];
+    this.userCountSelectOptions = [
+      { value: 'hasUsers', text: this.translate.instant('BURT02_HAS_USERS_OPT') },
+      { value: 'noUsers', text: this.translate.instant('BURT02_NO_USERS_OPT') },
+    ];
     this.loadRolesAndMembers();
   }
 
@@ -157,15 +167,9 @@ export class Burt02Component implements OnInit {
   }
 
   // ===== Options =====
-  readonly statusSelectOptions = [
-    { value: 'active', text: 'ใช้งาน' },
-    { value: 'inactive', text: 'ไม่ใช้งาน' },
-  ];
+  protected statusSelectOptions: { value: string; text: string }[] = [];
 
-  readonly userCountSelectOptions = [
-    { value: 'hasUsers', text: 'มีผู้ใช้งาน' },
-    { value: 'noUsers', text: 'ไม่มีผู้ใช้งาน' },
-  ];
+  protected userCountSelectOptions: { value: string; text: string }[] = [];
 
   // ===== Actions =====
   onSearch(event: Event) {
@@ -232,7 +236,7 @@ export class Burt02Component implements OnInit {
             if (m.isRemove) actions.push('Delete');
             if (m.isPrint) actions.push('Print');
             if (m.isSearch) actions.push('Search');
-            const levelText = actions.length > 0 ? actions.join(', ') : (m.isActive ? 'เปิดใช้งาน' : 'ไม่มีสิทธิ์');
+            const levelText = actions.length > 0 ? actions.join(', ') : (m.isActive ? this.translate.instant('BURT02_ACTIVE_LABEL') : this.translate.instant('BURT02_NO_PERM_LABEL'));
 
             return {
               moduleId: m.moduleId,
@@ -269,7 +273,7 @@ export class Burt02Component implements OnInit {
   }
 
   getStatusText(isActive: boolean): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    return isActive ? this.translate.instant('BURT02_ACTIVE_OPT') : this.translate.instant('BURT02_INACTIVE_OPT');
   }
 
   getLevelClass(level: string): string {
@@ -285,11 +289,11 @@ export class Burt02Component implements OnInit {
 
   getLevelText(level: string): string {
     const map: Record<string, string> = {
-      Full: 'เต็มรูปแบบ',
-      Edit: 'แก้ไข/เพิ่ม',
-      Approve: 'อนุมัติ',
-      View: 'ดูอย่างเดียว',
-      None: 'ไม่มีสิทธิ์',
+      Full: this.translate.instant('BURT02_LEVEL_FULL'),
+      Edit: this.translate.instant('BURT02_LEVEL_EDIT'),
+      Approve: this.translate.instant('BURT02_LEVEL_APPROVE'),
+      View: this.translate.instant('BURT02_LEVEL_VIEW'),
+      None: this.translate.instant('BURT02_NO_PERM_LABEL'),
     };
     return map[level] || level;
   }

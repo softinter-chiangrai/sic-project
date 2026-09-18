@@ -19,6 +19,7 @@ import { SicCardComponent } from 'sic-ng';
 import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sidebar.model';
 import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
 import { finalize } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-burt01',
@@ -32,7 +33,8 @@ import { finalize } from 'rxjs/operators';
     SicInputAreaComponent,
     SicRadioComponent,
     SicCheckboxComponent,
-    SicButtonComponent
+    SicButtonComponent,
+    TranslateModule
   ],
   templateUrl: './burt01.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -45,6 +47,7 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   readonly authService = inject(AuthService);
   readonly service = inject(Burt01Service);
   readonly router = inject(Router);
+  readonly translate = inject(TranslateService);
 
   formData!: SicFromData<Burt01Model>;
   isSaving = signal(false);
@@ -80,9 +83,9 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   submit() {
     this.formData.markAllAsTouched();
     if (this.formData.invalid) {
-      this.dialog.warn('Invalid Form', 'Please correct the errors in the form before saving.');
+      this.dialog.warn(this.translate.instant('BURT01_INVALID_FORM_TITLE'), this.translate.instant('BURT01_INVALID_FORM_MSG'));
     } else if (this.formData.isNotChanged) {
-      this.dialog.warn('No Changes', 'There are no changes to save.');
+      this.dialog.warn(this.translate.instant('BURT01_NO_CHANGES_TITLE'), this.translate.instant('BURT01_NO_CHANGES_MSG'));
     } else {
       this.save();
     }
@@ -95,10 +98,10 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
         next: (response) => {
-          this.dialog.success('Business Saved', 'Your Business has been successfully saved.');
+          this.dialog.success(this.translate.instant('BURT01_SAVED_TITLE'), this.translate.instant('BURT01_SAVED_MSG'));
         },
         error: (error) => {
-          this.dialog.error('Save Failed', error);
+          this.dialog.error(this.translate.instant('BURT01_SAVE_FAILED_TITLE'), error);
         }
       });
   }

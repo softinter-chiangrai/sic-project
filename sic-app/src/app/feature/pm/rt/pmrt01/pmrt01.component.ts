@@ -23,11 +23,12 @@ import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmrt01',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmrt01.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -39,6 +40,7 @@ export class Pmrt01Component implements OnInit {
   private customerState = inject(CustomerStateService);
   private navigation = inject(NavigationService);
   private recentItems = inject(RecentItemsService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -63,12 +65,12 @@ export class Pmrt01Component implements OnInit {
     defaultSortField: 'customerCode',
     pageSize: this.pageSize(),
     column: [
-      { label: 'รหัส', name: 'customerCode', type: 'code', sortable: true, minWidth: 100 },
-      { label: 'ชื่อบริษัท', name: 'companyNameEn', type: 'companyInfo', sortable: true, minWidth: 220 },
-      { label: 'อีเมล', name: 'email', type: 'emailLink', sortable: true, minWidth: 200 },
-      { label: 'เบอร์โทร', name: 'phoneNumber', type: 'phoneText', minWidth: 120 },
-      { label: 'สถานะ', name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
+      { label: this.translate.instant('PMRT01_COL_CODE'), name: 'customerCode', type: 'code', sortable: true, minWidth: 100 },
+      { label: this.translate.instant('PMRT01_COL_COMPANY'), name: 'companyNameEn', type: 'companyInfo', sortable: true, minWidth: 220 },
+      { label: this.translate.instant('PMRT01_COL_EMAIL'), name: 'email', type: 'emailLink', sortable: true, minWidth: 200 },
+      { label: this.translate.instant('PMRT01_COL_PHONE'), name: 'phoneNumber', type: 'phoneText', minWidth: 120 },
+      { label: this.translate.instant('PMRT01_COL_STATUS'), name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
+      { label: this.translate.instant('PMRT01_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
     ],
   };
 
@@ -146,8 +148,8 @@ export class Pmrt01Component implements OnInit {
         },
         error: (err) => {
           console.error('Load customers error', err);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการลูกค้าได้');
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          this.dialog.error(this.translate.instant('PMRT01_LOAD_ERROR_TITLE'), this.translate.instant('PMRT01_LOAD_ERROR_MSG'));
+          grid.setLoadError(this.translate.instant('PMRT01_LOAD_ERROR_TITLE'), request.requestId);
         },
       });
   }
@@ -182,8 +184,8 @@ export class Pmrt01Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'active', text: 'ใช้งาน' },
-    { value: 'inactive', text: 'ไม่ใช้งาน' },
+    { value: 'active', text: this.translate.instant('PMRT01_STATUS_ACTIVE') },
+    { value: 'inactive', text: this.translate.instant('PMRT01_STATUS_INACTIVE') },
   ];
 
   onFilterChange(value: any, grid: SicGridPanelComponent) {
@@ -199,7 +201,7 @@ export class Pmrt01Component implements OnInit {
 
   goToEdit(id: string | undefined) {
     if (!id) {
-      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถแก้ไขข้อมูลได้');
+      this.dialog.warn(this.translate.instant('PMRT01_NO_ID_TITLE'), this.translate.instant('PMRT01_NO_EDIT_MSG'));
       return;
     }
     const customer = this.customers().find((c) => c.id === id);
@@ -222,30 +224,32 @@ export class Pmrt01Component implements OnInit {
       next: () => {
         grid.reload();
         this.dialog.success(
-          'อัปเดตสถานะสำเร็จ',
-          `สถานะถูกเปลี่ยนเป็น ${updated.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน'}`,
+          this.translate.instant('PMRT01_UPDATE_STATUS_SUCCESS_TITLE'),
+          this.translate.instant('PMRT01_UPDATE_STATUS_SUCCESS_MSG', {
+            status: updated.isActive ? this.translate.instant('PMRT01_STATUS_ACTIVE') : this.translate.instant('PMRT01_STATUS_INACTIVE'),
+          }),
         );
       },
       error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.error?.message);
+        this.dialog.error(this.translate.instant('PMRT01_UPDATE_STATUS_ERROR_TITLE'), err.error?.message);
       },
     });
   }
 
   deleteCustomer(id: string | undefined, grid: SicGridPanelComponent) {
     if (!id) {
-      this.dialog.warn('ไม่พบรหัสลูกค้า', 'ไม่สามารถลบข้อมูลได้');
+      this.dialog.warn(this.translate.instant('PMRT01_NO_ID_TITLE'), this.translate.instant('PMRT01_NO_DELETE_MSG'));
       return;
     }
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบลูกค้ารายนี้ใช่หรือไม่?').then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMRT01_CONFIRM_DELETE_TITLE'), this.translate.instant('PMRT01_CONFIRM_DELETE_MSG')).then((confirmed) => {
       if (confirmed) {
         this.service.deleteCustomer(id).subscribe({
           next: () => {
             grid.reload();
-            this.dialog.success('ลบสำเร็จ', 'ลูกค้าถูกลบเรียบร้อย');
+            this.dialog.success(this.translate.instant('PMRT01_DELETE_SUCCESS_TITLE'), this.translate.instant('PMRT01_DELETE_SUCCESS_MSG'));
           },
           error: (err) => {
-            this.dialog.error('ลบไม่สำเร็จ', err.error?.message);
+            this.dialog.error(this.translate.instant('PMRT01_DELETE_ERROR_TITLE'), err.error?.message);
           },
         });
       }
@@ -260,7 +264,7 @@ export class Pmrt01Component implements OnInit {
   }
 
   getStatusText(isActive: boolean | undefined): string {
-    return isActive ? 'ใช้งาน' : 'ไม่ใช้งาน';
+    return isActive ? this.translate.instant('PMRT01_STATUS_ACTIVE') : this.translate.instant('PMRT01_STATUS_INACTIVE');
   }
 
   getInitials(companyName: string | undefined): string {

@@ -8,13 +8,13 @@
     <!-- Modal Header -->
     <div class="relative flex items-center justify-center px-4 py-3.5 border-b border-[var(--border)] bg-[var(--sidebar)]">
       <h2 class="text-lg font-bold text-[var(--text-active)]">
-        {{ isEdit ? 'แก้ไขโพสต์' : 'สร้างโพสต์ใหม่' }}
+        {{ isEdit ? ('PMDT08A_EDIT_TITLE' | translate) : ('PMDT08A_CREATE_TITLE' | translate) }}
       </h2>
       <button
         type="button"
         (click)="closeModal()"
         class="absolute right-3.5 top-3.5 w-8 h-8 rounded-full bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
-        title="ปิด"
+        [title]="'PMDT08A_CLOSE_TITLE' | translate"
       >
         <i class="bi bi-x-lg text-base"></i>
       </button>
@@ -36,7 +36,7 @@
         <div>
           <h3 class="font-semibold text-sm text-[var(--text-active)]">{{ currentUserName }}</h3>
           <span class="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-[var(--sidebar-hover)] text-[var(--text-muted)]">
-            <i class="bi bi-globe"></i> สาธารณะในโครงการ
+            <i class="bi bi-globe"></i> {{ 'PMDT08A_PUBLIC_IN_PROJECT' | translate }}
           </span>
         </div>
       </div>
@@ -45,18 +45,18 @@
       <form [formGroup]="postForm" (ngSubmit)="submitPost()" id="pmdt09aForm" class="space-y-3">
         <div>
           <sic-input
-            label="หัวข้อเรื่อง"
+            [label]="'PMDT08A_SUBJECT_LABEL' | translate"
             formControlName="subject"
-            placeholder="ตั้งหัวข้อสำหรับการพูดคุย..."
+            [placeholder]="'PMDT08A_SUBJECT_PLACEHOLDER' | translate"
             [required]="true"
           ></sic-input>
         </div>
 
         <div>
           <sic-tiptap-editor
-            label="ข้อความ"
+            [label]="'PMDT08A_CONTENT_LABEL' | translate"
             formControlName="content"
-            placeholder="คุณกำลังคิดอะไรอยู่? แชร์ความคิดเห็นหรือสอบถามกับทีม..."
+            [placeholder]="'PMDT08A_CONTENT_PLACEHOLDER' | translate"
             [required]="true"
             minHeight="180px"
           ></sic-tiptap-editor>
@@ -66,7 +66,7 @@
           <div class="flex items-center justify-between mb-2">
             <span class="text-xs font-medium text-[var(--text-muted)] flex items-center gap-1.5">
               <i class="bi bi-paperclip text-sm text-[var(--crm-primary)]"></i>
-              แนบรูปภาพหรือเอกสาร
+              {{ 'PMDT08A_ATTACH_IMAGE_DOC' | translate }}
             </span>
           </div>
           <!-- ✅ ใช้ uploadGroupId binding โดยตรง -->
@@ -77,7 +77,7 @@
             category="all"
             [visibility]="1"
             [uploadGroupId]="postToEdit?.attachmentGroupId || null"
-            [helperText]="'คลิกหรือลากไฟล์เพื่อแนบไฟล์ประกอบโพสต์'"
+            [helperText]="('PMDT08A_ATTACH_HELPER_TEXT' | translate)"
           ></sic-input-upload>
         </div>
       </form>
@@ -92,7 +92,7 @@
         (click)="closeModal()"
         [disabled]="isSubmitting"
       >
-        ยกเลิก
+        {{ 'PMDT08A_CANCEL_BTN' | translate }}
       </sic-button>
       <sic-button
         [block]="false"
@@ -103,9 +103,9 @@
         [disabled]="isSubmitting || postForm.invalid"
       >
         @if (isSubmitting) {
-          <i class="bi bi-arrow-repeat animate-spin mr-1"></i> กำลังบันทึก...
+          <i class="bi bi-arrow-repeat animate-spin mr-1"></i> {{ 'PMDT08A_SAVING_BTN' | translate }}
         } @else {
-          <i class="bi bi-check2 mr-1"></i> {{ isEdit ? 'บันทึกการแก้ไข' : 'โพสต์' }}
+          <i class="bi bi-check2 mr-1"></i> {{ isEdit ? ('PMDT08A_SAVE_EDIT_BTN' | translate) : ('PMDT08A_POST_BTN' | translate) }}
         }
       </sic-button>
     </div>

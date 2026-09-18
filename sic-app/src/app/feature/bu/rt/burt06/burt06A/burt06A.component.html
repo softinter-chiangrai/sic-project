@@ -5,7 +5,7 @@
   <div class="flex flex-wrap items-center justify-between gap-4">
     <div>
       <h1 class="text-2xl font-semibold text-[var(--text-active)]">
-        {{ isEdit ? 'แก้ไข Approval Flow' : 'สร้าง Approval Flow ใหม่' }}
+        {{ isEdit ? ('BURT06A_EDIT_TITLE' | translate) : ('BURT06A_CREATE_TITLE' | translate) }}
       </h1>
     </div>
   </div>
@@ -16,7 +16,7 @@
       <div
         class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'BURT06A_LOADING' | translate }}</p>
     </div>
   }
 
@@ -30,59 +30,59 @@
               <i class="bi bi-info-circle"></i>
             </div>
             <div>
-              <h3 class="text-base font-semibold text-[var(--text-active)]">ข้อมูลพื้นฐานของ Flow</h3>
-              <p class="text-xs text-[var(--text-muted)]">กำหนดรหัส, ชื่อ และประเภทเอกสารที่ใช้งานร่วมกับ Flow นี้</p>
+              <h3 class="text-base font-semibold text-[var(--text-active)]">{{ 'BURT06A_BASIC_INFO_TITLE' | translate }}</h3>
+              <p class="text-xs text-[var(--text-muted)]">{{ 'BURT06A_BASIC_INFO_DESC' | translate }}</p>
             </div>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <sic-input
-              label="รหัส Flow"
+              [label]="'BURT06A_FLOWCODE_LABEL' | translate"
               formControlName="flowCode"
               [required]="true"
-              placeholder="เช่น REQ_APPROVAL"
+              [placeholder]="'BURT06A_FLOWCODE_PLACEHOLDER' | translate"
             ></sic-input>
             <sic-input
-              label="ชื่อ Flow"
+              [label]="'BURT06A_FLOWNAME_LABEL' | translate"
               formControlName="flowName"
               [required]="true"
-              placeholder="เช่น การอนุมัติความต้องการ (Requirement Approval)"
+              [placeholder]="'BURT06A_FLOWNAME_PLACEHOLDER' | translate"
             ></sic-input>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <sic-combobox
-              label="ประเภทเอกสาร"
+              [label]="'BURT06A_DOCTYPE_LABEL' | translate"
               formControlName="documentType"
               [apiUrl]="apiBaseUrl + '/api/db/parameter/lov'"
               [params]="{ group: 'PM', parameterCode: 'DOCUMENT_TYPE' }"
               valueField="value"
               textField="text"
               [required]="true"
-              placeholder="เลือกประเภทเอกสาร..."
+              [placeholder]="'BURT06A_DOCTYPE_PLACEHOLDER' | translate"
             ></sic-combobox>
 
             <sic-combobox
-              label="โหมดการอนุมัติ"
+              [label]="'BURT06A_MODE_LABEL' | translate"
               formControlName="approvalMode"
               [apiUrl]="approvalModeComboboxConfig.apiUrl"
               [params]="approvalModeComboboxConfig.params"
               valueField="value"
               textField="text"
               [required]="true"
-              placeholder="เลือกโหมดการอนุมัติ..."
+              [placeholder]="'BURT06A_MODE_PLACEHOLDER' | translate"
             ></sic-combobox>
           </div>
 
           <sic-tiptap-editor
-            label="คำอธิบาย"
+            [label]="'BURT06A_DESC_LABEL' | translate"
             formControlName="description"
             minHeight="120px"
-            placeholder="รายละเอียดหรือเงื่อนไขเพิ่มเติมของ Flow นี้..."
+            [placeholder]="'BURT06A_DESC_PLACEHOLDER' | translate"
           ></sic-tiptap-editor>
 
           <div class="pt-2 flex items-center">
-            <sic-checkbox label="เปิดใช้งาน Flow นี้" formControlName="isActive"></sic-checkbox>
+            <sic-checkbox [label]="'BURT06A_ISACTIVE_LABEL' | translate" formControlName="isActive"></sic-checkbox>
           </div>
         </div>
 
@@ -95,12 +95,12 @@
               </div>
               <div>
                 <h3 class="text-base font-semibold text-[var(--text-active)]">
-                  ขั้นตอนการอนุมัติ
+                  {{ 'BURT06A_STEPS_TITLE' | translate }}
                   <span class="text-xs font-normal px-2 py-0.5 ml-2 bg-[var(--bg)] border border-[var(--border)] rounded-full text-[var(--text-muted)]">
-                    {{ steps.length }} ขั้นตอน
+                    {{ steps.length }} {{ 'BURT06A_STEPS_UNIT' | translate }}
                   </span>
                 </h3>
-                <p class="text-xs text-[var(--text-muted)]">กำหนดลำดับผู้มีสิทธิ์อนุมัติ, Timeout และเงื่อนไขการทำงาน</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ 'BURT06A_STEPS_DESC' | translate }}</p>
               </div>
             </div>
             <button
@@ -108,7 +108,7 @@
               (click)="addStep()"
               class="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white bg-[var(--crm-primary)] rounded-xl hover:bg-[var(--crm-primary)]/90 shadow-sm transition-all active:scale-95"
             >
-              <i class="bi bi-plus-lg"></i> เพิ่มขั้นตอน
+              <i class="bi bi-plus-lg"></i> {{ 'BURT06A_ADD_STEP_BTN' | translate }}
             </button>
           </div>
 
@@ -116,7 +116,7 @@
           @if (steps.hasError('missingApprover')) {
             <div class="text-[var(--crm-danger)] text-sm flex items-center gap-2 bg-red-50 dark:bg-red-900/20 p-3.5 rounded-xl border border-red-200 dark:border-red-800">
               <i class="bi bi-exclamation-triangle-fill text-lg"></i>
-              <span>⚠️ ทุกขั้นตอนต้องเลือกบทบาทและเลือกผู้อนุมัติอย่างน้อย 1 คน</span>
+              <span>⚠️ {{ 'BURT06A_MISSING_APPROVER_WARN' | translate }}</span>
             </div>
           }
 
@@ -134,7 +134,7 @@
                       {{ i + 1 }}
                     </span>
                     <span class="text-sm font-semibold text-[var(--text-active)]">
-                      ขั้นตอนที่ {{ i + 1 }}
+                      {{ 'BURT06A_STEP_NUMBER_LABEL' | translate }} {{ i + 1 }}
                     </span>
                   </div>
 
@@ -145,7 +145,7 @@
                       (click)="moveStepUp(i)"
                       [disabled]="i === 0"
                       class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-1.5 rounded-md hover:bg-[var(--bg)]"
-                      title="เลื่อนขึ้น"
+                      [title]="'BURT06A_MOVE_UP_TITLE' | translate"
                     >
                       <i class="bi bi-chevron-up"></i>
                     </button>
@@ -155,7 +155,7 @@
                       (click)="moveStepDown(i)"
                       [disabled]="i === steps.length - 1"
                       class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-1.5 rounded-md hover:bg-[var(--bg)]"
-                      title="เลื่อนลง"
+                      [title]="'BURT06A_MOVE_DOWN_TITLE' | translate"
                     >
                       <i class="bi bi-chevron-down"></i>
                     </button>
@@ -165,7 +165,7 @@
                       type="button"
                       (click)="removeStep(i)"
                       class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
-                      title="ลบขั้นตอนนี้"
+                      [title]="'BURT06A_REMOVE_STEP_TITLE' | translate"
                     >
                       <i class="bi bi-trash"></i>
                     </button>
@@ -175,22 +175,22 @@
                 <!-- Step Fields: Name & Role -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <sic-input
-                    label="ชื่อขั้นตอน"
+                    [label]="'BURT06A_STEPNAME_LABEL' | translate"
                     formControlName="stepName"
                     [required]="true"
-                    placeholder="เช่น BA Approve / PM ตรวจสอบ"
+                    [placeholder]="'BURT06A_STEPNAME_PLACEHOLDER' | translate"
                   ></sic-input>
 
                   <sic-combobox
-                    label="บทบาทผู้ Approve"
+                    [label]="'BURT06A_APPROVERROLE_LABEL' | translate"
                     formControlName="approverRole"
                     [apiUrl]="roleApiUrl"
                     valueField="roleCode"
                     textField="roleName"
-                    placeholder="เลือกบทบาท..."
+                    [placeholder]="'BURT06A_APPROVERROLE_PLACEHOLDER' | translate"
                     [required]="true"
                     (selectionChanged)="loadUsersForStep(i, $safeNavigationMigration($event?.roleCode))"
-                    [errorMessages]="{ required: 'กรุณาเลือกบทบาท' }"
+                    [errorMessages]="{ required: ('BURT06A_REQUIRED_ROLE' | translate) }"
                   ></sic-combobox>
                 </div>
 
@@ -198,21 +198,21 @@
                 @if (step.get('approverRole')?.value) {
                   <div>
                     <sic-combobox
-                      label="เลือกผู้อนุมัติ"
+                      [label]="'BURT06A_SELECTUSERS_LABEL' | translate"
                       formControlName="selectedUserIds"
                       [multiple]="true"
                       [apiUrl]="getUsersByRoleApiUrl(step.get('approverRole')?.value)"
                       valueField="value"
                       textField="text"
                       [required]="true"
-                      placeholder="เลือกผู้อนุมัติอย่างน้อย 1 คน..."
-                      [errorMessages]="{ required: 'กรุณาเลือกผู้อนุมัติอย่างน้อย 1 คน' }"
+                      [placeholder]="'BURT06A_SELECTUSERS_PLACEHOLDER' | translate"
+                      [errorMessages]="{ required: ('BURT06A_REQUIRED_USERS' | translate) }"
                     ></sic-combobox>
                   </div>
                 } @else {
                   <div class="text-[var(--crm-danger)] text-xs flex items-center gap-1.5 bg-red-50/50 dark:bg-red-900/10 p-2.5 rounded-lg border border-dashed border-red-200 dark:border-red-900/30">
                     <i class="bi bi-info-circle"></i>
-                    <span>กรุณาเลือกบทบาทเพื่อโหลดรายชื่อผู้อนุมัติ</span>
+                    <span>{{ 'BURT06A_SELECT_ROLE_FIRST_HINT' | translate }}</span>
                   </div>
                 }
 
@@ -220,13 +220,13 @@
                 <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)]/70">
                   <div class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <i class="bi bi-sliders"></i>
-                    <span>การตั้งค่ากำหนดเวลา & พฤติกรรม (SLA & Actions)</span>
+                    <span>{{ 'BURT06A_SLA_SETTINGS_TITLE' | translate }}</span>
                   </div>
 
                   <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
                     <div class="md:col-span-3">
                       <sic-input
-                        label="Timeout (วัน)"
+                        [label]="'BURT06A_TIMEOUTDAYS_LABEL' | translate"
                         type="text"
                         inputMode="numeric"
                         formControlName="timeoutDays"
@@ -237,19 +237,19 @@
 
                     <div class="md:col-span-5">
                       <sic-combobox
-                        label="เมื่อหมดเวลา (Timeout Action)"
+                        [label]="'BURT06A_TIMEOUTACTION_LABEL' | translate"
                         formControlName="timeoutAction"
                         [items]="timeoutActionOptions"
                         valueField="value"
                         textField="text"
                         [required]="true"
-                        placeholder="เลือกการกระทำเมื่อหมดเวลา"
+                        [placeholder]="'BURT06A_TIMEOUTACTION_PLACEHOLDER' | translate"
                       ></sic-combobox>
                     </div>
 
                     <div class="md:col-span-4 flex items-center gap-5 md:pt-6">
-                      <sic-checkbox label="บังคับ (Required)" formControlName="isRequired"></sic-checkbox>
-                      <sic-checkbox label="ข้ามได้ (Can Skip)" formControlName="canSkip"></sic-checkbox>
+                      <sic-checkbox [label]="'BURT06A_ISREQUIRED_LABEL' | translate" formControlName="isRequired"></sic-checkbox>
+                      <sic-checkbox [label]="'BURT06A_CANSKIP_LABEL' | translate" formControlName="canSkip"></sic-checkbox>
                     </div>
                   </div>
                 </div>
@@ -259,8 +259,8 @@
             @if (steps.length === 0) {
               <div class="text-center py-10 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-2xl bg-[var(--bg)]">
                 <i class="bi bi-inbox text-4xl block mb-2 opacity-30"></i>
-                <p class="font-medium text-[var(--text-active)]">ยังไม่มีขั้นตอนการอนุมัติ</p>
-                <p class="text-xs text-[var(--text-muted)] mt-1">คลิกปุ่ม "เพิ่มขั้นตอน" เพื่อสร้างขั้นตอนการอนุมัติแรก</p>
+                <p class="font-medium text-[var(--text-active)]">{{ 'BURT06A_NO_STEPS_TITLE' | translate }}</p>
+                <p class="text-xs text-[var(--text-muted)] mt-1">{{ 'BURT06A_NO_STEPS_HINT' | translate }}</p>
               </div>
             }
           </div>
@@ -269,7 +269,7 @@
         <!-- === Action Buttons === -->
         <div class="flex justify-end gap-3 pt-2">
           <sic-button type="button" variant="outline" color="primary" [block]="false" (click)="cancel()">
-            <i class="bi bi-x-lg"></i> ยกเลิก
+            <i class="bi bi-x-lg"></i> {{ 'BURT06A_CANCEL_BTN' | translate }}
           </sic-button>
           <sic-button
             type="submit"
@@ -278,9 +278,9 @@
             [disabled]="form.invalid || isSaving()"
           >
             @if (isSaving()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i> กำลังบันทึก...
+              <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'BURT06A_SAVING_BTN' | translate }}
             } @else {
-              <i class="bi bi-floppy"></i> {{ isEdit ? 'บันทึกการแก้ไข' : 'สร้าง Flow' }}
+              <i class="bi bi-floppy"></i> {{ isEdit ? ('BURT06A_SAVE_EDIT_BTN' | translate) : ('BURT06A_CREATE_BTN' | translate) }}
             }
           </sic-button>
         </div>

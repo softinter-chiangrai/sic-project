@@ -13,11 +13,12 @@ import { Pmdt02AService } from '../../../feature/pm/dt/pmdt02/pmdt02A/pmdt02A.se
 import { Pmdt02BService } from '../../../feature/pm/dt/pmdt02/pmdt02B/pmdt02B.service';
 import { Pmdt02CService } from '../../../feature/pm/dt/pmdt02/pmdt02C/pmdt02C.service';
 import { Pmdt02Service } from '../../../feature/pm/dt/pmdt02/pmdt02.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sic-gantt',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicAvatarComponent, SicCalendarTimelineComponent],
+  imports: [CommonModule, RouterModule, SicAvatarComponent, SicCalendarTimelineComponent, TranslateModule],
   template: `
     <div class="p-4 h-screen flex flex-col bg-[var(--bg)]">
       <div class="flex items-center gap-3 mb-4 flex-shrink-0">
@@ -61,7 +62,7 @@ import { Pmdt02Service } from '../../../feature/pm/dt/pmdt02/pmdt02.service';
                     type="button"
                     (click)="toggleTimelineRow(row.id, $event)"
                     class="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white transition-all flex-shrink-0 shadow-sm"
-                    title="คลิกเพื่อพับ/ขยาย">
+                    [title]="'GANTT_TOGGLE_ROW_TITLE' | translate">
                     <i
                       class="bi bi-chevron-right text-[0.7rem] font-bold transition-transform duration-200"
                       [class.rotate-90]="isTimelineRowExpanded(row.id)"></i>
@@ -116,6 +117,7 @@ export class SicGanttComponent implements OnInit {
   private wpService = inject(Pmdt02BService);
   private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
+  private translate = inject(TranslateService);
 
   isLoading = signal(false);
   projectId = signal<string | null>(null);
@@ -188,7 +190,7 @@ export class SicGanttComponent implements OnInit {
         this.route.queryParams.subscribe((qParams) => {
           const pid = qParams['projectId'] || this.customerState.getProjectId();
           if (!pid) {
-            this.dialog.warn('กรุณาเลือกโครงการ', 'ไม่พบรหัสโครงการ');
+            this.dialog.warn(this.translate.instant('GANTT_WARN_SELECT_PROJECT_TITLE'), this.translate.instant('GANTT_WARN_PROJECT_CODE_NOT_FOUND'));
             this.navigation.navigate(['/feature/pm/project']);
             return;
           }
@@ -265,7 +267,7 @@ export class SicGanttComponent implements OnInit {
         });
       },
       error: (err) => {
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message);
+        this.dialog.error(this.translate.instant('GANTT_ERROR_LOAD_DATA_FAILED'), err.message);
         this.isLoading.set(false);
         this.goBack();
       }
@@ -320,13 +322,13 @@ export class SicGanttComponent implements OnInit {
             });
           },
           error: (err) => {
-            this.dialog.error('โหลด Phase ไม่สำเร็จ', err.message);
+            this.dialog.error(this.translate.instant('GANTT_ERROR_LOAD_PHASE_FAILED'), err.message);
             this.isLoading.set(false);
           }
         });
       },
       error: (err) => {
-        this.dialog.error('โหลดโครงการไม่สำเร็จ', err.message);
+        this.dialog.error(this.translate.instant('GANTT_ERROR_LOAD_PROJECT_FAILED'), err.message);
         this.isLoading.set(false);
         this.navigation.navigate(['/feature/pm/project']);
       }
@@ -412,7 +414,7 @@ export class SicGanttComponent implements OnInit {
   getAssigneesTooltip(assignees?: any[]): string {
     if (!assignees || assignees.length === 0) return '';
     const names = assignees.map((p) => this.getAssigneeName(p)).filter(Boolean);
-    return names.length > 0 ? ` | ผู้รับผิดชอบ: ${names.join(', ')}` : '';
+    return names.length > 0 ? ` | ${this.translate.instant('GANTT_ASSIGNEE_LABEL')}: ${names.join(', ')}` : '';
   }
 
   goBack() {

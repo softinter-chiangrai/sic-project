@@ -19,6 +19,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Burt05AForm } from './burt05A.form';
 import { Burt05AModel } from './burt05A.model';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-burt05A',
@@ -33,6 +34,7 @@ import { Burt05AModel } from './burt05A.model';
     SicInputNumberComponent,
     SicCheckboxComponent,
     SicComboboxComponent,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './burt05A.component.html',
@@ -44,6 +46,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   private router = inject(Router);
   private service = inject(burt05Service);
   private dialog = inject(DialogService);
+  private translate = inject(TranslateService);
 
   formData!: SicFromData<Burt05AModel>;
 
@@ -71,15 +74,16 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     }));
   });
 
-  readonly permissionSelectOptions = [
-    { value: 'Full', text: 'เต็มรูปแบบ (Full)' },
-    { value: 'Edit', text: 'แก้ไข/เพิ่ม (Edit)' },
-    { value: 'Approve', text: 'อนุมัติ (Approve)' },
-    { value: 'View', text: 'ดูอย่างเดียว (View)' },
-    { value: 'None', text: 'ไม่มีสิทธิ์ (None)' },
-  ];
+  permissionSelectOptions: { value: string; text: string }[] = [];
 
   ngOnInit() {
+    this.permissionSelectOptions = [
+      { value: 'Full', text: this.translate.instant('BURT05A_LEVEL_FULL_OPT') },
+      { value: 'Edit', text: this.translate.instant('BURT05A_LEVEL_EDIT_OPT') },
+      { value: 'Approve', text: this.translate.instant('BURT05A_LEVEL_APPROVE_OPT') },
+      { value: 'View', text: this.translate.instant('BURT05A_LEVEL_VIEW_OPT') },
+      { value: 'None', text: this.translate.instant('BURT05A_LEVEL_NONE_OPT') },
+    ];
     const rawForm = Burt05AForm.createForm(this.fb);
     this.formData = new SicFromData<Burt05AModel>(rawForm);
 
@@ -118,7 +122,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err: any) => {
         this.isLoading.set(false);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
+        this.dialog.error(this.translate.instant('BURT05A_LOAD_FAILED_TITLE'), this.translate.instant('BURT05A_PROGRAM_NOT_FOUND_MSG'));
         this.router.navigate(['/feature/bu/program']);
       },
     });
@@ -130,7 +134,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     const businessId = localStorage.getItem('businessId');
     if (!businessId) {
       this.isLoading.set(false);
-      this.dialog.error('ไม่พบธุรกิจ', 'กรุณาเลือกธุรกิจก่อน');
+      this.dialog.error(this.translate.instant('BURT05A_NO_BUSINESS_TITLE'), this.translate.instant('BURT05A_SELECT_BUSINESS_MSG'));
       this.router.navigate(['/management/business']);
       return;
     }
@@ -147,7 +151,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
         this.service.getRoles(businessId).subscribe({
           next: (roles: any[]) => {
             if (!roles || roles.length === 0) {
-              this.dialog.warn('ไม่พบบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า burt03');
+              this.dialog.warn(this.translate.instant('BURT05A_NO_ROLES_FOUND_TITLE'), this.translate.instant('BURT05A_CREATE_ROLE_FIRST_MSG'));
               this.roles.set([]);
               this.rolePermissions.set([]);
               this.isLoading.set(false);
@@ -172,13 +176,13 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
           },
           error: (err: any) => {
             this.isLoading.set(false);
-            this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดบทบาทได้');
+            this.dialog.error(this.translate.instant('BURT05A_LOAD_FAILED_TITLE'), this.translate.instant('BURT05A_LOAD_ROLES_FAILED_MSG'));
           },
         });
       },
       error: (err: any) => {
         this.isLoading.set(false);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบโปรแกรม');
+        this.dialog.error(this.translate.instant('BURT05A_LOAD_FAILED_TITLE'), this.translate.instant('BURT05A_PROGRAM_NOT_FOUND_MSG'));
         this.router.navigate(['/feature/bu/program']);
       },
     });

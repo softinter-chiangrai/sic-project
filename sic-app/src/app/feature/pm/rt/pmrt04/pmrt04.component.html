@@ -8,19 +8,19 @@
         <div class="flex items-center gap-3">
           <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-            รายการสัญญา
+            {{ 'PMRT04_PAGE_TITLE' | translate }}
           </h1>
           <span
             class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
           >
-            {{ totalItems() }} รายการ
+            {{ totalItems() }} {{ 'PMRT04_ITEMS_UNIT' | translate }}
           </span>
         </div>
         @if (filterProjectName() || filterCustomerName()) {
           <div class="flex flex-wrap items-center gap-3 mt-1 text-xs text-[var(--text-muted)]">
             @if (filterProjectName()) {
               <span class="flex items-center gap-1">
-                <i class="bi bi-folder text-[var(--crm-primary)]"></i> โครงการ: <strong class="text-[var(--text-active)]">{{ filterProjectName() }}</strong>
+                <i class="bi bi-folder text-[var(--crm-primary)]"></i> {{ 'PMRT04_PROJECT_LABEL' | translate }} <strong class="text-[var(--text-active)]">{{ filterProjectName() }}</strong>
                 @if (filterProjectCode()) {
                   <span class="font-mono text-[var(--text-muted)]">({{ filterProjectCode() }})</span>
                 }
@@ -28,7 +28,7 @@
             }
             @if (filterCustomerName()) {
               <span class="flex items-center gap-1">
-                <i class="bi bi-building"></i> ลูกค้า: <strong class="text-[var(--text-active)]">{{ filterCustomerName() }}</strong>
+                <i class="bi bi-building"></i> {{ 'PMRT04_CUSTOMER_LABEL' | translate }} <strong class="text-[var(--text-active)]">{{ filterCustomerName() }}</strong>
               </span>
             }
           </div>
@@ -43,14 +43,14 @@
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
           <i class="bi bi-arrow-left"></i>
-          กลับ
+          {{ 'PMRT04_BACK_BTN' | translate }}
         </button>
       }
 
       <button
         (click)="exportCsv()"
         class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        title="ส่งออกรายการที่กรองอยู่เป็น CSV"
+        [title]="'PMRT04_EXPORT_CSV_TITLE' | translate"
       >
         <i class="bi bi-download"></i>
         Export CSV
@@ -62,10 +62,10 @@
           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
           <i class="bi bi-layout-three-columns"></i>
-          คอลัมน์
+          {{ 'PMRT04_COLUMNS_BTN' | translate }}
         </button>
         @if (showColumnMenu()) {
-          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" aria-label="ปิดเมนูคอลัมน์"></button>
+          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" [attr.aria-label]="'PMRT04_CLOSE_COLUMN_MENU_ARIA' | translate"></button>
           <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-56 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
             @for (col of allColumns; track col.key) {
               <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
@@ -82,7 +82,7 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
       >
         <i class="bi bi-plus-lg"></i>
-        เพิ่มสัญญา
+        {{ 'PMRT04_ADD_CONTRACT_BTN' | translate }}
       </button>
     </div>
   </div>
@@ -94,14 +94,14 @@
       [class]="activePreset() === 'all'
         ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
         : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
-      ทั้งหมด <span class="opacity-80">{{ totalItems() }}</span>
+      {{ 'PMRT04_PRESET_ALL' | translate }} <span class="opacity-80">{{ totalItems() }}</span>
     </button>
     <button type="button" (click)="setPreset('expiring', grid)"
       class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
       [class]="activePreset() === 'expiring'
         ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
         : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
-      หมดอายุใน 30 วัน
+      {{ 'PMRT04_PRESET_EXPIRING' | translate }}
     </button>
   </div>
 
@@ -114,7 +114,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาเลขสัญญา, ลูกค้า, ประเภท..."
+        [placeholder]="'PMRT04_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -133,7 +133,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event, grid)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMRT04_STATUS_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -143,7 +143,7 @@
         [options]="typeSelectOptions()"
         [ngModel]="filterType()"
         (ngModelChange)="onTypeChange($event, grid)"
-        placeholder="📋 ทุกประเภท"
+        [placeholder]="'PMRT04_TYPE_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -199,7 +199,7 @@
         @let r = $any(row);
         @if (r.signStatus === 'Changed') {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            รอส่งอนุมัติ
+            {{ 'PMRT04_PENDING_SUBMIT_BADGE' | translate }}
           </span>
         } @else if (r.approvalStatus) {
           <span [class]="getApprovalStatusClass(r.approvalStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
@@ -207,7 +207,7 @@
           </span>
         } @else {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            ยังไม่อนุมัติ
+            {{ 'PMRT04_NOT_APPROVED_BADGE' | translate }}
           </span>
         }
       </ng-template>
@@ -219,7 +219,7 @@
           <button
             (click)="openQuickView(r)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            title="ดูสรุปด่วน"
+            [title]="'PMRT04_QUICK_VIEW_TITLE' | translate"
           >
             <i class="bi bi-layout-sidebar-inset"></i>
           </button>
@@ -228,7 +228,7 @@
           <button
             (click)="goToView(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
-            title="ดูข้อมูล"
+            [title]="'PMRT04_VIEW_TITLE' | translate"
           >
             <i class="bi bi-eye"></i>
           </button>
@@ -237,7 +237,7 @@
           <button
             (click)="printContract(r)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-            title="ส่งออกเอกสาร PDF"
+            [title]="'PMRT04_EXPORT_PDF_TITLE' | translate"
           >
             <i class="bi bi-printer"></i>
           </button>
@@ -246,7 +246,7 @@
           <button
             (click)="goToEdit(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-            title="แก้ไข"
+            [title]="'PMRT04_EDIT_TITLE' | translate"
           >
             <i class="bi bi-pencil"></i>
           </button>
@@ -255,7 +255,7 @@
           <button
             (click)="goToRenew(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            title="ต่อสัญญา"
+            [title]="'PMRT04_RENEW_TITLE' | translate"
           >
             <i class="bi bi-arrow-repeat text-sm"></i>
           </button>
@@ -264,7 +264,7 @@
           <button
             (click)="deleteContract(r, grid)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            title="ลบสัญญา"
+            [title]="'PMRT04_DELETE_TITLE' | translate"
           >
             <i class="bi bi-trash"></i>
           </button>
@@ -276,15 +276,15 @@
   @if (grid.selectedRowIds.size > 0) {
     <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
       <span class="text-sm font-medium text-[var(--text-active)]">
-        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ grid.selectedRowIds.size }} รายการ
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> {{ 'PMRT04_SELECTED_COUNT' | translate: { count: grid.selectedRowIds.size } }}
       </span>
       <button type="button" (click)="bulkExportPdf(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
-        <i class="bi bi-file-earmark-pdf"></i> Export PDF ทั้งหมด
+        <i class="bi bi-file-earmark-pdf"></i> {{ 'PMRT04_BULK_EXPORT_PDF_BTN' | translate }}
       </button>
       <button type="button" (click)="grid.selectedRowIds.clear()"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
-        <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
+        <i class="bi bi-x-lg"></i> {{ 'PMRT04_CLEAR_SELECTION_BTN' | translate }}
       </button>
     </div>
   }
@@ -292,7 +292,7 @@
   <!-- QUICK VIEW DRAWER -->
   <sic-drawer
     [isOpen]="showDrawer()"
-    [title]="selectedContract() ? 'สรุปสัญญา ' + selectedContract()!.contractNo : 'สรุปสัญญา'"
+    [title]="selectedContract() ? (('PMRT04_CONTRACT_SUMMARY_TITLE' | translate) + ' ' + selectedContract()!.contractNo) : ('PMRT04_CONTRACT_SUMMARY_TITLE' | translate)"
     size="md"
     (closed)="closeQuickView()"
   >
@@ -321,27 +321,27 @@
 
         <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
           <div>
-            <dt class="text-[var(--text-muted)]">เลขสัญญา</dt>
+            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_CONTRACT_NO' | translate }}</dt>
             <dd class="font-mono font-semibold text-[var(--text-active)]">{{ contract.contractNo }}</dd>
           </div>
           <div>
-            <dt class="text-[var(--text-muted)]">ประเภท</dt>
+            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_TYPE' | translate }}</dt>
             <dd class="text-[var(--text-active)]">{{ contract.contractType }}</dd>
           </div>
           <div>
-            <dt class="text-[var(--text-muted)]">ลูกค้า</dt>
+            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_CUSTOMER' | translate }}</dt>
             <dd class="text-[var(--text-active)]">{{ contract.customerName }}</dd>
           </div>
           <div>
-            <dt class="text-[var(--text-muted)]">โครงการ</dt>
+            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_PROJECT' | translate }}</dt>
             <dd class="text-[var(--text-active)]">{{ contract.projectName || '-' }}</dd>
           </div>
           <div>
-            <dt class="text-[var(--text-muted)]">มูลค่าสัญญา</dt>
+            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_CONTRACT_VALUE_LABEL' | translate }}</dt>
             <dd class="font-mono text-[var(--text-active)]">{{ formatCurrency(contract.contractValue) }}</dd>
           </div>
           <div>
-            <dt class="text-[var(--text-muted)]">ระยะเวลา</dt>
+            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_DURATION' | translate }}</dt>
             <dd class="font-mono text-[var(--text-active)]">
               {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
             </dd>
@@ -356,19 +356,19 @@
           (click)="printContract(contract); "
           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
-          <i class="bi bi-printer"></i> พิมพ์
+          <i class="bi bi-printer"></i> {{ 'PMRT04_PRINT_BTN' | translate }}
         </button>
         <button
           (click)="closeQuickView(); goToEdit(contract.id)"
           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
-          <i class="bi bi-pencil"></i> แก้ไข
+          <i class="bi bi-pencil"></i> {{ 'PMRT04_EDIT_TITLE' | translate }}
         </button>
         <button
           (click)="closeQuickView(); goToView(contract.id)"
           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
         >
-          <i class="bi bi-arrow-up-right-square"></i> ดูฉบับเต็ม
+          <i class="bi bi-arrow-up-right-square"></i> {{ 'PMRT04_VIEW_FULL_BTN' | translate }}
         </button>
       </div>
     }

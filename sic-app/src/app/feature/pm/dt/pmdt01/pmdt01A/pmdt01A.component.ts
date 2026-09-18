@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../../environments/environment';
 import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
@@ -29,7 +30,8 @@ import { SicButtonComponent } from "sic-ng";
     SicComboboxComponent,
     SicTiptapEditorComponent,
     RouterModule,
-    SicButtonComponent
+    SicButtonComponent,
+    TranslateModule
 ],
   templateUrl: './pmdt01A.component.html',
 })
@@ -40,6 +42,7 @@ export class Pmdt01AComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private businessService = inject(BusinessService);
+  private translate = inject(TranslateService);
 
   projectId = '';
   phaseId: string | null = null;
@@ -100,7 +103,7 @@ export class Pmdt01AComponent implements OnInit {
         this.data = data;
         this.patchForm(data);
       },
-      error: (err) => this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.message),
+      error: (err) => this.dialog.error(this.translate.instant('PMDT01_LOAD_FAIL_TITLE'), err.message),
     });
   }
 
@@ -152,7 +155,7 @@ export class Pmdt01AComponent implements OnInit {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.dialog.error('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.error(this.translate.instant('PMDT01_INVALID_DATA_TITLE'), this.translate.instant('PMDT01_FILL_ALL_FIELDS'));
       return;
     }
 
@@ -187,8 +190,8 @@ export class Pmdt01AComponent implements OnInit {
       next: () => {
         this.form.markAsPristine();
         this.dialog.success(
-          'สำเร็จ',
-          this.isEdit ? 'อัปเดต Phase เรียบร้อย' : 'สร้าง Phase เรียบร้อย',
+          this.translate.instant('PMDT01_SUCCESS_TITLE'),
+          this.isEdit ? this.translate.instant('PMDT01_UPDATE_SUCCESS_MSG') : this.translate.instant('PMDT01_CREATE_SUCCESS_MSG'),
         ).then(() => {
           this.form.markAsPristine();
           this.router.navigate(['/feature/pm/phase'], {
@@ -196,7 +199,7 @@ export class Pmdt01AComponent implements OnInit {
           });
         });
       },
-      error: (err) => this.dialog.error('ไม่สำเร็จ', err.message),
+      error: (err) => this.dialog.error(this.translate.instant('PMDT01_FAIL_TITLE'), err.message),
     });
   }
 

@@ -10,6 +10,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { debounceTime, distinctUntilChanged, Subject, switchMap } from 'rxjs';
 
 import { CustomerStateService } from '../../services/customer-state.service';
@@ -19,7 +20,7 @@ import { PmCustomerProject } from '../../../feature/pm/rt/pmrt02/pmrt02.model';
 @Component({
   selector: 'sic-context-switcher',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './sic-context-switcher.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })

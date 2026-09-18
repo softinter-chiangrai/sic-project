@@ -5,21 +5,21 @@
       <button
         (click)="onBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMDT17_BACK_LABEL' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-headset text-[var(--crm-primary)]"></i>
-          {{ isView() ? 'ดูตั๋วแจ้งปัญหา MA' : (isEdit() ? 'แก้ไขตั๋วแจ้งปัญหา MA' : 'สร้างตั๋วแจ้งปัญหาใหม่') }}
+          {{ isView() ? ('PMDT17_VIEW_TICKET_TITLE' | translate) : (isEdit() ? ('PMDT17_EDIT_TICKET_TITLE' | translate) : ('PMDT17_NEW_TICKET_TITLE' | translate)) }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          รับแจ้งปัญหาหลังการส่งมอบ ติดตามการแก้ไข และกำหนดระดับความเร่งด่วนตาม SLA
+          {{ 'PMDT17_PAGE_SUBTITLE' | translate }}
         </p>
         @if (id()) {
           <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
-            <span>เลขที่: {{ formData?.form?.getRawValue()?.ticketNo }}</span>
+            <span>{{ 'PMDT17_TICKET_NO_LABEL' | translate }} {{ formData?.form?.getRawValue()?.ticketNo }}</span>
             <sic-version-badge [status]="formData?.form?.getRawValue()?.status" [isLocked]="isLocked()"></sic-version-badge>
           </p>
         }
@@ -34,7 +34,7 @@
           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-medium text-sm shadow-md hover:shadow-lg shadow-purple-500/20 transition-all cursor-pointer"
         >
           <i class="bi bi-stars text-base animate-pulse"></i>
-          <span>สร้างด้วย AI</span>
+          <span>{{ 'PMDT17_CREATE_WITH_AI_BUTTON' | translate }}</span>
         </button>
       }
     </div>
@@ -45,18 +45,18 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        ข้อมูลทั่วไปของตั๋ว
+        {{ 'PMDT17_SECTION_GENERAL_INFO' | translate }}
       </h2>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-input
-          label="รหัส MA Ticket"
-          placeholder="เช่น MA-2026-001"
+          [label]="'PMDT17_TICKET_CODE_LABEL' | translate"
+          [placeholder]="'PMDT17_TICKET_CODE_PLACEHOLDER' | translate"
           formControlName="ticketNo"
         ></sic-input>
 
         <sic-combobox
-          label="ประเภทปัญหา"
+          [label]="'PMDT17_ISSUE_TYPE_LABEL' | translate"
           [required]="true"
           [items]="ticketTypeOptions"
           valueField="value"
@@ -65,7 +65,7 @@
         ></sic-combobox>
 
         <sic-combobox
-          label="ระดับความรุนแรง"
+          [label]="'PMDT17_SEVERITY_LABEL' | translate"
           [required]="true"
           [items]="severityOptions"
           valueField="value"
@@ -76,12 +76,12 @@
 
       <div>
         <sic-combobox
-          label="ผู้รับผิดชอบแก้ไข"
+          [label]="'PMDT17_ASSIGNEE_LABEL' | translate"
           [apiUrl]="apiMembersCombobox"
           [params]="{ businessId: businessId }"
           valueField="value"
           textField="text"
-          placeholder="พิมพ์หรือเลือกผู้รับผิดชอบ..."
+          [placeholder]="'PMDT17_ASSIGNEE_PLACEHOLDER' | translate"
           [clearable]="true"
           [multiple]="true"
           formControlName="assignedToIds"
@@ -93,22 +93,22 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-calendar-event text-[var(--crm-primary)]"></i>
-        กำหนดเวลาดำเนินการ
+        {{ 'PMDT17_SECTION_SCHEDULE' | translate }}
       </h2>
 
       <!-- Start Date + Time -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <sic-datepicker
-            label="วันที่เริ่มต้น"
-            placeholder="เลือกวันที่เริ่ม"
+            [label]="'PMDT17_START_DATE_LABEL' | translate"
+            [placeholder]="'PMDT17_START_DATE_PLACEHOLDER' | translate"
             formControlName="startDate"
           ></sic-datepicker>
         </div>
         <div>
           <sic-timepicker
-            label="เวลาเริ่มต้น"
-            placeholder="เลือกเวลา"
+            [label]="'PMDT17_START_TIME_LABEL' | translate"
+            [placeholder]="'PMDT17_SELECT_TIME_PLACEHOLDER' | translate"
             formControlName="startTime"
           ></sic-timepicker>
         </div>
@@ -118,15 +118,15 @@
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <sic-datepicker
-            label="วันที่สิ้นสุด"
-            placeholder="เลือกวันที่สิ้นสุด"
+            [label]="'PMDT17_END_DATE_LABEL' | translate"
+            [placeholder]="'PMDT17_END_DATE_PLACEHOLDER' | translate"
             formControlName="endDate"
           ></sic-datepicker>
         </div>
         <div>
           <sic-timepicker
-            label="เวลาสิ้นสุด"
-            placeholder="เลือกเวลา"
+            [label]="'PMDT17_END_TIME_LABEL' | translate"
+            [placeholder]="'PMDT17_SELECT_TIME_PLACEHOLDER' | translate"
             formControlName="endTime"
           ></sic-timepicker>
         </div>
@@ -137,19 +137,19 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-card-text text-[var(--crm-primary)]"></i>
-        รายละเอียดปัญหา
+        {{ 'PMDT17_SECTION_ISSUE_DETAILS' | translate }}
       </h2>
 
       <sic-input
-        label="หัวข้อปัญหา"
-        placeholder="ระบุหัวข้อปัญหาที่พบแบบกระชับ"
+        [label]="'PMDT17_COL_TITLE' | translate"
+        [placeholder]="'PMDT17_TITLE_PLACEHOLDER' | translate"
         [required]="true"
         formControlName="title"
       ></sic-input>
 
       <sic-tiptap-editor
-        label="รายละเอียดปัญหาโดยละเอียด"
-        placeholder="อธิบายอาการของปัญหา ขั้นตอนการเกิด และผลกระทบ..."
+        [label]="'PMDT17_DESC_DETAIL_LABEL' | translate"
+        [placeholder]="'PMDT17_DESC_PLACEHOLDER' | translate"
         [required]="true"
         minHeight="140px"
         formControlName="description"
@@ -160,11 +160,11 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-check-circle text-[var(--crm-primary)]"></i>
-        สรุปการแก้ไขปัญหา
+        {{ 'PMDT17_SECTION_RESOLUTION' | translate }}
       </h2>
       <sic-tiptap-editor
-        label="วิธีแก้ไขปัญหาและแนวทางป้องกัน"
-        placeholder="ระบุแนวทางการแก้ไขที่ดำเนินการเรียบร้อยแล้ว..."
+        [label]="'PMDT17_RESOLUTION_METHOD_LABEL' | translate"
+        [placeholder]="'PMDT17_RESOLUTION_PLACEHOLDER' | translate"
         minHeight="140px"
         formControlName="resolutionSummary"
       ></sic-tiptap-editor>
@@ -176,20 +176,20 @@
         <div class="border-b border-[var(--border)] pb-3">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ
+            {{ 'PMDT17_SECTION_APPROVAL_PROCESS' | translate }}
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            เลือกกระบวนการอนุมัติสำหรับตั๋วปัญหานี้ เพื่อส่งให้หัวหน้าทีมและลูกค้ายืนยันการปิดตั๋ว
+            {{ 'PMDT17_APPROVAL_PROCESS_DESC' | translate }}
           </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="กระบวนการอนุมัติ"
+            [label]="'PMDT17_SECTION_APPROVAL_PROCESS' | translate"
             [apiUrl]="approvalFlowsApi"
             valueField="id"
             textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
+            [placeholder]="'PMDT17_SELECT_APPROVAL_FLOW_PLACEHOLDER' | translate"
             [clearable]="true"
             (selectionChanged)="selectedFlowId.set($event?.id || null)">
           </sic-combobox>
@@ -200,19 +200,19 @@
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
+        <i class="bi bi-arrow-left"></i> {{ isView() ? ('PMDT17_BACK_LABEL' | translate) : ('PMDT17_CANCEL_LABEL' | translate) }}
       </sic-button>
       @if (isLocked()) {
         <sic-button variant="solid" color="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข
+          <i class="bi bi-pencil-square"></i> {{ 'PMDT17_REQUEST_CHANGE_BUTTON' | translate }}
         </sic-button>
       } @else if (isView()) {
         <sic-button variant="solid" color="primary" (click)="goToEditMode()">
-          <i class="bi bi-pencil"></i> แก้ไขข้อมูล
+          <i class="bi bi-pencil"></i> {{ 'PMDT17_EDIT_DATA_BUTTON' | translate }}
         </sic-button>
       } @else {
         <sic-button variant="solid" color="primary" [loading]="isSaving()" (click)="submit()">
-          <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+          <i class="bi bi-check-lg"></i> {{ 'PMDT17_SAVE_DATA_BUTTON' | translate }}
         </sic-button>
       }
     </div>
@@ -220,7 +220,7 @@
     @if (isLocked()) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+        {{ 'PMDT17_LOCKED_NOTICE' | translate }}
       </div>
     }
   </form>
@@ -242,10 +242,10 @@
             </div>
             <div>
               <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
-                ผู้ช่วยสร้างตั๋วแจ้งปัญหา MA ด้วย AI
+                {{ 'PMDT17_AI_MODAL_TITLE' | translate }}
               </h2>
               <p class="text-xs text-[var(--text-muted)]">
-                วิเคราะห์อาการปัญหา ร่างรายละเอียด สาเหตุเบื้องต้น และแนวทางการแก้ไขอัตโนมัติ
+                {{ 'PMDT17_AI_MODAL_SUBTITLE' | translate }}
               </p>
             </div>
           </div>
@@ -270,7 +270,7 @@
                 : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
           >
             <i class="bi bi-lightning-charge-fill text-xs"></i>
-            <span>สร้างเนื้อหา (Generate)</span>
+            <span>{{ 'PMDT17_AI_TAB_GENERATE' | translate }}</span>
           </button>
           <button
             type="button"
@@ -281,7 +281,7 @@
                 : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
           >
             <i class="bi bi-clock-history text-xs"></i>
-            <span>ประวัติเวอร์ชัน (History Log)</span>
+            <span>{{ 'PMDT17_AI_TAB_HISTORY' | translate }}</span>
             @if (aiHistories().length > 0) {
               <span class="px-1.5 py-0.2 text-[10px] rounded-full bg-purple-200 text-purple-900 font-bold ml-0.5">
                 {{ aiHistories().length }}
@@ -298,7 +298,7 @@
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               <i class="bi bi-stars text-purple-500 mr-1"></i>
-              โมเดล AI ที่ต้องการใช้
+              {{ 'PMDT17_AI_MODEL_LABEL' | translate }}
             </label>
             <sic-combobox
               [options]="aiModels"
@@ -306,7 +306,7 @@
               textField="name"
               [ngModel]="aiModel()"
               (ngModelChange)="aiModel.set($event)"
-              placeholder="เลือกโมเดล AI"
+              [placeholder]="'PMDT17_SELECT_AI_MODEL_PLACEHOLDER' | translate"
               [clearable]="false"
             >
             </sic-combobox>
@@ -317,7 +317,7 @@
             <div class="space-y-1">
               <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                 <i class="bi bi-tag text-purple-500 mr-1"></i>
-                ประเภทตั๋ว
+                {{ 'PMDT17_TICKET_TYPE_LABEL' | translate }}
               </label>
               <sic-combobox
                 [items]="ticketTypeOptions"
@@ -325,7 +325,7 @@
                 displayField="label"
                 [ngModel]="aiTicketType()"
                 (ngModelChange)="aiTicketType.set($event)"
-                placeholder="เลือกประเภทตั๋ว"
+                [placeholder]="'PMDT17_SELECT_TICKET_TYPE_PLACEHOLDER' | translate"
               >
               </sic-combobox>
             </div>
@@ -334,7 +334,7 @@
             <div class="space-y-1">
               <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
                 <i class="bi bi-exclamation-triangle text-amber-500 mr-1"></i>
-                ระดับความเร่งด่วน (Severity)
+                {{ 'PMDT17_URGENCY_LEVEL_LABEL' | translate }}
               </label>
               <sic-combobox
                 [items]="severityOptions"
@@ -342,7 +342,7 @@
                 displayField="label"
                 [ngModel]="aiPriority()"
                 (ngModelChange)="aiPriority.set($event)"
-                placeholder="เลือกระดับความเร่งด่วน"
+                [placeholder]="'PMDT17_SELECT_URGENCY_PLACEHOLDER' | translate"
               >
               </sic-combobox>
             </div>
@@ -352,13 +352,13 @@
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
               <i class="bi bi-chat-left-text text-indigo-500 mr-1"></i>
-              คำสั่งเพิ่มเติม หรือรายละเอียดปัญหาที่ผู้ใช้แจ้ง
+              {{ 'PMDT17_AI_PROMPT_LABEL' | translate }}
             </label>
             <textarea
               [ngModel]="aiPrompt()"
               (ngModelChange)="aiPrompt.set($event)"
               rows="3"
-              placeholder="เช่น ผู้ใช้กดปุ่มออกรายงานแล้วหน้าจอค้างและแสดง Error 500 หลังอัปเกรดเวอร์ชัน..."
+              [placeholder]="'PMDT17_AI_PROMPT_PLACEHOLDER' | translate"
               class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
             ></textarea>
           </div>
@@ -367,8 +367,8 @@
             <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
               <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">AI กำลังวิเคราะห์อาการและร่างตั๋วปัญหา...</p>
-                <p class="text-xs text-[var(--text-muted)]">กำลังสรุปสาเหตุและแนวทางแก้ไขเบื้องต้น</p>
+                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ 'PMDT17_AI_ANALYZING_MSG' | translate }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT17_AI_SUMMARIZING_MSG' | translate }}</p>
               </div>
             </div>
           }
@@ -379,9 +379,9 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 text-xs font-bold rounded-md bg-purple-600 text-white">
-                    v{{ aiCurrentVersionNo() || 1 }} (ล่าสุด)
+                    v{{ aiCurrentVersionNo() || 1 }} ({{ 'PMDT17_LATEST_TAG' | translate }})
                   </span>
-                  <span class="text-xs font-bold text-[var(--text-active)]">ผลลัพธ์ที่ AI ร่างไว้</span>
+                  <span class="text-xs font-bold text-[var(--text-active)]">{{ 'PMDT17_AI_DRAFT_RESULT_LABEL' | translate }}</span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <button
@@ -390,7 +390,7 @@
                     class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text)] transition-all flex items-center gap-1"
                   >
                     <i [class]="copiedId() === 'current' ? 'bi bi-check-lg text-green-500' : 'bi bi-clipboard'"></i>
-                    <span>{{ copiedId() === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                    <span>{{ copiedId() === 'current' ? ('PMDT17_COPIED_LABEL' | translate) : ('PMDT17_COPY_LABEL' | translate) }}</span>
                   </button>
                   <button
                     type="button"
@@ -398,31 +398,31 @@
                     class="px-3 py-1 text-xs rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <i class="bi bi-clipboard-check"></i>
-                    <span>วางลงในฟอร์ม (Paste to Form)</span>
+                    <span>{{ 'PMDT17_PASTE_TO_FORM_BUTTON' | translate }}</span>
                   </button>
                 </div>
               </div>
 
               <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] text-xs space-y-2 max-h-48 overflow-y-auto">
                 <div>
-                  <span class="text-[var(--text-muted)] text-[11px]">หัวข้อ:</span>
+                  <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT17_FIELD_TITLE_LABEL' | translate }}</span>
                   <div class="font-semibold text-[var(--text-active)]">{{ aiCurrentDraft()?.title }}</div>
                 </div>
                 @if (aiCurrentDraft()?.description) {
                   <div>
-                    <span class="text-[var(--text-muted)] text-[11px]">รายละเอียด:</span>
+                    <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT17_FIELD_DESC_LABEL' | translate }}</span>
                     <div class="text-[var(--text-muted)] text-[11px] line-clamp-2" [innerHTML]="aiCurrentDraft()?.description"></div>
                   </div>
                 }
                 @if (aiCurrentDraft()?.rootCause) {
                   <div>
-                    <span class="text-[var(--text-muted)] text-[11px]">สาเหตุ:</span>
+                    <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT17_FIELD_CAUSE_LABEL' | translate }}</span>
                     <div class="text-[var(--text-muted)] text-[11px] line-clamp-2" [innerHTML]="aiCurrentDraft()?.rootCause"></div>
                   </div>
                 }
                 @if (aiCurrentDraft()?.resolution) {
                   <div>
-                    <span class="text-[var(--text-muted)] text-[11px]">แนวทางแก้ไข:</span>
+                    <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT17_FIELD_RESOLUTION_LABEL' | translate }}</span>
                     <div class="text-[var(--text-muted)] text-[11px] line-clamp-2" [innerHTML]="aiCurrentDraft()?.resolution"></div>
                   </div>
                 }
@@ -434,7 +434,7 @@
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs text-[var(--text-muted)]">
-                ประวัติเวอร์ชันที่ AI ร่างไว้ (เลือกเวอร์ชันเพื่อวางลงในฟอร์มได้)
+                {{ 'PMDT17_HISTORY_LIST_DESC' | translate }}
               </span>
               @if (aiHistories().length > 0) {
                 <button
@@ -442,7 +442,7 @@
                   (click)="clearAllAiHistory()"
                   class="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <i class="bi bi-trash"></i> ล้างประวัติทั้งหมด
+                  <i class="bi bi-trash"></i> {{ 'PMDT17_CLEAR_ALL_HISTORY_BUTTON' | translate }}
                 </button>
               }
             </div>
@@ -450,8 +450,8 @@
             @if (aiHistories().length === 0) {
               <div class="text-center py-12 text-[var(--text-muted)] space-y-2">
                 <i class="bi bi-clock-history text-4xl opacity-30"></i>
-                <p class="text-sm">ยังไม่มีประวัติเวอร์ชันที่บันทึกไว้</p>
-                <p class="text-xs">เมื่อกดสร้างเนื้อหา ระบบจะบันทึกเวอร์ชัน v1, v2, ... ให้อัตโนมัติ</p>
+                <p class="text-sm">{{ 'PMDT17_NO_HISTORY_MSG' | translate }}</p>
+                <p class="text-xs">{{ 'PMDT17_HISTORY_HINT_MSG' | translate }}</p>
               </div>
             } @else {
               <div class="space-y-2.5">
@@ -476,7 +476,7 @@
                           class="px-2 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text)] transition-all flex items-center gap-1"
                         >
                           <i [class]="copiedId() === hist.id ? 'bi bi-check-lg text-green-500' : 'bi bi-clipboard'"></i>
-                          <span>{{ copiedId() === hist.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                          <span>{{ copiedId() === hist.id ? ('PMDT17_COPIED_LABEL' | translate) : ('PMDT17_COPY_LABEL' | translate) }}</span>
                         </button>
                         <button
                           type="button"
@@ -484,13 +484,13 @@
                           class="px-2.5 py-1 text-xs rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                         >
                           <i class="bi bi-clipboard-check"></i>
-                          <span>วางลงในฟอร์ม</span>
+                          <span>{{ 'PMDT17_PASTE_TO_FORM_SHORT' | translate }}</span>
                         </button>
                         <button
                           type="button"
                           (click)="deleteAiHistory(hist.id, $event)"
                           class="text-red-400 hover:text-red-600 p-1"
-                          title="ลบประวัตินี้"
+                          [title]="'PMDT17_DELETE_HISTORY_TOOLTIP' | translate"
                         >
                           <i class="bi bi-trash"></i>
                         </button>
@@ -499,13 +499,13 @@
 
                     @if (hist.prompt) {
                       <div class="text-[11px] text-[var(--text-muted)] bg-[var(--sidebar)] p-2 rounded-lg border border-[var(--border)]/50">
-                        <span class="font-semibold text-purple-600 dark:text-purple-400">คำสั่ง:</span> {{ hist.prompt }}
+                        <span class="font-semibold text-purple-600 dark:text-purple-400">{{ 'PMDT17_COMMAND_LABEL' | translate }}</span> {{ hist.prompt }}
                       </div>
                     }
 
                     <div class="text-xs space-y-1">
                       <div class="font-semibold text-[var(--text-active)]">
-                        {{ hist.data?.title || 'ตั๋วแจ้งปัญหา' }}
+                        {{ hist.data?.title || ('PMDT17_ISSUE_TICKET_FALLBACK' | translate) }}
                       </div>
                     </div>
                   </div>
@@ -524,7 +524,7 @@
           [disabled]="isGeneratingAi()"
           class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer disabled:opacity-50"
         >
-          ปิด
+          {{ 'PMDT17_CLOSE_BUTTON' | translate }}
         </button>
 
         @if (aiAssistTab() === 'generate') {
@@ -536,10 +536,10 @@
           >
             @if (isGeneratingAi()) {
               <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>กำลังประมวลผล...</span>
+              <span>{{ 'PMDT17_PROCESSING_MSG' | translate }}</span>
             } @else {
               <i class="bi bi-stars text-base"></i>
-              <span>สร้างตั๋ว MA ด้วย AI</span>
+              <span>{{ 'PMDT17_GENERATE_TICKET_AI_BUTTON' | translate }}</span>
             }
           </button>
         }

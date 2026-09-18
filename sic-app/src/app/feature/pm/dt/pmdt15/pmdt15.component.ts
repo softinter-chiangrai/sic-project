@@ -4,6 +4,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { Pmdt15AService } from './pmdt15A/pmdt15A.service';
 import { PmUserManualModel } from './pmdt15A/pmdt15A.model';
@@ -18,7 +19,7 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 @Component({
   selector: 'app-pmdt15',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt15.component.html',
   styleUrls: ['./pmdt15.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -31,6 +32,7 @@ export class Pmdt15Component implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly http = inject(HttpClient);
   private readonly approvalService = inject(ApprovalService);
+  private readonly translate = inject(TranslateService);
 
   manuals = signal<PmUserManualModel[]>([]);
   isLoading = signal(false);
@@ -44,18 +46,18 @@ export class Pmdt15Component implements OnInit {
   filterStatus = signal('');
 
   typeFilterOptions = [
-    { label: 'คู่มือผู้ใช้ทั่วไป', value: 'USER' },
-    { label: 'คู่มือผู้ดูแลระบบ', value: 'ADMIN' },
-    { label: 'คู่มือการติดตั้ง', value: 'INSTALLATION' },
-    { label: 'คู่มือการปฏิบัติงาน', value: 'OPERATION' },
+    { label: this.translate.instant('PMDT15_TYPE_USER'), value: 'USER' },
+    { label: this.translate.instant('PMDT15_TYPE_ADMIN'), value: 'ADMIN' },
+    { label: this.translate.instant('PMDT15_TYPE_INSTALLATION'), value: 'INSTALLATION' },
+    { label: this.translate.instant('PMDT15_TYPE_OPERATION'), value: 'OPERATION' },
   ];
 
   statusFilterOptions = [
-    { label: 'ฉบับร่าง', value: 'DRAFT' },
-    { label: 'รอตรวจสอบ', value: 'REVIEW' },
-    { label: 'อนุมัติแล้ว', value: 'APPROVED' },
-    { label: 'แก้ไขหลังอนุมัติ', value: 'CHANGED' },
-    { label: 'เผยแพร่แล้ว', value: 'PUBLISHED' },
+    { label: this.translate.instant('PMDT15_STATUS_DRAFT'), value: 'DRAFT' },
+    { label: this.translate.instant('PMDT15_STATUS_REVIEW'), value: 'REVIEW' },
+    { label: this.translate.instant('PMDT15_STATUS_APPROVED'), value: 'APPROVED' },
+    { label: this.translate.instant('PMDT15_STATUS_CHANGED'), value: 'CHANGED' },
+    { label: this.translate.instant('PMDT15_STATUS_PUBLISHED'), value: 'PUBLISHED' },
   ];
 
   @ViewChild('grid') gridRef?: SicGridPanelComponent;
@@ -66,13 +68,13 @@ export class Pmdt15Component implements OnInit {
     selectable: false,
     showToolbar: false,
     column: [
-      { label: 'รหัสคู่มือ', name: 'manualCode', type: 'code', minWidth: 140 },
-      { label: 'ชื่อคู่มือ', name: 'manualTitle', type: 'text', minWidth: 200 },
-      { label: 'ประเภท', name: 'manualType', type: 'typeTag', minWidth: 140 },
-      { label: 'เวอร์ชัน', name: 'version', type: 'versionText', align: 'center', minWidth: 90 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 120 },
-      { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
+      { label: this.translate.instant('PMDT15_COL_MANUAL_CODE'), name: 'manualCode', type: 'code', minWidth: 140 },
+      { label: this.translate.instant('PMDT15_COL_MANUAL_TITLE'), name: 'manualTitle', type: 'text', minWidth: 200 },
+      { label: this.translate.instant('PMDT15_COL_TYPE'), name: 'manualType', type: 'typeTag', minWidth: 140 },
+      { label: this.translate.instant('PMDT15_COL_VERSION'), name: 'version', type: 'versionText', align: 'center', minWidth: 90 },
+      { label: this.translate.instant('PMDT15_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', minWidth: 120 },
+      { label: this.translate.instant('PMDT15_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
+      { label: this.translate.instant('PMDT15_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
     ],
   };
 
@@ -132,7 +134,7 @@ export class Pmdt15Component implements OnInit {
         error: () => {
           this.isLoading.set(false);
           this.cdr.markForCheck();
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          grid.setLoadError(this.translate.instant('PMDT15_LOAD_ERROR'), request.requestId);
         },
       });
   }
@@ -196,15 +198,15 @@ export class Pmdt15Component implements OnInit {
   }
 
   onDelete(id: string, grid: SicGridPanelComponent): void {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบระบุคู่มือนี้ใช่หรือไม่?').then((confirmed: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT15_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT15_CONFIRM_DELETE_MSG')).then((confirmed: boolean) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบคู่มือเรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT15_SUCCESS_TITLE'), this.translate.instant('PMDT15_DELETE_SUCCESS_MSG'));
             grid.reload();
           },
           error: (err) => {
-            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT15_ERROR_TITLE'), err.message || this.translate.instant('PMDT15_DELETE_FAILED_MSG'));
           },
         });
       }
@@ -213,7 +215,7 @@ export class Pmdt15Component implements OnInit {
 
   printManual(item: PmUserManualModel): void {
     if (!item.id) {
-      this.dialog.warn('ไม่พบรหัสคู่มือ', 'ไม่สามารถพิมพ์เอกสารได้');
+      this.dialog.warn(this.translate.instant('PMDT15_NO_MANUAL_ID'), this.translate.instant('PMDT15_PRINT_FAILED_TITLE'));
       return;
     }
 
@@ -236,7 +238,7 @@ export class Pmdt15Component implements OnInit {
         },
         error: (err) => {
           console.error('Print user manual error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้: ' + (err?.error?.message || err?.message || ''));
+          this.dialog.error(this.translate.instant('PMDT15_PRINT_ERROR_TITLE'), this.translate.instant('PMDT15_JASPER_ERROR_PREFIX') + (err?.error?.message || err?.message || ''));
         },
       });
   }
@@ -264,11 +266,11 @@ export class Pmdt15Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ฉบับร่าง',
-      REVIEW: 'รอตรวจสอบ',
-      APPROVED: 'อนุมัติแล้ว',
-      CHANGED: 'แก้ไขหลังอนุมัติ',
-      PUBLISHED: 'เผยแพร่แล้ว',
+      DRAFT: this.translate.instant('PMDT15_STATUS_DRAFT'),
+      REVIEW: this.translate.instant('PMDT15_STATUS_REVIEW'),
+      APPROVED: this.translate.instant('PMDT15_STATUS_APPROVED'),
+      CHANGED: this.translate.instant('PMDT15_STATUS_CHANGED'),
+      PUBLISHED: this.translate.instant('PMDT15_STATUS_PUBLISHED'),
     };
     return map[status] || status;
   }
@@ -288,11 +290,11 @@ export class Pmdt15Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMDT15_APPROVAL_PENDING'),
+      APPROVED: this.translate.instant('PMDT15_STATUS_APPROVED'),
+      REJECTED: this.translate.instant('PMDT15_APPROVAL_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT15_APPROVAL_REVISION'),
+      CANCELLED: this.translate.instant('PMDT15_APPROVAL_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
   }

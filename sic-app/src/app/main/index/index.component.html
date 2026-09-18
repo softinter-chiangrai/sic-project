@@ -3,7 +3,7 @@
     <div class="flex items-center gap-4">
         <div class="relative">
             <div class="grid place-items-center">
-                <img src="images/softinter_chiangrai.png" alt="บริษัท ซอฟต์อินเตอร์ เชียงราย จำกัด"
+                <img src="images/softinter_chiangrai.png" [alt]="'MAIN_INDEX_LOGO_ALT' | translate"
                     class="h-12 w-full rounded-full object-cover cursor-pointer"
                     [class.brightness-0]="isDark()"
                     [class.invert]="isDark()"
@@ -13,11 +13,11 @@
     </div>
     <div class="flex items-center gap-3">
         <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_LANGUAGE' | translate ">
-            <img src="images/language.png" (click)="toggleLanguage()" alt="English"
+            <img src="images/language.png" (click)="toggleLanguage()" [alt]="'MAIN_INDEX_ICON_ALT' | translate"
                 class="h-9 w-9 object-contain rounded-full cursor-pointer" />
         </div>
         <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_THEME' | translate ">
-            <img src="images/day-and-night.png" (click)="toggleTheme()" alt="English"
+            <img src="images/day-and-night.png" (click)="toggleTheme()" [alt]="'MAIN_INDEX_ICON_ALT' | translate"
                 class="h-9 w-9 object-contain cursor-pointer" />
         </div>
         <div class="flex-initial" >

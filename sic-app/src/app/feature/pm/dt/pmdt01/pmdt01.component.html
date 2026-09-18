@@ -6,16 +6,16 @@
     <div>
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-layers text-[var(--crm-primary)]"></i>
-        Phases & Milestones
+        {{ 'PMDT01_PAGE_TITLE' | translate }}
       </h1>
-      <p class="text-sm text-[var(--text-muted)]">จัดการระยะและเหตุการณ์สำคัญของโครงการ</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT01_SUBTITLE' | translate }}</p>
     </div>
     <button
       (click)="openCreatePhase()"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
     >
       <i class="bi bi-plus-lg"></i>
-      เพิ่ม Phase
+      {{ 'PMDT01_ADD_PHASE' | translate }}
     </button>
   </div>
 
@@ -48,7 +48,7 @@
                 {{ getStatusText(phase.status) }}
               </span>
             </div>
-            <p class="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{{ (phase.description | sicStripHtml) || 'ไม่มีคำอธิบาย' }}</p>
+            <p class="text-sm text-[var(--text-muted)] mt-1 line-clamp-2">{{ (phase.description | sicStripHtml) || ('PMDT01_NO_DESCRIPTION' | translate) }}</p>
             <div class="flex items-center gap-4 text-xs text-[var(--text-muted)] mt-3">
               <span><i class="bi bi-calendar3"></i> {{ formatDate(phase.startDate) }} - {{ formatDate(phase.endDate) }}</span>
             </div>
@@ -66,7 +66,7 @@
               <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="phase.progress"></div>
             </div>
             <div class="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-              <span>ความคืบหน้า</span>
+              <span>{{ 'PMDT01_PROGRESS' | translate }}</span>
               <span>{{ phase.progress }}%</span>
             </div>
 
@@ -75,19 +75,19 @@
                 (click)="openQuickView(phase, $event)"
                 class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
               >
-                <i class="bi bi-layout-sidebar-inset"></i> สรุปด่วน
+                <i class="bi bi-layout-sidebar-inset"></i> {{ 'PMDT01_QUICK_VIEW' | translate }}
               </button>
               <button
                 (click)="editPhase(phase, $event)"
                 class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
               >
-                <i class="bi bi-pencil"></i> แก้ไข
+                <i class="bi bi-pencil"></i> {{ 'PMDT01_EDIT' | translate }}
               </button>
               <button
                 (click)="deletePhase(phase, $event)"
                 class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
               >
-                <i class="bi bi-trash"></i> ลบ
+                <i class="bi bi-trash"></i> {{ 'PMDT01_DELETE' | translate }}
               </button>
             </div>
           </div>
@@ -96,8 +96,8 @@
     } @else {
       <div class="text-center py-12 text-[var(--text-muted)]">
         <i class="bi bi-inbox text-5xl block mb-3 opacity-30"></i>
-        <p>ยังไม่มี Phase ในโครงการนี้</p>
-        <p class="text-sm">คลิก "เพิ่ม Phase" เพื่อเริ่มต้น</p>
+        <p>{{ 'PMDT01_EMPTY_TITLE' | translate }}</p>
+        <p class="text-sm">{{ 'PMDT01_EMPTY_HINT' | translate }}</p>
       </div>
     }
   }
@@ -105,7 +105,7 @@
   <!-- QUICK VIEW DRAWER -->
   <sic-drawer
     [isOpen]="showDrawer()"
-    [title]="selectedPhase() ? (selectedPhase()!.phaseCode ? selectedPhase()!.phaseCode + ' · ' : '') + selectedPhase()!.phaseName : 'รายละเอียด Phase'"
+    [title]="selectedPhase() ? (selectedPhase()!.phaseCode ? selectedPhase()!.phaseCode + ' · ' : '') + selectedPhase()!.phaseName : ('PMDT01_DETAIL_TITLE_DEFAULT' | translate)"
     size="md"
     (closed)="closeQuickView()"
   >
@@ -121,7 +121,7 @@
         </div>
 
         <p class="text-sm text-[var(--text)] whitespace-pre-line">
-          {{ (phase.description | sicStripHtml) || 'ไม่มีคำอธิบาย' }}
+          {{ (phase.description | sicStripHtml) || ('PMDT01_NO_DESCRIPTION' | translate) }}
         </p>
 
         <div class="grid grid-cols-2 gap-3">
@@ -140,7 +140,7 @@
             <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="phase.progress"></div>
           </div>
           <div class="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-            <span>ความคืบหน้า</span>
+            <span>{{ 'PMDT01_PROGRESS' | translate }}</span>
             <span>{{ phase.progress }}%</span>
           </div>
         </div>
@@ -153,13 +153,13 @@
           (click)="closeQuickView(); editPhase(phase, $event)"
           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
-          <i class="bi bi-pencil"></i> แก้ไข
+          <i class="bi bi-pencil"></i> {{ 'PMDT01_EDIT' | translate }}
         </button>
         <button
           (click)="closeQuickView(); goToDetail(phase.id)"
           class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
         >
-          <i class="bi bi-arrow-up-right-square"></i> ดูฉบับเต็ม
+          <i class="bi bi-arrow-up-right-square"></i> {{ 'PMDT01_VIEW_FULL' | translate }}
         </button>
       </div>
     }

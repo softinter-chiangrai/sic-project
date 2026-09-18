@@ -5,10 +5,10 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-        จัดการ Approval Flow
+        {{ 'BURT06_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'BURT06_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <button
@@ -16,7 +16,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all shadow-sm"
     >
       <i class="bi bi-plus-lg"></i>
-      สร้าง Approval Flow
+      {{ 'BURT06_CREATE_BTN' | translate }}
     </button>
   </div>
 
@@ -30,7 +30,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหารหัส Flow, ชื่อ Flow, คำอธิบาย..."
+        [placeholder]="'BURT06_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -50,7 +50,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterStatusChange($event, grid)"
-        placeholder="🌐 สถานะทั้งหมด"
+        [placeholder]="'BURT06_STATUS_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -61,7 +61,7 @@
         [options]="docTypeSelectOptions()"
         [ngModel]="filterDocumentType()"
         (ngModelChange)="onFilterDocTypeChange($event, grid)"
-        placeholder="📋 ทุกประเภทเอกสาร"
+        [placeholder]="'BURT06_DOCTYPE_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -118,14 +118,14 @@
           <button
             (click)="openEditForm(r)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
-            title="แก้ไข"
+            [title]="'BURT06_EDIT_TITLE' | translate"
           >
             <i class="bi bi-pencil"></i>
           </button>
           <button
             (click)="deleteFlow(r, grid)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            title="ลบ"
+            [title]="'BURT06_DELETE_TITLE' | translate"
           >
             <i class="bi bi-trash"></i>
           </button>

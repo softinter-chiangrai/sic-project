@@ -19,6 +19,7 @@ import { PmMaRenewalModel } from './pmdt18A.model';
 import { Pmdt18AService } from './pmdt18A.service';
 import { Pmdt18AForm } from './pmdt18A.form';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 
 @Component({
@@ -34,11 +35,13 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
     SicInputComponent,
     SicInputAreaComponent,
     SicDatepickerComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt18A.component.html',
   styleUrls: ['./pmdt18A.component.css'],
 })
 export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
+  private translate = inject(TranslateService);
   private service = inject(Pmdt18AService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
@@ -51,11 +54,11 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
   isLocked = signal(false);
 
   statusOptions = [
-    { value: 'DRAFT', label: 'ฉบับร่าง' },
-    { value: 'PROPOSED', label: 'เสนอราคาแล้ว' },
-    { value: 'CONFIRMED', label: 'ตกลงต่อสัญญาแล้ว' },
-    { value: 'REJECTED', label: 'ปฏิเสธการต่อสัญญา' },
-    { value: 'EXPIRED', label: 'หมดอายุสัญญาแล้ว' },
+    { value: 'DRAFT', label: this.translate.instant('PMDT18_STATUS_DRAFT_LONG') },
+    { value: 'PROPOSED', label: this.translate.instant('PMDT18_STATUS_PROPOSED') },
+    { value: 'CONFIRMED', label: this.translate.instant('PMDT18_STATUS_CONFIRMED') },
+    { value: 'REJECTED', label: this.translate.instant('PMDT18_STATUS_REJECTED') },
+    { value: 'EXPIRED', label: this.translate.instant('PMDT18_STATUS_EXPIRED_ALREADY') },
   ];
 
   apiContractCombobox = `${apiBaseUrl}/api/pm/customer-contracts/combobox`;

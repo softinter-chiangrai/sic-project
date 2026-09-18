@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
 import { delay } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -60,6 +61,8 @@ class Pmdt11Form {
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
 export class Pmdt11Service {
+  private translate = inject(TranslateService);
+
   private mockTask: TaskScheduleModel = {
     id: '2',
     taskCode: 'TASK-002',
@@ -78,7 +81,7 @@ export class Pmdt11Service {
 
   updateSchedule(data: TaskScheduleModel): Observable<string> {
     console.log('📝 Updating task schedule:', data);
-    return of('อัปเดตกำหนดการสำเร็จ').pipe(delay(500));
+    return of(this.translate.instant('PMDT11_UPDATE_SERVICE_SUCCESS_MSG')).pipe(delay(500));
   }
 
   getTask(id: string): Observable<TaskScheduleModel> {
@@ -98,6 +101,7 @@ export class Pmdt11Service {
     SicButtonComponent,
     SicInputComponent,
     SicInputAreaComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt11.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -110,6 +114,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly translate = inject(TranslateService);
 
   formData!: SicFromData<TaskScheduleModel>;
   taskId: string | null = null;
@@ -155,7 +160,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
       error: (error) => {
         this.isLoading = false;
         console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลงานรหัสนี้');
+        this.dialog.error(this.translate.instant('PMDT11_LOAD_ERROR_TITLE'), this.translate.instant('PMDT11_LOAD_ERROR_MSG'));
         this.router.navigate(['/feature/pm/gantt']);
       },
     });
@@ -168,7 +173,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      this.dialog.warn(this.translate.instant('PMDT11_FORM_INVALID_TITLE'), this.translate.instant('PMDT11_FILL_FORM_MSG'));
       return;
     }
 
@@ -178,27 +183,27 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
     this.service.updateSchedule(data).subscribe({
       next: () => {
         this.isSaved = true;
-        this.dialog.success('บันทึกสำเร็จ', 'อัปเดตกำหนดการเรียบร้อย').then(() => {
+        this.dialog.success(this.translate.instant('PMDT11_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT11_UPDATE_SUCCESS_MSG')).then(() => {
           this.formData.markAsPristine();
           this.router.navigate(['/feature/pm/gantt']);
         });
       },
       error: (error) => {
-        this.dialog.error('บันทึกไม่สำเร็จ', error);
+        this.dialog.error(this.translate.instant('PMDT11_SAVE_ERROR_TITLE'), error);
       },
     });
   }
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      Todo: 'รอเริ่ม',
-      'In Progress': 'กำลังทำ',
-      'Waiting Review': 'รอ Review',
-      'Waiting Fix': 'รอแก้ไข',
-      Done: 'เสร็จ',
-      Delayed: 'ล่าช้า',
-      Blocked: 'ติดปัญหา',
-      Cancelled: 'ยกเลิก',
+      Todo: this.translate.instant('PMDT11_ST_TODO'),
+      'In Progress': this.translate.instant('PMDT11_ST_INPROGRESS'),
+      'Waiting Review': this.translate.instant('PMDT11_ST_WAITING_REVIEW'),
+      'Waiting Fix': this.translate.instant('PMDT11_ST_WAITING_FIX'),
+      Done: this.translate.instant('PMDT11_ST_DONE'),
+      Delayed: this.translate.instant('PMDT11_ST_DELAYED'),
+      Blocked: this.translate.instant('PMDT11_ST_BLOCKED'),
+      Cancelled: this.translate.instant('PMDT11_ST_CANCELLED'),
     };
     return map[status] || status;
   }

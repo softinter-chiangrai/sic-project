@@ -4,6 +4,7 @@ import { Component, computed, inject, OnInit, OnDestroy, signal, ChangeDetection
 import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
 import { Subscription, filter } from 'rxjs';
 import dayjs from '../../../../core/dayjs';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 
 import type { PhaseResponse, CalendarItemDetail } from './pmdt02.model';
@@ -54,6 +55,7 @@ export type { CalendarItemDetail };
     SicDatepickerComponent,
     SicKanbanComponent,
     SicStripHtmlPipe,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02.component.html',
@@ -73,6 +75,7 @@ export class Pmdt02Component implements OnInit {
   private taskService = inject(Pmdt02CService);
   private dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
+  private translate = inject(TranslateService);
   private routerSub?: Subscription;
 
   // ===== SIGNALS =====
@@ -233,9 +236,9 @@ export class Pmdt02Component implements OnInit {
           items.push({
             id: p.id,
             type: 'phase',
-            title: `Phase: ${p.phaseName}`,
-            subtitle: p.description || 'Phase หลัก',
-            description: `ระยะเวลา: ${this.formatDate(p.startDate)} - ${this.formatDate(p.endDate)}`,
+            title: this.translate.instant('PMDT02_PHASE_TITLE_PREFIX', { name: p.phaseName }),
+            subtitle: p.description || this.translate.instant('PMDT02_MAIN_PHASE_LABEL'),
+            description: this.translate.instant('PMDT02_DURATION_LABEL', { start: this.formatDate(p.startDate), end: this.formatDate(p.endDate) }),
             color: p.color || '#3b82f6',
             icon: '🚩',
             rawObject: p,
@@ -250,8 +253,8 @@ export class Pmdt02Component implements OnInit {
           items.push({
             id: ms.id,
             type: 'milestone',
-            title: `Milestone: ${ms.milestoneName}`,
-            subtitle: ms.description || 'วันกำหนด Milestone',
+            title: this.translate.instant('PMDT02_MS_TITLE_PREFIX', { name: ms.milestoneName }),
+            subtitle: ms.description || this.translate.instant('PMDT02_MS_DUE_LABEL'),
             color: ms.color || '#eab308',
             icon: '📌',
             rawObject: ms,
@@ -267,8 +270,8 @@ export class Pmdt02Component implements OnInit {
               items.push({
                 id: wp.id,
                 type: 'workpackage',
-                title: `Work Package: ${wp.packageName}`,
-                subtitle: wp.description || `Milestone: ${ms.milestoneName}`,
+                title: this.translate.instant('PMDT02_WP_TITLE_PREFIX', { name: wp.packageName }),
+                subtitle: wp.description || this.translate.instant('PMDT02_MS_TITLE_PREFIX', { name: ms.milestoneName }),
                 color: wp.color || '#a855f7',
                 icon: '📦',
                 rawObject: { ...wp, milestoneId: ms.id },
@@ -286,8 +289,8 @@ export class Pmdt02Component implements OnInit {
                   items.push({
                     id: task.id,
                     type: 'task',
-                    title: `Task: ${task.taskName}`,
-                    subtitle: `ผู้รับผิดชอบ: ${assignee} | สถานะ: ${this.getStatusText(task.status)}`,
+                    title: this.translate.instant('PMDT02_TASK_TITLE_PREFIX', { name: task.taskName }),
+                    subtitle: this.translate.instant('PMDT02_TASK_SUBTITLE', { assignee, status: this.getStatusText(task.status) }),
                     description: task.description,
                     color: task.color || visuals.color,
                     icon: visuals.icon,
@@ -309,7 +312,7 @@ export class Pmdt02Component implements OnInit {
           id: cItem.id,
           type: 'holiday',
           title: cItem.title,
-          subtitle: cItem.description || 'วันหยุด / Event ที่เพิ่มเอง',
+          subtitle: cItem.description || this.translate.instant('PMDT02_CUSTOM_HOLIDAY_LABEL'),
           color: cItem.color || '#8b5cf6',
           icon: cItem.icon || '📌',
           isCustom: true,
@@ -509,7 +512,7 @@ export class Pmdt02Component implements OnInit {
       },
       error: (err) => {
         console.error(err);
-        this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายละเอียด Phase ได้');
+        this.dialog.error(this.translate.instant('PMDT02_LOAD_FAIL_TITLE'), this.translate.instant('PMDT02_LOAD_DETAIL_FAIL_MSG'));
         this.router.navigate(['/feature/pm/phase'], {
           queryParams: { projectId: this.projectId() },
         });
@@ -640,7 +643,7 @@ export class Pmdt02Component implements OnInit {
 
   deleteMilestone(ms: MilestoneResponse, event: Event) {
     event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', `ลบ Milestone "${ms.milestoneName}"?`).then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT02_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT02_CONFIRM_DELETE_MS_MSG', { name: ms.milestoneName })).then((confirmed) => {
       if (confirmed) {
         this.milestoneService.deleteMilestone(ms.id).subscribe({
           next: () => {
@@ -650,7 +653,7 @@ export class Pmdt02Component implements OnInit {
               this.phase.set({ ...current });
             }
           },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+          error: (err) => this.dialog.error(this.translate.instant('PMDT02_DELETE_FAIL_TITLE'), err.message),
         });
       }
     });
@@ -669,7 +672,7 @@ export class Pmdt02Component implements OnInit {
   openCreateWorkPackageForPhase() {
     const p = this.phase();
     if (!p || !p.milestones || p.milestones.length === 0) {
-      this.dialog.error('ไม่มี Milestone', 'กรุณาสร้าง Milestone ก่อน');
+      this.dialog.error(this.translate.instant('PMDT02_NO_MS_TITLE'), this.translate.instant('PMDT02_CREATE_MS_FIRST_MSG'));
       return;
     }
     this.openCreateWorkPackage(p.milestones[0].id);
@@ -688,7 +691,7 @@ export class Pmdt02Component implements OnInit {
 
   deleteWorkPackage(wp: WorkPackageResponse, event: Event) {
     event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', `ลบ Work Package "${wp.packageName}"?`).then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT02_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT02_CONFIRM_DELETE_WP_MSG', { name: wp.packageName })).then((confirmed) => {
       if (confirmed) {
         this.wpService.deleteWorkPackage(wp.id).subscribe({
           next: () => {
@@ -701,7 +704,7 @@ export class Pmdt02Component implements OnInit {
               this.phase.set({ ...current });
             }
           },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+          error: (err) => this.dialog.error(this.translate.instant('PMDT02_DELETE_FAIL_TITLE'), err.message),
         });
       }
     });
@@ -730,7 +733,7 @@ export class Pmdt02Component implements OnInit {
 
   deleteTask(task: TaskResponse, event: Event) {
     event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', `ลบ Task "${task.taskName}"?`).then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT02_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT02_CONFIRM_DELETE_TASK_MSG', { name: task.taskName })).then((confirmed) => {
       if (confirmed) {
         this.taskService.deleteTask(task.id).subscribe({
           next: () => {
@@ -747,7 +750,7 @@ export class Pmdt02Component implements OnInit {
               this.phase.set({ ...current });
             }
           },
-          error: (err) => this.dialog.error('ลบไม่สำเร็จ', err.message),
+          error: (err) => this.dialog.error(this.translate.instant('PMDT02_DELETE_FAIL_TITLE'), err.message),
         });
       }
     });
@@ -783,7 +786,7 @@ export class Pmdt02Component implements OnInit {
         this.reloadCurrentPhase();
       },
       error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        this.dialog.error(this.translate.instant('PMDT02_UPDATE_STATUS_FAIL_TITLE'), err.message);
         this.reloadCurrentPhase();
       },
     });
@@ -851,7 +854,7 @@ export class Pmdt02Component implements OnInit {
     const wps = this.allWorkPackages();
     const wpId = event.workPackageId || (wps.length > 0 ? wps[0].id : undefined);
     if (!wpId) {
-      this.dialog.error('ไม่พบ Work Package', 'กรุณาสร้าง Work Package ก่อนเพิ่ม Task');
+      this.dialog.error(this.translate.instant('PMDT02_NO_WP_FOUND_TITLE'), this.translate.instant('PMDT02_CREATE_WP_BEFORE_TASK_MSG'));
       return;
     }
     this.router.navigate(['/feature/pm/task/new'], {
@@ -893,7 +896,7 @@ export class Pmdt02Component implements OnInit {
         }
       },
       error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        this.dialog.error(this.translate.instant('PMDT02_UPDATE_STATUS_FAIL_TITLE'), err.message);
         const currentPhaseId = this.currentPhaseId();
         if (currentPhaseId) {
           this.loadMilestones(currentPhaseId);
@@ -920,7 +923,7 @@ export class Pmdt02Component implements OnInit {
     const msList = this.phase()?.milestones || [];
     const msId = event.milestoneId || (msList.length > 0 ? msList[0].id : undefined);
     if (!msId) {
-      this.dialog.error('ไม่พบ Milestone', 'กรุณาสร้าง Milestone ก่อนเพิ่ม Work Package');
+      this.dialog.error(this.translate.instant('PMDT02_NO_MS_FOUND_TITLE'), this.translate.instant('PMDT02_CREATE_MS_BEFORE_WP_MSG'));
       return;
     }
     this.router.navigate(['/feature/pm/work-package/new'], {
@@ -959,7 +962,7 @@ export class Pmdt02Component implements OnInit {
         }
       },
       error: (err) => {
-        this.dialog.error('อัปเดตสถานะไม่สำเร็จ', err.message);
+        this.dialog.error(this.translate.instant('PMDT02_UPDATE_STATUS_FAIL_TITLE'), err.message);
         const currentPhaseId = this.currentPhaseId();
         if (currentPhaseId) {
           this.loadMilestones(currentPhaseId);
@@ -1196,7 +1199,7 @@ export class Pmdt02Component implements OnInit {
 
   deleteCustomItem(itemId: string, event?: Event): void {
     if (event) event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบข้อมูลนี้หรือไม่?').then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT02_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT02_CONFIRM_DELETE_GENERIC_MSG')).then((confirmed) => {
       if (confirmed) {
         const currentItems = this.getRawCustomItems();
         const updated = currentItems.filter((i) => i.id !== itemId);
@@ -1220,7 +1223,7 @@ export class Pmdt02Component implements OnInit {
   openCreateWorkPackageForDate(dateStr?: string | null): void {
     const p = this.phase();
     if (!p || !p.milestones || p.milestones.length === 0) {
-      this.dialog.error('ไม่มี Milestone', 'กรุณาสร้าง Milestone ก่อน');
+      this.dialog.error(this.translate.instant('PMDT02_NO_MS_TITLE'), this.translate.instant('PMDT02_CREATE_MS_FIRST_MSG'));
       return;
     }
     this.router.navigate(['/feature/pm/work-package/new'], {
@@ -1244,7 +1247,7 @@ export class Pmdt02Component implements OnInit {
       }
     }
     if (!wpId) {
-      this.dialog.error('ไม่มี Work Package', 'กรุณาสร้าง Work Package ก่อน');
+      this.dialog.error(this.translate.instant('PMDT02_NO_WP_TITLE'), this.translate.instant('PMDT02_CREATE_WP_FIRST_MSG'));
       return;
     }
     this.router.navigate(['/feature/pm/task/new'], {
@@ -1352,17 +1355,17 @@ export class Pmdt02Component implements OnInit {
   getStatusText(status?: string): string {
     if (!status) return '-';
     const s = status.trim().toLowerCase();
-    if (['approved', 'อนุมัติแล้ว'].includes(s)) return 'อนุมัติแล้ว';
-    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return 'เปลี่ยนแปลง';
-    if (['not started', 'not_started'].includes(s)) return 'ยังไม่เริ่ม';
-    if (['in progress', 'in_progress', 'doing'].includes(s)) return 'กำลังดำเนินการ';
-    if (['done', 'complete', 'completed'].includes(s)) return 'เสร็จสิ้น';
-    if (['delayed'].includes(s)) return 'ล่าช้า';
-    if (['todo'].includes(s)) return 'รอเริ่ม';
-    if (['waiting review', 'waiting_review', 'review', 'in review'].includes(s)) return 'อยู่ระหว่างตรวจสอบ';
-    if (['waiting fix', 'waiting_fix'].includes(s)) return 'รอแก้ไข';
-    if (['blocked'].includes(s)) return 'ติดปัญหา';
-    if (['cancelled'].includes(s)) return 'ยกเลิก';
+    if (['approved', 'อนุมัติแล้ว'].includes(s)) return this.translate.instant('PMDT02_STATUS_APPROVED');
+    if (['changed', 'เปลี่ยนแปลง'].includes(s)) return this.translate.instant('PMDT02_STATUS_CHANGED');
+    if (['not started', 'not_started'].includes(s)) return this.translate.instant('PMDT02_STATUS_NOT_STARTED');
+    if (['in progress', 'in_progress', 'doing'].includes(s)) return this.translate.instant('PMDT02_STATUS_IN_PROGRESS');
+    if (['done', 'complete', 'completed'].includes(s)) return this.translate.instant('PMDT02_STATUS_DONE');
+    if (['delayed'].includes(s)) return this.translate.instant('PMDT02_STATUS_DELAYED');
+    if (['todo'].includes(s)) return this.translate.instant('PMDT02_STATUS_TODO');
+    if (['waiting review', 'waiting_review', 'review', 'in review'].includes(s)) return this.translate.instant('PMDT02_STATUS_REVIEWING');
+    if (['waiting fix', 'waiting_fix'].includes(s)) return this.translate.instant('PMDT02_STATUS_WAITING_FIX');
+    if (['blocked'].includes(s)) return this.translate.instant('PMDT02_STATUS_BLOCKED');
+    if (['cancelled'].includes(s)) return this.translate.instant('PMDT02_STATUS_CANCELLED');
     return status;
   }
 
@@ -1399,7 +1402,7 @@ export class Pmdt02Component implements OnInit {
   getAssigneesTooltip(assignees?: any[]): string {
     if (!assignees || assignees.length === 0) return '';
     const names = assignees.map((p) => this.getAssigneeName(p)).filter(Boolean);
-    return names.length > 0 ? ` | ผู้รับผิดชอบ: ${names.join(', ')}` : '';
+    return names.length > 0 ? this.translate.instant('PMDT02_ASSIGNEE_TOOLTIP', { names: names.join(', ') }) : '';
   }
 
   formatDate(dateStr: string): string {

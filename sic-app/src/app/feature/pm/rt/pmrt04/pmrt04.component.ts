@@ -29,11 +29,12 @@ import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, SicDrawerComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, SicDrawerComponent, TranslateModule],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -48,6 +49,7 @@ export class Pmrt04Component implements OnInit {
   private navigation = inject(NavigationService);
   private customerState = inject(CustomerStateService);
   private recentItems = inject(RecentItemsService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -86,12 +88,12 @@ export class Pmrt04Component implements OnInit {
   // ===== Column Visibility =====
   private readonly COLUMN_STORAGE_KEY = 'pmrt04.visibleColumns';
   protected readonly allColumns: { key: string; label: string }[] = [
-    { key: 'contractType', label: 'ประเภท' },
-    { key: 'customerName', label: 'ลูกค้า' },
-    { key: 'projectName', label: 'โครงการ' },
-    { key: 'contractValue', label: 'มูลค่า' },
-    { key: 'duration', label: 'ระยะเวลา' },
-    { key: 'approvalStatus', label: 'อนุมัติ' },
+    { key: 'contractType', label: this.translate.instant('PMRT04_COL_TYPE') },
+    { key: 'customerName', label: this.translate.instant('PMRT04_COL_CUSTOMER') },
+    { key: 'projectName', label: this.translate.instant('PMRT04_COL_PROJECT') },
+    { key: 'contractValue', label: this.translate.instant('PMRT04_COL_VALUE') },
+    { key: 'duration', label: this.translate.instant('PMRT04_COL_DURATION') },
+    { key: 'approvalStatus', label: this.translate.instant('PMRT04_COL_APPROVAL') },
   ];
   protected visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   protected showColumnMenu = signal(false);
@@ -107,24 +109,24 @@ export class Pmrt04Component implements OnInit {
       defaultSortField: 'contractNo',
       pageSize: this.pageSize(),
       column: [
-        { label: 'เลขสัญญา', name: 'contractNo', type: 'code', sortable: true, minWidth: 120 },
-        { label: 'ประเภท', name: 'contractType', type: 'text', hidden: !visible.has('contractType'), sortable: true, minWidth: 140 },
-        { label: 'ลูกค้า', name: 'customerName', type: 'text', hidden: !visible.has('customerName'), sortable: true, minWidth: 150 },
-        { label: 'โครงการ', name: 'projectName', type: 'projectLink', hidden: !visible.has('projectName'), sortable: true, minWidth: 130 },
-        { label: 'มูลค่า', name: 'contractValue', type: 'currencyText', hidden: !visible.has('contractValue'), sortable: true, minWidth: 120 },
-        { label: 'ระยะเวลา', name: 'startDate', type: 'dateRangeText', hidden: !visible.has('duration'), minWidth: 140 },
-        { label: 'สถานะ', name: 'signStatus', type: 'statusBadge', sortable: true, minWidth: 100 },
-        { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), minWidth: 100 },
-        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 180 },
+        { label: this.translate.instant('PMRT04_COL_CONTRACT_NO'), name: 'contractNo', type: 'code', sortable: true, minWidth: 120 },
+        { label: this.translate.instant('PMRT04_COL_TYPE'), name: 'contractType', type: 'text', hidden: !visible.has('contractType'), sortable: true, minWidth: 140 },
+        { label: this.translate.instant('PMRT04_COL_CUSTOMER'), name: 'customerName', type: 'text', hidden: !visible.has('customerName'), sortable: true, minWidth: 150 },
+        { label: this.translate.instant('PMRT04_COL_PROJECT'), name: 'projectName', type: 'projectLink', hidden: !visible.has('projectName'), sortable: true, minWidth: 130 },
+        { label: this.translate.instant('PMRT04_COL_VALUE'), name: 'contractValue', type: 'currencyText', hidden: !visible.has('contractValue'), sortable: true, minWidth: 120 },
+        { label: this.translate.instant('PMRT04_COL_DURATION'), name: 'startDate', type: 'dateRangeText', hidden: !visible.has('duration'), minWidth: 140 },
+        { label: this.translate.instant('PMRT04_COL_STATUS'), name: 'signStatus', type: 'statusBadge', sortable: true, minWidth: 100 },
+        { label: this.translate.instant('PMRT04_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), minWidth: 100 },
+        { label: this.translate.instant('PMRT04_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 180 },
       ],
     };
   });
 
   readonly statusSelectOptions = [
-    { value: 'Draft', text: 'ฉบับร่าง' },
-    { value: 'Sent', text: 'ส่งแล้ว' },
-    { value: 'Signed', text: 'ลงนามแล้ว' },
-    { value: 'Expired', text: 'หมดอายุ' },
+    { value: 'Draft', text: this.translate.instant('PMRT04_STATUS_OPT_DRAFT') },
+    { value: 'Sent', text: this.translate.instant('PMRT04_STATUS_SENT') },
+    { value: 'Signed', text: this.translate.instant('PMRT04_STATUS_SIGNED') },
+    { value: 'Expired', text: this.translate.instant('PMRT04_STATUS_EXPIRED') },
   ];
 
   typeSelectOptions = computed(() => {
@@ -327,10 +329,10 @@ export class Pmrt04Component implements OnInit {
         },
         error: (error) => {
           console.error('Load contracts error:', error);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่สามารถโหลดรายการสัญญาได้');
+          this.dialog.error(this.translate.instant('PMRT04_LOAD_ERROR_TITLE'), this.translate.instant('PMRT04_LOAD_ERROR_MSG'));
           this.contracts.set([]);
           this.totalItems.set(0);
-          grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+          grid.setLoadError(this.translate.instant('PMRT04_LOAD_ERROR_TITLE'), request.requestId);
         },
       });
   }
@@ -414,7 +416,7 @@ export class Pmrt04Component implements OnInit {
           URL.revokeObjectURL(pdfUrl);
         },
         error: () => {
-          this.dialog.error('ส่งออกไม่สำเร็จ', `ไม่สามารถส่งออกเอกสารสัญญารหัส ${id} ได้`);
+          this.dialog.error(this.translate.instant('PMRT04_EXPORT_ERROR_TITLE'), this.translate.instant('PMRT04_EXPORT_ERROR_MSG', { id }));
         },
         complete: () => {
           remaining -= 1;
@@ -473,12 +475,21 @@ export class Pmrt04Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => this.downloadCsv(res.data || []),
-        error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการสัญญาได้'),
+        error: () => this.dialog.error(this.translate.instant('PMRT04_EXPORT_ERROR_TITLE'), this.translate.instant('PMRT04_EXPORT_LIST_ERROR_MSG')),
       });
   }
 
   private downloadCsv(items: Contract[]): void {
-    const headers = ['เลขสัญญา', 'ประเภท', 'ลูกค้า', 'โครงการ', 'มูลค่า', 'วันที่เริ่ม', 'วันที่สิ้นสุด', 'สถานะ'];
+    const headers = [
+      this.translate.instant('PMRT04_COL_CONTRACT_NO'),
+      this.translate.instant('PMRT04_COL_TYPE'),
+      this.translate.instant('PMRT04_COL_CUSTOMER'),
+      this.translate.instant('PMRT04_COL_PROJECT'),
+      this.translate.instant('PMRT04_COL_VALUE'),
+      this.translate.instant('PMRT04_COL_START_DATE'),
+      this.translate.instant('PMRT04_COL_END_DATE'),
+      this.translate.instant('PMRT04_COL_STATUS'),
+    ];
     const rows = items.map((c) => [
       c.contractNo,
       c.contractType,
@@ -538,7 +549,7 @@ export class Pmrt04Component implements OnInit {
 
   printContract(contract: Contract) {
     if (!contract.id) {
-      this.dialog.warn('ไม่พบรหัสสัญญา', 'ไม่สามารถส่งออกเอกสารได้');
+      this.dialog.warn(this.translate.instant('PMRT04_NO_ID_TITLE'), this.translate.instant('PMRT04_NO_EXPORT_MSG'));
       return;
     }
 
@@ -562,8 +573,8 @@ export class Pmrt04Component implements OnInit {
         error: (error) => {
           console.error('Export contract PDF error:', error);
           this.dialog.error(
-            'ส่งออกเอกสารไม่สำเร็จ',
-            error.error?.message || 'เกิดข้อผิดพลาดในการสร้างเอกสาร PDF'
+            this.translate.instant('PMRT04_EXPORT_PDF_ERROR_TITLE'),
+            error.error?.message || this.translate.instant('PMRT04_EXPORT_PDF_ERROR_MSG')
           );
         },
       });
@@ -598,13 +609,13 @@ export class Pmrt04Component implements OnInit {
   // ✅ เพิ่ม method ลบสัญญา (อ้างอิงจาก pmrt01)
   deleteContract(contract: Contract, grid: SicGridPanelComponent) {
     if (!contract.id) {
-      this.dialog.warn('ไม่พบรหัสสัญญา', 'ไม่สามารถลบข้อมูลได้');
+      this.dialog.warn(this.translate.instant('PMRT04_NO_ID_TITLE'), this.translate.instant('PMRT04_NO_DELETE_MSG'));
       return;
     }
 
     this.dialog.confirm(
-    'ยืนยันการลบสัญญา',
-    `คุณต้องการลบสัญญา ${contract.contractNo} (${contract.contractType}) ของ ${contract.customerName} ใช่หรือไม่?\n⚠️ การดำเนินการนี้ไม่สามารถกู้คืนได้`
+    this.translate.instant('PMRT04_CONFIRM_DELETE_TITLE'),
+    this.translate.instant('PMRT04_CONFIRM_DELETE_MSG', { contractNo: contract.contractNo, contractType: contract.contractType, customerName: contract.customerName })
     )
       .then((confirmed) => {
         if (confirmed) {
@@ -614,14 +625,14 @@ export class Pmrt04Component implements OnInit {
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({
               next: () => {
-                this.dialog.success('ลบสำเร็จ', `สัญญา ${contract.contractNo} ถูกลบเรียบร้อย`);
+                this.dialog.success(this.translate.instant('PMRT04_DELETE_SUCCESS_TITLE'), this.translate.instant('PMRT04_DELETE_SUCCESS_MSG', { contractNo: contract.contractNo }));
                 grid.reload();
               },
               error: (error) => {
                 console.error('Delete contract error:', error);
                 this.dialog.error(
-                  'ลบไม่สำเร็จ',
-                  error.error?.message || 'เกิดข้อผิดพลาดในการลบข้อมูล'
+                  this.translate.instant('PMRT04_DELETE_ERROR_TITLE'),
+                  error.error?.message || this.translate.instant('PMRT04_DELETE_ERROR_MSG')
                 );
               },
             });
@@ -643,11 +654,11 @@ export class Pmrt04Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      Draft: 'ร่าง',
-      Sent: 'ส่งแล้ว',
-      Signed: 'ลงนามแล้ว',
-      Changed: 'แก้ไขหลังลงนาม',
-      Expired: 'หมดอายุ',
+      Draft: this.translate.instant('PMRT04_STATUS_DRAFT'),
+      Sent: this.translate.instant('PMRT04_STATUS_SENT'),
+      Signed: this.translate.instant('PMRT04_STATUS_SIGNED'),
+      Changed: this.translate.instant('PMRT04_STATUS_CHANGED'),
+      Expired: this.translate.instant('PMRT04_STATUS_EXPIRED'),
     };
     return map[status] || status;
   }
@@ -688,11 +699,11 @@ export class Pmrt04Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      PENDING: this.translate.instant('PMRT04_APPROVAL_PENDING'),
+      APPROVED: this.translate.instant('PMRT04_APPROVAL_APPROVED'),
+      REJECTED: this.translate.instant('PMRT04_APPROVAL_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMRT04_APPROVAL_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMRT04_APPROVAL_CANCELLED'),
     };
     return status ? map[status] || '-' : '-';
   }

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, inject, signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DialogService } from '../../services/dialog.service';
@@ -25,24 +26,24 @@ interface DisplayLink {
 @Component({
   selector: 'sic-trace-link-panel',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent],
+  imports: [CommonModule, RouterModule, SicButtonComponent, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="rounded-xl border p-4" style="border-color: var(--border);">
       <div class="flex items-center justify-between mb-3">
         <span class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
-          ความสัมพันธ์ที่เชื่อมโยง
+          {{ 'TRACE_LINK_PANEL_TITLE' | translate }}
         </span>
         <sic-button variant="outline" color="primary" size="sm" type="button" (click)="openPicker()" [disabled]="!entityId || !projectId">
-          <i class="bi bi-plus-lg"></i> เพิ่มความสัมพันธ์
+          <i class="bi bi-plus-lg"></i> {{ 'TRACE_LINK_PANEL_ADD_BUTTON' | translate }}
         </sic-button>
       </div>
 
       @if (loading()) {
-        <p class="text-xs text-[var(--text-muted)]">กำลังโหลด...</p>
+        <p class="text-xs text-[var(--text-muted)]">{{ 'TRACE_LINK_PANEL_LOADING' | translate }}</p>
       } @else if (links().length === 0) {
-        <p class="text-xs text-[var(--text-muted)]">ยังไม่มีความสัมพันธ์ที่เชื่อมโยง</p>
+        <p class="text-xs text-[var(--text-muted)]">{{ 'TRACE_LINK_PANEL_EMPTY' | translate }}</p>
       } @else {
         <ul class="space-y-1.5">
           @for (link of links(); track link.linkId) {
@@ -51,7 +52,7 @@ interface DisplayLink {
                 <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] shrink-0">{{ link.otherType }}</span>
                 <span class="truncate">{{ link.relationshipLabel }} {{ link.name }}</span>
               </a>
-              <button (click)="removeLink(link)" class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] shrink-0" title="ลบความสัมพันธ์">
+              <button (click)="removeLink(link)" class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] shrink-0" [title]="'TRACE_LINK_PANEL_REMOVE_TITLE' | translate">
                 <i class="bi bi-x-lg"></i>
               </button>
             </li>
@@ -69,6 +70,7 @@ export class SicTraceLinkPanelComponent implements OnChanges {
   private http = inject(HttpClient);
   private dialogService = inject(DialogService);
   private traceLinkService = inject(TraceLinkService);
+  private translate = inject(TranslateService);
 
   links = signal<DisplayLink[]>([]);
   loading = signal(false);
@@ -137,11 +139,11 @@ export class SicTraceLinkPanelComponent implements OnChanges {
   }
 
   removeLink(link: DisplayLink): void {
-    this.dialogService.confirm('ลบความสัมพันธ์', 'ต้องการลบความสัมพันธ์นี้หรือไม่?').then((ok) => {
+    this.dialogService.confirm(this.translate.instant('TRACE_LINK_PANEL_CONFIRM_REMOVE_TITLE'), this.translate.instant('TRACE_LINK_PANEL_CONFIRM_REMOVE_MSG')).then((ok) => {
       if (!ok) return;
       this.traceLinkService.deleteLink(link.linkId).subscribe({
         next: () => this.load(),
-        error: () => this.dialogService.error('ลบไม่สำเร็จ', 'เกิดข้อผิดพลาด กรุณาลองใหม่'),
+        error: () => this.dialogService.error(this.translate.instant('TRACE_LINK_PANEL_REMOVE_ERROR_TITLE'), this.translate.instant('TRACE_LINK_PANEL_GENERIC_ERROR_MSG')),
       });
     });
   }

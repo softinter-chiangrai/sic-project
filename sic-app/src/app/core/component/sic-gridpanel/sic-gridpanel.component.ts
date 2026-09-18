@@ -37,6 +37,7 @@ import { SicInputUploadComponent } from '../sic-input-upload/sic-input-upload.co
 import { SicUploadCategory } from '../sic-upload/sic-upload.component';
 import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
 import { DialogService } from '../../services/dialog.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 const SIC_GRID_INPUT_IMPORTS = [
   SicInputComponent,
@@ -51,7 +52,7 @@ const SIC_GRID_INPUT_IMPORTS = [
   SicInputUploadComponent,
 ];
 
-const SIC_GRID_TEMPLATE_IMPORTS = [TooltipDirective];
+const SIC_GRID_TEMPLATE_IMPORTS = [TooltipDirective, TranslateModule];
 
 export type SicGridPanelTemplateSection = 'cell' | 'header' | 'footer';
 
@@ -239,6 +240,7 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly datePipe = inject(DatePipe);
   private readonly dialogService = inject(DialogService);
+  private readonly translate = inject(TranslateService);
   private templatesReady = false;
   private rowKeySequence = 0;
   private pageBeforeReviewChanges = 1;
@@ -452,7 +454,7 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
     this.validationRequested = true;
     this.touchVisibleControls();
     if (this.hasVisibleInvalidControls()) {
-      void this.dialogService.warn('Validation Error', 'Please check and correct invalid fields before saving.');
+      void this.dialogService.warn(this.translate.instant('GRIDPANEL_VALIDATION_ERROR_TITLE'), this.translate.instant('GRIDPANEL_VALIDATION_ERROR_MSG'));
       this.cdr.markForCheck();
       return;
     }
@@ -490,12 +492,12 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
       this.validationRequested = false;
       this.resetTrackedStateAfterSave(reloadPage);
       this.rowAction.emit({ action: 'save', row: null, rows: trackedRows, column: null });
-      void this.dialogService.success('Save Complete', 'Grid data was saved successfully.');
+      void this.dialogService.success(this.translate.instant('GRIDPANEL_SAVE_COMPLETE_TITLE'), this.translate.instant('GRIDPANEL_SAVE_COMPLETE_MSG'));
       this.loadRows(false);
     } catch (error: any) {
-      const message = error?.error?.message || error?.message || 'Unable to save grid data.';
+      const message = error?.error?.message || error?.message || this.translate.instant('GRIDPANEL_SAVE_FAILED_DEFAULT_MSG');
       this.errorMessage = null;
-      void this.dialogService.error('Grid Error', message);
+      void this.dialogService.error(this.translate.instant('GRIDPANEL_GRID_ERROR_TITLE'), message);
       this.rowAction.emit({ action: 'save-error', row: null, rows: trackedRows, column: null });
       this.cdr.markForCheck();
     } finally {
@@ -685,9 +687,9 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
     // Default actions if type === 'actions' and no custom actions specified
     if (column.type === 'actions') {
       return [
-        { type: 'view', tooltip: 'ดูข้อมูล', variant: 'ghost' },
-        { type: 'edit', tooltip: 'แก้ไข', variant: 'ghost' },
-        { type: 'delete', tooltip: 'ลบ', variant: 'danger' },
+        { type: 'view', tooltip: this.translate.instant('GRIDPANEL_ACTION_VIEW_TOOLTIP'), variant: 'ghost' },
+        { type: 'edit', tooltip: this.translate.instant('GRIDPANEL_ACTION_EDIT_TOOLTIP'), variant: 'ghost' },
+        { type: 'delete', tooltip: this.translate.instant('GRIDPANEL_ACTION_DELETE_TOOLTIP'), variant: 'danger' },
       ];
     }
 
@@ -720,10 +722,10 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
       return action.tooltip;
     }
     switch (action.type) {
-      case 'view': return 'ดูข้อมูล';
-      case 'edit': return 'แก้ไข';
-      case 'print': return 'พิมพ์';
-      case 'delete': return 'ลบ';
+      case 'view': return this.translate.instant('GRIDPANEL_ACTION_VIEW_TOOLTIP');
+      case 'edit': return this.translate.instant('GRIDPANEL_ACTION_EDIT_TOOLTIP');
+      case 'print': return this.translate.instant('GRIDPANEL_ACTION_PRINT_TOOLTIP');
+      case 'delete': return this.translate.instant('GRIDPANEL_ACTION_DELETE_TOOLTIP');
       default: return action.label || '';
     }
   }
@@ -794,9 +796,9 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
       case 'number':
         return typeof value === 'number' ? new Intl.NumberFormat().format(value) : `${value}`;
       case 'checkbox':
-        return value ? 'Yes' : 'No';
+        return value ? this.translate.instant('GRIDPANEL_YES_TEXT') : this.translate.instant('GRIDPANEL_NO_TEXT');
       case 'upload':
-        return Array.isArray(value) && value.length > 0 ? `${value.length} file(s)` : '-';
+        return Array.isArray(value) && value.length > 0 ? this.translate.instant('GRIDPANEL_FILES_COUNT_TEXT', { count: value.length }) : '-';
       case 'combobox':
       case 'radio':
         return this.resolveOptionLabel(column, value);
@@ -1025,10 +1027,10 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
         this.cdr.markForCheck();
       },
       error: (error) => {
-        const message = error?.error?.message || error?.message || 'Unable to load grid data.';
+        const message = error?.error?.message || error?.message || this.translate.instant('GRIDPANEL_LOAD_FAILED_DEFAULT_MSG');
         this.errorMessage = null;
         this.loading = false;
-        void this.dialogService.error('Grid Error', message);
+        void this.dialogService.error(this.translate.instant('GRIDPANEL_GRID_ERROR_TITLE'), message);
         this.cdr.markForCheck();
       },
     });

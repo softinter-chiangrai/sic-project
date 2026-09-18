@@ -1,4 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import {
   ChangeDetectorRef,
   Component,
@@ -52,7 +53,7 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
 @Component({
   selector: 'sic-input-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-input-upload.component.html',
   styleUrl: './sic-input-upload.component.css',
   host: {

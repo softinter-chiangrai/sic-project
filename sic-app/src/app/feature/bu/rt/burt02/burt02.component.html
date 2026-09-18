@@ -6,12 +6,12 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-shield-lock-fill text-[var(--crm-primary)]"></i>
-        สิทธิ์ของบทบาท
+        {{ 'BURT02_TITLE' | translate }}
       </h1>
       <span
         class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
       >
-        {{ totalItems() }} บทบาท
+        {{ totalItems() }} {{ 'BURT02_ROLES_UNIT' | translate }}
       </span>
     </div>
   </div>
@@ -25,7 +25,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาชื่อบทบาท, รหัส..."
+        [placeholder]="'BURT02_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -45,7 +45,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event)"
-        placeholder="สถานะทั้งหมด"
+        [placeholder]="'BURT02_STATUS_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -56,7 +56,7 @@
         [options]="userCountSelectOptions"
         [ngModel]="filterUserCount()"
         (ngModelChange)="onFilterUserCountChange($event)"
-        placeholder="ผู้ใช้ทั้งหมด"
+        [placeholder]="'BURT02_USER_ALL_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -68,7 +68,7 @@
       <div
         class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'BURT02_LOADING_TEXT' | translate }}</p>
     </div>
   }
 
@@ -85,7 +85,7 @@
               (click)="onSortChange('roleCode')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[100px]"
             >
-              รหัส
+              {{ 'BURT02_CODE_COL' | translate }}
               @if (sortBy() === 'roleCode') {
                 <i
                   class="bi text-xs ml-1 text-[var(--crm-primary)]"
@@ -98,7 +98,7 @@
               (click)="onSortChange('roleName')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[150px]"
             >
-              ชื่อบทบาท
+              {{ 'BURT02_ROLE_NAME_COL' | translate }}
               @if (sortBy() === 'roleName') {
                 <i
                   class="bi text-xs ml-1 text-[var(--crm-primary)]"
@@ -111,7 +111,7 @@
               (click)="onSortChange('userCount')"
               class="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider cursor-pointer hover:text-[var(--text-active)] transition-colors whitespace-nowrap min-w-[80px]"
             >
-              ผู้ใช้
+              {{ 'BURT02_USER_COL' | translate }}
               @if (sortBy() === 'userCount') {
                 <i
                   class="bi text-xs ml-1 text-[var(--crm-primary)]"
@@ -123,7 +123,7 @@
             <th
               class="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap min-w-[160px]"
             >
-              จัดการ
+              {{ 'BURT02_ACTION_COL' | translate }}
             </th>
           </tr>
         </thead>
@@ -154,7 +154,7 @@
               </td>
               <td class="px-4 py-3">
                 <span class="text-[var(--text-active)] font-medium">{{ role.userCount }}</span>
-                <span class="text-xs text-[var(--text-muted)]"> คน</span>
+                <span class="text-xs text-[var(--text-muted)]"> {{ 'BURT02_PERSON_UNIT' | translate }}</span>
               </td>
               <td class="px-4 py-3 text-center">
                 <button
@@ -162,7 +162,7 @@
                   class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm bg-[var(--crm-primary)] text-white hover:bg-[var(--crm-primary)]/80 transition-all"
                 >
                   <i class="bi bi-pencil"></i>
-                  จัดการสิทธิ์
+                  {{ 'BURT02_MANAGE_PERM_BTN' | translate }}
                 </button>
               </td>
             </tr>
@@ -176,14 +176,14 @@
                       <div
                         class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider"
                       >
-                        📋 ระดับสิทธิ์ของแต่ละโปรแกรม
+                        {{ 'BURT02_PERM_LEVEL_TITLE' | translate }}
                         <span class="ml-2 text-[var(--text-muted)] font-normal">
-                          ({{ role.permissions.length }} โปรแกรม)
+                          ({{ role.permissions.length }} {{ 'BURT02_PROGRAM_UNIT' | translate }})
                         </span>
                       </div>
                       <span class="text-xs text-[var(--text-muted)]">
-                        <span class="text-emerald-500">✅</span> เปิดใช้งาน
-                        <span class="ml-2 text-gray-300">⛔</span> ปิดใช้งาน
+                        <span class="text-emerald-500">✅</span> {{ 'BURT02_ACTIVE_LABEL' | translate }}
+                        <span class="ml-2 text-gray-300">⛔</span> {{ 'BURT02_INACTIVE_LABEL' | translate }}
                       </span>
                     </div>
 
@@ -208,7 +208,7 @@
                         </div>
                       } @empty {
                         <div class="col-span-full text-center text-[var(--text-muted)] py-4">
-                          ไม่มีข้อมูลสิทธิ์โปรแกรม
+                          {{ 'BURT02_NO_PERM_DATA' | translate }}
                         </div>
                       }
                     </div>
@@ -218,21 +218,21 @@
                       class="mt-3 flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]"
                     >
                       <span
-                        >🟢 เปิดใช้งาน:
+                        >🟢 {{ 'BURT02_ACTIVE_LABEL' | translate }}:
                         <strong class="text-emerald-500">{{
                           countActivePrograms(role.permissions)
                         }}</strong>
-                        โปรแกรม</span
+                        {{ 'BURT02_PROGRAM_UNIT' | translate }}</span
                       >
                       <span
-                        >🔴 ปิดใช้งาน:
+                        >🔴 {{ 'BURT02_INACTIVE_LABEL' | translate }}:
                         <strong class="text-gray-400">{{
                           role.permissions.length - countActivePrograms(role.permissions)
                         }}</strong>
-                        โปรแกรม</span
+                        {{ 'BURT02_PROGRAM_UNIT' | translate }}</span
                       >
                       <span
-                        >📊 รวม: <strong>{{ role.permissions.length }}</strong> โปรแกรม</span
+                        >📊 {{ 'BURT02_TOTAL_LABEL' | translate }}: <strong>{{ role.permissions.length }}</strong> {{ 'BURT02_PROGRAM_UNIT' | translate }}</span
                       >
                     </div>
                   </div>
@@ -244,8 +244,8 @@
               <td colspan="5" class="px-4 py-12 text-center">
                 <div class="flex flex-col items-center gap-3">
                   <i class="bi bi-inbox text-5xl text-[var(--text-muted)] opacity-30"></i>
-                  <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูลบทบาท</p>
-                  <p class="text-sm text-[var(--text-muted)]">ปรับคำค้นหาหรือรอข้อมูล</p>
+                  <p class="text-lg font-medium text-[var(--text-active)]">{{ 'BURT02_NO_DATA_TITLE' | translate }}</p>
+                  <p class="text-sm text-[var(--text-muted)]">{{ 'BURT02_NO_DATA_HINT' | translate }}</p>
                 </div>
               </td>
             </tr>

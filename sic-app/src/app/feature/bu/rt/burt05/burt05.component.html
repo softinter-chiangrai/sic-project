@@ -6,12 +6,12 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-        จัดการโปรแกรม
+        {{ 'BURT05_TITLE' | translate }}
       </h1>
       <span
         class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]"
       >
-        {{ programs().length }} โปรแกรม
+        {{ programs().length }} {{ 'BURT05_PROGRAM_UNIT' | translate }}
       </span>
     </div>
     <button
@@ -19,7 +19,7 @@
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
     >
       <i class="bi bi-plus-lg"></i>
-      เพิ่มโปรแกรม
+      {{ 'BURT05_ADD_PROGRAM_BTN' | translate }}
     </button>
   </div>
 
@@ -29,7 +29,7 @@
       <div
         class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
       ></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'BURT05_LOADING_TEXT' | translate }}</p>
     </div>
   }
 
@@ -42,17 +42,17 @@
             <th
               class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[260px]"
             >
-              โปรแกรม
+              {{ 'BURT05_PROGRAM_UNIT' | translate }}
             </th>
             <th
               class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[100px]"
             >
-              รหัส
+              {{ 'BURT05_COL_CODE' | translate }}
             </th>
             <th
               class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[70px]"
             >
-              ลำดับ
+              {{ 'BURT05_COL_ORDER' | translate }}
             </th>
             <th
               class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[120px]"
@@ -62,12 +62,12 @@
             <th
               class="px-4 py-2.5 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[80px]"
             >
-              สถานะ
+              {{ 'BURT05_COL_STATUS' | translate }}
             </th>
             <th
               class="px-4 py-2.5 text-center text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider min-w-[220px]"
             >
-              จัดการ
+              {{ 'BURT05_COL_ACTION' | translate }}
             </th>
           </tr>
         </thead>
@@ -133,7 +133,7 @@
                   class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
                   [class]="getStatusClass(flatNode.isActive)"
                 >
-                  {{ flatNode.isActive ? 'ใช้งาน' : 'ไม่ใช้งาน' }}
+                  {{ flatNode.isActive ? ('BURT05_ACTIVE_TEXT' | translate) : ('BURT05_INACTIVE_TEXT' | translate) }}
                 </span>
               </td>
 
@@ -142,14 +142,14 @@
                   <button
                     (click)="goToEdit(flatNode)"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-                    title="แก้ไข"
+                    [title]="'BURT05_EDIT_TITLE' | translate"
                   >
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button
                     (click)="deleteProgram(flatNode)"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
-                    title="ลบ"
+                    [title]="'BURT05_DELETE_TITLE' | translate"
                     [disabled]="flatNode.children.length > 0"
                   >
                     <i class="bi bi-trash"></i>
@@ -167,14 +167,14 @@
   @if (!isLoading() && treeData().length === 0) {
     <div class="flex flex-col items-center justify-center py-16 gap-4">
       <i class="bi bi-diagram-3 text-6xl text-[var(--text-muted)] opacity-30"></i>
-      <p class="text-lg font-medium text-[var(--text-active)]">ยังไม่มีโปรแกรมในระบบ</p>
-      <p class="text-sm text-[var(--text-muted)]">คลิกปุ่ม "เพิ่มโปรแกรม" เพื่อสร้างโปรแกรมแรก</p>
+      <p class="text-lg font-medium text-[var(--text-active)]">{{ 'BURT05_NO_PROGRAMS_TITLE' | translate }}</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'BURT05_NO_PROGRAMS_HINT' | translate }}</p>
       <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
       >
         <i class="bi bi-plus-lg"></i>
-        สร้างโปรแกรมแรก
+        {{ 'BURT05_CREATE_FIRST_PROGRAM_BTN' | translate }}
       </button>
     </div>
   }

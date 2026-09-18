@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
 import { SicButtonComponent } from 'sic-ng';
 import { SicCardComponent } from 'sic-ng';
@@ -34,7 +35,8 @@ import { SicDatePipe } from "../../../../../core/pipes/sic-date.pipe";
     SicButtonComponent,
     SicCardComponent,
     SicInputComponent,
-    SicDatePipe
+    SicDatePipe,
+    TranslateModule
 ],
   templateUrl: './pmdt03A.component.html',
   styleUrls: ['./pmdt03A.component.css'],
@@ -47,6 +49,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
   private readonly dialogService = inject(DialogService);
   private readonly navigation = inject(NavigationService);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly translate = inject(TranslateService);
 
   // ===== State =====
   protected approvalId = signal<string | null>(null);
@@ -109,7 +112,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err) => {
         this.isLoading.set(false);
-        this.error.set(err.error?.message || 'ไม่สามารถโหลดข้อมูลการอนุมัติได้');
+        this.error.set(err.error?.message || this.translate.instant('PMDT03_LOAD_APPROVAL_DETAIL_FAIL'));
         this.cdr.markForCheck();
       },
     });
@@ -177,13 +180,13 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      PENDING: 'รอดำเนินการ',
-      PARTIALLY_APPROVED: 'อนุมัติบางส่วน',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
-      EXPIRED: 'หมดอายุ',
+      PENDING: this.translate.instant('PMDT03_STATUS_PENDING'),
+      PARTIALLY_APPROVED: this.translate.instant('PMDT03_STATUS_PARTIALLY_APPROVED'),
+      APPROVED: this.translate.instant('PMDT03_STATUS_APPROVED_FULL'),
+      REJECTED: this.translate.instant('PMDT03_STATUS_REJECTED_SHORT'),
+      NEED_REVISION: this.translate.instant('PMDT03_STATUS_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT03_STATUS_CANCELLED'),
+      EXPIRED: this.translate.instant('PMDT03_STATUS_EXPIRED'),
     };
     return map[status] || status;
   }

@@ -9,6 +9,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalService } from '../pmdt03/approval.service';
 import type { ApprovalFlow } from '../pmdt03/approval.model';
 import { environment } from '../../../../../environments/environment';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 export interface DiagramEditData {
   id: string;
@@ -26,18 +27,18 @@ export interface DiagramEditData {
 @Component({
   selector: 'app-new-diagram-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent],
+  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-[min(92vw,30rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4 flex items-center justify-between" style="border-color: var(--border);">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi" [class.bi-pencil-square]="editData" [class.bi-plus-circle]="!editData"></i>
-          {{ editData ? 'แก้ไขข้อมูล Diagram' : 'สร้าง Diagram ใหม่' }}
+          {{ (editData ? 'PMDT05_EDIT_DIAGRAM_TITLE' : 'PMDT05_CREATE_DIAGRAM_TITLE') | translate }}
         </h3>
         @if (editData?.isApproved) {
           <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
-            <i class="bi bi-check-circle-fill"></i> ผ่านการอนุมัติแล้ว
+            <i class="bi bi-check-circle-fill"></i> {{ 'PMDT05_APPROVED_LABEL' | translate }}
           </span>
         }
       </div>
@@ -45,30 +46,30 @@ export interface DiagramEditData {
       <div class="space-y-4 px-5 py-4 max-h-[75vh] overflow-y-auto">
         <!-- รหัส Diagram -->
         <sic-input
-          label="รหัส Diagram"
+          [label]="'PMDT05_DIAGRAM_CODE_LABEL' | translate"
           [(ngModel)]="diagramCode"
           [ngModelOptions]="{ standalone: true }"
-          placeholder="ป้อนรหัส diagram เช่น DIAG-001"
+          [placeholder]="'PMDT05_DIAGRAM_CODE_PLACEHOLDER' | translate"
           [required]="true"
         ></sic-input>
 
         <!-- ชื่อ Diagram -->
         <sic-input
-          label="ชื่อ Diagram"
+          [label]="'PMDT05_DIAGRAM_NAME_LABEL' | translate"
           [(ngModel)]="name"
           [ngModelOptions]="{ standalone: true }"
-          placeholder="ป้อนชื่อ diagram"
+          [placeholder]="'PMDT05_DIAGRAM_NAME_PLACEHOLDER' | translate"
           [required]="true"
         ></sic-input>
 
         <!-- ประเภท Diagram -->
         <div>
           <sic-combobox
-            label="ประเภท Diagram"
+            [label]="'PMDT05_DIAGRAM_TYPE_LABEL' | translate"
             [options]="diagramTypeOptions"
             valueField="value"
             textField="text"
-            placeholder="เลือกประเภท Diagram"
+            [placeholder]="'PMDT05_DIAGRAM_TYPE_PLACEHOLDER' | translate"
             [(ngModel)]="type"
             [clearable]="false"
           ></sic-combobox>
@@ -79,7 +80,7 @@ export interface DiagramEditData {
           <div class="p-3 rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5">
             <div class="flex items-center gap-2 text-sm">
               <i class="bi bi-check-circle-fill text-[var(--crm-success)]"></i>
-              <span class="font-medium text-[var(--text-active)]">Requirement ต้นทาง:</span>
+              <span class="font-medium text-[var(--text-active)]">{{ 'PMDT05_REQ_SOURCE_LABEL' | translate }}</span>
               <span>{{ requirementTitle }}</span>
             </div>
           </div>
@@ -91,7 +92,7 @@ export interface DiagramEditData {
             <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center justify-between">
               <span class="flex items-center gap-2">
                 <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                กระบวนการอนุมัติ
+                {{ 'PMDT05_APPROVAL_PROCESS_LABEL' | translate }}
               </span>
               @if (currentApprovalStatus) {
                 <span class="text-xs px-2 py-0.5 rounded font-medium" [ngClass]="getApprovalBadgeClass(currentApprovalStatus)">
@@ -101,18 +102,18 @@ export interface DiagramEditData {
             </div>
 
             <sic-combobox
-              label="เลือกกระบวนการอนุมัติ"
+              [label]="'PMDT05_SELECT_APPROVAL_FLOW_LABEL' | translate"
               [apiUrl]="approvalFlowApiUrl"
               valueField="id"
               textField="flowName"
-              placeholder="เลือกกระบวนการอนุมัติสำหรับ Diagram"
+              [placeholder]="'PMDT05_SELECT_APPROVAL_FLOW_PLACEHOLDER' | translate"
               [clearable]="true"
               [(ngModel)]="selectedFlowId"
               (selectionChanged)="selectedFlowId = $event?.id"
             ></sic-combobox>
             @if (selectedFlowId) {
               <p class="text-xs text-emerald-600 dark:text-emerald-400 mt-1">
-                <i class="bi bi-send-check"></i> จะส่งขออนุมัติ Diagram นี้ไปยังกระบวนการที่เลือกเมื่อกดบันทึก
+                <i class="bi bi-send-check"></i> {{ 'PMDT05_SUBMIT_ON_SAVE_HINT' | translate }}
               </p>
             }
           </div>
@@ -120,9 +121,9 @@ export interface DiagramEditData {
       </div>
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <sic-button variant="outline" color="primary" size="sm" (click)="cancel()">ยกเลิก</sic-button>
+        <sic-button variant="outline" color="primary" size="sm" (click)="cancel()">{{ 'PMDT05_CANCEL_BTN' | translate }}</sic-button>
         <sic-button variant="solid" color="primary" size="sm" [disabled]="!canSave" (click)="save()">
-          {{ editData ? 'บันทึก' : 'สร้าง' }}
+          {{ (editData ? 'PMDT05_SAVE_DIALOG_BTN' : 'PMDT05_CREATE_DIALOG_BTN') | translate }}
         </sic-button>
       </div>
     </div>
@@ -161,6 +162,7 @@ export class NewDiagramDialogComponent implements OnInit {
 
   private dialogService = inject(DialogService);
   private approvalService = inject(ApprovalService);
+  private translate = inject(TranslateService);
 
   ngOnInit(): void {
     if (this.projectId) {
@@ -183,7 +185,7 @@ export class NewDiagramDialogComponent implements OnInit {
 
     if (!this.projectId) {
       console.error('[NewDiagramDialog] projectId is required but not provided!');
-      this.dialogService.error('ข้อผิดพลาด', 'ไม่พบ projectId กรุณาลองใหม่');
+      this.dialogService.error(this.translate.instant('PMDT05_ERROR_GENERIC_TITLE'), this.translate.instant('PMDT05_NO_PROJECT_ID_MSG'));
       this.cancel();
     }
   }

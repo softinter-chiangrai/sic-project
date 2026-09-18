@@ -17,11 +17,12 @@ export interface ScenarioGroup {
 import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt12',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule],
   templateUrl: './pmdt12.component.html',
   styleUrls: ['./pmdt12.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -32,6 +33,7 @@ export class Pmdt12Component implements OnInit {
   private service = inject(Pmdt12Service);
   private customerState = inject(CustomerStateService);
   private dialog = inject(DialogService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -46,20 +48,20 @@ export class Pmdt12Component implements OnInit {
   protected exportReportOptions = [
     {
       value: 'UAT',
-      title: 'รายงานผลการตรวจรับระบบ (UAT)',
-      desc: 'เฉพาะ Test Cases ของ UAT สำหรับส่งมอบลูกค้า',
+      title: this.translate.instant('PMDT12_RPT_UAT_TITLE'),
+      desc: this.translate.instant('PMDT12_RPT_UAT_DESC'),
       icon: 'bi-clipboard-check text-purple-600 dark:text-purple-400',
     },
     {
       value: 'SIT',
-      title: 'รายงานผลการทดสอบระบบ (SIT)',
-      desc: 'เฉพาะ Test Cases ของ SIT สำหรับทีมพัฒนา',
+      title: this.translate.instant('PMDT12_RPT_SIT_TITLE'),
+      desc: this.translate.instant('PMDT12_RPT_SIT_DESC'),
       icon: 'bi-flask text-sky-600 dark:text-sky-400',
     },
     {
       value: 'ALL',
-      title: 'รายงานผลการทดสอบทั้งหมด (ALL)',
-      desc: 'รวมทุก Test Cases ทั้ง SIT และ UAT ในเอกสารเดียว',
+      title: this.translate.instant('PMDT12_RPT_ALL_TITLE'),
+      desc: this.translate.instant('PMDT12_RPT_ALL_DESC'),
       icon: 'bi-file-earmark-text text-indigo-600 dark:text-indigo-400',
     },
   ];
@@ -113,25 +115,25 @@ export class Pmdt12Component implements OnInit {
 
   // ===== Options =====
   readonly statusSelectOptions = [
-    { value: 'Pass', text: 'ผ่าน' },
-    { value: 'Fail', text: 'ไม่ผ่าน' },
-    { value: 'Blocked', text: 'ติดปัญหา' },
-    { value: 'Pending', text: 'รอดำเนินการ' },
+    { value: 'Pass', text: this.translate.instant('PMDT12_STATUS_PASS') },
+    { value: 'Fail', text: this.translate.instant('PMDT12_STATUS_FAIL') },
+    { value: 'Blocked', text: this.translate.instant('PMDT12_STATUS_BLOCKED') },
+    { value: 'Pending', text: this.translate.instant('PMDT12_STATUS_PENDING') },
   ];
 
   readonly prioritySelectOptions = [
-    { value: 'High', text: 'สูง' },
-    { value: 'Medium', text: 'ปานกลาง' },
-    { value: 'Low', text: 'ต่ำ' },
+    { value: 'High', text: this.translate.instant('PMDT12_PRIORITY_HIGH') },
+    { value: 'Medium', text: this.translate.instant('PMDT12_PRIORITY_MEDIUM') },
+    { value: 'Low', text: this.translate.instant('PMDT12_PRIORITY_LOW') },
   ];
 
   readonly taskStatusSelectOptions = [
-    { value: 'Testing', text: '🧪 พร้อมทดสอบ' },
-    { value: 'In Progress', text: '🛠️ กำลังพัฒนา' },
+    { value: 'Testing', text: '🧪 ' + this.translate.instant('PMDT12_TASK_STATUS_TESTING_OPT') },
+    { value: 'In Progress', text: '🛠️ ' + this.translate.instant('PMDT12_TASK_STATUS_DEV_OPT') },
     { value: 'bugfix', text: '🚨 Bugfix' },
-    { value: 'complete', text: '✅ เสร็จสมบูรณ์' },
-    { value: 'To Do', text: '📝 รอดำเนินการ' },
-    { value: 'on hold', text: '⏸️ พักไว้ชั่วคราว' },
+    { value: 'complete', text: '✅ ' + this.translate.instant('PMDT12_TASK_STATUS_COMPLETE_OPT') },
+    { value: 'To Do', text: '📝 ' + this.translate.instant('PMDT12_TASK_STATUS_TODO_OPT') },
+    { value: 'on hold', text: '⏸️ ' + this.translate.instant('PMDT12_TASK_STATUS_ONHOLD_OPT') },
   ];
 
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
@@ -386,12 +388,12 @@ export class Pmdt12Component implements OnInit {
 
   getExecuteButtonDisabledTitle(testCase: PmTestCaseModel): string {
     if (this.hasActiveBug(testCase)) {
-      return 'ไม่สามารถทดสอบได้เนื่องจากมี Bug ที่กำลังรอการแก้ไข';
+      return this.translate.instant('PMDT12_CANNOT_TEST_BUG_MSG');
     }
     if (testCase.taskId && (testCase.taskStatus || '').toLowerCase() !== 'testing') {
-      return 'Task ยังไม่อยู่ในสถานะ "พร้อมทดสอบ"';
+      return this.translate.instant('PMDT12_TASK_NOT_READY_MSG');
     }
-    return 'บันทึกผลการทดสอบ';
+    return this.translate.instant('PMDT12_SAVE_TEST_RESULT_TT');
   }
 
   // ===== Accordion Toggle =====
@@ -526,7 +528,7 @@ export class Pmdt12Component implements OnInit {
   exportUatReport(testType: string = 'UAT') {
     const projectId = this.customerState.getProjectId();
     if (!projectId) {
-      this.dialog.warn('ไม่พบข้อมูลโครงการ', 'กรุณาเลือกโครงการก่อนทำการออกรายงาน');
+      this.dialog.warn(this.translate.instant('PMDT12_NO_PROJECT_TITLE'), this.translate.instant('PMDT12_SELECT_PROJECT_FIRST_MSG'));
       return;
     }
 
@@ -548,7 +550,7 @@ export class Pmdt12Component implements OnInit {
         },
         error: (err) => {
           console.error('Error exporting UAT report:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
+          this.dialog.error(this.translate.instant('PMDT12_PRINT_FAILED_TITLE'), this.translate.instant('PMDT12_PRINT_FAILED_MSG'));
         }
       });
   }
@@ -584,7 +586,7 @@ export class Pmdt12Component implements OnInit {
     if (event) event.stopPropagation();
     const projectId = this.customerState.getProjectId();
     if (!projectId) {
-      this.dialog.warn('ไม่พบข้อมูลโครงการ', 'กรุณาเลือกโครงการก่อนทำการออกรายงาน');
+      this.dialog.warn(this.translate.instant('PMDT12_NO_PROJECT_TITLE'), this.translate.instant('PMDT12_SELECT_PROJECT_FIRST_MSG'));
       return;
     }
 
@@ -607,7 +609,7 @@ export class Pmdt12Component implements OnInit {
         },
         error: (err) => {
           console.error('Error exporting Scenario report:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน PDF ได้');
+          this.dialog.error(this.translate.instant('PMDT12_PRINT_FAILED_TITLE'), this.translate.instant('PMDT12_PRINT_FAILED_MSG'));
         }
       });
   }
@@ -616,18 +618,18 @@ export class Pmdt12Component implements OnInit {
     if (event) event.stopPropagation();
     this.dialog
       .confirm(
-        'ยืนยันการลบ Test Scenario',
-        'ต้องการลบ Test Scenario นี้ใช่หรือไม่? (Test Cases ที่อยู่ใน Scenario จะยังคงอยู่แต่จะกลายเป็น Unassigned)'
+        this.translate.instant('PMDT12_CONFIRM_DELETE_SCENARIO_TITLE'),
+        this.translate.instant('PMDT12_CONFIRM_DELETE_SCENARIO_MSG')
       )
       .then((ok) => {
         if (ok) {
           this.service.deleteTestScenario(id).subscribe({
             next: () => {
-              this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Scenario ถูกลบเรียบร้อยแล้ว');
+              this.dialog.success(this.translate.instant('PMDT12_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT12_DELETE_SCENARIO_SUCCESS_MSG'));
               this.loadData();
             },
             error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการลบ');
+              this.dialog.error(this.translate.instant('PMDT12_DELETE_FAILED_TITLE'), err.message || this.translate.instant('PMDT12_DELETE_ERROR_MSG'));
             },
           });
         }
@@ -641,8 +643,8 @@ export class Pmdt12Component implements OnInit {
     if (this.scenarios().length === 0) {
       this.dialog
         .confirm(
-          'ยังไม่มี Test Scenario',
-          'ต้องสร้าง Test Scenario ขึ้นมาก่อนจึงจะสามารถสร้าง Test Case ได้ ต้องการสร้าง Test Scenario ตอนนี้หรือไม่?'
+          this.translate.instant('PMDT12_NO_SCENARIO_YET_TITLE'),
+          this.translate.instant('PMDT12_CREATE_SCENARIO_FIRST_MSG')
         )
         .then((ok) => {
           if (ok) {
@@ -674,15 +676,15 @@ export class Pmdt12Component implements OnInit {
   }
 
   deleteTestCase(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'ต้องการลบ Test Case นี้ใช่หรือไม่?').then((ok) => {
+    this.dialog.confirm(this.translate.instant('PMDT12_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT12_CONFIRM_DELETE_TC_MSG')).then((ok) => {
       if (ok) {
         this.service.deleteTestCase(id).subscribe({
           next: () => {
-            this.dialog.success('ลบสำเร็จ', 'ข้อมูล Test Case ถูกลบเรียบร้อย');
+            this.dialog.success(this.translate.instant('PMDT12_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT12_DELETE_TC_SUCCESS_MSG'));
             this.loadData();
           },
           error: (err) => {
-            this.dialog.error('ลบไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการลบ');
+            this.dialog.error(this.translate.instant('PMDT12_DELETE_FAILED_TITLE'), err.message || this.translate.instant('PMDT12_DELETE_ERROR_MSG'));
           },
         });
       }
@@ -695,14 +697,14 @@ export class Pmdt12Component implements OnInit {
     }
 
     if (!testCase.taskId) {
-      this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'Test Case นี้ไม่ได้ผูกกับ Task จึงไม่สามารถระบุตำแหน่งงานใน Task Board ได้');
+      this.dialog.warn(this.translate.instant('PMDT12_CANNOT_CREATE_BUG_TITLE'), this.translate.instant('PMDT12_BUG_NO_TASK_MSG'));
       return;
     }
 
     this.service.getTaskById(testCase.taskId).subscribe({
       next: (parentTask) => {
         if (!parentTask || !parentTask.workPackageId) {
-          this.dialog.warn('ไม่สามารถสร้าง Bug ได้', 'ไม่พบ Work Package ของ Task ที่ผูกไว้');
+          this.dialog.warn(this.translate.instant('PMDT12_CANNOT_CREATE_BUG_TITLE'), this.translate.instant('PMDT12_BUG_NO_WP_MSG'));
           return;
         }
 
@@ -727,12 +729,12 @@ export class Pmdt12Component implements OnInit {
             .trim();
         };
 
-        let desc = `[BUG จากผลการทดสอบ: ${testCase.testCaseCode || ''}]\n\n`;
-        if (testCase.title) desc += `• หัวข้อ Test Case: ${testCase.title}\n`;
-        if (testCase.testStep) desc += `• ขั้นตอนการทดสอบ:\n${cleanHtml(testCase.testStep)}\n\n`;
-        if (testCase.expectedResult) desc += `• ผลลัพธ์ที่คาดหวัง:\n${cleanHtml(testCase.expectedResult)}\n\n`;
-        if (testCase.actualResult) desc += `• ผลลัพธ์ที่พบจริง (ข้อผิดพลาด):\n${cleanHtml(testCase.actualResult)}\n\n`;
-        if (testCase.tester) desc += `• ผู้รายงาน: ${testCase.tester}\n`;
+        let desc = `[${this.translate.instant('PMDT12_BUG_FROM_TEST_RESULT')}: ${testCase.testCaseCode || ''}]\n\n`;
+        if (testCase.title) desc += `• ${this.translate.instant('PMDT12_TC_TITLE_BULLET')}: ${testCase.title}\n`;
+        if (testCase.testStep) desc += `• ${this.translate.instant('PMDT12_TEST_STEP_BULLET')}:\n${cleanHtml(testCase.testStep)}\n\n`;
+        if (testCase.expectedResult) desc += `• ${this.translate.instant('PMDT12_EXPECTED_RESULT_BULLET')}:\n${cleanHtml(testCase.expectedResult)}\n\n`;
+        if (testCase.actualResult) desc += `• ${this.translate.instant('PMDT12_ACTUAL_RESULT_ERROR_BULLET')}:\n${cleanHtml(testCase.actualResult)}\n\n`;
+        if (testCase.tester) desc += `• ${this.translate.instant('PMDT12_REPORTER_BULLET')}: ${testCase.tester}\n`;
 
         const rawPriority = (testCase.priority || 'HIGH').toUpperCase();
         let defaultPriority = 'HIGH';
@@ -758,7 +760,7 @@ export class Pmdt12Component implements OnInit {
         this.showBugModal.set(true);
       },
       error: () => {
-        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่สามารถโหลดข้อมูล Task ที่ผูกไว้ได้');
+        this.dialog.error(this.translate.instant('PMDT12_ERROR_TITLE'), this.translate.instant('PMDT12_LOAD_TASK_ERROR_MSG'));
       },
     });
   }
@@ -782,12 +784,12 @@ export class Pmdt12Component implements OnInit {
     const parentTask = this.bugParentTask();
 
     if (!form.taskName || !form.taskName.trim()) {
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณาระบุชื่อ / หัวข้อ Bug');
+      this.dialog.warn(this.translate.instant('PMDT12_INCOMPLETE_DATA_TITLE'), this.translate.instant('PMDT12_ENTER_BUG_TITLE_MSG'));
       return;
     }
 
     if (!parentTask || !parentTask.workPackageId) {
-      this.dialog.error('ไม่สามารถบันทึกได้', 'ไม่พบข้อมูล Work Package สำหรับสร้าง Task');
+      this.dialog.error(this.translate.instant('PMDT12_CANNOT_SAVE_TITLE'), this.translate.instant('PMDT12_NO_WP_FOR_TASK_MSG'));
       return;
     }
 
@@ -831,14 +833,14 @@ export class Pmdt12Component implements OnInit {
         this.isSubmittingBug.set(false);
         this.closeBugModal();
         this.dialog.success(
-          'เปิด Bug สำเร็จ',
-          `สร้าง Bug Task (${form.taskCode}) ในคอลัมน์ To Do และปรับสถานะ Task หลักเป็น Bugfix เรียบร้อยแล้ว`
+          this.translate.instant('PMDT12_BUG_OPEN_SUCCESS_TITLE'),
+          this.translate.instant('PMDT12_BUG_CREATED_MSG', { taskCode: form.taskCode })
         );
         this.loadData();
       },
       error: (err) => {
         this.isSubmittingBug.set(false);
-        this.dialog.error('สร้าง Bug ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการสร้าง Task');
+        this.dialog.error(this.translate.instant('PMDT12_BUG_CREATE_FAILED_TITLE'), err.message || this.translate.instant('PMDT12_CREATE_TASK_ERROR_MSG'));
       },
     });
   }
@@ -866,15 +868,15 @@ export class Pmdt12Component implements OnInit {
     switch (s) {
       case 'pass':
       case 'passed':
-        return 'ผ่าน';
+        return this.translate.instant('PMDT12_STATUS_PASS');
       case 'fail':
       case 'failed':
-        return 'ไม่ผ่าน';
+        return this.translate.instant('PMDT12_STATUS_FAIL');
       case 'blocked':
-        return 'ติดปัญหา';
+        return this.translate.instant('PMDT12_STATUS_BLOCKED');
       case 'pending':
       default:
-        return 'รอทดสอบ';
+        return this.translate.instant('PMDT12_STATUS_WAITING_TEST');
     }
   }
 

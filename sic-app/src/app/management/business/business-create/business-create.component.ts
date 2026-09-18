@@ -14,6 +14,7 @@ import { SicInputAreaComponent } from 'sic-ng';
 import { SicInputPhoneComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../core/services/dialog.service';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-business-create',
@@ -27,7 +28,8 @@ import { DialogService } from '../../../core/services/dialog.service';
     SicButtonComponent,
     SicInputComponent,
     SicInputAreaComponent,
-    SicInputPhoneComponent
+    SicInputPhoneComponent,
+    TranslateModule
 ],
   templateUrl: './business-create.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -39,6 +41,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   readonly router = inject(Router);
   readonly service = inject(BusinessCreateService);
   readonly dialog = inject(DialogService);
+  readonly translate = inject(TranslateService);
   
   formBusinessData!: SicFromData<BusinessCreateModel>;
 
@@ -82,7 +85,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   submit(){
     this.formBusinessData.markAllAsTouched();
     if (this.formBusinessData.invalid) {
-      this.dialog.warn('Invalid Form', 'Please correct the errors in the form before saving.');
+      this.dialog.warn(this.translate.instant('BUSINESS_CREATE_INVALID_FORM_TITLE'), this.translate.instant('BUSINESS_CREATE_INVALID_FORM_MSG'));
     } else {
       const data = this.formBusinessData.value;
       this.service.save(data).subscribe({
@@ -91,13 +94,13 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
         if (response) {
           localStorage.setItem('businessId', response);
         }
-        this.dialog.success('Business Saved', 'Your business has been successfully saved.').then((confirmed) => {
+        this.dialog.success(this.translate.instant('BUSINESS_CREATE_SAVED_TITLE'), this.translate.instant('BUSINESS_CREATE_SAVED_MSG')).then((confirmed) => {
           this.formBusinessData.markAsPristine();
           this.router.navigate(['feature']);
         });
       },
       error: (error) => {
-        this.dialog.error('Save Failed', error);
+        this.dialog.error(this.translate.instant('BUSINESS_CREATE_SAVE_FAILED_TITLE'), error);
       }
     });
     }

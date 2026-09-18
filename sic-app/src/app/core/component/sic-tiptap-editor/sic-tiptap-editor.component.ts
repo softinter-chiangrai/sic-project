@@ -9,6 +9,7 @@ import {
   signal,
   computed,
   effect,
+  inject,
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -18,11 +19,12 @@ import {
   ATE_DEFAULT_TOOLBAR_CONFIG,
   AteEditorConfig,
 } from '@flogeez/angular-tiptap-editor';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'sic-tiptap-editor',
   standalone: true,
-  imports: [CommonModule, AngularTiptapEditorComponent],
+  imports: [CommonModule, AngularTiptapEditorComponent, TranslateModule],
   templateUrl: './sic-tiptap-editor.component.html',
   styleUrls: ['./sic-tiptap-editor.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -35,6 +37,8 @@ import {
   ],
 })
 export class SicTiptapEditorComponent implements ControlValueAccessor {
+  private readonly translate = inject(TranslateService);
+
   // === Standard Component Inputs ===
   @Input() label?: string;
   @Input() hint?: string;
@@ -85,7 +89,7 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
   @Output() fullscreenClosed = new EventEmitter<void>();
 
   // === State ===
-  placeholderState = signal<string>('กรอกรายละเอียด...');
+  placeholderState = signal<string>(this.translate.instant('TIPTAP_EDITOR_DEFAULT_PLACEHOLDER'));
   disabledState = signal<boolean>(false);
   minHeightState = signal<string>('150px');
   maxHeightState = signal<string>('500px');

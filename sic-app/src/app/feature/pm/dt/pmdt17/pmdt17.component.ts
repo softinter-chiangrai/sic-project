@@ -16,6 +16,7 @@ import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-dr
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt17',
@@ -29,12 +30,14 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
     SicGridPanelComponent,
     SicGridPanelTemplate,
     SicDrawerComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
 })
 export class Pmdt17Component implements OnInit {
+  private translate = inject(TranslateService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private service = inject(Pmdt17AService);
@@ -73,15 +76,15 @@ export class Pmdt17Component implements OnInit {
       showToolbar: false,
       pageSize: this.pageSize(),
       column: [
-        { label: 'เลขที่ Ticket', name: 'ticketNo', type: 'code', minWidth: 130 },
-        { label: 'หัวข้อปัญหา', name: 'title', type: 'titleTruncate', minWidth: 180 },
-        { label: 'ลูกค้า / โครงการ', name: 'customerName', type: 'customerInfo', minWidth: 150 },
-        { label: 'ประเภท', name: 'ticketType', type: 'typeText', hidden: !visible.has('ticketType'), minWidth: 100 },
-        { label: 'ความรุนแรง', name: 'severity', type: 'severityBadge', hidden: !visible.has('severity'), align: 'center', minWidth: 110 },
-        { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
-        { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
-        { label: 'ผู้รับผิดชอบ', name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), minWidth: 130 },
-        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
+        { label: this.translate.instant('PMDT17_COL_TICKET_NO'), name: 'ticketNo', type: 'code', minWidth: 130 },
+        { label: this.translate.instant('PMDT17_COL_TITLE'), name: 'title', type: 'titleTruncate', minWidth: 180 },
+        { label: this.translate.instant('PMDT17_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', minWidth: 150 },
+        { label: this.translate.instant('PMDT17_COL_TYPE'), name: 'ticketType', type: 'typeText', hidden: !visible.has('ticketType'), minWidth: 100 },
+        { label: this.translate.instant('PMDT17_COL_SEVERITY'), name: 'severity', type: 'severityBadge', hidden: !visible.has('severity'), align: 'center', minWidth: 110 },
+        { label: this.translate.instant('PMDT17_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
+        { label: this.translate.instant('PMDT17_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
+        { label: this.translate.instant('PMDT17_COL_ASSIGNED'), name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), minWidth: 130 },
+        { label: this.translate.instant('PMDT17_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
       ],
     };
   });
@@ -89,10 +92,10 @@ export class Pmdt17Component implements OnInit {
   // ===== Column Visibility =====
   private readonly COLUMN_STORAGE_KEY = 'pmdt17.visibleColumns';
   readonly allColumns: { key: string; label: string }[] = [
-    { key: 'ticketType', label: 'ประเภท' },
-    { key: 'severity', label: 'ความรุนแรง' },
-    { key: 'approvalStatus', label: 'การอนุมัติ' },
-    { key: 'assignedTo', label: 'ผู้รับผิดชอบ' },
+    { key: 'ticketType', label: this.translate.instant('PMDT17_COL_TYPE') },
+    { key: 'severity', label: this.translate.instant('PMDT17_COL_SEVERITY') },
+    { key: 'approvalStatus', label: this.translate.instant('PMDT17_COL_APPROVAL') },
+    { key: 'assignedTo', label: this.translate.instant('PMDT17_COL_ASSIGNED') },
   ];
   visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   showColumnMenu = signal(false);
@@ -169,12 +172,12 @@ export class Pmdt17Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'OPEN', text: 'เปิดตั๋ว' },
-    { value: 'IN_PROGRESS', text: 'กำลังดำเนินการ' },
-    { value: 'WAITING_CUSTOMER', text: 'รอลูกค้าตอบกลับ' },
-    { value: 'RESOLVED', text: 'แก้ไขแล้ว' },
-    { value: 'CHANGED', text: 'แก้ไขหลังอนุมัติ' },
-    { value: 'CLOSED', text: 'ปิดตั๋ว' },
+    { value: 'OPEN', text: this.translate.instant('PMDT17_STATUS_OPEN') },
+    { value: 'IN_PROGRESS', text: this.translate.instant('PMDT17_STATUS_IN_PROGRESS') },
+    { value: 'WAITING_CUSTOMER', text: this.translate.instant('PMDT17_STATUS_WAITING_CUSTOMER') },
+    { value: 'RESOLVED', text: this.translate.instant('PMDT17_STATUS_RESOLVED') },
+    { value: 'CHANGED', text: this.translate.instant('PMDT17_STATUS_CHANGED') },
+    { value: 'CLOSED', text: this.translate.instant('PMDT17_STATUS_CLOSED') },
   ];
 
   onFilterChange(value: any) {
@@ -214,7 +217,10 @@ export class Pmdt17Component implements OnInit {
           URL.revokeObjectURL(pdfUrl);
         },
         error: () => {
-          this.dialog.error('ส่งออกไม่สำเร็จ', `ไม่สามารถส่งออกตั๋ว MA รหัส ${id} ได้`);
+          this.dialog.error(
+            this.translate.instant('PMDT17_EXPORT_FAILED_TITLE'),
+            this.translate.instant('PMDT17_EXPORT_TICKET_FAILED_MSG').replace('{id}', id),
+          );
         },
         complete: () => {
           remaining -= 1;
@@ -265,12 +271,24 @@ export class Pmdt17Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => this.downloadCsv(res.data || []),
-        error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการตั๋ว MA ได้'),
+        error: () => this.dialog.error(
+          this.translate.instant('PMDT17_EXPORT_FAILED_TITLE'),
+          this.translate.instant('PMDT17_EXPORT_LIST_FAILED_MSG'),
+        ),
       });
   }
 
   private downloadCsv(items: any[]): void {
-    const headers = ['เลขที่ Ticket', 'หัวข้อปัญหา', 'ลูกค้า', 'โครงการ', 'ประเภท', 'ความรุนแรง', 'สถานะ', 'ผู้รับผิดชอบ'];
+    const headers = [
+      this.translate.instant('PMDT17_COL_TICKET_NO'),
+      this.translate.instant('PMDT17_COL_TITLE'),
+      this.translate.instant('PMDT17_LABEL_CUSTOMER'),
+      this.translate.instant('PMDT17_LABEL_PROJECT'),
+      this.translate.instant('PMDT17_COL_TYPE'),
+      this.translate.instant('PMDT17_COL_SEVERITY'),
+      this.translate.instant('PMDT17_COL_STATUS'),
+      this.translate.instant('PMDT17_COL_ASSIGNED'),
+    ];
     const rows = items.map((i) => [
       i.ticketNo, i.title || '', i.customerName || '', i.projectName || '',
       i.ticketType || '', i.severity || '', this.getStatusText(i.status), i.assignedTo || '',
@@ -321,7 +339,10 @@ export class Pmdt17Component implements OnInit {
 
   printTicket(item: any) {
     if (!item.id) {
-      this.dialog.warn('ไม่พบรหัสตั๋ว MA', 'ไม่สามารถพิมพ์เอกสารได้');
+      this.dialog.warn(
+        this.translate.instant('PMDT17_TICKET_ID_NOT_FOUND_TITLE'),
+        this.translate.instant('PMDT17_PRINT_FAILED_MSG'),
+      );
       return;
     }
 
@@ -343,21 +364,27 @@ export class Pmdt17Component implements OnInit {
         },
         error: (err) => {
           console.error('Print ticket error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+          this.dialog.error(
+            this.translate.instant('PMDT17_PRINT_DOC_FAILED_TITLE'),
+            this.translate.instant('PMDT17_JASPER_REPORT_FAILED_MSG'),
+          );
         },
       });
   }
 
   deleteTicket(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบตั๋ว MA นี้ใช่หรือไม่?').then((confirmed) => {
+    this.dialog.confirm(
+      this.translate.instant('PMDT17_CONFIRM_DELETE_TITLE'),
+      this.translate.instant('PMDT17_CONFIRM_DELETE_MSG'),
+    ).then((confirmed) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบตั๋ว MA เรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT17_SUCCESS_TITLE'), this.translate.instant('PMDT17_DELETE_SUCCESS_MSG'));
             this.ticketsResource.reload();
           },
           error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT17_ERROR_TITLE'), err.message || this.translate.instant('PMDT17_DELETE_FAILED_MSG'));
           },
         });
       }
@@ -388,12 +415,12 @@ export class Pmdt17Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      OPEN: 'เปิดตั๋ว',
-      IN_PROGRESS: 'กำลังดำเนินการ',
-      WAITING_CUSTOMER: 'รอลูกค้าตอบกลับ',
-      RESOLVED: 'แก้ไขแล้ว',
-      CHANGED: 'แก้ไขหลังอนุมัติ',
-      CLOSED: 'ปิดตั๋ว',
+      OPEN: this.translate.instant('PMDT17_STATUS_OPEN'),
+      IN_PROGRESS: this.translate.instant('PMDT17_STATUS_IN_PROGRESS'),
+      WAITING_CUSTOMER: this.translate.instant('PMDT17_STATUS_WAITING_CUSTOMER'),
+      RESOLVED: this.translate.instant('PMDT17_STATUS_RESOLVED'),
+      CHANGED: this.translate.instant('PMDT17_STATUS_CHANGED'),
+      CLOSED: this.translate.instant('PMDT17_STATUS_CLOSED'),
     };
     return map[status] || status || '-';
   }
@@ -414,12 +441,12 @@ export class Pmdt17Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ฉบับร่าง',
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
+      DRAFT: this.translate.instant('PMDT17_APPR_DRAFT'),
+      PENDING: this.translate.instant('PMDT17_APPR_PENDING'),
+      APPROVED: this.translate.instant('PMDT17_APPR_APPROVED'),
+      REJECTED: this.translate.instant('PMDT17_APPR_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT17_APPR_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT17_APPR_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
   }

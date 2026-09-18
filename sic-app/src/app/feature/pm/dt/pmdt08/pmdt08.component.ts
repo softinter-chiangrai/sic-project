@@ -3,6 +3,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { AuthService } from '../../../../core/auth/auth.service';
@@ -32,6 +33,7 @@ import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-dr
     Pmdt08AComponent,
     SicInputUploadComponent,
     SicDrawerComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt08.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -47,6 +49,7 @@ export class Pmdt08Component implements OnInit {
   private sidebarService = inject(SicSidebarService);
   private http = inject(HttpClient);
   private customerState = inject(CustomerStateService);
+  private translate = inject(TranslateService);
 
   readonly apiBaseUrl = environment.apiBaseUrl;
 
@@ -68,7 +71,7 @@ export class Pmdt08Component implements OnInit {
   selectedPost = signal<Post | null>(null);
 
   currentUserId = signal<string | null>(null);
-  currentUserName = signal<string>('ผู้ใช้งาน');
+  currentUserName = signal<string>(this.translate.instant('PMDT08_DEFAULT_USER_NAME'));
   currentUserAvatar = signal<string | null>(null);
 
   currentPage = signal(0);
@@ -90,7 +93,7 @@ export class Pmdt08Component implements OnInit {
     this.sidebarService.getProfile().subscribe({
       next: (profile) => {
         if (profile) {
-          const name = profile.name || profile.id || 'ผู้ใช้';
+          const name = profile.name || profile.id || this.translate.instant('PMDT08_DEFAULT_USER_NAME_SHORT');
           this.currentUserName.set(name);
           if (profile.uploadGroupData && profile.uploadGroupData.length > 0 && profile.uploadGroupData[0].accessUrl) {
             this.currentUserAvatar.set(profile.uploadGroupData[0].accessUrl);
@@ -154,7 +157,7 @@ export class Pmdt08Component implements OnInit {
           });
         },
         error: (err) => {
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMDT08_LOAD_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08_GENERIC_ERROR_MSG'));
         },
       });
   }
@@ -333,13 +336,13 @@ export class Pmdt08Component implements OnInit {
     this.commentForm.markAllAsTouched();
 
     if (this.commentForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการแสดงความคิดเห็น');
+      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), this.translate.instant('PMDT08_COMMENT_TEXT_REQUIRED_MSG'));
       return;
     }
 
     const postId = this.expandedPostId();
     if (!postId) {
-      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการแสดงความคิดเห็น');
+      this.dialog.warn(this.translate.instant('PMDT08_POST_NOT_FOUND_TITLE'), this.translate.instant('PMDT08_SELECT_POST_COMMENT_MSG'));
       return;
     }
 
@@ -367,7 +370,7 @@ export class Pmdt08Component implements OnInit {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (newReply) => {
-          this.dialog.success('แสดงความคิดเห็นสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.dialog.success(this.translate.instant('PMDT08_COMMENT_SUCCESS_TITLE'), this.translate.instant('PMDT08_MESSAGE_ADDED_MSG'));
           this.commentForm.reset({ content: '', attachmentGroupId: null });
           if (newReply?.attachmentGroupId) {
             this.loadAttachments(newReply.attachmentGroupId);
@@ -375,7 +378,7 @@ export class Pmdt08Component implements OnInit {
           this.loadReplies(postId);
         },
         error: (err) => {
-          this.dialog.error('แสดงความคิดเห็นไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMDT08_COMMENT_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08_GENERIC_ERROR_MSG'));
         },
       });
   }
@@ -386,13 +389,13 @@ export class Pmdt08Component implements OnInit {
     this.replyForm.markAllAsTouched();
 
     if (this.replyForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความในการตอบกลับ');
+      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), this.translate.instant('PMDT08_REPLY_TEXT_REQUIRED_MSG'));
       return;
     }
 
     const postId = this.replyingPostId();
     if (!postId) {
-      this.dialog.warn('ไม่พบโพสต์', 'กรุณาเลือกโพสต์ที่ต้องการตอบกลับ');
+      this.dialog.warn(this.translate.instant('PMDT08_POST_NOT_FOUND_TITLE'), this.translate.instant('PMDT08_SELECT_POST_REPLY_MSG'));
       return;
     }
 
@@ -420,7 +423,7 @@ export class Pmdt08Component implements OnInit {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: (newReply) => {
-          this.dialog.success('ตอบกลับสำเร็จ', 'ข้อความของคุณถูกเพิ่มแล้ว');
+          this.dialog.success(this.translate.instant('PMDT08_REPLY_SUCCESS_TITLE'), this.translate.instant('PMDT08_MESSAGE_ADDED_MSG'));
           this.replyingPostId.set(null);
           this.replyToUser.set(null);
           this.replyForm.reset({ content: '', attachmentGroupId: null });
@@ -430,7 +433,7 @@ export class Pmdt08Component implements OnInit {
           this.loadReplies(postId);
         },
         error: (err) => {
-          this.dialog.error('ตอบกลับไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMDT08_REPLY_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08_GENERIC_ERROR_MSG'));
         },
       });
   }
@@ -475,7 +478,7 @@ export class Pmdt08Component implements OnInit {
 
   submitEdit(): void {
     if (this.editForm.invalid) {
-      this.dialog.warn('กรุณาใส่ข้อความ', 'ต้องระบุข้อความ');
+      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), this.translate.instant('PMDT08_TEXT_REQUIRED_MSG'));
       return;
     }
     const commentId = this.editingCommentId();
@@ -488,7 +491,7 @@ export class Pmdt08Component implements OnInit {
       .pipe(finalize(() => this.isSubmitting.set(false)))
       .subscribe({
         next: () => {
-          this.dialog.success('แก้ไขสำเร็จ', 'ข้อความถูกอัปเดตแล้ว');
+          this.dialog.success(this.translate.instant('PMDT08_EDIT_SUCCESS_TITLE'), this.translate.instant('PMDT08_MESSAGE_UPDATED_MSG'));
           this.editingCommentId.set(null);
           const postId = (this.editForm as any).__postId;
           this.editForm.reset();
@@ -512,7 +515,7 @@ export class Pmdt08Component implements OnInit {
           }
         },
         error: (err) => {
-          this.dialog.error('แก้ไขไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('PMDT08_EDIT_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08_GENERIC_ERROR_MSG'));
         },
       });
   }
@@ -520,16 +523,16 @@ export class Pmdt08Component implements OnInit {
   // ===== Delete =====
   deletePost(postId: string): void {
     this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบโพสต์นี้ใช่หรือไม่?')
+      .confirm(this.translate.instant('PMDT08_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT08_CONFIRM_DELETE_POST_MSG'))
       .then((confirmed) => {
         if (confirmed) {
           this.service.deleteComment(postId).subscribe({
             next: () => {
-              this.dialog.success('ลบสำเร็จ', 'โพสต์ถูกลบแล้ว');
+              this.dialog.success(this.translate.instant('PMDT08_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT08_POST_DELETED_MSG'));
               this.posts.update((posts) => posts.filter((p) => p.id !== postId));
             },
             error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialog.error(this.translate.instant('PMDT08_DELETE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08_GENERIC_ERROR_MSG'));
             },
           });
         }
@@ -538,12 +541,12 @@ export class Pmdt08Component implements OnInit {
 
   deleteReply(postId: string, replyId: string): void {
     this.dialog
-      .confirm('ยืนยันการลบ', 'คุณต้องการลบข้อความนี้ใช่หรือไม่?')
+      .confirm(this.translate.instant('PMDT08_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT08_CONFIRM_DELETE_MSG_MSG'))
       .then((confirmed) => {
         if (confirmed) {
           this.service.deleteComment(replyId).subscribe({
             next: () => {
-              this.dialog.success('ลบสำเร็จ', 'ข้อความถูกลบแล้ว');
+              this.dialog.success(this.translate.instant('PMDT08_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT08_MESSAGE_DELETED_MSG'));
               this.posts.update((posts) =>
                 posts.map((p) => {
                   if (p.id === postId) {
@@ -555,7 +558,7 @@ export class Pmdt08Component implements OnInit {
               );
             },
             error: (err) => {
-              this.dialog.error('ลบไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+              this.dialog.error(this.translate.instant('PMDT08_DELETE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT08_GENERIC_ERROR_MSG'));
             },
           });
         }

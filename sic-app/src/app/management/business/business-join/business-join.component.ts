@@ -11,6 +11,7 @@ import { SicInputComponent } from 'sic-ng';
 import { SicButtonComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { ToForm } from '../../../core/types/form.type';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-business-join',
@@ -20,6 +21,7 @@ import { ToForm } from '../../../core/types/form.type';
     ReactiveFormsModule,
     SicInputComponent,
     SicButtonComponent,
+    TranslateModule,
   ],
   templateUrl: './business-join.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -30,6 +32,7 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
   readonly service = inject(BusinessJoinService);
   readonly dialog = inject(DialogService);
   readonly router = inject(Router);
+  readonly translate = inject(TranslateService);
 
   loading = signal(false);
   isAutoSubmit = signal(false);
@@ -76,13 +79,13 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
         this.loading.set(false);
         this.isSaved = true;
         this.tokenForm.markAsPristine();
-        await this.dialog.success('เข้าร่วมสำเร็จ', 'คุณได้เข้าร่วมธุรกิจเรียบร้อยแล้ว');
+        await this.dialog.success(this.translate.instant('BUSINESS_JOIN_SUCCESS_TITLE'), this.translate.instant('BUSINESS_JOIN_SUCCESS_MSG'));
         this.router.navigate(['/management/business']);
       },
       error: async (err) => {
         this.loading.set(false);
-        const msg = err?.error?.detail ?? err?.error?.message ?? 'ไม่สามารถเข้าร่วมธุรกิจได้';
-        await this.dialog.error('เกิดข้อผิดพลาด', msg);
+        const msg = err?.error?.detail ?? err?.error?.message ?? this.translate.instant('BUSINESS_JOIN_FAIL_MSG');
+        await this.dialog.error(this.translate.instant('BUSINESS_JOIN_ERROR_TITLE'), msg);
       },
     });
   }
