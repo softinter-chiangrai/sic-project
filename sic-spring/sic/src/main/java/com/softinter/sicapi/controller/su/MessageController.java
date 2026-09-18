@@ -60,6 +60,9 @@ public ResponseEntity<Map<String, String>> i18n(
 
     Map<String, String> translations = new HashMap<>();
     for (I18nMessageResponse msg : messages) {
+        // Direct key (e.g. "DASHBOARD_WELCOME") used by Angular {{ 'KEY' | translate }}
+        translations.put(msg.getMessageCode(), msg.getMessage());
+        // Namespaced key (e.g. "COMMON.ALL.DASHBOARD_WELCOME") for backwards compatibility
         String key = moduleCode + "." + programCode + "." + msg.getMessageCode();
         translations.put(key, msg.getMessage());
     }

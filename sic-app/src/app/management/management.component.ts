@@ -15,11 +15,6 @@ import { APP_TRANSLATE_MODULE_CODE, APP_TRANSLATE_PROGRAM_CODE, AppTranslateLoad
   templateUrl: './management.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './management.component.css',
-  providers: [
-    AppTranslateLoader,
-    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'MANAGEMENT' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'APP' },
-  ],
 })
 export class Management {
 

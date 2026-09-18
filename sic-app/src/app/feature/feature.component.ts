@@ -26,11 +26,6 @@ type TaskPersistMeta = {
   templateUrl: './feature.component.html',
   styleUrl: './feature.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
-  providers: [
-    AppTranslateLoader,
-    { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'FEATURE' },
-    { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'APP' },
-  ],
 })
 export class Feature {
   private readonly taskPersistMeta = new Map<string, TaskPersistMeta>();
