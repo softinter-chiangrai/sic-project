@@ -4,7 +4,10 @@ import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmCustomerProjectRequest;
 import com.softinter.sicapi.dto.response.ApiResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PmCustomerProjectResponse;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.service.PmCustomerProjectService;
 import com.softinter.sicapi.util.PaginationUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -36,6 +39,7 @@ public class PmCustomerProjectController {
     private final PmCustomerProjectService projectService;
     private final PmCustomerProjectExportService projectExportService;
     private final com.softinter.sicapi.service.impl.ProjectGeneratorService projectGeneratorService;
+    private final PmCustomerProjectRepository projectRepository;
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate project charter/plan draft with AI")
@@ -74,6 +78,24 @@ public class PmCustomerProjectController {
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
+
+    @GetMapping("/combobox")
+    @Operation(summary = "Get project combobox list (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน)")
+    public ResponseEntity<java.util.List<ComboboxResponse>> getComboboxProjects(
+            @RequestParam(required = false) String keyword) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        java.util.List<PmCustomerProject> projects = (keyword != null && !keyword.isBlank())
+                ? projectRepository.findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
+                        businessId, keyword, org.springframework.data.domain.PageRequest.of(0, 50)).getContent()
+                : projectRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        java.util.List<ComboboxResponse> list = projects.stream()
+                .map(p -> new ComboboxResponse(p.getId().toString(), p.getProjectName()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 
     @GetMapping("/{id}")
     @Operation(summary = "ดึงข้อมูลโครงการโดย ID")

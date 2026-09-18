@@ -115,6 +115,18 @@
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <sic-combobox
+          formControlName="projectId"
+          label="โครงการ"
+          [apiUrl]="apiGetComboboxProject"
+          valueField="value"
+          textField="text"
+          placeholder="ค้นหาและเลือกโครงการ"
+          [clearable]="true"
+          [required]="true"
+          (selectionChanged)="onProjectSelected($event)">
+        </sic-combobox>
+
         <sic-input
           formControlName="deliveryCode"
           [label]="'PMDT14_CODE_FIELD_LABEL' | translate"

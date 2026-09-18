@@ -16,6 +16,7 @@ export interface PmInvoiceModel {
   projectId: string;
   customerId: string;
   contractId?: string;
+  deliveryId?: string;
   milestoneId?: string;
   invoiceNo?: string;
   issueDate: string;

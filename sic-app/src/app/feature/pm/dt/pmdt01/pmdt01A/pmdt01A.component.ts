@@ -50,6 +50,7 @@ export class Pmdt01AComponent implements OnInit {
   data: Pmdt01AModel | null = null;
   userApiUrl = '';
   selectedOwnerNames: Record<string, string> = {};
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
 
   form: FormGroup = Pmdt01AForm.createForm(this.fb);
 
@@ -121,6 +122,11 @@ export class Pmdt01AComponent implements OnInit {
         .filter(Boolean);
     }
 
+    // ✅ sync this.projectId (ใช้ตอน submit/cancel) ให้ตรงกับ project จริงของ Phase ที่โหลดมาแก้ไข
+    if (data.projectId) {
+      this.projectId = data.projectId;
+    }
+
     this.form.patchValue({
       projectId: data.projectId || this.projectId,
       phaseCode: data.phaseCode || '',
@@ -134,6 +140,11 @@ export class Pmdt01AComponent implements OnInit {
       color: data.color || '',
     });
     this.form.markAsPristine();
+  }
+
+  // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
+  onProjectSelected(item: any): void {
+    this.projectId = item?.value ?? item?.id ?? '';
   }
 
   onOwnerSelectionChanged(items: any[]) {

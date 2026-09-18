@@ -7,7 +7,7 @@ export class Pmdt02BForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<WorkPackageModel>> {
     return fb.group<ToForm<WorkPackageModel>>({
       id: fb.control(null),
-      milestoneId: fb.control(null),
+      milestoneId: fb.control(null, [Validators.required]),
       packageName: fb.control(null, [Validators.required]),
       description: fb.control(null),
       startDate: fb.control(null, [Validators.required]),

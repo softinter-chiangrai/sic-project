@@ -7,7 +7,7 @@ export class Pmdt02CForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<TaskModel>> {
     return fb.group<ToForm<TaskModel>>({
       id: fb.control(null),
-      workPackageId: fb.control(null),
+      workPackageId: fb.control(null, [Validators.required]),
       specificationId: fb.control(null),
       taskCode: fb.control(null, [Validators.required]),
       taskName: fb.control(null, [Validators.required]),

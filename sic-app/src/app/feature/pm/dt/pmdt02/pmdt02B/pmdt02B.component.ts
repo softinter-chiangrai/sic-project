@@ -7,6 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from 'sic-ng';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { Pmdt02BService } from './pmdt02B.service';
 import { Pmdt02BForm } from './pmdt02B.form';
@@ -14,6 +15,7 @@ import { WorkPackageModel, WorkPackageRequest, WorkPackageResponse } from './pmd
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicButtonComponent } from "sic-ng";
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmdt02B',
@@ -25,6 +27,7 @@ import { SicButtonComponent } from "sic-ng";
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicColorpickerComponent,
+    SicComboboxComponent,
     SicTiptapEditorComponent,
     SicButtonComponent,
     TranslateModule
@@ -46,6 +49,7 @@ export class Pmdt02BComponent implements OnInit {
   wpId: string | null = null;
   isEdit = false;
   data: WorkPackageResponse | null = null;
+  apiGetComboboxMilestone = `${environment.apiBaseUrl}/api/pm/milestones/combobox`;
 
   formData: SicFromData<WorkPackageModel> = new SicFromData<WorkPackageModel>(Pmdt02BForm.createForm(this.fb));
 
@@ -94,7 +98,11 @@ export class Pmdt02BComponent implements OnInit {
     const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
     const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    if (data.milestoneId) {
+      this.milestoneId = data.milestoneId;
+    }
     this.form.patchValue({
+      milestoneId: data.milestoneId,
       packageName: data.packageName,
       description: data.description,
       startDate: startDate,
@@ -103,6 +111,11 @@ export class Pmdt02BComponent implements OnInit {
       endTime: endTime,
       color: data.color || '', // ✅ patch ค่าสี
     });
+  }
+
+  // ผู้ใช้เลือกไมล์สโตนเองจาก Combobox (ไม่ต้องเคยเข้าหน้าไมล์สโตนมาก่อน)
+  onMilestoneSelected(item: any): void {
+    this.milestoneId = item?.value ?? item?.id ?? '';
   }
 
   private buildISOString(date: any, time: string): string {

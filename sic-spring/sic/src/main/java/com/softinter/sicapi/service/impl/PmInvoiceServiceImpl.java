@@ -8,11 +8,14 @@ import com.softinter.sicapi.dto.response.PmInvoiceResponse;
 import com.softinter.sicapi.entity.enums.BillingType;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.enums.PaymentStatus;
+import com.softinter.sicapi.entity.pm.PmCustomerContract;
+import com.softinter.sicapi.entity.pm.PmDelivery;
 import com.softinter.sicapi.entity.pm.PmInvoice;
 import com.softinter.sicapi.entity.pm.PmInvoiceItem;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceItemRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
 import com.softinter.sicapi.service.ApprovalService;
@@ -47,6 +50,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
+    private final PmDeliveryRepository deliveryRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
@@ -286,8 +290,35 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
 
     private void mapRequestToEntity(PmInvoiceRequest req, PmInvoice entity) {
         entity.setInvoiceNo(req.getInvoiceNo());
-        entity.setCustomerId(req.getCustomerId());
-        entity.setProjectId(req.getProjectId());
+
+        // ✅ derive projectId จาก Delivery เสมอถ้ามี deliveryId (ตัวเลือกหลักตามแผนผังความสัมพันธ์)
+        // ไม่มี deliveryId ก็ยังใช้ projectId ที่เลือกตรงๆ ได้ตามปกติ (ไม่บังคับต้องมี Delivery)
+        UUID effectiveProjectId = req.getProjectId();
+        if (req.getDeliveryId() != null) {
+            PmDelivery delivery = deliveryRepository.findById(req.getDeliveryId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Delivery"));
+            effectiveProjectId = delivery.getProjectId();
+        }
+        entity.setProjectId(effectiveProjectId);
+
+        // ✅ derive customerId จาก Project เสมอเมื่อรู้ projectId (ห้าม trust req.getCustomerId() แยกต่างหาก)
+        if (effectiveProjectId != null) {
+            entity.setCustomerId(projectRepository.findById(effectiveProjectId)
+                    .map(com.softinter.sicapi.entity.pm.PmCustomerProject::getCustomerId)
+                    .orElse(req.getCustomerId()));
+        } else {
+            entity.setCustomerId(req.getCustomerId());
+        }
+
+        // ✅ ตรวจสอบว่า contractId (ถ้ามี) เป็นของโครงการเดียวกับ projectId ที่ derive/เลือกมา กัน mismatch
+        if (req.getContractId() != null) {
+            PmCustomerContract contract = contractRepository.findById(req.getContractId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบสัญญา"));
+            if (contract.getProjectId() != null && effectiveProjectId != null
+                    && !contract.getProjectId().equals(effectiveProjectId)) {
+                throw new RuntimeException("สัญญาที่เลือกไม่ได้อยู่ในโครงการเดียวกับที่เลือกไว้");
+            }
+        }
         entity.setContractId(req.getContractId());
         entity.setDeliveryId(req.getDeliveryId());
         entity.setMilestoneId(req.getMilestoneId());

@@ -5,6 +5,21 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
+    <!-- Project -->
+    <div class="grid grid-cols-1 gap-4">
+      <sic-combobox
+        formControlName="projectId"
+        label="โครงการ"
+        [apiUrl]="apiGetComboboxProject"
+        valueField="value"
+        textField="text"
+        placeholder="ค้นหาและเลือกโครงการ"
+        [clearable]="true"
+        [required]="true"
+        (selectionChanged)="onProjectSelected($event)">
+      </sic-combobox>
+    </div>
+
     <!-- Phase Code & Phase Name -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div>

@@ -160,7 +160,18 @@ public class PmBugServiceImpl implements PmBugService {
     }
 
     private void mapRequestToEntity(PmBugRequest req, PmBug entity) {
-        entity.setProjectId(req.getProjectId());
+        // ✅ derive taskId/projectId จาก Test Case เสมอถ้ามี testCaseId
+        // ห้าม trust req.getProjectId()/req.getTaskId() แยกต่างหาก (กันกรณีไม่ตรงกับ test case จริง)
+        if (req.getTestCaseId() != null) {
+            PmTestCase tc = testCaseRepository.findById(req.getTestCaseId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Test Case"));
+            entity.setTaskId(tc.getTaskId());
+            entity.setProjectId(tc.getProjectId());
+        } else {
+            entity.setTaskId(req.getTaskId());
+            entity.setProjectId(req.getProjectId());
+        }
+        entity.setTestCaseId(req.getTestCaseId());
         entity.setBugCode(req.getBugCode());
         entity.setTitle(req.getTitle());
         entity.setDescription(req.getDescription());
@@ -177,8 +188,6 @@ public class PmBugServiceImpl implements PmBugService {
         entity.setFixedDate(req.getFixedDate());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "Open");
         entity.setRelatedSpec(req.getRelatedSpec());
-        entity.setTaskId(req.getTaskId());
-        entity.setTestCaseId(req.getTestCaseId());
     }
 
     private PmBugResponse toResponse(PmBug entity) {

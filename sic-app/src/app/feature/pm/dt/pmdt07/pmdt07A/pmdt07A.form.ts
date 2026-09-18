@@ -21,7 +21,7 @@ export class Pmdt07AForm {
       requirementId: [null],
       generatedFromRequirementId: [null],
       generatedFromDiagramId: [null],
-      projectId: [null],
+      projectId: [null, [Validators.required]],
       projectName: [null],
       createdBy: [null],
       createdDate: [null],

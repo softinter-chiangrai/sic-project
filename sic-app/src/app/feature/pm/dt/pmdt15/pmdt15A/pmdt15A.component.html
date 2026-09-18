@@ -54,6 +54,21 @@
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
         <div class="md:col-span-3">
+          <sic-combobox
+            formControlName="projectId"
+            [label]="isProjectDerived() ? 'โครงการ (ผูกอัตโนมัติจาก Specification/Delivery ที่เลือก)' : 'โครงการ'"
+            [apiUrl]="apiGetComboboxProject"
+            valueField="value"
+            textField="text"
+            placeholder="ค้นหาและเลือกโครงการ"
+            [clearable]="true"
+            [required]="true"
+            [disabled]="isProjectDerived()"
+            (selectionChanged)="onProjectSelected($event)">
+          </sic-combobox>
+        </div>
+
+        <div class="md:col-span-3">
           <sic-input
             formControlName="manualCode"
             [label]="'PMDT15_CODE_FIELD_LABEL' | translate"
@@ -81,10 +96,22 @@
 
         <div class="md:col-span-3">
           <sic-combobox
+            formControlName="relatedSpecId"
+            label="Specification (ถ้ามี — เลือกแล้วระบบจะผูกโครงการให้อัตโนมัติ)"
+            [options]="specificationOptions()"
+            placeholder="เลือก Specification"
+            [clearable]="true"
+            (selectionChanged)="onRelatedSpecSelected($event)">
+          </sic-combobox>
+        </div>
+
+        <div class="md:col-span-3">
+          <sic-combobox
             formControlName="deliveryId"
             [label]="'PMDT15_DELIVERY_LABEL' | translate"
             [options]="deliveryOptions()"
             [placeholder]="'PMDT15_DELIVERY_PLACEHOLDER' | translate"
+            (selectionChanged)="onDeliverySelected($event)"
             [clearable]="true"
             valueField="value"
             displayField="text">

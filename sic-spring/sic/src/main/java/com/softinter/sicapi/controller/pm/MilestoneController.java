@@ -12,10 +12,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.MilestoneRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.MilestoneResponse;
+import com.softinter.sicapi.entity.pm.PmMilestone;
+import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
 import com.softinter.sicapi.service.MilestoneService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,23 @@ import lombok.extern.slf4j.Slf4j;
 public class MilestoneController {
 
     private final MilestoneService milestoneService;
+    private final PmMilestoneRepository milestoneRepository;
+
+    // ===== Milestone Combobox (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน) =====
+    @GetMapping("/combobox")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxMilestones(
+            @RequestParam(required = false) String keyword) {
+        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        List<PmMilestone> milestones = milestoneRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        List<ComboboxResponse> list = milestones.stream()
+                .map(m -> new ComboboxResponse(m.getId().toString(), m.getMilestoneName()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 
     @GetMapping("/phase/{phaseId}")
     public ResponseEntity<List<MilestoneResponse>> getMilestonesByPhaseId(@PathVariable UUID phaseId) {

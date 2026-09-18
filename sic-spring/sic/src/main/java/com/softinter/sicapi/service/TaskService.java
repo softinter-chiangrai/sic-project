@@ -16,5 +16,6 @@ public interface TaskService {
     TaskResponse updateTask(UUID taskId, TaskRequest request);
     void deleteTask(UUID taskId);
     List<TaskResponse> getAllTasksByProjectId(UUID projectId);
+    List<TaskResponse> getAllTasksByBusinessId(UUID businessId, String keyword);
     Page<TaskResponse> search(UUID projectId, String keyword, Pageable pageable);
 }

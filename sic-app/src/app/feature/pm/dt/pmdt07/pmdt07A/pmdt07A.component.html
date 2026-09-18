@@ -113,13 +113,25 @@
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <sic-combobox
+                                label="โครงการ"
+                                formControlName="projectId"
+                                [apiUrl]="service.apiGetComboboxProject"
+                                keywordParam="keyword"
+                                valueField="value"
+                                textField="text"
+                                placeholder="ค้นหาและเลือกโครงการ"
+                                [clearable]="true"
+                                [required]="true"
+                                (selectionChanged)="onProjectSelected($event)">
+                            </sic-combobox>
+                            <sic-combobox
                                 label="ความต้องการ"
                                 formControlName="requirementId"
                                 [apiUrl]="service.apiGetComboboxRequirement"
-                                [params]="{ projectId: form.value.projectId || customerState.getProjectId() }"
+                                [params]="{ projectId: form.value.projectId }"
                                 valueField="value"
                                 textField="text"
-                                placeholder="เลือกความต้องการที่เกี่ยวข้อง"
+                                placeholder="เลือกความต้องการที่เกี่ยวข้อง (ไม่บังคับ)"
                                 [clearable]="true">
                             </sic-combobox>
                             <sic-combobox
@@ -201,7 +213,6 @@
                         <input type="hidden" formControlName="id" />
                         <input type="hidden" formControlName="state" />
                         <input type="hidden" formControlName="rowVersion" />
-                        <input type="hidden" formControlName="projectId" />
                         <input type="hidden" formControlName="projectName" />
                         <input type="hidden" formControlName="createdBy" />
 

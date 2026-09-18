@@ -7,6 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicDatepickerComponent } from 'sic-ng';
 import { SicTimepickerComponent } from '../../../../../core/component/sic-timepicker/sic-timepicker.component';
 import { SicColorpickerComponent } from 'sic-ng';
+import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmdt02AService } from './pmdt02A.service';
@@ -14,6 +15,7 @@ import { Pmdt02AForm } from './pmdt02A.form';
 import { MilestoneModel, MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicButtonComponent } from "sic-ng";
+import { environment } from '../../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmdt02A',
@@ -25,6 +27,7 @@ import { SicButtonComponent } from "sic-ng";
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicColorpickerComponent,
+    SicComboboxComponent,
     SicTiptapEditorComponent,
     SicButtonComponent,
     TranslateModule
@@ -45,6 +48,7 @@ export class Pmdt02AComponent implements OnInit {
   milestoneId: string | null = null;
   isEdit = false;
   data: MilestoneResponse | null = null;
+  apiGetComboboxPhase = `${environment.apiBaseUrl}/api/pm/phases/combobox`;
 
   formData: SicFromData<MilestoneModel> = new SicFromData<MilestoneModel>(Pmdt02AForm.createForm(this.fb));
 
@@ -88,13 +92,22 @@ export class Pmdt02AComponent implements OnInit {
   patchForm(data: MilestoneResponse) {
     const dueDate = data.dueDate ? data.dueDate.split('T')[0] : '';
     const dueTime = data.dueDate ? data.dueDate.split('T')[1]?.substring(0, 5) : '';
+    if (data.phaseId) {
+      this.phaseId = data.phaseId;
+    }
     this.form.patchValue({
+      phaseId: data.phaseId,
       milestoneName: data.milestoneName,
       description: data.description,
       dueDate: dueDate,
       dueTime: dueTime,
       color: data.color || '', // ✅ patch ค่าสี
     });
+  }
+
+  // ผู้ใช้เลือกเฟสเองจาก Combobox (ไม่ต้องเคยเข้าหน้าเฟสมาก่อน)
+  onPhaseSelected(item: any): void {
+    this.phaseId = item?.value ?? item?.id ?? '';
   }
 
   private buildISOString(date: any, time: string): string {

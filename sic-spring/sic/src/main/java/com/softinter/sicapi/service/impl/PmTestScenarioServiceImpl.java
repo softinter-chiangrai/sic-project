@@ -123,7 +123,14 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
     }
 
     private void mapRequestToEntity(PmTestScenarioRequest req, PmTestScenario entity) {
-        entity.setProjectId(req.getProjectId());
+        // ✅ derive projectId จาก Task เสมอถ้ามี taskId (ห้าม trust req.getProjectId() แยกต่างหาก)
+        if (req.getTaskId() != null) {
+            var task = taskRepository.findById(req.getTaskId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Task"));
+            entity.setProjectId(task.getWorkPackage().getMilestone().getPhase().getProject().getId());
+        } else {
+            entity.setProjectId(req.getProjectId());
+        }
         entity.setTestPlanId(req.getTestPlanId());
         entity.setTaskId(req.getTaskId());
         entity.setScenarioCode(req.getScenarioCode());

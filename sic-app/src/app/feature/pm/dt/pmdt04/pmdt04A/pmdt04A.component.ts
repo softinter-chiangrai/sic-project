@@ -63,7 +63,7 @@ import { AiHistoryService } from '../../../../../core/services/ai-history.servic
 export class Pmdt04AService {
   private http = inject(HttpClient);
 
-  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/requirement/combobox-project`;
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
   apiGetLovRequirementType = `${environment.apiBaseUrl}/api/pm/requirement/lov-type`;
   apiGetLovPriority = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
   apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/requirement/lov-status`;
@@ -452,6 +452,13 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.navigation.navigate(['/feature/pm/requirement']);
       },
     });
+  }
+
+  // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
+  onProjectSelected(item: any): void {
+    const projectName = item ? (item.text ?? item.label ?? '') : '';
+    this.formData.patchValue({ projectName } as any);
+    this.cdr.markForCheck();
   }
 
   private fetchProjectName(projectId: string): void {

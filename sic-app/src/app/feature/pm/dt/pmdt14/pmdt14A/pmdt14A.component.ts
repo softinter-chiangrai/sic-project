@@ -79,6 +79,8 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   checklists = signal<PmDeliveryChecklistModel[]>([]);
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
 
+  apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+
   // Delivery options
   typeOptions = [
     { label: this.translate.instant('PMDT14_TYPE_FINAL'), value: 'FINAL' },
@@ -277,6 +279,15 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         }
       }
     });
+  }
+
+  // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Contract + Gate Check ของโครงการที่เลือกใหม่
+  onProjectSelected(item: any): void {
+    const projId = item?.value ?? item?.id ?? null;
+    this.loadContractOptions(projId || undefined);
+    if (projId) {
+      this.runGateCheck(projId);
+    }
   }
 
   loadContractOptions(projectId?: string): void {

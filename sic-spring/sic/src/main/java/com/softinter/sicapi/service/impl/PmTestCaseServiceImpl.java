@@ -229,10 +229,21 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     }
 
     private void mapRequestToEntity(PmTestCaseRequest req, PmTestCase entity) {
-        entity.setProjectId(req.getProjectId());
+        // ✅ derive taskId/projectId จาก Test Scenario เสมอถ้ามี scenarioId
+        // ห้าม trust req.getProjectId()/req.getTaskId() แยกต่างหาก (กันกรณีไม่ตรงกับ scenario จริง)
+        PmTestScenario sc = req.getScenarioId() != null
+                ? scenarioRepository.findById(req.getScenarioId())
+                        .orElseThrow(() -> new RuntimeException("ไม่พบ Test Scenario"))
+                : null;
         entity.setScenarioId(req.getScenarioId());
         entity.setScenarioName(req.getScenarioName());
-        entity.setTaskId(req.getTaskId());
+        if (sc != null) {
+            entity.setTaskId(sc.getTaskId());
+            entity.setProjectId(sc.getProjectId());
+        } else {
+            entity.setTaskId(req.getTaskId());
+            entity.setProjectId(req.getProjectId());
+        }
         entity.setTestCaseCode(req.getTestCaseCode());
         entity.setTitle(req.getTitle());
         entity.setPriority(req.getPriority() != null ? req.getPriority() : "Medium");
@@ -243,11 +254,8 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
 
         // Auto-inherit testType from Scenario if scenarioId is present
         String effectiveTestType = req.getTestType();
-        if (entity.getScenarioId() != null) {
-            PmTestScenario sc = scenarioRepository.findById(entity.getScenarioId()).orElse(null);
-            if (sc != null && sc.getTestType() != null && !sc.getTestType().isBlank()) {
-                effectiveTestType = sc.getTestType();
-            }
+        if (sc != null && sc.getTestType() != null && !sc.getTestType().isBlank()) {
+            effectiveTestType = sc.getTestType();
         }
         entity.setTestType(effectiveTestType != null ? effectiveTestType : "SIT");
         entity.setTester(req.getTester());

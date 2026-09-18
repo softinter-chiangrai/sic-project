@@ -211,9 +211,13 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
 
     private void mapRequestToEntity(PmMaRenewalRequest req, PmMaRenewal entity) {
         entity.setRenewalNo(req.getRenewalNo());
-        entity.setContractId(req.getContractId());
-        entity.setCustomerId(req.getCustomerId());
-        entity.setProjectId(req.getProjectId());
+        // ✅ derive customerId/projectId จาก Contract เสมอ (contractId บังคับอยู่แล้ว)
+        // ห้าม trust req.getCustomerId()/req.getProjectId() แยกต่างหาก (กันกรณีไม่ตรงกับสัญญาจริง)
+        PmCustomerContract contract = contractRepository.findById(req.getContractId())
+                .orElseThrow(() -> new RuntimeException("ไม่พบสัญญา"));
+        entity.setContractId(contract.getId());
+        entity.setCustomerId(contract.getCustomerId());
+        entity.setProjectId(contract.getProjectId());
         entity.setCurrentEndDate(req.getCurrentEndDate() != null ? req.getCurrentEndDate() : LocalDate.now());
         entity.setNewStartDate(req.getNewStartDate() != null ? req.getNewStartDate() : LocalDate.now());
         entity.setNewEndDate(req.getNewEndDate() != null ? req.getNewEndDate() : LocalDate.now().plusDays(365));

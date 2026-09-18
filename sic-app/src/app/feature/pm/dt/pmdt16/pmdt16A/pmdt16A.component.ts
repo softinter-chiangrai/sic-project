@@ -74,6 +74,9 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   isPrinting = signal(false);
 
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
+  deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
+  isProjectDerived = signal(false);
+  apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
   items = signal<PmInvoiceItemModel[]>([]);
 
   // Approval Flow
@@ -287,6 +290,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       } as any);
     }
     this.loadContractOptions(projId || undefined);
+    this.loadDeliveryOptions(projId || undefined);
 
     // Auto calculate VAT & Total
     this.formData.form.get('subtotalAmount')?.valueChanges.subscribe(() => this.calculateTotals());
@@ -309,6 +313,39 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       if (paramId) {
         this.loadData(paramId);
       }
+    });
+  }
+
+  loadDeliveryOptions(projectId?: string): void {
+    this.service.getDeliveryCombobox(projectId).subscribe({
+      next: (res) => this.deliveryOptions.set(res || []),
+      error: () => this.deliveryOptions.set([]),
+    });
+  }
+
+  // เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
+  onProjectSelected(item: any): void {
+    const projId = item?.value ?? item?.id ?? null;
+    this.loadContractOptions(projId || undefined);
+    this.loadDeliveryOptions(projId || undefined);
+  }
+
+  // เลือก Delivery แล้วผูกโครงการให้อัตโนมัติ (ตัวเลือกหลักตามแผนผังความสัมพันธ์)
+  onDeliverySelected(item: any): void {
+    const deliveryId = item?.value ?? item?.id ?? null;
+    if (!deliveryId) {
+      this.isProjectDerived.set(false);
+      return;
+    }
+    this.http.get<any>(`${apiBaseUrl}/api/pm/delivery/${deliveryId}`).subscribe({
+      next: (delivery) => {
+        const projId = delivery?.projectId;
+        if (projId) {
+          this.formData.patchValue({ projectId: projId } as any);
+          this.isProjectDerived.set(true);
+          this.loadContractOptions(projId);
+        }
+      },
     });
   }
 
@@ -418,7 +455,9 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         this.formData.resetModel(this.formData.form.getRawValue() as any);
         if (data.projectId) {
           this.loadContractOptions(data.projectId);
+          this.loadDeliveryOptions(data.projectId);
         }
+        this.isProjectDerived.set(!!data.deliveryId);
       },
       error: (err) => {
         this.dialog.error(this.translate.instant('PMDT16A_ERROR_TITLE'), err.message || this.translate.instant('PMDT16A_LOAD_ERROR_MSG'));

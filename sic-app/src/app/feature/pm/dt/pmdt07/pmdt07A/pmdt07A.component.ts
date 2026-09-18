@@ -509,6 +509,13 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         });
     }
 
+    // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — sync ชื่อโครงการ และล้าง Requirement เดิมที่อาจไม่ตรงกับโครงการใหม่
+    onProjectSelected(item: any): void {
+        const projectName = item ? (item.text ?? item.label ?? '') : '';
+        this.form.patchValue({ projectName, requirementId: null });
+        this.cdr.markForCheck();
+    }
+
     private fetchProjectName(projectId: string): void {
         this.http.get<any>(this.service.apiGetComboboxProject).subscribe({
             next: (res) => {

@@ -124,7 +124,6 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   }
 
   loadTasks(projectId?: string): void {
-    if (!projectId) return;
     this.taskLoading.set(true);
     this.service.getTasksByProject(projectId).subscribe({
       next: (tasks) => {

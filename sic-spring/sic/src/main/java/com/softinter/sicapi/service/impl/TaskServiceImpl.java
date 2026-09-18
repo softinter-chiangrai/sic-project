@@ -359,6 +359,14 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<TaskResponse> getAllTasksByBusinessId(UUID businessId, String keyword) {
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        return taskRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword)
+                .stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public Page<TaskResponse> search(UUID projectId, String keyword, Pageable pageable) {
         String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
         return taskRepository.searchByProjectIdAndKeyword(projectId, normalizedKeyword, pageable)

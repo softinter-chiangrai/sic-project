@@ -56,6 +56,30 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
+          [label]="'Delivery (เลือกแล้วระบบจะผูกโครงการให้อัตโนมัติ)'"
+          [options]="deliveryOptions()"
+          placeholder="เลือก Delivery"
+          valueField="value"
+          displayField="text"
+          [clearable]="true"
+          formControlName="deliveryId"
+          (selectionChanged)="onDeliverySelected($event)"
+        ></sic-combobox>
+
+        <sic-combobox
+          [label]="isProjectDerived() ? 'โครงการ (ผูกอัตโนมัติจาก Delivery ที่เลือก)' : 'โครงการ'"
+          [apiUrl]="apiGetComboboxProject"
+          valueField="value"
+          textField="text"
+          placeholder="ค้นหาและเลือกโครงการ"
+          [clearable]="true"
+          [required]="true"
+          [disabled]="isProjectDerived()"
+          formControlName="projectId"
+          (selectionChanged)="onProjectSelected($event)"
+        ></sic-combobox>
+
+        <sic-combobox
           [label]="'PMDT16A_LBL_BILLING_TYPE' | translate"
           [required]="true"
           [items]="billingTypeOptions"

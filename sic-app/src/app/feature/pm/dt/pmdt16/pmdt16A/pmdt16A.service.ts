@@ -28,6 +28,14 @@ export class Pmdt16AService {
     return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/contracts/combobox`, { params: httpParams });
   }
 
+  getDeliveryCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let httpParams = new HttpParams();
+    if (projectId) {
+      httpParams = httpParams.set('projectId', projectId);
+    }
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/delivery/combobox`, { params: httpParams });
+  }
+
   generateDraft(data: { projectId?: string; contractId?: string; invoiceType?: string; prompt?: string; model?: string }): Observable<any> {
     return this.http.post<any>(`${apiBaseUrl}/api/pm/invoices/generate/draft`, data);
   }

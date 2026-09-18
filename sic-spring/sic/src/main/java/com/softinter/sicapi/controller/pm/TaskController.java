@@ -84,9 +84,21 @@ public class TaskController {
     }
 
     @GetMapping("/combobox")
-    public ResponseEntity<List<ComboboxResponse>> getComboboxTasks(@RequestParam UUID projectId) {
-        log.info("Getting tasks combobox for project ID: {}", projectId);
-        List<TaskResponse> tasks = taskService.getAllTasksByProjectId(projectId);
+    public ResponseEntity<List<ComboboxResponse>> getComboboxTasks(
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword) {
+        List<TaskResponse> tasks;
+        if (projectId != null) {
+            log.info("Getting tasks combobox for project ID: {}", projectId);
+            tasks = taskService.getAllTasksByProjectId(projectId);
+        } else {
+            UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+            if (businessId == null) {
+                return ResponseEntity.badRequest().build();
+            }
+            log.info("Getting tasks combobox for business ID: {} (ไม่มี projectId มาก่อน)", businessId);
+            tasks = taskService.getAllTasksByBusinessId(businessId, keyword);
+        }
         List<ComboboxResponse> list = tasks.stream()
                 .map(t -> new ComboboxResponse(t.getId().toString(), t.getTaskCode() + " - " + t.getTaskName()))
                 .collect(java.util.stream.Collectors.toList());

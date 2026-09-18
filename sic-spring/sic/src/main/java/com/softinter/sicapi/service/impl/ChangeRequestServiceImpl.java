@@ -66,9 +66,13 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
 
         PmChangeRequest cr = new PmChangeRequest();
-        UUID projId = request.getProjectId();
-        if (projId == null && request.getTargetType() != null && request.getTargetId() != null) {
-            if ("REQUIREMENT".equalsIgnoreCase(request.getTargetType())) {
+        // ✅ derive projectId จาก targetType/targetId เสมอ (targetType/targetId บังคับอยู่แล้วจาก validateTargetExists)
+        // ห้ามใช้ request.getProjectId() ทับ เพื่อกัน project ไม่ตรงกับ target จริง
+        UUID projId = null;
+        if (request.getTargetType() != null && request.getTargetId() != null) {
+            if ("PROJECT".equalsIgnoreCase(request.getTargetType())) {
+                projId = request.getTargetId();
+            } else if ("REQUIREMENT".equalsIgnoreCase(request.getTargetType())) {
                 projId = requirementRepository.findById(request.getTargetId())
                         .map(r -> r.getProject() != null ? r.getProject().getId() : r.getProjectId())
                         .orElse(null);
@@ -85,6 +89,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                         .map(PmUserManual::getProjectId)
                         .orElse(null);
             }
+        }
+        // fallback: targetType ที่ยัง derive ไม่ได้ (เช่น TASK, DIAGRAM, CONTRACT) ใช้ค่าจาก request แทน
+        if (projId == null) {
+            projId = request.getProjectId();
         }
         cr.setProjectId(projId);
         if (request.getCrCode() != null && !request.getCrCode().isBlank()) {

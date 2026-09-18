@@ -528,6 +528,15 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         entity.setDeliveryCode(req.getDeliveryCode());
         entity.setDeliveryTitle(req.getDeliveryTitle());
         entity.setDeliveryType(req.getDeliveryType() != null ? req.getDeliveryType() : "FINAL");
+        // ✅ ตรวจสอบว่า contractId (ถ้ามี) เป็นของโครงการเดียวกับ projectId ที่เลือก กัน mismatch
+        if (req.getContractId() != null) {
+            PmCustomerContract contract = contractRepository.findById(req.getContractId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบสัญญา"));
+            if (contract.getProjectId() != null && req.getProjectId() != null
+                    && !contract.getProjectId().equals(req.getProjectId())) {
+                throw new RuntimeException("สัญญาที่เลือกไม่ได้อยู่ในโครงการเดียวกับที่เลือกไว้");
+            }
+        }
         entity.setContractId(req.getContractId());
         entity.setMilestoneId(req.getMilestoneId());
         entity.setDeliveryDate(req.getDeliveryDate());

@@ -52,6 +52,7 @@ export class Pmdt02CComponent implements OnInit {
   workPackageId = '';
   projectId = '';
   phaseId = '';
+  apiGetComboboxWorkPackage = `${environment.apiBaseUrl}/api/pm/work-packages/combobox`;
   taskId: string | null = null;
   isEdit = false;
   data: TaskResponse | null = null;
@@ -222,7 +223,11 @@ export class Pmdt02CComponent implements OnInit {
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
     const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
 
+    if (data.workPackageId) {
+      this.workPackageId = data.workPackageId;
+    }
     this.form.patchValue({
+      workPackageId: data.workPackageId,
       specificationId: data.specificationId || null,
       taskCode: data.taskCode,
       taskName: data.taskName,
@@ -244,6 +249,11 @@ export class Pmdt02CComponent implements OnInit {
     if (data.assigneeNames) {
       this.assigneeNames = data.assigneeNames;
     }
+  }
+
+  // ผู้ใช้เลือกแพ็กเกจงานเองจาก Combobox (ไม่ต้องเคยเข้าหน้าแพ็กเกจงานมาก่อน)
+  onWorkPackageSelected(item: any): void {
+    this.workPackageId = item?.value ?? item?.id ?? '';
   }
 
   // ✅ เมื่อเลือกจาก combobox multiple

@@ -5,8 +5,12 @@ import com.softinter.sicapi.dto.request.PmUserManualSectionRequest;
 import com.softinter.sicapi.dto.response.PmUserManualResponse;
 import com.softinter.sicapi.dto.response.PmUserManualSectionResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.pm.PmDelivery;
+import com.softinter.sicapi.entity.pm.PmSpecification;
 import com.softinter.sicapi.entity.pm.PmUserManual;
 import com.softinter.sicapi.entity.pm.PmUserManualSection;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmUserManualRepository;
 import com.softinter.sicapi.repository.pm.PmUserManualSectionRepository;
 import com.softinter.sicapi.service.ApprovalService;
@@ -35,6 +39,8 @@ public class PmUserManualServiceImpl implements PmUserManualService {
 
     private final PmUserManualRepository manualRepository;
     private final PmUserManualSectionRepository sectionRepository;
+    private final PmSpecificationRepository specificationRepository;
+    private final PmDeliveryRepository deliveryRepository;
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
@@ -222,7 +228,21 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     }
 
     private void mapRequestToEntity(PmUserManualRequest req, PmUserManual entity) {
-        entity.setProjectId(req.getProjectId());
+        // ✅ derive projectId จาก Specification หรือ Delivery เสมอถ้ามี (ตัวเลือกหลักตามแผนผังความสัมพันธ์)
+        // ลำดับ: relatedSpecId ก่อน แล้วค่อย deliveryId — ไม่มีทั้งคู่ก็ยังใช้ projectId ที่เลือกตรงๆ ได้ตามปกติ
+        UUID effectiveProjectId = req.getProjectId();
+        if (req.getRelatedSpecId() != null) {
+            PmSpecification spec = specificationRepository.findById(req.getRelatedSpecId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Specification"));
+            if (spec.getProject() != null) {
+                effectiveProjectId = spec.getProject().getId();
+            }
+        } else if (req.getDeliveryId() != null) {
+            PmDelivery delivery = deliveryRepository.findById(req.getDeliveryId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบ Delivery"));
+            effectiveProjectId = delivery.getProjectId();
+        }
+        entity.setProjectId(effectiveProjectId);
         entity.setManualCode(req.getManualCode());
         entity.setManualTitle(req.getManualTitle());
         entity.setManualType(req.getManualType() != null ? req.getManualType() : "USER");

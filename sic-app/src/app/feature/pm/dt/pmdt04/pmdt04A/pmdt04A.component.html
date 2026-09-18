@@ -104,6 +104,17 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
               <sic-combobox
+                label="โครงการ"
+                formControlName="projectId"
+                [apiUrl]="service.apiGetComboboxProject"
+                valueField="value"
+                textField="text"
+                placeholder="ค้นหาและเลือกโครงการ"
+                [clearable]="true"
+                [required]="true"
+                (selectionChanged)="onProjectSelected($event)">
+              </sic-combobox>
+              <sic-combobox
                 [label]="'PMDT04_REQ_TYPE_LABEL' | translate"
                 formControlName="requirementType"
                 [apiUrl]="service.apiGetLovRequirementType"

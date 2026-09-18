@@ -141,14 +141,28 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
         // ----- CREATE NEW -----
         if (isNew) {
+            // ✅ Resolve Requirement ก่อนเสมอ เพื่อ derive projectId จาก parent จริง
+            // ห้าม trust request.getProjectId() แยกต่างหากเมื่อมี requirementId ส่งมา (กันกรณี project/requirement ไม่ตรงกัน)
+            UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId()
+                    : request.getGeneratedFromRequirementId();
+            PmRequirement requirement = null;
+            UUID effectiveProjectId;
+            if (targetReqId != null) {
+                requirement = requirementRepository.findById(targetReqId)
+                        .orElseThrow(() -> new RuntimeException("ไม่พบ Requirement"));
+                effectiveProjectId = requirement.getProject().getId();
+            } else {
+                effectiveProjectId = request.getProjectId();
+            }
+
             if (request.getSpecificationCode() == null || request.getSpecificationCode().isBlank()) {
-                long count = specificationRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                long count = specificationRepository.countByProjectIdAndIsDeleteFalse(effectiveProjectId) + 1;
                 request.setSpecificationCode("SPEC-" + String.format("%03d", count));
             }
 
             // ตรวจสอบรหัสซ้ำ (ในโครงการเดียวกัน)
             if (specificationRepository.existsByBusinessIdAndProjectIdAndSpecificationCodeAndIsDeleteFalse(
-                    businessId, request.getProjectId(), request.getSpecificationCode())) {
+                    businessId, effectiveProjectId, request.getSpecificationCode())) {
                 throw new RuntimeException("รหัส Specification นี้มีอยู่แล้วในโครงการนี้: " + request.getSpecificationCode());
             }
 
@@ -164,26 +178,20 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // Mapping ข้อมูล
             mapRequestToEntity(request, spec);
 
-            // ตั้งค่า Project
-            if (request.getProjectId() != null) {
-                PmCustomerProject project = projectRepository.findById(request.getProjectId())
+            // ตั้งค่า Requirement + Project — derive project จาก requirement เสมอถ้ามี requirement
+            if (requirement != null) {
+                spec.setRequirement(requirement);
+                spec.setProject(requirement.getProject());
+            } else if (effectiveProjectId != null) {
+                PmCustomerProject project = projectRepository.findById(effectiveProjectId)
                         .orElseThrow(() -> new RuntimeException("ไม่พบโครงการ"));
                 spec.setProject(project);
-            }
-
-            // ตั้งค่า Requirement
-            UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId()
-                    : request.getGeneratedFromRequirementId();
-            if (targetReqId != null) {
-                PmRequirement requirement = requirementRepository.findById(targetReqId)
-                        .orElseThrow(() -> new RuntimeException("ไม่พบ Requirement"));
-                spec.setRequirement(requirement);
             }
 
             PmSpecification saved = specificationRepository.save(spec);
 
             // ✅ Create initial document version with snapshot & fileRefId
-            UUID projIdForVersion = saved.getProject() != null ? saved.getProject().getId() : request.getProjectId();
+            UUID projIdForVersion = saved.getProject() != null ? saved.getProject().getId() : effectiveProjectId;
             if (projIdForVersion != null) {
                 documentVersionService.createVersion(
                         "SPECIFICATION",
@@ -199,16 +207,13 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             }
 
             // ✅ สร้าง Trace Link กับ Requirement (ถ้ามี)
-            UUID projectIdForTrace = saved.getProject() != null ? saved.getProject().getId() : request.getProjectId();
-            UUID reqId = request.getRequirementId() != null ? request.getRequirementId() : request.getGeneratedFromRequirementId();
-            if (reqId != null) {
-                if (requirementRepository.existsById(reqId)) {
-                    traceLinkService.createLink(
-                            projectIdForTrace,
-                            "REQUIREMENT", reqId,
-                            "SPECIFICATION", saved.getId(),
-                            TraceRelationship.DOCUMENTED_BY);
-                }
+            UUID projectIdForTrace = saved.getProject() != null ? saved.getProject().getId() : effectiveProjectId;
+            if (requirement != null) {
+                traceLinkService.createLink(
+                        projectIdForTrace,
+                        "REQUIREMENT", requirement.getId(),
+                        "SPECIFICATION", saved.getId(),
+                        TraceRelationship.DOCUMENTED_BY);
             }
 
             // ✅ สร้าง Trace Link กับ Diagram (ถ้ามี)
@@ -263,13 +268,16 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             // Mapping ข้อมูล
             mapRequestToEntity(request, spec);
 
-            // ตั้งค่า Requirement (ถ้ามีการส่งมาในการแก้ไข)
+            // ตั้งค่า Requirement (ถ้ามีการส่งมาในการแก้ไข) — derive project จาก requirement เสมอ
+            // ห้าม trust request.getProjectId() แยกต่างหาก (กันกรณี project/requirement ไม่ตรงกันหลังแก้ไข)
             UUID targetReqId = request.getRequirementId() != null ? request.getRequirementId()
                     : request.getGeneratedFromRequirementId();
+            PmRequirement requirement = null;
             if (targetReqId != null) {
-                PmRequirement requirement = requirementRepository.findById(targetReqId)
+                requirement = requirementRepository.findById(targetReqId)
                         .orElseThrow(() -> new RuntimeException("ไม่พบ Requirement"));
                 spec.setRequirement(requirement);
+                spec.setProject(requirement.getProject());
             }
 
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
@@ -289,10 +297,10 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             // ✅ สร้าง/อัปเดต Trace Link กับ Requirement
             UUID projectIdForTrace = spec.getProject() != null ? spec.getProject().getId() : request.getProjectId();
-            if (targetReqId != null && requirementRepository.existsById(targetReqId)) {
+            if (requirement != null) {
                 traceLinkService.createLink(
                         projectIdForTrace,
-                        "REQUIREMENT", targetReqId,
+                        "REQUIREMENT", requirement.getId(),
                         "SPECIFICATION", spec.getId(),
                         TraceRelationship.DOCUMENTED_BY);
             }

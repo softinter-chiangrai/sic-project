@@ -18,4 +18,9 @@ public interface PmMilestoneRepository extends JpaRepository<PmMilestone, UUID> 
 
     @Query("SELECT COUNT(m) FROM PmMilestone m WHERE m.phase.project.id = :projectId AND m.isDelete = false AND m.status = 'Done'")
     long countCompletedByProjectId(@Param("projectId") UUID projectId);
+
+    @Query("SELECT m FROM PmMilestone m WHERE m.phase.project.businessId = :businessId AND m.isDelete = false " +
+           "AND m.phase.isDelete = false AND m.phase.project.isDelete = false " +
+           "AND (:keyword IS NULL OR LOWER(m.milestoneName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    List<PmMilestone> findByBusinessIdAndKeyword(@Param("businessId") UUID businessId, @Param("keyword") String keyword);
 }

@@ -256,8 +256,17 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
 
     private void mapRequestToEntity(PmMaTicketRequest req, PmMaTicket entity) {
         entity.setTicketNo(req.getTicketNo());
-        entity.setCustomerId(req.getCustomerId());
-        entity.setProjectId(req.getProjectId());
+        // ✅ derive customerId/projectId จาก Contract เสมอถ้ามี contractId
+        // ห้าม trust req.getCustomerId()/req.getProjectId() แยกต่างหาก (กันกรณีไม่ตรงกับสัญญาจริง)
+        if (req.getContractId() != null) {
+            var contract = contractRepository.findById(req.getContractId())
+                    .orElseThrow(() -> new RuntimeException("ไม่พบสัญญา"));
+            entity.setCustomerId(contract.getCustomerId());
+            entity.setProjectId(contract.getProjectId());
+        } else {
+            entity.setCustomerId(req.getCustomerId());
+            entity.setProjectId(req.getProjectId());
+        }
         entity.setContractId(req.getContractId());
         entity.setTicketType(req.getTicketType() != null ? req.getTicketType() : MaTicketType.BUG_SUPPORT);
         entity.setTitle(req.getTitle());

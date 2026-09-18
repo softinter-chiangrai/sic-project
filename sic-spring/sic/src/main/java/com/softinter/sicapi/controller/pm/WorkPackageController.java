@@ -12,10 +12,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.WorkPackageRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.WorkPackageResponse;
+import com.softinter.sicapi.entity.pm.PmWorkPackage;
+import com.softinter.sicapi.repository.pm.PmWorkPackageRepository;
 import com.softinter.sicapi.service.WorkPackageService;
 
 import lombok.RequiredArgsConstructor;
@@ -28,6 +32,23 @@ import lombok.extern.slf4j.Slf4j;
 public class WorkPackageController {
 
     private final WorkPackageService workPackageService;
+    private final PmWorkPackageRepository workPackageRepository;
+
+    // ===== Work Package Combobox (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน) =====
+    @GetMapping("/combobox")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxWorkPackages(
+            @RequestParam(required = false) String keyword) {
+        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        List<PmWorkPackage> workPackages = workPackageRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        List<ComboboxResponse> list = workPackages.stream()
+                .map(w -> new ComboboxResponse(w.getId().toString(), w.getPackageName()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 
     @GetMapping("/milestone/{milestoneId}")
     public ResponseEntity<List<WorkPackageResponse>> getWorkPackagesByMilestoneId(@PathVariable UUID milestoneId) {

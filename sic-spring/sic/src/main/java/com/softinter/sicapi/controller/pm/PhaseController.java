@@ -16,7 +16,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.PhaseRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PhaseResponse;
+import com.softinter.sicapi.entity.pm.PmPhase;
+import com.softinter.sicapi.repository.pm.PmPhaseRepository;
 import com.softinter.sicapi.service.PhaseService;
 
 import lombok.RequiredArgsConstructor;
@@ -29,6 +32,24 @@ import lombok.extern.slf4j.Slf4j;
 public class PhaseController {
 
     private final PhaseService phaseService;
+    private final PmPhaseRepository phaseRepository;
+
+    // ===== Phase Combobox (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน) =====
+    @GetMapping("/phases/combobox")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxPhases(
+            @RequestParam(required = false) String keyword) {
+        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
+        List<PmPhase> phases = phaseRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        List<ComboboxResponse> list = phases.stream()
+                .map(p -> new ComboboxResponse(p.getId().toString(),
+                        (p.getPhaseCode() != null ? p.getPhaseCode() + " - " : "") + p.getPhaseName()))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
+    }
 
     // ===== Phase CRUD =====
 

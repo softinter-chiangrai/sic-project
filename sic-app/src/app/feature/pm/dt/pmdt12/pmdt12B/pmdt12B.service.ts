@@ -28,8 +28,10 @@ export class Pmdt12BService {
     return this.http.delete<void>(`${this.apiBase}/api/pm/test-scenarios/${id}`);
   }
 
-  getTasksByProject(projectId: string): Observable<PmTaskItemModel[]> {
-    return this.http.get<PmTaskItemModel[]>(`${this.apiBase}/api/pm/tasks/combobox?projectId=${projectId}`);
+  getTasksByProject(projectId?: string): Observable<PmTaskItemModel[]> {
+    let params = new HttpParams();
+    if (projectId) params = params.set('projectId', projectId);
+    return this.http.get<PmTaskItemModel[]>(`${this.apiBase}/api/pm/tasks/combobox`, { params });
   }
 
   generateDraft(request: {

@@ -6,6 +6,21 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
+    <!-- Work Package Selection -->
+    <div>
+      <sic-combobox
+        label="แพ็กเกจงาน (Work Package)"
+        formControlName="workPackageId"
+        [apiUrl]="apiGetComboboxWorkPackage"
+        valueField="value"
+        textField="text"
+        placeholder="ค้นหาและเลือกแพ็กเกจงาน"
+        [clearable]="true"
+        [required]="true"
+        (selectionChanged)="onWorkPackageSelected($event)">
+      </sic-combobox>
+    </div>
+
     <!-- Specification Selection -->
     <div>
       <label class="block text-sm font-medium text-[var(--text)] mb-1">Specification</label>

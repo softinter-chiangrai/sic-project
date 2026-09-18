@@ -103,6 +103,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
+  apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+  isProjectDerived = signal(false);
 
   // AI Generator Modal State
   showAiModal = signal(false);
@@ -155,6 +157,57 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.loadData(paramId);
       }
       this.cdr.markForCheck();
+    });
+  }
+
+  // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Delivery/AI options ของโครงการที่เลือกใหม่
+  onProjectSelected(item: any): void {
+    const projId = item?.value ?? item?.id ?? null;
+    this.loadDeliveryOptions(projId || undefined);
+    this.loadAiComboboxOptions(projId || undefined);
+    this.cdr.markForCheck();
+  }
+
+  // เลือก Specification/Delivery แล้วผูกโครงการให้อัตโนมัติ (ตัวเลือกหลักตามแผนผังความสัมพันธ์)
+  onRelatedSpecSelected(item: any): void {
+    const specId = item?.value ?? item?.id ?? null;
+    if (!specId) {
+      this.isProjectDerived.set(false);
+      this.cdr.markForCheck();
+      return;
+    }
+    this.formData.patchValue({ deliveryId: null } as any);
+    this.http.get<any>(`${apiBaseUrl}/api/pm/specifications/${specId}`).subscribe({
+      next: (spec) => {
+        const projId = spec?.projectId || spec?.project?.id;
+        if (projId) {
+          this.formData.patchValue({ projectId: projId } as any);
+          this.isProjectDerived.set(true);
+          this.loadDeliveryOptions(projId);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => this.cdr.markForCheck(),
+    });
+  }
+
+  onDeliverySelected(item: any): void {
+    const deliveryId = item?.value ?? item?.id ?? null;
+    if (!deliveryId) {
+      this.isProjectDerived.set(!!this.formData.form.get('relatedSpecId')?.value);
+      this.cdr.markForCheck();
+      return;
+    }
+    this.http.get<any>(`${apiBaseUrl}/api/pm/delivery/${deliveryId}`).subscribe({
+      next: (delivery) => {
+        const projId = delivery?.projectId;
+        if (projId) {
+          this.formData.patchValue({ projectId: projId } as any);
+          this.isProjectDerived.set(true);
+        }
+        this.cdr.markForCheck();
+      },
+      error: () => this.cdr.markForCheck(),
     });
   }
 
@@ -394,6 +447,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         if (data.projectId) {
           this.loadDeliveryOptions(data.projectId);
         }
+        this.isProjectDerived.set(!!(data as any).relatedSpecId || !!data.deliveryId);
         if (data.sections && data.sections.length > 0) {
           this.sections.set(data.sections);
         } else {
