@@ -86,11 +86,11 @@
       <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
         <div class="relative flex-1 sm:w-56">
           <i
-            class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"
+            class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm pointer-events-none"
           ></i>
           <input
             type="text"
-            class="w-full pl-9 pr-8 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+            class="sic-search-input pl-10 pr-9"
             placeholder="Search module..."
             [value]="searchTerm()"
             (input)="onSearch($event, grid)"
@@ -98,7 +98,7 @@
           @if (searchTerm()) {
             <button
               (click)="clearSearch(grid)"
-              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors cursor-pointer"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors cursor-pointer"
             >
               <i class="bi bi-x-lg text-xs"></i>
             </button>
@@ -117,12 +117,11 @@
     </div>
 
     <!-- Permission Matrix Grid -->
-    <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm overflow-hidden">
-      <sic-gridpanel
-        #grid
-        [config]="gridConfig"
-        (loadData)="handleGridLoad($event, grid)"
-      >
+    <sic-gridpanel
+      #grid
+      [config]="gridConfig"
+      (loadData)="handleGridLoad($event, grid)"
+    >
         <ng-template sicGridPanelTemplate="moduleInfo" section="cell" let-row>
           @let r = $any(row);
           <div class="flex items-center gap-2">
@@ -165,7 +164,7 @@
 
         <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
           @let r = $any(row);
-          <div class="inline-flex items-center gap-1">
+          <div class="flex items-center justify-center gap-1">
             <button
               type="button"
               (click)="setRowPermissions(r.moduleId, 'full')"
@@ -201,7 +200,6 @@
           </div>
         </ng-template>
       </sic-gridpanel>
-    </div>
   </div>
 }
 

@@ -179,7 +179,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       { label: 'Delete', name: 'isRemove', type: 'permCheckbox', align: 'center', minWidth: 90 },
       { label: 'Print', name: 'isPrint', type: 'permCheckbox', align: 'center', minWidth: 90 },
       { label: 'Search', name: 'isSearch', type: 'permCheckbox', align: 'center', minWidth: 90 },
-      { label: 'Actions', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 150 },
+      { label: 'Actions', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
     ],
   };
 

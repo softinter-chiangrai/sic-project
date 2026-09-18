@@ -36,10 +36,10 @@
   <div class="flex flex-wrap gap-3 items-center bg-[var(--sidebar)] p-3 rounded-xl border border-[var(--border)] shadow-xs">
     <!-- Search -->
     <div class="relative flex-1 min-w-[240px]">
-      <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm"></i>
+      <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm pointer-events-none"></i>
       <input
         type="text"
-        class="w-full h-[3.15rem] pl-10 pr-9 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] text-[0.95rem] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+        class="sic-search-input pl-10 pr-9"
         placeholder="ค้นหารหัส, ชื่องาน, ผู้สร้าง, รายการที่ตรวจ..."
         [value]="searchTerm()"
         (input)="onSearch($event)"
@@ -47,7 +47,7 @@
       @if (searchTerm()) {
         <button
           (click)="clearSearch()"
-          class="absolute right-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
+          class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors"
         >
           <i class="bi bi-x-lg text-xs"></i>
         </button>

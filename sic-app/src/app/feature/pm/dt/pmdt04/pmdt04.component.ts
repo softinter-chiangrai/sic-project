@@ -70,7 +70,7 @@ export class Pmdt04Component implements OnInit {
       { label: 'สถานะ', name: 'status', type: 'statusBadge', sortable: true, minWidth: 100 },
       { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
       { label: 'เวอร์ชัน', name: 'version', type: 'text', minWidth: 100 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
     ],
   };
 

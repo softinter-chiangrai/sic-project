@@ -60,7 +60,7 @@ export class Pmdt18Component implements OnInit {
       { label: 'มูลค่าเสนอ', name: 'proposedAmount', type: 'amountText', align: 'right', minWidth: 120 },
       { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
       { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 100 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
     ],
   };
 

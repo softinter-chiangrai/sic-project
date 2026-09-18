@@ -5,14 +5,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BusinessInviteService } from './business-invite.service';
 import { BusinessInviteFormData, InviteEmailModel, InviteTokenModel } from './business-invite.model';
 import { DialogService } from '../../../core/services/dialog.service';
-import { SicInputComponent } from 'sic-ng';
-import { SicButtonComponent } from 'sic-ng';
+import { SicInputComponent, SicButtonComponent, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridLoadRequest, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../core/component/sic-combobox/sic-combobox.component';
 import { SicNumberComponent } from '../../../core/component/sic-number/sic-number.component';
 import { environment } from '../../../../environments/environment';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { ToForm } from '../../../core/types/form.type';
-import { SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate } from '../../../core/component/sic-gridpanel/sic-gridpanel.component';
 
 @Component({
   selector: 'app-business-invite',
@@ -32,7 +30,7 @@ import { SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate } from 
   styleUrl: './business-invite.component.css',
 })
 export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
-  @ViewChild(SicGridPanelComponent) grid?: SicGridPanelComponent;
+  @ViewChild('grid') grid?: SicGridPanelComponent;
 
   readonly route = inject(ActivatedRoute);
   readonly service = inject(BusinessInviteService);
@@ -50,17 +48,30 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.emailForm.dirty || this.tokenForm.dirty;
 
   readonly inviteGridConfig: SicGridPanelConfig = {
-    api: `${environment.apiBaseUrl}/api/business/invite`,
     id: 'id',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
     pageable: false,
-    columns: [
-      { label: 'ประเภท', name: 'inviteType', type: 'text', width: 100, sortable: true },
-      { label: 'ตำแหน่ง', name: 'roleName', type: 'text', width: 180, sortable: true },
-      { label: 'Email / Token', name: 'inviteEmail', type: 'text', customTemplate: 'inviteContact' },
-      { label: 'สถานะ / ครั้งที่ใช้', name: 'isActivated', type: 'text', width: 160, customTemplate: 'inviteStatus' },
-      { label: '', name: 'rowActions', type: 'text', width: 180, customTemplate: 'inviteActions' },
+    column: [
+      { label: 'ประเภท', name: 'inviteType', type: 'text', minWidth: 100, sortable: true },
+      { label: 'ตำแหน่ง', name: 'roleName', type: 'text', minWidth: 180, sortable: true },
+      { label: 'Email / Token', name: 'inviteEmail', type: 'inviteContact', minWidth: 180 },
+      { label: 'สถานะ / ครั้งที่ใช้', name: 'isActivated', type: 'inviteStatus', minWidth: 160 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
     ],
   };
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    this.service.getInvites().subscribe({
+      next: (list) => {
+        grid.setRows((list || []) as unknown as SicGridRowData[], { totalElements: list?.length || 0 }, request.requestId);
+      },
+      error: () => {
+        grid.setRows([], { totalElements: 0 }, request.requestId);
+      },
+    });
+  }
 
   ngOnInit(): void {
     const data: BusinessInviteFormData = this.route.snapshot.data['form'];

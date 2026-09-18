@@ -3,7 +3,6 @@ import { RouterOutlet } from '@angular/router';
 import { SicSidebarComponent } from '../core/component/sic-sidebar/sic-sidebar.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { environment } from '../../environments/environment';
-import { SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate } from '../core/component/sic-gridpanel/sic-gridpanel.component';
 import { CommonModule } from '@angular/common';
 import type { SicCalendarTask } from '../core/component/sic-calendar/sic-calendar.component';
 import { SicTaskConfig, SicTaskPersistState } from '../core/component/sic-task/sic-task.component';
@@ -34,8 +33,6 @@ type TaskPersistMeta = {
   ],
 })
 export class Feature {
-  protected readonly gridPanelComponent = SicGridPanelComponent;
-  protected readonly gridPanelTemplateDirective = SicGridPanelTemplate;
   private readonly taskPersistMeta = new Map<string, TaskPersistMeta>();
 
   protected readonly title = signal('sic-app');
@@ -122,171 +119,6 @@ export class Feature {
 
   apiCombobox:string = `${environment.apiBaseUrl}/api/ex/examples/lov`;
   apiRadio:string = `${environment.apiBaseUrl}/api/db/parameter/lov`;
-
-  readonly gridConfig: SicGridPanelConfig = {
-    api: `${environment.apiBaseUrl}/api/ex/examples/paging`,
-    id: 'id',
-    defaultSortField: 'id',
-    saveApi: `${environment.apiBaseUrl}/api/ex/examples/grid-save`,
-    saveMethod: 'POST',
-    savePayload: (row, state) => ({
-      id: row['id'] ?? null,
-      exampleCode: row['exampleCode'] ?? '',
-      messageEn: row['messageEn'] ?? '',
-      messageLocal: row['messageLocal'] ?? (row['messageEn'] ?? ''),
-      startDate: row['startDate'] ?? null,
-      endDate: row['endDate'] ?? (row['startDate'] ?? null),
-      startTime: row['startTime'] ?? '',
-      endTime: row['endTime'] ?? '',
-      isAccept: row['isAccept'] ?? '',
-      color: row['color'] ?? '',
-      uploadGroupData: row['uploadGroupData'] ?? [],
-      countryCode: row['countryCode'] ?? '',
-      total: row['total'] ?? 0,
-      isActive: row['isActive'] ?? true,
-      rowVersion: row['rowVersion'] ?? null,
-      state,
-    }),
-    pageable: true,
-    pageSize: 10,
-    softDelete: true,
-    disableRow: (row) => row['exampleCode'] === '004',
-    createRowValue: {
-      isActive: true
-    },
-    columns: [
-      {
-        label: 'รหัส',
-        name: 'exampleCode',
-        type: 'text',
-        editable: true,
-        sortable: true,
-        width: 120,
-        validators: [Validators.required, Validators.maxLength(10)],
-        errorMessages: {
-          required: 'กรุณากรอกรหัส',
-          maxlength: 'ความยาวเกินกำหนด',
-        },
-      },
-      {
-        label: 'ข้อความ EN',
-        name: 'messageEn',
-        type: 'area',
-        editable: true,
-        sortable: true,
-        width: 240,
-        validators: [Validators.required, Validators.maxLength(200)],
-        errorMessages: {
-          required: 'กรุณากรอกข้อความ',
-          maxlength: 'ความยาวเกินกำหนด',
-        },
-      },
-      {
-        label: 'ข้อความ Local',
-        name: 'messageLocal',
-        type: 'area',
-        editable: true,
-        sortable: true,
-        width: 240,
-        validators: [Validators.required, Validators.maxLength(200)],
-        errorMessages: {
-          required: 'กรุณากรอกข้อความ local',
-          maxlength: 'ความยาวเกินกำหนด',
-        },
-      },
-      {
-        label: 'วันที่เริ่ม',
-        name: 'startDate',
-        type: 'date',
-        editable: true,
-        sortable: true,
-        width: 200,
-      },
-      {
-        label: 'วันที่สิ้นสุด',
-        name: 'endDate',
-        type: 'date',
-        editable: true,
-        sortable: true,
-        width: 200,
-      },
-      {
-        label: 'เวลาเริ่ม',
-        name: 'startTime',
-        type: 'time',
-        editable: true,
-        sortable: true,
-        width: 170,
-      },
-      {
-        label: 'เวลาสิ้นสุด',
-        name: 'endTime',
-        type: 'time',
-        editable: true,
-        sortable: true,
-        width: 170,
-      },
-      {
-        label: 'ยอมรับ',
-        name: 'isAccept',
-        type: 'radio',
-        apiUrl: this.apiRadio,
-        direction: 'horizontal',
-        editable: true,
-        sortable: true,
-        width: 200,
-      },
-      {
-        label: 'สี',
-        name: 'color',
-        type: 'color',
-        editable: true,
-        sortable: true,
-        width: 190,
-      },
-      {
-        label: 'Attachments',
-        name: 'uploadGroupData',
-        type: 'upload',
-        editable: true,
-        width: 340,
-        multiple: true,
-        uploadCategory: 'all',
-        visibility: 1,
-        uploadGroupId: (row) => {
-          const uploadGroupId = row['uploadGroupId'];
-          return typeof uploadGroupId === 'string' || typeof uploadGroupId === 'number'
-            ? String(uploadGroupId)
-            : null;
-        },
-      },
-      {
-        label: 'Country',
-        name: 'countryCode',
-        type: 'combobox',
-        apiUrl: this.apiCombobox,
-        editable: true,
-        sortable: true,
-        width: 220,
-      },
-      {
-        label: 'ยอดรวม',
-        name: 'total',
-        type: 'number',
-        editable: true,
-        sortable: true,
-        width: 250,
-      },
-      {
-        label: 'สถานะ',
-        name: 'isActive',
-        type: 'checkbox',
-        editable: true,
-        sortable: true,
-        width: 120,
-      },
-    ],
-  };
 
   readonly taskConfig: SicTaskConfig = {
     api: `${environment.apiBaseUrl}/api/su/tasks/search`,

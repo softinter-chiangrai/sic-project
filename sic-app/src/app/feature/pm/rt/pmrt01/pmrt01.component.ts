@@ -68,7 +68,7 @@ export class Pmrt01Component implements OnInit {
       { label: 'อีเมล', name: 'email', type: 'emailLink', sortable: true, minWidth: 200 },
       { label: 'เบอร์โทร', name: 'phoneNumber', type: 'phoneText', minWidth: 120 },
       { label: 'สถานะ', name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
     ],
   };
 

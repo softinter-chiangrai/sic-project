@@ -61,7 +61,7 @@ export class Burt04AComponent implements OnInit {
       { label: 'อีเมล', name: 'userEmail', type: 'text', sortable: true, minWidth: 200 },
       { label: 'บทบาท', name: 'roleNames', type: 'roleBadges', minWidth: 150 },
       { label: 'สถานะ', name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 200 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
     ],
   };
 

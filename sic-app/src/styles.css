@@ -258,14 +258,14 @@ html, body {
   --light-text-active: #0f172a;
   --light-border: #e2e8f0;
 
-  /* Dark Theme */
-  --dark-bg: #0f172a;
-  --dark-sidebar: #111827;
-  --dark-sidebar-hover: #1e293b;
-  --dark-text: #e5e7eb;
-  --dark-text-muted: #94a3b8;
-  --dark-text-active: #f9fafb;
-  --dark-border: #1e293b;
+  /* Dark Theme (Unified with sic-ng design tokens: Charcoal Dark) */
+  --dark-bg: var(--sic-color-bg, #101215);
+  --dark-sidebar: var(--sic-color-surface, #17191d);
+  --dark-sidebar-hover: #22262d;
+  --dark-text: var(--sic-color-text, #f2f3f5);
+  --dark-text-muted: var(--sic-color-text-muted, #9aa0ab);
+  --dark-text-active: var(--sic-color-text-active, #ffffff);
+  --dark-border: var(--sic-color-border, #2a2d33);
 
   /* ✅ Active Theme (default = light) */
   --bg: var(--light-bg);
@@ -285,6 +285,92 @@ html, body {
   --text-muted: var(--dark-text-muted);
   --text-active: var(--dark-text-active);
   --border: var(--dark-border);
+
+  /* TipTap / Angular TipTap Editor Dark Mode Tokens */
+  --ate-primary: var(--crm-primary, #10b981);
+  --ate-primary-hover: #059669;
+  --ate-primary-contrast: #ffffff;
+  --ate-primary-light: rgba(16, 185, 129, 0.1);
+  --ate-primary-lighter: rgba(16, 185, 129, 0.05);
+  --ate-primary-light-alpha: rgba(16, 185, 129, 0.15);
+
+  --ate-surface: var(--sic-color-bg, #101215);
+  --ate-surface-secondary: var(--sic-color-surface, #17191d);
+  --ate-surface-tertiary: #1f2329;
+  --ate-surface-hover: rgba(255, 255, 255, 0.06);
+
+  --ate-text: var(--sic-color-text, #f2f3f5);
+  --ate-text-primary: var(--sic-color-text-active, #ffffff);
+  --ate-text-secondary: var(--sic-color-text-muted, #9aa0ab);
+  --ate-text-muted: #6b7280;
+
+  --ate-border: var(--sic-color-border, #2a2d33);
+  --ate-border-color: var(--sic-color-border, #2a2d33);
+  --ate-background: var(--sic-color-bg, #101215);
+  --ate-text-color: var(--sic-color-text, #f2f3f5);
+  --ate-menu-bg: var(--sic-color-surface, #17191d);
+  --ate-menu-border: var(--sic-color-border, #2a2d33);
+  --ate-button-hover: rgba(255, 255, 255, 0.08);
+  --ate-button-active: rgba(255, 255, 255, 0.14);
+  --ate-placeholder-color: var(--sic-color-text-muted, #9aa0ab);
+}
+
+/* ========================================================
+   TipTap Editor Dark Mode Styling Overrides
+   ======================================================== */
+.dark angular-tiptap-editor,
+.dark .angular-tiptap-editor,
+.dark .ate-editor-container,
+.dark .ate-editor,
+.dark .ate-editor-content {
+  background-color: var(--sic-color-bg, #101215) !important;
+  color: var(--sic-color-text, #f2f3f5) !important;
+  border-color: var(--sic-color-border, #2a2d33) !important;
+}
+
+.dark .ate-toolbar-container,
+.dark .ate-toolbar {
+  background-color: var(--sic-color-surface, #17191d) !important;
+  border-bottom: 1px solid var(--sic-color-border, #2a2d33) !important;
+  color: var(--sic-color-text, #f2f3f5) !important;
+}
+
+.dark .ate-toolbar-button,
+.dark .ate-toolbar button,
+.dark .ate-btn {
+  color: var(--sic-color-text-muted, #9aa0ab) !important;
+  background: transparent !important;
+}
+
+.dark .ate-toolbar-button:hover,
+.dark .ate-toolbar button:hover,
+.dark .ate-btn:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--sic-color-text-active, #ffffff) !important;
+}
+
+.dark .ate-toolbar-button.active,
+.dark .ate-toolbar-button--active,
+.dark .ate-toolbar button.active {
+  background-color: rgba(16, 185, 129, 0.15) !important;
+  color: var(--crm-primary, #10b981) !important;
+}
+
+.dark .ate-character-count,
+.dark .ate-footer {
+  background-color: var(--sic-color-surface, #17191d) !important;
+  border-top: 1px solid var(--sic-color-border, #2a2d33) !important;
+  color: var(--sic-color-text-muted, #9aa0ab) !important;
+}
+
+.dark .ProseMirror {
+  color: var(--sic-color-text, #f2f3f5) !important;
+  background-color: transparent !important;
+}
+
+.dark .ProseMirror p.is-editor-empty:first-child::before,
+.dark .ProseMirror.is-editor-empty::before {
+  color: var(--sic-color-text-muted, #6b7280) !important;
 }
 
 /* ========================================================
@@ -403,6 +489,14 @@ html, body {
   text-align: left !important;
 }
 
+/* หัวคอลัมน์ที่ไม่สามารถเรียงลำดับได้ (sortable: false) เช่น คอลัมน์จัดการ / Actions ให้จัดกึ่งกลางให้ตรงกับเนื้อหา/ไอคอน */
+.sic-gridpanel__sort:disabled,
+.sic-gridpanel__sort:not(.sic-gridpanel__sort--enabled),
+.sic-gridpanel__header-cell:last-child .sic-gridpanel__sort {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
 /* Gridpanel: .sic-gridpanel__table เผื่อ padding-bottom ไว้ตายตัวสำหรับ scrollbar แนวนอนเสมอ
    แม้เนื้อหาจะไม่ล้นก็ตาม รวมกับพื้นหลังโทนสีเข้มของตัวตาราง ทำให้เห็นเป็นแถบทึบด้านล่างที่กดลากไม่ได้
    (ไม่ใช่ scrollbar จริง) ตัดช่องว่างนี้ออก ให้ scrollbar จริงแสดงเฉพาะตอนเนื้อหาล้นเท่านั้น */
@@ -416,5 +510,40 @@ html, body {
    (ไม่ใช่ scrollbar) ตัด margin นี้ออกเพราะการ์ดครอบให้ spacing แยกอยู่แล้ว */
 sic-gridpanel {
   margin-bottom: 0 !important;
+}
+
+/* ========================================================
+   Search Input: สไตล์ช่องค้นหาให้เข้าชุดกับ sic-combobox (ความสูง, ความโค้งมน, สีพื้นหลังและขอบ)
+   ======================================================== */
+.sic-search-input {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  height: var(--sic-control-height-md, 2.9rem) !important;
+  min-height: var(--sic-control-height-md, 2.9rem) !important;
+  background-color: var(--sic-color-bg, #ffffff) !important;
+  border: 1px solid var(--sic-color-border, var(--border)) !important;
+  border-radius: var(--sic-radius-md, 0.95rem) !important;
+  color: var(--text-active) !important;
+  font-family: var(--font-sans) !important;
+  font-size: 0.95rem !important;
+  line-height: 1.4 !important;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease !important;
+}
+
+.sic-search-input::placeholder {
+  color: var(--text-muted) !important;
+}
+
+.sic-search-input:hover {
+  border-color: color-mix(in srgb, var(--crm-primary, #10b981) 22%, var(--sic-color-border, var(--border))) !important;
+}
+
+.sic-search-input:focus {
+  outline: none !important;
+  border-color: color-mix(in srgb, var(--crm-primary, #10b981) 45%, var(--sic-color-border, var(--border))) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary, #10b981) 14%, transparent) !important;
 }
 

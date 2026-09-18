@@ -419,7 +419,7 @@ export class Pmdt10Component implements OnInit {
       { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
       { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', minWidth: 100 },
       { label: 'กำหนดส่ง', name: 'endDate', type: 'endDateText', minWidth: 110 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'right', minWidth: 60 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 80 },
     ],
   };
 

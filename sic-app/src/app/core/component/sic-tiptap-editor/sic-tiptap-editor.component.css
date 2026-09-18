@@ -4,7 +4,7 @@
 .sic-tiptap-editor {
   position: relative;
   border: 1px solid var(--border);
-  border-radius: 0.75rem;
+  border-radius: var(--sic-radius-md, 0.95rem);
   overflow: hidden;
   background: var(--bg);
   transition: border-color 0.2s;

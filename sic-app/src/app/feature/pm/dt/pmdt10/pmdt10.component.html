@@ -83,13 +83,13 @@
     <div class="flex items-center gap-2.5 flex-wrap flex-1">
       <!-- Search -->
       <div class="relative min-w-[220px] flex-1 md:flex-initial">
-        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)]"></i>
+        <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-sm text-[var(--text-muted)] pointer-events-none"></i>
         <input
           type="text"
           [ngModel]="searchQuery()"
           (ngModelChange)="onSearchQueryChange($event)"
           placeholder="ค้นหาชื่อ Task, รหัสงาน..."
-          class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all"
+          class="sic-search-input pl-10 pr-3"
         />
       </div>
 
@@ -206,12 +206,11 @@
 
     <!-- === 4.2 TABLE LIST VIEW === -->
     @if (viewType() === 'list') {
-      <div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] shadow-sm overflow-hidden">
-        <sic-gridpanel
-          #grid
-          [config]="gridConfig"
-          (loadData)="handleGridLoad($event, grid)"
-        >
+      <sic-gridpanel
+        #grid
+        [config]="gridConfig"
+        (loadData)="handleGridLoad($event, grid)"
+      >
           <ng-template sicGridPanelTemplate="taskCode" section="cell" let-row>
             @let r = $any(row);
             <span (click)="openEditTask(r)" class="cursor-pointer font-mono text-xs font-bold text-[var(--crm-primary)]">
@@ -314,17 +313,18 @@
 
           <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
             @let r = $any(row);
-            <button
-              type="button"
-              (click)="deleteTask(r, $event, grid)"
-              class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all"
-              title="ลบ Task"
-            >
-              <i class="bi bi-trash"></i>
-            </button>
+            <div class="flex items-center justify-center">
+              <button
+                type="button"
+                (click)="deleteTask(r, $event, grid)"
+                class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all"
+                title="ลบ Task"
+              >
+                <i class="bi bi-trash"></i>
+              </button>
+            </div>
           </ng-template>
         </sic-gridpanel>
-      </div>
     }
 
   }

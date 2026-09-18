@@ -56,7 +56,7 @@ export class Pmdt07Component implements OnInit {
             { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
             { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
             { label: 'Manday', name: 'estimatedManday', type: 'mandayText', minWidth: 80 },
-            { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+            { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
         ],
     };
 

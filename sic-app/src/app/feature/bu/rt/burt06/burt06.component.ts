@@ -104,7 +104,7 @@ export class Burt06Component implements OnInit {
       { label: 'โหมด', name: 'approvalMode', type: 'approvalMode', minWidth: 100 },
       { label: 'Steps', name: 'steps', type: 'stepsCount', align: 'center', minWidth: 60 },
       { label: 'สถานะ', name: 'active', type: 'statusBadge', sortable: true, minWidth: 80 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 200 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
     ],
   };
 

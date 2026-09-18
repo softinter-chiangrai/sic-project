@@ -83,7 +83,7 @@ export class Pmdt06Component implements OnInit {
       { label: 'ผู้เกี่ยวข้อง / ผู้แก้ไข', name: 'assignees', type: 'assigneeList', minWidth: 150 },
       { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 100 },
       { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 250 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
     ],
   };
 

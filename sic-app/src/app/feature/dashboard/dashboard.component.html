@@ -332,18 +332,18 @@
 
         <!-- Search Input -->
         <div class="relative min-w-[200px]">
-          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-xs"></i>
+          <i class="bi bi-search absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] text-sm pointer-events-none"></i>
           <input
             type="text"
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
             placeholder="ค้นหารหัส / ชื่อโปรแกรม..."
-            class="w-full pl-8 pr-7 py-1.5 text-xs rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all"
+            class="sic-search-input pl-10 pr-7"
           />
           @if (searchQuery()) {
             <button
               (click)="searchQuery.set('')"
-              class="absolute right-2 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)]"
+              class="absolute right-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)]"
             >
               <i class="bi bi-x"></i>
             </button>

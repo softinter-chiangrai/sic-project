@@ -71,7 +71,7 @@ export class Pmrt02Component implements OnInit {
       { label: 'Manday', name: 'usedManday', type: 'mandayProgress', minWidth: 100 },
       { label: 'ระยะเวลา', name: 'startDate', type: 'dateRangeText', minWidth: 120 },
       { label: 'ความสำคัญ', name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 100 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 160 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
     ],
   };
 

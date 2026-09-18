@@ -78,7 +78,7 @@ export class Pmdt14Component implements OnInit {
       { label: 'วันที่ส่งมอบ', name: 'deliveryDate', type: 'dateText', minWidth: 110 },
       { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 140 },
       { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 120 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
     ],
   };
 

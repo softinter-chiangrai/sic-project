@@ -115,7 +115,7 @@ export class Pmrt04Component implements OnInit {
         { label: 'ระยะเวลา', name: 'startDate', type: 'dateRangeText', hidden: !visible.has('duration'), minWidth: 140 },
         { label: 'สถานะ', name: 'signStatus', type: 'statusBadge', sortable: true, minWidth: 100 },
         { label: 'อนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), minWidth: 100 },
-        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 260 },
+        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 180 },
       ],
     };
   });

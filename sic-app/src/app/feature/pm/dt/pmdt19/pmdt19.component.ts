@@ -85,7 +85,7 @@ export class Pmdt19Component implements OnInit {
       { label: 'สรุปการเปลี่ยนแปลง', name: 'changeSummary', type: 'summaryText', minWidth: 180 },
       { label: 'ผู้บันทึก', name: 'createdBy', type: 'createdByInfo', minWidth: 120 },
       { label: 'วันที่บันทึก', name: 'createdDate', type: 'dateText', minWidth: 140 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'right', minWidth: 110 },
+      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
     ],
   };
 

@@ -81,7 +81,7 @@ export class Pmdt17Component implements OnInit {
         { label: 'สถานะ', name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
         { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
         { label: 'ผู้รับผิดชอบ', name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), minWidth: 130 },
-        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 100 },
+        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
       ],
     };
   });

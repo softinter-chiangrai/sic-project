@@ -81,7 +81,7 @@ export class Pmdt03Component implements OnInit {
         { label: 'ผู้ขอ', name: 'requester', type: 'text', hidden: !visible.has('requester'), minWidth: 100 },
         { label: 'วันที่ขอ', name: 'requestedDate', type: 'dateInfo', hidden: !visible.has('requestedDate'), minWidth: 140 },
         { label: 'สถานะ', name: 'status', type: 'statusBadge', minWidth: 110 },
-        { label: 'ดำเนินการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 120 },
+        { label: 'ดำเนินการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
       ],
     };
   });

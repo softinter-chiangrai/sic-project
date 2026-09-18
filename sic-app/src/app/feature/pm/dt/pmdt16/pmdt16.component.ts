@@ -80,7 +80,7 @@ export class Pmdt16Component implements OnInit {
         { label: 'ชำระแล้ว', name: 'paidAmount', type: 'paidAmountText', hidden: !visible.has('paidAmount'), align: 'right', minWidth: 110 },
         { label: 'สถานะ', name: 'paymentStatus', type: 'statusBadge', align: 'center', minWidth: 110 },
         { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
-        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', minWidth: 110 },
+        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
       ],
     };
   });
