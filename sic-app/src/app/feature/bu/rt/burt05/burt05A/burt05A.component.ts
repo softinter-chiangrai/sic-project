@@ -275,7 +275,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   saveProgram() {
     if (this.programForm.invalid) {
       this.programForm.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่สมบูรณ์', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('BURT05A_FORM_INCOMPLETE_TITLE'), this.translate.instant('BURT05A_FORM_INCOMPLETE_MSG'));
       return;
     }
 
@@ -289,13 +289,13 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
+          this.dialog.success(this.translate.instant('BURT05A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT05A_SAVE_SUCCESS_MSG'));
           this.isSaving.set(false);
           this.router.navigate(['/feature/bu/program']);
         },
         error: (err: any) => {
           this.isSaving.set(false);
-          this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+          this.dialog.error(this.translate.instant('BURT05A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('BURT05A_GENERIC_ERROR_MSG'));
         },
       });
       return;
@@ -306,13 +306,13 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
       next: () => {
         this.isSaved = true;
         this.formData.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกโปรแกรมเรียบร้อย');
+        this.dialog.success(this.translate.instant('BURT05A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT05A_SAVE_SUCCESS_MSG'));
         this.isSaving.set(false);
         this.router.navigate(['/feature/bu/program']);
       },
       error: (err: any) => {
         this.isSaving.set(false);
-        this.dialog.error('บันทึกไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        this.dialog.error(this.translate.instant('BURT05A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('BURT05A_GENERIC_ERROR_MSG'));
       },
     });
   }
@@ -321,12 +321,12 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
     const programId = this.programId();
 
     if (!programId) {
-      this.dialog.error('ไม่พบโปรแกรม', 'กรุณาสร้างโปรแกรมก่อนกำหนดสิทธิ์');
+      this.dialog.error(this.translate.instant('BURT05A_PROGRAM_NOT_FOUND_TITLE'), this.translate.instant('BURT05A_PROGRAM_NOT_FOUND_MSG'));
       return;
     }
 
     if (this.roles().length === 0) {
-      this.dialog.warn('ไม่มีบทบาท', 'กรุณาสร้างบทบาทก่อนที่หน้า burt03');
+      this.dialog.warn(this.translate.instant('BURT05A_NO_ROLES_TITLE'), this.translate.instant('BURT05A_NO_ROLES_MSG'));
       return;
     }
 
@@ -359,19 +359,19 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
           next: () => {
             this.isSaved = true;
             this.formData.markAsPristine();
-            this.dialog.success('บันทึกสำเร็จ', 'บันทึกสิทธิ์โปรแกรมเรียบร้อย');
+            this.dialog.success(this.translate.instant('BURT05A_SAVE_PERMISSIONS_SUCCESS_TITLE'), this.translate.instant('BURT05A_SAVE_PERMISSIONS_SUCCESS_MSG'));
             this.isSaving.set(false);
             this.router.navigate(['/feature/bu/program']);
           },
           error: (err: any) => {
             this.isSaving.set(false);
-            this.dialog.error('บันทึกสิทธิ์ไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+            this.dialog.error(this.translate.instant('BURT05A_SAVE_PERMISSIONS_ERROR_TITLE'), err.error?.message || this.translate.instant('BURT05A_GENERIC_ERROR_MSG'));
           },
         });
       },
       error: (err: any) => {
         this.isSaving.set(false);
-        this.dialog.error('บันทึกข้อมูลโปรแกรมไม่สำเร็จ', err.error?.message || 'เกิดข้อผิดพลาด');
+        this.dialog.error(this.translate.instant('BURT05A_SAVE_PROGRAM_DATA_ERROR_TITLE'), err.error?.message || this.translate.instant('BURT05A_GENERIC_ERROR_MSG'));
       },
     });
   }
@@ -403,11 +403,11 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
 
   getLevelText(level: string): string {
     const map: Record<string, string> = {
-      Full: 'เต็มรูปแบบ',
-      Edit: 'แก้ไข/เพิ่ม',
-      Approve: 'อนุมัติ',
-      View: 'ดูอย่างเดียว',
-      None: 'ไม่มีสิทธิ์',
+      Full: this.translate.instant('BURT05A_LEVEL_FULL'),
+      Edit: this.translate.instant('BURT05A_LEVEL_EDIT'),
+      Approve: this.translate.instant('BURT05A_LEVEL_APPROVE'),
+      View: this.translate.instant('BURT05A_LEVEL_VIEW'),
+      None: this.translate.instant('BURT05A_LEVEL_NONE'),
     };
     return map[level] || level;
   }

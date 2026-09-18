@@ -1,12 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, HostBinding, Input, inject, ChangeDetectionStrategy } from '@angular/core';
 import { Router } from '@angular/router';
+import { TranslateModule } from '@ngx-translate/core';
 import { SicToast, SicToastPosition, SicToastService } from './sic-toast.service';
 
 @Component({
   selector: 'sic-toast',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-toast.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-toast.component.css',

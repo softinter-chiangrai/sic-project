@@ -423,10 +423,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   initDefaultSections(): void {
     const defaults: PmUserManualSectionModel[] = [
-      { sectionCode: 'SEC-1', sectionTitle: '1. บทนำและวัตถุประสงค์', content: 'รายละเอียดวัตถุประสงค์ของระบบ...', sortOrder: 1 },
-      { sectionCode: 'SEC-2', sectionTitle: '2. การเข้าใช้งานระบบและสิทธิ์การใช้งาน', content: 'ขั้นตอนการเข้าสู่ระบบ และสิทธิ์ผู้ใช้งาน...', sortOrder: 2 },
-      { sectionCode: 'SEC-3', sectionTitle: '3. ขั้นตอนการใช้งานฟีเจอร์หลัก', content: 'คำอธิบายขั้นตอนการทำงานทีละขั้นตอนพร้อมภาพประกอบ...', sortOrder: 3 },
-      { sectionCode: 'SEC-4', sectionTitle: '4. คำถามที่พบบ่อยและการแก้ปัญหาเบื้องต้น', content: 'รายการปัญหาที่อาจพบและวิธีแก้ไข...', sortOrder: 4 },
+      { sectionCode: 'SEC-1', sectionTitle: `1. ${this.translate.instant('PMDT15A_DEFAULT_SECTION_1_TITLE')}`, content: this.translate.instant('PMDT15A_DEFAULT_SECTION_1_CONTENT'), sortOrder: 1 },
+      { sectionCode: 'SEC-2', sectionTitle: `2. ${this.translate.instant('PMDT15A_DEFAULT_SECTION_2_TITLE')}`, content: this.translate.instant('PMDT15A_DEFAULT_SECTION_2_CONTENT'), sortOrder: 2 },
+      { sectionCode: 'SEC-3', sectionTitle: `3. ${this.translate.instant('PMDT15A_DEFAULT_SECTION_3_TITLE')}`, content: this.translate.instant('PMDT15A_DEFAULT_SECTION_3_CONTENT'), sortOrder: 3 },
+      { sectionCode: 'SEC-4', sectionTitle: `4. ${this.translate.instant('PMDT15A_DEFAULT_SECTION_4_TITLE')}`, content: this.translate.instant('PMDT15A_DEFAULT_SECTION_4_CONTENT'), sortOrder: 4 },
     ];
     this.sections.set(defaults);
     this.cdr.markForCheck();
@@ -437,7 +437,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     const current = [...this.sections()];
     const newSec: PmUserManualSectionModel = {
       sectionCode: `SEC-${current.length + 1}`,
-      sectionTitle: `${current.length + 1}. หัวข้อใหม่`,
+      sectionTitle: `${current.length + 1}. ${this.translate.instant('PMDT15A_NEW_SECTION_TITLE')}`,
       content: '',
       sortOrder: current.length + 1,
       state: SicEntityState.Added,
@@ -505,7 +505,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     if (this.isLocked()) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('คำเตือน', 'กรุณากรอกข้อมูลคู่มือที่จำเป็นให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMDT15A_WARNING_TITLE'), this.translate.instant('PMDT15A_REQUIRED_FIELDS_MSG'));
       return;
     }
 
@@ -534,16 +534,16 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
             documentType: 'USER_MANUAL',
             documentId: savedId,
             documentCode: formVal.manualCode || payload.manualCode,
-            documentTitle: formVal.manualTitle ? ('คู่มือการใช้งาน ' + formVal.manualTitle) : 'คู่มือการใช้งาน',
+            documentTitle: formVal.manualTitle ? (this.translate.instant('PMDT15A_MANUAL_DOC_TYPE') + ' ' + formVal.manualTitle) : this.translate.instant('PMDT15A_MANUAL_DOC_TYPE'),
             version: res?.version || formVal.version,
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติคู่มือการใช้งาน'
+            comment: this.translate.instant('PMDT15A_SUBMIT_APPROVAL_COMMENT')
           }).subscribe({
             next: () => {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
+              this.dialog.success(this.translate.instant('PMDT15A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT15A_SAVE_SUCCESS_MSG'));
               const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
               this.router.navigate(['/feature/pm/manual'], {
                 queryParams: queryProj ? { projectId: queryProj } : undefined,
@@ -553,7 +553,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
+              this.dialog.success(this.translate.instant('PMDT15A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT15A_SAVE_SUCCESS_MSG'));
               const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
               this.router.navigate(['/feature/pm/manual'], {
                 queryParams: queryProj ? { projectId: queryProj } : undefined,
@@ -562,7 +562,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
           });
         } else {
           this.isSaved = true;
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกคู่มือการใช้งานเรียบร้อยแล้ว');
+          this.dialog.success(this.translate.instant('PMDT15A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT15A_SAVE_SUCCESS_MSG'));
           this.formData.markAsPristine();
           const queryProj = this.route.snapshot.queryParams['projectId'] || (this.formData.form.value as any)?.projectId;
           this.router.navigate(['/feature/pm/manual'], {
@@ -572,7 +572,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         }
       },
       error: (err) => {
-        this.dialog.error('ข้อผิดพลาด', err.message || 'บันทึกคู่มือไม่สำเร็จ');
+        this.dialog.error(this.translate.instant('PMDT15A_ERROR_TITLE'), err.message || this.translate.instant('PMDT15A_SAVE_FAILED_MSG'));
         this.isSaving.set(false);
       },
     });
@@ -581,7 +581,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   printPdf(): void {
     const manualId = this.id();
     if (!manualId) {
-      this.dialog.warn('ไม่พบรหัสคู่มือ', 'กรุณาบันทึกคู่มือก่อนพิมพ์รายงาน');
+      this.dialog.warn(this.translate.instant('PMDT15A_MANUAL_ID_NOT_FOUND_TITLE'), this.translate.instant('PMDT15A_SAVE_BEFORE_PRINT_MSG'));
       return;
     }
 
@@ -604,7 +604,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         },
         error: (err) => {
           console.error('Print user manual error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้: ' + (err?.error?.message || err?.message || ''));
+          this.dialog.error(this.translate.instant('PMDT15A_PRINT_ERROR_TITLE'), this.translate.instant('PMDT15A_PRINT_ERROR_MSG') + ': ' + (err?.error?.message || err?.message || ''));
         },
       });
   }

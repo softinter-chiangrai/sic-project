@@ -6,17 +6,17 @@
       <button
         (click)="onBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMDT19A_BACK_TITLE' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-          {{ isEdit() ? 'แก้ไขบันทึกเวอร์ชันเอกสาร' : 'สร้างบันทึกเวอร์ชันเอกสารใหม่' }}
+          {{ isEdit() ? ('PMDT19A_TITLE_EDIT' | translate) : ('PMDT19A_TITLE_NEW' | translate) }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          สร้างหรือแก้ไขประวัติ Version Control ประจำเอกสารโครงการ
+          {{ 'PMDT19A_SUBTITLE' | translate }}
         </p>
       </div>
     </div>
@@ -27,13 +27,13 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
       <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        รายละเอียดเวอร์ชันเอกสาร
+        {{ 'PMDT19A_SEC1_TITLE' | translate }}
       </h3>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
           formControlName="documentType"
-          label="ประเภทเอกสาร"
+          [label]="'PMDT19A_LBL_DOC_TYPE' | translate"
           [items]="docTypeOptions"
           valueField="value"
           displayField="label">
@@ -41,21 +41,21 @@
 
         <sic-input
           formControlName="documentCode"
-          label="รหัสเอกสาร"
-          placeholder="เช่น REQ-001, SPEC-002">
+          [label]="'PMDT19A_LBL_DOC_CODE' | translate"
+          [placeholder]="'PMDT19A_PH_DOC_CODE' | translate">
         </sic-input>
 
         <sic-input
           formControlName="versionNo"
-          label="หมายเลขเวอร์ชัน"
-          placeholder="เช่น v1.0, v2.1">
+          [label]="'PMDT19A_LBL_VERSION_NO' | translate"
+          [placeholder]="'PMDT19A_PH_VERSION_NO' | translate">
         </sic-input>
       </div>
 
       <sic-input-area
         formControlName="changeSummary"
-        label="ประวัติและสรุปการเปลี่ยนแปลง"
-        placeholder="ระบุสิ่งที่เปลี่ยนแปลง แก้ไขเพิ่มเติม หรือรายละเอียด revision...">
+        [label]="'PMDT19A_LBL_CHANGE_SUMMARY' | translate"
+        [placeholder]="'PMDT19A_PH_CHANGE_SUMMARY' | translate">
       </sic-input-area>
     </div>
 
@@ -63,7 +63,7 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
       <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-        แนบไฟล์ฉบับนี้
+        {{ 'PMDT19A_SEC2_TITLE' | translate }}
       </h3>
 
       <sic-upload
@@ -75,10 +75,10 @@
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> ยกเลิก
+        <i class="bi bi-arrow-left"></i> {{ 'PMDT19A_BTN_CANCEL' | translate }}
       </sic-button>
       <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()">
-        <i class="bi bi-check-lg"></i> บันทึกเวอร์ชัน
+        <i class="bi bi-check-lg"></i> {{ 'PMDT19A_BTN_SAVE' | translate }}
       </sic-button>
     </div>
   </form>

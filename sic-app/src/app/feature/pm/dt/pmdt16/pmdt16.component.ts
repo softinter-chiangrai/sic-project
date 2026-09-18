@@ -18,11 +18,12 @@ import { SicPaginationComponent } from '../../../../core/component/sic-paginatio
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt16',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -36,6 +37,7 @@ export class Pmdt16Component implements OnInit {
   private approvalService = inject(ApprovalService);
   private customerState = inject(CustomerStateService);
   private recentItems = inject(RecentItemsService);
+  private translate = inject(TranslateService);
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});
@@ -72,27 +74,29 @@ export class Pmdt16Component implements OnInit {
       showToolbar: false,
       pageSize: this.pageSize(),
       column: [
-        { label: 'เลขที่ใบแจ้งหนี้', name: 'invoiceNo', type: 'code', minWidth: 140 },
-        { label: 'ลูกค้า / โครงการ', name: 'customerName', type: 'customerInfo', minWidth: 160 },
-        { label: 'ประเภทบิล', name: 'billingType', type: 'text', hidden: !visible.has('billingType'), minWidth: 110 },
-        { label: 'วันครบกำหนด', name: 'dueDate', type: 'dateText', hidden: !visible.has('dueDate'), minWidth: 110 },
-        { label: 'ยอดรวม', name: 'totalAmount', type: 'amountText', align: 'right', minWidth: 110 },
-        { label: 'ชำระแล้ว', name: 'paidAmount', type: 'paidAmountText', hidden: !visible.has('paidAmount'), align: 'right', minWidth: 110 },
-        { label: 'สถานะ', name: 'paymentStatus', type: 'statusBadge', align: 'center', minWidth: 110 },
-        { label: 'การอนุมัติ', name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
-        { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
+        { label: this.translate.instant('PMDT16_COL_INVOICE_NO'), name: 'invoiceNo', type: 'code', minWidth: 140 },
+        { label: this.translate.instant('PMDT16_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', minWidth: 160 },
+        { label: this.translate.instant('PMDT16_COL_BILLING_TYPE'), name: 'billingType', type: 'text', hidden: !visible.has('billingType'), minWidth: 110 },
+        { label: this.translate.instant('PMDT16_COL_DUE_DATE'), name: 'dueDate', type: 'dateText', hidden: !visible.has('dueDate'), minWidth: 110 },
+        { label: this.translate.instant('PMDT16_COL_TOTAL_AMOUNT'), name: 'totalAmount', type: 'amountText', align: 'right', minWidth: 110 },
+        { label: this.translate.instant('PMDT16_COL_PAID_AMOUNT'), name: 'paidAmount', type: 'paidAmountText', hidden: !visible.has('paidAmount'), align: 'right', minWidth: 110 },
+        { label: this.translate.instant('PMDT16_COL_STATUS'), name: 'paymentStatus', type: 'statusBadge', align: 'center', minWidth: 110 },
+        { label: this.translate.instant('PMDT16_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', minWidth: 120 },
+        { label: this.translate.instant('PMDT16_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
       ],
     };
   });
 
   // ===== Column Visibility =====
   private readonly COLUMN_STORAGE_KEY = 'pmdt16.visibleColumns';
-  readonly allColumns: { key: string; label: string }[] = [
-    { key: 'billingType', label: 'ประเภทบิล' },
-    { key: 'dueDate', label: 'วันครบกำหนด' },
-    { key: 'paidAmount', label: 'ชำระแล้ว' },
-    { key: 'approvalStatus', label: 'การอนุมัติ' },
-  ];
+  get allColumns(): { key: string; label: string }[] {
+    return [
+      { key: 'billingType', label: this.translate.instant('PMDT16_COL_BILLING_TYPE') },
+      { key: 'dueDate', label: this.translate.instant('PMDT16_COL_DUE_DATE') },
+      { key: 'paidAmount', label: this.translate.instant('PMDT16_COL_PAID_AMOUNT') },
+      { key: 'approvalStatus', label: this.translate.instant('PMDT16_COL_APPROVAL') },
+    ];
+  }
   visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   showColumnMenu = signal(false);
 
@@ -184,12 +188,14 @@ export class Pmdt16Component implements OnInit {
     this.syncFiltersToUrl();
   }
 
-  readonly statusOptions = [
-    { value: 'UNPAID', text: 'รอชำระ' },
-    { value: 'PARTIAL', text: 'ชำระบางส่วน' },
-    { value: 'PAID', text: 'ชำระครบแล้ว' },
-    { value: 'OVERDUE', text: 'เกินกำหนด' },
-  ];
+  get statusOptions() {
+    return [
+      { value: 'UNPAID', text: this.translate.instant('PMDT16_STATUS_OPT_UNPAID') },
+      { value: 'PARTIAL', text: this.translate.instant('PMDT16_STATUS_OPT_PARTIAL') },
+      { value: 'PAID', text: this.translate.instant('PMDT16_STATUS_OPT_PAID') },
+      { value: 'OVERDUE', text: this.translate.instant('PMDT16_STATUS_OPT_OVERDUE') },
+    ];
+  }
 
   onFilterChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
@@ -228,7 +234,7 @@ export class Pmdt16Component implements OnInit {
           URL.revokeObjectURL(pdfUrl);
         },
         error: () => {
-          this.dialog.error('ส่งออกไม่สำเร็จ', `ไม่สามารถส่งออกใบแจ้งหนี้รหัส ${id} ได้`);
+          this.dialog.error(this.translate.instant('PMDT16_EXPORT_ERROR_TITLE'), `${this.translate.instant('PMDT16_EXPORT_ONE_ERROR_MSG_PREFIX')} ${id} ${this.translate.instant('PMDT16_EXPORT_ONE_ERROR_MSG_SUFFIX')}`);
         },
         complete: () => {
           remaining -= 1;
@@ -281,12 +287,21 @@ export class Pmdt16Component implements OnInit {
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => this.downloadCsv(res.data || []),
-        error: () => this.dialog.error('ส่งออกไม่สำเร็จ', 'ไม่สามารถส่งออกรายการใบแจ้งหนี้ได้'),
+        error: () => this.dialog.error(this.translate.instant('PMDT16_EXPORT_ERROR_TITLE'), this.translate.instant('PMDT16_EXPORT_ALL_ERROR_MSG')),
       });
   }
 
   private downloadCsv(items: any[]): void {
-    const headers = ['เลขที่ใบแจ้งหนี้', 'ลูกค้า', 'โครงการ', 'ประเภทบิล', 'วันครบกำหนด', 'ยอดรวม', 'ชำระแล้ว', 'สถานะ'];
+    const headers = [
+      this.translate.instant('PMDT16_COL_INVOICE_NO'),
+      this.translate.instant('PMDT16_CSV_CUSTOMER'),
+      this.translate.instant('PMDT16_CSV_PROJECT'),
+      this.translate.instant('PMDT16_COL_BILLING_TYPE'),
+      this.translate.instant('PMDT16_COL_DUE_DATE'),
+      this.translate.instant('PMDT16_COL_TOTAL_AMOUNT'),
+      this.translate.instant('PMDT16_COL_PAID_AMOUNT'),
+      this.translate.instant('PMDT16_COL_STATUS'),
+    ];
     const rows = items.map((i) => [
       i.invoiceNo, i.customerName || '', i.projectName || '', i.billingType || '',
       i.dueDate || '', String(i.totalAmount ?? ''), String(i.paidAmount ?? ''), this.getStatusText(i.paymentStatus),
@@ -331,7 +346,7 @@ export class Pmdt16Component implements OnInit {
 
   printInvoice(item: any) {
     if (!item.id) {
-      this.dialog.warn('ไม่พบรหัสใบแจ้งหนี้', 'ไม่สามารถพิมพ์เอกสารได้');
+      this.dialog.warn(this.translate.instant('PMDT16_NO_INVOICE_ID_TITLE'), this.translate.instant('PMDT16_NO_INVOICE_ID_MSG'));
       return;
     }
 
@@ -353,21 +368,21 @@ export class Pmdt16Component implements OnInit {
         },
         error: (err) => {
           console.error('Print invoice error:', err);
-          this.dialog.error('พิมพ์เอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้');
+          this.dialog.error(this.translate.instant('PMDT16_PRINT_ERROR_TITLE'), this.translate.instant('PMDT16_PRINT_ERROR_MSG'));
         },
       });
   }
 
   deleteInvoice(id: string) {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบใบแจ้งหนี้นี้ใช่หรือไม่?').then((confirmed) => {
+    this.dialog.confirm(this.translate.instant('PMDT16_DELETE_CONFIRM_TITLE'), this.translate.instant('PMDT16_DELETE_CONFIRM_MSG')).then((confirmed) => {
       if (confirmed) {
         this.service.delete(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบใบแจ้งหนี้เรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT16_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT16_DELETE_SUCCESS_MSG'));
             this.invoicesResource.reload();
           },
           error: (err) => {
-            this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT16_LOAD_ERROR_TITLE'), err.message || this.translate.instant('PMDT16_DELETE_FAILED_MSG'));
           },
         });
       }
@@ -386,10 +401,10 @@ export class Pmdt16Component implements OnInit {
 
   getStatusText(status: string): string {
     const map: Record<string, string> = {
-      UNPAID: 'รอชำระเงิน',
-      PARTIAL: 'ชำระบางส่วน',
-      PAID: 'ชำระครบแล้ว',
-      OVERDUE: 'เกินกำหนดชำระ',
+      UNPAID: this.translate.instant('PMDT16_STATUS_TEXT_UNPAID'),
+      PARTIAL: this.translate.instant('PMDT16_STATUS_TEXT_PARTIAL'),
+      PAID: this.translate.instant('PMDT16_STATUS_TEXT_PAID'),
+      OVERDUE: this.translate.instant('PMDT16_STATUS_TEXT_OVERDUE'),
     };
     return map[status] || status || '-';
   }
@@ -411,13 +426,13 @@ export class Pmdt16Component implements OnInit {
 
   getApprovalStatusText(status?: string): string {
     const map: Record<string, string> = {
-      DRAFT: 'ฉบับร่าง',
-      PENDING: 'รออนุมัติ',
-      APPROVED: 'อนุมัติแล้ว',
-      REJECTED: 'ปฏิเสธ',
-      NEED_REVISION: 'ต้องแก้ไข',
-      CANCELLED: 'ยกเลิก',
-      CHANGED: 'รอส่งอนุมัติ',
+      DRAFT: this.translate.instant('PMDT16_APPROVAL_DRAFT'),
+      PENDING: this.translate.instant('PMDT16_APPROVAL_PENDING'),
+      APPROVED: this.translate.instant('PMDT16_APPROVAL_APPROVED'),
+      REJECTED: this.translate.instant('PMDT16_APPROVAL_REJECTED'),
+      NEED_REVISION: this.translate.instant('PMDT16_APPROVAL_NEED_REVISION'),
+      CANCELLED: this.translate.instant('PMDT16_APPROVAL_CANCELLED'),
+      CHANGED: this.translate.instant('PMDT16_APPROVAL_CHANGED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
   }

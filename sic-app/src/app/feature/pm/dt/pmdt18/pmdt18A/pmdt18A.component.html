@@ -5,21 +5,21 @@
       <button
         (click)="onBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMDT18A_BACK_TITLE' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
-          {{ id() ? 'แก้ไขข้อเสนอต่อสัญญา MA' : 'สร้างข้อเสนอต่อสัญญา MA ใหม่' }}
+          {{ id() ? ('PMDT18A_TITLE_EDIT' | translate) : ('PMDT18A_TITLE_NEW' | translate) }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          บริหารการต่อสัญญา MA ล่วงหน้าและเสนอราคาการดูแลระบบ
+          {{ 'PMDT18A_SUBTITLE' | translate }}
         </p>
         @if (id()) {
           <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
-            <span>เลขที่: {{ formData?.form?.getRawValue()?.renewalNo }}</span>
+            <span>{{ 'PMDT18A_NO_PREFIX' | translate }} {{ formData?.form?.getRawValue()?.renewalNo }}</span>
             <sic-version-badge [status]="formData?.form?.getRawValue()?.status" [isLocked]="isLocked()"></sic-version-badge>
           </p>
         }
@@ -30,19 +30,19 @@
   @if (dataResource.isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT18A_LOADING' | translate }}</p>
     </div>
   } @else {
     <form [formGroup]="formData.form" class="space-y-5">
       <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
         <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
           <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-          ข้อมูลสัญญาและโครงการที่ต่ออายุ
+          {{ 'PMDT18A_SEC1_TITLE' | translate }}
         </h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="อ้างอิงสัญญาเดิม"
+            [label]="'PMDT18A_LBL_ORIG_CONTRACT' | translate"
             [required]="true"
             [apiUrl]="apiContractCombobox"
             valueField="id"
@@ -51,7 +51,7 @@
           ></sic-combobox>
 
           <sic-combobox
-            label="ลูกค้า"
+            [label]="'PMDT18A_LBL_CUSTOMER' | translate"
             [required]="true"
             [apiUrl]="apiCustomerCombobox"
             valueField="id"
@@ -60,7 +60,7 @@
           ></sic-combobox>
 
           <sic-combobox
-            label="โครงการ"
+            [label]="'PMDT18A_LBL_PROJECT' | translate"
             [required]="true"
             [apiUrl]="apiProjectCombobox"
             valueField="id"
@@ -69,13 +69,13 @@
           ></sic-combobox>
 
           <sic-input
-            label="เลขที่เอกสารต่อสัญญา"
-            placeholder="ระบบจะสร้างให้อัตโนมัติหากว่างไว้"
+            [label]="'PMDT18A_LBL_RENEWAL_NO' | translate"
+            [placeholder]="'PMDT18A_PH_RENEWAL_NO' | translate"
             formControlName="renewalNo"
           ></sic-input>
 
           <sic-combobox
-            label="สถานะข้อเสนอ"
+            [label]="'PMDT18A_LBL_STATUS' | translate"
             [required]="true"
             [items]="statusOptions"
             valueField="value"
@@ -88,24 +88,24 @@
       <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
         <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
           <i class="bi bi-calendar-range text-[var(--crm-primary)]"></i>
-          ระยะเวลาสัญญาและมูลค่าข้อเสนอ
+          {{ 'PMDT18A_SEC2_TITLE' | translate }}
         </h2>
 
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <sic-datepicker
-            label="วันสิ้นสุดสัญญาเดิม"
+            [label]="'PMDT18A_LBL_CURRENT_END_DATE' | translate"
             [required]="true"
             formControlName="currentEndDate"
           ></sic-datepicker>
 
           <sic-datepicker
-            label="วันเริ่มต้นสัญญาใหม่"
+            [label]="'PMDT18A_LBL_NEW_START_DATE' | translate"
             [required]="true"
             formControlName="newStartDate"
           ></sic-datepicker>
 
           <sic-datepicker
-            label="วันสิ้นสุดสัญญาใหม่"
+            [label]="'PMDT18A_LBL_NEW_END_DATE' | translate"
             [required]="true"
             formControlName="newEndDate"
           ></sic-datepicker>
@@ -113,7 +113,7 @@
 
         <div class="pt-2">
           <sic-input
-            label="มูลค่าเสนอต่อสัญญา"
+            [label]="'PMDT18A_LBL_PROPOSED_AMOUNT' | translate"
             type="text"
             [required]="true"
             formControlName="proposedAmount"
@@ -122,8 +122,8 @@
 
         <div class="pt-4 border-t border-[var(--border)]">
           <sic-input-area
-            label="หมายเหตุเพิ่มเติม / เงื่อนไขพิเศษ"
-            placeholder="รายละเอียดหรือเงื่อนไขการเสนอต่อสัญญา MA"
+            [label]="'PMDT18A_LBL_REMARK' | translate"
+            [placeholder]="'PMDT18A_PH_REMARK' | translate"
             formControlName="remark"
           ></sic-input-area>
         </div>
@@ -132,15 +132,15 @@
       <!-- Bottom Action Bar -->
       <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
         <sic-button variant="outline" (click)="onBack()">
-          <i class="bi bi-arrow-left"></i> {{ isLocked() ? 'กลับ' : 'ยกเลิก' }}
+          <i class="bi bi-arrow-left"></i> {{ isLocked() ? ('PMDT18A_BACK_TITLE' | translate) : ('PMDT18A_BTN_CANCEL' | translate) }}
         </sic-button>
         @if (isLocked()) {
           <sic-button variant="solid" color="primary" (click)="requestChange()">
-            <i class="bi bi-pencil-square"></i> ขอแก้ไข
+            <i class="bi bi-pencil-square"></i> {{ 'PMDT18A_BTN_REQUEST_CHANGE' | translate }}
           </sic-button>
         } @else {
           <sic-button variant="solid" color="primary" [loading]="isSaving()" (click)="submit()">
-            <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+            <i class="bi bi-check-lg"></i> {{ 'PMDT18A_BTN_SAVE' | translate }}
           </sic-button>
         }
       </div>
@@ -148,7 +148,7 @@
       @if (isLocked()) {
         <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
           <i class="bi bi-lock-fill"></i>
-          เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+          {{ 'PMDT18A_LOCKED_MSG' | translate }}
         </div>
       }
     </form>

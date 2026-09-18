@@ -4,7 +4,7 @@
 @if (isLoading) {
   <div class="flex flex-col items-center justify-center py-16 gap-4">
     <div class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
+    <p class="text-[var(--text-muted)]">{{ 'PMRT04A_LOADING_CONTRACT' | translate }}</p>
   </div>
 }
 
@@ -18,24 +18,24 @@
           type="button"
           (click)="onBack()"
           class="w-10 h-10 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all cursor-pointer"
-          title="ย้อนกลับ"
+          [title]="'PMRT04A_BACK' | translate"
         >
           <i class="bi bi-arrow-left text-xl"></i>
         </button>
         <div>
           <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-            {{ isView ? 'รายละเอียดสัญญา' : (isEdit ? 'แก้ไขข้อมูลสัญญา' : 'เพิ่มข้อมูลสัญญา') }}
+            {{ (isView ? 'PMRT04A_TITLE_VIEW' : (isEdit ? 'PMRT04A_TITLE_EDIT' : 'PMRT04A_TITLE_ADD')) | translate }}
           </h1>
           <div class="flex flex-wrap items-center gap-2 mt-1 text-xs text-[var(--text-muted)]">
             @if (customerName) {
               <span class="flex items-center gap-1">
-                <i class="bi bi-building"></i> ลูกค้า: <strong class="text-[var(--text-active)]">{{ customerName }}</strong>
+                <i class="bi bi-building"></i> {{ 'PMRT04A_CUSTOMER_LABEL' | translate }} <strong class="text-[var(--text-active)]">{{ customerName }}</strong>
               </span>
             }
             @if (projectName) {
               <span class="flex items-center gap-1">
-                <i class="bi bi-folder"></i> โครงการ: <strong class="text-[var(--text-active)]">{{ projectName }}</strong>
+                <i class="bi bi-folder"></i> {{ 'PMRT04A_PROJECT_LABEL' | translate }} <strong class="text-[var(--text-active)]">{{ projectName }}</strong>
               </span>
             }
           </div>
@@ -50,7 +50,7 @@
             (click)="openAiAssist()"
             class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-sm hover:shadow transition-all cursor-pointer">
             <i class="bi bi-stars text-amber-300"></i>
-            <span>สร้างด้วย AI</span>
+            <span>{{ 'PMRT04A_CREATE_WITH_AI' | translate }}</span>
           </button>
         }
         @if (form.get('contractNo')?.value) {
@@ -73,13 +73,13 @@
           <!-- Contract No -->
           <div>
             <sic-input
-              label="เลขที่สัญญา"
+              [label]="'PMRT04A_CONTRACT_NO_LABEL' | translate"
               formControlName="contractNo"
               [required]="true"
-              placeholder="เช่น CT-2026-001"
+              [placeholder]="'PMRT04A_CONTRACT_NO_PLACEHOLDER' | translate"
               [errorMessages]="{
-                required: 'กรุณาระบุเลขที่สัญญา',
-                maxlength: 'เลขที่สัญญาต้องไม่เกิน 50 ตัวอักษร'
+                required: 'PMRT04A_CONTRACT_NO_REQUIRED' | translate,
+                maxlength: 'PMRT04A_CONTRACT_NO_MAXLENGTH' | translate
               }"
             ></sic-input>
           </div>
@@ -87,50 +87,50 @@
           <!-- Contract Type -->
           <div>
             <sic-combobox
-              label="ประเภทสัญญา"
+              [label]="'PMRT04A_CONTRACT_TYPE_LABEL' | translate"
               formControlName="contractType"
               [apiUrl]="service.getLovContractType()"
               [required]="true"
-              placeholder="เลือกประเภทสัญญา..."
-              [errorMessages]="{ required: 'กรุณาเลือกประเภทสัญญา' }"
+              [placeholder]="'PMRT04A_CONTRACT_TYPE_PLACEHOLDER' | translate"
+              [errorMessages]="{ required: 'PMRT04A_CONTRACT_TYPE_REQUIRED' | translate }"
             ></sic-combobox>
           </div>
 
           <!-- Start Date -->
           <div>
             <sic-datepicker
-              label="วันที่เริ่มสัญญา"
+              [label]="'PMRT04A_START_DATE_LABEL' | translate"
               formControlName="startDate"
               [required]="true"
-              placeholder="เลือกวันที่เริ่มสัญญา"
+              [placeholder]="'PMRT04A_START_DATE_PLACEHOLDER' | translate"
               dateFormat="DD/MM/YYYY"
-              [errorMessages]="{ required: 'กรุณาระบุวันที่เริ่ม' }"
+              [errorMessages]="{ required: 'PMRT04A_START_DATE_REQUIRED' | translate }"
             ></sic-datepicker>
           </div>
 
           <!-- End Date -->
           <div>
             <sic-datepicker
-              label="วันที่สิ้นสุดสัญญา"
+              [label]="'PMRT04A_END_DATE_LABEL' | translate"
               formControlName="endDate"
               [required]="true"
-              placeholder="เลือกวันที่สิ้นสุดสัญญา"
+              [placeholder]="'PMRT04A_END_DATE_PLACEHOLDER' | translate"
               dateFormat="DD/MM/YYYY"
-              [errorMessages]="{ required: 'กรุณาระบุวันที่สิ้นสุด' }"
+              [errorMessages]="{ required: 'PMRT04A_END_DATE_REQUIRED' | translate }"
             ></sic-datepicker>
           </div>
 
           <!-- Contract Value -->
           <div>
             <sic-input
-              label="มูลค่าสัญญา (บาท)"
+              [label]="'PMRT04A_CONTRACT_VALUE_LABEL' | translate"
               type="text"
               formControlName="contractValue"
               [required]="true"
               placeholder="0.00"
               [errorMessages]="{
-                required: 'กรุณาระบุมูลค่าสัญญา',
-                min: 'มูลค่าต้องมากกว่าหรือเท่ากับ 0'
+                required: 'PMRT04A_CONTRACT_VALUE_REQUIRED' | translate,
+                min: 'PMRT04A_CONTRACT_VALUE_MIN' | translate
               }"
             ></sic-input>
           </div>
@@ -138,19 +138,19 @@
           <!-- Payment Terms -->
           <div>
             <sic-input
-              label="เงื่อนไขการชำระเงิน"
+              [label]="'PMRT04A_PAYMENT_TERMS_LABEL' | translate"
               formControlName="paymentTerms"
-              placeholder="เช่น จ่ายตามงวดงาน 3 งวด (30/40/30), ชำระรายเดือน"
+              [placeholder]="'PMRT04A_PAYMENT_TERMS_PLACEHOLDER' | translate"
             ></sic-input>
           </div>
 
           <!-- Scope Summary (Full Width) -->
           <div class="md:col-span-2">
             <sic-tiptap-editor
-              label="สรุปขอบเขตงาน"
+              [label]="'PMRT04A_SCOPE_SUMMARY_LABEL' | translate"
               formControlName="scopeSummary"
               minHeight="140px"
-              placeholder="ระบุขอบเขตงานหลักและรายละเอียดของสัญญานี้..."
+              [placeholder]="'PMRT04A_SCOPE_SUMMARY_PLACEHOLDER' | translate"
             ></sic-tiptap-editor>
           </div>
 
@@ -162,7 +162,7 @@
                 formControlName="isActive"
                 class="w-4 h-4 text-[var(--crm-primary)] rounded focus:ring-[var(--crm-primary)]/20"
               />
-              <span>เปิดใช้งานสัญญา</span>
+              <span>{{ 'PMRT04A_ACTIVE_CHECKBOX_LABEL' | translate }}</span>
             </label>
           </div>
 
@@ -171,16 +171,16 @@
             <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
               <div class="text-sm font-medium text-[var(--text-active)] mb-3 flex items-center gap-2">
                 <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                การอนุมัติ
+                {{ 'PMRT04A_APPROVAL_SECTION_TITLE' | translate }}
               </div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div>
                   <sic-combobox
-                    label="กระบวนการอนุมัติ"
+                    [label]="'PMRT04A_APPROVAL_FLOW_LABEL' | translate"
                     [apiUrl]="apiGetApprovals"
                     valueField="id"
                     textField="flowName"
-                    placeholder="เลือกกระบวนการอนุมัติ"
+                    [placeholder]="'PMRT04A_APPROVAL_FLOW_PLACEHOLDER' | translate"
                     [clearable]="true"
                     (selectionChanged)="selectedFlowId = $event?.id"
                   ></sic-combobox>
@@ -202,7 +202,7 @@
           (click)="onBack()"
         >
           <i class="bi bi-arrow-left"></i>
-          ย้อนกลับ
+          {{ 'PMRT04A_BACK' | translate }}
         </sic-button>
 
         @if (isLocked) {
@@ -213,7 +213,7 @@
             (click)="requestChange()"
           >
             <i class="bi bi-pencil-square"></i>
-            ขอแก้ไข
+            {{ 'PMRT04A_REQUEST_CHANGE' | translate }}
           </sic-button>
         } @else if (!isView) {
           <sic-button
@@ -224,10 +224,10 @@
           >
             @if (isSaving) {
               <i class="bi bi-arrow-repeat animate-spin"></i>
-              กำลังบันทึก...
+              {{ 'PMRT04A_SAVING' | translate }}
             } @else {
               <i class="bi bi-floppy"></i>
-              {{ isEdit ? 'บันทึก' : 'สร้าง' }}
+              {{ (isEdit ? 'PMRT04A_SAVE_BUTTON' : 'PMRT04A_CREATE_BUTTON') | translate }}
             }
           </sic-button>
         }
@@ -236,7 +236,7 @@
       @if (isLocked) {
         <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
           <i class="bi bi-lock-fill"></i>
-          เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+          {{ 'PMRT04A_LOCKED_NOTICE' | translate }}
         </div>
       }
     </form>
@@ -261,7 +261,7 @@
                 PRO
               </span>
             </h3>
-            <p class="text-xs text-[var(--text-muted)]">ร่างเนื้อหาและขอบเขตสัญญา เงื่อนไขการชำระเงิน และงวดงานอัตโนมัติด้วย AI</p>
+            <p class="text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AI_MODAL_SUBTITLE' | translate }}</p>
           </div>
         </div>
         <button
@@ -279,14 +279,14 @@
           (click)="aiActiveTab.set('generate')"
           [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
           <i class="bi bi-magic"></i>
-          สร้างเนื้อหา (Generate)
+          {{ 'PMRT04A_AI_TAB_GENERATE' | translate }}
         </button>
         <button
           type="button"
           (click)="aiActiveTab.set('history')"
           [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
           <i class="bi bi-clock-history"></i>
-          ประวัติเวอร์ชัน (History Log)
+          {{ 'PMRT04A_AI_TAB_HISTORY' | translate }}
           @if (aiHistories().length > 0) {
             <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold">
               {{ aiHistories().length }}
@@ -302,7 +302,7 @@
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               <i class="bi bi-cpu text-purple-500 mr-1"></i>
-              โมเดล AI ที่ต้องการใช้
+              {{ 'PMRT04A_AI_MODEL_LABEL' | translate }}
             </label>
             <sic-combobox
               [options]="aiModels"
@@ -310,7 +310,7 @@
               textField="name"
               [ngModel]="aiModel()"
               (ngModelChange)="aiModel.set($event)"
-              placeholder="เลือกโมเดล AI"
+              [placeholder]="'PMRT04A_AI_MODEL_PLACEHOLDER' | translate"
               [clearable]="false">
             </sic-combobox>
           </div>
@@ -319,7 +319,7 @@
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               <i class="bi bi-file-earmark-ruled text-purple-500 mr-1"></i>
-              ประเภทสัญญา
+              {{ 'PMRT04A_CONTRACT_TYPE_LABEL' | translate }}
             </label>
             <sic-combobox
               [items]="aiContractTypeOptions"
@@ -327,7 +327,7 @@
               displayField="label"
               [ngModel]="aiContractType()"
               (ngModelChange)="aiContractType.set($event)"
-              placeholder="เลือกประเภทสัญญา">
+              [placeholder]="'PMRT04A_AI_CONTRACT_TYPE_PLACEHOLDER' | translate">
             </sic-combobox>
           </div>
 
@@ -335,13 +335,13 @@
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
               <i class="bi bi-chat-left-text text-indigo-500 mr-1"></i>
-              เงื่อนไขสัญญา / รายละเอียดเพิ่มเติม
+              {{ 'PMRT04A_AI_PROMPT_LABEL' | translate }}
             </label>
             <textarea
               [ngModel]="aiPrompt()"
               (ngModelChange)="aiPrompt.set($event)"
               rows="3"
-              placeholder="เช่น สัญญาจ้างพัฒนาระบบ e-Commerce ระยะเวลา 6 เดือน แบ่งชำระ 3 งวด มีเงื่อนไขการรับประกัน 1 ปี..."
+              [placeholder]="'PMRT04A_AI_PROMPT_PLACEHOLDER' | translate"
               class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"></textarea>
           </div>
 
@@ -349,8 +349,8 @@
             <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
               <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">AI กำลังร่างข้อสัญญาและขอบเขตงาน...</p>
-                <p class="text-xs text-[var(--text-muted)]">กำลังสรุปเงื่อนไขการชำระเงินและขอบเขตงานทางกฎหมาย</p>
+                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ 'PMRT04A_AI_GENERATING_TITLE' | translate }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AI_GENERATING_SUBTITLE' | translate }}</p>
               </div>
             </div>
           }
@@ -361,7 +361,7 @@
               <div class="flex items-center justify-between border-b border-[var(--border)] pb-2 flex-wrap gap-2">
                 <span class="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
                   <i class="bi bi-check-circle-fill"></i>
-                  ผลลัพธ์ล่าสุด (เวอร์ชัน v{{ aiCurrentVersionNo() }})
+                  {{ 'PMRT04A_AI_LATEST_RESULT' | translate: { version: aiCurrentVersionNo() } }}
                 </span>
                 <div class="flex items-center gap-2">
                   <button
@@ -369,25 +369,25 @@
                     (click)="copyDraft(aiCurrentDraft())"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--sidebar)] border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
                     <i class="bi" [ngClass]="copiedId() === 'current' ? 'bi-check text-emerald-500' : 'bi-clipboard'"></i>
-                    {{ copiedId() === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}
+                    {{ (copiedId() === 'current' ? 'PMRT04A_COPIED' : 'PMRT04A_COPY') | translate }}
                   </button>
                   <button
                     type="button"
                     (click)="pasteContractDraft(aiCurrentDraft())"
                     class="px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer">
                     <i class="bi bi-arrow-down-circle"></i>
-                    วางลงในฟอร์ม
+                    {{ 'PMRT04A_PASTE_TO_FORM' | translate }}
                   </button>
                 </div>
               </div>
 
               <div class="text-xs text-[var(--text-active)] space-y-1.5">
-                <p><strong>เลขที่สัญญา:</strong> {{ aiCurrentDraft().contractNo }} ({{ aiCurrentDraft().contractType }})</p>
+                <p><strong>{{ 'PMRT04A_CONTRACT_NO_COLON_LABEL' | translate }}</strong> {{ aiCurrentDraft().contractNo }} ({{ aiCurrentDraft().contractType }})</p>
                 @if (aiCurrentDraft().contractValue) {
-                  <p><strong>มูลค่าสัญญา:</strong> {{ aiCurrentDraft().contractValue | number:'1.2-2' }} บาท</p>
+                  <p><strong>{{ 'PMRT04A_CONTRACT_VALUE_COLON_LABEL' | translate }}</strong> {{ aiCurrentDraft().contractValue | number:'1.2-2' }} {{ 'PMRT04A_BAHT_UNIT' | translate }}</p>
                 }
                 @if (aiCurrentDraft().paymentTerms) {
-                  <p><strong>เงื่อนไขชำระเงิน:</strong> {{ aiCurrentDraft().paymentTerms }}</p>
+                  <p><strong>{{ 'PMRT04A_PAYMENT_TERMS_COLON_LABEL' | translate }}</strong> {{ aiCurrentDraft().paymentTerms }}</p>
                 }
                 @if (aiCurrentDraft().scopeSummary) {
                   <div class="mt-2 p-2 bg-[var(--sidebar)] rounded-lg text-xs text-[var(--text-muted)] line-clamp-4" [innerHTML]="aiCurrentDraft().scopeSummary"></div>
@@ -403,7 +403,7 @@
             type="button"
             (click)="closeAiAssist()"
             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-            ยกเลิก
+            {{ 'PMRT04A_CANCEL' | translate }}
           </button>
           <button
             type="button"
@@ -412,10 +412,10 @@
             class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-2">
             @if (isGeneratingAi()) {
               <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>กำลังสร้าง...</span>
+              <span>{{ 'PMRT04A_GENERATING' | translate }}</span>
             } @else {
               <i class="bi bi-stars text-amber-300"></i>
-              <span>สร้างเนื้อหาด้วย AI</span>
+              <span>{{ 'PMRT04A_GENERATE_WITH_AI' | translate }}</span>
             }
           </button>
         </div>
@@ -427,17 +427,17 @@
           @if (aiHistories().length === 0) {
             <div class="text-center py-12 text-[var(--text-muted)]">
               <i class="bi bi-clock-history text-4xl block mb-2 opacity-40"></i>
-              <p class="text-sm font-medium">ยังไม่มีประวัติการสร้างเนื้อหา AI</p>
-              <p class="text-xs mt-1">ประวัติจะถูกบันทึกอัตโนมัติเมื่อสร้างเนื้อหาในแท็บ "สร้างเนื้อหา"</p>
+              <p class="text-sm font-medium">{{ 'PMRT04A_NO_AI_HISTORY' | translate }}</p>
+              <p class="text-xs mt-1">{{ 'PMRT04A_AI_HISTORY_HINT' | translate }}</p>
             </div>
           } @else {
             <div class="flex items-center justify-between mb-2">
-              <span class="text-xs text-[var(--text-muted)]">มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน</span>
+              <span class="text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AI_HISTORY_TOTAL_COUNT' | translate: { count: aiHistories().length } }}</span>
               <button
                 type="button"
                 (click)="clearAllAiHistories()"
                 class="text-xs text-rose-500 hover:underline cursor-pointer flex items-center gap-1">
-                <i class="bi bi-trash3"></i> ล้างประวัติทั้งหมด
+                <i class="bi bi-trash3"></i> {{ 'PMRT04A_CLEAR_ALL_HISTORY' | translate }}
               </button>
             </div>
 
@@ -449,7 +449,7 @@
                       v{{ item.versionNo }}
                     </span>
                     <span class="text-xs font-semibold text-[var(--text-active)]">
-                      {{ item.data?.contractNo || 'สัญญาร่างใหม่' }}
+                      {{ item.data?.contractNo || ('PMRT04A_NEW_DRAFT_CONTRACT' | translate) }}
                     </span>
                   </div>
                   <span class="text-[11px] text-[var(--text-muted)]">
@@ -472,21 +472,21 @@
                     type="button"
                     (click)="deleteAiHistory(item.id, $event)"
                     class="px-2 py-1 rounded-lg text-xs text-rose-500 hover:bg-rose-500/10 transition-all cursor-pointer">
-                    <i class="bi bi-trash"></i> ลบ
+                    <i class="bi bi-trash"></i> {{ 'PMRT04A_DELETE' | translate }}
                   </button>
                   <button
                     type="button"
                     (click)="copyDraft(item.data, item.id)"
                     class="px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--sidebar)] border border-[var(--border)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
                     <i class="bi" [ngClass]="copiedId() === item.id ? 'bi-check text-emerald-500' : 'bi-clipboard'"></i>
-                    {{ copiedId() === item.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}
+                    {{ (copiedId() === item.id ? 'PMRT04A_COPIED' : 'PMRT04A_COPY') | translate }}
                   </button>
                   <button
                     type="button"
                     (click)="pasteContractDraft(item.data)"
                     class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer flex items-center gap-1.5">
                     <i class="bi bi-arrow-down-circle"></i>
-                    วางลงในฟอร์ม
+                    {{ 'PMRT04A_PASTE_TO_FORM' | translate }}
                   </button>
                 </div>
               </div>
@@ -500,10 +500,10 @@
             type="button"
             (click)="closeAiAssist()"
             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-            ปิด
+            {{ 'PMRT04A_CLOSE' | translate }}
           </button>
           <span class="text-xs text-[var(--text-muted)]">
-            มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน
+            {{ 'PMRT04A_AI_HISTORY_TOTAL_COUNT' | translate: { count: aiHistories().length } }}
           </span>
         </div>
       }

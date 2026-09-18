@@ -14,11 +14,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt19',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt19.component.html',
   styleUrls: ['./pmdt19.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -30,6 +31,7 @@ export class Pmdt19Component implements OnInit {
   private readonly dialog = inject(DialogService);
   private readonly customerState = inject(CustomerStateService);
   private readonly navigation = inject(NavigationService);
+  private readonly translate = inject(TranslateService);
 
   // projectId ที่ active อยู่ในขณะนี้ (required)
   activeProjectId = signal<string | null>(null);
@@ -40,54 +42,60 @@ export class Pmdt19Component implements OnInit {
   filterType = signal<string>('ALL');
   filterDocId = signal<string>('');
 
-  readonly docTypeOptions = [
-    { text: 'ทุกประเภทเอกสาร', value: 'ALL' },
-    { text: 'Requirement', value: 'REQUIREMENT' },
-    { text: 'Specification', value: 'SPECIFICATION' },
-    { text: 'Diagram', value: 'DIAGRAM' },
-    { text: 'Design Review', value: 'DESIGN_REVIEW' },
-    { text: 'Change Request', value: 'CHANGE_REQUEST' },
-    { text: 'Delivery Document', value: 'DELIVERY' },
-    { text: 'Contract', value: 'CONTRACT' },
-    { text: 'Invoice', value: 'INVOICE' },
-    { text: 'MA Ticket', value: 'MA_TICKET' },
-    { text: 'MA Renewal', value: 'MA_RENEWAL' },
-    { text: 'User Manual', value: 'USER_MANUAL' },
-    { text: 'Project', value: 'PROJECT' },
-  ];
+  get docTypeOptions() {
+    return [
+      { text: this.translate.instant('PMDT19_DOCTYPE_ALL'), value: 'ALL' },
+      { text: 'Requirement', value: 'REQUIREMENT' },
+      { text: 'Specification', value: 'SPECIFICATION' },
+      { text: 'Diagram', value: 'DIAGRAM' },
+      { text: 'Design Review', value: 'DESIGN_REVIEW' },
+      { text: 'Change Request', value: 'CHANGE_REQUEST' },
+      { text: 'Delivery Document', value: 'DELIVERY' },
+      { text: 'Contract', value: 'CONTRACT' },
+      { text: 'Invoice', value: 'INVOICE' },
+      { text: 'MA Ticket', value: 'MA_TICKET' },
+      { text: 'MA Renewal', value: 'MA_RENEWAL' },
+      { text: 'User Manual', value: 'USER_MANUAL' },
+      { text: 'Project', value: 'PROJECT' },
+    ];
+  }
 
   filteredVersions = signal<DocumentVersionModel[]>([]);
 
   // ===== Pagination State =====
   currentPage = signal(0);
   pageSize = signal(10);
-  readonly pageSizeOptions = [
-    { text: '10 รายการ / หน้า', value: 10 },
-    { text: '20 รายการ / หน้า', value: 20 },
-    { text: '50 รายการ / หน้า', value: 50 },
-    { text: '100 รายการ / หน้า', value: 100 },
-  ];
+  get pageSizeOptions() {
+    return [
+      { text: '10 ' + this.translate.instant('PMDT19_ITEMS_PER_PAGE'), value: 10 },
+      { text: '20 ' + this.translate.instant('PMDT19_ITEMS_PER_PAGE'), value: 20 },
+      { text: '50 ' + this.translate.instant('PMDT19_ITEMS_PER_PAGE'), value: 50 },
+      { text: '100 ' + this.translate.instant('PMDT19_ITEMS_PER_PAGE'), value: 100 },
+    ];
+  }
 
   totalItems = computed(() => this.filteredVersions().length);
 
   @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
-  gridConfig: SicGridPanelConfig = {
-    id: 'id',
-    lazy: false,
-    selectable: false,
-    showToolbar: false,
-    pageSizeOptions: [10, 20, 50, 100],
-    column: [
-      { label: 'เวอร์ชัน', name: 'versionNo', type: 'versionInfo', minWidth: 100 },
-      { label: 'ประเภทเอกสาร', name: 'documentType', type: 'docTypeTag', minWidth: 130 },
-      { label: 'รหัส / ชื่อเอกสาร', name: 'documentCode', type: 'text', minWidth: 130 },
-      { label: 'สรุปการเปลี่ยนแปลง', name: 'changeSummary', type: 'summaryText', minWidth: 180 },
-      { label: 'ผู้บันทึก', name: 'createdBy', type: 'createdByInfo', minWidth: 120 },
-      { label: 'วันที่บันทึก', name: 'createdDate', type: 'dateText', minWidth: 140 },
-      { label: 'จัดการ', name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
-    ],
-  };
+  get gridConfig(): SicGridPanelConfig {
+    return {
+      id: 'id',
+      lazy: false,
+      selectable: false,
+      showToolbar: false,
+      pageSizeOptions: [10, 20, 50, 100],
+      column: [
+        { label: this.translate.instant('PMDT19_COL_VERSION'), name: 'versionNo', type: 'versionInfo', minWidth: 100 },
+        { label: this.translate.instant('PMDT19_COL_DOC_TYPE'), name: 'documentType', type: 'docTypeTag', minWidth: 130 },
+        { label: this.translate.instant('PMDT19_COL_DOC_CODE'), name: 'documentCode', type: 'text', minWidth: 130 },
+        { label: this.translate.instant('PMDT19_COL_CHANGE_SUMMARY'), name: 'changeSummary', type: 'summaryText', minWidth: 180 },
+        { label: this.translate.instant('PMDT19_COL_CREATED_BY'), name: 'createdBy', type: 'createdByInfo', minWidth: 120 },
+        { label: this.translate.instant('PMDT19_COL_CREATED_DATE'), name: 'createdDate', type: 'dateText', minWidth: 140 },
+        { label: this.translate.instant('PMDT19_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
+      ],
+    };
+  }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     const list = this.filteredVersions();
@@ -172,7 +180,7 @@ export class Pmdt19Component implements OnInit {
   onViewContent(ver: DocumentVersionModel): void {
     this.dialog.open({
       type: 'info',
-      title: 'เนื้อหาเอกสารเวอร์ชัน ' + ver.versionNo,
+      title: this.translate.instant('PMDT19_VIEW_CONTENT_TITLE') + ' ' + ver.versionNo,
       component: Pmdt19ViewDialogComponent,
       componentInputs: {
         version: ver,
@@ -181,15 +189,15 @@ export class Pmdt19Component implements OnInit {
   }
 
   onActivate(id: string): void {
-    this.dialog.confirm('ยืนยัน', 'คุณต้องการตั้งเวอร์ชันนี้เป็น Active Version ใช่หรือไม่?').then((confirmed: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT19_CONFIRM_TITLE'), this.translate.instant('PMDT19_CONFIRM_ACTIVATE_MSG')).then((confirmed: boolean) => {
       if (confirmed) {
         this.service.activateVersion(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'เปิดใช้งานเวอร์ชันเรียบร้อยแล้ว');
+            this.dialog.success(this.translate.instant('PMDT19_SUCCESS_TITLE'), this.translate.instant('PMDT19_ACTIVATE_SUCCESS_MSG'));
             this.loadVersions();
           },
           error: (err) => {
-            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถเปิดใช้งานได้');
+            this.dialog.error(this.translate.instant('PMDT19_ERROR_TITLE'), err.message || this.translate.instant('PMDT19_ACTIVATE_ERROR_MSG'));
           },
         });
       }
@@ -197,15 +205,15 @@ export class Pmdt19Component implements OnInit {
   }
 
   onDelete(id: string): void {
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบบันทึกเวอร์ชันนี้ใช่หรือไม่?').then((confirmed: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT19_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT19_CONFIRM_DELETE_MSG')).then((confirmed: boolean) => {
       if (confirmed) {
         this.service.deleteVersion(id).subscribe({
           next: () => {
-            this.dialog.success('สำเร็จ', 'ลบบันทึกเรียบร้อย');
+            this.dialog.success(this.translate.instant('PMDT19_SUCCESS_TITLE'), this.translate.instant('PMDT19_DELETE_SUCCESS_MSG'));
             this.loadVersions();
           },
           error: (err) => {
-            this.dialog.error('ข้อผิดพลาด', err.message || 'ไม่สามารถลบข้อมูลได้');
+            this.dialog.error(this.translate.instant('PMDT19_ERROR_TITLE'), err.message || this.translate.instant('PMDT19_DELETE_ERROR_MSG'));
           },
         });
       }

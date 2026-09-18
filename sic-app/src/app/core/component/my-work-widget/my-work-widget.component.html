@@ -7,10 +7,10 @@
       </div>
       <div>
         <h3 class="font-bold text-base text-[var(--text-active)]">
-          ศูนย์งานของฉัน (Your Work & Focus)
+          {{ 'MY_WORK_WIDGET_TITLE' | translate }}
         </h3>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          งานที่ได้รับมอบหมายและต้องดำเนินการในวันนี้
+          {{ 'MY_WORK_WIDGET_SUBTITLE' | translate }}
         </p>
       </div>
     </div>
@@ -18,7 +18,7 @@
     <!-- Quick action links -->
     <div class="flex items-center gap-2">
       <a routerLink="/feature/pm/task-board" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline flex items-center gap-1">
-        บอร์ดงานทั้งหมด <i class="bi bi-arrow-right"></i>
+        {{ 'MY_WORK_WIDGET_ALL_BOARD_LINK' | translate }} <i class="bi bi-arrow-right"></i>
       </a>
     </div>
   </div>
@@ -31,7 +31,7 @@
       [ngClass]="activeTab() === 'ASSIGNED' ? 'bg-[var(--crm-primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
     >
       <i class="bi bi-check2-circle"></i>
-      <span>งานที่ต้องทำ</span>
+      <span>{{ 'MY_WORK_WIDGET_TAB_ASSIGNED' | translate }}</span>
       <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="activeTab() === 'ASSIGNED' ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-[var(--text-muted)]'">
         {{ allWorkItems().length }}
       </span>
@@ -43,7 +43,7 @@
       [ngClass]="activeTab() === 'REVIEWS' ? 'bg-[var(--crm-primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
     >
       <i class="bi bi-code-square"></i>
-      <span>รอตรวจแบบ (Design Review)</span>
+      <span>{{ 'MY_WORK_WIDGET_TAB_REVIEWS' | translate }}</span>
       <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="activeTab() === 'REVIEWS' ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-[var(--text-muted)]'">
         {{ reviewItems().length }}
       </span>
@@ -55,7 +55,7 @@
       [ngClass]="activeTab() === 'APPROVALS' ? 'bg-[var(--crm-primary)] text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
     >
       <i class="bi bi-shield-check"></i>
-      <span>รออนุมัติ (Approvals)</span>
+      <span>{{ 'MY_WORK_WIDGET_TAB_APPROVALS' | translate }}</span>
       <span class="text-[10px] px-1.5 py-0.2 rounded-full" [ngClass]="activeTab() === 'APPROVALS' ? 'bg-white/20 text-white' : 'bg-[var(--border)] text-[var(--text-muted)]'">
         {{ approvalItems().length }}
       </span>
@@ -67,7 +67,7 @@
       [ngClass]="activeTab() === 'DEADLINES' ? 'bg-red-500 text-white shadow-sm' : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]'"
     >
       <i class="bi bi-alarm-fill"></i>
-      <span>ด่วน / ใกล้ครบกำหนด</span>
+      <span>{{ 'MY_WORK_WIDGET_TAB_DEADLINES' | translate }}</span>
     </button>
   </div>
 
@@ -120,7 +120,7 @@
     } @empty {
       <div class="py-10 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
         <i class="bi bi-inbox text-3xl mb-2 block opacity-40"></i>
-        ไม่มีรายการงานค้างในหมวดหมู่นี้ คุณจัดการงานเรียบร้อยหมดแล้ว! ✨
+        {{ 'MY_WORK_WIDGET_EMPTY_STATE' | translate }}
       </div>
     }
   </div>

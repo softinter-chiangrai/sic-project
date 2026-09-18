@@ -467,7 +467,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
             documentTitle: payload.deliveryTitle,
             version: payload.deliveryVersion,
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติเอกสารส่งมอบงาน'
+            comment: this.translate.instant('PMDT14A_SUBMIT_APPROVAL_COMMENT')
           }).subscribe({
             next: () => {
               this.isSaving.set(false);

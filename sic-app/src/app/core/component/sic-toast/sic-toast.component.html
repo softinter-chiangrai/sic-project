@@ -30,7 +30,7 @@
         }
         <p class="sic-toast-message">{{ toast.message }}</p>
         @if (toast.linkUrl || toast.onClick) {
-          <span class="sic-toast-action-hint">คลิกเพื่อดูรายละเอียด <i class="bi bi-arrow-right-short"></i></span>
+          <span class="sic-toast-action-hint">{{ 'TOAST_CLICK_TO_VIEW_DETAILS' | translate }} <i class="bi bi-arrow-right-short"></i></span>
         }
       </div>
 

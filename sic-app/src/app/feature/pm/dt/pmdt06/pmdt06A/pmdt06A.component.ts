@@ -471,7 +471,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                             documentCode: data.crCode || ('CR-' + id.substring(0, 8).toUpperCase()),
                             documentTitle: data.title || this.translate.instant('PMDT06_DEFAULT_CR_TITLE'),
                             flowId: this.selectedFlowId,
-                            comment: 'ส่งขออนุมัติ Change Request',
+                            comment: this.translate.instant('PMDT06A_SUBMIT_APPROVAL_COMMENT'),
                         })
                         .pipe(finalize(() => (this.isSaving = false)))
                         .subscribe({

@@ -4,17 +4,17 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-receipt text-[var(--crm-primary)]"></i>
-        รายการใบแจ้งหนี้
+        {{ 'PMDT16_PAGE_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMDT16_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <div class="flex gap-2">
       <button
         (click)="exportCsv()"
         class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        title="ส่งออกรายการที่กรองอยู่เป็น CSV"
+        [title]="'PMDT16_EXPORT_CSV_TITLE' | translate"
       >
         <i class="bi bi-download"></i>
         Export CSV
@@ -26,10 +26,10 @@
           class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
         >
           <i class="bi bi-layout-three-columns"></i>
-          คอลัมน์
+          {{ 'PMDT16_COLUMNS' | translate }}
         </button>
         @if (showColumnMenu()) {
-          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" aria-label="ปิดเมนูคอลัมน์"></button>
+          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" [attr.aria-label]="'PMDT16_CLOSE_COLUMN_MENU' | translate"></button>
           <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-52 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
             @for (col of allColumns; track col.key) {
               <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
@@ -46,14 +46,14 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
       >
         <i class="bi bi-plus-lg"></i>
-        สร้างใบแจ้งหนี้ใหม่
+        {{ 'PMDT16_CREATE_NEW' | translate }}
       </button>
     </div>
   </div>
 
   <!-- PRESET TABS -->
   <div class="flex flex-wrap gap-2">
-    @for (preset of [{v:'all', l:'ทั้งหมด'}, {v:'UNPAID', l:'ค้างชำระ'}, {v:'PAID', l:'รับเงินแล้ว'}, {v:'OVERDUE', l:'เกินกำหนด'}]; track preset.v) {
+    @for (preset of [{v:'all', l:('PMDT16_PRESET_ALL' | translate)}, {v:'UNPAID', l:('PMDT16_PRESET_UNPAID' | translate)}, {v:'PAID', l:('PMDT16_PRESET_PAID' | translate)}, {v:'OVERDUE', l:('PMDT16_PRESET_OVERDUE' | translate)}]; track preset.v) {
       <button type="button" (click)="setPreset(preset.v)"
         class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
         [class]="filterStatus() === preset.v
@@ -71,7 +71,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาเลขที่บิล, ชื่อลูกค้า, โครงการ..."
+        [placeholder]="'PMDT16_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -90,7 +90,7 @@
         [options]="statusOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterChange($event)"
-        placeholder="📊 ทุกสถานะชำระเงิน"
+        [placeholder]="'PMDT16_ALL_PAYMENT_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -149,7 +149,7 @@
           </span>
         } @else {
           <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            ยังไม่อนุมัติ
+            {{ 'PMDT16_NOT_YET_APPROVED' | translate }}
           </span>
         }
       </ng-template>
@@ -173,15 +173,15 @@
   @if ((gridRef?.selectedRowIds?.size ?? 0) > 0) {
     <div class="fixed bottom-6 left-1/2 z-[900] flex -translate-x-1/2 items-center gap-3 rounded-2xl border border-[var(--border)] bg-[var(--bg)] px-5 py-3 shadow-2xl">
       <span class="text-sm font-medium text-[var(--text-active)]">
-        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> เลือก {{ gridRef?.selectedRowIds?.size }} รายการ
+        <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> {{ 'PMDT16_SELECTED_PREFIX' | translate }} {{ gridRef?.selectedRowIds?.size }} {{ 'PMDT16_ITEMS_UNIT' | translate }}
       </span>
       <button type="button" (click)="bulkExportPdf()"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
-        <i class="bi bi-file-earmark-pdf"></i> Export PDF ทั้งหมด
+        <i class="bi bi-file-earmark-pdf"></i> {{ 'PMDT16_EXPORT_ALL_PDF' | translate }}
       </button>
       <button type="button" (click)="gridRef?.reload()"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-all">
-        <i class="bi bi-x-lg"></i> ยกเลิกการเลือก
+        <i class="bi bi-x-lg"></i> {{ 'PMDT16_CANCEL_SELECTION' | translate }}
       </button>
     </div>
   }

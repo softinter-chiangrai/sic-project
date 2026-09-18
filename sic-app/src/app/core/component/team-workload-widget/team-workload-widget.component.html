@@ -8,15 +8,15 @@
         </div>
         <div>
           <h3 class="font-bold text-base text-[var(--text-active)]">
-            ภาระงานทีม & อัตราการแก้ไข (Workload & Quality)
+            {{ 'TEAM_WORKLOAD_WIDGET_TITLE' | translate }}
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-0.5">
-            สัดส่วนการกระจายงานสมาชิกในระบบจริง (BURT04)
+            {{ 'TEAM_WORKLOAD_WIDGET_SUBTITLE' | translate }}
           </p>
         </div>
       </div>
       <a routerLink="/feature/bu/rt/burt04" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
-        จัดการสมาชิก &rarr;
+        {{ 'TEAM_WORKLOAD_WIDGET_MANAGE_MEMBERS_LINK' | translate }} &rarr;
       </a>
     </div>
 
@@ -32,7 +32,7 @@
             </div>
             <div class="flex items-center gap-2 shrink-0">
               <span class="text-[10px] font-bold font-mono text-[var(--text-active)]">
-                {{ member.activeTasks }} รายการ
+                {{ 'TEAM_WORKLOAD_WIDGET_ITEMS_COUNT' | translate: { count: member.activeTasks } }}
               </span>
               <span class="text-[10px] px-1.5 py-0.2 rounded border font-semibold {{ getStatusClass(member.status).bg }} {{ getStatusClass(member.status).text }}">
                 {{ getStatusClass(member.status).label }}
@@ -56,7 +56,7 @@
       } @empty {
         <div class="py-8 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
           <i class="bi bi-people text-2xl mb-1.5 block opacity-40"></i>
-          ยังไม่มีข้อมูลสมาชิกในระบบ สามารถเพิ่มสมาชิกได้ที่เมนู <a routerLink="/feature/bu/rt/burt04" class="text-[var(--crm-primary)] underline">จัดการสมาชิก (BURT04)</a>
+          {{ 'TEAM_WORKLOAD_WIDGET_NO_MEMBERS_TEXT' | translate }} <a routerLink="/feature/bu/rt/burt04" class="text-[var(--crm-primary)] underline">{{ 'TEAM_WORKLOAD_WIDGET_MANAGE_MEMBERS_BURT04_LINK' | translate }}</a>
         </div>
       }
     </div>
@@ -66,7 +66,7 @@
       <div class="flex items-center justify-between text-xs mb-2">
         <span class="font-bold text-[var(--text-active)] flex items-center gap-1.5">
           <i class="bi bi-shield-check text-emerald-500"></i>
-          อัตราการปิด Bug สำเร็จ (Resolved Rate)
+          {{ 'TEAM_WORKLOAD_WIDGET_RESOLVED_RATE_TITLE' | translate }}
         </span>
         <span class="font-bold text-emerald-500">{{ resolvedRate() }}%</span>
       </div>
@@ -79,8 +79,8 @@
       </div>
 
       <div class="flex items-center justify-between text-[11px] text-[var(--text-muted)] pt-1">
-        <span>ปิดแล้ว {{ summary()?.closedBugs || 0 }} รายการ</span>
-        <span>คงเหลือเปิดอยู่ {{ summary()?.openBugs || 0 }} รายการ (Critical: {{ summary()?.criticalOpenBugs || 0 }})</span>
+        <span>{{ 'TEAM_WORKLOAD_WIDGET_CLOSED_COUNT' | translate: { count: summary()?.closedBugs || 0 } }}</span>
+        <span>{{ 'TEAM_WORKLOAD_WIDGET_OPEN_COUNT' | translate: { count: summary()?.openBugs || 0, critical: summary()?.criticalOpenBugs || 0 } }}</span>
       </div>
     </div>
   </div>

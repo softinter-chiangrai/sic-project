@@ -5,10 +5,10 @@
     <div class="flex items-center gap-3">
       <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
-        บันทึกการตรวจสอบ
+        {{ 'PMDT20_PAGE_TITLE' | translate }}
       </h1>
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} รายการ
+        {{ totalItems() }} {{ 'PMDT20_ITEMS_UNIT' | translate }}
       </span>
     </div>
     <div class="flex gap-2">
@@ -17,7 +17,7 @@
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
       >
         <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoading()"></i>
-        รีเฟรช
+        {{ 'PMDT20_REFRESH' | translate }}
       </button>
     </div>
   </div>
@@ -30,7 +30,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหาผู้ใช้, การกระทำ, รายละเอียด..."
+        [placeholder]="'PMDT20_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event, grid)"
       />
@@ -50,7 +50,7 @@
         [options]="moduleSelectOptions()"
         [ngModel]="filterModule()"
         (ngModelChange)="onModuleChange($event, grid)"
-        placeholder="📋 ทุกโมดูล"
+        [placeholder]="'PMDT20_ALL_MODULES' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -61,7 +61,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onStatusChange($event, grid)"
-        placeholder="📊 ทุกสถานะ"
+        [placeholder]="'PMDT20_ALL_STATUS' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -72,7 +72,7 @@
         [options]="userSelectOptions()"
         [ngModel]="filterUser()"
         (ngModelChange)="onUserChange($event, grid)"
-        placeholder="👤 ทุกคน"
+        [placeholder]="'PMDT20_ALL_USERS' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>

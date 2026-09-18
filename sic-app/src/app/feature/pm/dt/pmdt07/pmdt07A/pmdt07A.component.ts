@@ -782,7 +782,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                         documentTitle: data.title,
                         version: data.version,
                         flowId: this.selectedFlowId,
-                        comment: 'ส่งขออนุมัติ Specification'
+                        comment: this.translate.instant('PMDT07A_SUBMIT_APPROVAL_COMMENT')
                     }).subscribe({
                         next: () => {
                             this.isSaving = false;

@@ -18,6 +18,7 @@ import { Pmdt19AForm } from './pmdt19A.form';
 import { Pmdt19AService } from './pmdt19A.service';
 import { DocumentVersionModel } from './pmdt19A.model';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt19a',
@@ -31,6 +32,7 @@ import { resolveProjectId } from '../../../../../core/utils/resolve-context.util
     SicInputComponent,
     SicInputAreaComponent,
     SicUploadComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt19A.component.html',
   styleUrls: ['./pmdt19A.component.css'],
@@ -43,6 +45,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   private readonly dialog = inject(DialogService);
   private readonly customerState = inject(CustomerStateService);
   private readonly fb = inject(FormBuilder);
+  private readonly translate = inject(TranslateService);
 
   formData!: SicFromData<DocumentVersionModel>;
   id = signal<string | null>(null);
@@ -100,7 +103,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
         this.formData.resetModel(this.formData.form.getRawValue() as any);
       },
       error: (err) => {
-        this.dialog.error('Error', err.message || 'ไม่สามารถโหลดข้อมูลเวอร์ชันได้');
+        this.dialog.error('Error', err.message || this.translate.instant('PMDT19A_LOAD_ERROR_MSG'));
       },
     });
   }
@@ -108,7 +111,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('คำเตือน', 'กรุณากรอกข้อมูลเวอร์ชันให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMDT19A_WARN_TITLE'), this.translate.instant('PMDT19A_WARN_MSG'));
       return;
     }
 
@@ -125,14 +128,14 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     this.service.saveVersion(payload).subscribe({
       next: () => {
         this.isSaved = true;
-        this.dialog.success('สำเร็จ', 'บันทึกเวอร์ชันเอกสารเรียบร้อยแล้ว');
+        this.dialog.success(this.translate.instant('PMDT19A_SUCCESS_TITLE'), this.translate.instant('PMDT19A_SAVE_SUCCESS_MSG'));
         this.formData.markAsPristine();
         this.router.navigate(['/feature/pm/version'], {
           queryParams: { projectId: this.customerState.getProjectId() || undefined }
         });
       },
       error: (err) => {
-        this.dialog.error('ข้อผิดพลาด', err.message || 'บันทึกไม่สำเร็จ');
+        this.dialog.error(this.translate.instant('PMDT19A_ERROR_TITLE'), err.message || this.translate.instant('PMDT19A_SAVE_ERROR_MSG'));
       },
       complete: () => this.isSaving.set(false),
     });

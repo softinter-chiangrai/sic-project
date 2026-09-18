@@ -24,11 +24,12 @@ import { FormsModule } from '@angular/forms';
 import { AuditLogService } from './audit-log.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt20',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt20.component.html',
   styleUrls: ['./pmdt20.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -36,6 +37,7 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 export class Pmdt20Component implements OnInit {
   private router = inject(Router);
   private auditLogService = inject(AuditLogService);
+  private translate = inject(TranslateService);
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -95,22 +97,24 @@ export class Pmdt20Component implements OnInit {
   // ===== Server Pagination State =====
   protected totalItems = signal(0);
 
-  gridConfig: SicGridPanelConfig = {
-    id: 'id',
-    selectable: false,
-    showToolbar: false,
-    defaultSortField: 'createdDate',
-    defaultSortDescending: true,
-    pageSize: this.pageSize(),
-    column: [
-      { label: 'ผู้ใช้', name: 'user', type: 'userInfo', sortable: true, minWidth: 100 },
-      { label: 'การกระทำ', name: 'action', type: 'text', sortable: true, minWidth: 120 },
-      { label: 'โมดูล', name: 'module', type: 'text', sortable: true, minWidth: 130 },
-      { label: 'รายละเอียด', name: 'description', type: 'descText', minWidth: 200 },
-      { label: 'วันที่-เวลา', name: 'timestamp', type: 'dateText', sortable: true, minWidth: 150 },
-      { label: 'สถานะ', name: 'status', type: 'statusBadge', sortable: true, minWidth: 80 },
-    ],
-  };
+  get gridConfig(): SicGridPanelConfig {
+    return {
+      id: 'id',
+      selectable: false,
+      showToolbar: false,
+      defaultSortField: 'createdDate',
+      defaultSortDescending: true,
+      pageSize: this.pageSize(),
+      column: [
+        { label: this.translate.instant('PMDT20_COL_USER'), name: 'user', type: 'userInfo', sortable: true, minWidth: 100 },
+        { label: this.translate.instant('PMDT20_COL_ACTION'), name: 'action', type: 'text', sortable: true, minWidth: 120 },
+        { label: this.translate.instant('PMDT20_COL_MODULE'), name: 'module', type: 'text', sortable: true, minWidth: 130 },
+        { label: this.translate.instant('PMDT20_COL_DESCRIPTION'), name: 'description', type: 'descText', minWidth: 200 },
+        { label: this.translate.instant('PMDT20_COL_TIMESTAMP'), name: 'timestamp', type: 'dateText', sortable: true, minWidth: 150 },
+        { label: this.translate.instant('PMDT20_COL_STATUS'), name: 'status', type: 'statusBadge', sortable: true, minWidth: 80 },
+      ],
+    };
+  }
 
   // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว
   private reloadFromPage1(grid: SicGridPanelComponent): void {
@@ -169,7 +173,7 @@ export class Pmdt20Component implements OnInit {
         this.isLoading.set(false);
         this.logs.set([]);
         this.totalItems.set(0);
-        grid.setLoadError('โหลดข้อมูลไม่สำเร็จ', request.requestId);
+        grid.setLoadError(this.translate.instant('PMDT20_LOAD_ERROR_MSG'), request.requestId);
       }
     });
   }

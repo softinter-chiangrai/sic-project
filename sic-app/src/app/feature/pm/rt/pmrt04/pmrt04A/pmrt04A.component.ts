@@ -15,6 +15,7 @@ import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angul
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 import { signal } from '@angular/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
@@ -53,6 +54,7 @@ import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-lin
     SicDatepickerComponent,
     SicCopyLinkComponent,
     SicEntitySummaryComponent,
+    TranslateModule,
   ],
   templateUrl: './pmrt04A.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,6 +70,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private projectService = inject(Pmrt02Service);
   private cdr = inject(ChangeDetectorRef);
   private aiHistoryService = inject(AiHistoryService);
+  private translate = inject(TranslateService);
 
   formData!: SicFromData<ContractModel>;
   get form(): FormGroup {
@@ -100,26 +103,26 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         icon: 'bi-flag',
         label: 'Milestone',
         value: `${s.milestones.completed}/${s.milestones.total}`,
-        sublabel: 'เสร็จแล้ว/ทั้งหมด',
-        actionLabel: 'ดู Phase',
+        sublabel: this.translate.instant('PMRT04A_SUMMARY_COMPLETED_OF_TOTAL'),
+        actionLabel: this.translate.instant('PMRT04A_SUMMARY_VIEW_PHASE'),
         action: () => this.navigation.navigate(['/feature/pm/phase'], { queryParams: { projectId } }),
       },
       {
         icon: 'bi-receipt',
-        label: 'ใบแจ้งหนี้',
+        label: this.translate.instant('PMRT04A_SUMMARY_INVOICE_LABEL'),
         value: String(s.invoices.total),
-        sublabel: s.invoices.pending > 0 ? `${s.invoices.pending} ค้างชำระ` : 'ชำระครบแล้ว',
+        sublabel: s.invoices.pending > 0 ? this.translate.instant('PMRT04A_SUMMARY_INVOICE_PENDING', { count: s.invoices.pending }) : this.translate.instant('PMRT04A_SUMMARY_INVOICE_PAID_FULL'),
         variant: s.invoices.pending > 0 ? 'warning' : 'default',
-        actionLabel: 'ดูใบแจ้งหนี้',
+        actionLabel: this.translate.instant('PMRT04A_SUMMARY_VIEW_INVOICE'),
         action: () => this.navigation.navigate(['/feature/pm/invoice'], { queryParams: { projectId } }),
       },
       {
         icon: 'bi-ticket-perforated',
         label: 'MA Ticket',
         value: String(s.maTickets.total),
-        sublabel: s.maTickets.open > 0 ? `${s.maTickets.open} เปิดอยู่` : 'ไม่มีที่เปิดอยู่',
+        sublabel: s.maTickets.open > 0 ? this.translate.instant('PMRT04A_SUMMARY_MA_TICKET_OPEN', { count: s.maTickets.open }) : this.translate.instant('PMRT04A_SUMMARY_MA_TICKET_NONE_OPEN'),
         variant: s.maTickets.open > 0 ? 'warning' : 'default',
-        actionLabel: 'ดู MA Ticket',
+        actionLabel: this.translate.instant('PMRT04A_SUMMARY_VIEW_MA_TICKET'),
         action: () => this.navigation.navigate(['/feature/pm/ma-ticket'], { queryParams: { projectId } }),
       },
     ];
@@ -128,11 +131,11 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       const expiring = s.daysUntilExpiry <= 30;
       cards.push({
         icon: 'bi-clock-history',
-        label: 'อายุสัญญา',
-        value: s.daysUntilExpiry >= 0 ? `อีก ${s.daysUntilExpiry} วัน` : 'หมดอายุแล้ว',
-        sublabel: expiring ? 'ใกล้หมดอายุ' : undefined,
+        label: this.translate.instant('PMRT04A_SUMMARY_CONTRACT_AGE_LABEL'),
+        value: s.daysUntilExpiry >= 0 ? this.translate.instant('PMRT04A_SUMMARY_DAYS_LEFT', { days: s.daysUntilExpiry }) : this.translate.instant('PMRT04A_SUMMARY_EXPIRED'),
+        sublabel: expiring ? this.translate.instant('PMRT04A_SUMMARY_EXPIRING_SOON') : undefined,
         variant: s.daysUntilExpiry < 0 ? 'danger' : expiring ? 'warning' : 'default',
-        actionLabel: this.contractId ? 'ต่อสัญญา' : undefined,
+        actionLabel: this.contractId ? this.translate.instant('PMRT04A_SUMMARY_RENEW_CONTRACT') : undefined,
         action: this.contractId
           ? () => this.navigation.navigate(['/feature/pm/contract/renew', this.contractId!])
           : undefined,
@@ -156,12 +159,14 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   aiModels = AI_MODEL_OPTIONS;
 
-  aiContractTypeOptions = [
-    { value: 'SOFTWARE_DEVELOPMENT', label: 'สัญญาจ้างพัฒนาซอฟต์แวร์ (Software Development)' },
-    { value: 'MAINTENANCE_SUPPORT', label: 'สัญญาบำรุงรักษาและสนับสนุนระบบ (MA & Support)' },
-    { value: 'CONSULTING', label: 'สัญญาบริการที่ปรึกษาด้านไอที (IT Consulting)' },
-    { value: 'CLOUD_INFRASTRUCTURE', label: 'สัญญาบริการคลาวด์และโครงสร้างพื้นฐาน (Cloud & Infra)' },
-  ];
+  get aiContractTypeOptions() {
+    return [
+      { value: 'SOFTWARE_DEVELOPMENT', label: this.translate.instant('PMRT04A_AI_CONTRACT_TYPE_SOFTWARE_DEV') },
+      { value: 'MAINTENANCE_SUPPORT', label: this.translate.instant('PMRT04A_AI_CONTRACT_TYPE_MAINTENANCE') },
+      { value: 'CONSULTING', label: this.translate.instant('PMRT04A_AI_CONTRACT_TYPE_CONSULTING') },
+      { value: 'CLOUD_INFRASTRUCTURE', label: this.translate.instant('PMRT04A_AI_CONTRACT_TYPE_CLOUD') },
+    ];
+  }
 
   // Approval Integration
   selectedFlowId: string | null = null;
@@ -271,8 +276,8 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           this.loadSummary(id);
         },
         error: (error) => {
-          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญารหัสนี้');
+          console.error(this.translate.instant('PMRT04A_LOAD_FAILED_TITLE'), error);
+          this.dialog.error(this.translate.instant('PMRT04A_LOAD_FAILED_TITLE'), this.translate.instant('PMRT04A_CONTRACT_NOT_FOUND_MSG'));
           this.navigation.navigate(['/feature/pm/contract']);
         },
       });
@@ -323,7 +328,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง');
+      this.dialog.warn(this.translate.instant('PMRT04A_FORM_INVALID_TITLE'), this.translate.instant('PMRT04A_FORM_INVALID_MSG'));
       return;
     }
 
@@ -341,7 +346,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     if (this.customerId) {
       data.customerId = this.customerId;
     } else {
-      this.dialog.warn('ไม่พบข้อมูลลูกค้า', 'กรุณาเลือกลูกค้าก่อน');
+      this.dialog.warn(this.translate.instant('PMRT04A_NO_CUSTOMER_DATA_TITLE'), this.translate.instant('PMRT04A_SELECT_CUSTOMER_FIRST_MSG'));
       this.isSaving = false;
       return;
     }
@@ -368,9 +373,9 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
                 documentType: 'CONTRACT',
                 documentId: savedId,
                 documentCode: data.contractNo,
-                documentTitle: `สัญญา ${data.contractNo}`,
+                documentTitle: this.translate.instant('PMRT04A_APPROVAL_DOC_TITLE', { contractNo: data.contractNo }),
                 flowId: this.selectedFlowId,
-                comment: 'ส่งขออนุมัติสัญญา',
+                comment: this.translate.instant('PMRT04A_SUBMIT_APPROVAL_COMMENT'),
               })
               .pipe(
                 finalize(() => {
@@ -382,8 +387,8 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
                 next: () => {
                   this.dialog
                     .success(
-                      'บันทึกสำเร็จ',
-                      `บันทึกข้อมูลสัญญา ${data.contractNo} เรียบร้อย`,
+                      this.translate.instant('PMRT04A_SAVE_SUCCESS_TITLE'),
+                      this.translate.instant('PMRT04A_SAVE_SUCCESS_MSG', { contractNo: data.contractNo }),
                     )
                     .then(() => {
                       this.onBack();
@@ -393,8 +398,8 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
                   console.error('Submit approval error:', err);
                   this.dialog
                     .success(
-                      'บันทึกสำเร็จ',
-                      `บันทึกข้อมูลสัญญา ${data.contractNo} เรียบร้อย`,
+                      this.translate.instant('PMRT04A_SAVE_SUCCESS_TITLE'),
+                      this.translate.instant('PMRT04A_SAVE_SUCCESS_MSG', { contractNo: data.contractNo }),
                     )
                     .then(() => {
                       this.onBack();
@@ -404,7 +409,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           } else {
             this.isSaving = false;
             this.cdr.detectChanges();
-            this.dialog.success('บันทึกสำเร็จ', 'ข้อมูลสัญญาถูกบันทึกเรียบร้อย').then(() => {
+            this.dialog.success(this.translate.instant('PMRT04A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT04A_SAVE_SUCCESS_GENERIC_MSG')).then(() => {
               this.onBack();
             });
           }
@@ -412,7 +417,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         error: (error) => {
           this.isSaving = false;
           this.cdr.detectChanges();
-          this.dialog.error('บันทึกไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาดในการบันทึกข้อมูล');
+          this.dialog.error(this.translate.instant('PMRT04A_SAVE_FAILED_TITLE'), error.error?.message || this.translate.instant('PMRT04A_SAVE_FAILED_MSG'));
         },
       });
   }
@@ -436,7 +441,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   deleteAiHistory(id: string, event: Event): void {
     event.stopPropagation();
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้ใช่หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMRT04A_CONFIRM_DELETE_TITLE'), this.translate.instant('PMRT04A_CONFIRM_DELETE_HISTORY_MSG')).then((ok: boolean) => {
       if (ok) {
         const targetId = this.contractId || this.form?.get('id')?.value || 'new';
         this.aiHistoryService.deleteHistory('contract', targetId, id);
@@ -447,7 +452,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   }
 
   clearAllAiHistories(): void {
-    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้าง AI ทั้งหมดของสัญญานี้ใช่หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMRT04A_CONFIRM_CLEAR_HISTORY_TITLE'), this.translate.instant('PMRT04A_CONFIRM_CLEAR_HISTORY_MSG')).then((ok: boolean) => {
       if (ok) {
         const targetId = this.contractId || this.form?.get('id')?.value || 'new';
         this.aiHistoryService.clearHistories('contract', targetId);
@@ -477,7 +482,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAi.set(false);
         if (!draft || (!draft.contractNo && !draft.scopeSummary && !draft.paymentTerms)) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาสัญญาได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(this.translate.instant('PMRT04A_NO_DATA_FOUND_TITLE'), this.translate.instant('PMRT04A_AI_GENERATE_FAILED_MSG'));
           return;
         }
 
@@ -496,13 +501,13 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         // ดึงข้อมูลหัวข้อและเนื้อหา TipTap ลงในฟอร์มทันที
         this.applyDraftToForm(draft);
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลสัญญา (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.dialog.success(this.translate.instant('PMRT04A_AI_GENERATE_SUCCESS_TITLE'), this.translate.instant('PMRT04A_AI_GENERATE_SUCCESS_MSG', { version: historyItem.versionNo }));
         this.cdr.detectChanges();
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
         console.error('AI contract generation error:', err);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.dialog.error(this.translate.instant('PMRT04A_ERROR_OCCURRED_TITLE'), err?.error?.message || err?.message || this.translate.instant('PMRT04A_AI_CONTENT_GENERATE_FAILED_MSG'));
         this.cdr.detectChanges();
       },
     });
@@ -525,17 +530,17 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   pasteContractDraft(draft: any): void {
     if (this.isLocked || this.isView) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMRT04A_CANNOT_PROCEED_TITLE'), this.translate.instant('PMRT04A_DOC_VIEW_OR_LOCKED_MSG'));
       return;
     }
     if (!draft) {
-      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      this.dialog.warn(this.translate.instant('PMRT04A_NO_DATA_FOUND_TITLE'), this.translate.instant('PMRT04A_NO_DATA_TO_PASTE_MSG'));
       return;
     }
 
     this.applyDraftToForm(draft);
     this.showAiModal.set(false);
-    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลสัญญาจาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMRT04A_PASTE_SUCCESS_TITLE'), this.translate.instant('PMRT04A_PASTE_SUCCESS_MSG'));
     this.cdr.detectChanges();
   }
 

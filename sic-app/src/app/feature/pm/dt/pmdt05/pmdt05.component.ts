@@ -419,7 +419,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                     documentTitle: res.name || 'Diagram Document',
                     version: res.version || tab.version || 'v1.0',
                     flowId: flowId,
-                    comment: 'ส่งขออนุมัติ Diagram จากการแก้ไขข้อมูล',
+                    comment: this.translate.instant('PMDT05_SUBMIT_APPROVAL_COMMENT'),
                   })
                   .subscribe({
                     next: () => {

@@ -40,10 +40,10 @@
           }
         </div>
         <h1 class="text-2xl font-bold text-[var(--text-active)] tracking-tight">
-          ยินดีต้อนรับ, {{ profile()?.name || 'ผู้ใช้งาน' }} 👋
+          {{ 'DASHBOARD_WELCOME' | translate }}, {{ profile()?.name || ('DASHBOARD_DEFAULT_USER' | translate) }} 👋
         </h1>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          ภาพรวมสถานะและโครงการที่ดำเนินงานอยู่ <strong class="text-[var(--crm-primary)] font-semibold">{{ realProjects().length }} โครงการ</strong>
+          {{ 'DASHBOARD_OVERVIEW_PREFIX' | translate }} <strong class="text-[var(--crm-primary)] font-semibold">{{ realProjects().length }} {{ 'DASHBOARD_PROJECTS_UNIT' | translate }}</strong>
         </p>
       </div>
     </div>
@@ -63,10 +63,10 @@
       <button
         (click)="loadAllRealData()"
         class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--crm-primary)] text-white hover:bg-[var(--crm-primary)]/90 transition-all cursor-pointer shadow-xs"
-        title="รีเฟรชข้อมูลจากฐานข้อมูลจริง"
+        [title]="'DASHBOARD_REFRESH_TITLE' | translate"
       >
         <i class="bi bi-arrow-repeat text-sm" [class.animate-spin]="isLoading()"></i>
-        <span>รีเฟรช</span>
+        <span>{{ 'DASHBOARD_REFRESH' | translate }}</span>
       </button>
     </div>
   </div>
@@ -81,7 +81,7 @@
           <i class="bi bi-briefcase-fill text-[var(--crm-primary)] group-hover:scale-110 transition-transform"></i>
         </div>
         <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.activeProjects }}</div>
-        <div class="text-[11px] text-[var(--text-muted)]">โครงการ Active</div>
+        <div class="text-[11px] text-[var(--text-muted)]">{{ 'DASHBOARD_KPI_ACTIVE_PROJECTS' | translate }}</div>
       </a>
 
       <a routerLink="/feature/pm/rt/pmrt02" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-danger)]/50 transition-all cursor-pointer group">
@@ -89,7 +89,7 @@
           <i class="bi bi-exclamation-triangle-fill text-[var(--crm-danger)] group-hover:scale-110 transition-transform"></i>
         </div>
         <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.delayedProjects }}</div>
-        <div class="text-[11px] text-[var(--text-muted)]">โครงการล่าช้า</div>
+        <div class="text-[11px] text-[var(--text-muted)]">{{ 'DASHBOARD_KPI_DELAYED_PROJECTS' | translate }}</div>
       </a>
 
       <a routerLink="/feature/pm/dt/pmdt06" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-danger)]/50 transition-all cursor-pointer group">
@@ -97,7 +97,7 @@
           <i class="bi bi-bug-fill text-[var(--crm-danger)] group-hover:scale-110 transition-transform"></i>
         </div>
         <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.openBugs }}</div>
-        <div class="text-[11px] text-[var(--text-muted)]">Bug เปิดอยู่ ({{ summary.criticalOpenBugs }} Critical)</div>
+        <div class="text-[11px] text-[var(--text-muted)]">{{ 'DASHBOARD_KPI_OPEN_BUGS' | translate }} ({{ summary.criticalOpenBugs }} Critical)</div>
       </a>
 
       <a routerLink="/feature/pm/dt/pmdt07" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-warning)]/50 transition-all cursor-pointer group">
@@ -105,7 +105,7 @@
           <i class="bi bi-wallet-fill text-[var(--crm-warning)] group-hover:scale-110 transition-transform"></i>
         </div>
         <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.pendingInvoiceCount }}</div>
-        <div class="text-[11px] text-[var(--text-muted)]">Invoice ค้างชำระ ({{ summary.pendingInvoiceAmount | number: '1.0-0' }} ฿)</div>
+        <div class="text-[11px] text-[var(--text-muted)]">{{ 'DASHBOARD_KPI_PENDING_INVOICE' | translate }} ({{ summary.pendingInvoiceAmount | number: '1.0-0' }} ฿)</div>
       </a>
 
       <a routerLink="/feature/pm/rt/pmrt07" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-primary)]/50 transition-all cursor-pointer group">
@@ -113,7 +113,7 @@
           <i class="bi bi-headset text-[var(--crm-primary)] group-hover:scale-110 transition-transform"></i>
         </div>
         <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.openMaTickets }}</div>
-        <div class="text-[11px] text-[var(--text-muted)]">MA Ticket ค้าง</div>
+        <div class="text-[11px] text-[var(--text-muted)]">{{ 'DASHBOARD_KPI_OPEN_MA_TICKETS' | translate }}</div>
       </a>
 
       <a routerLink="/feature/pm/rt/pmrt07" class="p-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm hover:border-[var(--crm-warning)]/50 transition-all cursor-pointer group">
@@ -121,7 +121,7 @@
           <i class="bi bi-file-earmark-text text-[var(--crm-warning)] group-hover:scale-110 transition-transform"></i>
         </div>
         <div class="text-xl font-extrabold text-[var(--text-active)]">{{ summary.contractsNearExpiry }}</div>
-        <div class="text-[11px] text-[var(--text-muted)]">สัญญาใกล้หมดอายุ</div>
+        <div class="text-[11px] text-[var(--text-muted)]">{{ 'DASHBOARD_KPI_CONTRACTS_EXPIRING' | translate }}</div>
       </a>
     </div>
   }
@@ -152,14 +152,14 @@
       <div>
         <h3 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-diagram-3-fill text-[var(--crm-primary)]"></i>
-          วงจรการส่งมอบซอฟต์แวร์ (SDLC Delivery Pipeline)
+          {{ 'DASHBOARD_SDLC_TITLE' | translate }}
         </h3>
         <p class="text-xs text-[var(--text-muted)] mt-0.5">
-          เชื่อมโยงข้อมูลจริงจาก Requirement (PMDT01) ➔ Review (PMDT09) ➔ Tasks (PMDT02) ➔ QA (PMDT05) ➔ Delivery (PMDT04)
+          {{ 'DASHBOARD_SDLC_DESC' | translate }}
         </p>
       </div>
       <span class="text-xs font-semibold px-3 py-1 rounded-lg bg-[var(--sidebar-hover)] text-[var(--text-active)] border border-[var(--border)] self-start sm:self-auto">
-        {{ totalWorkItemsCount() }} รายการทั้งหมดในกระบวนการ
+        {{ totalWorkItemsCount() }} {{ 'DASHBOARD_TOTAL_ITEMS_IN_PIPELINE' | translate }}
       </span>
     </div>
 
@@ -178,7 +178,7 @@
           </div>
           <div class="flex items-baseline justify-between mt-1">
             <span class="text-2xl font-extrabold text-[var(--text-active)]">{{ stage.count }}</span>
-            <span class="text-[11px] text-[var(--text-muted)] font-medium">รายการ</span>
+            <span class="text-[11px] text-[var(--text-muted)] font-medium">{{ 'DASHBOARD_ITEMS_UNIT' | translate }}</span>
           </div>
           <p class="text-[11px] text-[var(--text-muted)] mt-1 truncate group-hover:text-[var(--text-active)] transition-colors">
             {{ stage.thStage }} &rarr;
@@ -207,14 +207,14 @@
           <div>
             <h3 class="font-bold text-base text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-kanban-fill text-[var(--crm-primary)]"></i>
-              โครงการในระบบจริง
+              {{ 'DASHBOARD_REAL_PROJECTS_TITLE' | translate }}
             </h3>
             <p class="text-xs text-[var(--text-muted)] mt-0.5">
-              ดึงข้อมูลจากทะเบียนโครงการ (PMRT02)
+              {{ 'DASHBOARD_REAL_PROJECTS_DESC' | translate }}
             </p>
           </div>
           <a routerLink="/feature/pm/rt/pmrt02" class="text-xs font-semibold text-[var(--crm-primary)] hover:underline flex items-center gap-1">
-            ดูทั้งหมด ({{ realProjects().length }}) <i class="bi bi-arrow-right"></i>
+            {{ 'DASHBOARD_VIEW_ALL' | translate }} ({{ realProjects().length }}) <i class="bi bi-arrow-right"></i>
           </a>
         </div>
 
@@ -236,11 +236,11 @@
                   >
                     {{ proj.status || 'ACTIVE' }}
                   </span>
-                  <span class="text-xs text-[var(--text-muted)]">&bull; {{ proj.customerName || 'ลูกค้าทั่วไป' }}</span>
+                  <span class="text-xs text-[var(--text-muted)]">&bull; {{ proj.customerName || ('DASHBOARD_GENERAL_CUSTOMER' | translate) }}</span>
                 </div>
 
                 <div class="flex items-center gap-3 text-xs">
-                  <span class="text-[var(--text-muted)]"><i class="bi bi-person me-1"></i>{{ proj.projectManager || 'ยังไม่ระบุ' }}</span>
+                  <span class="text-[var(--text-muted)]"><i class="bi bi-person me-1"></i>{{ proj.projectManager || ('DASHBOARD_NOT_SPECIFIED' | translate) }}</span>
                   <span class="text-[var(--crm-primary)] font-bold">{{ calcProjectProgress(proj) }}% Manday</span>
                 </div>
               </div>
@@ -260,16 +260,16 @@
           } @empty {
             <div class="py-8 text-center text-xs text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-xl">
               <i class="bi bi-folder2-open text-2xl mb-1 block opacity-40"></i>
-              ยังไม่มีข้อมูลโครงการในระบบ
+              {{ 'DASHBOARD_NO_PROJECT_DATA' | translate }}
             </div>
           }
         </div>
       </div>
 
       <div class="pt-3 mt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-muted)]">
-        <span>บันทึก Audit Logs ล่าสุด:</span>
+        <span>{{ 'DASHBOARD_RECENT_AUDIT_LOGS' | translate }}</span>
         <a routerLink="/feature/pm/dt/pmdt20" class="text-[var(--crm-primary)] font-semibold hover:underline">
-          ดูประวัติทั้งหมด &rarr;
+          {{ 'DASHBOARD_VIEW_ALL_HISTORY' | translate }} &rarr;
         </a>
       </div>
     </div>

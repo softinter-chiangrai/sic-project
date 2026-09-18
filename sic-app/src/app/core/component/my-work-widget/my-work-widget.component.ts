@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, input, output, signal, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, output, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DesignReview } from '../../../feature/pm/dt/pmdt09/pmdt09.model';
 import { Approval } from '../../../feature/pm/dt/pmdt03/approval.model';
 import { DashboardDeadlineItem } from '../../../feature/dashboard/dashboard.model';
@@ -24,12 +25,14 @@ export interface MyWorkItem {
 @Component({
   selector: 'app-my-work-widget',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   templateUrl: './my-work-widget.component.html',
   styleUrl: './my-work-widget.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class MyWorkWidgetComponent {
+  private readonly translate = inject(TranslateService);
+
   readonly projects = input<PmCustomerProject[]>([]);
   readonly designReviews = input<DesignReview[]>([]);
   readonly approvals = input<Approval[]>([]);
@@ -78,7 +81,7 @@ export class MyWorkWidgetComponent {
     return this.approvals().map((a, idx) => ({
       id: a.id || String(idx),
       code: a.documentCode || `APP-${idx + 1}`,
-      title: a.documentTitle || a.documentType || 'รายการขออนุมัติ',
+      title: a.documentTitle || a.documentType || this.translate.instant('MY_WORK_WIDGET_DEFAULT_APPROVAL_TITLE'),
       project: a.projectName || undefined,
       type: 'APPROVAL' as const,
       status: a.status || 'PENDING',
@@ -115,28 +118,28 @@ export class MyWorkWidgetComponent {
           bg: 'bg-red-500/10 border-red-500/20',
           text: 'text-red-500',
           icon: 'bi-exclamation-octagon-fill',
-          label: 'เร่งด่วนสูงสุด',
+          label: this.translate.instant('MY_WORK_WIDGET_PRIORITY_CRITICAL'),
         };
       case 'HIGH':
         return {
           bg: 'bg-orange-500/10 border-orange-500/20',
           text: 'text-orange-500',
           icon: 'bi-arrow-up-circle-fill',
-          label: 'สำคัญสูง',
+          label: this.translate.instant('MY_WORK_WIDGET_PRIORITY_HIGH'),
         };
       case 'MEDIUM':
         return {
           bg: 'bg-amber-500/10 border-amber-500/20',
           text: 'text-amber-500',
           icon: 'bi-dash-circle-fill',
-          label: 'ปกติ',
+          label: this.translate.instant('MY_WORK_WIDGET_PRIORITY_MEDIUM'),
         };
       default:
         return {
           bg: 'bg-emerald-500/10 border-emerald-500/20',
           text: 'text-emerald-500',
           icon: 'bi-arrow-down-circle-fill',
-          label: 'ทั่วไป',
+          label: this.translate.instant('MY_WORK_WIDGET_PRIORITY_LOW'),
         };
     }
   }

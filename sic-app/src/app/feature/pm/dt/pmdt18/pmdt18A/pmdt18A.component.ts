@@ -129,7 +129,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     }
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMDT18A_INVALID_TITLE'), this.translate.instant('PMDT18A_INVALID_MSG'));
       return;
     }
 
@@ -146,12 +146,12 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     this.service.save(val).subscribe({
       next: () => {
         this.isSaved = true;
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลข้อเสนอต่อสัญญา MA เรียบร้อย');
+        this.dialog.success(this.translate.instant('PMDT18A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT18A_SAVE_SUCCESS_MSG'));
         this.formData.form.markAsPristine();
         this.router.navigate(['/feature/pm/renewal']);
       },
       error: (err) => {
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'บันทึกข้อมูลไม่สำเร็จ');
+        this.dialog.error(this.translate.instant('PMDT18A_ERROR_TITLE'), err.message || this.translate.instant('PMDT18A_SAVE_ERROR_MSG'));
       },
       complete: () => this.isSaving.set(false),
     });

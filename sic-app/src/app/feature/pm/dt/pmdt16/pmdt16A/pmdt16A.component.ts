@@ -28,6 +28,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt16a',
@@ -46,6 +47,7 @@ import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-lin
     SicDatepickerComponent,
     SicUploadComponent,
     SicCopyLinkComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],
@@ -61,6 +63,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   private approvalService = inject(ApprovalService);
   private http = inject(HttpClient);
   private aiHistoryService = inject(AiHistoryService);
+  private translate = inject(TranslateService);
 
   formData!: SicFromData<PmInvoiceModel>;
   id = signal<string | null>(null);
@@ -79,20 +82,24 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   selectedFlowId = signal<string | null>(null);
   isLoadingFlows = signal(false);
 
-  billingTypeOptions = [
-    { value: 'FIXED_PRICE', label: 'งวดราคาคงที่' },
-    { value: 'MILESTONE', label: 'งวดงานตามไมล์สโตน' },
-    { value: 'MONTHLY', label: 'รายเดือน' },
-    { value: 'MA', label: 'ค่าบำรุงรักษาระบบ' },
-    { value: 'CHANGE_REQUEST', label: 'งานส่วนเพิ่ม' },
-  ];
+  get billingTypeOptions() {
+    return [
+      { value: 'FIXED_PRICE', label: this.translate.instant('PMDT16A_BILL_FIXED') },
+      { value: 'MILESTONE', label: this.translate.instant('PMDT16A_BILL_MILESTONE') },
+      { value: 'MONTHLY', label: this.translate.instant('PMDT16A_BILL_MONTHLY') },
+      { value: 'MA', label: this.translate.instant('PMDT16A_BILL_MA') },
+      { value: 'CHANGE_REQUEST', label: this.translate.instant('PMDT16A_BILL_CR') },
+    ];
+  }
 
-  paymentStatusOptions = [
-    { value: 'UNPAID', label: 'ยังไม่ชำระ' },
-    { value: 'PARTIAL', label: 'ชำระบางส่วน' },
-    { value: 'PAID', label: 'ชำระครบถ้วน' },
-    { value: 'OVERDUE', label: 'เกินกำหนดชำระ' },
-  ];
+  get paymentStatusOptions() {
+    return [
+      { value: 'UNPAID', label: this.translate.instant('PMDT16A_PAY_UNPAID') },
+      { value: 'PARTIAL', label: this.translate.instant('PMDT16A_PAY_PARTIAL') },
+      { value: 'PAID', label: this.translate.instant('PMDT16A_PAY_PAID') },
+      { value: 'OVERDUE', label: this.translate.instant('PMDT16A_PAY_OVERDUE') },
+    ];
+  }
 
   // AI Assistant State
   showAiModal = signal(false);
@@ -118,7 +125,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   deleteAiHistory(id: string, e: MouseEvent): void {
     e.stopPropagation();
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการลบ', 'คุณต้องการลบประวัติการสร้างนี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT16A_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT16A_CONFIRM_DELETE_HIST_MSG')).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.deleteHistory('invoice', targetId, id);
         this.loadAiHistory();
@@ -128,7 +135,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   clearAllAiHistory(): void {
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
-    this.dialog.confirm('ยืนยันการล้างประวัติ', 'คุณต้องการล้างประวัติการสร้างทั้งหมดของใบแจ้งหนี้นี้หรือไม่?').then((ok: boolean) => {
+    this.dialog.confirm(this.translate.instant('PMDT16A_CONFIRM_CLEAR_TITLE'), this.translate.instant('PMDT16A_CONFIRM_CLEAR_MSG')).then((ok: boolean) => {
       if (ok) {
         this.aiHistoryService.clearHistories('invoice', targetId);
         this.loadAiHistory();
@@ -138,7 +145,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   openAiModal(): void {
     if (this.isLocked() || this.isView()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMDT16A_LOCKED_WARN_TITLE'), this.translate.instant('PMDT16A_LOCKED_WARN_MSG'));
       return;
     }
     const currentType = (this.formData?.form?.value as any)?.billingType || 'FIXED_PRICE';
@@ -173,7 +180,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       next: (draft) => {
         this.isGeneratingAi.set(false);
         if (!draft) {
-          this.dialog.warn('ไม่พบข้อมูล', 'AI ไม่สามารถสร้างเนื้อหาใบแจ้งหนี้ได้ กรุณาลองใหม่อีกครั้ง');
+          this.dialog.warn(this.translate.instant('PMDT16A_NO_DATA_TITLE'), this.translate.instant('PMDT16A_NO_DATA_AI_MSG'));
           return;
         }
 
@@ -192,12 +199,12 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         // ดึงข้อมูลหัวข้อ/ประเภท หมายเหตุ (Tiptap) อัตราภาษี และรายการสินค้าลงในฟอร์มทันที
         this.applyDraftToForm(draft);
 
-        this.dialog.success('สร้างเนื้อหาสำเร็จ', `AI ได้ร่างข้อมูลใบแจ้งหนี้ (เวอร์ชัน v${historyItem.versionNo}) ลงในฟอร์มเรียบร้อยแล้ว`);
+        this.dialog.success(this.translate.instant('PMDT16A_GEN_SUCCESS_TITLE'), this.translate.instant('PMDT16A_GEN_SUCCESS_MSG', { v: historyItem.versionNo }));
       },
       error: (err) => {
         this.isGeneratingAi.set(false);
         console.error('AI invoice generation error:', err);
-        this.dialog.error('เกิดข้อผิดพลาด', err?.error?.message || err?.message || 'ไม่สามารถสร้างเนื้อหาด้วย AI ได้');
+        this.dialog.error(this.translate.instant('PMDT16A_ERROR_TITLE'), err?.error?.message || err?.message || this.translate.instant('PMDT16A_AI_ERROR_MSG'));
       },
     });
   }
@@ -221,7 +228,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       const newItems = draft.items.map((it: any, idx: number) => ({
         id: `ai-item-${Date.now()}-${idx}`,
         itemNo: idx + 1,
-        itemName: it.itemDescription || it.itemName || it.name || `รายการที่ ${idx + 1}`,
+        itemName: it.itemDescription || it.itemName || it.name || this.translate.instant('PMDT16A_DEFAULT_ITEM_NAME', { n: idx + 1 }),
         description: it.description || '',
         quantity: it.quantity || 1,
         unitPrice: it.unitPrice || it.amount || 0,
@@ -238,17 +245,17 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   pasteInvoiceDraft(draft: any): void {
     if (this.isLocked() || this.isView()) {
-      this.dialog.warn('ไม่สามารถดำเนินการได้', 'เอกสารนี้อยู่ในโหมดดูข้อมูลหรือถูกล็อคแล้ว');
+      this.dialog.warn(this.translate.instant('PMDT16A_LOCKED_WARN_TITLE'), this.translate.instant('PMDT16A_LOCKED_WARN_MSG'));
       return;
     }
     if (!draft) {
-      this.dialog.warn('ไม่พบข้อมูล', 'ไม่มีข้อมูลที่จะวางลงในฟอร์ม');
+      this.dialog.warn(this.translate.instant('PMDT16A_NO_DATA_TITLE'), this.translate.instant('PMDT16A_NO_DATA_PASTE_MSG'));
       return;
     }
 
     this.applyDraftToForm(draft);
     this.showAiModal.set(false);
-    this.dialog.success('นำข้อมูลลงฟอร์มสำเร็จ', 'ข้อมูลใบแจ้งหนี้จาก AI ถูกใส่ลงในฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMDT16A_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT16A_PASTE_SUCCESS_MSG'));
   }
 
   copyDraft(draft: any, historyId?: string): void {
@@ -414,7 +421,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         }
       },
       error: (err) => {
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถโหลดข้อมูลใบแจ้งหนี้ได้');
+        this.dialog.error(this.translate.instant('PMDT16A_ERROR_TITLE'), err.message || this.translate.instant('PMDT16A_LOAD_ERROR_MSG'));
       },
     });
   }
@@ -443,7 +450,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     this.formData.form.markAllAsTouched();
     if (this.formData.invalid) {
-      this.dialog.warn('กรุณากรอกข้อมูล', 'โปรดตรวจสอบข้อมูลในฟอร์มให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMDT16A_VALIDATE_TITLE'), this.translate.instant('PMDT16A_VALIDATE_MSG'));
       return;
     }
 
@@ -469,22 +476,22 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
             documentType: 'INVOICE',
             documentId: savedId,
             documentCode: formValue.invoiceNo,
-            documentTitle: formValue.invoiceNo ? ('ใบแจ้งหนี้ ' + formValue.invoiceNo) : 'ใบแจ้งหนี้',
+            documentTitle: formValue.invoiceNo ? (this.translate.instant('PMDT16A_INVOICE_WORD') + ' ' + formValue.invoiceNo) : this.translate.instant('PMDT16A_INVOICE_WORD'),
             flowId: this.selectedFlowId()!,
-            comment: 'ส่งขออนุมัติใบแจ้งหนี้'
+            comment: this.translate.instant('PMDT16A_SUBMIT_COMMENT')
           }).subscribe({
             next: () => {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
+              this.dialog.success(this.translate.instant('PMDT16A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT16A_SAVE_SUCCESS_MSG'));
               this.router.navigate(['/feature/pm/invoice']);
             },
             error: (err) => {
               this.isSaving.set(false);
               this.isSaved = true;
               this.formData.markAsPristine();
-              this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
+              this.dialog.success(this.translate.instant('PMDT16A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT16A_SAVE_SUCCESS_MSG'));
               this.router.navigate(['/feature/pm/invoice']);
             }
           });
@@ -492,13 +499,13 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
           this.isSaving.set(false);
           this.isSaved = true;
           this.formData.markAsPristine();
-          this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูลใบแจ้งหนี้และการชำระเงินเรียบร้อย');
+          this.dialog.success(this.translate.instant('PMDT16A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT16A_SAVE_SUCCESS_MSG'));
           this.router.navigate(['/feature/pm/invoice']);
         }
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', err.message || 'ไม่สามารถบันทึกข้อมูลได้');
+        this.dialog.error(this.translate.instant('PMDT16A_ERROR_TITLE'), err.message || this.translate.instant('PMDT16A_SAVE_ERROR_MSG'));
       },
     });
   }
@@ -510,7 +517,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   printPdf(): void {
     const invoiceId = this.id();
     if (!invoiceId) {
-      this.dialog.warn('ไม่พบรหัสใบแจ้งหนี้', 'กรุณาบันทึกใบแจ้งหนี้ก่อนส่งออกเอกสาร');
+      this.dialog.warn(this.translate.instant('PMDT16A_NO_ID_TITLE'), this.translate.instant('PMDT16A_NO_ID_MSG'));
       return;
     }
 
@@ -533,7 +540,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         },
         error: (err) => {
           console.error('Export invoice PDF error:', err);
-          this.dialog.error('ส่งออกเอกสารไม่สำเร็จ', 'ไม่สามารถสร้างรายงาน Jasper Report ได้: ' + (err?.error?.message || err?.message || ''));
+          this.dialog.error(this.translate.instant('PMDT16A_EXPORT_FAIL_TITLE'), this.translate.instant('PMDT16A_EXPORT_FAIL_MSG') + ' ' + (err?.error?.message || err?.message || ''));
         },
       });
   }

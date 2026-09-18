@@ -5,7 +5,7 @@
     <div
       class="w-12 h-12 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
     ></div>
-    <p class="text-[var(--text-muted)]">กำลังโหลดข้อมูลสัญญา...</p>
+    <p class="text-[var(--text-muted)]">{{ 'PMRT04B_LOADING_CONTRACT' | translate }}</p>
   </div>
 }
 
@@ -15,13 +15,13 @@
       <button
         (click)="onBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMRT04B_BACK' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <h1 class="text-2xl font-bold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
-        ต่อสัญญา
+        {{ 'PMRT04B_RENEW_CONTRACT_TITLE' | translate }}
       </h1>
       <span
         class="inline-block px-3 py-1 rounded-lg text-sm font-mono font-semibold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]"
@@ -36,40 +36,40 @@
         <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
           <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
             <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-            ข้อมูลสัญญาเดิม
+            {{ 'PMRT04B_ORIGINAL_CONTRACT_INFO_TITLE' | translate }}
           </div>
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">เลขที่สัญญา</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_CONTRACT_NO_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.contractNo }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ประเภท</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_TYPE_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.contractType }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">ลูกค้า</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_CUSTOMER_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ customerDisplayName || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">โครงการ</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_PROJECT_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ projectDisplayName || '-' }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">วันที่เริ่ม</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_START_DATE_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ formatDate(originalContract.startDate) }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">วันที่สิ้นสุด</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_END_DATE_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ formatDate(originalContract.endDate) }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">มูลค่า</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_VALUE_LABEL' | translate }}</p>
               <p class="text-sm font-medium text-[var(--text-active)]">{{ formatCurrency(originalContract.contractValue) }}</p>
             </div>
             <div>
-              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">สถานะการต่อ</p>
-              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.renewalStatus || 'ยังไม่ต่อ' }}</p>
+              <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT04B_RENEWAL_STATUS_LABEL' | translate }}</p>
+              <p class="text-sm font-medium text-[var(--text-active)]">{{ originalContract.renewalStatus || ('PMRT04B_STATUS_NOT_RENEWED' | translate) }}</p>
             </div>
           </div>
         </div>
@@ -80,56 +80,56 @@
         <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm">
           <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
             <i class="bi bi-pencil-square text-[var(--crm-primary)]"></i>
-            ข้อมูลสัญญาใหม่
+            {{ 'PMRT04B_NEW_CONTRACT_INFO_TITLE' | translate }}
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- เลขที่สัญญาใหม่ (แก้ไขได้/Auto-generated) -->
             <div class="md:col-span-2">
               <sic-input
-                label="เลขที่สัญญา (ใหม่)"
+                [label]="'PMRT04B_NEW_CONTRACT_NO_LABEL' | translate"
                 type="text"
                 formControlName="newContractNo"
                 [required]="true"
-                placeholder="ระบุเลขที่สัญญาใหม่ เช่น CTR-001-R1"
+                [placeholder]="'PMRT04B_NEW_CONTRACT_NO_PLACEHOLDER' | translate"
               ></sic-input>
               @if (form.get('newContractNo')?.touched && form.get('newContractNo')?.invalid) {
-                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุเลขที่สัญญาใหม่</p>
+                <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMRT04B_NEW_CONTRACT_NO_REQUIRED' | translate }}</p>
               }
               <p class="text-xs text-[var(--text-muted)] mt-1">
-                * ระบบสร้างค่าเริ่มต้นอัตโนมัติ (-R1, -R2...) คุณสามารถแก้ไขเลขที่สัญญาตามเอกสารจริงได้
+                {{ 'PMRT04B_NEW_CONTRACT_NO_HINT' | translate }}
               </p>
             </div>
 
             <!-- วันที่เริ่มใหม่ -->
             <div>
               <sic-datepicker
-                label="วันที่เริ่ม (ใหม่)"
+                [label]="'PMRT04B_NEW_START_DATE_LABEL' | translate"
                 formControlName="newStartDate"
                 [required]="true"
-                placeholder="เลือกวันที่เริ่ม"
+                [placeholder]="'PMRT04B_NEW_START_DATE_PLACEHOLDER' | translate"
                 dateFormat="DD/MM/YYYY"
               ></sic-datepicker>
               @if (form.get('newStartDate')?.touched && form.get('newStartDate')?.invalid) {
-                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่เริ่ม</p>
+                <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMRT04B_NEW_START_DATE_REQUIRED' | translate }}</p>
               }
             </div>
 
             <!-- วันที่สิ้นสุดใหม่ -->
             <div>
               <sic-datepicker
-                label="วันที่สิ้นสุด (ใหม่)"
+                [label]="'PMRT04B_NEW_END_DATE_LABEL' | translate"
                 formControlName="newEndDate"
                 [required]="true"
-                placeholder="เลือกวันที่สิ้นสุด"
+                [placeholder]="'PMRT04B_NEW_END_DATE_PLACEHOLDER' | translate"
                 dateFormat="DD/MM/YYYY"
               ></sic-datepicker>
               @if (form.get('newEndDate')?.touched && form.get('newEndDate')?.invalid) {
-                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุวันที่สิ้นสุด</p>
+                <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMRT04B_NEW_END_DATE_REQUIRED' | translate }}</p>
               }
               @if (form.hasError('endDateInvalid')) {
                 <p class="text-xs text-[var(--crm-danger)] mt-1">
-                  วันที่สิ้นสุดต้องมากกว่าวันที่เริ่ม
+                  {{ 'PMRT04B_END_DATE_MUST_BE_AFTER_START' | translate }}
                 </p>
               }
             </div>
@@ -137,26 +137,26 @@
             <!-- มูลค่าใหม่ -->
             <div>
               <sic-input
-                label="มูลค่าสัญญา (ใหม่)"
+                [label]="'PMRT04B_NEW_CONTRACT_VALUE_LABEL' | translate"
                 type="text"
                 formControlName="newContractValue"
                 [required]="true"
                 placeholder="0.00"
               ></sic-input>
               @if (form.get('newContractValue')?.touched && form.get('newContractValue')?.invalid) {
-                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุมูลค่า</p>
+                <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMRT04B_NEW_CONTRACT_VALUE_REQUIRED' | translate }}</p>
               }
             </div>
 
             <!-- สถานะการต่อ (Combobox) -->
             <div>
               <sic-combobox
-                label="สถานะการต่อสัญญา"
+                [label]="'PMRT04B_RENEWAL_STATUS_COMBOBOX_LABEL' | translate"
                 [options]="renewalStatusOptions"
                 valueField="value"
                 textField="text"
                 formControlName="renewalStatus"
-                placeholder="เลือกสถานะการต่อสัญญา"
+                [placeholder]="'PMRT04B_RENEWAL_STATUS_PLACEHOLDER' | translate"
                 [clearable]="false"
               ></sic-combobox>
             </div>
@@ -166,15 +166,15 @@
           <div class="mt-4">
             <div class="flex items-center justify-between mb-1.5">
               <label class="block text-sm font-medium text-[var(--text-active)]">
-                หมายเหตุการต่อสัญญา
+                {{ 'PMRT04B_RENEWAL_REMARK_LABEL' | translate }}
               </label>
               <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
-                <i class="bi bi-markdown"></i> รองรับ Rich Text
+                <i class="bi bi-markdown"></i> {{ 'PMRT04B_RICH_TEXT_SUPPORTED' | translate }}
               </span>
             </div>
             <sic-tiptap-editor
               formControlName="renewalRemark"
-              placeholderInput="ระบุเหตุผลหรือรายละเอียดเพิ่มเติมในการต่อสัญญา..."
+              [placeholderInput]="'PMRT04B_RENEWAL_REMARK_PLACEHOLDER' | translate"
               minHeightInput="160px"
             ></sic-tiptap-editor>
           </div>
@@ -183,24 +183,24 @@
           <div class="border-t border-[var(--border)] pt-4 mt-4">
             <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">
               <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-              กระบวนการอนุมัติ
+              {{ 'PMRT04B_APPROVAL_PROCESS_TITLE' | translate }}
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <sic-combobox
-                  label="เลือกกระบวนการอนุมัติ"
+                  [label]="'PMRT04B_SELECT_APPROVAL_FLOW_LABEL' | translate"
                   [apiUrl]="documenttypeapiUrl"
                   valueField="id"
                   textField="flowName"
-                  placeholder="เลือกกระบวนการอนุมัติ (ถ้ามี)"
+                  [placeholder]="'PMRT04B_SELECT_APPROVAL_FLOW_PLACEHOLDER' | translate"
                   [clearable]="true"
                   formControlName="approvalFlowId"
                   (selectionChanged)="selectedFlowId = $event?.id"
                 ></sic-combobox>
                 @if (!selectedFlowId && flows.length > 0) {
                   <p class="text-xs text-[var(--text-muted)] mt-1">
-                    * คุณสามารถเลือกกระบวนการอนุมัติเพื่อส่งขออนุมัติหลังบันทึก
+                    {{ 'PMRT04B_APPROVAL_FLOW_HINT' | translate }}
                   </p>
                 }
               </div>
@@ -212,7 +212,7 @@
         <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
           <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">
             <i class="bi bi-arrow-left"></i>
-            ย้อนกลับ
+            {{ 'PMRT04B_BACK' | translate }}
           </sic-button>
           <sic-button
             [type]="'submit'"
@@ -221,10 +221,10 @@
           >
             @if (isSaving) {
               <i class="bi bi-arrow-repeat animate-spin"></i>
-              กำลังบันทึก...
+              {{ 'PMRT04B_SAVING' | translate }}
             } @else {
               <i class="bi bi-check-lg"></i>
-              ยืนยันการต่อสัญญา
+              {{ 'PMRT04B_CONFIRM_RENEWAL' | translate }}
             }
           </sic-button>
         </div>

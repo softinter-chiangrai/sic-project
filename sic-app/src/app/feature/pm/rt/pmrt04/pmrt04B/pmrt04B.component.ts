@@ -5,6 +5,7 @@ import { ChangeDetectorRef, Component, inject, NgZone, OnInit, ChangeDetectionSt
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
@@ -40,6 +41,7 @@ import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
     SicDatepickerComponent,
     SicInputAreaComponent,
     SicTiptapEditorComponent,
+    TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmrt04B.component.html',
@@ -56,6 +58,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private navigation = inject(NavigationService);
   private cdr = inject(ChangeDetectorRef);
   private ngZone = inject(NgZone); // ✅ ใช้ NgZone เพื่อบังคับ Change Detection
+  private translate = inject(TranslateService);
 
   formData!: SicFromData<any>;
   get form(): FormGroup {
@@ -71,12 +74,14 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   projectDisplayName = '';
 
   // Renewal Status Options for Combobox
-  renewalStatusOptions = [
-    { value: 'ต่อแล้ว', text: 'ต่อแล้ว' },
-    { value: 'รอต่อ', text: 'รอต่อ' },
-    { value: 'ยังไม่ต่อ', text: 'ยังไม่ต่อ' },
-    { value: 'ยกเลิก', text: 'ยกเลิก' },
-  ];
+  get renewalStatusOptions() {
+    return [
+      { value: 'ต่อแล้ว', text: this.translate.instant('PMRT04B_STATUS_RENEWED') },
+      { value: 'รอต่อ', text: this.translate.instant('PMRT04B_STATUS_PENDING_RENEWAL') },
+      { value: 'ยังไม่ต่อ', text: this.translate.instant('PMRT04B_STATUS_NOT_RENEWED') },
+      { value: 'ยกเลิก', text: this.translate.instant('PMRT04B_STATUS_CANCELLED') },
+    ];
+  }
 
   // ===== Approval Flow =====
   flows: ApprovalFlow[] = [];
@@ -105,7 +110,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
         this.contractId = id;
         this.loadContract(id);
       } else {
-        this.dialog.error('ไม่พบรหัสสัญญา', 'กรุณาระบุรหัสสัญญา');
+        this.dialog.error(this.translate.instant('PMRT04B_CONTRACT_ID_NOT_FOUND_TITLE'), this.translate.instant('PMRT04B_PLEASE_SPECIFY_CONTRACT_ID_MSG'));
         this.navigation.navigate(['/feature/pm/contract']);
       }
     });
@@ -159,7 +164,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           this.cdr.detectChanges();
         },
         error: () => {
-          console.warn('ไม่สามารถโหลด Approval Flow สำหรับ CONTRACT');
+          console.warn(this.translate.instant('PMRT04B_LOAD_APPROVAL_FLOW_FAILED_MSG'));
         },
       });
   }
@@ -168,7 +173,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     const start = group.get('newStartDate')?.value;
     const end = group.get('newEndDate')?.value;
     if (start && end && new Date(start) >= new Date(end)) {
-      return { endDateInvalid: 'วันที่สิ้นสุดต้องมากกว่าวันที่เริ่ม' };
+      return { endDateInvalid: this.translate.instant('PMRT04B_END_DATE_MUST_BE_AFTER_START') };
     }
     return null;
   }
@@ -212,7 +217,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
         },
         error: (error) => {
           console.error('Load contract error:', error);
-          this.dialog.error('โหลดข้อมูลไม่สำเร็จ', 'ไม่พบข้อมูลสัญญา');
+          this.dialog.error(this.translate.instant('PMRT04B_LOAD_FAILED_TITLE'), this.translate.instant('PMRT04B_CONTRACT_NOT_FOUND_MSG'));
           this.navigation.navigate(['/feature/pm/contract']);
         },
       });
@@ -307,7 +312,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn('ฟอร์มไม่ถูกต้อง', 'กรุณากรอกข้อมูลให้ครบถ้วน');
+      this.dialog.warn(this.translate.instant('PMRT04B_FORM_INVALID_TITLE'), this.translate.instant('PMRT04B_FORM_INVALID_MSG'));
       return;
     }
 
@@ -341,15 +346,22 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     };
 
     if (formValue.renewalRemark) {
+      const renewalTag = this.translate.instant('PMRT04B_RENEWAL_TAG');
       newContract.scopeSummary = original.scopeSummary
-        ? `${original.scopeSummary}\n[ต่อสัญญา] ${formValue.renewalRemark}`
-        : `[ต่อสัญญา] ${formValue.renewalRemark}`;
+        ? `${original.scopeSummary}\n${renewalTag} ${formValue.renewalRemark}`
+        : `${renewalTag} ${formValue.renewalRemark}`;
     }
 
     this.dialog
       .confirm(
-        'ยืนยันการต่อสัญญา',
-        `คุณต้องการต่อสัญญาเป็น ${newContract.contractNo} (จากสัญญาเดิม ${original.contractNo}) ตั้งแต่วันที่ ${this.formatDate(startDateStr)} ถึง ${this.formatDate(endDateStr)} มูลค่า ${this.formatCurrency(formValue.newContractValue)} ใช่หรือไม่?`,
+        this.translate.instant('PMRT04B_CONFIRM_RENEWAL_TITLE'),
+        this.translate.instant('PMRT04B_CONFIRM_RENEWAL_MSG', {
+          newContractNo: newContract.contractNo,
+          originalContractNo: original.contractNo,
+          startDate: this.formatDate(startDateStr),
+          endDate: this.formatDate(endDateStr),
+          value: this.formatCurrency(formValue.newContractValue),
+        }),
       )
       .then((confirmed) => {
         if (confirmed) {
@@ -371,9 +383,9 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                       documentType: 'CONTRACT',
                       documentId: savedId,
                       documentCode: newContract.contractNo,
-                      documentTitle: `ต่ออายุสัญญา ${original.contractNo}`,
+                      documentTitle: this.translate.instant('PMRT04B_RENEW_DOC_TITLE', { contractNo: original.contractNo }),
                       flowId: this.selectedFlowId,
-                      comment: formValue.renewalRemark || 'ส่งขออนุมัติการต่ออายุสัญญา',
+                      comment: formValue.renewalRemark || this.translate.instant('PMRT04B_SUBMIT_RENEWAL_APPROVAL_COMMENT'),
                     })
                     .pipe(
                       finalize(() => {
@@ -388,8 +400,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                         this.isSaved = true;
                         this.dialog
                           .success(
-                            'บันทึกสำเร็จ',
-                            `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`,
+                            this.translate.instant('PMRT04B_SAVE_SUCCESS_TITLE'),
+                            this.translate.instant('PMRT04B_RENEWAL_SUCCESS_MSG', { contractNo: original.contractNo }),
                           )
                           .then(() => {
                             this.form.markAsPristine();
@@ -400,8 +412,8 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                         console.error('Submit approval error:', err);
                         this.dialog
                           .success(
-                            'บันทึกสำเร็จ',
-                            `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`,
+                            this.translate.instant('PMRT04B_SAVE_SUCCESS_TITLE'),
+                            this.translate.instant('PMRT04B_RENEWAL_SUCCESS_MSG', { contractNo: original.contractNo }),
                           )
                           .then(() => {
                             this.form.markAsPristine();
@@ -416,7 +428,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                   });
                   this.isSaved = true;
                   this.dialog
-                    .success('ต่อสัญญาสำเร็จ', `สัญญา ${original.contractNo} ถูกต่ออายุเรียบร้อย`)
+                    .success(this.translate.instant('PMRT04B_RENEWAL_SUCCESS_TITLE'), this.translate.instant('PMRT04B_RENEWAL_SUCCESS_MSG', { contractNo: original.contractNo }))
                     .then(() => {
                       this.form.markAsPristine();
                       this.navigateBack();
@@ -428,7 +440,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
                   this.isSaving = false;
                   this.cdr.detectChanges();
                 });
-                this.dialog.error('ต่อสัญญาไม่สำเร็จ', error.error?.message || 'เกิดข้อผิดพลาด');
+                this.dialog.error(this.translate.instant('PMRT04B_RENEWAL_FAILED_TITLE'), error.error?.message || this.translate.instant('PMRT04B_ERROR_OCCURRED_MSG'));
               },
             });
         }

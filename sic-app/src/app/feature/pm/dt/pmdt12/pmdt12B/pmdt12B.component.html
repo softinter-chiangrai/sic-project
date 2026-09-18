@@ -5,10 +5,10 @@
     <div>
       <h2 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
         <i class="bi" [ngClass]="isView() ? 'bi-folder2-open text-blue-500' : (isEdit() ? 'bi-folder-check text-amber-500' : 'bi-folder-plus text-[var(--crm-primary)]')"></i>
-        {{ isView() ? 'รายละเอียด Test Scenario' : (isEdit() ? 'แก้ไข Test Scenario' : 'เพิ่ม Test Scenario ใหม่') }}
+        {{ isView() ? ('PMDT12B_TITLE_VIEW' | translate) : (isEdit() ? ('PMDT12B_TITLE_EDIT' | translate) : ('PMDT12B_TITLE_CREATE' | translate)) }}
       </h2>
       <p class="text-sm text-[var(--text-muted)] mt-1">
-        กลุ่มสถานการณ์หรือหมวดหมู่การทดสอบสำหรับจัดการชุด Test Cases
+        {{ 'PMDT12B_PAGE_DESC' | translate }}
       </p>
     </div>
 
@@ -19,9 +19,9 @@
           type="button"
           (click)="openAiAssist()"
           class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
-          title="สร้างเนื้อหาและรายละเอียดด้วย AI">
+          [title]="'PMDT12B_AI_GENERATE_TITLE' | translate">
           <i class="bi bi-stars text-sm"></i>
-          <span>สร้างเนื้อหาด้วย AI</span>
+          <span>{{ 'PMDT12B_AI_GENERATE_BUTTON' | translate }}</span>
         </button>
       </div>
     }
@@ -30,7 +30,7 @@
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-12 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT12B_LOADING' | translate }}</p>
     </div>
   } @else if (formData && formData.form) {
     <form [formGroup]="formData.form" (ngSubmit)="onSubmit()" class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm space-y-6">
@@ -39,41 +39,41 @@
       <div class="space-y-4">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
           <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-          ข้อมูล Test Scenario
+          {{ 'PMDT12B_SECTION_INFO' | translate }}
         </h3>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
           <div>
             <sic-input
               formControlName="scenarioCode"
-              label="รหัส Test Scenario"
-              placeholder="เช่น SC-001, SC-LOGIN"
+              [label]="'PMDT12B_SCENARIO_CODE_LABEL' | translate"
+              [placeholder]="'PMDT12B_SCENARIO_CODE_PLACEHOLDER' | translate"
               [disabled]="isView()"
             ></sic-input>
           </div>
           <div class="md:col-span-1">
             <sic-input
               formControlName="scenarioName"
-              label="ชื่อ Test Scenario"
-              placeholder="เช่น การเข้าสู่ระบบ, การพิมพ์รายงาน..."
+              [label]="'PMDT12B_SCENARIO_NAME_LABEL' | translate"
+              [placeholder]="'PMDT12B_SCENARIO_NAME_PLACEHOLDER' | translate"
               [disabled]="isView()"
             ></sic-input>
           </div>
           <div>
             <sic-combobox
-              label="ประเภทการทดสอบ"
+              [label]="'PMDT12B_TEST_TYPE_LABEL' | translate"
               formControlName="testType"
               [items]="testTypeOptions"
-              placeholder="เลือกประเภทการทดสอบ"
+              [placeholder]="'PMDT12B_TEST_TYPE_PLACEHOLDER' | translate"
               [disabled]="isView()"
             ></sic-combobox>
           </div>
           <div>
             <sic-combobox
-              label="ความสำคัญ"
+              [label]="'PMDT12B_PRIORITY_LABEL' | translate"
               formControlName="priority"
               [apiUrl]="priorityApiUrl"
-              placeholder="เลือกระดับความสำคัญ"
+              [placeholder]="'PMDT12B_PRIORITY_PLACEHOLDER' | translate"
               valueField="value"
               textField="text"
               [disabled]="isView()"
@@ -81,10 +81,10 @@
           </div>
           <div>
             <sic-combobox
-              label="ความสัมพันธ์กับ Task (Trace Link)"
+              [label]="'PMDT12B_TASK_TRACE_LABEL' | translate"
               formControlName="taskId"
               [items]="taskOptions()"
-              placeholder="เลือก Task ที่เกี่ยวข้อง"
+              [placeholder]="'PMDT12B_TASK_TRACE_PLACEHOLDER' | translate"
               (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
               [disabled]="isView()"
             ></sic-combobox>
@@ -94,23 +94,23 @@
         <div>
           <div class="flex items-center justify-between mb-1.5">
             <span class="text-sm font-medium text-[var(--text-active)]">
-              คำอธิบาย / วัตถุประสงค์ของ Scenario
+              {{ 'PMDT12B_DESCRIPTION_LABEL' | translate }}
             </span>
-            <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+            <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT12B_RICH_TEXT_HINT' | translate }}</span>
           </div>
           <sic-tiptap-editor
             formControlName="description"
-            placeholderInput="อธิบายขอบเขตและวัตถุประสงค์ในการทดสอบกลุ่มนี้..."
+            [placeholderInput]="'PMDT12B_DESCRIPTION_PLACEHOLDER' | translate"
             minHeightInput="130px"
             [disabledInput]="isView()"
           ></sic-tiptap-editor>
         </div>
 
-        <!-- สถานะด้านล่างสุดของฟอร์ม (Checkbox) -->
+        <!-- Active status checkbox -->
         <div class="pt-2">
           <sic-checkbox
             formControlName="status"
-            label="เปิดใช้งาน"
+            [label]="'PMDT12B_STATUS_ACTIVE_LABEL' | translate"
             checkedValue="Active"
             uncheckedValue="Inactive"
             [disabled]="isView()"
@@ -127,7 +127,7 @@
           [disabled]="isSaving()"
         >
           <i class="bi bi-arrow-left"></i>
-          ย้อนกลับ
+          {{ 'PMDT12B_BACK_BUTTON' | translate }}
         </sic-button>
         @if (!isView()) {
           <sic-button
@@ -140,7 +140,7 @@
             } @else {
               <i class="bi bi-floppy"></i>
             }
-            {{ isSaving() ? 'กำลังบันทึก...' : 'บันทึก' }}
+            {{ isSaving() ? ('PMDT12B_SAVING' | translate) : ('PMDT12B_SAVE_BUTTON' | translate) }}
           </sic-button>
         }
       </div>
@@ -166,9 +166,9 @@
             </div>
             <div>
               <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
-                สร้าง Test Scenario ด้วย AI
+                {{ 'PMDT12B_AI_MODAL_TITLE' | translate }}
               </h2>
-              <p class="text-xs text-[var(--text-muted)]">AI จะช่วยวิเคราะห์และร่างชื่อ Scenario และขอบเขตวัตถุประสงค์การทดสอบ</p>
+              <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT12B_AI_MODAL_DESC' | translate }}</p>
             </div>
           </div>
           <button
@@ -191,7 +191,7 @@
             [class.border-purple-600]="aiAssistTab() === 'generate'"
             [class.text-[var(--text-muted)]]="aiAssistTab() !== 'generate'">
             <i class="bi bi-lightning-charge-fill"></i>
-            <span>สร้างเนื้อหา (Generate)</span>
+            <span>{{ 'PMDT12B_AI_TAB_GENERATE' | translate }}</span>
           </button>
           <button
             type="button"
@@ -202,7 +202,7 @@
             [class.border-purple-600]="aiAssistTab() === 'history'"
             [class.text-[var(--text-muted)]]="aiAssistTab() !== 'history'">
             <i class="bi bi-clock-history"></i>
-            <span>ประวัติเวอร์ชัน (History Log)</span>
+            <span>{{ 'PMDT12B_AI_TAB_HISTORY' | translate }}</span>
             @if (aiHistories().length > 0) {
               <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-purple-500/15 text-purple-600">
                 {{ aiHistories().length }}
@@ -218,11 +218,11 @@
           <!-- AI Model Selection -->
           <div>
             <sic-combobox
-              label="โมเดล AI ที่ต้องการใช้"
+              [label]="'PMDT12B_AI_MODEL_LABEL' | translate"
               [options]="aiModels"
               valueField="id"
               textField="name"
-              placeholder="เลือกโมเดล AI"
+              [placeholder]="'PMDT12B_AI_MODEL_PLACEHOLDER' | translate"
               [ngModel]="aiAssistModel()"
               (selectionChanged)="aiAssistModel.set($event?.value || $event?.id || $event)"
               [clearable]="false">
@@ -232,28 +232,28 @@
           <!-- Task Selection (Optional) -->
           <div>
             <sic-combobox
-              label="อ้างอิงจาก Task ที่เกี่ยวข้อง (ถ้ามี)"
+              [label]="'PMDT12B_AI_TASK_REF_LABEL' | translate"
               [items]="taskOptions()"
-              placeholder="-- ไม่ระบุ (สร้างจากข้อความคำสั่งอิสระ) --"
+              [placeholder]="'PMDT12B_AI_TASK_REF_PLACEHOLDER' | translate"
               [ngModel]="aiAssistTaskId()"
               (selectionChanged)="aiAssistTaskId.set($event?.value ?? $event?.id ?? $event ?? null)"
               [clearable]="true">
             </sic-combobox>
             <p class="text-[11px] text-[var(--text-muted)] mt-1">
-              💡 หากเลือก Task ระบบจะดึงเนื้อหา Task และ Specification ที่ผูกอยู่มาร่วมวิเคราะห์สร้าง Scenario
+              💡 {{ 'PMDT12B_AI_TASK_REF_HINT' | translate }}
             </p>
           </div>
 
           <!-- Prompt -->
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-              คำสั่งหรือขอบเขตการทดสอบที่ต้องการเน้น
+              {{ 'PMDT12B_AI_PROMPT_LABEL' | translate }}
             </label>
             <textarea
               [ngModel]="aiAssistPrompt()"
               (ngModelChange)="onAiPromptChange($event)"
               rows="3"
-              placeholder="ระบุสิ่งที่ต้องการให้ AI เน้น เช่น 'กลุ่มการทดสอบกระบวนการชำระเงินผ่านบัตรเครดิตและ PromptPay', 'กลุ่มการทดสอบการ Export รายงานและการจัดรูปแบบไฟล์ Excel'..."
+              [placeholder]="'PMDT12B_AI_PROMPT_PLACEHOLDER' | translate"
               class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
             </textarea>
           </div>
@@ -261,7 +261,7 @@
           @if (isGeneratingAiAssist()) {
             <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
               <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-              <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และร่างข้อมูล Test Scenario...</p>
+              <p class="text-xs font-medium text-purple-600 dark:text-purple-400">{{ 'PMDT12B_AI_GENERATING' | translate }}</p>
             </div>
           }
 
@@ -271,7 +271,7 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-600 text-white">
-                    v{{ aiCurrentVersionNo() }} (ล่าสุด)
+                    v{{ aiCurrentVersionNo() }} ({{ 'PMDT12B_LATEST' | translate }})
                   </span>
                   <span class="text-xs font-bold text-[var(--text-active)] truncate max-w-xs">
                     {{ aiCurrentDraft().scenarioName }}
@@ -283,24 +283,24 @@
                     (click)="copyDraft(aiCurrentDraft(), 'current')"
                     class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] flex items-center gap-1 cursor-pointer">
                     <i class="bi" [class.bi-clipboard]="copiedId() !== 'current'" [class.bi-check-lg]="copiedId() === 'current'" [class.text-green-500]="copiedId() === 'current'"></i>
-                    <span>{{ copiedId() === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                    <span>{{ copiedId() === 'current' ? ('PMDT12B_COPIED' | translate) : ('PMDT12B_COPY' | translate) }}</span>
                   </button>
                   <button
                     type="button"
                     (click)="pasteTestScenarioDraft(aiCurrentDraft())"
                     class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
                     <i class="bi bi-clipboard-check"></i>
-                    <span>วางลงในฟอร์ม (Paste)</span>
+                    <span>{{ 'PMDT12B_PASTE_INTO_FORM' | translate }}</span>
                   </button>
                 </div>
               </div>
 
               <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto">
                 <div *ngIf="aiCurrentDraft().scenarioCode">
-                  <strong>รหัส Scenario:</strong> <span class="font-mono ml-1">{{ aiCurrentDraft().scenarioCode }}</span>
+                  <strong>{{ 'PMDT12B_SCENARIO_CODE_INLINE_LABEL' | translate }}</strong> <span class="font-mono ml-1">{{ aiCurrentDraft().scenarioCode }}</span>
                 </div>
                 <div *ngIf="aiCurrentDraft().description" class="space-y-1">
-                  <strong>รายละเอียด:</strong>
+                  <strong>{{ 'PMDT12B_DESCRIPTION_INLINE_LABEL' | translate }}</strong>
                   <p class="text-xs text-[var(--text-muted)] mt-1 whitespace-pre-wrap">{{ aiCurrentDraft().description }}</p>
                 </div>
               </div>
@@ -315,7 +315,7 @@
             (click)="closeAiAssist()"
             [disabled]="isGeneratingAiAssist()"
             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-            ปิด
+            {{ 'PMDT12B_CLOSE' | translate }}
           </button>
 
           <button
@@ -325,10 +325,10 @@
             class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
             @if (isGeneratingAiAssist()) {
               <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>กำลังประมวลผล...</span>
+              <span>{{ 'PMDT12B_PROCESSING' | translate }}</span>
             } @else {
               <i class="bi bi-stars"></i>
-              <span>{{ aiCurrentDraft() ? 'Generate ใหม่' : 'สร้างเนื้อหา' }}</span>
+              <span>{{ aiCurrentDraft() ? ('PMDT12B_GENERATE_AGAIN' | translate) : ('PMDT12B_GENERATE' | translate) }}</span>
             }
           </button>
         </div>
@@ -340,12 +340,12 @@
           @if (aiHistories().length === 0) {
             <div class="py-12 text-center text-[var(--text-muted)] flex flex-col items-center gap-2">
               <i class="bi bi-clock-history text-3xl opacity-40"></i>
-              <p class="text-xs">ยังไม่มีประวัติการสร้าง Test Scenario ด้วย AI สำหรับเอกสารนี้</p>
+              <p class="text-xs">{{ 'PMDT12B_NO_AI_HISTORY' | translate }}</p>
               <button
                 type="button"
                 (click)="aiAssistTab.set('generate')"
                 class="text-xs text-purple-600 underline cursor-pointer hover:opacity-80">
-                คลิกที่นี่เพื่อเริ่มสร้างเวอร์ชันแรก
+                {{ 'PMDT12B_START_FIRST_VERSION' | translate }}
               </button>
             </div>
           } @else {
@@ -369,7 +369,7 @@
                     <button
                       (click)="deleteAiHistory(item.id, $event)"
                       class="p-1 text-[var(--text-muted)] hover:text-red-500 transition-colors cursor-pointer"
-                      title="ลบประวัตินี้">
+                      [title]="'PMDT12B_DELETE_HISTORY_TITLE' | translate">
                       <i class="bi bi-trash"></i>
                     </button>
                   </div>
@@ -388,7 +388,7 @@
                     (click)="togglePreview(item.id)"
                     class="text-xs text-purple-600 hover:underline flex items-center gap-1 font-medium cursor-pointer">
                     <i class="bi" [class.bi-chevron-up]="previewHistoryId() === item.id" [class.bi-chevron-down]="previewHistoryId() !== item.id"></i>
-                    <span>{{ previewHistoryId() === item.id ? 'ซ่อนตัวอย่าง' : 'ดูตัวอย่างเนื้อหา' }}</span>
+                    <span>{{ previewHistoryId() === item.id ? ('PMDT12B_HIDE_PREVIEW' | translate) : ('PMDT12B_SHOW_PREVIEW' | translate) }}</span>
                   </button>
 
                   <div class="flex items-center gap-2">
@@ -397,16 +397,16 @@
                       (click)="copyDraft(item.data, item.id)"
                       class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] flex items-center gap-1 cursor-pointer">
                       <i class="bi" [class.bi-clipboard]="copiedId() !== item.id" [class.bi-check-lg]="copiedId() === item.id" [class.text-green-500]="copiedId() === item.id"></i>
-                      <span>{{ copiedId() === item.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                      <span>{{ copiedId() === item.id ? ('PMDT12B_COPIED' | translate) : ('PMDT12B_COPY' | translate) }}</span>
                     </button>
-                    
+
                     <!-- PASTE BUTTON -->
                     <button
                       type="button"
                       (click)="pasteTestScenarioDraft(item.data)"
                       class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
                       <i class="bi bi-clipboard-check"></i>
-                      <span>วางลงในฟอร์ม (Paste)</span>
+                      <span>{{ 'PMDT12B_PASTE_INTO_FORM' | translate }}</span>
                     </button>
                   </div>
                 </div>
@@ -415,10 +415,10 @@
                 @if (previewHistoryId() === item.id) {
                   <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--sidebar)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto mt-2">
                     <div *ngIf="item.data?.scenarioCode">
-                      <strong>รหัส Scenario:</strong> <span class="font-mono ml-1">{{ item.data?.scenarioCode }}</span>
+                      <strong>{{ 'PMDT12B_SCENARIO_CODE_INLINE_LABEL' | translate }}</strong> <span class="font-mono ml-1">{{ item.data?.scenarioCode }}</span>
                     </div>
                     <div *ngIf="item.data?.description">
-                      <strong>รายละเอียด:</strong>
+                      <strong>{{ 'PMDT12B_DESCRIPTION_INLINE_LABEL' | translate }}</strong>
                       <p class="text-xs text-[var(--text-muted)] mt-1 whitespace-pre-wrap">{{ item.data?.description }}</p>
                     </div>
                   </div>
@@ -434,10 +434,10 @@
             type="button"
             (click)="closeAiAssist()"
             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-            ปิด
+            {{ 'PMDT12B_CLOSE' | translate }}
           </button>
           <span class="text-xs text-[var(--text-muted)]">
-            มีประวัติทั้งหมด {{ aiHistories().length }} เวอร์ชัน
+            {{ 'PMDT12B_TOTAL_HISTORY_PREFIX' | translate }} {{ aiHistories().length }} {{ 'PMDT12B_VERSIONS_UNIT' | translate }}
           </span>
         </div>
       }

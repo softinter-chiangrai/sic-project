@@ -8,11 +8,12 @@ import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { SicButtonComponent } from 'sic-ng';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt19-view-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicButtonComponent, SicDatePipe],
+  imports: [CommonModule, FormsModule, SicButtonComponent, SicDatePipe, TranslateModule],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="w-[min(92vw,48rem)] max-h-[85vh] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl flex flex-col" style="border-color: var(--border);">
@@ -24,14 +25,14 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
           </div>
           <div>
             <h3 class="text-lg font-semibold text-[var(--text-active)] flex items-center gap-2">
-              เนื้อหาเอกสาร
+              {{ 'PMDT19_VD_DOC_CONTENT' | translate }}
               <span class="px-2.5 py-0.5 rounded-full text-xs font-mono font-bold bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                 {{ version.versionNo }}
               </span>
             </h3>
             <p class="text-xs text-[var(--text-muted)]">
-              ประเภท: <span class="font-medium text-[var(--text-active)]">{{ version.documentType }}</span> | 
-              รหัส: <span class="font-medium text-[var(--text-active)]">{{ version.documentCode || '-' }}</span>
+              {{ 'PMDT19_VD_TYPE_LABEL' | translate }}: <span class="font-medium text-[var(--text-active)]">{{ version.documentType }}</span> |
+              {{ 'PMDT19_VD_CODE_LABEL' | translate }}: <span class="font-medium text-[var(--text-active)]">{{ version.documentCode || '-' }}</span>
             </p>
           </div>
         </div>
@@ -49,14 +50,14 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
         <!-- Metadata Summary Box -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] text-xs">
           <div>
-            <span class="text-[var(--text-muted)] block mb-1">ผู้บันทึกเวอร์ชันนี้:</span>
+            <span class="text-[var(--text-muted)] block mb-1">{{ 'PMDT19_VD_RECORDED_BY' | translate }}:</span>
             <div class="flex items-center gap-1.5 font-medium text-[var(--text-active)] text-sm">
               <i class="bi bi-person text-[var(--crm-primary)]"></i>
               <span>{{ version.createdBy || 'System' }}</span>
             </div>
           </div>
           <div>
-            <span class="text-[var(--text-muted)] block mb-1">วันที่บันทึก:</span>
+            <span class="text-[var(--text-muted)] block mb-1">{{ 'PMDT19_VD_RECORDED_DATE' | translate }}:</span>
             <div class="flex items-center gap-1.5 font-medium text-[var(--text-active)] text-sm">
               <i class="bi bi-clock text-[var(--crm-primary)]"></i>
               <span>{{ version.createdDate ? (version.createdDate | sicDate: null : 'DD/MM/YYYY HH:mm') : '-' }}</span>
@@ -64,7 +65,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
           </div>
           @if (version.changeSummary) {
             <div class="col-span-full pt-2 border-t border-[var(--border)]">
-              <span class="text-[var(--text-muted)] block mb-1 font-semibold">สรุปการเปลี่ยนแปลง:</span>
+              <span class="text-[var(--text-muted)] block mb-1 font-semibold">{{ 'PMDT19_VD_CHANGE_SUMMARY' | translate }}:</span>
               <p class="text-[var(--text)] whitespace-pre-wrap leading-relaxed">{{ version.changeSummary }}</p>
             </div>
           }
@@ -75,7 +76,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
           <div class="space-y-4">
             <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-2">
               <i class="bi bi-journal-text text-[var(--crm-primary)]"></i>
-              รายละเอียดเนื้อหาเอกสาร ณ เวอร์ชันนี้
+              {{ 'PMDT19_VD_CONTENT_DETAILS_AT_VERSION' | translate }}
             </h4>
 
             <div class="space-y-3">
@@ -88,17 +89,17 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
                   <div class="flex flex-wrap gap-2 pt-1">
                     @if (parsedSnapshot().requirementType || parsedSnapshot().specificationType || parsedSnapshot().type) {
                       <span class="px-2 py-0.5 rounded text-xs bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium">
-                        ประเภท: {{ parsedSnapshot().requirementType || parsedSnapshot().specificationType || parsedSnapshot().type }}
+                        {{ 'PMDT19_VD_TYPE_LABEL' | translate }}: {{ parsedSnapshot().requirementType || parsedSnapshot().specificationType || parsedSnapshot().type }}
                       </span>
                     }
                     @if (parsedSnapshot().priority) {
                       <span class="px-2 py-0.5 rounded text-xs bg-amber-500/10 text-amber-600 font-medium">
-                        ความสำคัญ: {{ parsedSnapshot().priority }}
+                        {{ 'PMDT19_VD_PRIORITY_LABEL' | translate }}: {{ parsedSnapshot().priority }}
                       </span>
                     }
                     @if (parsedSnapshot().status) {
                       <span class="px-2 py-0.5 rounded text-xs bg-emerald-500/10 text-emerald-600 font-medium">
-                        สถานะเดิม: {{ parsedSnapshot().status }}
+                        {{ 'PMDT19_VD_ORIGINAL_STATUS_LABEL' | translate }}: {{ parsedSnapshot().status }}
                       </span>
                     }
                   </div>
@@ -108,7 +109,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
               <!-- Description -->
               @if (parsedSnapshot().description) {
                 <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-2">
-                  <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">รายละเอียดเนื้อหา:</span>
+                  <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">{{ 'PMDT19_VD_CONTENT_DETAILS' | translate }}:</span>
                   <div class="text-sm text-[var(--text)] leading-relaxed formatted-content" [innerHTML]="sanitize(parsedSnapshot().description)"></div>
                 </div>
               }
@@ -116,7 +117,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
               <!-- Acceptance Criteria -->
               @if (parsedSnapshot().acceptanceCriteria) {
                 <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-2">
-                  <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">เกณฑ์การยอมรับ:</span>
+                  <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">{{ 'PMDT19_VD_ACCEPTANCE_CRITERIA' | translate }}:</span>
                   <div class="text-sm text-[var(--text)] leading-relaxed formatted-content" [innerHTML]="sanitize(parsedSnapshot().acceptanceCriteria)"></div>
                 </div>
               }
@@ -124,7 +125,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
               <!-- Business Value / Notes -->
               @if (parsedSnapshot().businessValue) {
                 <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-2">
-                  <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">คุณค่าทางธุรกิจ:</span>
+                  <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">{{ 'PMDT19_VD_BUSINESS_VALUE' | translate }}:</span>
                   <div class="text-sm text-[var(--text)] leading-relaxed">{{ parsedSnapshot().businessValue }}</div>
                 </div>
               }
@@ -133,7 +134,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
               <details class="group rounded-xl border border-[var(--border)] bg-[var(--sidebar)] p-3">
                 <summary class="text-xs font-semibold text-[var(--text-muted)] cursor-pointer select-none flex items-center justify-between hover:text-[var(--text-active)]">
                   <span class="flex items-center gap-1.5">
-                    <i class="bi bi-code-slash text-[var(--crm-primary)]"></i> ข้อมูล Snapshot ฉบับเต็ม (JSON)
+                    <i class="bi bi-code-slash text-[var(--crm-primary)]"></i> {{ 'PMDT19_VD_FULL_SNAPSHOT_JSON' | translate }}
                   </span>
                   <i class="bi bi-chevron-down group-open:rotate-180 transition-transform"></i>
                 </summary>
@@ -144,7 +145,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
         } @else if (version.snapshotData) {
           <!-- Raw Text / String -->
           <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-2">
-            <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">ข้อมูลเนื้อหา Snapshot:</span>
+            <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider block">{{ 'PMDT19_VD_SNAPSHOT_DATA' | translate }}:</span>
             <div class="text-sm text-[var(--text)] whitespace-pre-wrap leading-relaxed font-mono bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)]">
               {{ version.snapshotData }}
             </div>
@@ -153,8 +154,8 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
           <!-- Empty State for Snapshot -->
           <div class="text-center py-8 px-4 rounded-xl bg-[var(--sidebar)] border border-dashed border-[var(--border)] text-[var(--text-muted)] space-y-2">
             <i class="bi bi-journal-x text-4xl block opacity-30 text-[var(--crm-primary)]"></i>
-            <div class="text-sm font-medium text-[var(--text-active)]">ไม่มีข้อมูล Snapshot เนื้อหาสำหรับเวอร์ชันนี้</div>
-            <p class="text-xs">เวอร์ชันนี้อาจถูกสร้างขึ้นก่อนระบบ Snapshot หรือสร้างขึ้นแบบแมนนวล</p>
+            <div class="text-sm font-medium text-[var(--text-active)]">{{ 'PMDT19_VD_NO_SNAPSHOT_DATA' | translate }}</div>
+            <p class="text-xs">{{ 'PMDT19_VD_NO_SNAPSHOT_HINT' | translate }}</p>
           </div>
         }
 
@@ -163,7 +164,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
           <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-3">
             <h4 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
               <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-              ไฟล์แนบประจำเวอร์ชัน - {{ attachedFiles().length }} ไฟล์
+              {{ 'PMDT19_VD_VERSION_ATTACHMENTS' | translate }} - {{ attachedFiles().length }} {{ 'PMDT19_VD_FILES_UNIT' | translate }}
             </h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               @for (file of attachedFiles(); track file.id || file.fileUrl || $index) {
@@ -172,15 +173,15 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
                     <i class="bi text-lg" [class]="getFileIcon(file.fileName || file.name || '')"></i>
                   </div>
                   <div class="min-w-0 flex-1">
-                    <div class="text-xs font-medium text-[var(--text-active)] truncate" [title]="file.fileName || file.name || 'ไฟล์แนบ'">
-                      {{ file.fileName || file.name || 'ไฟล์แนบ' }}
+                    <div class="text-xs font-medium text-[var(--text-active)] truncate" [title]="file.fileName || file.name || ('PMDT19_VD_ATTACHMENT_FALLBACK' | translate)">
+                      {{ file.fileName || file.name || ('PMDT19_VD_ATTACHMENT_FALLBACK' | translate) }}
                     </div>
                     <div class="text-[10px] text-[var(--text-muted)]">
                       {{ formatFileSize(file.fileSize || file.size) }}
                     </div>
                   </div>
                   @if (file.fileUrl || file.accessUrl || file.downloadUrl) {
-                    <a [href]="file.fileUrl || file.accessUrl || file.downloadUrl" target="_blank" download class="p-1.5 rounded-md hover:bg-[var(--sidebar)] text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors" title="ดาวน์โหลด/เปิดไฟล์">
+                    <a [href]="file.fileUrl || file.accessUrl || file.downloadUrl" target="_blank" download class="p-1.5 rounded-md hover:bg-[var(--sidebar)] text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors" [title]="'PMDT19_VD_DOWNLOAD_OPEN_FILE' | translate">
                       <i class="bi bi-download"></i>
                     </a>
                   }
@@ -192,18 +193,18 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
           <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-2">
             <h4 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
               <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-              ไฟล์แนบประจำเวอร์ชัน
+              {{ 'PMDT19_VD_VERSION_ATTACHMENTS' | translate }}
             </h4>
             <div class="text-xs text-[var(--text-muted)] flex items-center gap-2">
               <i class="bi bi-info-circle"></i>
-              <span>ไม่มีไฟล์แนบในเวอร์ชันนี้</span>
+              <span>{{ 'PMDT19_VD_NO_ATTACHMENTS' | translate }}</span>
             </div>
           </div>
         } @else if (version.filePath) {
           <div class="p-4 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] space-y-3">
             <h4 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
               <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-              ไฟล์แนบประจำเวอร์ชัน
+              {{ 'PMDT19_VD_VERSION_ATTACHMENTS' | translate }}
             </h4>
             <div class="flex items-center gap-2 text-sm text-[var(--crm-primary)]">
               <i class="bi bi-file-earmark"></i>
@@ -216,7 +217,7 @@ import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
       <!-- Footer -->
       <div class="flex items-center justify-end border-t px-6 py-4" style="border-color: var(--border); background: color-mix(in srgb, var(--sidebar) 72%, var(--bg));">
         <sic-button variant="outline" color="primary" size="sm" (click)="close()">
-          ปิดหน้าต่าง
+          {{ 'PMDT19_VD_CLOSE_WINDOW' | translate }}
         </sic-button>
       </div>
     </div>

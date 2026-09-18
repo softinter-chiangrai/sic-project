@@ -5,21 +5,21 @@
       <button
         (click)="onBack()"
         class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        title="กลับ"
+        [title]="'PMDT16A_BACK_TITLE' | translate"
       >
         <i class="bi bi-arrow-left text-xl"></i>
       </button>
       <div>
         <h1 class="text-2xl font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-receipt text-[var(--crm-primary)]"></i>
-          {{ isView() ? 'ดูใบแจ้งหนี้' : (isEdit() ? 'แก้ไขใบแจ้งหนี้และการรับชำระ' : 'สร้างใบแจ้งหนี้ใหม่') }}
+          {{ isView() ? ('PMDT16A_TITLE_VIEW' | translate) : (isEdit() ? ('PMDT16A_TITLE_EDIT' | translate) : ('PMDT16A_TITLE_NEW' | translate)) }}
         </h1>
         <p class="text-sm text-[var(--text-muted)]">
-          จัดการข้อมูลใบแจ้งหนี้ วางบิล และลงบันทึกการรับชำระเงินพร้อมแนบหลักฐาน
+          {{ 'PMDT16A_SUBTITLE' | translate }}
         </p>
         @if (id()) {
           <p class="text-xs text-[var(--text-muted)] flex items-center gap-2 mt-1">
-            <span>เลขที่: {{ formData?.form?.getRawValue()?.invoiceNo }}</span>
+            <span>{{ 'PMDT16A_NO_PREFIX' | translate }} {{ formData?.form?.getRawValue()?.invoiceNo }}</span>
             <sic-version-badge [status]="formData?.form?.getRawValue()?.approvalStatus" [isLocked]="isLocked()"></sic-version-badge>
           </p>
         }
@@ -34,13 +34,13 @@
           class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-medium text-sm shadow-md hover:shadow-lg shadow-purple-500/20 transition-all cursor-pointer"
         >
           <i class="bi bi-stars text-base animate-pulse"></i>
-          <span>สร้างด้วย AI</span>
+          <span>{{ 'PMDT16A_AI_GENERATE_BTN' | translate }}</span>
         </button>
       }
       @if (id()) {
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
-          {{ isPrinting() ? 'กำลังสร้าง PDF...' : 'ส่งออก PDF' }}
+          {{ isPrinting() ? ('PMDT16A_PDF_GENERATING' | translate) : ('PMDT16A_EXPORT_PDF' | translate) }}
         </sic-button>
       }
     </div>
@@ -51,12 +51,12 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        ข้อมูลทั่วไปของใบแจ้งหนี้
+        {{ 'PMDT16A_SEC1_TITLE' | translate }}
       </h2>
-      
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          label="ประเภทบิล"
+          [label]="'PMDT16A_LBL_BILLING_TYPE' | translate"
           [required]="true"
           [items]="billingTypeOptions"
           valueField="value"
@@ -65,26 +65,26 @@
         ></sic-combobox>
 
         <sic-input
-          label="เลขที่ใบแจ้งหนี้"
-          placeholder="เช่น INV-2026-001"
+          [label]="'PMDT16A_LBL_INVOICE_NO' | translate"
+          [placeholder]="'PMDT16A_PH_INVOICE_NO' | translate"
           formControlName="invoiceNo"
         ></sic-input>
 
         <sic-datepicker
-          label="วันที่ออกบิล"
+          [label]="'PMDT16A_LBL_ISSUE_DATE' | translate"
           [required]="true"
           formControlName="issueDate"
         ></sic-datepicker>
 
         <sic-datepicker
-          label="วันครบกำหนดชำระ"
+          [label]="'PMDT16A_LBL_DUE_DATE' | translate"
           [required]="true"
           formControlName="dueDate"
         ></sic-datepicker>
 
         <sic-combobox
-          label="สัญญาอ้างอิง"
-          placeholder="เลือกสัญญาที่เกี่ยวข้อง (ถ้ามี)"
+          [label]="'PMDT16A_LBL_CONTRACT' | translate"
+          [placeholder]="'PMDT16A_PH_CONTRACT' | translate"
           [options]="contractOptions()"
           valueField="value"
           displayField="text"
@@ -99,7 +99,7 @@
       <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
         <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-list-check text-[var(--crm-primary)]"></i>
-          รายการสินค้าและบริการ
+          {{ 'PMDT16A_SEC2_TITLE' | translate }}
         </h2>
         @if (!isView()) {
           <button
@@ -107,7 +107,7 @@
             (click)="addItem()"
             class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors"
           >
-            <i class="bi bi-plus-lg"></i> เพิ่มรายการ
+            <i class="bi bi-plus-lg"></i> {{ 'PMDT16A_ADD_ITEM' | translate }}
           </button>
         }
       </div>
@@ -116,9 +116,9 @@
         <table class="w-full text-sm">
           <thead>
             <tr class="text-left text-xs text-[var(--text-muted)] border-b border-[var(--border)]">
-              <th class="py-2 pr-2 font-medium">ชื่อรายการ</th>
-              <th class="py-2 pr-2 font-medium">คำอธิบาย</th>
-              <th class="py-2 pr-2 font-medium text-right w-40">ยอดเงิน</th>
+              <th class="py-2 pr-2 font-medium">{{ 'PMDT16A_TH_ITEM_NAME' | translate }}</th>
+              <th class="py-2 pr-2 font-medium">{{ 'PMDT16A_TH_DESC' | translate }}</th>
+              <th class="py-2 pr-2 font-medium text-right w-40">{{ 'PMDT16A_TH_AMOUNT' | translate }}</th>
               @if (!isView()) {
                 <th class="py-2 pl-2 w-10"></th>
               }
@@ -135,7 +135,7 @@
                       [ngModelOptions]="{standalone: true}"
                       [disabled]="isView()"
                       (ngModelChange)="onItemFieldChange($index, 'itemName', $event)"
-                      placeholder="เช่น ค่าพัฒนาระบบงวดที่ 1"
+                      [placeholder]="'PMDT16A_PH_ITEM_NAME' | translate"
                       class="w-full text-sm bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none"
                     />
                   </td>
@@ -146,7 +146,7 @@
                       [ngModelOptions]="{standalone: true}"
                       [disabled]="isView()"
                       (ngModelChange)="onItemFieldChange($index, 'description', $event)"
-                      placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                      [placeholder]="'PMDT16A_PH_ITEM_DESC' | translate"
                       class="w-full text-sm bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none"
                     />
                   </td>
@@ -174,7 +174,7 @@
             @if (!items().length) {
               <tr>
                 <td colspan="4" class="py-4 text-center text-xs text-[var(--text-muted)]">
-                  ยังไม่มีรายการสินค้า/บริการ กดปุ่ม "เพิ่มรายการ" เพื่อเริ่มต้น
+                  {{ 'PMDT16A_NO_ITEMS' | translate }}
                 </td>
               </tr>
             }
@@ -187,25 +187,25 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-cash-stack text-[var(--crm-primary)]"></i>
-        ยอดเงินและภาษี
+        {{ 'PMDT16A_SEC3_TITLE' | translate }}
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-input-number
-          label="ยอดก่อนภาษี"
+          [label]="'PMDT16A_LBL_SUBTOTAL' | translate"
           [min]="0"
           [readonly]="true"
           formControlName="subtotalAmount"
         ></sic-input-number>
 
         <sic-input-number
-          label="อัตราภาษี VAT (%)"
+          [label]="'PMDT16A_LBL_VAT_RATE' | translate"
           [min]="0"
           formControlName="vatRate"
         ></sic-input-number>
 
         <sic-input-number
-          label="จำนวนภาษี VAT"
+          [label]="'PMDT16A_LBL_VAT_AMOUNT' | translate"
           [readonly]="true"
           formControlName="vatAmount"
         ></sic-input-number>
@@ -213,13 +213,13 @@
 
       <div class="p-4 bg-[var(--bg)] rounded-xl border border-[var(--border)] flex items-center justify-between flex-wrap gap-4">
         <div>
-          <span class="text-xs text-[var(--text-muted)]">ยอดรวมทั้งสิ้น:</span>
+          <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT16A_TOTAL_LABEL' | translate }}</span>
           <div class="text-2xl font-bold text-[var(--crm-primary)]">
             {{ (formData.form.get('totalAmount')?.value || 0) | currency:'THB':'symbol':'1.2-2' }}
           </div>
         </div>
         <div class="text-right">
-          <span class="text-xs text-[var(--text-muted)]">ยอดค้างชำระ:</span>
+          <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT16A_OUTSTANDING_LABEL' | translate }}</span>
           <div class="text-2xl font-bold text-amber-600 dark:text-amber-400">
             {{ ((formData.form.get('totalAmount')?.value || 0) - (formData.form.get('paidAmount')?.value || 0)) | currency:'THB':'symbol':'1.2-2' }}
           </div>
@@ -232,16 +232,16 @@
       <div class="border-b border-[var(--border)] pb-3">
         <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi bi-credit-card text-[var(--crm-primary)]"></i>
-          บันทึกการรับชำระเงิน
+          {{ 'PMDT16A_SEC4_TITLE' | translate }}
         </h2>
         <p class="text-xs text-[var(--text-muted)] mt-1">
-          บันทึกยอดเงินที่ได้รับจริง วันที่ชำระ และแนบสลิป/หลักฐานการโอนเงิน
+          {{ 'PMDT16A_SEC4_DESC' | translate }}
         </p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          label="สถานะการชำระเงิน"
+          [label]="'PMDT16A_LBL_PAY_STATUS' | translate"
           [items]="paymentStatusOptions"
           valueField="value"
           displayField="label"
@@ -249,20 +249,20 @@
         ></sic-combobox>
 
         <sic-input-number
-          label="ยอดเงินที่ชำระแล้ว"
+          [label]="'PMDT16A_LBL_PAID_AMOUNT' | translate"
           [min]="0"
           formControlName="paidAmount"
         ></sic-input-number>
 
         <sic-datepicker
-          label="วันที่ชำระเงิน"
+          [label]="'PMDT16A_LBL_PAID_DATE' | translate"
           formControlName="paidDate"
         ></sic-datepicker>
       </div>
 
       <div>
         <label class="block text-xs font-semibold text-[var(--text)] mb-1.5">
-          แนบสลิปการโอน / ใบเสร็จรับเงิน
+          {{ 'PMDT16A_LBL_ATTACH_SLIP' | translate }}
         </label>
         <sic-upload
           formControlName="receiptGroupId"
@@ -275,11 +275,11 @@
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
         <i class="bi bi-chat-left-text text-[var(--crm-primary)]"></i>
-        หมายเหตุเพิ่มเติม
+        {{ 'PMDT16A_SEC5_TITLE' | translate }}
       </h2>
       <sic-tiptap-editor
-        label="หมายเหตุ"
-        placeholder="กรอกหมายเหตุ หรือเงื่อนไขการชำระเงินเพิ่มเติม..."
+        [label]="'PMDT16A_LBL_REMARK' | translate"
+        [placeholder]="'PMDT16A_PH_REMARK' | translate"
         formControlName="remark"
       ></sic-tiptap-editor>
     </div>
@@ -290,20 +290,20 @@
         <div class="border-b border-[var(--border)] pb-3">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            กระบวนการอนุมัติ
+            {{ 'PMDT16A_APPROVAL_TITLE' | translate }}
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            เลือกกระบวนการอนุมัติสำหรับใบแจ้งหนี้นี้ เพื่อส่งให้ฝ่ายการเงินและผู้บริหารตรวจสอบอนุมัติ
+            {{ 'PMDT16A_APPROVAL_DESC' | translate }}
           </p>
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <sic-combobox
-            label="กระบวนการอนุมัติ"
+            [label]="'PMDT16A_APPROVAL_TITLE' | translate"
             [apiUrl]="approvalFlowsApi"
             valueField="id"
             textField="flowName"
-            placeholder="เลือกกระบวนการอนุมัติ"
+            [placeholder]="'PMDT16A_PH_APPROVAL_FLOW' | translate"
             [clearable]="true"
             (selectionChanged)="selectedFlowId.set($event?.id || null)">
           </sic-combobox>
@@ -314,19 +314,19 @@
     <!-- Bottom Action Bar -->
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> {{ isView() ? 'กลับ' : 'ยกเลิก' }}
+        <i class="bi bi-arrow-left"></i> {{ isView() ? ('PMDT16A_BACK_TITLE' | translate) : ('PMDT16A_BTN_CANCEL' | translate) }}
       </sic-button>
       @if (isLocked()) {
         <sic-button variant="solid" color="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> ขอแก้ไข
+          <i class="bi bi-pencil-square"></i> {{ 'PMDT16A_BTN_REQUEST_CHANGE' | translate }}
         </sic-button>
       } @else if (isView()) {
         <sic-button variant="solid" color="primary" (click)="goToEditMode()">
-          <i class="bi bi-pencil"></i> แก้ไขข้อมูล
+          <i class="bi bi-pencil"></i> {{ 'PMDT16A_BTN_EDIT_DATA' | translate }}
         </sic-button>
       } @else {
         <sic-button variant="solid" color="primary" [loading]="isSaving()" (click)="submit()">
-          <i class="bi bi-check-lg"></i> บันทึกข้อมูล
+          <i class="bi bi-check-lg"></i> {{ 'PMDT16A_BTN_SAVE' | translate }}
         </sic-button>
       }
     </div>
@@ -334,7 +334,7 @@
     @if (isLocked()) {
       <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
         <i class="bi bi-lock-fill"></i>
-        เอกสารนี้ผ่านการอนุมัติแล้ว กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+        {{ 'PMDT16A_LOCKED_MSG' | translate }}
       </div>
     }
   </form>
@@ -346,7 +346,7 @@
 @if (showAiModal()) {
   <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
     <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all max-h-[90vh]">
-      
+
       <!-- Modal Header with Tabs -->
       <div class="px-6 py-4 border-b border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
         <div class="flex items-center justify-between mb-3">
@@ -356,10 +356,10 @@
             </div>
             <div>
               <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
-                ผู้ช่วยสร้างใบแจ้งหนี้ด้วย AI
+                {{ 'PMDT16A_AI_MODAL_TITLE' | translate }}
               </h2>
               <p class="text-xs text-[var(--text-muted)]">
-                วิเคราะห์เงื่อนไขสัญญา/งวดงาน และช่วยคำนวณยอดเงิน ภาษี และหมายเหตุการเรียกเก็บเงิน
+                {{ 'PMDT16A_AI_MODAL_DESC' | translate }}
               </p>
             </div>
           </div>
@@ -384,7 +384,7 @@
                 : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
           >
             <i class="bi bi-lightning-charge-fill text-xs"></i>
-            <span>สร้างเนื้อหา (Generate)</span>
+            <span>{{ 'PMDT16A_TAB_GENERATE' | translate }}</span>
           </button>
           <button
             type="button"
@@ -395,7 +395,7 @@
                 : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
           >
             <i class="bi bi-clock-history text-xs"></i>
-            <span>ประวัติเวอร์ชัน (History Log)</span>
+            <span>{{ 'PMDT16A_TAB_HISTORY' | translate }}</span>
             @if (aiHistories().length > 0) {
               <span class="px-1.5 py-0.2 text-[10px] rounded-full bg-purple-200 text-purple-900 font-bold ml-0.5">
                 {{ aiHistories().length }}
@@ -412,7 +412,7 @@
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               <i class="bi bi-stars text-purple-500 mr-1"></i>
-              โมเดล AI ที่ต้องการใช้
+              {{ 'PMDT16A_LBL_AI_MODEL' | translate }}
             </label>
             <sic-combobox
               [options]="aiModels"
@@ -420,7 +420,7 @@
               textField="name"
               [ngModel]="aiModel()"
               (ngModelChange)="aiModel.set($event)"
-              placeholder="เลือกโมเดล AI"
+              [placeholder]="'PMDT16A_PH_AI_MODEL' | translate"
               [clearable]="false"
             >
             </sic-combobox>
@@ -430,7 +430,7 @@
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
               <i class="bi bi-receipt text-indigo-500 mr-1"></i>
-              ประเภทการเรียกเก็บเงิน
+              {{ 'PMDT16A_LBL_AI_BILLING_TYPE' | translate }}
             </label>
             <sic-combobox
               [items]="billingTypeOptions"
@@ -438,7 +438,7 @@
               displayField="label"
               [ngModel]="aiBillingType()"
               (ngModelChange)="aiBillingType.set($event)"
-              placeholder="เลือกประเภทบิล"
+              [placeholder]="'PMDT16A_PH_AI_BILLING_TYPE' | translate"
             >
             </sic-combobox>
           </div>
@@ -447,13 +447,13 @@
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
               <i class="bi bi-chat-left-text text-amber-500 mr-1"></i>
-              คำสั่งเพิ่มเติม หรือรายละเอียดที่ต้องการให้ AI ช่วยร่าง
+              {{ 'PMDT16A_LBL_AI_PROMPT' | translate }}
             </label>
             <textarea
               [ngModel]="aiPrompt()"
               (ngModelChange)="aiPrompt.set($event)"
               rows="3"
-              placeholder="เช่น ร่างใบแจ้งหนี้งวดที่ 2 สำหรับงานพัฒนาระบบ พร้อมคำนวณ VAT 7% และระบุเงื่อนไขการชำระเงินในหมายเหตุ..."
+              [placeholder]="'PMDT16A_PH_AI_PROMPT' | translate"
               class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
             ></textarea>
           </div>
@@ -462,8 +462,8 @@
             <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
               <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">AI กำลังวิเคราะห์และคำนวณข้อมูลใบแจ้งหนี้...</p>
-                <p class="text-xs text-[var(--text-muted)]">กำลังประมวลผลยอดเงิน ภาษี และหมายเหตุ</p>
+                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ 'PMDT16A_AI_LOADING_TITLE' | translate }}</p>
+                <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT16A_AI_LOADING_DESC' | translate }}</p>
               </div>
             </div>
           }
@@ -474,9 +474,9 @@
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
                   <span class="px-2 py-0.5 text-xs font-bold rounded-md bg-purple-600 text-white">
-                    v{{ aiCurrentVersionNo() || 1 }} (ล่าสุด)
+                    v{{ aiCurrentVersionNo() || 1 }} {{ 'PMDT16A_LATEST_TAG' | translate }}
                   </span>
-                  <span class="text-xs font-bold text-[var(--text-active)]">ผลลัพธ์ที่ AI ร่างไว้</span>
+                  <span class="text-xs font-bold text-[var(--text-active)]">{{ 'PMDT16A_DRAFT_RESULT_TITLE' | translate }}</span>
                 </div>
                 <div class="flex items-center gap-1.5">
                   <button
@@ -485,7 +485,7 @@
                     class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text)] transition-all flex items-center gap-1"
                   >
                     <i [class]="copiedId() === 'current' ? 'bi bi-check-lg text-green-500' : 'bi bi-clipboard'"></i>
-                    <span>{{ copiedId() === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                    <span>{{ copiedId() === 'current' ? ('PMDT16A_COPIED' | translate) : ('PMDT16A_COPY' | translate) }}</span>
                   </button>
                   <button
                     type="button"
@@ -493,7 +493,7 @@
                     class="px-3 py-1 text-xs rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <i class="bi bi-clipboard-check"></i>
-                    <span>วางลงในฟอร์ม (Paste to Form)</span>
+                    <span>{{ 'PMDT16A_PASTE_TO_FORM_LONG' | translate }}</span>
                   </button>
                 </div>
               </div>
@@ -501,21 +501,21 @@
               <div class="bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] text-xs space-y-2 max-h-48 overflow-y-auto">
                 <div class="grid grid-cols-2 gap-2">
                   <div>
-                    <span class="text-[var(--text-muted)] text-[11px]">ประเภทบิล:</span>
-                    <div class="font-semibold text-[var(--text-active)]">{{ aiCurrentDraft()?.invoiceType || 'ตามสัญญา' }}</div>
+                    <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT16A_BILLING_TYPE_LABEL' | translate }}</span>
+                    <div class="font-semibold text-[var(--text-active)]">{{ aiCurrentDraft()?.invoiceType || ('PMDT16A_DEFAULT_BY_CONTRACT' | translate) }}</div>
                   </div>
                   <div>
-                    <span class="text-[var(--text-muted)] text-[11px]">ยอดก่อนภาษี:</span>
+                    <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT16A_SUBTOTAL_LABEL2' | translate }}</span>
                     <div class="font-semibold text-emerald-600 dark:text-emerald-400">฿{{ (aiCurrentDraft()?.amount || 0) | number:'1.2-2' }}</div>
                   </div>
                   <div>
-                    <span class="text-[var(--text-muted)] text-[11px]">อัตราภาษีมูลค่าเพิ่ม:</span>
+                    <span class="text-[var(--text-muted)] text-[11px]">{{ 'PMDT16A_VAT_RATE_LABEL2' | translate }}</span>
                     <div class="font-semibold text-[var(--text-active)]">{{ aiCurrentDraft()?.taxRate || 7 }}%</div>
                   </div>
                 </div>
                 @if (aiCurrentDraft()?.notes) {
                   <div class="pt-2 border-t border-[var(--border)] text-[var(--text-muted)] text-[11px] leading-relaxed">
-                    <span class="font-semibold text-[var(--text-active)]">หมายเหตุ:</span> {{ aiCurrentDraft()?.notes }}
+                    <span class="font-semibold text-[var(--text-active)]">{{ 'PMDT16A_NOTE_LABEL' | translate }}</span> {{ aiCurrentDraft()?.notes }}
                   </div>
                 }
               </div>
@@ -526,7 +526,7 @@
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <span class="text-xs text-[var(--text-muted)]">
-                ประวัติเวอร์ชันที่ AI ร่างไว้ (เลือกเวอร์ชันเพื่อวางลงในฟอร์มได้)
+                {{ 'PMDT16A_HISTORY_DESC' | translate }}
               </span>
               @if (aiHistories().length > 0) {
                 <button
@@ -534,7 +534,7 @@
                   (click)="clearAllAiHistory()"
                   class="text-xs text-red-500 hover:underline flex items-center gap-1 cursor-pointer"
                 >
-                  <i class="bi bi-trash"></i> ล้างประวัติทั้งหมด
+                  <i class="bi bi-trash"></i> {{ 'PMDT16A_CLEAR_ALL_HISTORY' | translate }}
                 </button>
               }
             </div>
@@ -542,8 +542,8 @@
             @if (aiHistories().length === 0) {
               <div class="text-center py-12 text-[var(--text-muted)] space-y-2">
                 <i class="bi bi-clock-history text-4xl opacity-30"></i>
-                <p class="text-sm">ยังไม่มีประวัติเวอร์ชันที่บันทึกไว้</p>
-                <p class="text-xs">เมื่อกดสร้างเนื้อหา ระบบจะบันทึกเวอร์ชัน v1, v2, ... ให้อัตโนมัติ</p>
+                <p class="text-sm">{{ 'PMDT16A_NO_HISTORY' | translate }}</p>
+                <p class="text-xs">{{ 'PMDT16A_NO_HISTORY_HINT' | translate }}</p>
               </div>
             } @else {
               <div class="space-y-2.5">
@@ -568,7 +568,7 @@
                           class="px-2 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text)] transition-all flex items-center gap-1"
                         >
                           <i [class]="copiedId() === hist.id ? 'bi bi-check-lg text-green-500' : 'bi bi-clipboard'"></i>
-                          <span>{{ copiedId() === hist.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                          <span>{{ copiedId() === hist.id ? ('PMDT16A_COPIED' | translate) : ('PMDT16A_COPY' | translate) }}</span>
                         </button>
                         <button
                           type="button"
@@ -576,13 +576,13 @@
                           class="px-2.5 py-1 text-xs rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                         >
                           <i class="bi bi-clipboard-check"></i>
-                          <span>วางลงในฟอร์ม</span>
+                          <span>{{ 'PMDT16A_PASTE_TO_FORM_SHORT' | translate }}</span>
                         </button>
                         <button
                           type="button"
                           (click)="deleteAiHistory(hist.id, $event)"
                           class="text-red-400 hover:text-red-600 p-1"
-                          title="ลบประวัตินี้"
+                          [title]="'PMDT16A_DELETE_HISTORY_TITLE' | translate"
                         >
                           <i class="bi bi-trash"></i>
                         </button>
@@ -591,7 +591,7 @@
 
                     @if (hist.prompt) {
                       <div class="text-[11px] text-[var(--text-muted)] bg-[var(--sidebar)] p-2 rounded-lg border border-[var(--border)]/50">
-                        <span class="font-semibold text-purple-600 dark:text-purple-400">คำสั่ง:</span> {{ hist.prompt }}
+                        <span class="font-semibold text-purple-600 dark:text-purple-400">{{ 'PMDT16A_PROMPT_LABEL' | translate }}</span> {{ hist.prompt }}
                       </div>
                     }
 
@@ -621,7 +621,7 @@
           [disabled]="isGeneratingAi()"
           class="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer disabled:opacity-50"
         >
-          ปิด
+          {{ 'PMDT16A_CLOSE' | translate }}
         </button>
 
         @if (aiAssistTab() === 'generate') {
@@ -633,10 +633,10 @@
           >
             @if (isGeneratingAi()) {
               <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-              <span>กำลังประมวลผล...</span>
+              <span>{{ 'PMDT16A_AI_PROCESSING' | translate }}</span>
             } @else {
               <i class="bi bi-stars text-base"></i>
-              <span>สร้างใบแจ้งหนี้ด้วย AI</span>
+              <span>{{ 'PMDT16A_AI_GENERATE_LONG' | translate }}</span>
             }
           </button>
         }

@@ -46,6 +46,7 @@ import { TeamMember } from '../bu/rt/burt04/burt04.model';
 import { MyWorkWidgetComponent } from '../../core/component/my-work-widget/my-work-widget.component';
 import { SprintHealthWidgetComponent } from '../../core/component/sprint-health-widget/sprint-health-widget.component';
 import { TeamWorkloadWidgetComponent } from '../../core/component/team-workload-widget/team-workload-widget.component';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-dashboard',
@@ -59,6 +60,7 @@ import { TeamWorkloadWidgetComponent } from '../../core/component/team-workload-
     MyWorkWidgetComponent,
     SprintHealthWidgetComponent,
     TeamWorkloadWidgetComponent,
+    TranslateModule,
   ],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
@@ -76,6 +78,7 @@ export class DashboardComponent implements OnInit {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly platformId = inject(PLATFORM_ID);
+  private readonly translate = inject(TranslateService);
 
   // Real Data Signals
   readonly profile = signal<ProfileInfoModel | null>(null);
@@ -93,14 +96,16 @@ export class DashboardComponent implements OnInit {
   readonly myPendingApprovals = signal<Approval[]>([]);
   readonly approvalSummaryTotal = signal(0);
 
-  readonly quickActions = [
-    { label: 'โครงการ (PMRT02)', icon: 'bi-kanban-fill', route: '/feature/pm/rt/pmrt02', color: 'primary' },
-    { label: 'Requirement (PMDT01)', icon: 'bi-clipboard2-plus-fill', route: '/feature/pm/dt/pmdt01', color: 'info' },
-    { label: 'Task Board (PMDT02)', icon: 'bi-check2-square', route: '/feature/pm/dt/pmdt02', color: 'primary' },
-    { label: 'แจ้ง Bug (PMDT06)', icon: 'bi-bug-fill', route: '/feature/pm/dt/pmdt06', color: 'danger' },
-    { label: 'ขออนุมัติ (PMDT03)', icon: 'bi-shield-check', route: '/feature/pm/dt/pmdt03', color: 'warning' },
-    { label: 'ใบแจ้งหนี้ (PMDT07)', icon: 'bi-receipt-cutoff', route: '/feature/pm/dt/pmdt07', color: 'success' },
-  ];
+  get quickActions() {
+    return [
+      { label: this.translate.instant('DASHBOARD_QA_PROJECT'), icon: 'bi-kanban-fill', route: '/feature/pm/rt/pmrt02', color: 'primary' },
+      { label: this.translate.instant('DASHBOARD_QA_REQUIREMENT'), icon: 'bi-clipboard2-plus-fill', route: '/feature/pm/dt/pmdt01', color: 'info' },
+      { label: this.translate.instant('DASHBOARD_QA_TASK_BOARD'), icon: 'bi-check2-square', route: '/feature/pm/dt/pmdt02', color: 'primary' },
+      { label: this.translate.instant('DASHBOARD_QA_REPORT_BUG'), icon: 'bi-bug-fill', route: '/feature/pm/dt/pmdt06', color: 'danger' },
+      { label: this.translate.instant('DASHBOARD_QA_REQUEST_APPROVAL'), icon: 'bi-shield-check', route: '/feature/pm/dt/pmdt03', color: 'warning' },
+      { label: this.translate.instant('DASHBOARD_QA_INVOICE'), icon: 'bi-receipt-cutoff', route: '/feature/pm/dt/pmdt07', color: 'success' },
+    ];
+  }
 
   // Real Role Signals
   readonly isAdmin = signal(false);
@@ -151,7 +156,7 @@ export class DashboardComponent implements OnInit {
     return [
       {
         stage: 'Planning & Req',
-        thStage: 'วิเคราะห์ความต้องการ (PMDT01)',
+        thStage: this.translate.instant('DASHBOARD_STAGE_REQ'),
         icon: 'bi-clipboard-data',
         count: reqCount || 0,
         route: '/feature/pm/dt/pmdt01',
@@ -160,7 +165,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Design & Review',
-        thStage: 'ตรวจแบบสถาปัตยกรรม (PMDT09)',
+        thStage: this.translate.instant('DASHBOARD_STAGE_DESIGN'),
         icon: 'bi-palette2',
         count: reviewCount || 0,
         route: '/feature/pm/dt/pmdt09',
@@ -169,7 +174,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Development',
-        thStage: 'พัฒนาโค้ด & งาน (PMDT02)',
+        thStage: this.translate.instant('DASHBOARD_STAGE_DEV'),
         icon: 'bi-code-slash',
         count: devCount || 0,
         route: '/feature/pm/dt/pmdt02',
@@ -178,7 +183,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Testing & QA',
-        thStage: 'ทดสอบ & ตรวจรับ (PMDT05)',
+        thStage: this.translate.instant('DASHBOARD_STAGE_QA'),
         icon: 'bi-shield-check',
         count: qaCount || 0,
         route: '/feature/pm/dt/pmdt05',
@@ -187,7 +192,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Release / Delivery',
-        thStage: 'ส่งมอบ & ขึ้นระบบ (PMDT04)',
+        thStage: this.translate.instant('DASHBOARD_STAGE_RELEASE'),
         icon: 'bi-rocket-takeoff',
         count: releaseCount || 0,
         route: '/feature/pm/dt/pmdt04',
@@ -314,7 +319,7 @@ export class DashboardComponent implements OnInit {
 
   private resolveUserRole(membersResponse: any, currentUserId: string | null): void {
     if (this.isAdmin()) {
-      this.realRoleName.set('ผู้ดูแลระบบ');
+      this.realRoleName.set(this.translate.instant('DASHBOARD_ROLE_ADMIN'));
       return;
     }
 
@@ -343,7 +348,7 @@ export class DashboardComponent implements OnInit {
     }
 
     // 3. Fallback to Member
-    this.realRoleName.set('สมาชิกในระบบ');
+    this.realRoleName.set(this.translate.instant('DASHBOARD_ROLE_MEMBER'));
   }
 
   get profileImage(): string {

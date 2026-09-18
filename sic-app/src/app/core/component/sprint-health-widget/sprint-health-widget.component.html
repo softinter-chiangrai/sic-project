@@ -8,15 +8,15 @@
         </div>
         <div>
           <h3 class="font-bold text-base text-[var(--text-active)]">
-            สุขภาพ Sprint & การส่งมอบ (Sprint Health)
+            {{ 'SPRINT_HEALTH_WIDGET_TITLE' | translate }}
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-0.5">
-            ติดตามความคืบหน้าของรอบการส่งมอบปัจจุบัน
+            {{ 'SPRINT_HEALTH_WIDGET_SUBTITLE' | translate }}
           </p>
         </div>
       </div>
       <a routerLink="/feature/pm/project" class="text-xs text-[var(--crm-primary)] font-semibold hover:underline">
-        ดู Release &rarr;
+        {{ 'SPRINT_HEALTH_WIDGET_VIEW_RELEASE' | translate }} &rarr;
       </a>
     </div>
 
@@ -65,7 +65,7 @@
     <div>
       <h4 class="text-xs font-bold text-[var(--text-active)] mb-2.5 flex items-center gap-1.5">
         <i class="bi bi-patch-check-fill text-[var(--crm-primary)]"></i>
-        เกณฑ์ความพร้อมในการส่งมอบ (Release Readiness)
+        {{ 'SPRINT_HEALTH_WIDGET_RELEASE_READINESS_TITLE' | translate }}
       </h4>
       <div class="space-y-2">
         @for (item of checklistItems(); track item.label) {
@@ -84,7 +84,7 @@
   </div>
 
   <div class="pt-4 mt-4 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-muted)]">
-    <span>เป้าหมาย Go-Live งวดถัดไป:</span>
-    <span class="font-bold text-[var(--text-active)] font-mono">สิ้นเดือนนี้ 🚀</span>
+    <span>{{ 'SPRINT_HEALTH_WIDGET_NEXT_GOLIVE_LABEL' | translate }}</span>
+    <span class="font-bold text-[var(--text-active)] font-mono">{{ 'SPRINT_HEALTH_WIDGET_NEXT_GOLIVE_VALUE' | translate }}</span>
   </div>
 </div>

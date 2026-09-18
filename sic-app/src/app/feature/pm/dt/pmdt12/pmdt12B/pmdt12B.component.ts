@@ -19,6 +19,7 @@ import { SicCheckboxComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { environment } from '../../../../../../environments/environment';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt12b',
@@ -33,6 +34,7 @@ import { resolveProjectId } from '../../../../../core/utils/resolve-context.util
     SicComboboxComponent,
     SicCheckboxComponent,
     SicTiptapEditorComponent,
+    TranslateModule,
   ],
   templateUrl: './pmdt12B.component.html',
   styleUrls: ['./pmdt12B.component.css'],
@@ -45,6 +47,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  private translate = inject(TranslateService);
   readonly aiHistoryService = inject(AiHistoryService);
 
   formData!: SicFromData<PmTestScenarioModel>;
@@ -59,16 +62,22 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   priorityApiUrl = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
 
-  testTypeOptions = [
-    { value: 'SIT', text: '🧪 การทดสอบระบบภายใน (SIT)' },
-    { value: 'UAT', text: '📋 การตรวจรับระบบโดยผู้ใช้ (UAT)' },
-  ];
+  testTypeOptions: { value: string; text: string }[] = [];
 
-  priorityOptions = [
-    { value: 'High', text: 'สูง' },
-    { value: 'Medium', text: 'ปานกลาง' },
-    { value: 'Low', text: 'ต่ำ' },
-  ];
+  priorityOptions: { value: string; text: string }[] = [];
+
+  private buildStaticOptions(): void {
+    this.testTypeOptions = [
+      { value: 'SIT', text: `🧪 ${this.translate.instant('PMDT12B_TEST_TYPE_SIT')}` },
+      { value: 'UAT', text: `📋 ${this.translate.instant('PMDT12B_TEST_TYPE_UAT')}` },
+    ];
+
+    this.priorityOptions = [
+      { value: 'High', text: this.translate.instant('PMDT12B_PRIORITY_HIGH') },
+      { value: 'Medium', text: this.translate.instant('PMDT12B_PRIORITY_MEDIUM') },
+      { value: 'Low', text: this.translate.instant('PMDT12B_PRIORITY_LOW') },
+    ];
+  }
 
   // AI Assistant State
   showAiAssistModal = signal(false);
@@ -88,6 +97,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
 
   ngOnInit(): void {
+    this.buildStaticOptions();
     this.formData = new SicFromData<PmTestScenarioModel>(Pmdt12BForm.createForm(this.fb));
 
     const currentUrl = this.router.url;
@@ -237,7 +247,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err) => {
         this.isGeneratingAiAssist.set(false);
-        this.dialog.error('AI ไม่สามารถสร้างเนื้อหาได้', err.error?.message || 'เกิดข้อผิดพลาดในการติดต่อ AI');
+        this.dialog.error(this.translate.instant('PMDT12B_AI_GENERATE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT12B_AI_CONTACT_ERROR_MSG'));
       }
     });
   }
@@ -260,7 +270,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
     this.formData.markAsDirty();
     this.closeAiAssist();
-    this.dialog.success('วางข้อมูลลงในฟอร์มสำเร็จ', 'นำเข้าข้อมูล Test Scenario เวอร์ชันที่เลือกลงในแบบฟอร์มเรียบร้อยแล้ว');
+    this.dialog.success(this.translate.instant('PMDT12B_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT12B_PASTE_SUCCESS_MSG'));
   }
 
   deleteAiHistory(id: string, event: Event): void {
@@ -300,7 +310,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       },
       error: () => {
         this.isLoading.set(false);
-        this.dialog.error('เกิดข้อผิดพลาด', 'ไม่พบข้อมูล Test Scenario นี้');
+        this.dialog.error(this.translate.instant('PMDT12B_LOAD_ERROR_TITLE'), this.translate.instant('PMDT12B_LOAD_ERROR_MSG'));
         this.onBack();
       },
     });
@@ -309,7 +319,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกรหัส, ชื่อ Test Scenario และเลือก Task ที่เกี่ยวข้อง');
+      this.dialog.warn(this.translate.instant('PMDT12B_FORM_INCOMPLETE_TITLE'), this.translate.instant('PMDT12B_FORM_INCOMPLETE_MSG'));
       return;
     }
 
@@ -329,13 +339,13 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
         this.isSaving.set(false);
         this.isSaved = true;
         this.formData.markAsPristine();
-        this.dialog.success('บันทึกสำเร็จ', 'บันทึกข้อมูล Test Scenario เรียบร้อยแล้ว').then(() => {
+        this.dialog.success(this.translate.instant('PMDT12B_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT12B_SAVE_SUCCESS_MSG')).then(() => {
           this.onBack();
         });
       },
       error: (err) => {
         this.isSaving.set(false);
-        this.dialog.error('บันทึกไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+        this.dialog.error(this.translate.instant('PMDT12B_SAVE_ERROR_TITLE'), err.message || this.translate.instant('PMDT12B_SAVE_ERROR_MSG'));
       },
     });
   }

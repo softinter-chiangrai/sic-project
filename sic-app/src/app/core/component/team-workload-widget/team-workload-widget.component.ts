@@ -1,6 +1,7 @@
-import { Component, ChangeDetectionStrategy, input, computed } from '@angular/core';
+import { Component, ChangeDetectionStrategy, input, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DashboardDeadlineItem, DashboardOrgSummary } from '../../../feature/dashboard/dashboard.model';
 import { TeamMember } from '../../../feature/bu/rt/burt04/burt04.model';
 import { PmCustomerProject } from '../../../feature/pm/rt/pmrt02/pmrt02.model';
@@ -18,12 +19,14 @@ export interface RealMemberWorkload {
 @Component({
   selector: 'app-team-workload-widget',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   templateUrl: './team-workload-widget.component.html',
   styleUrl: './team-workload-widget.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class TeamWorkloadWidgetComponent {
+  private readonly translate = inject(TranslateService);
+
   readonly summary = input<DashboardOrgSummary | null>(null);
   readonly members = input<TeamMember[]>([]);
   readonly deadlines = input<DashboardDeadlineItem[]>([]);
@@ -39,8 +42,8 @@ export class TeamWorkloadWidgetComponent {
     }
 
     return list.map((m) => {
-      const name = m.userName || m.userEmail || 'สมาชิกในระบบ';
-      const role = m.roleNames?.length ? m.roleNames.join(', ') : 'สมาชิกทีม';
+      const name = m.userName || m.userEmail || this.translate.instant('TEAM_WORKLOAD_WIDGET_DEFAULT_MEMBER_NAME');
+      const role = m.roleNames?.length ? m.roleNames.join(', ') : this.translate.instant('TEAM_WORKLOAD_WIDGET_DEFAULT_MEMBER_ROLE');
 
       // Count tasks or projects associated with this user
       const assignedDeadlines = allDeadlines.filter(
@@ -88,11 +91,11 @@ export class TeamWorkloadWidgetComponent {
   getStatusClass(status: string): { bg: string; text: string; label: string } {
     switch (status) {
       case 'OVERLOADED':
-        return { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-500', label: 'งานล้น (Overload)' };
+        return { bg: 'bg-red-500/10 border-red-500/20', text: 'text-red-500', label: this.translate.instant('TEAM_WORKLOAD_WIDGET_STATUS_OVERLOADED') };
       case 'BUSY':
-        return { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-500', label: 'กำลังดี (Busy)' };
+        return { bg: 'bg-amber-500/10 border-amber-500/20', text: 'text-amber-500', label: this.translate.instant('TEAM_WORKLOAD_WIDGET_STATUS_BUSY') };
       default:
-        return { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-500', label: 'พร้อมรับงาน (Available)' };
+        return { bg: 'bg-emerald-500/10 border-emerald-500/20', text: 'text-emerald-500', label: this.translate.instant('TEAM_WORKLOAD_WIDGET_STATUS_OPTIMAL') };
     }
   }
 }
