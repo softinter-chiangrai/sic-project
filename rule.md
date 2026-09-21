@@ -110,12 +110,21 @@ toggleLanguage(): void {
 }
 ```
 
-**ระบบโหลดข้อความแปลแบบแบ่ง module** — `core/services/app-translate-loader.service.ts` → `AppTranslateLoader implements TranslateLoader`:
+**ระบบโหลดข้อความแปลและฐานข้อมูล (`su_message` / i18n)** — `core/services/app-translate-loader.service.ts` → `AppTranslateLoader`:
 
-- ใช้ `InjectionToken`: `APP_TRANSLATE_MODULE_CODE`, `APP_TRANSLATE_PROGRAM_CODE` (default `'COMMON'`/`'ALL'`, provide ไว้ที่ root ใน `app.config.ts`)
-- `setContext(moduleCode, programCode)` — สลับ context ตอน runtime เพื่อโหลดข้อความแปลของ module นั้นๆ เพิ่ม (มักเรียกใน resolver หรือ `ngOnInit` ของ feature shell component)
-- `getTranslation(lang)` จะยิง `GET {apiBaseUrl}/api/i18n/COMMON/ALL/{lang}` เสมอ + ยิง `GET {apiBaseUrl}/api/i18n/{moduleCode}/{programCode}/{lang}` เพิ่มถ้า context ไม่ใช่ default แล้ว deep-merge กัน (ของ module เฉพาะทับ COMMON ถ้า key ชนกัน)
-- **การใช้งาน:** ถ้าหน้าใหม่มี translation key เฉพาะของตัวเอง ให้ provide token สองตัวนี้ที่ระดับ feature shell (ดูตัวอย่างใน `management/management.component.ts`) แทนที่จะยัด key ทั้งหมดลงใน `COMMON`
+- **มาตรฐานปัจจุบันของโปรเจกต์:** ใช้ **`module_code = 'COMMON'`** และ **`program_code = 'ALL'`** เป็นมาตรฐานหลักสำหรับเก็บและโหลดข้อความแปลทั้งหมดในตาราง `su_message`
+- **Flyway Migration:** เวลาเขียน SQL เพิ่ม/อัปเดตคำแปลในตาราง `su_message` ให้ระบุ `module_code = 'COMMON'` และ `program_code = 'ALL'` เสมอ
+- ฝั่ง Frontend: `AppTranslateLoader` ถูก provide ไว้ที่ root (`app.config.ts`) และจะยิง `GET {apiBaseUrl}/api/i18n/COMMON/ALL/{lang}` เพื่อโหลดข้อความแปลทั้งหมดของระบบมาใช้งาน
+- `setLanguage()` ใน `LanguageService` จะบันทึกภาษาลง `localStorage['app-lang']` และ reload หน้าเพื่อดึง translation ใหม่
+
+**มาตรฐานข้อความภาษาไทย (`message_local` / UI Translation):**
+- เมื่อสร้างหรือแก้ไขข้อความภาษาไทย **ไม่ต้องใส่วงเล็บภาษาอังกฤษกำกับ** ถ้าไม่จำเป็นจริงๆ
+- ตัวอย่าง:
+  - ✅ `'เรียงตามลำดับ'` | ❌ `'เรียงตามลำดับ (Sequential)'`
+  - ✅ `'พร้อมกัน'` | ❌ `'พร้อมกัน (Parallel)'`
+  - ✅ `'คนใดคนหนึ่ง'` | ❌ `'คนใดคนหนึ่ง (Any)'`
+  - ✅ `'ผู้อนุมัติเดี่ยว'` | ❌ `'ผู้อนุมัติเดี่ยว (Single)'`
+- เป้าหมายเพื่อให้ UI ดูสะอาด กระชับ เป็นธรรมชาติ และสอดคล้องกันทั่วทั้งระบบ
 
 ### 3.3 Utility files ที่มีให้แล้ว (`core/utils/`)
 
@@ -501,7 +510,7 @@ public class ExampleServiceImpl implements ExampleService {
 4. [ ] `*.service.ts` — เรียก HTTP จริงผ่าน `apiBaseUrl` คืน `Observable<T>` — list ที่แบ่งหน้าคืน `PaginationResponse<T>`
 5. [ ] `*.component.ts` — อ่านจาก `route.snapshot.data['key']` เท่านั้น, ใช้ `isSaving`/`isLoading` + `finalize()`, ใช้ `DialogService` สำหรับ popup/error, implement `CanComponentDeactivate` ถ้าเป็นฟอร์ม
 6. [ ] เพิ่ม route ใน `*.routes.ts` พร้อม `resolve: { key: xxxResolver }` และ guard ที่จำเป็น
-7. [ ] เพิ่ม translation key (ถ้ามีข้อความใหม่) — ถ้าเป็น module ใหม่ให้ตั้ง `APP_TRANSLATE_MODULE_CODE`/`APP_TRANSLATE_PROGRAM_CODE` แทนยัดลง COMMON
+7. [ ] เพิ่ม translation key ใน Flyway migration (ตาราง `su_message` กำหนด `module_code = 'COMMON'` และ `program_code = 'ALL'` เสมอ) — ข้อความภาษาไทยไม่ต้องใส่วงเล็บภาษาอังกฤษถ้าไม่จำเป็นจริงๆ
 8. [ ] ถ้ามี grid: เช็ค `handleGridLoad` มี `finalize` + `setLoadError` + `dialog.error` ครบ, ถ้าไม่ใช้ grid แต่ต้องมี pagination → ใช้ `<sic-pagination>`
 9. [ ] ถ้ามีวันที่แสดงผล → ใช้ `DateTimeUtil`/`sicDate`/`sicDateTime` ไม่เขียน formatter เอง
 

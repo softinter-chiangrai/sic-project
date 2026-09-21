@@ -53,7 +53,7 @@ public class ProjectGeneratorService {
                 """;
 
         try {
-            String rawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+            String rawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel(), request.getAttachments());
             return parseResponse(rawResponse, request, customer);
         } catch (Exception e) {
             log.error("AI project generation failed, falling back to heuristic: {}", e.getMessage());

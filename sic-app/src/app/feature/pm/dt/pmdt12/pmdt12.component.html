@@ -15,6 +15,16 @@
 
     <!-- Action Buttons -->
     <div class="flex items-center gap-2">
+      <!-- AI Batch Create -->
+      <button
+        type="button"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-gradient-to-r from-indigo-500 to-purple-500 hover:opacity-90 transition"
+        (click)="showAiBatchModal.set(true)"
+      >
+        <i class="bi bi-stars"></i>
+        AI Batch Create
+      </button>
+
       <!-- Export Test / UAT Report Dropdown -->
       <div class="relative inline-block text-left">
         <button
@@ -542,6 +552,21 @@
   }
 
 </div>
+
+<!-- ============================================================ -->
+<!-- AI BATCH CREATE MODAL -->
+<!-- ============================================================ -->
+<sic-ai-batch-modal
+  moduleType="TEST_CASE"
+  moduleLabel="Test Case"
+  [fields]="aiBatchFields"
+  [visible]="showAiBatchModal()"
+  [initialPrompt]="aiBatchInitialPrompt()"
+  [autoGenerate]="aiBatchAutoGenerate()"
+  [saving]="aiBatchSaving()"
+  (closed)="showAiBatchModal.set(false)"
+  (saved)="onAiBatchSaved($event)"
+></sic-ai-batch-modal>
 
 <!-- ============================================================ -->
 <!-- REPORT / CREATE BUG MODAL -->

@@ -1,0 +1,69 @@
+<!-- Floating trigger button -->
+<button
+  type="button"
+  class="ai-nav-fab"
+  (click)="toggle()"
+  title="ผู้ช่วย AI นำทางระบบ"
+  aria-label="เปิดผู้ช่วย AI นำทางระบบ"
+>
+  <i class="bi bi-stars"></i>
+</button>
+
+<!-- Drawer -->
+<div class="ai-nav-backdrop" *ngIf="navSvc.isOpen()" (click)="close()"></div>
+
+<div class="ai-nav-drawer" [class.open]="navSvc.isOpen()">
+  <div class="ai-nav-header">
+    <div class="ai-nav-title">
+      <i class="bi bi-stars"></i>
+      <span>ผู้ช่วย AI นำทางระบบ</span>
+    </div>
+    <button type="button" class="ai-nav-close" (click)="close()" aria-label="ปิด">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="ai-nav-messages">
+    <div
+      *ngFor="let msg of navSvc.messages(); trackBy: trackMsg"
+      class="ai-nav-msg"
+      [class.user]="msg.role === 'user'"
+      [class.ai]="msg.role === 'ai'"
+    >
+      <div class="ai-nav-bubble">{{ msg.text }}</div>
+
+      <div class="ai-nav-routes" *ngIf="msg.routes?.length">
+        <button
+          type="button"
+          class="ai-nav-route-btn"
+          *ngFor="let route of msg.routes"
+          (click)="selectRoute(route)"
+        >
+          <i class="bi bi-arrow-right-circle"></i>
+          {{ route.label }}
+        </button>
+      </div>
+    </div>
+
+    <div class="ai-nav-msg ai" *ngIf="navSvc.isSending()">
+      <div class="ai-nav-bubble ai-nav-typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+
+    <div #messagesEnd></div>
+  </div>
+
+  <div class="ai-nav-input-row">
+    <textarea
+      class="ai-nav-input"
+      rows="1"
+      placeholder="ถามขั้นตอนการใช้งาน หรือบอกว่าอยากไปหน้าไหน..."
+      [(ngModel)]="inputText"
+      (keydown.enter)="onEnter($event)"
+    ></textarea>
+    <button type="button" class="ai-nav-send" (click)="send()" [disabled]="navSvc.isSending() || !inputText.trim()">
+      <i class="bi bi-send-fill"></i>
+    </button>
+  </div>
+</div>

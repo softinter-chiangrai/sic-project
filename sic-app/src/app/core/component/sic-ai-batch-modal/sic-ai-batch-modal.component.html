@@ -1,0 +1,127 @@
+<div class="ai-batch-backdrop" *ngIf="visible" (click)="close()"></div>
+
+<div class="ai-batch-modal" *ngIf="visible">
+  <div class="ai-batch-header">
+    <div class="ai-batch-title">
+      <i class="bi bi-stars"></i>
+      <span>AI Batch Create{{ moduleLabel ? ' - ' + moduleLabel : '' }}</span>
+    </div>
+    <button type="button" class="ai-batch-close" (click)="close()" aria-label="ปิด">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <div class="ai-batch-body">
+    <!-- Prompt panel -->
+    <div class="ai-batch-prompt-panel">
+      <label class="ai-batch-label">อธิบายข้อมูลที่ต้องการให้ AI สร้าง</label>
+      <textarea
+        class="ai-batch-textarea"
+        rows="3"
+        placeholder="เช่น สร้าง Test Case สำหรับหน้า Login 10 ข้อ"
+        [ngModel]="prompt()"
+        (ngModelChange)="prompt.set($event)"
+      ></textarea>
+
+      <div class="ai-batch-controls-row">
+        <div class="ai-batch-control">
+          <label class="ai-batch-label">จำนวน</label>
+          <input
+            type="number"
+            class="ai-batch-number"
+            min="1"
+            max="30"
+            [ngModel]="count()"
+            (ngModelChange)="count.set($event)"
+          />
+        </div>
+
+        <div class="ai-batch-control ai-batch-control-grow">
+          <label class="ai-batch-label">โมเดล AI</label>
+          <select class="ai-batch-select" [ngModel]="model()" (ngModelChange)="model.set($event)">
+            <option *ngFor="let m of aiModels" [value]="m.id">{{ m.name }}</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="ai-batch-attachments">
+        <label class="ai-batch-attach-btn">
+          <i class="bi bi-paperclip"></i>
+          แนบไฟล์ / รูปภาพ
+          <input type="file" multiple hidden (change)="onFileSelected($event)" />
+        </label>
+
+        <div class="ai-batch-file-chip" *ngFor="let f of attachedFiles(); let i = index">
+          <i class="bi" [ngClass]="f.type.startsWith('image/') ? 'bi-image' : 'bi-file-earmark-text'"></i>
+          <span class="ai-batch-file-name">{{ f.name }}</span>
+          <button type="button" (click)="removeFile(i)" aria-label="ลบไฟล์">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      </div>
+
+      <button type="button" class="ai-batch-generate-btn" [disabled]="isGenerating() || !prompt().trim()" (click)="generate()">
+        <i class="bi" [ngClass]="isGenerating() ? 'bi-hourglass-split' : 'bi-magic'"></i>
+        {{ isGenerating() ? 'กำลังสร้างข้อมูล...' : (rows().length ? 'สร้างเพิ่มเติม' : 'สร้างข้อมูลด้วย AI') }}
+      </button>
+
+      <div class="ai-batch-error" *ngIf="errorMessage()">{{ errorMessage() }}</div>
+    </div>
+
+    <!-- Preview table -->
+    <div class="ai-batch-preview" *ngIf="rows().length">
+      <div class="ai-batch-preview-header">
+        <span>ตรวจทานข้อมูล ({{ selectedCount }}/{{ rows().length }} รายการที่เลือก)</span>
+      </div>
+
+      <div class="ai-batch-table-wrap">
+        <table class="ai-batch-table">
+          <thead>
+            <tr>
+              <th class="ai-batch-col-check"></th>
+              <th *ngFor="let f of fields">{{ f.label }}</th>
+              <th class="ai-batch-col-action"></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let row of rows(); let i = index" [class.deselected]="!row.selected">
+              <td class="ai-batch-col-check">
+                <input type="checkbox" [checked]="row.selected" (change)="toggleRow(i)" />
+              </td>
+              <td *ngFor="let f of fields">
+                <textarea
+                  *ngIf="f.type === 'textarea'; else plainInput"
+                  class="ai-batch-cell-textarea"
+                  rows="2"
+                  [ngModel]="row.data[f.key]"
+                  (ngModelChange)="updateCell(i, f.key, $event)"
+                ></textarea>
+                <ng-template #plainInput>
+                  <input
+                    class="ai-batch-cell-input"
+                    [type]="f.type === 'number' ? 'number' : (f.type === 'date' ? 'date' : 'text')"
+                    [ngModel]="row.data[f.key]"
+                    (ngModelChange)="updateCell(i, f.key, $event)"
+                  />
+                </ng-template>
+              </td>
+              <td class="ai-batch-col-action">
+                <button type="button" (click)="removeRow(i)" aria-label="ลบแถว">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-batch-footer" *ngIf="rows().length">
+    <span class="ai-batch-hint">การบันทึกจะเพิ่มข้อมูลใหม่เท่านั้น ไม่มีผลกับข้อมูลเดิม</span>
+    <button type="button" class="ai-batch-save-btn" [disabled]="!selectedCount || saving" (click)="saveAll()">
+      <i class="bi" [ngClass]="saving ? 'bi-hourglass-split' : 'bi-save'"></i>
+      {{ saving ? 'กำลังบันทึก...' : 'บันทึกทั้งหมดลงระบบ (' + selectedCount + ')' }}
+    </button>
+  </div>
+</div>

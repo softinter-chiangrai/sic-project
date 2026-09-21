@@ -10,6 +10,7 @@ import { SicOrganizationalChartNode } from '../core/component/sic-organizational
 import { SicHeadchatComponent } from "../core/component/sic-headchat/sic-headchat.component";
 import { SicCommandPaletteComponent } from "../core/component/sic-command-palette/sic-command-palette.component";
 import { SicShortcutHelpComponent } from "../core/component/sic-shortcut-help/sic-shortcut-help.component";
+import { SicAiNavigatorComponent } from "../core/component/sic-ai-navigator/sic-ai-navigator.component";
 import { APP_TRANSLATE_MODULE_CODE, APP_TRANSLATE_PROGRAM_CODE, AppTranslateLoader } from '../core/services/app-translate-loader.service';
 
 type TaskPersistMeta = {
@@ -22,7 +23,7 @@ type TaskPersistMeta = {
 @Component({
   selector: 'app-feature',
   standalone: true,
-  imports: [RouterOutlet, SicSidebarComponent,ReactiveFormsModule, CommonModule, SicHeadchatComponent, SicCommandPaletteComponent, SicShortcutHelpComponent],
+  imports: [RouterOutlet, SicSidebarComponent,ReactiveFormsModule, CommonModule, SicHeadchatComponent, SicCommandPaletteComponent, SicShortcutHelpComponent, SicAiNavigatorComponent],
   templateUrl: './feature.component.html',
   styleUrl: './feature.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,

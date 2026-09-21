@@ -18,11 +18,12 @@ import { FormsModule } from '@angular/forms';
 import { environment } from '../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 @Component({
   selector: 'app-pmdt12',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule, SicAiBatchModalComponent],
   templateUrl: './pmdt12.component.html',
   styleUrls: ['./pmdt12.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -70,6 +71,19 @@ export class Pmdt12Component implements OnInit {
   protected scenarios = signal<PmTestScenarioModel[]>([]);
   protected testCases = signal<PmTestCaseModel[]>([]);
   protected projectTasks = signal<any[]>([]);
+
+  // ===== AI Batch Create State =====
+  protected showAiBatchModal = signal(false);
+  protected aiBatchSaving = signal(false);
+  protected aiBatchInitialPrompt = signal('');
+  protected aiBatchAutoGenerate = signal(false);
+  protected readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'title', label: 'ชื่อ Test Case', type: 'text' },
+    { key: 'testStep', label: 'ขั้นตอนการทดสอบ', type: 'textarea' },
+    { key: 'expectedResult', label: 'ผลลัพธ์ที่คาดหวัง', type: 'textarea' },
+    { key: 'priority', label: 'ความสำคัญ', type: 'text' },
+    { key: 'testType', label: 'ประเภท (SIT/UAT)', type: 'text' },
+  ];
 
   // ===== Bug Modal State =====
   protected showBugModal = signal(false);
@@ -273,7 +287,51 @@ export class Pmdt12Component implements OnInit {
     if (qp['taskStatus'] !== undefined) this.filterTaskStatus.set(qp['taskStatus']);
     if (qp['type'] !== undefined) this.filterTestType.set(qp['type'] as 'All' | 'SIT' | 'UAT');
 
+    // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Batch Create ทันที
+    if (qp['aiAutoOpen'] === '1' && qp['aiModuleType'] === 'TEST_CASE') {
+      this.aiBatchInitialPrompt.set(qp['aiPrompt'] || '');
+      this.aiBatchAutoGenerate.set(true);
+      this.showAiBatchModal.set(true);
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { aiAutoOpen: null, aiModuleType: null, aiPrompt: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
+
     this.loadData();
+  }
+
+  // ===== AI Batch Create =====
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    if (!rows.length) return;
+    const projectId = resolveProjectId(this.route, this.customerState);
+
+    this.aiBatchSaving.set(true);
+    const saveRequests = rows.map((row) =>
+      this.service.saveTestCase({
+        projectId: projectId || undefined,
+        title: row['title'],
+        testStep: row['testStep'],
+        expectedResult: row['expectedResult'],
+        priority: row['priority'],
+        testType: row['testType'],
+        testStatus: 'Pending',
+      }),
+    );
+
+    forkJoin(saveRequests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.loadData();
+        },
+        error: (err) => {
+          console.error('AI batch save failed', err);
+        },
+      });
   }
 
   // ===== URL State Sync =====

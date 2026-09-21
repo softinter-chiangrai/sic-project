@@ -25,6 +25,8 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
 import { Pmrt02AModel, Pmrt02APageData, ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 
 
 @Component({
@@ -85,6 +87,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentDraft = signal<any>(null);
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   aiModels = AI_MODEL_OPTIONS;
 
@@ -162,6 +165,21 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         if (customerName) {
           this.customerName.set(customerName);
         }
+      }
+
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      if (params['aiAutoOpen'] === '1' && params['aiModuleType'] === 'PROJECT' && !this.isViewOnly && !this.isLocked) {
+        this.aiPrompt.set(params['aiPrompt'] || '');
+        this.openAiAssist();
+        if (this.aiPrompt()) {
+          queueMicrotask(() => this.generateAiDraft());
+        }
+        this.router.navigate([], {
+          relativeTo: this.route,
+          queryParams: { aiAutoOpen: null, aiModuleType: null, aiPrompt: null },
+          queryParamsHandling: 'merge',
+          replaceUrl: true,
+        });
       }
     });
 
@@ -353,7 +371,18 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  generateAiDraft(): void {
+  onAiFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = input.files ? Array.from(input.files) : [];
+    this.aiAttachedFiles.update((existing) => [...existing, ...files]);
+    input.value = '';
+  }
+
+  removeAiFile(index: number): void {
+    this.aiAttachedFiles.update((files) => files.filter((_, i) => i !== index));
+  }
+
+  async generateAiDraft(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
     this.isGeneratingAi.set(true);
@@ -362,12 +391,18 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     const currentName = this.form?.get('projectName')?.value;
     const customerId = this.form?.get('customerId')?.value;
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.projectService.generateDraft({
       customerId: customerId || undefined,
       projectCode: currentCode || undefined,
       projectName: currentName || undefined,
       prompt: this.aiPrompt() || undefined,
       model: this.aiModel() || undefined,
+      attachments,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
@@ -404,15 +439,19 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
-    this.formData.patchValue({
-      projectCode: draft.projectCode || this.form.get('projectCode')?.value,
-      projectName: draft.projectName || this.form.get('projectName')?.value,
-      description: draft.description || this.form.get('description')?.value,
-      status: draft.status || this.form.get('status')?.value || 'Planning',
-      startDate: draft.startDate || this.form.get('startDate')?.value,
-      plannedEndDate: draft.endDate || draft.plannedEndDate || this.form.get('plannedEndDate')?.value,
-    });
-    this.form.markAsDirty();
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    // และห้ามแตะ projectCode (ระบบเป็นผู้กำหนด)
+    smartPatchFormAiDraft(
+      this.form,
+      {
+        projectName: draft.projectName,
+        description: draft.description,
+        status: draft.status,
+        startDate: draft.startDate,
+        plannedEndDate: draft.endDate || draft.plannedEndDate,
+      },
+      ['id', 'projectCode'],
+    );
   }
 
   pasteProjectDraft(draft: any): void {

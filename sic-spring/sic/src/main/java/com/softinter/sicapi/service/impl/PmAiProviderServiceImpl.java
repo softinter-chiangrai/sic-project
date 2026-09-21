@@ -2,6 +2,7 @@ package com.softinter.sicapi.service.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softinter.sicapi.dto.request.AiAttachmentDto;
 import com.softinter.sicapi.dto.response.AiModelResponse;
 import com.softinter.sicapi.service.PmAiProviderService;
 import lombok.extern.slf4j.Slf4j;
@@ -175,6 +176,41 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         return config;
     }
 
+    /**
+     * Splits attachments into images (returned via {@code outImages}, sent as real vision
+     * content blocks) and everything else. Text-like files are decoded and appended to the
+     * prompt; binary non-image files (pdf/docx/...) are only referenced by name since this
+     * service has no document parser.
+     */
+    private String inlineTextAttachments(String userPrompt, List<AiAttachmentDto> attachments, List<AiAttachmentDto> outImages) {
+        if (attachments == null || attachments.isEmpty()) {
+            return userPrompt;
+        }
+        StringBuilder sb = new StringBuilder(userPrompt != null ? userPrompt : "");
+        for (AiAttachmentDto att : attachments) {
+            if (att == null || att.getBase64Data() == null || att.getBase64Data().isBlank()) continue;
+            String mime = att.getMimeType() != null ? att.getMimeType().toLowerCase() : "";
+            if (mime.startsWith("image/")) {
+                outImages.add(att);
+                continue;
+            }
+            boolean isText = mime.startsWith("text/") || mime.contains("json") || mime.contains("csv")
+                    || mime.contains("markdown") || mime.contains("xml");
+            sb.append("\n\n----- ATTACHMENT: ").append(att.getFileName()).append(" -----\n");
+            if (isText) {
+                try {
+                    byte[] raw = Base64.getDecoder().decode(att.getBase64Data());
+                    sb.append(new String(raw, java.nio.charset.StandardCharsets.UTF_8));
+                } catch (Exception e) {
+                    sb.append("(could not decode attachment content)");
+                }
+            } else {
+                sb.append("(binary file, content not extracted automatically - rely on the file name and the user's instructions above)");
+            }
+        }
+        return sb.toString();
+    }
+
     private String getEffectiveKey(String configuredKey, String envKeyName) {
         if (configuredKey != null && !configuredKey.isBlank()) {
             return configuredKey.trim();
@@ -229,6 +265,10 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
     }
 
     private String callAiApi(String userPrompt, String systemPrompt, String modelId) {
+        return callAiApi(userPrompt, systemPrompt, modelId, null);
+    }
+
+    private String callAiApi(String userPrompt, String systemPrompt, String modelId, List<AiAttachmentDto> attachments) {
         ModelConfig config = resolveModelConfig(modelId);
 
         try {
@@ -238,6 +278,9 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", config.targetModel);
             requestBody.put("temperature", 0.7);
+
+            List<AiAttachmentDto> images = new ArrayList<>();
+            String inlinedPrompt = inlineTextAttachments(userPrompt, attachments, images);
 
             if ("claude".equalsIgnoreCase(config.provider)) {
                 // Anthropic Claude API
@@ -249,8 +292,22 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                     requestBody.put("system", systemPrompt);
                 }
 
-                List<Map<String, String>> messages = new ArrayList<>();
-                messages.add(Map.of("role", "user", "content", userPrompt));
+                List<Map<String, Object>> messages = new ArrayList<>();
+                if (images.isEmpty()) {
+                    messages.add(Map.of("role", "user", "content", inlinedPrompt));
+                } else {
+                    List<Map<String, Object>> content = new ArrayList<>();
+                    content.add(Map.of("type", "text", "text", inlinedPrompt));
+                    for (AiAttachmentDto img : images) {
+                        content.add(Map.of(
+                                "type", "image",
+                                "source", Map.of(
+                                        "type", "base64",
+                                        "media_type", img.getMimeType(),
+                                        "data", img.getBase64Data())));
+                    }
+                    messages.add(Map.of("role", "user", "content", content));
+                }
                 requestBody.put("messages", messages);
             } else {
                 // OpenAI / Gemini (KKU) format
@@ -258,11 +315,23 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                     headers.set("Authorization", "Bearer " + config.apiKey.trim());
                 }
 
-                List<Map<String, String>> messages = new ArrayList<>();
+                List<Map<String, Object>> messages = new ArrayList<>();
                 if (systemPrompt != null && !systemPrompt.isBlank()) {
                     messages.add(Map.of("role", "system", "content", systemPrompt));
                 }
-                messages.add(Map.of("role", "user", "content", userPrompt));
+                if (images.isEmpty()) {
+                    messages.add(Map.of("role", "user", "content", inlinedPrompt));
+                } else {
+                    List<Map<String, Object>> content = new ArrayList<>();
+                    content.add(Map.of("type", "text", "text", inlinedPrompt));
+                    for (AiAttachmentDto img : images) {
+                        content.add(Map.of(
+                                "type", "image_url",
+                                "image_url", Map.of(
+                                        "url", "data:" + img.getMimeType() + ";base64," + img.getBase64Data())));
+                    }
+                    messages.add(Map.of("role", "user", "content", content));
+                }
                 requestBody.put("messages", messages);
                 requestBody.put("max_tokens", config.maxTokens);
             }
@@ -338,11 +407,16 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     @Override
     public String generateRawResponse(String prompt, String systemPrompt, String modelId) {
+        return generateRawResponse(prompt, systemPrompt, modelId, null);
+    }
+
+    @Override
+    public String generateRawResponse(String prompt, String systemPrompt, String modelId, List<AiAttachmentDto> attachments) {
         String effectiveSystemPrompt = (systemPrompt != null && !systemPrompt.isBlank())
                 ? systemPrompt
                 : "You are a professional software engineering AI assistant specialized in System Analysis, Requirements and Technical Documentation.";
 
-        String result = callAiApi(prompt, effectiveSystemPrompt, modelId);
+        String result = callAiApi(prompt, effectiveSystemPrompt, modelId, attachments);
         if (result != null && !result.isBlank()) {
             return result;
         }

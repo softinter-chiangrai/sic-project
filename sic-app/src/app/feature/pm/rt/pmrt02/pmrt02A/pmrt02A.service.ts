@@ -4,6 +4,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { ProjectModel } from './pmrt02A.model';
+import { AiAttachmentPayload } from '../../../../../core/utils/ai-attachment.util';
 
 
 @Injectable({ providedIn: 'root' })
@@ -33,6 +34,7 @@ export class Pmrt02AService {
     projectName?: string;
     prompt?: string;
     model?: string;
+    attachments?: AiAttachmentPayload[];
   }): Observable<any> {
     return this.http.post<any>(`${this.baseUrl}/generate/draft`, req);
   }
