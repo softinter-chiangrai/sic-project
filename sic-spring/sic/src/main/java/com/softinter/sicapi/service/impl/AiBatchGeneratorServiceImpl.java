@@ -81,7 +81,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
                 %s
                 5. สร้างข้อมูลจำนวนประมาณ %d รายการ (หรือใกล้เคียงตามที่ผู้ใช้ระบุใน prompt) เนื้อหาสมจริง เป็นมืออาชีพ และสอดคล้องกับ prompt/ไฟล์แนบของผู้ใช้
                 6. ถ้าผู้ใช้แนบไฟล์เอกสาร/รูปภาพมาด้วย ให้ใช้ข้อมูลจากไฟล์นั้นเป็นหลักในการสร้างรายการ
-                7. ตอบเป็นภาษาไทยในฟิลด์ข้อความ เว้นแต่ผู้ใช้ระบุภาษาอื่น
+                7. ตอบข้อความในฟิลด์ต่างๆ เป็นภาษาเดียวกับที่ผู้ใช้พิมพ์ prompt (ถ้าผู้ใช้พิมพ์เป็นภาษาอังกฤษ ให้ตอบเป็นภาษาอังกฤษ / Respond in the same language as the user's prompt)
                 """.formatted(def.getLabel(), def.getSchemaDescription(), count);
     }
 

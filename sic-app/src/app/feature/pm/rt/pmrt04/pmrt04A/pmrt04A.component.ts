@@ -36,6 +36,10 @@ import { ContractModel, Pmrt04APageData } from './pmrt04A.model';
 import { Pmrt04AService, ContractSummary } from './pmrt04A.service';
 import { SicEntitySummaryComponent, EntitySummaryCard } from '../../../../../core/component/sic-entity-summary/sic-entity-summary.component';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
   selector: 'app-pmrt04a',
@@ -53,6 +57,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicDatepickerComponent,
     SicEntitySummaryComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmrt04A.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -154,6 +159,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentDraft = signal<any>(null);
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   aiModels = AI_MODEL_OPTIONS;
 
@@ -239,6 +245,18 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           error: () => this.navigation.navigate(['/feature/pm/contract']),
         });
       }
+
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      tryAiAutoOpen({
+        params,
+        router: this.router,
+        route: this.route,
+        moduleType: 'CONTRACT',
+        canOpen: () => !this.contractId && !this.isView && !this.isLocked,
+        setPrompt: (p) => this.aiPrompt.set(p),
+        open: () => this.openAiAssist(),
+        generate: () => this.generateAiDraft(),
+      });
     });
   }
 
@@ -473,13 +491,18 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  generateAiDraft(): void {
+  async generateAiDraft(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
     this.isGeneratingAi.set(true);
     const targetId = this.contractId || this.form?.get('id')?.value || 'new';
     const currentNo = this.form?.get('contractNo')?.value;
     const currentVal = this.form?.get('contractValue')?.value;
+
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
 
     this.service.generateDraft({
       projectId: this.projectId || this.form?.get('projectId')?.value || undefined,
@@ -489,6 +512,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       contractValue: currentVal ? Number(currentVal) : undefined,
       prompt: this.aiPrompt() || undefined,
       model: this.aiModel() || undefined,
+      attachments,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
@@ -526,17 +550,21 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
-    this.formData.patchValue({
-      contractNo: draft.contractNo || this.form.get('contractNo')?.value,
-      contractType: draft.contractType || this.form.get('contractType')?.value,
-      contractValue: draft.contractValue !== undefined && draft.contractValue !== null ? Number(draft.contractValue) : this.form.get('contractValue')?.value,
-      paymentTerms: draft.paymentTerms || this.form.get('paymentTerms')?.value,
-      scopeSummary: draft.scopeSummary || this.form.get('scopeSummary')?.value,
-      startDate: draft.startDate || this.form.get('startDate')?.value,
-      endDate: draft.endDate || this.form.get('endDate')?.value,
-      signStatus: draft.signStatus || this.form.get('signStatus')?.value || 'Draft',
-    });
-    this.form.markAsDirty();
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    // และห้ามแตะ contractNo (ระบบเป็นผู้กำหนด)
+    smartPatchFormAiDraft(
+      this.form,
+      {
+        contractType: draft.contractType,
+        contractValue: draft.contractValue !== undefined && draft.contractValue !== null ? Number(draft.contractValue) : undefined,
+        paymentTerms: draft.paymentTerms,
+        scopeSummary: draft.scopeSummary,
+        startDate: draft.startDate,
+        endDate: draft.endDate,
+        signStatus: draft.signStatus,
+      },
+      ['id', 'contractNo'],
+    );
   }
 
   pasteContractDraft(draft: any): void {

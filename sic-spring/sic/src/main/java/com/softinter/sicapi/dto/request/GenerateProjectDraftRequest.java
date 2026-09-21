@@ -12,7 +12,7 @@ import java.util.UUID;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class GenerateProjectDraftRequest {
+public class GenerateProjectDraftRequest implements AiDraftRequest {
     private UUID customerId;
     private String projectCode;
     private String projectName;

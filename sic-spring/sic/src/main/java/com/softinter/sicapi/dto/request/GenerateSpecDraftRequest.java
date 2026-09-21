@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-public class GenerateSpecDraftRequest {
+public class GenerateSpecDraftRequest implements AiDraftRequest {
     private UUID projectId;
     private UUID requirementId;
     private UUID diagramId;
@@ -14,4 +14,5 @@ public class GenerateSpecDraftRequest {
     private String specificationType;
     private String prompt;
     private String model;
+    private List<AiAttachmentDto> attachments;
 }

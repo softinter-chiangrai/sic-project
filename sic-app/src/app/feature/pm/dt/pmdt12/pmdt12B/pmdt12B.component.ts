@@ -21,6 +21,10 @@ import { environment } from '../../../../../../environments/environment';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 import { Pmdt12BPageData } from './pmdt12B.resolver';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
   selector: 'app-pmdt12b',
@@ -36,6 +40,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicCheckboxComponent,
     SicTiptapEditorComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmdt12B.component.html',
   styleUrls: ['./pmdt12B.component.css'],
@@ -93,6 +98,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   previewHistoryId = signal<string | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
@@ -125,6 +131,20 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
         this.loadScenario(id);
       }
     }
+
+    this.route.queryParams.subscribe((params) => {
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      tryAiAutoOpen({
+        params,
+        router: this.router,
+        route: this.route,
+        moduleType: 'TEST_SCENARIO',
+        canOpen: () => !this.isView(),
+        setPrompt: (p) => this.aiAssistPrompt.set(p),
+        open: () => this.openAiAssist(),
+        generate: () => this.generateWithAi(),
+      });
+    });
   }
 
   loadTasks(projectId?: string): void {
@@ -189,7 +209,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     this.aiHistories.set(this.aiHistoryService.getHistories('test-scenario', targetId));
   }
 
-  generateWithAi(): void {
+  async generateWithAi(): Promise<void> {
     const pId = this.formData.form.get('projectId')?.value || this.customerState.getProjectId();
     const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
     const currentName = this.formData.form.get('scenarioName')?.value;
@@ -197,12 +217,18 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
     this.isGeneratingAiAssist.set(true);
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.service.generateDraft({
       projectId: pId || undefined,
       taskId: selectedTaskId || undefined,
       scenarioName: currentName || undefined,
       prompt: this.aiAssistPrompt() || undefined,
       model: this.aiAssistModel() || undefined,
+      attachments,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAiAssist.set(false);
@@ -231,21 +257,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
           this.aiCurrentVersionNo.set(historyItem.versionNo);
 
           // ดึงข้อมูลหัวข้อและเนื้อหาที่ AI สร้างลงในฟอร์มทันที
-          this.formData.form.patchValue({
-            scenarioName: fullDraft.scenarioName,
-            description: fullDraft.description || this.formData.form.get('description')?.value,
-            priority: fullDraft.priority || this.formData.form.get('priority')?.value || 'Medium',
-          });
-
-          if (fullDraft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
-            this.formData.form.patchValue({ scenarioCode: fullDraft.scenarioCode });
-          }
-
-          if (fullDraft.taskId && fullDraft.taskId !== this.formData.form.get('taskId')?.value) {
-            this.onTaskChange(fullDraft.taskId);
-          }
-
-          this.formData.markAsDirty();
+          this.applyDraftToForm(fullDraft);
         }
       },
       error: (err) => {
@@ -255,23 +267,30 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  pasteTestScenarioDraft(draft: any): void {
+  private applyDraftToForm(draft: any): void {
     if (!draft) return;
-    this.formData.form.patchValue({
-      scenarioName: draft.scenarioName || this.formData.form.get('scenarioName')?.value,
-      description: draft.description || this.formData.form.get('description')?.value,
-      priority: draft.priority || this.formData.form.get('priority')?.value || 'Medium',
-    });
-
-    if (draft.scenarioCode && (!this.formData.form.get('scenarioCode')?.value || this.formData.form.get('scenarioCode')?.value === '')) {
-      this.formData.form.patchValue({ scenarioCode: draft.scenarioCode });
-    }
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    // scenarioCode เป็นฟิลด์ที่ผู้ใช้กรอกเองได้ (ไม่ใช่รหัสระบบเหมือน testCaseCode/contractNo)
+    // จึงยังให้ AI ช่วยกรอกได้ถ้าช่องนี้ว่างอยู่
+    smartPatchFormAiDraft(
+      this.formData.form,
+      {
+        scenarioName: draft.scenarioName,
+        scenarioCode: draft.scenarioCode,
+        description: draft.description,
+        priority: draft.priority,
+      },
+      ['id'],
+    );
 
     if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {
       this.onTaskChange(draft.taskId);
     }
+  }
 
-    this.formData.markAsDirty();
+  pasteTestScenarioDraft(draft: any): void {
+    if (!draft) return;
+    this.applyDraftToForm(draft);
     this.closeAiAssist();
     this.dialog.success(this.translate.instant('PMDT12B_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT12B_PASTE_SUCCESS_MSG'));
   }

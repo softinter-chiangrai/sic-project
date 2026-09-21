@@ -3,7 +3,9 @@ package com.softinter.sicapi.service.impl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest;
 import com.softinter.sicapi.dto.response.InvoiceDraft;
+import com.softinter.sicapi.entity.pm.PmCustomerContract;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.service.PmAiProviderService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ public class InvoiceGeneratorService {
 
     private final PmAiProviderService aiProviderService;
     private final PmCustomerProjectRepository projectRepository;
+    private final PmCustomerContractRepository contractRepository;
     private final ObjectMapper objectMapper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -32,7 +35,12 @@ public class InvoiceGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String prompt = buildPrompt(project, request.getInvoiceTitle(), request.getBillingPeriod(), request.getPrompt());
+        PmCustomerContract contract = null;
+        if (request.getContractId() != null) {
+            contract = contractRepository.findById(request.getContractId()).orElse(null);
+        }
+
+        String prompt = buildPrompt(project, contract, request.getInvoiceType(), request.getInvoiceTitle(), request.getBillingPeriod(), request.getPrompt());
         String systemPrompt = """
                 You are a Senior Project Financial Controller and Billing Specialist with 15+ years of experience in enterprise software contracting and invoicing.
                 Your task is to generate a comprehensive, professional Software Invoice / Payment Milestone draft in JSON format.
@@ -59,7 +67,7 @@ public class InvoiceGeneratorService {
                 5. Ensure professional tone. If prompt in Thai, respond in Thai.
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         InvoiceDraft draft = parseAiResponse(aiResponse);
 
         draft.setBillingType(null);
@@ -71,7 +79,7 @@ public class InvoiceGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmCustomerProject project, String customTitle, String billingPeriod, String customPrompt) {
+    private String buildPrompt(PmCustomerProject project, PmCustomerContract contract, String invoiceType, String customTitle, String billingPeriod, String customPrompt) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a professional Software Invoice / Milestone Draft.\n\n");
 
@@ -80,6 +88,17 @@ public class InvoiceGeneratorService {
               .append("- Project Name: ").append(project.getProjectName() != null ? project.getProjectName() : "").append("\n")
               .append("- Project Code: ").append(project.getProjectCode() != null ? project.getProjectCode() : "").append("\n")
               .append("- Description: ").append(project.getDescription() != null ? project.getDescription() : "").append("\n\n");
+        }
+
+        if (contract != null) {
+            sb.append("**Contract Context:**\n")
+              .append("- Contract No: ").append(contract.getContractNo() != null ? contract.getContractNo() : "").append("\n")
+              .append("- Contract Type: ").append(contract.getContractType() != null ? contract.getContractType() : "").append("\n")
+              .append("- Scope Summary: ").append(contract.getScopeSummary() != null ? contract.getScopeSummary() : "").append("\n\n");
+        }
+
+        if (invoiceType != null && !invoiceType.isBlank()) {
+            sb.append("- Billing Type selected by user: ").append(invoiceType).append(" (for context only, do not put this in the JSON - billingType must stay null)\n");
         }
 
         if (customTitle != null && !customTitle.isBlank()) {

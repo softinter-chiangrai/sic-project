@@ -57,6 +57,10 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Pmdt04AForm } from './pmdt04A.form';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
@@ -93,6 +97,7 @@ export class Pmdt04AService {
     prompt?: string;
     requirementType?: string;
     model?: string;
+    attachments?: AiAttachmentPayload[];
   }): Observable<{
     title?: string;
     description?: string;
@@ -126,6 +131,7 @@ export class Pmdt04AService {
     SicUploadComponent,
     SicDatePipe,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmdt04A.component.html',
   styleUrls: ['./pmdt04A.component.css'],
@@ -200,6 +206,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   aiCurrentVersionNo: number | null = null;
   previewHistoryId: string | null = null;
   copiedId: string | null = null;
+  aiAttachedFiles = signal<File[]>([]);
 
   // ===== CanDeactivate =====
   isSaved = false;
@@ -227,7 +234,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.aiHistories = this.aiHistoryService.getHistories('requirement', targetId);
   }
 
-  generateWithAi(): void {
+
+  async generateWithAi(): Promise<void> {
     const formVal = this.form.value;
     const projectId = formVal.projectId;
     const targetId = this.reqId || formVal.id || 'new';
@@ -235,12 +243,18 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.isGeneratingAiAssist = true;
     this.cdr.markForCheck();
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.service.generateAiDraft({
       projectId: projectId || undefined,
       title: this.aiAssistTitle || formVal.title || undefined,
       requirementType: this.aiAssistType || formVal.requirementType || undefined,
       prompt: this.aiAssistPrompt || undefined,
       model: this.aiAssistModel || undefined,
+      attachments,
     }).pipe(finalize(() => {
       this.isGeneratingAiAssist = false;
       this.cdr.markForCheck();
@@ -276,15 +290,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.aiCurrentVersionNo = historyItem.versionNo;
 
         // ดึงข้อมูลหัวข้อและเนื้อหาที่ AI สร้างลงในฟอร์มทันที
-        this.form.patchValue({
-          title: fullDraft.title,
-          description: fullDraft.description || this.form.value.description,
-          acceptanceCriteria: fullDraft.acceptanceCriteria || this.form.value.acceptanceCriteria,
-          businessValue: fullDraft.businessValue || this.form.value.businessValue,
-          priority: fullDraft.priority || this.form.value.priority || 'MEDIUM',
-          requirementType: fullDraft.requirementType || this.form.value.requirementType || 'FUNCTIONAL',
-        });
-        this.form.markAsDirty();
+        this.applyDraftToForm(fullDraft);
 
         this.cdr.markForCheck();
       },
@@ -296,21 +302,30 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   pasteRequirementDraft(draft: any): void {
     if (!draft) return;
-    const currentTitle = this.form.value.title;
-    const titleToSet = (draft.title && draft.title.trim() !== '') ? draft.title : currentTitle;
 
-    this.form.patchValue({
-      title: titleToSet,
-      description: draft.description || this.form.value.description,
-      acceptanceCriteria: draft.acceptanceCriteria || this.form.value.acceptanceCriteria,
-      businessValue: draft.businessValue || this.form.value.businessValue,
-      priority: draft.priority || this.form.value.priority || 'MEDIUM',
-      requirementType: draft.requirementType || this.form.value.requirementType || 'FUNCTIONAL',
-    });
-
-    this.form.markAsDirty();
+    this.applyDraftToForm(draft);
     this.closeAiAssist();
     this.dialog.success(this.translate.instant('PMDT04_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT04_PASTE_SUCCESS_MSG'));
+  }
+
+  private applyDraftToForm(draft: any): void {
+    if (!draft) return;
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    smartPatchFormAiDraft(
+      this.form,
+      {
+        title: draft.title,
+        description: draft.description,
+        acceptanceCriteria: draft.acceptanceCriteria,
+        businessValue: draft.businessValue,
+        // requirementType is a required field with no form-level default (starts null) —
+        // fall back to FUNCTIONAL when the AI draft omits it, same as the pre-refactor behavior,
+        // so a fresh "Generate with AI" doesn't leave a required field empty and block Save.
+        priority: draft.priority || 'MEDIUM',
+        requirementType: draft.requirementType || 'FUNCTIONAL',
+      },
+      ['id'],
+    );
   }
 
   deleteAiHistory(id: string, event: Event): void {
@@ -372,6 +387,18 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
               this.fetchProjectName(pId);
             }
           }
+
+          // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+          tryAiAutoOpen({
+            params: qParams,
+            router: this.router,
+            route: this.route,
+            moduleType: 'REQUIREMENT',
+            canOpen: () => !this.isViewOnly,
+            setPrompt: (p) => (this.aiAssistPrompt = p),
+            open: () => this.openAiAssist(),
+            generate: () => this.generateWithAi(),
+          });
         });
 
         // Set default createdBy for new requirement

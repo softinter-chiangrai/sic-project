@@ -4,9 +4,9 @@
   <div class="ai-batch-header">
     <div class="ai-batch-title">
       <i class="bi bi-stars"></i>
-      <span>AI Batch Create{{ moduleLabel ? ' - ' + moduleLabel : '' }}</span>
+      <span>{{ 'AI_BATCH_TITLE' | translate }}{{ moduleLabel ? ' - ' + moduleLabel : '' }}</span>
     </div>
-    <button type="button" class="ai-batch-close" (click)="close()" aria-label="ปิด">
+    <button type="button" class="ai-batch-close" (click)="close()" [attr.aria-label]="'AI_BATCH_CLOSE' | translate">
       <i class="bi bi-x-lg"></i>
     </button>
   </div>
@@ -14,18 +14,18 @@
   <div class="ai-batch-body">
     <!-- Prompt panel -->
     <div class="ai-batch-prompt-panel">
-      <label class="ai-batch-label">อธิบายข้อมูลที่ต้องการให้ AI สร้าง</label>
+      <label class="ai-batch-label">{{ 'AI_BATCH_PROMPT_LABEL' | translate }}</label>
       <textarea
         class="ai-batch-textarea"
         rows="3"
-        placeholder="เช่น สร้าง Test Case สำหรับหน้า Login 10 ข้อ"
+        [placeholder]="'AI_BATCH_PROMPT_PLACEHOLDER' | translate"
         [ngModel]="prompt()"
         (ngModelChange)="prompt.set($event)"
       ></textarea>
 
       <div class="ai-batch-controls-row">
         <div class="ai-batch-control">
-          <label class="ai-batch-label">จำนวน</label>
+          <label class="ai-batch-label">{{ 'AI_BATCH_COUNT_LABEL' | translate }}</label>
           <input
             type="number"
             class="ai-batch-number"
@@ -37,7 +37,7 @@
         </div>
 
         <div class="ai-batch-control ai-batch-control-grow">
-          <label class="ai-batch-label">โมเดล AI</label>
+          <label class="ai-batch-label">{{ 'AI_BATCH_MODEL_LABEL' | translate }}</label>
           <select class="ai-batch-select" [ngModel]="model()" (ngModelChange)="model.set($event)">
             <option *ngFor="let m of aiModels" [value]="m.id">{{ m.name }}</option>
           </select>
@@ -47,14 +47,14 @@
       <div class="ai-batch-attachments">
         <label class="ai-batch-attach-btn">
           <i class="bi bi-paperclip"></i>
-          แนบไฟล์ / รูปภาพ
+          {{ 'AI_BATCH_ATTACH_FILE' | translate }}
           <input type="file" multiple hidden (change)="onFileSelected($event)" />
         </label>
 
         <div class="ai-batch-file-chip" *ngFor="let f of attachedFiles(); let i = index">
           <i class="bi" [ngClass]="f.type.startsWith('image/') ? 'bi-image' : 'bi-file-earmark-text'"></i>
           <span class="ai-batch-file-name">{{ f.name }}</span>
-          <button type="button" (click)="removeFile(i)" aria-label="ลบไฟล์">
+          <button type="button" (click)="removeFile(i)" [attr.aria-label]="'AI_BATCH_REMOVE_FILE' | translate">
             <i class="bi bi-x"></i>
           </button>
         </div>
@@ -62,7 +62,7 @@
 
       <button type="button" class="ai-batch-generate-btn" [disabled]="isGenerating() || !prompt().trim()" (click)="generate()">
         <i class="bi" [ngClass]="isGenerating() ? 'bi-hourglass-split' : 'bi-magic'"></i>
-        {{ isGenerating() ? 'กำลังสร้างข้อมูล...' : (rows().length ? 'สร้างเพิ่มเติม' : 'สร้างข้อมูลด้วย AI') }}
+        {{ isGenerating() ? ('AI_BATCH_GENERATING' | translate) : (rows().length ? ('AI_BATCH_GENERATE_MORE' | translate) : ('AI_BATCH_GENERATE' | translate)) }}
       </button>
 
       <div class="ai-batch-error" *ngIf="errorMessage()">{{ errorMessage() }}</div>
@@ -71,7 +71,7 @@
     <!-- Preview table -->
     <div class="ai-batch-preview" *ngIf="rows().length">
       <div class="ai-batch-preview-header">
-        <span>ตรวจทานข้อมูล ({{ selectedCount }}/{{ rows().length }} รายการที่เลือก)</span>
+        <span>{{ 'AI_BATCH_REVIEW_HEADER' | translate: { selected: selectedCount, total: rows().length } }}</span>
       </div>
 
       <div class="ai-batch-table-wrap">
@@ -106,7 +106,7 @@
                 </ng-template>
               </td>
               <td class="ai-batch-col-action">
-                <button type="button" (click)="removeRow(i)" aria-label="ลบแถว">
+                <button type="button" (click)="removeRow(i)" [attr.aria-label]="'AI_BATCH_REMOVE_ROW' | translate">
                   <i class="bi bi-trash"></i>
                 </button>
               </td>
@@ -118,10 +118,10 @@
   </div>
 
   <div class="ai-batch-footer" *ngIf="rows().length">
-    <span class="ai-batch-hint">การบันทึกจะเพิ่มข้อมูลใหม่เท่านั้น ไม่มีผลกับข้อมูลเดิม</span>
+    <span class="ai-batch-hint">{{ 'AI_BATCH_APPEND_HINT' | translate }}</span>
     <button type="button" class="ai-batch-save-btn" [disabled]="!selectedCount || saving" (click)="saveAll()">
       <i class="bi" [ngClass]="saving ? 'bi-hourglass-split' : 'bi-save'"></i>
-      {{ saving ? 'กำลังบันทึก...' : 'บันทึกทั้งหมดลงระบบ (' + selectedCount + ')' }}
+      {{ (saving ? 'AI_BATCH_SAVING' : 'AI_BATCH_SAVE_ALL') | translate: { count: selectedCount } }}
     </button>
   </div>
 </div>

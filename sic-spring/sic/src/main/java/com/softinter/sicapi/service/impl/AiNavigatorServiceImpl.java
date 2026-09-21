@@ -52,7 +52,12 @@ public class AiNavigatorServiceImpl implements AiNavigatorService {
                 + "\nคำถาม/คำสั่งของผู้ใช้: " + message;
 
         try {
-            String raw = aiProviderService.generateRawResponse(userPrompt, systemPrompt, request.getModel());
+            String raw = aiProviderService.generateRawResponse(
+                    userPrompt,
+                    systemPrompt,
+                    request.getModel(),
+                    request.getAttachments()
+            );
             return parseResponse(raw);
         } catch (Exception e) {
             log.error("AI Navigator chat failed", e);
@@ -82,11 +87,11 @@ public class AiNavigatorServiceImpl implements AiNavigatorService {
                 %s
 
                 กติกาการตอบ:
-                1. ตอบเป็นภาษาไทยเสมอ สุภาพ กระชับ ตรงประเด็น
+                1. ตอบเป็นภาษาเดียวกับที่ผู้ใช้ถาม (ภาษาไทย หรือภาษาอังกฤษ) เสมอ สุภาพ กระชับ ตรงประเด็น (Always respond in the same language as the user query - Thai or English)
                 2. ตอบกลับเป็น JSON เท่านั้น ห้ามมีข้อความอื่นนอก ```json ``` block โดยมีโครงสร้างดังนี้:
                 {
-                  "answer": "คำตอบข้อความสำหรับผู้ใช้",
-                  "suggestedRoutes": [ { "label": "ชื่อปุ่ม/หน้า", "path": "เส้นทางจริงจากรายชื่อโมดูลด้านบนเท่านั้น" } ],
+                  "answer": "คำตอบข้อความสำหรับผู้ใช้ (ตอบเป็นภาษาเดียวกับที่ผู้ใช้ถาม)",
+                  "suggestedRoutes": [ { "label": "ชื่อปุ่ม/หน้า (ภาษาไทยหรืออังกฤษตามภาษาที่ผู้ใช้ถาม)", "path": "เส้นทางจริงจากรายชื่อโมดูลด้านบนเท่านั้น" } ],
                   "intentModuleType": "รหัสโมดูล (ตัวพิมพ์ใหญ่) ถ้าผู้ใช้ต้องการ 'สร้าง/เพิ่ม' ข้อมูลใหม่ในโมดูลนั้น มิฉะนั้นให้เป็น null"
                 }
                 3. suggestedRoutes ต้องใช้ path จากรายชื่อโมดูลด้านบนเท่านั้น ห้ามสร้าง path เอง

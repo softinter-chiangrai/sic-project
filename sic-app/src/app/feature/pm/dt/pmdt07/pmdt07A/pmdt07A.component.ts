@@ -36,6 +36,10 @@ import { SicCheckboxComponent } from 'sic-ng';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -57,7 +61,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         SicDatePipe,
         Pmdt07PreviewComponent,
         SicTraceLinkPanelComponent,
-        TranslateModule
+        TranslateModule,
+        SicAiAttachmentPickerComponent
     ],
     templateUrl: './pmdt07A.component.html',
     changeDetection: ChangeDetectionStrategy.OnPush,
@@ -188,6 +193,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     aiCurrentVersionNo: number | null = null;
     previewHistoryId: string | null = null;
     copiedId: string | null = null;
+    aiAttachedFiles = signal<File[]>([]);
 
     // Auto-save
     private autoSaveSubscription: Subscription | null = null;
@@ -256,6 +262,18 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     if (diagId) {
                         this.formData.patchValue({ generatedFromDiagramId: diagId } as any);
                     }
+
+                    // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+                    tryAiAutoOpen({
+                        params: qParams,
+                        router: this.router,
+                        route: this.route,
+                        moduleType: 'SPECIFICATION',
+                        canOpen: () => !this.isViewOnly,
+                        setPrompt: (p) => (this.aiAssistPrompt = p),
+                        open: () => this.openAiAssist(),
+                        generate: () => this.generateWithAi(),
+                    });
                 });
                 const userName = this.getUserNameFromToken();
                 if (userName) this.formData.patchValue({ createdBy: userName } as any);
@@ -314,7 +332,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.aiHistories = this.aiHistoryService.getHistories('specification', targetId);
     }
 
-    generateWithAi(): void {
+    async generateWithAi(): Promise<void> {
         const formVal = this.form.value;
         const projectId = formVal.projectId;
         const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
@@ -325,6 +343,11 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.isGeneratingAiAssist = true;
         this.cdr.markForCheck();
 
+        let attachments: AiAttachmentPayload[] = [];
+        if (this.aiAttachedFiles().length) {
+            attachments = await filesToAiAttachments(this.aiAttachedFiles());
+        }
+
         this.service.generateDraft({
             projectId: projectId || undefined,
             requirementId: requirementId || undefined,
@@ -333,6 +356,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             specificationType: specType,
             prompt: this.aiAssistPrompt || undefined,
             model: this.aiAssistModel || undefined,
+            attachments,
         }).pipe(finalize(() => {
             this.isGeneratingAiAssist = false;
             this.cdr.markForCheck();
@@ -371,29 +395,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.aiCurrentVersionNo = historyItem.versionNo;
 
                 // ดึงข้อมูลหัวข้อและเนื้อหาที่ AI สร้างลงในฟอร์มทันที
-                this.form.patchValue({
-                    title: fullDraft.title,
-                    priority: fullDraft.priority || this.form.value.priority,
-                    estimatedManday: fullDraft.estimatedManday || this.form.value.estimatedManday,
-                    description: fullDraft.description || this.form.value.description,
-                });
-
-                if (fullDraft.requirementId) {
-                    this.form.patchValue({
-                        requirementId: fullDraft.requirementId,
-                        generatedFromRequirementId: fullDraft.requirementId
-                    });
-                }
-                if (fullDraft.diagramIds && fullDraft.diagramIds.length > 0) {
-                    this.form.patchValue({
-                        generatedFromDiagramId: fullDraft.diagramIds.join(',')
-                    });
-                }
-                if (fullDraft.specificationType) {
-                    this.form.patchValue({ specificationType: fullDraft.specificationType });
-                }
-
-                this.form.markAsDirty();
+                this.applyDraftToForm(fullDraft);
                 this.cdr.markForCheck();
             },
             error: (err) => {
@@ -404,16 +406,27 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     pasteSpecificationDraft(draft: any): void {
         if (!draft) return;
-        const currentTitle = this.form.value.title;
-        const titleToSet = (currentTitle && currentTitle.trim() !== '') ? currentTitle : (draft.title || currentTitle);
 
-        this.form.patchValue({
-            title: titleToSet,
-            priority: draft.priority || this.form.value.priority,
-            estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
-            description: draft.generatedHtmlDescription || draft.description || this.form.value.description,
-        });
+        this.applyDraftToForm(draft);
+        this.closeAiAssist();
+        this.dialog.success(this.translate.instant('PMDT07_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT07_PASTE_SUCCESS_MSG'));
+    }
 
+    private applyDraftToForm(draft: any): void {
+        if (!draft) return;
+        // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+        smartPatchFormAiDraft(
+            this.form,
+            {
+                title: draft.title,
+                priority: draft.priority,
+                estimatedManday: draft.estimatedManday,
+                description: draft.generatedHtmlDescription || draft.description,
+            },
+            ['id'],
+        );
+
+        // ฟิลด์ความสัมพันธ์/เมทาดาทา — AI กำหนดค่าทับได้เสมอ ไม่ใช่ผู้ใช้พิมพ์เอง
         if (draft.requirementId) {
             this.form.patchValue({
                 requirementId: draft.requirementId,
@@ -428,10 +441,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         if (draft.specificationType) {
             this.form.patchValue({ specificationType: draft.specificationType });
         }
-
         this.form.markAsDirty();
-        this.closeAiAssist();
-        this.dialog.success(this.translate.instant('PMDT07_PASTE_SUCCESS_TITLE'), this.translate.instant('PMDT07_PASTE_SUCCESS_MSG'));
     }
 
     deleteAiHistory(id: string, event: Event): void {

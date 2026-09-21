@@ -4,6 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { PmTestScenarioModel, PmTaskItemModel } from './pmdt12B.model';
+import { AiAttachmentPayload } from '../../../../../core/utils/ai-attachment.util';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt12BService {
@@ -41,6 +42,7 @@ export class Pmdt12BService {
     scenarioName?: string;
     prompt?: string;
     model?: string;
+    attachments?: AiAttachmentPayload[];
   }): Observable<any> {
     return this.http.post<any>(`${this.apiBase}/api/pm/test-scenarios/generate/draft`, request);
   }

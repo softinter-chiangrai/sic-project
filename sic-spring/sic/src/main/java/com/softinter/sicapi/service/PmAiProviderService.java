@@ -25,6 +25,15 @@ public interface PmAiProviderService {
      */
     String generateRawResponse(String prompt, String systemPrompt, String modelId, List<AiAttachmentDto> attachments);
 
+    /**
+     * Convenience overload for the many "generate draft" services: pulls model + attachments
+     * straight off any {@link com.softinter.sicapi.dto.request.AiDraftRequest} instead of every
+     * call site spelling out {@code request.getModel(), request.getAttachments()}.
+     */
+    default String generateRawResponse(String prompt, String systemPrompt, com.softinter.sicapi.dto.request.AiDraftRequest request) {
+        return generateRawResponse(prompt, systemPrompt, request.getModel(), request.getAttachments());
+    }
+
     String extractMermaidScript(String aiResponse);
 
     String extractDiagramName(String aiResponse);

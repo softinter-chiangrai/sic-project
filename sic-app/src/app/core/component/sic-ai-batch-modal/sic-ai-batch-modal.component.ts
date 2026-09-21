@@ -11,6 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../config/ai-models.config';
 import { AiBatchGenerateService } from '../../services/ai-batch-generate.service';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../utils/ai-attachment.util';
@@ -35,13 +36,14 @@ interface BatchRow {
 @Component({
   selector: 'sic-ai-batch-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './sic-ai-batch-modal.component.html',
   styleUrl: './sic-ai-batch-modal.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class SicAiBatchModalComponent implements OnChanges {
   private batchService = inject(AiBatchGenerateService);
+  private translate = inject(TranslateService);
 
   @Input({ required: true }) moduleType!: string;
   @Input() moduleLabel = '';
@@ -111,7 +113,7 @@ export class SicAiBatchModalComponent implements OnChanges {
         next: (items) => {
           this.isGenerating.set(false);
           if (!items.length) {
-            this.errorMessage.set('AI ไม่สามารถสร้างข้อมูลได้ กรุณาลองปรับ Prompt หรือไฟล์แนบใหม่');
+            this.errorMessage.set(this.translate.instant('AI_BATCH_NO_RESULT_ERROR'));
             return;
           }
           this.rows.update((existing) => [
@@ -121,7 +123,7 @@ export class SicAiBatchModalComponent implements OnChanges {
         },
         error: (err) => {
           this.isGenerating.set(false);
-          this.errorMessage.set(err?.error?.message || err?.message || 'เกิดข้อผิดพลาดในการเรียก AI');
+          this.errorMessage.set(err?.error?.message || err?.message || this.translate.instant('AI_BATCH_CALL_ERROR'));
         },
       });
   }

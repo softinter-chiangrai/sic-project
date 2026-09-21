@@ -26,6 +26,10 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
   selector: 'app-pmdt17a',
@@ -43,6 +47,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicTimepickerComponent,
     SicTiptapEditorComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmdt17A.component.html',
   styleUrls: ['./pmdt17A.component.css'],
@@ -114,6 +119,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentDraft = signal<any | null>(null);
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -173,7 +179,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     this.showAiModal.set(false);
   }
 
-  generateWithAi(): void {
+  async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
     const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
@@ -182,6 +188,11 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
     this.isGeneratingAi.set(true);
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.service.generateDraft({
       projectId: projId || undefined,
       title: currentTitle || undefined,
@@ -189,6 +200,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       priority: this.aiPriority() || undefined,
       prompt: this.aiPrompt() || undefined,
       model: this.aiModel() || undefined,
+      attachments,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
@@ -233,15 +245,18 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
-    this.formData.patchValue({
-      title: draft.title || this.formData.form.value.title,
-      ticketType: draft.ticketType || this.formData.form.value.ticketType || 'BUG_SUPPORT',
-      severity: draft.severity || draft.priority || this.formData.form.value.severity || 'MEDIUM',
-      description: draft.description || this.formData.form.value.description,
-      resolutionSummary: draft.resolutionSummary || draft.resolution || this.formData.form.value.resolutionSummary,
-    } as any);
-
-    this.formData.markAsDirty();
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    smartPatchFormAiDraft(
+      this.formData.form,
+      {
+        title: draft.title,
+        ticketType: draft.ticketType,
+        severity: draft.severity || draft.priority,
+        description: draft.description,
+        resolutionSummary: draft.resolutionSummary || draft.resolution,
+      },
+      ['id'],
+    );
   }
 
   pasteMaTicketDraft(draft: any): void {
@@ -315,6 +330,20 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       if (paramId) {
         this.loadData(paramId);
       }
+    });
+
+    this.route.queryParams.subscribe((params) => {
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      tryAiAutoOpen({
+        params,
+        router: this.router,
+        route: this.route,
+        moduleType: 'MA_TICKET',
+        canOpen: () => !this.isView() && !this.isLocked(),
+        setPrompt: (p) => this.aiPrompt.set(p),
+        open: () => this.openAiModal(),
+        generate: () => this.generateWithAi(),
+      });
     });
   }
 

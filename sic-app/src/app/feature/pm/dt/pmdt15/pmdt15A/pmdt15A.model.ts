@@ -1,5 +1,6 @@
 import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { AiAttachmentPayload } from '../../../../../core/utils/ai-attachment.util';
 
 export interface PmUserManualFormData {
   manual: SicFromData<PmUserManualModel>;
@@ -53,6 +54,7 @@ export interface GenerateUserManualDraftRequest {
   specificationIds?: string[];
   prompt?: string;
   model?: string;
+  attachments?: AiAttachmentPayload[];
 }
 
 export interface UserManualSectionDraft {

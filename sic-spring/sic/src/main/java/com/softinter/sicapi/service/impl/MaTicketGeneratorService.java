@@ -50,7 +50,7 @@ public class MaTicketGeneratorService {
                 5. If user prompt is in Thai, respond in Thai.
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         MaTicketDraft draft = parseAiResponse(aiResponse);
 
         draft.setTicketType(request.getTicketType() != null && !request.getTicketType().isBlank() ? request.getTicketType() : null);

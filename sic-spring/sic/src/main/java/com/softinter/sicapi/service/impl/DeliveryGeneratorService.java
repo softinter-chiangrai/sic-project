@@ -65,7 +65,7 @@ public class DeliveryGeneratorService {
                 5. Ensure professional tone. If prompt in Thai, respond in Thai.
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         DeliveryDraft draft = parseAiResponse(aiResponse);
 
         draft.setDeliveryType(request.getDeliveryType() != null && !request.getDeliveryType().isBlank() ? request.getDeliveryType() : null);

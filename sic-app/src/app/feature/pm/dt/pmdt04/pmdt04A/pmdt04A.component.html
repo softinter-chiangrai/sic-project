@@ -355,6 +355,11 @@
               ></textarea>
             </div>
 
+            <sic-ai-attachment-picker
+              [files]="aiAttachedFiles()"
+              (filesChange)="aiAttachedFiles.set($event)"
+            ></sic-ai-attachment-picker>
+
             @if (isGeneratingAiAssist) {
               <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
                 <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>

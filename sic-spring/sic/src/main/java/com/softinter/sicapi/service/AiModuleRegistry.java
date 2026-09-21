@@ -81,6 +81,22 @@ public class AiModuleRegistry {
                 .build());
 
         register(ModuleDef.builder()
+                .moduleType("SPECIFICATION")
+                .label("Specification")
+                .listRoute("/feature/pm/specification")
+                .createRoute("/feature/pm/specification/new")
+                .schemaDescription("{ \"specName\": string, \"description\": string, \"version\": string|null }")
+                .build());
+
+        register(ModuleDef.builder()
+                .moduleType("USER_MANUAL")
+                .label("คู่มือผู้ใช้งาน (User Manual)")
+                .listRoute("/feature/pm/manual")
+                .createRoute("/feature/pm/manual/new")
+                .schemaDescription("{ \"manualTitle\": string, \"description\": string }")
+                .build());
+
+        register(ModuleDef.builder()
                 .moduleType("DELIVERY")
                 .label("การส่งมอบ (Delivery)")
                 .listRoute("/feature/pm/delivery")

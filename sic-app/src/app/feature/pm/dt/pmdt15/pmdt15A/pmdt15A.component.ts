@@ -26,6 +26,10 @@ import { Pmdt15AService } from './pmdt15A.service';
 import { PmUserManualModel, PmUserManualSectionModel } from './pmdt15A.model';
 import { Pmdt15APageData } from './pmdt15A.resolver';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
   selector: 'app-pmdt15a',
@@ -42,6 +46,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicTiptapEditorComponent,
     SicUploadComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmdt15A.component.html',
   styleUrls: ['./pmdt15A.component.css'],
@@ -126,6 +131,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   previewHistoryId = signal<string | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -148,6 +154,18 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.loadDeliveryOptions();
         this.loadAiComboboxOptions();
       }
+
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      tryAiAutoOpen({
+        params: qParams,
+        router: this.router,
+        route: this.route,
+        moduleType: 'USER_MANUAL',
+        canOpen: () => !this.isLocked(),
+        setPrompt: (p) => this.aiPrompt.set(p),
+        open: () => this.openAiModal(),
+        generate: () => this.generateWithAi(),
+      });
     });
 
     const page: Pmdt15APageData = this.route.snapshot.data['pageData'];
@@ -295,7 +313,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.cdr.markForCheck();
   }
 
-  generateWithAi(): void {
+  async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
     const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
@@ -308,6 +326,11 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     const reqIds = this.aiSelectedRequirementIds();
     const specIds = this.aiSelectedSpecificationIds();
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.service.generateDraft({
       projectId: projId || undefined,
       manualTitle: currentTitle || undefined,
@@ -316,6 +339,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       specificationIds: specIds.length > 0 ? specIds : undefined,
       prompt: this.aiPrompt() || undefined,
       model: this.aiModel() || undefined,
+      attachments,
     }).pipe(
       finalize(() => {
         this.isGeneratingAi.set(false);
@@ -363,14 +387,17 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    const currentTitle = (this.formData?.form?.value as any)?.manualTitle;
-    if (!currentTitle || currentTitle.trim() === '') {
-      if (draft.manualTitle) {
-        this.formData.patchValue({ manualTitle: draft.manualTitle } as any);
-      }
-    }
-    if (draft.manualType) {
-      this.formData.patchValue({ manualType: draft.manualType } as any);
+    // Smart Preserve: ในโหมด replace กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    // ในโหมด append จะไม่แตะหัวข้อคู่มือ/ประเภทเลย (เพิ่มเฉพาะ Section ใหม่ต่อท้าย)
+    if (mode === 'replace') {
+      smartPatchFormAiDraft(
+        this.formData.form,
+        {
+          manualTitle: draft.manualTitle,
+          manualType: draft.manualType,
+        },
+        ['id'],
+      );
     }
 
     const newSectionsList: PmUserManualSectionModel[] = draft.sections.map((s: any, idx: number) => ({

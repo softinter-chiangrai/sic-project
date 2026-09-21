@@ -4,6 +4,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ContractModel, Pmrt04AModel } from './pmrt04A.model';
 import { environment } from '../../../../../../environments/environment';
+import { AiAttachmentPayload } from '../../../../../core/utils/ai-attachment.util';
 
 export interface ContractSummary {
   milestones: { total: number; completed: number };
@@ -65,6 +66,7 @@ export class Pmrt04AService {
     contractValue?: number;
     prompt?: string;
     model?: string;
+    attachments?: AiAttachmentPayload[];
   }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/generate/draft`, req);
   }

@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { PmMaTicketModel } from './pmdt17A.model';
+import { AiAttachmentPayload } from '../../../../../core/utils/ai-attachment.util';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt17AService {
@@ -30,7 +31,7 @@ export class Pmdt17AService {
     return this.http.delete<void>(`${apiBaseUrl}/api/pm/ma-tickets/${id}`);
   }
 
-  generateDraft(data: { projectId?: string; title?: string; ticketType?: string; priority?: string; prompt?: string; model?: string }): Observable<any> {
+  generateDraft(data: { projectId?: string; title?: string; ticketType?: string; priority?: string; prompt?: string; model?: string; attachments?: AiAttachmentPayload[] }): Observable<any> {
     return this.http.post<any>(`${apiBaseUrl}/api/pm/ma-tickets/generate/draft`, data);
   }
 }

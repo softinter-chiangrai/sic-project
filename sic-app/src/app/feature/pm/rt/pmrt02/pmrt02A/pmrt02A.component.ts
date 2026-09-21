@@ -27,6 +27,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 
 @Component({
@@ -45,6 +47,7 @@ import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/u
     SicTiptapEditorComponent,
     SicVersionBadgeComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmrt02A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -168,19 +171,16 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       }
 
       // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
-      if (params['aiAutoOpen'] === '1' && params['aiModuleType'] === 'PROJECT' && !this.isViewOnly && !this.isLocked) {
-        this.aiPrompt.set(params['aiPrompt'] || '');
-        this.openAiAssist();
-        if (this.aiPrompt()) {
-          queueMicrotask(() => this.generateAiDraft());
-        }
-        this.router.navigate([], {
-          relativeTo: this.route,
-          queryParams: { aiAutoOpen: null, aiModuleType: null, aiPrompt: null },
-          queryParamsHandling: 'merge',
-          replaceUrl: true,
-        });
-      }
+      tryAiAutoOpen({
+        params,
+        router: this.router,
+        route: this.route,
+        moduleType: 'PROJECT',
+        canOpen: () => !this.isViewOnly && !this.isLocked,
+        setPrompt: (p) => this.aiPrompt.set(p),
+        open: () => this.openAiAssist(),
+        generate: () => this.generateAiDraft(),
+      });
     });
 
     if (this.isViewOnly || this.isLocked) {
@@ -369,17 +369,6 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         this.loadAiHistory();
       }
     });
-  }
-
-  onAiFileSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const files = input.files ? Array.from(input.files) : [];
-    this.aiAttachedFiles.update((existing) => [...existing, ...files]);
-    input.value = '';
-  }
-
-  removeAiFile(index: number): void {
-    this.aiAttachedFiles.update((files) => files.filter((_, i) => i !== index));
   }
 
   async generateAiDraft(): Promise<void> {

@@ -29,6 +29,10 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
   selector: 'app-pmdt16a',
@@ -47,6 +51,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicDatepickerComponent,
     SicUploadComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],
@@ -115,6 +120,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentDraft = signal<any | null>(null);
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -163,7 +169,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     this.showAiModal.set(false);
   }
 
-  generateWithAi(): void {
+  async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
     const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
@@ -172,12 +178,18 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
     this.isGeneratingAi.set(true);
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.service.generateDraft({
       projectId: projId || undefined,
       contractId: contractId || undefined,
       invoiceType: this.aiBillingType() || undefined,
       prompt: this.aiPrompt() || undefined,
       model: this.aiModel() || undefined,
+      attachments,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
@@ -214,17 +226,21 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
 
-    if (draft.billingType || draft.invoiceType) {
-      this.formData.patchValue({ billingType: draft.billingType || draft.invoiceType } as any);
-    }
-    if (draft.vatRate !== undefined && draft.vatRate !== null) {
-      this.formData.patchValue({ vatRate: Number(draft.vatRate) } as any);
-    } else if (draft.taxRate !== undefined && draft.taxRate !== null) {
-      this.formData.patchValue({ vatRate: Number(draft.taxRate) } as any);
-    }
-    if (draft.remark || draft.notes) {
-      this.formData.patchValue({ remark: draft.remark || draft.notes } as any);
-    }
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+    smartPatchFormAiDraft(
+      this.formData.form,
+      {
+        billingType: draft.billingType || draft.invoiceType,
+        vatRate: draft.vatRate !== undefined && draft.vatRate !== null
+          ? Number(draft.vatRate)
+          : (draft.taxRate !== undefined && draft.taxRate !== null ? Number(draft.taxRate) : undefined),
+        remark: draft.remark || draft.notes,
+        subtotalAmount: (!draft.items || draft.items.length === 0) && draft.amount !== undefined && draft.amount !== null
+          ? Number(draft.amount)
+          : undefined,
+      },
+      ['id'],
+    );
 
     if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {
       const newItems = draft.items.map((it: any, idx: number) => ({
@@ -237,8 +253,6 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         amount: it.amount || ((it.quantity || 1) * (it.unitPrice || 0)),
       }));
       this.items.set(newItems);
-    } else if (draft.amount !== undefined && draft.amount !== null) {
-      this.formData.patchValue({ subtotalAmount: Number(draft.amount) } as any);
     }
 
     this.calculateTotals();
@@ -316,6 +330,20 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         this.loadData(paramId);
       }
     }
+
+    this.route.queryParams.subscribe((params) => {
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      tryAiAutoOpen({
+        params,
+        router: this.router,
+        route: this.route,
+        moduleType: 'INVOICE',
+        canOpen: () => !this.isView() && !this.isLocked(),
+        setPrompt: (p) => this.aiPrompt.set(p),
+        open: () => this.openAiModal(),
+        generate: () => this.generateWithAi(),
+      });
+    });
   }
 
   loadDeliveryOptions(projectId?: string): void {

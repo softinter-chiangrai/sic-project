@@ -27,6 +27,10 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { ApprovalFlow } from '../../pmdt03/approval.model';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
+import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
+import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 
 @Component({
   selector: 'app-pmdt14a',
@@ -45,6 +49,7 @@ import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai
     SicUploadComponent,
     SicTiptapEditorComponent,
     TranslateModule,
+    SicAiAttachmentPickerComponent,
   ],
   templateUrl: './pmdt14A.component.html',
   styleUrls: ['./pmdt14A.component.css'],
@@ -108,6 +113,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentDraft = signal<any | null>(null);
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
+  aiAttachedFiles = signal<File[]>([]);
 
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
@@ -154,7 +160,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     this.showAiModal.set(false);
   }
 
-  generateWithAi(): void {
+  async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
     const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
@@ -163,11 +169,17 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
     this.isGeneratingAi.set(true);
 
+    let attachments: AiAttachmentPayload[] = [];
+    if (this.aiAttachedFiles().length) {
+      attachments = await filesToAiAttachments(this.aiAttachedFiles());
+    }
+
     this.service.generateDraft({
       projectId: projId || undefined,
       deliveryName: currentTitle || undefined,
       prompt: this.aiPrompt() || undefined,
       model: this.aiModel() || undefined,
+      attachments,
     }).subscribe({
       next: (draft) => {
         this.isGeneratingAi.set(false);
@@ -203,13 +215,18 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
-    this.formData.patchValue({
-      deliveryTitle: draft.deliveryTitle || draft.deliveryName || this.formData.form.value.deliveryTitle,
-      deliveryType: draft.deliveryType || this.formData.form.value.deliveryType || 'FINAL',
-      deliveryVersion: draft.deliveryVersion || this.formData.form.value.deliveryVersion || '1.0',
-      releaseNote: draft.releaseNote || this.formData.form.value.releaseNote,
-      deliverySummary: draft.deliverySummary || this.formData.form.value.deliverySummary,
-    } as any);
+    // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว และห้ามแตะ id
+    smartPatchFormAiDraft(
+      this.formData.form,
+      {
+        deliveryTitle: draft.deliveryTitle || draft.deliveryName,
+        deliveryType: draft.deliveryType,
+        deliveryVersion: draft.deliveryVersion,
+        releaseNote: draft.releaseNote,
+        deliverySummary: draft.deliverySummary,
+      },
+      ['id'],
+    );
 
     const rawItems = draft.items || draft.checklists;
     if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {
@@ -283,6 +300,20 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         this.runGateCheck(projId);
       }
     }
+
+    this.route.queryParams.subscribe((params) => {
+      // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
+      tryAiAutoOpen({
+        params,
+        router: this.router,
+        route: this.route,
+        moduleType: 'DELIVERY',
+        canOpen: () => !this.isView() && !this.isLocked(),
+        setPrompt: (p) => this.aiPrompt.set(p),
+        open: () => this.openAiModal(),
+        generate: () => this.generateWithAi(),
+      });
+    });
   }
 
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Contract + Gate Check ของโครงการที่เลือกใหม่

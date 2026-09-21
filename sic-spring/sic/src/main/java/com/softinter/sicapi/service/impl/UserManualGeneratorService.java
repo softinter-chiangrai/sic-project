@@ -54,7 +54,7 @@ public class UserManualGeneratorService {
                 Return ONLY valid JSON matching the requested schema.
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         UserManualDraftResponse draft = parseAiResponse(aiResponse, manualType, request.getManualTitle(), requirements, specifications);
 
         if (draft.getManualType() == null || draft.getManualType().isBlank()) {

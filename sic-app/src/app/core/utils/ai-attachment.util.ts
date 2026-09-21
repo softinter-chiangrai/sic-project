@@ -11,27 +11,27 @@ const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024; // 8MB ต่อไฟล์ (จ�
  * ไฟล์ที่มีขนาดเกิน limit จะถูกข้าม (ไม่ throw) เพื่อไม่ให้กระบวนการทั้งชุดล้มเหลว
  */
 export async function filesToAiAttachments(files: File[]): Promise<AiAttachmentPayload[]> {
-  const results: AiAttachmentPayload[] = [];
-
-  for (const file of files) {
+  const reads = files.map(async (file): Promise<AiAttachmentPayload | null> => {
     if (file.size > MAX_FILE_SIZE_BYTES) {
       console.warn(`[AI Attachment] Skipped "${file.name}": exceeds ${MAX_FILE_SIZE_BYTES / (1024 * 1024)}MB limit`);
-      continue;
+      return null;
     }
 
     try {
       const base64Data = await readFileAsBase64(file);
-      results.push({
+      return {
         fileName: file.name,
         mimeType: file.type || 'application/octet-stream',
         base64Data,
-      });
+      };
     } catch (err) {
       console.error(`[AI Attachment] Failed to read "${file.name}"`, err);
+      return null;
     }
-  }
+  });
 
-  return results;
+  const results = await Promise.all(reads);
+  return results.filter((r): r is AiAttachmentPayload => r !== null);
 }
 
 function readFileAsBase64(file: File): Promise<string> {

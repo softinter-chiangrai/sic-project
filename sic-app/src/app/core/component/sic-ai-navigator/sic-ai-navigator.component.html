@@ -3,26 +3,173 @@
   type="button"
   class="ai-nav-fab"
   (click)="toggle()"
-  title="ผู้ช่วย AI นำทางระบบ"
-  aria-label="เปิดผู้ช่วย AI นำทางระบบ"
+  [title]="'AI_NAV_FAB_TITLE' | translate"
+  [attr.aria-label]="'AI_NAV_FAB_TITLE' | translate"
 >
   <i class="bi bi-stars"></i>
 </button>
 
-<!-- Drawer -->
+<!-- Backdrop -->
 <div class="ai-nav-backdrop" *ngIf="navSvc.isOpen()" (click)="close()"></div>
 
-<div class="ai-nav-drawer" [class.open]="navSvc.isOpen()">
-  <div class="ai-nav-header">
-    <div class="ai-nav-title">
-      <i class="bi bi-stars"></i>
-      <span>ผู้ช่วย AI นำทางระบบ</span>
-    </div>
-    <button type="button" class="ai-nav-close" (click)="close()" aria-label="ปิด">
-      <i class="bi bi-x-lg"></i>
-    </button>
+<!-- AI Navigator Drawer -->
+<div
+  class="ai-nav-drawer"
+  [class.open]="navSvc.isOpen()"
+  (dragover)="onDragOver($event)"
+  (dragleave)="onDragLeave($event)"
+  (drop)="onDrop($event)"
+>
+  <!-- Drag Overlay -->
+  <div class="ai-nav-drag-overlay" *ngIf="isDraggingFile()">
+    <i class="bi bi-cloud-arrow-up-fill"></i>
+    <span>{{ 'AI_NAV_DRAG_DROP' | translate }}</span>
   </div>
 
+  <!-- Header -->
+  <div class="ai-nav-header">
+    <div class="ai-nav-title">
+      <i class="bi bi-stars ai-nav-title-icon"></i>
+      <span>{{ 'AI_NAV_TITLE' | translate }}</span>
+    </div>
+
+    <div class="ai-nav-header-actions">
+      <!-- Model Selector Dropdown -->
+      <div class="ai-nav-model-wrapper">
+        <button
+          type="button"
+          class="ai-nav-model-btn"
+          (click)="toggleModelSelect()"
+          [title]="'AI_NAV_SELECT_MODEL' | translate"
+        >
+          <span class="ai-nav-model-name">{{ getCurrentModelLabel() }}</span>
+          <i class="bi bi-chevron-down ai-nav-model-arrow" [class.open]="showModelSelect()"></i>
+        </button>
+
+        <div class="ai-nav-model-dropdown" *ngIf="showModelSelect()">
+          <div class="ai-nav-model-dropdown-header">
+            <i class="bi bi-cpu"></i>
+            <span>{{ 'AI_NAV_SELECT_MODEL' | translate }}</span>
+          </div>
+          <div class="ai-nav-model-list">
+            <button
+              type="button"
+              class="ai-nav-model-item"
+              *ngFor="let m of availableModels"
+              [class.active]="m.id === navSvc.selectedModel()"
+              (click)="selectModel(m.id)"
+            >
+              <div class="ai-nav-model-info">
+                <div class="ai-nav-model-item-title">
+                  <span>{{ m.name }}</span>
+                  <span class="ai-nav-badge-rec" *ngIf="m.recommended">{{ 'AI_NAV_RECOMMENDED' | translate }}</span>
+                </div>
+                <span class="ai-nav-model-provider" *ngIf="m.provider">{{ m.provider }}</span>
+              </div>
+              <i class="bi bi-check2 ai-nav-model-check" *ngIf="m.id === navSvc.selectedModel()"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- New Chat Button -->
+      <button
+        type="button"
+        class="ai-nav-header-icon-btn"
+        (click)="startNewChat()"
+        [title]="'AI_NAV_NEW_CHAT_TITLE' | translate"
+        [attr.aria-label]="'AI_NAV_NEW_CHAT_TITLE' | translate"
+      >
+        <i class="bi bi-plus-lg"></i>
+      </button>
+
+      <!-- History Toggle Button -->
+      <button
+        type="button"
+        class="ai-nav-header-icon-btn"
+        [class.active]="showHistory()"
+        (click)="toggleHistory()"
+        [title]="'AI_NAV_HISTORY' | translate"
+        [attr.aria-label]="'AI_NAV_HISTORY' | translate"
+      >
+        <i class="bi bi-clock-history"></i>
+      </button>
+
+      <!-- Close Drawer Button -->
+      <button
+        type="button"
+        class="ai-nav-header-icon-btn ai-nav-close-btn"
+        (click)="close()"
+        [title]="'AI_NAV_CLOSE' | translate"
+        [attr.aria-label]="'AI_NAV_CLOSE' | translate"
+      >
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- History Panel Overlay -->
+  <div class="ai-nav-history-panel" *ngIf="showHistory()">
+    <div class="ai-nav-history-header">
+      <div class="ai-nav-history-title">
+        <i class="bi bi-clock-history"></i>
+        <span>{{ 'AI_NAV_HISTORY' | translate }}</span>
+      </div>
+      <div class="ai-nav-history-actions">
+        <button type="button" class="ai-nav-history-new-btn" (click)="startNewChat()">
+          <i class="bi bi-plus-lg"></i>
+          {{ 'AI_NAV_NEW_CHAT' | translate }}
+        </button>
+        <button type="button" class="ai-nav-history-close-btn" (click)="closeHistory()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="ai-nav-history-body">
+      <div class="ai-nav-history-empty" *ngIf="navSvc.sessions().length === 0">
+        <i class="bi bi-chat-left-dots"></i>
+        <p>{{ 'AI_NAV_NO_HISTORY' | translate }}</p>
+      </div>
+
+      <div class="ai-nav-history-list" *ngIf="navSvc.sessions().length > 0">
+        <div
+          class="ai-nav-history-item"
+          *ngFor="let s of navSvc.sessions(); trackBy: trackSession"
+          [class.active]="s.id === navSvc.activeSessionId()"
+          (click)="onSelectSession(s)"
+        >
+          <div class="ai-nav-history-item-content">
+            <div class="ai-nav-history-item-top">
+              <i class="bi bi-chat-text ai-nav-history-icon"></i>
+              <span class="ai-nav-history-item-title">{{ s.title }}</span>
+            </div>
+            <div class="ai-nav-history-item-meta">
+              <span class="ai-nav-history-date">{{ formatDate(s.updatedAt || s.createdAt) }}</span>
+              <span class="ai-nav-history-msg-count">{{ s.messages.length }} {{ 'AI_NAV_MESSAGES_COUNT' | translate }}</span>
+            </div>
+          </div>
+          <button
+            type="button"
+            class="ai-nav-history-del-btn"
+            (click)="onDeleteSession($event, s.id)"
+            [title]="'AI_NAV_DELETE_SESSION' | translate"
+          >
+            <i class="bi bi-trash3"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="ai-nav-history-footer" *ngIf="navSvc.sessions().length > 0">
+      <button type="button" class="ai-nav-clear-history-btn" (click)="onClearAllHistory()">
+        <i class="bi bi-trash"></i>
+        {{ 'AI_NAV_CLEAR_ALL_HISTORY' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Messages Container -->
   <div class="ai-nav-messages">
     <div
       *ngFor="let msg of navSvc.messages(); trackBy: trackMsg"
@@ -30,22 +177,51 @@
       [class.user]="msg.role === 'user'"
       [class.ai]="msg.role === 'ai'"
     >
-      <div class="ai-nav-bubble">{{ msg.text }}</div>
+      <!-- AI Avatar -->
+      <div class="ai-nav-avatar" *ngIf="msg.role === 'ai'">
+        <i class="bi bi-stars"></i>
+      </div>
 
-      <div class="ai-nav-routes" *ngIf="msg.routes?.length">
-        <button
-          type="button"
-          class="ai-nav-route-btn"
-          *ngFor="let route of msg.routes"
-          (click)="selectRoute(route)"
-        >
-          <i class="bi bi-arrow-right-circle"></i>
-          {{ route.label }}
-        </button>
+      <div class="ai-nav-bubble-group">
+        <!-- Attached Files in User Message -->
+        <div class="ai-nav-msg-attachments" *ngIf="msg.attachments?.length">
+          <div class="ai-nav-attached-pill" *ngFor="let f of msg.attachments">
+            <i
+              class="bi"
+              [ngClass]="f.mimeType.startsWith('image/') ? 'bi-image' : 'bi-file-earmark-text'"
+            ></i>
+            <span class="ai-nav-attached-name">{{ f.fileName }}</span>
+          </div>
+        </div>
+
+        <!-- Message Bubble -->
+        <div class="ai-nav-bubble" *ngIf="msg.text">{{ msg.text }}</div>
+
+        <!-- Route Suggestions -->
+        <div class="ai-nav-routes" *ngIf="msg.routes?.length">
+          <button
+            type="button"
+            class="ai-nav-route-btn"
+            *ngFor="let route of msg.routes"
+            (click)="selectRoute(route)"
+          >
+            <i class="bi bi-arrow-right-circle-fill"></i>
+            <span>{{ route.label }}</span>
+          </button>
+        </div>
+
+        <!-- Message Timestamp -->
+        <span class="ai-nav-msg-time" *ngIf="msg.timestamp">
+          {{ formatDate(msg.timestamp) }}
+        </span>
       </div>
     </div>
 
+    <!-- AI Typing Indicator -->
     <div class="ai-nav-msg ai" *ngIf="navSvc.isSending()">
+      <div class="ai-nav-avatar">
+        <i class="bi bi-stars"></i>
+      </div>
       <div class="ai-nav-bubble ai-nav-typing">
         <span></span><span></span><span></span>
       </div>
@@ -54,16 +230,63 @@
     <div #messagesEnd></div>
   </div>
 
-  <div class="ai-nav-input-row">
-    <textarea
-      class="ai-nav-input"
-      rows="1"
-      placeholder="ถามขั้นตอนการใช้งาน หรือบอกว่าอยากไปหน้าไหน..."
-      [(ngModel)]="inputText"
-      (keydown.enter)="onEnter($event)"
-    ></textarea>
-    <button type="button" class="ai-nav-send" (click)="send()" [disabled]="navSvc.isSending() || !inputText.trim()">
-      <i class="bi bi-send-fill"></i>
-    </button>
+  <!-- Input Area -->
+  <div class="ai-nav-input-container">
+    <!-- Attached Files Preview Chips -->
+    <div class="ai-nav-chips-bar" *ngIf="attachedFiles().length > 0">
+      <div class="ai-nav-chip" *ngFor="let f of attachedFiles(); let i = index">
+        <i class="bi" [ngClass]="f.type.startsWith('image/') ? 'bi-image' : 'bi-file-earmark-text'"></i>
+        <span class="ai-nav-chip-name">{{ f.name }}</span>
+        <button type="button" class="ai-nav-chip-del" (click)="removeFile(i)" [attr.aria-label]="'AI_NAV_REMOVE_FILE' | translate">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Input Row -->
+    <div class="ai-nav-input-row">
+      <!-- Hidden File Input -->
+      <input
+        #fileInput
+        type="file"
+        multiple
+        hidden
+        accept="image/*,.pdf,.txt,.csv,.json,.md,.doc,.docx,.xls,.xlsx"
+        (change)="onFileSelected($event)"
+      />
+
+      <!-- Attach Button -->
+      <button
+        type="button"
+        class="ai-nav-attach-btn"
+        (click)="triggerFileInput()"
+        [title]="'AI_NAV_ATTACH_FILE' | translate"
+        [attr.aria-label]="'AI_NAV_ATTACH_FILE' | translate"
+      >
+        <i class="bi bi-paperclip"></i>
+      </button>
+
+      <!-- Textarea -->
+      <textarea
+        #chatTextarea
+        class="ai-nav-input"
+        rows="1"
+        [placeholder]="'AI_NAV_INPUT_PLACEHOLDER' | translate"
+        [(ngModel)]="inputText"
+        (keydown.enter)="onEnter($event)"
+      ></textarea>
+
+      <!-- Send Button -->
+      <button
+        type="button"
+        class="ai-nav-send"
+        (click)="send()"
+        [disabled]="navSvc.isSending() || (!inputText.trim() && attachedFiles().length === 0)"
+        [title]="'AI_NAV_SEND' | translate"
+        [attr.aria-label]="'AI_NAV_SEND' | translate"
+      >
+        <i class="bi bi-send-fill"></i>
+      </button>
+    </div>
   </div>
 </div>

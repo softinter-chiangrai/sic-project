@@ -458,6 +458,11 @@
             ></textarea>
           </div>
 
+          <sic-ai-attachment-picker
+            [files]="aiAttachedFiles()"
+            (filesChange)="aiAttachedFiles.set($event)"
+          ></sic-ai-attachment-picker>
+
           <!-- 5. Generation Mode: Replace vs Append -->
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">

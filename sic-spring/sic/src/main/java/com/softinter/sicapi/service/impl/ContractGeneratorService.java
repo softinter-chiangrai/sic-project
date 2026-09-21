@@ -56,7 +56,7 @@ public class ContractGeneratorService {
                 """;
 
         try {
-            String rawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+            String rawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
             return parseResponse(rawResponse, request, project);
         } catch (Exception e) {
             log.error("AI contract generation failed, falling back to heuristic: {}", e.getMessage());

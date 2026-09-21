@@ -1,6 +1,7 @@
 // src/app/core/services/ai-history.service.ts
 import { Injectable } from '@angular/core';
 import { DEFAULT_AI_MODEL } from '../config/ai-models.config';
+import { readLocalStorageList, writeLocalStorageList } from '../utils/local-storage-list.util';
 
 export interface AiHistoryItem<T = any> {
   id: string;
@@ -27,16 +28,7 @@ export class AiHistoryService {
   }
 
   getHistories<T = any>(moduleKey: string, targetId?: string | null): AiHistoryItem<T>[] {
-    try {
-      const key = this.getStorageKey(moduleKey, targetId);
-      const raw = localStorage.getItem(key);
-      if (!raw) return [];
-      const items: AiHistoryItem<T>[] = JSON.parse(raw);
-      return Array.isArray(items) ? items : [];
-    } catch (e) {
-      console.error('Failed to load AI history from localStorage:', e);
-      return [];
-    }
+    return readLocalStorageList<AiHistoryItem<T>>(this.getStorageKey(moduleKey, targetId));
   }
 
   addHistory<T = any>(
@@ -64,13 +56,7 @@ export class AiHistoryService {
       data,
     };
 
-    const updated = [newItem, ...existing];
-    try {
-      const key = this.getStorageKey(moduleKey, targetId);
-      localStorage.setItem(key, JSON.stringify(updated));
-    } catch (e) {
-      console.error('Failed to save AI history to localStorage:', e);
-    }
+    writeLocalStorageList(this.getStorageKey(moduleKey, targetId), [newItem, ...existing]);
 
     return newItem;
   }
@@ -78,12 +64,7 @@ export class AiHistoryService {
   deleteHistory(moduleKey: string, targetId: string | null | undefined, historyId: string): void {
     const existing = this.getHistories(moduleKey, targetId);
     const filtered = existing.filter((item) => item.id !== historyId);
-    try {
-      const key = this.getStorageKey(moduleKey, targetId);
-      localStorage.setItem(key, JSON.stringify(filtered));
-    } catch (e) {
-      console.error('Failed to delete AI history item:', e);
-    }
+    writeLocalStorageList(this.getStorageKey(moduleKey, targetId), filtered);
   }
 
   clearHistories(moduleKey: string, targetId?: string | null): void {

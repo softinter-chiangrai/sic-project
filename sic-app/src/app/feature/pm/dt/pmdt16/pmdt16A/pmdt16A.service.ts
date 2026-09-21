@@ -3,6 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { PmInvoiceModel } from './pmdt16A.model';
+import { AiAttachmentPayload } from '../../../../../core/utils/ai-attachment.util';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt16AService {
@@ -36,7 +37,7 @@ export class Pmdt16AService {
     return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/delivery/combobox`, { params: httpParams });
   }
 
-  generateDraft(data: { projectId?: string; contractId?: string; invoiceType?: string; prompt?: string; model?: string }): Observable<any> {
+  generateDraft(data: { projectId?: string; contractId?: string; invoiceType?: string; prompt?: string; model?: string; attachments?: AiAttachmentPayload[] }): Observable<any> {
     return this.http.post<any>(`${apiBaseUrl}/api/pm/invoices/generate/draft`, data);
   }
 }

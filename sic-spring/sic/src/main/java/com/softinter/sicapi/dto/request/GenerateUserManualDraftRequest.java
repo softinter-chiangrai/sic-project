@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Data
-public class GenerateUserManualDraftRequest {
+public class GenerateUserManualDraftRequest implements AiDraftRequest {
     private UUID projectId;
     private String manualTitle;
     private String manualType; // USER, ADMIN, INSTALLATION, OPERATION, TROUBLESHOOT
@@ -14,4 +14,5 @@ public class GenerateUserManualDraftRequest {
     private List<UUID> specificationIds;
     private String prompt;
     private String model;
+    private List<AiAttachmentDto> attachments;
 }

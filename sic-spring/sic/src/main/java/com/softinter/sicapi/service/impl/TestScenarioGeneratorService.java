@@ -56,7 +56,7 @@ public class TestScenarioGeneratorService {
                 Ensure the description is rich with HTML tags suitable for rich-text rendering (e.g. <p>...</p>, <ul><li>...</li></ul>, <strong>...</strong>).
                 """;
 
-        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         TestScenarioDraftResponse draft = parseAiResponse(aiResponse);
 
         draft.setPriority(null);

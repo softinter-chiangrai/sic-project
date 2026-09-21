@@ -6,6 +6,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { PmSpecificationModel } from './pmdt07.model';
+import { AiAttachmentPayload } from '../../../../core/utils/ai-attachment.util';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt07Service {
@@ -46,6 +47,7 @@ export class Pmdt07Service {
         specificationType?: string;
         prompt?: string;
         model?: string;
+        attachments?: AiAttachmentPayload[];
     }): Observable<any> {
         return this.http.post<any>(`${this.baseUrl}/generate/draft`, request);
     }

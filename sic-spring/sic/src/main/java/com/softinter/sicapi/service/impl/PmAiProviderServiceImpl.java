@@ -402,7 +402,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     @Override
     public String generateRawResponse(String prompt, String systemPrompt) {
-        return generateRawResponse(prompt, systemPrompt, null);
+        return generateRawResponse(prompt, systemPrompt, (String) null);
     }
 
     @Override
