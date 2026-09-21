@@ -38,23 +38,22 @@ export class Pmdt01Component implements OnInit {
     const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
     if (resolved && Array.isArray(resolved)) {
       this.phases.set(resolved);
+    } else {
+      this.loadPhases();
     }
 
     this.route.queryParams.subscribe((params) => {
-      const pid = params['projectId'] || this.customerState.getProjectId();
-      if (pid) {
-        this.projectId.set(pid);
-        this.customerState.setProject(pid);
-        if (!resolved || !Array.isArray(resolved)) {
-          this.loadPhases();
-        }
+      const pid = params['projectId'] || '';
+      this.projectId.set(pid);
+      if (!resolved || !Array.isArray(resolved)) {
+        this.loadPhases();
       }
     });
   }
 
   loadPhases() {
     this.isLoading.set(true);
-    this.phaseService.getPhases(this.projectId()).subscribe({
+    this.phaseService.getPhases(this.projectId() || undefined).subscribe({
       next: (data) => this.phases.set(data),
       error: (err) => {
         console.error(err);

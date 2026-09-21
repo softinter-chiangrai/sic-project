@@ -53,6 +53,20 @@ public class PhaseController {
 
     // ===== Phase CRUD =====
 
+    @GetMapping("/phases")
+    public ResponseEntity<List<PhaseResponse>> getPhases(
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword) {
+        if (projectId != null) {
+            return ResponseEntity.ok(phaseService.getPhasesByProjectId(projectId));
+        }
+        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(phaseService.getPhasesByBusinessId(businessId, keyword));
+    }
+
     @GetMapping("/projects/{projectId}/phases")
     public ResponseEntity<List<PhaseResponse>> getPhasesByProjectId(@PathVariable UUID projectId) {
         log.info("Getting all phases for project ID: {}", projectId);

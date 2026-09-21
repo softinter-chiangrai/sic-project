@@ -8,6 +8,7 @@ import com.softinter.sicapi.dto.response.PhaseResponse;
 
 public interface PhaseService {
     List<PhaseResponse> getPhasesByProjectId(UUID projectId);
+    List<PhaseResponse> getPhasesByBusinessId(UUID businessId, String keyword);
     PhaseResponse getPhaseById(UUID phaseId);
     PhaseResponse createPhase(PhaseRequest request);
     PhaseResponse updatePhase(UUID phaseId, PhaseRequest request);

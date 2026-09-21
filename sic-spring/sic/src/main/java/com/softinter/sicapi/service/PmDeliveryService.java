@@ -10,6 +10,7 @@ import java.util.UUID;
 
 public interface PmDeliveryService {
     Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, Pageable pageable);
+    Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, String deliveryType, Pageable pageable);
     PmDeliveryResponse findById(UUID id, UUID businessId);
     UUID save(PmDeliveryRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);

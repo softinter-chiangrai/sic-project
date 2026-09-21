@@ -61,19 +61,20 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         return findAll(businessId, projectId, null, null, pageable);
     }
 
+    private static final java.util.Map<String, PaymentStatus> PAYMENT_STATUS_THAI_MAP = java.util.Map.of(
+            "ยังไม่จ่าย", PaymentStatus.UNPAID,
+            "ค้างชำระ", PaymentStatus.UNPAID,
+            "จ่ายบางส่วน", PaymentStatus.PARTIAL,
+            "ชำระบางส่วน", PaymentStatus.PARTIAL,
+            "จ่ายแล้ว", PaymentStatus.PAID,
+            "ชำระแล้ว", PaymentStatus.PAID,
+            "เกินกำหนด", PaymentStatus.OVERDUE,
+            "ยกเลิก", PaymentStatus.CANCELLED
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmInvoiceResponse> findAll(UUID businessId, UUID projectId, String keyword, String paymentStatus, Pageable pageable) {
-        if ((keyword == null || keyword.isBlank()) && (paymentStatus == null || paymentStatus.isBlank() || "all".equals(paymentStatus))) {
-            Page<PmInvoice> page;
-            if (projectId != null) {
-                page = invoiceRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-            } else {
-                page = invoiceRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-            }
-            return page.map(this::toResponse);
-        }
-
         org.springframework.data.jpa.domain.Specification<PmInvoice> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
@@ -81,11 +82,47 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             if (projectId != null) {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
-            if (keyword != null && !keyword.isBlank()) {
-                predicates.add(cb.like(cb.lower(root.get("invoiceNo")), "%" + keyword.toLowerCase() + "%"));
-            }
             if (paymentStatus != null && !paymentStatus.isBlank() && !"all".equals(paymentStatus)) {
                 predicates.add(cb.equal(root.get("paymentStatus"), PaymentStatus.valueOf(paymentStatus)));
+            }
+            if (keyword != null && !keyword.isBlank()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+
+                jakarta.persistence.criteria.Subquery<UUID> customerSub = query.subquery(UUID.class);
+                var customerRoot = customerSub.from(com.softinter.sicapi.entity.pm.PmCustomer.class);
+                customerSub.select(customerRoot.get("id"));
+                customerSub.where(cb.or(
+                        cb.like(cb.lower(customerRoot.get("companyNameEn")), pattern),
+                        cb.like(cb.lower(customerRoot.get("companyNameLocal")), pattern),
+                        cb.like(cb.lower(customerRoot.get("customerCode")), pattern)
+                ));
+
+                jakarta.persistence.criteria.Subquery<UUID> projectSub = query.subquery(UUID.class);
+                var projectRoot = projectSub.from(com.softinter.sicapi.entity.pm.PmCustomerProject.class);
+                projectSub.select(projectRoot.get("id"));
+                projectSub.where(cb.like(cb.lower(projectRoot.get("projectName")), pattern));
+
+                List<jakarta.persistence.criteria.Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("invoiceNo")), pattern),
+                        cb.like(cb.lower(root.get("remark")), pattern),
+                        cb.like(cb.lower(root.get("paymentStatus").as(String.class)), pattern),
+                        root.get("customerId").in(customerSub),
+                        root.get("projectId").in(projectSub)
+                ));
+
+                // ✅ Bilingual: สถานะการชำระเงิน
+                for (var entry : PAYMENT_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(root.get("paymentStatus"), entry.getValue()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "INVOICE", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new jakarta.persistence.criteria.Predicate[0])));
             }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };

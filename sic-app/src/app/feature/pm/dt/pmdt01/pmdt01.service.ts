@@ -11,9 +11,11 @@ export class Pmdt01Service {
   private http = inject(HttpClient);
   private baseUrl = environment.apiBaseUrl + '/api/pm'; // ✅ แก้ baseUrl
 
-  // ✅ เรียกด้วย path parameter แทน query param
-  getPhases(projectId: string): Observable<PhaseModel[]> {
-    return this.http.get<PhaseModel[]>(`${this.baseUrl}/projects/${projectId}/phases`);
+  getPhases(projectId?: string): Observable<PhaseModel[]> {
+    if (projectId) {
+      return this.http.get<PhaseModel[]>(`${this.baseUrl}/projects/${projectId}/phases`);
+    }
+    return this.http.get<PhaseModel[]>(`${this.baseUrl}/phases`);
   }
 
   getPhaseById(id: string): Observable<PhaseModel> {

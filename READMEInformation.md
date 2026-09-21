@@ -1,4 +1,4 @@
-# Software Development Lifecycle Management Platform
+# (Software Development Lifecycle Management & Tracking Platform) SDLMTP
 
 > ระบบบริหารโครงการพัฒนาซอฟต์แวร์แบบครบวงจร  
 > ครอบคลุมตั้งแต่ลูกค้า, สัญญา, Requirement, DFD, ER Diagram, Specification, Development, Testing, Delivery, Invoice, MA และการต่อสัญญา

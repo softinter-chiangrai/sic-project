@@ -69,6 +69,9 @@ public class PmDeliveryController {
     @Operation(summary = "Get delivery documents list with pagination")
     public ResponseEntity<PaginationResponse<PmDeliveryResponse>> getPaging(
             @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String deliveryType,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -77,7 +80,7 @@ public class PmDeliveryController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         Sort sort = SortValidator.build(PmDelivery.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
-        Page<PmDeliveryResponse> pageResult = deliveryService.findAll(businessId, projectId, pageable);
+        Page<PmDeliveryResponse> pageResult = deliveryService.findAll(businessId, projectId, keyword, status, deliveryType, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 

@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { PmMaTicketModel } from './pmdt17A.model';
@@ -10,6 +10,16 @@ export class Pmdt17AService {
 
   getById(id: string): Observable<PmMaTicketModel> {
     return this.http.get<PmMaTicketModel>(`${apiBaseUrl}/api/pm/ma-tickets/${id}`);
+  }
+
+  getContractCombobox(projectId?: string): Observable<Array<{ value: string; text: string }>> {
+    let params = new HttpParams();
+    if (projectId) params = params.set('projectId', projectId);
+    return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/contracts/combobox`, { params });
+  }
+
+  getContractById(id: string): Observable<any> {
+    return this.http.get<any>(`${apiBaseUrl}/api/pm/contracts/${id}`);
   }
 
   save(data: Partial<PmMaTicketModel>): Observable<string> {

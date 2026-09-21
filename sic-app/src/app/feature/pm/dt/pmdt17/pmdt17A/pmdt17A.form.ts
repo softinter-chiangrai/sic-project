@@ -6,8 +6,9 @@ export class Pmdt17AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmMaTicketModel>> {
     return fb.group<ToForm<PmMaTicketModel>>({
       id: fb.control(null),
-      projectId: fb.control(null),
+      projectId: fb.control(null, [Validators.required]),
       customerId: fb.control(null),
+      contractId: fb.control(null),
       ticketNo: fb.control(null),
       title: fb.control(null, [Validators.required, Validators.maxLength(200)]),
       description: fb.control(null, [Validators.required]),

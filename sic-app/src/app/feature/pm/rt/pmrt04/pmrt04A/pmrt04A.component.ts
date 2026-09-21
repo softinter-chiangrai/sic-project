@@ -36,7 +36,6 @@ import { ContractModel } from './pmrt04A.model';
 import { Pmrt04AService, ContractSummary } from './pmrt04A.service';
 import { SicEntitySummaryComponent, EntitySummaryCard } from '../../../../../core/component/sic-entity-summary/sic-entity-summary.component';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
-import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 
 @Component({
   selector: 'app-pmrt04a',
@@ -52,7 +51,6 @@ import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-lin
     SicInputComponent,
     SicTiptapEditorComponent,
     SicDatepickerComponent,
-    SicCopyLinkComponent,
     SicEntitySummaryComponent,
     TranslateModule,
   ],

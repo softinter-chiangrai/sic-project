@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -49,25 +49,6 @@ export class Pmdt14Component implements OnInit {
   filterStatus = signal('all');
   projectId = signal<string | null>(null);
 
-  filteredDeliveries = computed(() => {
-    let list = this.deliveries();
-    const term = this.searchTerm().trim().toLowerCase();
-    const status = this.filterStatus();
-
-    if (term) {
-      list = list.filter(
-        (d) =>
-          d.deliveryCode?.toLowerCase().includes(term) ||
-          d.deliveryTitle?.toLowerCase().includes(term) ||
-          d.deliveryType?.toLowerCase().includes(term)
-      );
-    }
-    if (status !== 'all') {
-      list = list.filter((d) => d.status === status);
-    }
-    return list;
-  });
-
   gridConfig: SicGridPanelConfig = {
     id: 'id',
     selectable: false,
@@ -114,14 +95,20 @@ export class Pmdt14Component implements OnInit {
     this.syncFiltersToUrl();
 
     const projectId = resolveProjectId(this.route, this.customerState) || undefined;
-    this.service.getPaging({ page: request.pageNumber, size: request.pageSize, projectId }).subscribe({
+    this.service.getPaging({
+      page: request.pageNumber,
+      size: request.pageSize,
+      projectId,
+      keyword: this.searchTerm().trim(),
+      status: this.filterStatus(),
+    }).subscribe({
       next: (res) => {
         const items = res.data || [];
         const totalElements = res.pageable?.totalElements || 0;
         this.deliveries.set(items);
         this.totalElements.set(totalElements);
         this.isLoading.set(false);
-        grid.setRows(this.filteredDeliveries() as unknown as SicGridRowData[], { totalElements }, request.requestId);
+        grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
         this.loadApprovalStatuses(items, grid, request.requestId, totalElements);
       },
       error: () => {
@@ -137,7 +124,7 @@ export class Pmdt14Component implements OnInit {
       this.approvalService.getDocumentStatus('DELIVERY', delivery.id).subscribe({
         next: (approval) => {
           this.approvalStatusMap.update((map) => ({ ...map, [delivery.id!]: approval.status }));
-          grid.setRows(this.filteredDeliveries() as unknown as SicGridRowData[], { totalElements }, requestId);
+          grid.setRows(this.deliveries() as unknown as SicGridRowData[], { totalElements }, requestId);
         },
         error: () => {
           // No approval status or not submitted yet
@@ -146,17 +133,25 @@ export class Pmdt14Component implements OnInit {
     });
   }
 
+  private reloadFromPage1(grid: SicGridPanelComponent): void {
+    if (grid.currentPage === 1) {
+      grid.reload();
+    } else {
+      grid.goToPage(1);
+    }
+  }
+
   onSearch(event: Event, grid: SicGridPanelComponent): void {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.syncFiltersToUrl();
-    grid.reload();
+    this.reloadFromPage1(grid);
   }
 
   clearSearch(grid: SicGridPanelComponent): void {
     this.searchTerm.set('');
     this.syncFiltersToUrl();
-    grid.reload();
+    this.reloadFromPage1(grid);
   }
 
   readonly statusOptions = [
@@ -172,7 +167,7 @@ export class Pmdt14Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.syncFiltersToUrl();
-    grid.reload();
+    this.reloadFromPage1(grid);
   }
 
   goBack(): void {

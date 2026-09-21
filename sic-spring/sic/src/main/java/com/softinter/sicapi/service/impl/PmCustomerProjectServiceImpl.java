@@ -9,9 +9,19 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.request.PmCustomerProjectRequest;
 import com.softinter.sicapi.dto.response.PmCustomerProjectResponse;
+import com.softinter.sicapi.entity.enums.ApprovalStatus;
+import com.softinter.sicapi.entity.pm.PmApproval;
 import com.softinter.sicapi.entity.pm.PmCustomer;
+import com.softinter.sicapi.entity.pm.PmCustomerContract;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.su.SuBusiness;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
+import org.springframework.data.jpa.domain.Specification;
+import java.util.Map;
 import com.softinter.sicapi.repository.pm.PmApprovalRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
@@ -201,46 +211,193 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerProjectResponse> findByCustomerId(UUID customerId, UUID businessId, Pageable pageable) {
-        Page<PmCustomerProject> page;
-        if (businessId != null) {
-            page = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalse(customerId, businessId, pageable);
-        } else {
-            page = projectRepository.findByCustomerIdAndIsDeleteFalse(customerId, pageable);
-        }
-        return page.map(this::toResponse);
+        return getProjects(businessId, customerId, null, null, null, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerProjectResponse> searchByCustomerId(UUID customerId, UUID businessId, String keyword, Pageable pageable) {
-        Page<PmCustomerProject> page;
-        if (businessId != null) {
-            page = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
-                    customerId, businessId, keyword, pageable);
-        } else {
-            page = projectRepository.findByCustomerIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(customerId, keyword, pageable);
-        }
-        return page.map(this::toResponse);
+        return getProjects(businessId, customerId, keyword, null, null, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerProjectResponse> findAllByBusinessId(UUID businessId, String keyword, Pageable pageable) {
-        Page<PmCustomerProject> page;
-        if (keyword != null && !keyword.isBlank()) {
+        return getProjects(businessId, null, keyword, null, null, pageable);
+    }
+
+    private static final Map<String, List<String>> STATUS_THAI_MAP = Map.ofEntries(
+            Map.entry("โอกาส", List.of("Prospect")),
+            Map.entry("ร่างสัญญา", List.of("Contract Drafting")),
+            Map.entry("เซ็นสัญญา", List.of("Contract Signed")),
+            Map.entry("ลงนาม", List.of("Contract Signed")),
+            Map.entry("รวบรวม", List.of("Requirement Gathering")),
+            Map.entry("ความต้องการ", List.of("Requirement Gathering", "Requirement Approval")),
+            Map.entry("อนุมัติความต้องการ", List.of("Requirement Approval")),
+            Map.entry("วิเคราะห์", List.of("System Analysis")),
+            Map.entry("dfd", List.of("DFD Design")),
+            Map.entry("er", List.of("ER Design")),
+            Map.entry("ข้อกำหนด", List.of("Specification Design", "Specification Approval")),
+            Map.entry("วางแผน", List.of("Planning")),
+            Map.entry("พัฒนา", List.of("Development")),
+            Map.entry("กำลังพัฒนา", List.of("Development")),
+            Map.entry("ทดสอบ", List.of("Internal Testing", "UAT")),
+            Map.entry("ตรวจรับ", List.of("UAT")),
+            Map.entry("uat", List.of("UAT")),
+            Map.entry("บั๊ก", List.of("Bug Fixing")),
+            Map.entry("bug", List.of("Bug Fixing")),
+            Map.entry("พร้อมส่งมอบ", List.of("Ready for Delivery")),
+            Map.entry("ส่งมอบ", List.of("Delivered", "Ready for Delivery")),
+            Map.entry("วางบิล", List.of("Invoicing")),
+            Map.entry("แจ้งหนี้", List.of("Invoicing")),
+            Map.entry("ปิด", List.of("Closed")),
+            Map.entry("บำรุงรักษา", List.of("MA Active")),
+            Map.entry("ma", List.of("MA Active"))
+    );
+
+    private static final Map<String, String> PRIORITY_THAI_MAP = Map.of(
+            "ต่ำ", "Low",
+            "กลาง", "Medium",
+            "ปานกลาง", "Medium",
+            "สูง", "High",
+            "วิกฤต", "Critical",
+            "ด่วน", "Critical"
+    );
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmCustomerProjectResponse> getProjects(
+            UUID businessId,
+            UUID customerId,
+            String keyword,
+            String status,
+            String priority,
+            Pageable pageable) {
+
+        Specification<PmCustomerProject> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Always filter out soft-deleted projects
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
             if (businessId != null) {
-                page = projectRepository.findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(businessId, keyword, pageable);
-            } else {
-                page = projectRepository.findAll(pageable);
+                predicates.add(cb.equal(root.get("businessId"), businessId));
             }
-        } else {
-            if (businessId != null) {
-                page = projectRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-            } else {
-                page = projectRepository.findAll(pageable);
+
+            if (customerId != null) {
+                predicates.add(cb.equal(root.get("customerId"), customerId));
             }
-        }
-        return page.map(this::toResponse);
+
+            // Direct Status filter
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                String cleanStatus = status.trim().toLowerCase();
+                List<String> mapped = STATUS_THAI_MAP.get(cleanStatus);
+                if (mapped != null && !mapped.isEmpty()) {
+                    List<Predicate> stPreds = new ArrayList<>();
+                    for (String m : mapped) {
+                        stPreds.add(cb.equal(cb.lower(root.get("status")), m.toLowerCase()));
+                    }
+                    predicates.add(cb.or(stPreds.toArray(new Predicate[0])));
+                } else {
+                    predicates.add(cb.equal(cb.lower(root.get("status")), cleanStatus));
+                }
+            }
+
+            // Direct Priority filter
+            if (priority != null && !priority.isBlank() && !"all".equalsIgnoreCase(priority)) {
+                String cleanPriority = priority.trim().toLowerCase();
+                String mappedPr = PRIORITY_THAI_MAP.get(cleanPriority);
+                if (mappedPr != null) {
+                    predicates.add(cb.equal(cb.lower(root.get("priority")), mappedPr.toLowerCase()));
+                } else {
+                    predicates.add(cb.equal(cb.lower(root.get("priority")), cleanPriority));
+                }
+            }
+
+            // Keyword search across all columns + Thai translations + Approval status
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+                Join<PmCustomerProject, PmCustomer> customerJoin = root.join("customer", JoinType.LEFT);
+                Join<PmCustomerProject, PmCustomerContract> contractJoin = root.join("contract", JoinType.LEFT);
+
+                List<Predicate> orPreds = new ArrayList<>();
+                orPreds.add(cb.like(cb.lower(root.get("projectName")), pattern));
+                orPreds.add(cb.like(cb.lower(root.get("projectCode")), pattern));
+                orPreds.add(cb.like(cb.lower(root.get("description")), pattern));
+                orPreds.add(cb.like(cb.lower(root.get("status")), pattern));
+                orPreds.add(cb.like(cb.lower(root.get("priority")), pattern));
+                orPreds.add(cb.like(cb.lower(customerJoin.get("companyNameEn")), pattern));
+                orPreds.add(cb.like(cb.lower(customerJoin.get("companyNameLocal")), pattern));
+                orPreds.add(cb.like(cb.lower(customerJoin.get("customerCode")), pattern));
+                orPreds.add(cb.like(cb.lower(contractJoin.get("contractNo")), pattern));
+
+                // 1. Match Thai Status words
+                for (var entry : STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        for (String mappedStatus : entry.getValue()) {
+                            orPreds.add(cb.equal(cb.lower(root.get("status")), mappedStatus.toLowerCase()));
+                        }
+                    }
+                }
+
+                // 2. Match Thai Priority words
+                for (var entry : PRIORITY_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // 3. Match Approval Status words
+                if (rawKw.contains("ยังไม่อนุมัติ") || rawKw.contains("ยังไม่ได้อนุมัติ") || rawKw.contains("unapproved") || rawKw.contains("not approved")) {
+                    Subquery<UUID> approvedSub = query.subquery(UUID.class);
+                    Root<PmApproval> approvedRoot = approvedSub.from(PmApproval.class);
+                    approvedSub.select(approvedRoot.get("documentId"))
+                            .where(
+                                    cb.equal(approvedRoot.get("documentType"), "PROJECT"),
+                                    cb.isFalse(approvedRoot.get("isDelete")),
+                                    cb.equal(approvedRoot.get("status"), ApprovalStatus.APPROVED)
+                            );
+                    orPreds.add(cb.not(root.get("id").in(approvedSub)));
+                } else if (rawKw.contains("อนุมัติแล้ว") || rawKw.contains("ผ่านการอนุมัติ") || rawKw.equals("อนุมัติ") || rawKw.equals("approved")) {
+                    Subquery<UUID> appSub = query.subquery(UUID.class);
+                    Root<PmApproval> appRoot = appSub.from(PmApproval.class);
+                    appSub.select(appRoot.get("documentId"))
+                            .where(
+                                    cb.equal(appRoot.get("documentType"), "PROJECT"),
+                                    cb.isFalse(appRoot.get("isDelete")),
+                                    cb.equal(appRoot.get("status"), ApprovalStatus.APPROVED)
+                            );
+                    orPreds.add(root.get("id").in(appSub));
+                } else if (rawKw.contains("รออนุมัติ") || rawKw.contains("pending")) {
+                    Subquery<UUID> appSub = query.subquery(UUID.class);
+                    Root<PmApproval> appRoot = appSub.from(PmApproval.class);
+                    appSub.select(appRoot.get("documentId"))
+                            .where(
+                                    cb.equal(appRoot.get("documentType"), "PROJECT"),
+                                    cb.isFalse(appRoot.get("isDelete")),
+                                    cb.equal(appRoot.get("status"), ApprovalStatus.PENDING)
+                            );
+                    orPreds.add(root.get("id").in(appSub));
+                } else if (rawKw.contains("ปฏิเสธ") || rawKw.contains("ไม่อนุมัติ") || rawKw.contains("rejected")) {
+                    Subquery<UUID> appSub = query.subquery(UUID.class);
+                    Root<PmApproval> appRoot = appSub.from(PmApproval.class);
+                    appSub.select(appRoot.get("documentId"))
+                            .where(
+                                    cb.equal(appRoot.get("documentType"), "PROJECT"),
+                                    cb.isFalse(appRoot.get("isDelete")),
+                                    cb.equal(appRoot.get("status"), ApprovalStatus.REJECTED)
+                            );
+                    orPreds.add(root.get("id").in(appSub));
+                }
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return projectRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
 

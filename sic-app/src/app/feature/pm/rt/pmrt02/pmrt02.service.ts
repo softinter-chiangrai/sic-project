@@ -18,6 +18,8 @@ export class Pmrt02Service {
   getProjects(params: {
     customerId?: string;
     keyword?: string;
+    status?: string;
+    priority?: string;
     startDate?: string;   
     endDate?: string;     
     page?: number;
@@ -29,6 +31,8 @@ export class Pmrt02Service {
 
     if (params.customerId) httpParams = httpParams.set('customerId', params.customerId);
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    if (params.status && params.status !== 'all') httpParams = httpParams.set('status', params.status);
+    if (params.priority && params.priority !== 'all') httpParams = httpParams.set('priority', params.priority);
     if (params.startDate) httpParams = httpParams.set('startDate', params.startDate);
     if (params.endDate) httpParams = httpParams.set('endDate', params.endDate);
     if (params.page !== undefined) httpParams = httpParams.set('page', String(params.page));

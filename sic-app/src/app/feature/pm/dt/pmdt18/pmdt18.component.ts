@@ -43,9 +43,14 @@ export class Pmdt18Component implements OnInit {
   searchTerm = signal('');
   filterStatus = signal('all');
 
-  renewalsResource = httpResource<any>(
-    () => `${apiBaseUrl}/api/pm/ma-renewals/paging?page=${this.currentPage()}&size=${this.pageSize()}`
-  );
+  renewalsResource = httpResource<any>(() => {
+    const params = new URLSearchParams();
+    params.set('page', String(this.currentPage()));
+    params.set('size', String(this.pageSize()));
+    if (this.searchTerm().trim()) params.set('keyword', this.searchTerm().trim());
+    if (this.filterStatus() !== 'all') params.set('status', this.filterStatus());
+    return `${apiBaseUrl}/api/pm/ma-renewals/paging?${params.toString()}`;
+  });
 
   @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
@@ -72,7 +77,7 @@ export class Pmdt18Component implements OnInit {
       const content = res?.data;
       if (content && Array.isArray(content)) {
         this.loadApprovalStatuses(content);
-        this.gridRef?.setRows(this.filteredRenewals() as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
+        this.gridRef?.setRows(content as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
       }
     });
   }
@@ -82,7 +87,7 @@ export class Pmdt18Component implements OnInit {
     this.syncFiltersToUrl();
     const res = this.renewalsResource.value();
     if (res?.data) {
-      grid.setRows(this.filteredRenewals() as unknown as SicGridRowData[], { totalElements: res.pageable?.totalElements || res.data.length }, request.requestId);
+      grid.setRows(res.data as unknown as SicGridRowData[], { totalElements: res.pageable?.totalElements || res.data.length }, request.requestId);
     }
   }
 
@@ -101,27 +106,6 @@ export class Pmdt18Component implements OnInit {
   }
 
   totalItems = computed(() => this.renewalsResource.value()?.pageable?.totalElements || 0);
-
-  filteredRenewals = computed(() => {
-    const res = this.renewalsResource.value();
-    let list: any[] = res?.data || [];
-    const term = this.searchTerm().trim().toLowerCase();
-    const status = this.filterStatus();
-
-    if (term) {
-      list = list.filter(
-        (item) =>
-          item.renewalNo?.toLowerCase().includes(term) ||
-          item.contractNo?.toLowerCase().includes(term) ||
-          item.customerName?.toLowerCase().includes(term) ||
-          item.projectName?.toLowerCase().includes(term)
-      );
-    }
-    if (status !== 'all') {
-      list = list.filter((item) => item.status === status);
-    }
-    return list;
-  });
 
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
@@ -147,12 +131,14 @@ export class Pmdt18Component implements OnInit {
   onSearch(event: Event) {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
+    this.currentPage.set(1);
     this.syncFiltersToUrl();
     this.gridRef?.reload();
   }
 
   clearSearch() {
     this.searchTerm.set('');
+    this.currentPage.set(1);
     this.syncFiltersToUrl();
     this.gridRef?.reload();
   }
@@ -168,6 +154,7 @@ export class Pmdt18Component implements OnInit {
   onFilterChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
+    this.currentPage.set(1);
     this.syncFiltersToUrl();
     this.gridRef?.reload();
   }

@@ -115,7 +115,8 @@ export class Pmrt01Component implements OnInit {
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
-    if (this.hasResolverData && this.initialResolverData) {
+    const hasActiveFilters = !!this.searchTerm() || this.filterStatus() !== 'all';
+    if (this.hasResolverData && this.initialResolverData && !hasActiveFilters) {
       const { data, totalElements } = this.initialResolverData;
       this.hasResolverData = false;
       this.customers.set(data);
@@ -123,6 +124,7 @@ export class Pmrt01Component implements OnInit {
       grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
       return;
     }
+    this.hasResolverData = false;
 
     this.isLoading.set(true);
     this.currentPage.set(request.pageNumber);
@@ -134,6 +136,7 @@ export class Pmrt01Component implements OnInit {
         page,
         request.pageSize,
         this.searchTerm() || undefined,
+        this.filterStatus() !== 'all' ? this.filterStatus() : undefined,
         request.sortField ?? 'customerCode',
         request.sortDescending ? 'desc' : 'asc'
       )

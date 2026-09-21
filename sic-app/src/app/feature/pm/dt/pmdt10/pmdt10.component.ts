@@ -204,7 +204,17 @@ export class Pmdt10Component implements OnInit {
         const matchName = (t.taskName || '').toLowerCase().includes(query);
         const matchDesc = (t.description || '').toLowerCase().includes(query);
         const matchSpec = (t.specificationCode || '').toLowerCase().includes(query);
-        if (!matchCode && !matchName && !matchDesc && !matchSpec) return false;
+        const matchAssignee = (t.assignedTo || '').toLowerCase().includes(query);
+        const matchStatus = (t.status || '').toLowerCase().includes(query);
+        const matchPriority = (t.priority || '').toLowerCase().includes(query);
+        // ✅ Bilingual: ความสำคัญ (ไทย ↔ อังกฤษ)
+        const priorityThaiMap: Record<string, string> = {
+          'ต่ำ': 'low', 'กลาง': 'medium', 'ปานกลาง': 'medium', 'สูง': 'high', 'วิกฤต': 'critical', 'ด่วน': 'critical',
+        };
+        const matchPriorityThai = Object.entries(priorityThaiMap).some(
+          ([th, en]) => (query.includes(th) || th.includes(query)) && (t.priority || '').toLowerCase() === en
+        );
+        if (!matchCode && !matchName && !matchDesc && !matchSpec && !matchAssignee && !matchStatus && !matchPriority && !matchPriorityThai) return false;
       }
       return true;
     });

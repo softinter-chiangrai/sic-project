@@ -53,6 +53,8 @@ public class PmCustomerProjectController {
     public ResponseEntity<PaginationResponse<PmCustomerProjectResponse>> getProjects(
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String priority,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -64,16 +66,8 @@ public class PmCustomerProjectController {
                 com.softinter.sicapi.entity.pm.PmCustomerProject.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
 
-        Page<PmCustomerProjectResponse> pageResult;
-        if (customerId != null) {
-            if (keyword != null && !keyword.isBlank()) {
-                pageResult = projectService.searchByCustomerId(customerId, businessId, keyword, pageable);
-            } else {
-                pageResult = projectService.findByCustomerId(customerId, businessId, pageable);
-            }
-        } else {
-            pageResult = projectService.findAllByBusinessId(businessId, keyword, pageable);
-        }
+        Page<PmCustomerProjectResponse> pageResult = projectService.getProjects(
+                businessId, customerId, keyword, status, priority, pageable);
 
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }

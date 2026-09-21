@@ -54,6 +54,16 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final ImpactAnalysisService impactAnalysisService;
     private final TraceLinkService traceLinkService;
 
+    private static final java.util.Map<String, String> CR_STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", "DRAFT",
+            "ส่งแล้ว", "SUBMITTED",
+            "อนุมัติ", "APPROVED",
+            "ปฏิเสธ", "REJECTED",
+            "ดำเนินการแล้ว", "IMPLEMENTED",
+            "นำไปใช้แล้ว", "IMPLEMENTED",
+            "ยกเลิก", "CANCELLED"
+    );
+
     @Override
     @Transactional
     public ChangeRequestResponse createChangeRequest(ChangeRequestRequest request) {
@@ -317,11 +327,38 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 predicates.add(cb.equal(root.get("status"), status));
             }
             if (keyword != null && !keyword.isBlank()) {
-                String searchPattern = "%" + keyword.trim().toLowerCase() + "%";
-                Predicate titleLike = cb.like(cb.lower(root.get("title")), searchPattern);
-                Predicate codeLike = cb.like(cb.lower(root.get("crCode")), searchPattern);
-                Predicate descLike = cb.like(cb.lower(root.get("description")), searchPattern);
-                predicates.add(cb.or(titleLike, codeLike, descLike));
+                String rawKw = keyword.trim().toLowerCase();
+                String searchPattern = "%" + rawKw + "%";
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("title")), searchPattern),
+                        cb.like(cb.lower(root.get("crCode")), searchPattern),
+                        cb.like(cb.lower(root.get("description")), searchPattern),
+                        cb.like(cb.lower(root.get("changeReason")), searchPattern),
+                        cb.like(cb.lower(root.get("requesterId")), searchPattern),
+                        cb.like(cb.lower(root.get("assigneeId")), searchPattern),
+                        cb.like(cb.lower(root.get("status")), searchPattern),
+                        cb.like(cb.lower(root.get("priority")), searchPattern)
+                ));
+
+                // ✅ Bilingual: สถานะ (ไทย ↔ อังกฤษ)
+                for (var entry : CR_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: ความสำคัญ (ไทย ↔ อังกฤษ)
+                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "CHANGE_REQUEST", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
 
             // ถ้า query ไม่ได้ระบุ sort มาจาก client ให้ default เรียงตาม createdDate DESC

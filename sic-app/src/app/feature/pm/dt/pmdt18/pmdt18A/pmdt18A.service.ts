@@ -12,6 +12,10 @@ export class Pmdt18AService {
     return this.http.get<PmMaRenewalModel>(`${apiBaseUrl}/api/pm/ma-renewals/${id}`);
   }
 
+  getContractById(id: string): Observable<any> {
+    return this.http.get<any>(`${apiBaseUrl}/api/pm/contracts/${id}`);
+  }
+
   getPaging(params: { projectId?: string; page?: number; size?: number; sortBy?: string; sortDirection?: string }): Observable<any> {
     let httpParams = new HttpParams();
     if (params.projectId) httpParams = httpParams.set('projectId', params.projectId);

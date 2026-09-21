@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public interface PmMaRenewalService {
     Page<PmMaRenewalResponse> findAll(UUID businessId, UUID projectId, Pageable pageable);
+    Page<PmMaRenewalResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable);
     PmMaRenewalResponse findById(UUID id, UUID businessId);
     UUID save(PmMaRenewalRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);

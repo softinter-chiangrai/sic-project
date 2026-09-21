@@ -4,6 +4,7 @@ export interface PmMaTicketModel {
   id?: string;
   projectId?: string;
   customerId?: string;
+  contractId?: string;
   ticketNo?: string;
   title: string;
   description: string;

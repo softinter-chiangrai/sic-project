@@ -9,8 +9,7 @@ import { PaginationResponse } from '../../../../core/model/pagination.model';
 
 export const pmrt02Resolver: ResolveFn<PaginationResponse<PmCustomerProject> | null> = (route) => {
   const service = inject(Pmrt02Service);
-  const customerState = inject(CustomerStateService);
-  const customerId = route.queryParams['customerId'] || customerState.getCustomerId() || undefined;
+  const customerId = route.queryParams['customerId'] || undefined;
 
   return service
     .getProjects({

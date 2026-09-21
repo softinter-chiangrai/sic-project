@@ -66,15 +66,6 @@ export class Pmdt07Component implements OnInit {
     private initialResolverData: { data: PmSpecificationModel[]; totalElements: number } | null = null;
 
     ngOnInit(): void {
-        const qReqId = this.route.snapshot.queryParams['requirementId'];
-        const qProjId = this.route.snapshot.queryParams['projectId'];
-        if (qReqId) {
-            this.customerState.setRequirement(qReqId);
-        }
-        if (qProjId) {
-            this.customerState.setProject(qProjId);
-        }
-
         // อ่านสถานะ filter/pagination จาก query params เพื่อคงค่าไว้เมื่อ refresh หน้า
         const qKeyword = this.route.snapshot.queryParams['q'];
         const qStatus = this.route.snapshot.queryParams['status'];
@@ -82,19 +73,6 @@ export class Pmdt07Component implements OnInit {
         if (qKeyword !== undefined) this.searchTerm.set(qKeyword);
         if (qStatus !== undefined) this.filterStatus.set(qStatus);
         if (qPage !== undefined) this.currentPage.set(+qPage || 1);
-
-        if (qReqId || qProjId) {
-            // ล้าง requirementId/projectId ออกจาก URL แต่คงค่า q/status/page ไว้
-            this.router.navigate([], {
-                relativeTo: this.route,
-                queryParams: {
-                    q: qKeyword !== undefined ? qKeyword : null,
-                    status: qStatus !== undefined ? qStatus : null,
-                    page: qPage !== undefined ? qPage : null,
-                },
-                replaceUrl: true,
-            });
-        }
 
         const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
         if (resolved && resolved.data) {

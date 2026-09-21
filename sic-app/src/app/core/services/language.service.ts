@@ -1,6 +1,6 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { PLATFORM_ID } from '@angular/core';
+import { Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 
 export type AppLanguage = 'th' | 'en';
@@ -18,10 +18,10 @@ export class LanguageService {
     });
   }
 
-  initLanguage(): void {
+  initLanguage(): Observable<any> {
     const lang = this.resolveInitialLanguage();
-    this.translate.use(lang);
     this.updateHtmlLang(lang);
+    return this.translate.use(lang);
   }
 
   setLanguage(lang: AppLanguage): void {

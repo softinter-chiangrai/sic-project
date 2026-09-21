@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public interface PmSpecificationService {
     Page<PmSpecificationResponse> findAll(UUID businessId, String keyword, String status, Pageable pageable);
+    Page<PmSpecificationResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, String specificationType, Pageable pageable);
     PmSpecificationResponse findById(UUID id, UUID businessId);
     UUID save(PmSpecificationRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);

@@ -23,14 +23,13 @@ export class CustomerStateService {
   readonly currentRequirementTitle = this.requirementTitle.asReadonly();
 
   constructor() {
-    this.loadFromStorage();
+    this.cleanupStorage();
   }
 
   // ===== Customer =====
   setCustomer(id: string, name?: string): void {
     this.customerId.set(id);
     if (name) this.customerName.set(name);
-    this.saveToStorage();
   }
 
   getCustomerId(): string | null { return this.customerId(); }
@@ -39,14 +38,12 @@ export class CustomerStateService {
   clearCustomer(): void {
     this.customerId.set(null);
     this.customerName.set('');
-    localStorage.removeItem(this.CUSTOMER_KEY);
   }
 
   // ===== Project =====
   setProject(id: string, name?: string): void {
     this.projectId.set(id);
     if (name) this.projectName.set(name);
-    this.saveToStorage();
   }
 
   getProjectId(): string | null { return this.projectId(); }
@@ -55,14 +52,12 @@ export class CustomerStateService {
   clearProject(): void {
     this.projectId.set(null);
     this.projectName.set('');
-    localStorage.removeItem(this.PROJECT_KEY);
   }
 
   // ===== Requirement =====
   setRequirement(id: string, title?: string): void {
     this.requirementId.set(id);
     if (title) this.requirementTitle.set(title);
-    this.saveToStorage();
   }
 
   getRequirementId(): string | null { return this.requirementId(); }
@@ -71,7 +66,6 @@ export class CustomerStateService {
   clearRequirement(): void {
     this.requirementId.set(null);
     this.requirementTitle.set('');
-    localStorage.removeItem(this.REQUIREMENT_KEY);
   }
 
   // ===== Context (customer + project พร้อมกันใน call เดียว) =====
@@ -80,7 +74,6 @@ export class CustomerStateService {
     if (customerName) this.customerName.set(customerName);
     this.projectId.set(projectId);
     if (projectName) this.projectName.set(projectName);
-    this.saveToStorage();
   }
 
   // ===== Clear All =====
@@ -88,53 +81,14 @@ export class CustomerStateService {
     this.clearCustomer();
     this.clearProject();
     this.clearRequirement();
+    this.cleanupStorage();
   }
 
-  // ===== Storage =====
-  private saveToStorage(): void {
-    localStorage.setItem(this.CUSTOMER_KEY, JSON.stringify({
-      id: this.customerId(),
-      name: this.customerName(),
-    }));
-    localStorage.setItem(this.PROJECT_KEY, JSON.stringify({
-      id: this.projectId(),
-      name: this.projectName(),
-    }));
-    localStorage.setItem(this.REQUIREMENT_KEY, JSON.stringify({
-      id: this.requirementId(),
-      title: this.requirementTitle(),
-    }));
-  }
-
-  private loadFromStorage(): void {
-    // Customer
-    const customerRaw = localStorage.getItem(this.CUSTOMER_KEY);
-    if (customerRaw) {
-      try {
-        const data = JSON.parse(customerRaw);
-        this.customerId.set(data.id);
-        this.customerName.set(data.name || '');
-      } catch { /* ignore */ }
-    }
-
-    // Project
-    const projectRaw = localStorage.getItem(this.PROJECT_KEY);
-    if (projectRaw) {
-      try {
-        const data = JSON.parse(projectRaw);
-        this.projectId.set(data.id);
-        this.projectName.set(data.name || '');
-      } catch { /* ignore */ }
-    }
-
-    // ✅ Requirement
-    const requirementRaw = localStorage.getItem(this.REQUIREMENT_KEY);
-    if (requirementRaw) {
-      try {
-        const data = JSON.parse(requirementRaw);
-        this.requirementId.set(data.id);
-        this.requirementTitle.set(data.title || '');
-      } catch { /* ignore */ }
-    }
+  private cleanupStorage(): void {
+    try {
+      localStorage.removeItem(this.CUSTOMER_KEY);
+      localStorage.removeItem(this.PROJECT_KEY);
+      localStorage.removeItem(this.REQUIREMENT_KEY);
+    } catch { /* ignore */ }
   }
 }

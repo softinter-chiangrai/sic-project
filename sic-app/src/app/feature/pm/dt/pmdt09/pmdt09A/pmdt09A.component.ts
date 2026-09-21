@@ -234,13 +234,11 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     // รับค่า queryParams หรือดึงจาก CustomerStateService เมื่อกดสร้างใหม่
     this.route.queryParams.subscribe((queryParams) => {
       if (!this.isEdit) {
-        const projectId = queryParams['projectId'] || this.customerState.getProjectId();
-        const projectName = this.customerState.getProjectName();
+        const projectId = queryParams['projectId'] || null;
 
         if (projectId) {
           this.formData.patchValue({
             projectId: projectId,
-            projectName: projectName || null,
           } as any);
         }
 

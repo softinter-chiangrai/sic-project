@@ -62,6 +62,15 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final DocumentVersionService documentVersionService;
     private final TraceLinkService traceLinkService;
 
+    private static final java.util.Map<String, String> DESIGN_REVIEW_STATUS_THAI_MAP = java.util.Map.of(
+            "เปิด", "Open",
+            "กำลังตรวจ", "In Review",
+            "ตรวจสอบ", "In Review",
+            "แก้ไข", "Resolved",
+            "เสร็จ", "Resolved",
+            "ปิด", "Closed"
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmDesignReviewResponse> findAll(UUID businessId, UUID projectId, String status, String keyword, Pageable pageable) {
@@ -77,12 +86,38 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
                 predicates.add(cb.equal(root.get("status"), status));
             }
             if (keyword != null && !keyword.isBlank()) {
-                String pattern = "%" + keyword.toLowerCase().trim() + "%";
-                predicates.add(cb.or(
+                String rawKw = keyword.toLowerCase().trim();
+                String pattern = "%" + rawKw + "%";
+                List<Predicate> orPreds = new ArrayList<>(List.of(
                         cb.like(cb.lower(root.get("title")), pattern),
                         cb.like(cb.lower(root.get("reviewCode")), pattern),
-                        cb.like(cb.lower(root.get("reviewer")), pattern)
+                        cb.like(cb.lower(root.get("reviewer")), pattern),
+                        cb.like(cb.lower(root.get("description")), pattern),
+                        cb.like(cb.lower(root.get("assignedTo")), pattern),
+                        cb.like(cb.lower(root.get("reviewItemType")), pattern),
+                        cb.like(cb.lower(root.get("status")), pattern),
+                        cb.like(cb.lower(root.get("severity")), pattern)
                 ));
+
+                // ✅ Bilingual: สถานะ
+                for (var entry : DESIGN_REVIEW_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: ความรุนแรง/ความสำคัญ
+                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("severity")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "DESIGN_REVIEW", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

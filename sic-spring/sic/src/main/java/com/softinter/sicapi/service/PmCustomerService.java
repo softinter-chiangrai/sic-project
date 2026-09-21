@@ -23,6 +23,8 @@ public interface PmCustomerService {
 
     Page<PmCustomerResponse> findAllByBusiness(UUID businessId, Pageable pageable);
 
+    Page<PmCustomerResponse> findAllByBusiness(UUID businessId, String keyword, String status, Pageable pageable);
+
     Page<PmCustomerResponse> search(UUID businessId, String keyword, Pageable pageable);
 
     List<PmCustomerResponse> findAllActiveByBusiness(UUID businessId);

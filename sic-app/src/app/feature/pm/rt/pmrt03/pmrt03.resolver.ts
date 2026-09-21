@@ -14,8 +14,7 @@ export const pmrt03Resolver: ResolveFn<Pmrt03PageData> = async (route) => {
   const fb = inject(FormBuilder);
   const service = inject(Pmrt03Service);
   const router = inject(Router);
-  const customerState = inject(CustomerStateService);
-  const id = route.paramMap.get('id') || route.queryParams['projectId'] || customerState.getProjectId();
+  const id = route.paramMap.get('id') || route.queryParams['projectId'] || null;
 
   const form = Pmrt03Form.createForm(fb);
 

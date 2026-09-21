@@ -22,8 +22,6 @@ import type { ApprovalFlow } from '../../../dt/pmdt03/approval.model';
 import { Pmrt02AService } from './pmrt02A.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
-import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
-
 import { ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -44,7 +42,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicComboboxComponent,
     SicTiptapEditorComponent,
     SicVersionBadgeComponent,
-    SicCopyLinkComponent,
     TranslateModule,
   ],
   templateUrl: './pmrt02A.component.html',
@@ -76,6 +73,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   isSaving = false;
 
   customerName = signal<string>('');
+  apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
 
   // ===== AI Assistant =====
   showAiModal = signal(false);
@@ -158,6 +156,11 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     this.loadFlows();
   }
 
+  // ผู้ใช้เลือกลูกค้าเองจาก Combobox (ไม่ต้องเคยเข้าหน้าลูกค้ามาก่อน)
+  onCustomerSelected(item: any): void {
+    this.customerName.set(item ? (item.text ?? item.label ?? '') : '');
+  }
+
   loadFlows() {
     this.isLoadingFlows = true;
     this.approvalService
@@ -211,7 +214,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       id: [null],
       projectCode: [null, [Validators.required, Validators.maxLength(30)]],
       projectName: [null, [Validators.required, Validators.maxLength(255)]],
-      customerId: [null],
+      customerId: [null, [Validators.required]],
       contractId: [null],
       contractNo: [null],
       startDate: [null, [Validators.required]],

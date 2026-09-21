@@ -26,6 +26,8 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.PmCustomerService;
 import com.softinter.sicapi.util.LocalizationHelper;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
 
 import lombok.RequiredArgsConstructor;
 
@@ -95,30 +97,84 @@ public class PmCustomerServiceImpl implements PmCustomerService {
     @Override
     @Transactional(readOnly = true) 
     public PmCustomerResponse findByCustomerCode(UUID businessId, String customerCode) {
-        PmCustomer customer = PmCustomerRepository.findByBusinessIdAndCustomerCode(businessId, customerCode)
+        PmCustomer customer = PmCustomerRepository.findByBusinessIdAndCustomerCodeWithFetch(businessId, customerCode)
                 .orElseThrow(() -> new RuntimeException("ไม่พบลูกค้ารหัส " + customerCode));
         return toResponse(customer);
     }
 
-     @Override
+    @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerResponse> findAllByBusiness(UUID businessId, Pageable pageable) {
-        // ✅ ใช้เมธอดที่โหลดลูกค้าทั้งหมด (ทั้ง active และ inactive)
-        return PmCustomerRepository.findByBusinessIdWithFetch(businessId, pageable)
-                .map(this::toResponse);
+        return findAllByBusiness(businessId, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmCustomerResponse> findAllByBusiness(UUID businessId, String keyword, String status, Pageable pageable) {
+        Specification<PmCustomer> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            // Filter Status
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                if ("active".equalsIgnoreCase(status) || "true".equalsIgnoreCase(status)) {
+                    predicates.add(cb.isTrue(root.get("isActive")));
+                } else if ("inactive".equalsIgnoreCase(status) || "false".equalsIgnoreCase(status)) {
+                    predicates.add(cb.isFalse(root.get("isActive")));
+                }
+            }
+
+            // Keyword Search across multiple fields
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String pattern = "%" + keyword.trim().toLowerCase() + "%";
+                Predicate codePred = cb.like(cb.lower(root.get("customerCode")), pattern);
+                Predicate nameEnPred = cb.like(cb.lower(root.get("companyNameEn")), pattern);
+                Predicate nameLocalPred = cb.like(cb.lower(root.get("companyNameLocal")), pattern);
+                Predicate taxIdPred = cb.like(cb.lower(root.get("taxId")), pattern);
+                Predicate contactPred = cb.like(cb.lower(root.get("contactPerson")), pattern);
+                Predicate phonePred = cb.like(cb.lower(root.get("phoneNumber")), pattern);
+                Predicate emailPred = cb.like(cb.lower(root.get("email")), pattern);
+                Predicate lineIdPred = cb.like(cb.lower(root.get("lineId")), pattern);
+                Predicate addressEnPred = cb.like(cb.lower(root.get("addressEn")), pattern);
+                Predicate addressLocalPred = cb.like(cb.lower(root.get("addressLocal")), pattern);
+                Predicate zipCodePred = cb.like(cb.lower(root.get("zipCode")), pattern);
+                Predicate remarkPred = cb.like(cb.lower(root.get("remark")), pattern);
+
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        codePred, nameEnPred, nameLocalPred, taxIdPred, contactPred,
+                        phonePred, emailPred, lineIdPred, addressEnPred, addressLocalPred, zipCodePred, remarkPred
+                ));
+
+                // ✅ Bilingual: รองรับพิมพ์คำไทย/อังกฤษของสถานะในช่อง Search
+                String rawKw = keyword.trim().toLowerCase();
+                if (rawKw.contains("ใช้งาน") && !rawKw.contains("ไม่")) {
+                    orPreds.add(cb.isTrue(root.get("isActive")));
+                } else if (rawKw.contains("ไม่ใช้งาน") || rawKw.contains("inactive")) {
+                    orPreds.add(cb.isFalse(root.get("isActive")));
+                } else if (rawKw.equals("active")) {
+                    orPreds.add(cb.isTrue(root.get("isActive")));
+                }
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return PmCustomerRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerResponse> search(UUID businessId, String keyword, Pageable pageable) {
-        // ✅ ใช้เมธอดที่มี JOIN FETCH
-        return PmCustomerRepository.searchByKeywordWithFetch(businessId, keyword, pageable)
-                .map(this::toResponse);
+        return findAllByBusiness(businessId, keyword, null, pageable);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<PmCustomerResponse> findAllActiveByBusiness(UUID businessId) {
-        return PmCustomerRepository.findByBusinessIdAndIsActiveTrue(businessId)
+        return PmCustomerRepository.findByBusinessIdAndIsActiveTrueWithFetch(businessId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

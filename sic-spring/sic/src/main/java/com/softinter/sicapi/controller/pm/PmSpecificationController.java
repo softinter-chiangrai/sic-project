@@ -61,8 +61,10 @@ public class PmSpecificationController {
     @GetMapping
     @Operation(summary = "Get specifications with pagination")
     public ResponseEntity<PaginationResponse<PmSpecificationResponse>> getSpecifications(
+            @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String specificationType,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -76,7 +78,7 @@ public class PmSpecificationController {
                 PmSpecification.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
 
-        Page<PmSpecificationResponse> pageResult = specificationService.findAll(businessId, keyword, status, pageable);
+        Page<PmSpecificationResponse> pageResult = specificationService.findAll(businessId, projectId, keyword, status, specificationType, pageable);
 
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }

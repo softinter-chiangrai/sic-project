@@ -92,8 +92,8 @@ export class Pmrt05Component implements OnInit {
       }
     } else {
       this.route.queryParams.subscribe((params) => {
-        const reqId = params['requirementId'] || this.customerState.getRequirementId();
-        const projId = params['projectId'] || this.customerState.getProjectId();
+        const reqId = params['requirementId'] || null;
+        const projId = params['projectId'] || null;
         if (reqId) {
           this.requirementId.set(reqId);
           if (projId) this.projectId.set(projId);

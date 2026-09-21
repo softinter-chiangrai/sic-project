@@ -25,7 +25,6 @@ import { PmMaTicketModel } from './pmdt17A.model';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
-import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -43,7 +42,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicTiptapEditorComponent,
-    SicCopyLinkComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt17A.component.html',
@@ -98,7 +96,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;
+  apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
   businessId = this.businessService.getCurrentBusinessId();
+  contractOptions = signal<Array<{ value: string; text: string }>>([]);
+  isProjectDerived = signal(false);
 
   // AI Assistant State
   showAiModal = signal(false);
@@ -295,6 +296,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         ...(custId ? { customerId: custId } : {}),
       } as any);
     }
+    this.loadContractOptions(projId || undefined);
 
     this.route.params.subscribe((params) => {
       const paramId = params['id'];
@@ -313,6 +315,37 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       if (paramId) {
         this.loadData(paramId);
       }
+    });
+  }
+
+  loadContractOptions(projectId?: string): void {
+    this.service.getContractCombobox(projectId).subscribe({
+      next: (res) => this.contractOptions.set(res || []),
+      error: () => this.contractOptions.set([]),
+    });
+  }
+
+  // เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
+  onProjectSelected(item: any): void {
+    const projId = item?.value ?? item?.id ?? null;
+    this.loadContractOptions(projId || undefined);
+  }
+
+  // เลือกสัญญาแล้วผูกลูกค้า/โครงการให้อัตโนมัติ (ตัวเลือกหลักตามแผนผังความสัมพันธ์)
+  onContractSelected(item: any): void {
+    const contractId = item?.value ?? item?.id ?? null;
+    if (!contractId) {
+      this.isProjectDerived.set(false);
+      return;
+    }
+    this.service.getContractById(contractId).subscribe({
+      next: (contract) => {
+        this.formData.patchValue({
+          projectId: contract?.projectId || null,
+          customerId: contract?.customerId || null,
+        } as any);
+        this.isProjectDerived.set(!!contract?.projectId);
+      },
     });
   }
 
@@ -346,6 +379,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
           this.formData.form.enable();
         }
         this.formData.resetModel(this.formData.form.getRawValue() as any);
+        if (data.projectId) {
+          this.loadContractOptions(data.projectId);
+        }
+        this.isProjectDerived.set(!!data.contractId);
       },
       error: (err) => {
         this.dialog.error(this.translate.instant('PMDT17_ERROR_TITLE'), err.message || this.translate.instant('PMDT17_LOAD_TICKET_FAILED_MSG'));

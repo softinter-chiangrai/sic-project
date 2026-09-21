@@ -23,8 +23,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.criteria.Predicate;
 
 import java.time.Instant;
 import java.util.ArrayList;
@@ -45,16 +47,67 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
 
+    private static final java.util.Map<String, String> MANUAL_STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", "DRAFT",
+            "ตรวจสอบ", "REVIEW",
+            "รีวิว", "REVIEW",
+            "อนุมัติ", "APPROVED",
+            "เปลี่ยนแปลง", "CHANGED",
+            "แก้ไข", "CHANGED",
+            "เผยแพร่", "PUBLISHED"
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmUserManualResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
-        Page<PmUserManual> page;
-        if (projectId != null) {
-            page = manualRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-        } else {
-            page = manualRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-        }
-        return page.map(this::toResponse);
+        return findAll(businessId, projectId, null, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmUserManualResponse> findAll(UUID businessId, UUID projectId, String keyword, String manualType, String status, Pageable pageable) {
+        Specification<PmUserManual> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (manualType != null && !manualType.isBlank() && !"all".equalsIgnoreCase(manualType)) {
+                predicates.add(cb.equal(root.get("manualType"), manualType));
+            }
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("manualCode")), pattern),
+                        cb.like(cb.lower(root.get("manualTitle")), pattern),
+                        cb.like(cb.lower(root.get("manualType")), pattern),
+                        cb.like(cb.lower(root.get("version")), pattern),
+                        cb.like(cb.lower(root.get("status")), pattern)
+                ));
+
+                // ✅ Bilingual: สถานะ
+                for (var entry : MANUAL_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "USER_MANUAL", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return manualRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override

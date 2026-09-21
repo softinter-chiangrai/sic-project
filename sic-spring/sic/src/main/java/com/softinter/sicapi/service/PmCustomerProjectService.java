@@ -24,4 +24,6 @@ public interface PmCustomerProjectService {
     Page<PmCustomerProjectResponse> searchByCustomerId(UUID customerId, UUID businessId, String keyword, Pageable pageable);
 
     Page<PmCustomerProjectResponse> findAllByBusinessId(UUID businessId, String keyword, Pageable pageable);
+
+    Page<PmCustomerProjectResponse> getProjects(UUID businessId, UUID customerId, String keyword, String status, String priority, Pageable pageable);
 }

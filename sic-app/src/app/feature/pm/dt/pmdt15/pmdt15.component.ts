@@ -78,31 +78,6 @@ export class Pmdt15Component implements OnInit {
     ],
   };
 
-  filteredManuals = computed(() => {
-    let list = this.manuals();
-    const search = this.searchTerm().trim().toLowerCase();
-    const type = this.filterType();
-    const status = this.filterStatus();
-
-    if (search) {
-      list = list.filter(
-        (m) =>
-          (m.manualCode && m.manualCode.toLowerCase().includes(search)) ||
-          (m.manualTitle && m.manualTitle.toLowerCase().includes(search))
-      );
-    }
-
-    if (type) {
-      list = list.filter((m) => m.manualType === type);
-    }
-
-    if (status) {
-      list = list.filter((m) => m.status === status);
-    }
-
-    return list;
-  });
-
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       const qProjectId = params['projectId'];
@@ -118,16 +93,20 @@ export class Pmdt15Component implements OnInit {
     this.service
       .getPaging({
         projectId: this.projectId() || undefined,
-        page: this.page(),
-        size: this.size(),
+        page: request.pageNumber,
+        size: request.pageSize,
+        keyword: this.searchTerm().trim() || undefined,
+        manualType: this.filterType() || undefined,
+        status: this.filterStatus() || undefined,
       })
       .subscribe({
         next: (res) => {
           const items = res.data || [];
+          const totalElements = res.pageable?.totalElements || 0;
           this.manuals.set(items);
-          this.totalElements.set(res.pageable?.totalElements || 0);
+          this.totalElements.set(totalElements);
           this.isLoading.set(false);
-          grid.setRows(this.filteredManuals() as unknown as SicGridRowData[], { totalElements: items.length }, request.requestId);
+          grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
           this.loadApprovalStatuses(items, grid, request.requestId);
           this.cdr.markForCheck();
         },
@@ -149,7 +128,7 @@ export class Pmdt15Component implements OnInit {
               item.id === manual.id ? { ...item, approvalStatus: approval.status } : item
             )
           );
-          grid.setRows(this.filteredManuals() as unknown as SicGridRowData[], { totalElements: this.filteredManuals().length }, requestId);
+          grid.setRows(this.manuals() as unknown as SicGridRowData[], { totalElements: this.totalElements() }, requestId);
           this.cdr.markForCheck();
         },
         error: () => {

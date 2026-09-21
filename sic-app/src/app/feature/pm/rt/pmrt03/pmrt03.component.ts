@@ -191,7 +191,7 @@ export class Pmrt03Component implements OnInit {
   // ===== Lifecycle =====
   ngOnInit() {
     this.route.queryParams.subscribe((params) => {
-      const projectId = params['projectId'] || this.customerState.getProjectId();
+      const projectId = params['projectId'] || null;
       if (projectId) {
         this.projectId.set(projectId);
         this.loadDashboard(projectId);

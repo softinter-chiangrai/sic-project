@@ -12,11 +12,14 @@ export class Pmdt14AService {
     return this.http.get<PmDeliveryModel>(`${apiBaseUrl}/api/pm/delivery/${id}`);
   }
 
-  getPaging(params: { page?: number; size?: number; projectId?: string; [key: string]: any }): Observable<any> {
+  getPaging(params: { page?: number; size?: number; projectId?: string; keyword?: string; status?: string; deliveryType?: string; [key: string]: any }): Observable<any> {
     let httpParams = new HttpParams();
-    if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
-    if (params.size !== undefined) httpParams = httpParams.set('size', params.size.toString());
-    if (params.projectId) httpParams = httpParams.set('projectId', params.projectId);
+    Object.keys(params).forEach((key) => {
+      const value = params[key];
+      if (value !== undefined && value !== null && value !== '' && value !== 'all') {
+        httpParams = httpParams.set(key, String(value));
+      }
+    });
     return this.http.get<any>(`${apiBaseUrl}/api/pm/delivery/paging`, { params: httpParams });
   }
 

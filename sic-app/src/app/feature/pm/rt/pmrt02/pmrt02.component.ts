@@ -168,9 +168,8 @@ export class Pmrt02Component implements OnInit {
       if (params['priority'] !== undefined) this.filterPriority.set(params['priority']);
       if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
 
-      const customerId = params['customerId'] || this.customerState.getCustomerId() || null;
+      const customerId = params['customerId'] || null;
       if (customerId) {
-        this.customerState.setCustomer(customerId);
         this.filterCustomerId.set(customerId);
       } else {
         this.filterCustomerId.set(null);
@@ -186,7 +185,8 @@ export class Pmrt02Component implements OnInit {
 
   // ===== Load Data =====
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent) {
-    if (this.hasResolverData && this.initialResolverData) {
+    const hasActiveFilters = !!this.searchTerm() || this.filterStatus() !== 'all' || this.filterPriority() !== 'all';
+    if (this.hasResolverData && this.initialResolverData && !hasActiveFilters) {
       const { data, totalElements } = this.initialResolverData;
       this.hasResolverData = false;
       this.projects.set(data);
@@ -194,6 +194,7 @@ export class Pmrt02Component implements OnInit {
       grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
       return;
     }
+    this.hasResolverData = false;
 
     this.isLoading.set(true);
     this.currentPage.set(request.pageNumber);
@@ -203,6 +204,8 @@ export class Pmrt02Component implements OnInit {
       .getProjects({
         customerId: this.filterCustomerId() || undefined,
         keyword: this.searchTerm() || undefined,
+        status: this.filterStatus() !== 'all' ? this.filterStatus() : undefined,
+        priority: this.filterPriority() !== 'all' ? this.filterPriority() : undefined,
         page: request.pageNumber,
         size: request.pageSize,
         sortBy: request.sortField ?? 'projectCode',

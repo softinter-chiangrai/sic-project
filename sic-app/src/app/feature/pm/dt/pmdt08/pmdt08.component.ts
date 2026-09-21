@@ -119,9 +119,9 @@ export class Pmdt08Component implements OnInit {
       content: ['', Validators.required],
     });
 
-    // ดึง projectId จาก queryParams หรือ customerState
+    // ดึง projectId จาก queryParams
     this.route.queryParams.subscribe((params) => {
-      const pId = params['projectId'] || params['id'] || this.customerState.getProjectId();
+      const pId = params['projectId'] || params['id'] || null;
       if (pId) {
         this.projectId.set(pId);
         this.loadPosts();

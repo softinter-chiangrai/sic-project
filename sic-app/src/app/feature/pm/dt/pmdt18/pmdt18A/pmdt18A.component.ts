@@ -61,9 +61,10 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     { value: 'EXPIRED', label: this.translate.instant('PMDT18_STATUS_EXPIRED_ALREADY') },
   ];
 
-  apiContractCombobox = `${apiBaseUrl}/api/pm/customer-contracts/combobox`;
+  apiContractCombobox = `${apiBaseUrl}/api/pm/contracts/combobox`;
   apiCustomerCombobox = `${apiBaseUrl}/api/pm/customers/combobox`;
   apiProjectCombobox = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+  isDerived = signal(false);
 
   dataResource = httpResource<PmMaRenewalModel>(() =>
   this.id() ? `${apiBaseUrl}/api/pm/ma-renewals/${this.id()}` : undefined
@@ -78,6 +79,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
       const data = this.dataResource.value();
       if (data) {
         this.formData.resetModel(data);
+        this.isDerived.set(!!data.contractId);
         if (data.isLocked) {
           this.isLocked.set(true);
           this.formData.form.disable();
@@ -104,6 +106,24 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
       } else {
         this.formData.patchValue({ state: SicEntityState.Added } as any);
       }
+    });
+  }
+
+  // เลือกสัญญาเดิมแล้วผูกลูกค้า/โครงการให้อัตโนมัติ (backend derive จาก contractId เสมอ ห้ามให้ผู้ใช้เลือกลูกค้า/โครงการแยกเอง)
+  onContractSelected(item: any): void {
+    const contractId = item?.value ?? item?.id ?? null;
+    if (!contractId) {
+      this.isDerived.set(false);
+      return;
+    }
+    this.service.getContractById(contractId).subscribe({
+      next: (contract) => {
+        this.formData.patchValue({
+          customerId: contract?.customerId || null,
+          projectId: contract?.projectId || null,
+        } as any);
+        this.isDerived.set(true);
+      },
     });
   }
 

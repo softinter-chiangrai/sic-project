@@ -11,9 +11,7 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 
 export const pmdt01Resolver: ResolveFn<PhaseModel[] | null> = (route) => {
   const service = inject(Pmdt01Service);
-  const customerState = inject(CustomerStateService);
-  const projectId = route.queryParams['projectId'] || customerState.getProjectId();
-  if (!projectId) return of(null);
+  const projectId = route.queryParams['projectId'] || undefined;
   return service.getPhases(projectId).pipe(
     catchError((err) => {
       console.error('pmdt01Resolver error:', err);

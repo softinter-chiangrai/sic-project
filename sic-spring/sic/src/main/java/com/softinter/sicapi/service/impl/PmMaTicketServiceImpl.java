@@ -55,19 +55,34 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         return findAll(businessId, projectId, null, null, pageable);
     }
 
+    private static final java.util.Map<String, MaTicketStatus> TICKET_STATUS_THAI_MAP = java.util.Map.of(
+            "เปิด", MaTicketStatus.OPEN,
+            "กำลังดำเนินการ", MaTicketStatus.IN_PROGRESS,
+            "รอลูกค้า", MaTicketStatus.WAITING_CUSTOMER,
+            "แก้ไขแล้ว", MaTicketStatus.RESOLVED,
+            "เสร็จสิ้น", MaTicketStatus.RESOLVED,
+            "ปิด", MaTicketStatus.CLOSED,
+            "เปลี่ยนแปลง", MaTicketStatus.CHANGED
+    );
+
+    private static final java.util.Map<String, MaTicketSeverity> TICKET_SEVERITY_THAI_MAP = java.util.Map.of(
+            "ต่ำ", MaTicketSeverity.LOW,
+            "กลาง", MaTicketSeverity.MEDIUM,
+            "ปานกลาง", MaTicketSeverity.MEDIUM,
+            "สูง", MaTicketSeverity.HIGH,
+            "วิกฤต", MaTicketSeverity.CRITICAL,
+            "ด่วน", MaTicketSeverity.CRITICAL
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
-        if ((keyword == null || keyword.isBlank()) && (status == null || status.isBlank() || "all".equals(status))) {
-            Page<PmMaTicket> page;
-            if (projectId != null) {
-                page = ticketRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-            } else {
-                page = ticketRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-            }
-            return page.map(this::toResponse);
-        }
+        return findAll(businessId, projectId, keyword, status, null, null, pageable);
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, String severity, String ticketType, Pageable pageable) {
         org.springframework.data.jpa.domain.Specification<PmMaTicket> spec = (root, query, cb) -> {
             java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
@@ -75,15 +90,49 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             if (projectId != null) {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
-            if (keyword != null && !keyword.isBlank()) {
-                String pattern = "%" + keyword.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("ticketNo")), pattern),
-                        cb.like(cb.lower(root.get("title")), pattern)
-                ));
-            }
             if (status != null && !status.isBlank() && !"all".equals(status)) {
                 predicates.add(cb.equal(root.get("status"), MaTicketStatus.valueOf(status)));
+            }
+            if (severity != null && !severity.isBlank() && !"all".equalsIgnoreCase(severity)) {
+                predicates.add(cb.equal(root.get("severity"), MaTicketSeverity.valueOf(severity)));
+            }
+            if (ticketType != null && !ticketType.isBlank() && !"all".equalsIgnoreCase(ticketType)) {
+                predicates.add(cb.equal(root.get("ticketType"), MaTicketType.valueOf(ticketType)));
+            }
+            if (keyword != null && !keyword.isBlank()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+                List<jakarta.persistence.criteria.Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("ticketNo")), pattern),
+                        cb.like(cb.lower(root.get("title")), pattern),
+                        cb.like(cb.lower(root.get("description")), pattern),
+                        cb.like(cb.lower(root.get("resolutionSummary")), pattern),
+                        cb.like(cb.lower(root.get("assignedTo")), pattern),
+                        cb.like(cb.lower(root.get("reportedBy")), pattern),
+                        cb.like(cb.lower(root.get("status").as(String.class)), pattern),
+                        cb.like(cb.lower(root.get("severity").as(String.class)), pattern),
+                        cb.like(cb.lower(root.get("ticketType").as(String.class)), pattern)
+                ));
+
+                // ✅ Bilingual: สถานะ
+                for (var entry : TICKET_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(root.get("status"), entry.getValue()));
+                    }
+                }
+
+                // ✅ Bilingual: ระดับความรุนแรง/ความสำคัญ
+                for (var entry : TICKET_SEVERITY_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(root.get("severity"), entry.getValue()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "MA_TICKET", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new jakarta.persistence.criteria.Predicate[0])));
             }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };

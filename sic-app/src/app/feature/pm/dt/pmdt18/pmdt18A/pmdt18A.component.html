@@ -45,26 +45,29 @@
             [label]="'PMDT18A_LBL_ORIG_CONTRACT' | translate"
             [required]="true"
             [apiUrl]="apiContractCombobox"
-            valueField="id"
-            displayField="contractNo"
+            valueField="value"
+            textField="text"
             formControlName="contractId"
+            (selectionChanged)="onContractSelected($event)"
           ></sic-combobox>
 
           <sic-combobox
-            [label]="'PMDT18A_LBL_CUSTOMER' | translate"
+            [label]="isDerived() ? ('PMDT18A_LBL_CUSTOMER' | translate) + ' (ผูกอัตโนมัติจากสัญญาที่เลือก)' : ('PMDT18A_LBL_CUSTOMER' | translate)"
             [required]="true"
             [apiUrl]="apiCustomerCombobox"
-            valueField="id"
-            displayField="customerName"
+            valueField="value"
+            textField="text"
+            [disabled]="isDerived()"
             formControlName="customerId"
           ></sic-combobox>
 
           <sic-combobox
-            [label]="'PMDT18A_LBL_PROJECT' | translate"
+            [label]="isDerived() ? ('PMDT18A_LBL_PROJECT' | translate) + ' (ผูกอัตโนมัติจากสัญญาที่เลือก)' : ('PMDT18A_LBL_PROJECT' | translate)"
             [required]="true"
             [apiUrl]="apiProjectCombobox"
-            valueField="id"
-            displayField="projectName"
+            valueField="value"
+            textField="text"
+            [disabled]="isDerived()"
             formControlName="projectId"
           ></sic-combobox>
 

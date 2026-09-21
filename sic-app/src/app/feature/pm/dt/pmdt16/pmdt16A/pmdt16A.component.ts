@@ -27,7 +27,6 @@ import { PmInvoiceModel, PmInvoiceItemModel } from './pmdt16A.model';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
-import { SicCopyLinkComponent } from '../../../../../core/component/sic-copy-link/sic-copy-link.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -46,7 +45,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicTiptapEditorComponent,
     SicDatepickerComponent,
     SicUploadComponent,
-    SicCopyLinkComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt16A.component.html',

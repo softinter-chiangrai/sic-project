@@ -173,11 +173,10 @@ export class Pmrt04Component implements OnInit {
       if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
       if (params['preset'] !== undefined) this.activePreset.set(params['preset'] === 'expiring' ? 'expiring' : 'all');
 
-      const projectId = params['projectId'] || this.customerState.getProjectId();
+      const projectId = params['projectId'] || null;
 
       if (projectId) {
         this.filterProjectId.set(projectId);
-        this.customerState.setProject(projectId);
         if (!resolved || !resolved.project) {
           this.projectResolved = false;
         }

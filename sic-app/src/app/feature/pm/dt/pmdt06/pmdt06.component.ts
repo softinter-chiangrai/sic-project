@@ -106,12 +106,9 @@ export class Pmdt06Component implements OnInit {
         this.gridConfig = { ...this.gridConfig, pageNumber: page };
       }
 
-      // ดึง projectId จาก queryParams ก่อน ถ้าไม่มีค่อย fallback ไป customerState
-      const projectId = queryParams['projectId'] || this.customerState.getProjectId();
-      this.projectId.set(projectId || null);
-      if (projectId) {
-        this.customerState.setProject(projectId);
-      }
+      // ดึง projectId จาก queryParams เท่านั้น
+      const projectId = queryParams['projectId'] || null;
+      this.projectId.set(projectId);
     });
   }
 

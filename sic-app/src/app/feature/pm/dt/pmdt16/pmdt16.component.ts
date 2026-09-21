@@ -154,11 +154,8 @@ export class Pmdt16Component implements OnInit {
       if (params['status'] !== undefined) this.filterStatus.set(params['status']);
       if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
 
-      const projectId = params['projectId'] || this.customerState.getProjectId();
-      if (projectId) {
-        this.filterProjectId.set(projectId);
-        this.customerState.setProject(projectId);
-      }
+      const projectId = params['projectId'] || null;
+      this.filterProjectId.set(projectId);
     });
   }
 

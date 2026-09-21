@@ -308,7 +308,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     generateWithAi(): void {
         const formVal = this.form.value;
-        const projectId = formVal.projectId || this.customerState.getProjectId();
+        const projectId = formVal.projectId;
         const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
         const diagramIds = Array.isArray(this.aiAssistDiagramIds) ? this.aiAssistDiagramIds : (this.aiAssistDiagramIds ? [this.aiAssistDiagramIds] : []);
         const specType = formVal.specificationType || 'UI Specification';

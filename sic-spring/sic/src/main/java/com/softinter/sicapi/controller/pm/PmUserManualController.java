@@ -48,6 +48,9 @@ public class PmUserManualController {
     @Operation(summary = "Get user manual list with pagination")
     public ResponseEntity<PaginationResponse<PmUserManualResponse>> getPaging(
             @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String manualType,
+            @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -56,7 +59,7 @@ public class PmUserManualController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmUserManual.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
-        Page<PmUserManualResponse> pageResult = manualService.findAll(businessId, projectId, pageable);
+        Page<PmUserManualResponse> pageResult = manualService.findAll(businessId, projectId, keyword, manualType, status, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 

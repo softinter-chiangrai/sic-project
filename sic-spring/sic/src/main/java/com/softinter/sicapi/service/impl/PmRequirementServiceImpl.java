@@ -7,8 +7,10 @@ import java.util.ArrayList;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.criteria.Predicate;
 
 import com.softinter.sicapi.dto.request.PmRequirementRequest;
 import com.softinter.sicapi.dto.response.PmRequirementResponse;
@@ -45,20 +47,72 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
 
+    private static final java.util.Map<String, String> STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", "Draft",
+            "ตรวจสอบ", "In Review",
+            "รีวิว", "In Review",
+            "อนุมัติ", "Approved",
+            "เปลี่ยนแปลง", "Changed",
+            "แก้ไข", "Changed",
+            "ยกเลิก", "Cancelled"
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmRequirementResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
-        Page<PmRequirement> page;
-        if (keyword != null && !keyword.isBlank() && status != null && !status.isBlank()) {
-            page = requirementRepository.searchByKeywordAndStatusAndProject(businessId, projectId, keyword, status, pageable);
-        } else if (keyword != null && !keyword.isBlank()) {
-            page = requirementRepository.searchByKeywordAndProject(businessId, projectId, keyword, pageable);
-        } else if (status != null && !status.isBlank()) {
-            page = requirementRepository.findAllByStatusAndProject(businessId, projectId, status, pageable);
-        } else {
-            page = requirementRepository.findAllByBusinessIdAndProjectId(businessId, projectId, pageable);
-        }
-        return page.map(this::toResponse);
+        Specification<PmRequirement> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("requirementCode")), pattern),
+                        cb.like(cb.lower(root.get("title")), pattern),
+                        cb.like(cb.lower(root.get("description")), pattern),
+                        cb.like(cb.lower(root.get("source")), pattern),
+                        cb.like(cb.lower(root.get("acceptanceCriteria")), pattern),
+                        cb.like(cb.lower(root.get("businessValue")), pattern),
+                        cb.like(cb.lower(root.get("requirementType")), pattern),
+                        cb.like(cb.lower(root.get("status")), pattern),
+                        cb.like(cb.lower(root.get("priority")), pattern)
+                ));
+
+                // ✅ Bilingual: สถานะ (ไทย ↔ อังกฤษ)
+                for (var entry : STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: ความสำคัญ (ไทย ↔ อังกฤษ)
+                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "REQUIREMENT", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return requirementRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override

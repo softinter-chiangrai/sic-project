@@ -21,7 +21,8 @@ public interface SuAuditLogRepository extends JpaRepository<SuAuditLog, UUID>, J
            " LOWER(a.userFullname) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            " LOWER(a.action) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
            " LOWER(a.description) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
-           " LOWER(a.module) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
+           " LOWER(a.module) LIKE LOWER(CONCAT('%', :searchTerm, '%')) OR " +
+           " LOWER(a.targetType) LIKE LOWER(CONCAT('%', :searchTerm, '%'))) AND " +
            "(:module IS NULL OR :module = '' OR :module = 'all' OR a.module = :module) AND " +
            "(:status IS NULL OR :status = '' OR :status = 'all' OR LOWER(a.status) = LOWER(:status)) AND " +
            "(:username IS NULL OR :username = '' OR :username = 'all' OR a.username = :username OR a.userFullname = :username OR a.userId = :username)")

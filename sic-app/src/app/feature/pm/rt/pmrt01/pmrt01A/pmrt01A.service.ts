@@ -25,6 +25,7 @@ export class Pmrt01AService {
     page: number,
     size: number,
     keyword?: string,
+    status?: string,
     sortBy?: string,
     sortDir?: 'asc' | 'desc'
   ): Observable<PaginationResponse<CustomerModel>> {
@@ -33,6 +34,7 @@ export class Pmrt01AService {
       .set('page', page.toString())
       .set('size', size.toString());
     if (keyword) params = params.set('keyword', keyword);
+    if (status && status !== 'all') params = params.set('status', status);
     if (sortBy) params = params.set('sortBy', sortBy);
     if (sortDir) params = params.set('sortDir', sortDir);
     return this.http.get<PaginationResponse<CustomerModel>>(this.baseUrl, { params });

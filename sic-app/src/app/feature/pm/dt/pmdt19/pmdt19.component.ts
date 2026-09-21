@@ -104,29 +104,20 @@ export class Pmdt19Component implements OnInit {
 
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
-      const projectId = params['projectId'] || this.customerState.getProjectId() || null;
-
-      if (projectId) {
-        this.activeProjectId.set(projectId);
-        this.customerState.setProject(projectId);
-      } else {
-        this.activeProjectId.set(null);
-      }
+      const projectId = params['projectId'] || null;
+      this.activeProjectId.set(projectId);
 
       const qType = params['documentType'];
       const qId = params['documentId'];
       if (qType) this.filterType.set(qType);
       if (qId) this.filterDocId.set(qId);
 
-      if (projectId) {
-        this.loadVersions();
-      }
+      this.loadVersions();
     });
   }
 
   loadVersions(): void {
-    const projectId = this.activeProjectId();
-    if (!projectId) return; // guard: ต้องมี projectId เสมอ
+    const projectId = this.activeProjectId() || undefined;
 
     this.isLoading.set(true);
     const docType = this.filterType();
@@ -154,7 +145,8 @@ export class Pmdt19Component implements OnInit {
         (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
         (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
         (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
-        (v.documentId && v.documentId.toLowerCase().includes(term))
+        (v.documentId && v.documentId.toLowerCase().includes(term)) ||
+        (v.createdBy && v.createdBy.toLowerCase().includes(term))
       );
       this.filteredVersions.set(filtered);
     }

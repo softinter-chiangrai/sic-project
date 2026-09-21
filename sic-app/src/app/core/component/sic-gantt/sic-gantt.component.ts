@@ -186,9 +186,9 @@ export class SicGanttComponent implements OnInit {
         this.phaseId.set(phaseId);
         this.loadPhase(phaseId);
       } else {
-        // ไม่มี phaseId -> ต้องมี projectId ใน queryParams หรือจาก customerState
+        // ไม่มี phaseId -> ต้องมี projectId ใน queryParams
         this.route.queryParams.subscribe((qParams) => {
-          const pid = qParams['projectId'] || this.customerState.getProjectId();
+          const pid = qParams['projectId'] || null;
           if (!pid) {
             this.dialog.warn(this.translate.instant('GANTT_WARN_SELECT_PROJECT_TITLE'), this.translate.instant('GANTT_WARN_PROJECT_CODE_NOT_FOUND'));
             this.navigation.navigate(['/feature/pm/project']);
@@ -420,8 +420,8 @@ export class SicGanttComponent implements OnInit {
   goBack() {
     // ถ้ามี phaseId -> กลับไปหน้า phase detail
     if (this.phaseId()) {
-      const projectId = this.projectId() || this.customerState.getProjectId();
-      this.router.navigate(['/feature/pm/phase', this.phaseId()], { queryParams: { projectId } });
+      const projectId = this.projectId();
+      this.router.navigate(['/feature/pm/phase', this.phaseId()], { queryParams: { projectId: projectId || undefined } });
     } else {
       // กลับไปหน้า project list หรือ dashboard
       this.navigation.navigate(['/feature/pm/project']);

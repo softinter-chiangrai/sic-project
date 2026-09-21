@@ -10,8 +10,7 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 export const pmrt04Resolver: ResolveFn<any> = (route) => {
   const http = inject(HttpClient);
   const projectService = inject(Pmrt02Service);
-  const customerState = inject(CustomerStateService);
-  const projectId = route.queryParams['projectId'] || customerState.getProjectId();
+  const projectId = route.queryParams['projectId'] || null;
 
   if (!projectId) {
     return of(null);

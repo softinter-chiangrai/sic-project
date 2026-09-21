@@ -17,12 +17,17 @@ import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
+import com.softinter.sicapi.entity.pm.PmCustomer;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Subquery;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -45,16 +50,83 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
     private final ApprovalService approvalService;
     private final DocumentVersionService documentVersionService;
 
+    private static final java.util.Map<String, MaRenewalStatus> RENEWAL_STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", MaRenewalStatus.DRAFT,
+            "เสนอ", MaRenewalStatus.PROPOSED,
+            "ยืนยัน", MaRenewalStatus.CONFIRMED,
+            "ปฏิเสธ", MaRenewalStatus.REJECTED,
+            "หมดอายุ", MaRenewalStatus.EXPIRED
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmMaRenewalResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
-        Page<PmMaRenewal> page;
-        if (projectId != null) {
-            page = renewalRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-        } else {
-            page = renewalRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-        }
-        return page.map(this::toResponse);
+        return findAll(businessId, projectId, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmMaRenewalResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, Pageable pageable) {
+        Specification<PmMaRenewal> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                predicates.add(cb.equal(root.get("status").as(String.class), status));
+            }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+
+                Subquery<UUID> contractSub = query.subquery(UUID.class);
+                var contractRoot = contractSub.from(PmCustomerContract.class);
+                contractSub.select(contractRoot.get("id"));
+                contractSub.where(cb.like(cb.lower(contractRoot.get("contractNo")), pattern));
+
+                Subquery<UUID> customerSub = query.subquery(UUID.class);
+                var customerRoot = customerSub.from(PmCustomer.class);
+                customerSub.select(customerRoot.get("id"));
+                customerSub.where(cb.or(
+                        cb.like(cb.lower(customerRoot.get("companyNameEn")), pattern),
+                        cb.like(cb.lower(customerRoot.get("companyNameLocal")), pattern),
+                        cb.like(cb.lower(customerRoot.get("customerCode")), pattern)
+                ));
+
+                Subquery<UUID> projectSub = query.subquery(UUID.class);
+                var projectRoot = projectSub.from(PmCustomerProject.class);
+                projectSub.select(projectRoot.get("id"));
+                projectSub.where(cb.like(cb.lower(projectRoot.get("projectName")), pattern));
+
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("renewalNo")), pattern),
+                        cb.like(cb.lower(root.get("remark")), pattern),
+                        cb.like(cb.lower(root.get("status").as(String.class)), pattern),
+                        root.get("contractId").in(contractSub),
+                        root.get("customerId").in(customerSub),
+                        root.get("projectId").in(projectSub)
+                ));
+
+                // ✅ Bilingual: สถานะการต่อสัญญา
+                for (var entry : RENEWAL_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(root.get("status"), entry.getValue()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "MA_RENEWAL", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        return renewalRepository.findAll(spec, pageable).map(this::toResponse);
     }
 
     @Override

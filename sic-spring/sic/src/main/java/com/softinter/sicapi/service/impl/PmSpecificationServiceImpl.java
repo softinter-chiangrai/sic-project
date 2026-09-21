@@ -54,25 +54,72 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
 
+    private static final java.util.Map<String, String> SPEC_STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", "Draft",
+            "ตรวจสอบ", "In Review",
+            "รีวิว", "In Review",
+            "อนุมัติ", "Approved",
+            "เปลี่ยนแปลง", "Changed",
+            "แก้ไข", "Changed"
+    );
+
     // ===== FIND ALL (with pagination) =====
     @Override
     @Transactional(readOnly = true)
     public Page<PmSpecificationResponse> findAll(UUID businessId, String keyword, String status, Pageable pageable) {
+        return findAll(businessId, null, keyword, status, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmSpecificationResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, String specificationType, Pageable pageable) {
         Specification<PmSpecification> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
             predicates.add(cb.isFalse(root.get("isDelete")));
 
-            if (keyword != null && !keyword.isBlank()) {
-                String pattern = "%" + keyword.toLowerCase() + "%";
-                predicates.add(cb.or(
-                        cb.like(cb.lower(root.get("specificationCode")), pattern),
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("specificationType")), pattern)));
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("project").get("id"), projectId));
             }
-
+            if (specificationType != null && !specificationType.isBlank() && !"all".equalsIgnoreCase(specificationType)) {
+                predicates.add(cb.equal(root.get("specificationType"), specificationType));
+            }
             if (status != null && !status.isBlank() && !"all".equals(status)) {
                 predicates.add(cb.equal(root.get("status"), status));
+            }
+
+            if (keyword != null && !keyword.isBlank()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("specificationCode")), pattern),
+                        cb.like(cb.lower(root.get("title")), pattern),
+                        cb.like(cb.lower(root.get("specificationType")), pattern),
+                        cb.like(cb.lower(root.get("description")), pattern),
+                        cb.like(cb.lower(root.get("status")), pattern),
+                        cb.like(cb.lower(root.get("priority")), pattern),
+                        cb.like(cb.lower(root.get("version")), pattern)
+                ));
+
+                // ✅ Bilingual: สถานะ
+                for (var entry : SPEC_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: ความสำคัญ
+                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "SPECIFICATION", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
 
             return cb.and(predicates.toArray(new Predicate[0]));

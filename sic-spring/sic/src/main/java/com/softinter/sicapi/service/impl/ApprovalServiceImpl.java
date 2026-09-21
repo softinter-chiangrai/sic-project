@@ -363,10 +363,32 @@ public class ApprovalServiceImpl implements ApprovalService {
             predicates.add(cb.equal(root.get("documentType"), documentType));
         }
         if (keyword != null && !keyword.isBlank()) {
-            String pattern = "%" + keyword.toLowerCase() + "%";
-            predicates.add(cb.or(
+            String rawKw = keyword.trim().toLowerCase();
+            String pattern = "%" + rawKw + "%";
+            List<Predicate> orPreds = new ArrayList<>(List.of(
                     cb.like(cb.lower(root.get("documentCode")), pattern),
-                    cb.like(cb.lower(root.get("documentTitle")), pattern)));
+                    cb.like(cb.lower(root.get("documentTitle")), pattern),
+                    cb.like(cb.lower(root.get("documentType")), pattern),
+                    cb.like(cb.lower(root.get("requestedByName")), pattern),
+                    cb.like(cb.lower(root.get("finalApprover")), pattern),
+                    cb.like(cb.lower(root.get("comment")), pattern),
+                    cb.like(cb.lower(root.get("status").as(String.class)), pattern)
+            ));
+
+            // ✅ Bilingual: สถานะการอนุมัติ (ไทย ↔ อังกฤษ)
+            if (rawKw.contains("อนุมัติแล้ว") || rawKw.contains("ผ่านการอนุมัติ") || rawKw.equals("อนุมัติ") || rawKw.equals("approved")) {
+                orPreds.add(cb.equal(root.get("status"), ApprovalStatus.APPROVED));
+            } else if (rawKw.contains("รออนุมัติ") || rawKw.contains("pending")) {
+                orPreds.add(cb.equal(root.get("status"), ApprovalStatus.PENDING));
+            } else if (rawKw.contains("ปฏิเสธ") || rawKw.contains("ไม่อนุมัติ") || rawKw.contains("rejected")) {
+                orPreds.add(cb.equal(root.get("status"), ApprovalStatus.REJECTED));
+            } else if (rawKw.contains("ขอแก้ไข") || rawKw.contains("ต้องแก้ไข") || rawKw.contains("need revision")) {
+                orPreds.add(cb.equal(root.get("status"), ApprovalStatus.NEED_REVISION));
+            } else if (rawKw.contains("ยกเลิก") || rawKw.contains("cancelled")) {
+                orPreds.add(cb.equal(root.get("status"), ApprovalStatus.CANCELLED));
+            }
+
+            predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
         }
     }
 

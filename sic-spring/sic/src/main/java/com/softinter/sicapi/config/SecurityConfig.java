@@ -54,7 +54,8 @@ public class SecurityConfig {
                                 "/health",
                                 "/api/storage/avatar/**",
                                 "/api/storage/files/**",
-                                "/api/storage/download/**")
+                                "/api/storage/download/**",
+                                "/api/i18n/**")
                         .permitAll()
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(oauth2 -> oauth2

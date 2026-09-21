@@ -34,7 +34,6 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <sic-copy-link></sic-copy-link>
         <!-- AI Assistant Button -->
         @if (!isViewOnly && !isLocked) {
           <button
@@ -50,6 +49,22 @@
 
     <!-- FORM GRID -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+      <!-- Customer -->
+      <div class="md:col-span-2">
+        <sic-combobox
+          label="ลูกค้า"
+          formControlName="customerId"
+          [apiUrl]="apiGetComboboxCustomer"
+          valueField="value"
+          textField="text"
+          placeholder="ค้นหาและเลือกลูกค้า"
+          [required]="true"
+          [disabled]="isViewOnly || isLocked"
+          [errorMessages]="{ required: 'กรุณาเลือกลูกค้า' }"
+          (selectionChanged)="onCustomerSelected($event)"
+        ></sic-combobox>
+      </div>
+
       <!-- Project Code -->
       <div>
         <sic-input

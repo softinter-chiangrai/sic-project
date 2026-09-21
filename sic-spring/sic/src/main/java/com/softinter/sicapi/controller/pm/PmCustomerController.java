@@ -21,9 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmCustomerRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.dto.response.PmCustomerResponse;
 import com.softinter.sicapi.service.PmCustomerService;
+import org.springframework.data.domain.PageRequest;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -82,8 +84,10 @@ public class PmCustomerController {
     @Operation(summary = "รายการลูกค้าทั้งหมด (แบบแบ่งหน้า)")
     public ResponseEntity<PaginationResponse<PmCustomerResponse>> getAll(
             @RequestParam UUID businessId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String status,
             @PageableDefault(size = 20) Pageable pageable) {
-        return ResponseEntity.ok(of(PmCustomerService.findAllByBusiness(businessId, pageable)));
+        return ResponseEntity.ok(of(PmCustomerService.findAllByBusiness(businessId, keyword, status, pageable)));
     }
 
     @GetMapping("/search")
@@ -99,5 +103,38 @@ public class PmCustomerController {
     @Operation(summary = "รายการลูกค้าที่ active (ไม่แบ่งหน้า)")
     public ResponseEntity<List<PmCustomerResponse>> getActive(@RequestParam UUID businessId) {
         return ResponseEntity.ok(PmCustomerService.findAllActiveByBusiness(businessId));
+    }
+
+    // ===== Customer Combobox (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน) =====
+    @GetMapping("/combobox")
+    @Operation(summary = "Get customer combobox list")
+    public ResponseEntity<List<ComboboxResponse>> getComboboxCustomers(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (value != null) {
+            try {
+                PmCustomerResponse c = PmCustomerService.findById(value);
+                if (c != null && businessId.equals(c.getBusinessId())) {
+                    String name = (c.getCompanyNameLocal() != null && !c.getCompanyNameLocal().isBlank())
+                            ? c.getCompanyNameLocal()
+                            : (c.getCompanyNameEn() != null ? c.getCompanyNameEn() : "");
+                    return ResponseEntity.ok(List.of(new ComboboxResponse(c.getId().toString(), c.getCustomerCode() + " - " + name)));
+                }
+            } catch (Exception ignored) {
+                return ResponseEntity.ok(List.of());
+            }
+        }
+        List<PmCustomerResponse> customers = (keyword != null && !keyword.isBlank())
+                ? PmCustomerService.search(businessId, keyword, PageRequest.of(0, 50)).getContent()
+                : PmCustomerService.findAllActiveByBusiness(businessId);
+        List<ComboboxResponse> list = customers.stream()
+                .map(c -> new ComboboxResponse(c.getId().toString(),
+                        c.getCustomerCode() + " - " + (c.getCompanyNameLocal() != null && !c.getCompanyNameLocal().isBlank() ? c.getCompanyNameLocal() : (c.getCompanyNameEn() != null ? c.getCompanyNameEn() : ""))))
+                .collect(java.util.stream.Collectors.toList());
+        return ResponseEntity.ok(list);
     }
 }

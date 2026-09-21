@@ -53,6 +53,8 @@ public class PmMaTicketController {
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String severity,
+            @RequestParam(required = false) String ticketType,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -61,7 +63,7 @@ public class PmMaTicketController {
         UUID businessId = BusinessContextHolder.getBusinessId();
         Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmMaTicket.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
-        Page<PmMaTicketResponse> pageResult = ticketService.findAll(businessId, projectId, keyword, status, pageable);
+        Page<PmMaTicketResponse> pageResult = ticketService.findAll(businessId, projectId, keyword, status, severity, ticketType, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 

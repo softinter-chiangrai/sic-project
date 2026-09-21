@@ -17,6 +17,9 @@ import org.springframework.transaction.annotation.Transactional;
 import com.softinter.sicapi.dto.request.PmCustomerContractRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PmCustomerContractResponse;
+import com.softinter.sicapi.entity.enums.PaymentStatus;
+import com.softinter.sicapi.entity.enums.MaTicketStatus;
+import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.entity.pm.PmCustomerContract;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
@@ -25,8 +28,6 @@ import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmMilestoneRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
-import com.softinter.sicapi.entity.enums.PaymentStatus;
-import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.dto.response.PmContractSummaryResponse;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.DocumentVersionService;
@@ -34,7 +35,8 @@ import com.softinter.sicapi.service.PmCustomerContractService;
 import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
-
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,6 +55,14 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     private final PmMilestoneRepository milestoneRepository;
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
+
+    private static final java.util.Map<String, String> SIGN_STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", "Draft",
+            "ส่งแล้ว", "Sent",
+            "ลงนาม", "Signed",
+            "เซ็นสัญญา", "Signed",
+            "หมดอายุ", "Expired"
+    );
 
     @Override
     @Transactional(readOnly = true)
@@ -101,8 +111,40 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             if (projectId != null) {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
-            if (keyword != null && !keyword.isBlank()) {
-                predicates.add(cb.like(cb.lower(root.get("contractNo")), "%" + keyword.toLowerCase() + "%"));
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+                Join<PmCustomerContract, PmCustomer> customerJoin = root.join("customer", JoinType.LEFT);
+                Join<PmCustomerContract, PmCustomerProject> projectJoin = root.join("project", JoinType.LEFT);
+
+                Predicate contractNoPred = cb.like(cb.lower(root.get("contractNo")), pattern);
+                Predicate contractTypePred = cb.like(cb.lower(root.get("contractType")), pattern);
+                Predicate scopePred = cb.like(cb.lower(root.get("scopeSummary")), pattern);
+                Predicate paymentPred = cb.like(cb.lower(root.get("paymentTerms")), pattern);
+                Predicate signStatusPred = cb.like(cb.lower(root.get("signStatus")), pattern);
+                Predicate custNameEnPred = cb.like(cb.lower(customerJoin.get("companyNameEn")), pattern);
+                Predicate custNameLocalPred = cb.like(cb.lower(customerJoin.get("companyNameLocal")), pattern);
+                Predicate custCodePred = cb.like(cb.lower(customerJoin.get("customerCode")), pattern);
+                Predicate projNamePred = cb.like(cb.lower(projectJoin.get("projectName")), pattern);
+                Predicate projCodePred = cb.like(cb.lower(projectJoin.get("projectCode")), pattern);
+
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        contractNoPred, contractTypePred, scopePred, paymentPred, signStatusPred,
+                        custNameEnPred, custNameLocalPred, custCodePred, projNamePred, projCodePred
+                ));
+
+                // ✅ Bilingual: สถานะลงนาม (ไทย ↔ อังกฤษ)
+                for (var entry : SIGN_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("signStatus")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ (join กับ pm_approval แบบ Polymorphic Document)
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "CONTRACT", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
             if (status != null && !status.isBlank() && !"all".equals(status)) {
                 predicates.add(cb.equal(root.get("signStatus"), status));

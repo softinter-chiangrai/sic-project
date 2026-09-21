@@ -8,7 +8,7 @@ import { GenerateUserManualDraftRequest, PmUserManualModel, UserManualDraftRespo
 export class Pmdt15AService {
   private http = inject(HttpClient);
 
-  getPaging(params: { projectId?: string; page: number; size: number; sortBy?: string; sortDirection?: string }): Observable<any> {
+  getPaging(params: { projectId?: string; page: number; size: number; sortBy?: string; sortDirection?: string; keyword?: string; manualType?: string; status?: string }): Observable<any> {
     let httpParams = new HttpParams()
       .set('page', params.page.toString())
       .set('size', params.size.toString());
@@ -20,6 +20,15 @@ export class Pmdt15AService {
     }
     if (params.sortDirection) {
       httpParams = httpParams.set('sortDirection', params.sortDirection);
+    }
+    if (params.keyword) {
+      httpParams = httpParams.set('keyword', params.keyword);
+    }
+    if (params.manualType) {
+      httpParams = httpParams.set('manualType', params.manualType);
+    }
+    if (params.status) {
+      httpParams = httpParams.set('status', params.status);
     }
     return this.http.get(`${apiBaseUrl}/api/pm/manual/paging`, { params: httpParams });
   }

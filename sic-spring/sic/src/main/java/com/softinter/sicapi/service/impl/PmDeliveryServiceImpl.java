@@ -24,8 +24,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import jakarta.persistence.criteria.Predicate;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -57,15 +59,69 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     private final PmInvoiceService invoiceService;
     private final AuditLogService auditLogService;
 
+    private static final java.util.Map<String, String> DELIVERY_STATUS_THAI_MAP = java.util.Map.of(
+            "ร่าง", "DRAFT",
+            "เตรียม", "PREPARING",
+            "พร้อมส่งมอบ", "READY",
+            "ส่งมอบแล้ว", "DELIVERED",
+            "ยืนยันแล้ว", "CONFIRMED",
+            "ตรวจรับแล้ว", "CONFIRMED",
+            "เปลี่ยนแปลง", "CHANGED"
+    );
+
     @Override
     @Transactional(readOnly = true)
     public Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, Pageable pageable) {
-        Page<PmDelivery> page;
-        if (projectId != null) {
-            page = deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId, pageable);
-        } else {
-            page = deliveryRepository.findByBusinessIdAndIsDeleteFalse(businessId, pageable);
-        }
+        return findAll(businessId, projectId, null, null, null, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, String deliveryType, Pageable pageable) {
+        Specification<PmDelivery> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+            predicates.add(cb.equal(root.get("businessId"), businessId));
+            predicates.add(cb.isFalse(root.get("isDelete")));
+
+            if (projectId != null) {
+                predicates.add(cb.equal(root.get("projectId"), projectId));
+            }
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                predicates.add(cb.equal(root.get("status"), status));
+            }
+            if (deliveryType != null && !deliveryType.isBlank() && !"all".equalsIgnoreCase(deliveryType)) {
+                predicates.add(cb.equal(root.get("deliveryType"), deliveryType));
+            }
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                String rawKw = keyword.trim().toLowerCase();
+                String pattern = "%" + rawKw + "%";
+                List<Predicate> orPreds = new ArrayList<>(List.of(
+                        cb.like(cb.lower(root.get("deliveryCode")), pattern),
+                        cb.like(cb.lower(root.get("deliveryTitle")), pattern),
+                        cb.like(cb.lower(root.get("deliveryType")), pattern),
+                        cb.like(cb.lower(root.get("deliverySummary")), pattern),
+                        cb.like(cb.lower(root.get("releaseNote")), pattern),
+                        cb.like(cb.lower(root.get("customerSignedBy")), pattern),
+                        cb.like(cb.lower(root.get("status")), pattern)
+                ));
+
+                // ✅ Bilingual: สถานะการส่งมอบ
+                for (var entry : DELIVERY_STATUS_THAI_MAP.entrySet()) {
+                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
+                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
+                    }
+                }
+
+                // ✅ Bilingual: สถานะการอนุมัติ
+                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                        query, cb, root.get("id"), "DELIVERY", rawKw, orPreds);
+
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
+            }
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+
+        Page<PmDelivery> page = deliveryRepository.findAll(spec, pageable);
         return page.map(d -> toResponseWithReadiness(d, businessId));
     }
 

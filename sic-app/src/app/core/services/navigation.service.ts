@@ -11,18 +11,7 @@ export class NavigationService {
   ) {}
 
   navigate(commands: any[], extras?: NavigationExtras): Promise<boolean> {
-    const projectId = this.customerState.getProjectId();
-    const queryParams: any = { ...extras?.queryParams };
-
-    if (projectId) {
-      queryParams.projectId = projectId;
-    }
-
-    return this.router.navigate(commands, {
-      ...extras,
-      queryParams,
-      queryParamsHandling: extras?.queryParamsHandling || 'replace',
-    });
+    return this.router.navigate(commands, extras);
   }
 
   navigateWithoutContext(commands: any[], extras?: NavigationExtras): Promise<boolean> {
