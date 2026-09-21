@@ -1,5 +1,6 @@
 import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
+import { AuditLogUser } from './audit-log.service';
 
 export interface Pmdt20Model extends SicBaseStateModel {
   id?: string;
@@ -13,4 +14,7 @@ export interface Pmdt20PageData {
   formData?: SicFromData<Pmdt20Model>;
   detail?: any;
   items?: any[];
+  /** Filter dropdown options preloaded by the resolver; grid rows stay lazily loaded via handleGridLoad. */
+  modules?: string[];
+  users?: AuditLogUser[];
 }

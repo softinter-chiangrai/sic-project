@@ -30,7 +30,7 @@ import type { CanComponentDeactivate } from '../../../../../core/guard/can-deact
 
 import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
-import { ChangeRequestFormModel } from './pmdt06A.model';
+import { ChangeRequestFormModel, Pmdt06APageData } from './pmdt06A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -197,16 +197,19 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             this.isView = true;
         }
 
-        this.route.params.subscribe((params) => {
-            const id = params['id'];
-            if (id) {
-                this.isEdit = !this.isView;
-                this.changeRequestId = id;
+        const page: Pmdt06APageData = this.route.snapshot.data['form'];
+        const id = this.route.snapshot.paramMap.get('id');
+        if (id) {
+            this.isEdit = !this.isView;
+            this.changeRequestId = id;
+            if (page?.data) {
+                this.applyChangeRequestData(page.data);
+            } else {
                 this.loadChangeRequest(id);
-                // โหลด Impact Analysis เฉพาะตอนแก้ไข/ดูรายละเอียด
-                this.loadImpactAnalysis(id);
             }
-        });
+            // โหลด Impact Analysis เฉพาะตอนแก้ไข/ดูรายละเอียด
+            this.loadImpactAnalysis(id);
+        }
 
         this.form.get('targetType')?.valueChanges.subscribe((val) => {
             this.selectedTargetType.set(val);
@@ -306,57 +309,62 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             .get<ChangeRequestFormModel>(`${this.baseUrl}/${id}`)
             .pipe(finalize(() => (this.isLoading = false)))
             .subscribe({
-                next: (data) => {
-                    if (data.targetType) {
-                        this.selectedTargetType.set(data.targetType);
-                    }
-                    this.currentStatus = (data as any).status ?? null;
-                    this.currentIsLocked = !!(data as any).isLocked;
-                    this.formData.patchValue(data);
-                    this.loadApprovalFlowForCR(id);
-                    if (data.status === 'SUBMITTED' || data.status === 'APPROVED' || data.status === 'IMPLEMENTED') {
-                        this.isView = true;
-                        this.isEdit = false;
-                        this.form.disable();
-                    } else if (data.status === 'REJECTED') {
-                        // If rejected, allow editing and re-submitting for approval
-                        this.isView = false;
-                        this.isEdit = true;
-                        this.form.enable();
-                    } else if (this.isView) {
-                        this.form.disable();
-                    }
-                    if (data.assignees && data.assignees.length > 0) {
-                        const assignees = data.assignees.map((a) => ({
-                            userId: a.userId,
-                            userName: a.userName || a.userId,
-                        }));
-                        this.selectedAssignees.set(assignees);
-                        this.form.get('assigneeIds')?.setValue(assignees.map(a => a.userId));
-                        this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
-                    } else if (data.assigneeId) {
-                        this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
-                        this.form.get('assigneeIds')?.setValue([data.assigneeId]);
-                        this.form.get('assigneeId')?.setValue(data.assigneeId);
-                    } else {
-                        this.selectedAssignees.set([]);
-                        this.form.get('assigneeIds')?.setValue([]);
-                        this.form.get('assigneeId')?.setValue(null);
-                    }
-                    if (data.projectId) {
-                        this.projectId = data.projectId;
-                    }
-                    if (this.isView) {
-                        this.form.disable();
-                    }
-                    this.formData.resetModel(this.form.getRawValue());
-                    this.isLoading = false;
-                },
+                next: (data) => this.applyChangeRequestData(data),
                 error: () => {
                     this.dialog.error(this.translate.instant('PMDT06_LOAD_FAIL_TITLE'), this.translate.instant('PMDT06_CR_NOT_FOUND_MSG'));
                     this.navigation.navigate(['/feature/pm/change-request']);
                 },
             });
+    }
+
+    private applyChangeRequestData(data: ChangeRequestFormModel) {
+        const id = data.id || this.changeRequestId;
+        if (data.targetType) {
+            this.selectedTargetType.set(data.targetType);
+        }
+        this.currentStatus = (data as any).status ?? null;
+        this.currentIsLocked = !!(data as any).isLocked;
+        this.formData.patchValue(data);
+        if (id) {
+            this.loadApprovalFlowForCR(id);
+        }
+        if (data.status === 'SUBMITTED' || data.status === 'APPROVED' || data.status === 'IMPLEMENTED') {
+            this.isView = true;
+            this.isEdit = false;
+            this.form.disable();
+        } else if (data.status === 'REJECTED') {
+            // If rejected, allow editing and re-submitting for approval
+            this.isView = false;
+            this.isEdit = true;
+            this.form.enable();
+        } else if (this.isView) {
+            this.form.disable();
+        }
+        if (data.assignees && data.assignees.length > 0) {
+            const assignees = data.assignees.map((a) => ({
+                userId: a.userId,
+                userName: a.userName || a.userId,
+            }));
+            this.selectedAssignees.set(assignees);
+            this.form.get('assigneeIds')?.setValue(assignees.map(a => a.userId));
+            this.form.get('assigneeId')?.setValue(data.assignees[0]?.userId || null);
+        } else if (data.assigneeId) {
+            this.selectedAssignees.set([{ userId: data.assigneeId, userName: data.assigneeName || data.assigneeId }]);
+            this.form.get('assigneeIds')?.setValue([data.assigneeId]);
+            this.form.get('assigneeId')?.setValue(data.assigneeId);
+        } else {
+            this.selectedAssignees.set([]);
+            this.form.get('assigneeIds')?.setValue([]);
+            this.form.get('assigneeId')?.setValue(null);
+        }
+        if (data.projectId) {
+            this.projectId = data.projectId;
+        }
+        if (this.isView) {
+            this.form.disable();
+        }
+        this.formData.resetModel(this.form.getRawValue());
+        this.isLoading = false;
     }
 
     // ===== Impact Analysis Methods =====

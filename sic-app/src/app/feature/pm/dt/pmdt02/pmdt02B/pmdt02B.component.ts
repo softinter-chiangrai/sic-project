@@ -11,7 +11,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { Pmdt02BService } from './pmdt02B.service';
 import { Pmdt02BForm } from './pmdt02B.form';
-import { WorkPackageModel, WorkPackageRequest, WorkPackageResponse } from './pmdt02B.model';
+import { WorkPackageModel, WorkPackagePageData, WorkPackageRequest, WorkPackageResponse } from './pmdt02B.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicButtonComponent } from "sic-ng";
@@ -58,13 +58,26 @@ export class Pmdt02BComponent implements OnInit {
   }
 
   ngOnInit() {
+    const pageData: WorkPackagePageData | undefined = this.route.snapshot.data['pageData'];
+    if (pageData?.workPackageData) {
+      this.formData = pageData.workPackageData;
+    }
+    if (pageData?.workPackageDetail) {
+      this.data = pageData.workPackageDetail;
+      this.isEdit = true;
+      this.wpId = pageData.workPackageDetail.id;
+      if (pageData.workPackageDetail.milestoneId) {
+        this.milestoneId = pageData.workPackageDetail.milestoneId;
+      }
+    }
+
     this.route.paramMap.subscribe((params) => {
       this.wpId = params.get('id');
       this.isEdit = !!this.wpId;
     });
 
     this.route.queryParams.subscribe((qParams) => {
-      this.milestoneId = qParams['milestoneId'] || '';
+      this.milestoneId = qParams['milestoneId'] || this.milestoneId;
       this.projectId = qParams['projectId'] || '';
       this.phaseId = qParams['phaseId'] || '';
       const dateParam = qParams['startDate'] || qParams['date'];
@@ -77,7 +90,7 @@ export class Pmdt02BComponent implements OnInit {
           endTime: '18:00',
         });
       }
-      if (this.isEdit && this.wpId) {
+      if (this.isEdit && this.wpId && !this.data) {
         this.loadWorkPackage(this.wpId);
       }
     });

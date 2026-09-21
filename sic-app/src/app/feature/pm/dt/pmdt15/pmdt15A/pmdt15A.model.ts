@@ -5,6 +5,16 @@ export interface PmUserManualFormData {
   manual: SicFromData<PmUserManualModel>;
 }
 
+export interface PmUserManualPageData {
+  formData: SicFromData<PmUserManualModel>;
+  isEdit: boolean;
+  isLocked: boolean;
+  sections: PmUserManualSectionModel[];
+  deliveryOptions: Array<{ value: string; text: string }>;
+  requirementOptions: Array<{ value: string; text: string }>;
+  specificationOptions: Array<{ value: string; text: string }>;
+}
+
 export interface PmUserManualSectionModel {
   id?: string;
   manualId?: string;

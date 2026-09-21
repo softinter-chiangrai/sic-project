@@ -1,19 +1,10 @@
 // src/app/feature/bu/rt/burt06/burt06A/burt06A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { HttpClient } from '@angular/common/http';
 import { ChangeDetectorRef, Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import {
-  AbstractControl,
-  FormArray,
-  FormBuilder,
-  FormGroup,
-  ReactiveFormsModule,
-  ValidationErrors,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
 import { SicCardComponent } from 'sic-ng';
@@ -24,8 +15,9 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { UserOption } from './burt06A.model';
-import { ApprovalFlowStep, ApprovalFlow } from '../burt06.model';
+import { Burt06AModel, Burt06APageData, UserOption } from './burt06A.model';
+import { Burt06AForm } from './burt06A.form';
+import { ApprovalFlow } from '../burt06.model';
 import { Burt06Service } from '../burt06.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -57,7 +49,6 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   private dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
   private businessService = inject(BusinessService);
-  private http = inject(HttpClient);
   private translate = inject(TranslateService);
   readonly apiBaseUrl = environment.apiBaseUrl;
 
@@ -71,21 +62,9 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   isLoading = signal(false);
   isSaving = signal(false);
 
-  formData = new SicFromData<any>(
-    this.fb.group({
-      id: [null],
-      flowCode: ['', [Validators.required, Validators.maxLength(50)]],
-      flowName: ['', [Validators.required, Validators.maxLength(255)]],
-      documentType: [null as string | null, [Validators.required]],
-      approvalMode: ['CHAIN', [Validators.required]],
-      description: [''],
-      isActive: [true],
-      steps: this.fb.array<FormGroup>([], [this.stepValidator()]),
-      rowVersion: [null],
-    })
-  );
+  formData!: SicFromData<Burt06AModel>;
 
-  get form() {
+  get form(): FormGroup {
     return this.formData.formGroup;
   }
 
@@ -96,63 +75,12 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
-  stepValidator(): ValidatorFn {
-    return (control: AbstractControl): ValidationErrors | null => {
-      if (!(control instanceof FormArray)) {
-        return null;
-      }
-      const formArray = control as FormArray;
-      const invalidSteps = formArray.controls
-        .map((stepGroup, index) => ({ index, stepGroup }))
-        .filter(({ stepGroup }) => {
-          const approverRole = stepGroup.get('approverRole')?.value;
-          const selectedUserIds = stepGroup.get('selectedUserIds')?.value;
-          const hasUsers = Array.isArray(selectedUserIds) && selectedUserIds.length > 0;
-          return !approverRole || !hasUsers;
-        });
-
-      if (invalidSteps.length > 0) {
-        return { missingApprover: true, invalidIndices: invalidSteps.map((s) => s.index) };
-      }
-      return null;
-    };
-  }
-
   ngOnInit(): void {
     this.timeoutActionOptions = this.buildTimeoutActionOptions();
-    const id = this.route.snapshot.params['id'];
-    if (id) {
-      this.isEdit = true;
-      this.flowId = id;
-      this.loadFlow(id);
-    } else {
-      this.addStep();
-    }
-  }
-
-  loadFlow(id: string): void {
-    this.isLoading.set(true);
-    this.service
-      .getFlow(id)
-      .subscribe({
-        next: (data) => {
-          this.form.patchValue(data as any);
-          this.steps.clear();
-          data.steps?.forEach((step) => {
-            this.steps.push(this.createStepForm(step));
-          });
-          this.reorderSteps();
-          this.formData.resetModel(this.form.getRawValue());
-          this.isLoading.set(false);
-          this.cdr.detectChanges();
-        },
-        error: () => {
-          this.isLoading.set(false);
-          this.cdr.detectChanges();
-          this.dialog.error(this.translate.instant('BURT06A_LOAD_FAILED_TITLE'), this.translate.instant('BURT06A_LOAD_FAILED_MSG'));
-          this.router.navigate(['/feature/bu/approval-flow']);
-        },
-      });
+    const page: Burt06APageData = this.route.snapshot.data['form'];
+    this.formData = page.flowData;
+    this.isEdit = page.isEdit;
+    this.flowId = this.route.snapshot.paramMap.get('id');
   }
 
   timeoutActionOptions: { value: string; text: string }[] = [];
@@ -166,38 +94,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     ];
   }
 
-  createStepForm(step?: ApprovalFlowStep): FormGroup {
-    return this.fb.group({
-      id: [step?.id || null],
-      stepOrder: [
-        step?.stepOrder || this.steps.length + 1,
-        [Validators.required, Validators.min(1)],
-      ],
-      stepName: [step?.stepName || '', [Validators.required, Validators.maxLength(255)]],
-      approverRole: [step?.approverRole || '', [Validators.required]],
-      approverUserId: [step?.approverUserId || ''],
-      selectedUserIds: [this.parseUserIds(step?.approverUserId), [Validators.required]],
-      isRequired: [step?.isRequired !== false],
-      timeoutDays: [
-        step?.timeoutDays !== undefined && step?.timeoutDays !== null ? step.timeoutDays : 1,
-        [Validators.required, Validators.min(1)],
-      ],
-      timeoutAction: [step?.timeoutAction || 'NONE', [Validators.required]],
-      canSkip: [step?.canSkip || false],
-      rowVersion: [step?.rowVersion || null],
-    });
-  }
-
-  private parseUserIds(csv?: string): string[] {
-    if (!csv || !csv.trim()) return [];
-    return csv
-      .split(',')
-      .map((s) => s.trim())
-      .filter(Boolean);
-  }
-
   addStep(): void {
-    this.steps.push(this.createStepForm());
+    this.steps.push(Burt06AForm.createStepForm(this.fb, this.steps.length + 1));
     this.reorderSteps();
     this.cdr.detectChanges();
   }
@@ -308,19 +206,19 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
         ? this.service.updateFlow(this.flowId, data)
         : this.service.createFlow(data);
 
-    request.subscribe({
-      next: () => {
-        this.isSaving.set(false);
-        this.isSaved = true;
-        this.form.markAsPristine();
-        this.dialog.success(this.translate.instant('BURT06A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT06A_SAVE_SUCCESS_MSG', { name: data.flowName }));
-        this.router.navigate(['/feature/bu/approval-flow']);
-      },
-      error: (err) => {
-        this.isSaving.set(false);
-        this.dialog.error(this.translate.instant('BURT06A_SAVE_FAILED_TITLE'), err.error?.message || this.translate.instant('BURT06A_GENERIC_ERROR_MSG'));
-      },
-    });
+    request
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.isSaved = true;
+          this.form.markAsPristine();
+          this.dialog.success(this.translate.instant('BURT06A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT06A_SAVE_SUCCESS_MSG', { name: data.flowName }));
+          this.router.navigate(['/feature/bu/approval-flow']);
+        },
+        error: (err) => {
+          this.dialog.error(this.translate.instant('BURT06A_SAVE_FAILED_TITLE'), err.error?.message || this.translate.instant('BURT06A_GENERIC_ERROR_MSG'));
+        },
+      });
   }
 
   get roleApiUrl(): string {

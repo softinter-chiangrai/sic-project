@@ -4,6 +4,7 @@ import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@ang
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { BusinessJoinService } from './business-join.service';
 import { BusinessJoinFormData, JoinModel } from './business-join.model';
 import { DialogService } from '../../../core/services/dialog.service';
@@ -74,20 +75,20 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
       return;
     }
     this.loading.set(true);
-    this.service.join(this.tokenForm.value.token!).subscribe({
-      next: async () => {
-        this.loading.set(false);
-        this.isSaved = true;
-        this.tokenForm.markAsPristine();
-        await this.dialog.success(this.translate.instant('BUSINESS_JOIN_SUCCESS_TITLE'), this.translate.instant('BUSINESS_JOIN_SUCCESS_MSG'));
-        this.router.navigate(['/management/business']);
-      },
-      error: async (err) => {
-        this.loading.set(false);
-        const msg = err?.error?.detail ?? err?.error?.message ?? this.translate.instant('BUSINESS_JOIN_FAIL_MSG');
-        await this.dialog.error(this.translate.instant('BUSINESS_JOIN_ERROR_TITLE'), msg);
-      },
-    });
+    this.service.join(this.tokenForm.value.token!)
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: async () => {
+          this.isSaved = true;
+          this.tokenForm.markAsPristine();
+          await this.dialog.success(this.translate.instant('BUSINESS_JOIN_SUCCESS_TITLE'), this.translate.instant('BUSINESS_JOIN_SUCCESS_MSG'));
+          this.router.navigate(['/management/business']);
+        },
+        error: async (err) => {
+          const msg = err?.error?.detail ?? err?.error?.message ?? this.translate.instant('BUSINESS_JOIN_FAIL_MSG');
+          await this.dialog.error(this.translate.instant('BUSINESS_JOIN_ERROR_TITLE'), msg);
+        },
+      });
   }
 
   onBack(): void {

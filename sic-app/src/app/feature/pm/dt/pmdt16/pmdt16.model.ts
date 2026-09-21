@@ -13,4 +13,5 @@ export interface Pmdt16PageData {
   formData?: SicFromData<Pmdt16Model>;
   detail?: any;
   items?: any[];
+  totalElements?: number;
 }

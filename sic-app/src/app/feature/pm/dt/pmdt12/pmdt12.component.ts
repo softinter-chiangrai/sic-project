@@ -333,6 +333,7 @@ export class Pmdt12Component implements OnInit {
           this.scenarios.set([]);
           this.testCases.set([]);
           this.projectTasks.set([]);
+          this.dialog.error(this.translate.instant('PMDT12_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT12_LOAD_FAIL_MSG'));
         },
       });
   }

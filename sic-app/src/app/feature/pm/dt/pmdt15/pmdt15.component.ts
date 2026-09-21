@@ -99,21 +99,23 @@ export class Pmdt15Component implements OnInit {
         manualType: this.filterType() || undefined,
         status: this.filterStatus() || undefined,
       })
+      .pipe(finalize(() => { this.isLoading.set(false); this.cdr.markForCheck(); }))
       .subscribe({
         next: (res) => {
           const items = res.data || [];
           const totalElements = res.pageable?.totalElements || 0;
           this.manuals.set(items);
           this.totalElements.set(totalElements);
-          this.isLoading.set(false);
           grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
           this.loadApprovalStatuses(items, grid, request.requestId);
-          this.cdr.markForCheck();
         },
-        error: () => {
-          this.isLoading.set(false);
-          this.cdr.markForCheck();
-          grid.setLoadError(this.translate.instant('PMDT15_LOAD_ERROR'), request.requestId);
+        error: (err) => {
+          const msg = err.error?.message || this.translate.instant('PMDT15_LOAD_ERROR');
+          this.manuals.set([]);
+          this.totalElements.set(0);
+          grid.setRows([], { totalElements: 0 }, request.requestId);
+          grid.setLoadError(msg, request.requestId);
+          this.dialog.error(this.translate.instant('PMDT15_LOAD_ERROR'), msg);
         },
       });
   }

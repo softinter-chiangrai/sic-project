@@ -24,6 +24,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmdt16AForm } from './pmdt16A.form';
 import { Pmdt16AService } from './pmdt16A.service';
 import { PmInvoiceModel, PmInvoiceItemModel } from './pmdt16A.model';
+import { Pmdt16APageData } from './pmdt16A.resolver';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
@@ -294,24 +295,27 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     this.formData.form.get('subtotalAmount')?.valueChanges.subscribe(() => this.calculateTotals());
     this.formData.form.get('vatRate')?.valueChanges.subscribe(() => this.calculateTotals());
 
-    this.route.params.subscribe((params) => {
-      const paramId = params['id'];
-      if (paramId) {
-        this.id.set(paramId);
-      }
-      const isViewRoute = this.router.url.includes('/view');
-      const isEditRoute = this.router.url.includes('/edit');
-      this.isView.set(isViewRoute);
-      this.isEdit.set(isEditRoute || (!isViewRoute && !!paramId));
-      if (this.isView()) {
-        this.formData?.form.disable();
+    const page: Pmdt16APageData = this.route.snapshot.data['pageData'];
+    const paramId = this.route.snapshot.paramMap.get('id');
+    if (paramId) {
+      this.id.set(paramId);
+    }
+    const isViewRoute2 = this.router.url.includes('/view');
+    const isEditRoute = this.router.url.includes('/edit');
+    this.isView.set(isViewRoute2);
+    this.isEdit.set(isEditRoute || (!isViewRoute2 && !!paramId));
+    if (this.isView()) {
+      this.formData?.form.disable();
+    } else {
+      this.formData?.form.enable();
+    }
+    if (paramId) {
+      if (page?.data) {
+        this.applyInvoiceData(page.data);
       } else {
-        this.formData?.form.enable();
-      }
-      if (paramId) {
         this.loadData(paramId);
       }
-    });
+    }
   }
 
   loadDeliveryOptions(projectId?: string): void {
@@ -433,34 +437,36 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   loadData(id: string) {
     this.service.getById(id).subscribe({
-      next: (data) => {
-        this.formData.form.patchValue(data);
-        if (data.items) {
-          this.items.set(data.items);
-        }
-        if (data.isLocked) {
-          this.isLocked.set(true);
-          this.isView.set(true);
-        } else {
-          this.isLocked.set(false);
-          this.isView.set(this.router.url.includes('/view'));
-        }
-        if (this.isView()) {
-          this.formData.form.disable();
-        } else {
-          this.formData.form.enable();
-        }
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
-        if (data.projectId) {
-          this.loadContractOptions(data.projectId);
-          this.loadDeliveryOptions(data.projectId);
-        }
-        this.isProjectDerived.set(!!data.deliveryId);
-      },
+      next: (data) => this.applyInvoiceData(data),
       error: (err) => {
         this.dialog.error(this.translate.instant('PMDT16A_ERROR_TITLE'), err.message || this.translate.instant('PMDT16A_LOAD_ERROR_MSG'));
       },
     });
+  }
+
+  private applyInvoiceData(data: PmInvoiceModel): void {
+    this.formData.form.patchValue(data);
+    if (data.items) {
+      this.items.set(data.items);
+    }
+    if (data.isLocked) {
+      this.isLocked.set(true);
+      this.isView.set(true);
+    } else {
+      this.isLocked.set(false);
+      this.isView.set(this.router.url.includes('/view'));
+    }
+    if (this.isView()) {
+      this.formData.form.disable();
+    } else {
+      this.formData.form.enable();
+    }
+    this.formData.resetModel(this.formData.form.getRawValue() as any);
+    if (data.projectId) {
+      this.loadContractOptions(data.projectId);
+      this.loadDeliveryOptions(data.projectId);
+    }
+    this.isProjectDerived.set(!!data.deliveryId);
   }
 
   goToEditMode(): void {

@@ -13,7 +13,13 @@ export interface Pmdt08Model extends SicBaseStateModel {
 }
 
 export interface Pmdt08PageData {
+  /** kept for legacy/unused edit-by-id form flow (not currently routed with :id) */
   discussionData: SicFromData<Pmdt08Model>;
+  /** actual data the discussion feed page (pmdt08.component.ts) needs */
+  projectId: string | null;
+  posts: Post[];
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface ApiResponse<T> {

@@ -22,6 +22,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import type { Approval } from '../approval.model';
 import { ApprovalService } from '../approval.service';
+import type { Pmdt03APageData } from './pmdt03A.model';
 import { SicDatePipe } from "../../../../../core/pipes/sic-date.pipe";
 
 @Component({
@@ -78,9 +79,14 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
   // ===== Lifecycle =====
   ngOnInit(): void {
     const id = this.route.snapshot.params['id'];
+    const pageData: Pmdt03APageData | undefined = this.route.snapshot.data['pageData'];
     if (id) {
       this.approvalId.set(id);
-      this.loadApproval(id);
+      if (pageData?.approval) {
+        this.approval.set(pageData.approval);
+      } else {
+        this.loadApproval(id);
+      }
     }
 
     this.route.params.subscribe((params) => {

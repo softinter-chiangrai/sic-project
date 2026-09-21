@@ -17,7 +17,8 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import type { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from './approval.service';
 import type { Approval } from './approval.model';
-import { ApprovalItem } from './pmdt03.model';
+import { ApprovalItem, Pmdt03PageData } from './pmdt03.model';
+import type { ApprovalSummary } from './approval.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
@@ -49,6 +50,7 @@ export class Pmdt03Component implements OnInit {
   // ===== Data =====
   protected approvals = signal<ApprovalItem[]>([]);
   protected totalElements = signal(0);
+  protected summary = signal<ApprovalSummary | null>(null);
 
   // ===== Bulk Selection (เฉพาะแท็บ "รอฉันอนุมัติ" เท่านั้น) — ใช้ selection ในตัวของ grid =====
   protected isBulkActing = signal(false);
@@ -141,6 +143,11 @@ export class Pmdt03Component implements OnInit {
   ];
 
   ngOnInit(): void {
+    const pageData: Pmdt03PageData | undefined = this.route.snapshot.data['pageData'];
+    if (pageData?.summary) {
+      this.summary.set(pageData.summary);
+    }
+
     this.route.queryParams.subscribe((params) => {
       if (this.syncingUrl) {
         this.syncingUrl = false;

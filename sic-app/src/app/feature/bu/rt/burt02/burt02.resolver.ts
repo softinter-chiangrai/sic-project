@@ -1,35 +1,50 @@
 // src/app/feature/bu/rt/burt02/burt02.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Burt02Service } from './burt02.service';
-import { Burt02Form } from './burt02.form';
-import { Burt02Model, Burt02PageData } from './burt02.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { ResolveFn } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
+import { burt03Service } from '../burt03/burt03.service';
+import { burt04Service } from '../burt04/burt04.service';
+import { Burt02PageData, RolePermissionSummary } from './burt02.model';
 
-export const burt02Resolver: ResolveFn<Burt02PageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Burt02Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
+export const burt02Resolver: ResolveFn<Burt02PageData> = async () => {
+  const roleService = inject(burt03Service);
+  const memberService = inject(burt04Service);
 
-  const form = Burt02Form.createForm(fb);
-
-  if (!id) {
-    return { customerData: new SicFromData<Burt02Model>(form) };
+  const businessId = localStorage.getItem('businessId');
+  if (!businessId) {
+    return { roles: [] };
   }
 
   try {
-    const data = await lastValueFrom(service.getCustomerById(id));
-    if (data) {
-      form.patchValue(data);
-      return { customerData: new SicFromData<Burt02Model>(form, data) };
+    const roles = await lastValueFrom(roleService.getRoles(businessId));
+
+    let userCountMap = new Map<string, number>();
+    try {
+      const res = await lastValueFrom(memberService.getMembers(businessId, 0, 1000));
+      const members = res?.data || [];
+      members.forEach((member) => {
+        const roleIds = member.roleIds || [];
+        roleIds.forEach((roleId) => {
+          userCountMap.set(roleId, (userCountMap.get(roleId) || 0) + 1);
+        });
+      });
+    } catch {
+      // Fallback: userCount = 0 for every role, still show the role list.
+      userCountMap = new Map<string, number>();
     }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+
+    const mapped: RolePermissionSummary[] = roles.map((r) => ({
+      roleId: r.id,
+      roleCode: r.roleCode,
+      roleName: r.roleName || r.roleNameEn || r.roleCode,
+      userCount: userCountMap.get(r.id) || 0,
+      isActive: r.isActive,
+      permissions: [],
+    }));
+
+    return { roles: mapped };
+  } catch (err) {
+    console.error('Failed to load roles:', err);
+    return { roles: [] };
   }
 };

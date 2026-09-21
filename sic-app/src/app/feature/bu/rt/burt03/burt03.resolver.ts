@@ -1,35 +1,37 @@
 // src/app/feature/bu/rt/burt03/burt03.resolver.ts
 import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { burt03Service } from './burt03.service';
-import { Burt03Form } from './burt03.form';
-import { Burt03Model, Burt03PageData } from './burt03.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { Burt03PageData, Role } from './burt03.model';
 
-export const burt03Resolver: ResolveFn<Burt03PageData> = async (route) => {
-  const fb = inject(FormBuilder);
+async function resolveBusinessId(service: burt03Service): Promise<string | null> {
+  const stored = localStorage.getItem('businessId');
+  if (stored) return stored;
+
+  const businesses = await lastValueFrom(service.getMyBusinesses());
+  if (!businesses || businesses.length === 0) return null;
+
+  const activeBiz = businesses.find((b) => b.isDefault) || businesses[0];
+  localStorage.setItem('businessId', activeBiz.id);
+  return activeBiz.id;
+}
+
+export const burt03Resolver: ResolveFn<Burt03PageData> = async () => {
   const service = inject(burt03Service);
   const router = inject(Router);
-  const id = route.paramMap.get('id');
-
-  const form = Burt03Form.createForm(fb);
-
-  if (!id) {
-    return { roleData: new SicFromData<Burt03Model>(form) };
-  }
 
   try {
-    const data = await lastValueFrom(service.getRole(id));
-    if (data) {
-      form.patchValue(data as any);
-      return { roleData: new SicFromData<Burt03Model>(form, data as any) };
+    const businessId = await resolveBusinessId(service);
+    if (!businessId) {
+      return { businessId: '', roles: [] };
     }
+
+    const roles: Role[] = await lastValueFrom(service.getRoles(businessId));
+    return { businessId, roles: roles ?? [] };
+  } catch (err) {
+    console.error('Failed to load roles:', err);
     router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+    return { businessId: '', roles: [] };
   }
 };

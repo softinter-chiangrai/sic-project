@@ -3,17 +3,14 @@ import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export interface Burt02AModel extends SicBaseStateModel {
-  id: string;
-  customerCode: string;
-  customerName: string;
-  email?: string;
-  phone?: string;
-  address?: string;
-  taxId?: string;
+  roleId: string;
+  roleCode: string;
+  roleName: string;
+  modules: ModulePermission[];
 }
 
 export interface Burt02APageData {
-  customerData: SicFromData<Burt02AModel>;
+  formData: SicFromData<Burt02AModel>;
 }
 
 export interface ModulePermission {

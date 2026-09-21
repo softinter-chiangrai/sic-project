@@ -52,7 +52,7 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 // Preview Component
 import { SicRequirementPreviewComponent } from './pmdt04-preview/pmdt04-preview.component';
 
-import { RequirementModel } from './pmdt04A.model';
+import { Pmdt04APageData, RequirementModel } from './pmdt04A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Pmdt04AForm } from './pmdt04A.form';
@@ -337,8 +337,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   // ===== Lifecycle =====
   ngOnInit(): void {
-    const rawForm = Pmdt04AForm.createForm(this.fb);
-    this.formData = new SicFromData<RequirementModel>(rawForm);
+    const pageData: Pmdt04APageData | undefined = this.route.snapshot.data['form'];
+    this.formData = pageData?.requirementData ?? new SicFromData<RequirementModel>(Pmdt04AForm.createForm(this.fb));
     this.loadFlows();
 
     // Check if current route is view mode
@@ -352,7 +352,11 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       if (id) {
         this.isEdit = !this.isViewOnly;
         this.reqId = id;
-        this.loadRequirement(id);
+        if (pageData?.requirementDetail) {
+          this.applyLoadedRequirement(pageData.requirementDetail);
+        } else {
+          this.loadRequirement(id);
+        }
       } else {
         // New requirement - set default project from query params or customer state
         this.route.queryParams.subscribe((qParams) => {
@@ -394,55 +398,14 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   // ===== Data Loading =====
+  // Kept as a fallback for the rare case the resolver couldn't attach requirementDetail
+  // (resolver failures already redirect to /not-found before the component loads).
   loadRequirement(id: string) {
     this.isLoading = true;
     this.service.getRequirement(id).subscribe({
       next: (data) => {
-        this.formData.formGroup.patchValue(data);
         this.isLoading = false;
-
-        if (data.isLocked) {
-          this.isLocked = true;
-          this.isViewOnly = true;
-        } else {
-          this.isLocked = false;
-          const isViewRoute = this.router.url.includes('/view');
-          this.isViewOnly = isViewRoute;
-        }
-
-        if (this.isViewOnly) {
-          this.form.disable();
-        } else {
-          this.form.enable();
-        }
-
-        // If loaded data doesn't have projectName but has projectId, try to fetch it
-        if (!data.projectName && data.projectId) {
-          const cachedName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(data.projectId)) 
-            ? this.customerState.getProjectName() 
-            : null;
-          if (cachedName) {
-            // ✅ ใช้ formData.patchValue() — ไม่ทำให้ isChanged = true
-            this.formData.patchValue({ projectName: cachedName } as any);
-          } else {
-            this.fetchProjectName(data.projectId);
-          }
-        } else {
-          // ✅ re-snapshot หลังโหลดข้อมูลเสร็จ
-          this.formData.resetModel(this.form.getRawValue());
-        }
-
-        // If loaded data doesn't have createdBy, set it from token
-        if (!data.createdBy) {
-          const userName = this.getUserNameFromToken();
-          if (userName) {
-            // ✅ ใช้ formData.patchValue()
-            this.formData.patchValue({ createdBy: userName } as any);
-          }
-        }
-
-        console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
-        this.cdr.detectChanges();
+        this.applyLoadedRequirement(data);
       },
       error: (error) => {
         this.isLoading = false;
@@ -452,6 +415,55 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.navigation.navigate(['/feature/pm/requirement']);
       },
     });
+  }
+
+  // Shared post-processing for a loaded RequirementModel, whether it came from the
+  // route resolver (normal case) or the loadRequirement() fallback fetch above.
+  private applyLoadedRequirement(data: RequirementModel): void {
+    this.formData.formGroup.patchValue(data);
+
+    if (data.isLocked) {
+      this.isLocked = true;
+      this.isViewOnly = true;
+    } else {
+      this.isLocked = false;
+      const isViewRoute = this.router.url.includes('/view');
+      this.isViewOnly = isViewRoute;
+    }
+
+    if (this.isViewOnly) {
+      this.form.disable();
+    } else {
+      this.form.enable();
+    }
+
+    // If loaded data doesn't have projectName but has projectId, try to fetch it
+    if (!data.projectName && data.projectId) {
+      const cachedName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(data.projectId))
+        ? this.customerState.getProjectName()
+        : null;
+      if (cachedName) {
+        // ✅ ใช้ formData.patchValue() — ไม่ทำให้ isChanged = true
+        this.formData.patchValue({ projectName: cachedName } as any);
+      } else {
+        this.fetchProjectName(data.projectId);
+      }
+    } else {
+      // ✅ re-snapshot หลังโหลดข้อมูลเสร็จ
+      this.formData.resetModel(this.form.getRawValue());
+    }
+
+    // If loaded data doesn't have createdBy, set it from token
+    if (!data.createdBy) {
+      const userName = this.getUserNameFromToken();
+      if (userName) {
+        // ✅ ใช้ formData.patchValue()
+        this.formData.patchValue({ createdBy: userName } as any);
+      }
+    }
+
+    console.log('✅ โหลดข้อมูล Requirement สำเร็จ:', data);
+    this.cdr.detectChanges();
   }
 
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)

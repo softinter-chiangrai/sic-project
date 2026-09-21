@@ -1,6 +1,7 @@
 // src/app/feature/pm/dt/pmdt03/pmdt03.model.ts
 import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
+import type { ApprovalSummary } from './approval.model';
 
 export type ApprovalStatus =
   | 'PENDING'
@@ -25,7 +26,7 @@ export interface Pmdt03Model extends SicBaseStateModel {
 }
 
 export interface Pmdt03PageData {
-  approvalData: SicFromData<Pmdt03Model>;
+  summary: ApprovalSummary | null;
 }
 
 export interface ApprovalItem {

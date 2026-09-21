@@ -24,6 +24,7 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 
 import { Pmdt07Service } from '../pmdt07.service';
 import { PmSpecificationModel } from '../pmdt07.model';
+import { Pmdt07AResolvedPageData } from '../pmdt07.resolver';
 import { Pmdt07AForm } from './pmdt07A.form';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmdt07PreviewComponent } from '../pmdt07-preview/pmdt07-preview.component';
@@ -223,12 +224,19 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         // Check if navigated with AI Draft State
         const aiDraft = history.state?.aiDraft;
 
+        const resolvedData: Pmdt07AResolvedPageData = this.route.snapshot.data['form'];
+
         this.route.params.subscribe(params => {
             const id = params['id'];
             if (id) {
                 this.isEdit = !this.isViewOnly;
                 this.specId = id;
-                this.loadSpecification(id);
+                const resolvedSpec = resolvedData?.specification?.value;
+                if (resolvedSpec?.id) {
+                    this.applySpecificationData(resolvedSpec);
+                } else {
+                    this.loadSpecification(id);
+                }
             } else {
                 // New spec
                 this.route.queryParams.subscribe(qParams => {
@@ -471,35 +479,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.isLoading = true;
         this.service.getSpecification(id).subscribe({
             next: (data) => {
-                this.form.patchValue(data);
-                if (data.owner && typeof data.owner === 'string') {
-                    const owners = data.owner.split(',').map((s: string) => s.trim()).filter(Boolean);
-                    this.form.patchValue({ owner: owners });
-                }
-                if (!data.projectName && data.projectId) {
-                    this.fetchProjectName(data.projectId);
-                }
-                if (!data.createdBy) {
-                    const userName = this.getUserNameFromToken();
-                    if (userName) this.form.patchValue({ createdBy: userName });
-                }
+                this.applySpecificationData(data);
                 this.isLoading = false;
-                if (data.isLocked) {
-                    this.isLocked = true;
-                    this.isViewOnly = true;
-                } else {
-                    this.isLocked = false;
-                    const isViewRoute = this.router.url.includes('/view');
-                    this.isViewOnly = isViewRoute;
-                }
-                if (this.isViewOnly) {
-                    this.form.disable();
-                } else {
-                    this.form.enable();
-                }
-
-                this.formData.resetModel(this.form.getRawValue() as any);
-                this.cdr.markForCheck();
             },
             error: () => {
                 this.isLoading = false;
@@ -507,6 +488,37 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.navigation.navigate(['/feature/pm/specification']);
             }
         });
+    }
+
+    private applySpecificationData(data: PmSpecificationModel) {
+        this.form.patchValue(data);
+        if (data.owner && typeof data.owner === 'string') {
+            const owners = data.owner.split(',').map((s: string) => s.trim()).filter(Boolean);
+            this.form.patchValue({ owner: owners });
+        }
+        if (!data.projectName && data.projectId) {
+            this.fetchProjectName(data.projectId);
+        }
+        if (!data.createdBy) {
+            const userName = this.getUserNameFromToken();
+            if (userName) this.form.patchValue({ createdBy: userName });
+        }
+        if (data.isLocked) {
+            this.isLocked = true;
+            this.isViewOnly = true;
+        } else {
+            this.isLocked = false;
+            const isViewRoute = this.router.url.includes('/view');
+            this.isViewOnly = isViewRoute;
+        }
+        if (this.isViewOnly) {
+            this.form.disable();
+        } else {
+            this.form.enable();
+        }
+
+        this.formData.resetModel(this.form.getRawValue() as any);
+        this.cdr.markForCheck();
     }
 
     // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — sync ชื่อโครงการ และล้าง Requirement เดิมที่อาจไม่ตรงกับโครงการใหม่

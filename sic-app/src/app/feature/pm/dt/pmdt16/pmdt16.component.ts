@@ -102,6 +102,16 @@ export class Pmdt16Component implements OnInit {
 
   constructor() {
     effect(() => {
+      const err = this.invoicesResource.error();
+      if (err) {
+        const msg = (err as any)?.error?.message || this.translate.instant('PMDT16_LOAD_ERROR');
+        this.gridRef?.setRows([], { totalElements: 0 });
+        this.gridRef?.setLoadError(msg);
+        this.dialog.error(this.translate.instant('PMDT16_LOAD_ERROR'), msg);
+      }
+    });
+
+    effect(() => {
       const res = this.invoicesResource.value();
       const content = res?.data;
       if (content && Array.isArray(content)) {

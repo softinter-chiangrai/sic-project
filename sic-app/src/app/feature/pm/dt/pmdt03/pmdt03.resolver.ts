@@ -1,35 +1,23 @@
 // src/app/feature/pm/dt/pmdt03/pmdt03.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt03Service } from './pmdt03.service';
-import { Pmdt03Form } from './pmdt03.form';
-import { Pmdt03Model, Pmdt03PageData } from './pmdt03.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { ResolveFn } from '@angular/router';
+import { lastValueFrom, catchError, of } from 'rxjs';
+import { ApprovalService } from './approval.service';
+import { Pmdt03PageData } from './pmdt03.model';
 
-export const pmdt03Resolver: ResolveFn<Pmdt03PageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmdt03Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
-
-  const form = Pmdt03Form.createForm(fb);
-
-  if (!id) {
-    return { approvalData: new SicFromData<Pmdt03Model>(form) };
-  }
+// The Approval Center ("approval") route has no :id — it is a paginated grid whose
+// rows are always loaded lazily via handleGridLoad(). The only thing genuinely
+// worth preloading here is the summary counts shown on the tab headers.
+export const pmdt03Resolver: ResolveFn<Pmdt03PageData> = async () => {
+  const service = inject(ApprovalService);
 
   try {
-    const data = await lastValueFrom(service.getApprovalById(id));
-    if (data) {
-      form.patchValue(data);
-      return { approvalData: new SicFromData<Pmdt03Model>(form, data) };
-    }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+    const summary = await lastValueFrom(
+      service.getSummary().pipe(catchError(() => of(null)))
+    );
+    return { summary };
+  } catch (err) {
+    console.error('pmdt03Resolver error:', err);
+    return { summary: null };
   }
 };

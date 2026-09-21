@@ -5,6 +5,12 @@ export interface DocumentVersionFormData {
   version: SicFromData<DocumentVersionModel>;
 }
 
+export interface Pmdt19APageData {
+  formData: SicFromData<DocumentVersionModel>;
+  isEdit: boolean;
+  id: string | null;
+}
+
 export interface DocumentVersionModel extends SicBaseStateModel {
   id: string;
   documentType: string; // REQUIREMENT, DFD, ER, SPEC, TEST_CASE, DELIVERY, CONTRACT, CHANGE_REQUEST, MANUAL

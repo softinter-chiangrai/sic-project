@@ -3,13 +3,12 @@
 import { inject } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { ResolveFn, Router } from '@angular/router';
-import { catchError, EMPTY, map, tap } from 'rxjs';
+import { catchError, EMPTY, map, timeout } from 'rxjs';
 
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmrt01AForm } from './pmrt01A.form';
 import { CustomerFormData, CustomerModel } from './pmrt01A.model';
 import { Pmrt01AService } from './pmrt01A.service';
-import { NavigationService } from '../../../../../core/services/navigation.service';
 
 // Create: ไม่โหลดข้อมูล
 export const customerCreateResolver: ResolveFn<CustomerFormData> = () => {
@@ -23,14 +22,15 @@ export const customerEditResolver: ResolveFn<CustomerFormData> = (route) => {
   const service = inject(Pmrt01AService);
   const router = inject(Router);
   const form = Pmrt01AForm.createForm(fb);
-  const navigation = inject(NavigationService); // ✅ ใช้ const
 
   return service.getCustomer(route.params['id']).pipe(
+    timeout(10000),
     map((data) => ({
       customer: new SicFromData<CustomerModel>(form, data),
     })),
-    catchError(() => {
-      navigation.navigate(['/feature/pm/customer']); // ✅ ใช้ navigation.navigate
+    catchError((err) => {
+      console.error('Failed to load customer:', err);
+      router.navigate(['/not-found']);
       return EMPTY;
     }),
   );

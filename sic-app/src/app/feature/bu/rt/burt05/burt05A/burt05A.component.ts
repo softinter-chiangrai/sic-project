@@ -18,7 +18,7 @@ import { burt05Service } from '../burt05.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Burt05AForm } from './burt05A.form';
-import { Burt05AModel } from './burt05A.model';
+import { Burt05AModel, Burt05APageData } from './burt05A.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -84,48 +84,29 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
       { value: 'View', text: this.translate.instant('BURT05A_LEVEL_VIEW_OPT') },
       { value: 'None', text: this.translate.instant('BURT05A_LEVEL_NONE_OPT') },
     ];
-    const rawForm = Burt05AForm.createForm(this.fb);
-    this.formData = new SicFromData<Burt05AModel>(rawForm);
+    const id = this.route.snapshot.paramMap.get('id');
+    const segments = this.route.snapshot.url;
+    const lastSegment = segments[segments.length - 1]?.path;
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      const segments = this.route.snapshot.url;
-      const lastSegment = segments[segments.length - 1]?.path;
+    if (lastSegment === 'permissions' && id) {
+      this.formData = new SicFromData<Burt05AModel>(Burt05AForm.createForm(this.fb));
+      this.isPermissionMode.set(true);
+      this.programId.set(id);
+      this.loadProgramWithPermissions(id);
+      return;
+    }
 
-      this.service.getPrograms().subscribe({
-        next: (progs: Program[]) => this.programs.set(progs),
-        error: (err: any) => console.error('Load programs error', err),
-      });
+    const page: Burt05APageData = this.route.snapshot.data['form'];
+    this.formData = page.programData;
+    this.programs.set(page.programs);
 
-      if (lastSegment === 'permissions' && id) {
-        this.isPermissionMode.set(true);
-        this.programId.set(id);
-        this.loadProgramWithPermissions(id);
-      } else if (id) {
-        this.isEditMode.set(true);
-        this.programId.set(id);
-        this.loadProgram(id);
-      } else {
-        this.isEditMode.set(false);
-        this.isPermissionMode.set(false);
-      }
-    });
-  }
-
-  // ✅ เพิ่ม type ให้กับ callback parameters
-  loadProgram(id: string) {
-    this.isLoading.set(true);
-    this.service.getProgram(id).subscribe({
-      next: (program: Program) => {
-        this.formData.patchValue(program as any);
-        this.isLoading.set(false);
-      },
-      error: (err: any) => {
-        this.isLoading.set(false);
-        this.dialog.error(this.translate.instant('BURT05A_LOAD_FAILED_TITLE'), this.translate.instant('BURT05A_PROGRAM_NOT_FOUND_MSG'));
-        this.router.navigate(['/feature/bu/program']);
-      },
-    });
+    if (id) {
+      this.isEditMode.set(true);
+      this.programId.set(id);
+    } else {
+      this.isEditMode.set(false);
+      this.isPermissionMode.set(false);
+    }
   }
 
   loadProgramWithPermissions(id: string) {

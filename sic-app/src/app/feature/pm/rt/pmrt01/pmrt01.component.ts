@@ -152,6 +152,7 @@ export class Pmrt01Component implements OnInit {
         error: (err) => {
           console.error('Load customers error', err);
           this.dialog.error(this.translate.instant('PMRT01_LOAD_ERROR_TITLE'), this.translate.instant('PMRT01_LOAD_ERROR_MSG'));
+          grid.setRows([], { totalElements: 0 }, request.requestId);
           grid.setLoadError(this.translate.instant('PMRT01_LOAD_ERROR_TITLE'), request.requestId);
         },
       });

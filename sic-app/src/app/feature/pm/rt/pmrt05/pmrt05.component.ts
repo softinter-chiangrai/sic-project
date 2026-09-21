@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize, forkJoin, of, catchError, map, Observable } from 'rxjs';
+import { forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
 import { SicCardComponent } from 'sic-ng';
@@ -80,49 +80,38 @@ export class Pmrt05Component implements OnInit {
   }
 
   // ===== Lifecycle =====
+  // Route is configured with `runGuardsAndResolvers: 'paramsOrQueryParamsChange'`
+  // so the resolver re-fetches whenever `requirementId`/`projectId` query params
+  // change while staying on the same route. We subscribe to `route.data` (not just
+  // the initial snapshot) so the page reacts to those re-resolves instead of
+  // duplicating the fetch here.
   ngOnInit() {
-    const pageData: Pmrt05PageData = this.route.snapshot.data['pageData'];
+    this.route.data.subscribe((data) => {
+      const pageData: Pmrt05PageData | undefined = data['pageData'];
+      this.applyPageData(pageData);
+    });
+  }
+
+  private applyPageData(pageData: Pmrt05PageData | undefined) {
     if (pageData && pageData.requirementDetail) {
       this.requirement.set(pageData.requirementDetail);
       this.projectId.set(pageData.requirementDetail.projectId);
       this.requirementId.set(pageData.requirementDetail.id);
-      if (pageData.traceLinks) {
-        this.traceLinks.set(pageData.traceLinks);
-        this.groupLinks(pageData.traceLinks);
-      }
+      this.traceLinks.set(pageData.traceLinks || []);
+      this.groupLinks(pageData.traceLinks || []);
     } else {
-      this.route.queryParams.subscribe((params) => {
-        const reqId = params['requirementId'] || null;
-        const projId = params['projectId'] || null;
-        if (reqId) {
-          this.requirementId.set(reqId);
-          if (projId) this.projectId.set(projId);
-          this.loadRequirement(reqId);
-          this.loadTraceLinks(reqId);
-        }
-      });
+      this.requirement.set(null);
+      this.projectId.set(null);
+      this.requirementId.set(null);
+      this.traceLinks.set([]);
+      this.groupLinks([]);
     }
   }
 
   // ===== Load Data =====
-  loadRequirement(id: string) {
-    this.isLoading.set(true);
-    this.http
-      .get<RequirementDetail>(`${environment.apiBaseUrl}/api/pm/requirement/${id}`)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (data) => {
-          this.requirement.set(data);
-          this.projectId.set(data.projectId);
-        },
-        error: (err) => {
-          console.error('Load requirement error:', err);
-          this.dialog.error(this.translate.instant('PMRT05_LOAD_ERROR_TITLE'), this.translate.instant('PMRT05_LOAD_ERROR_MSG'));
-          this.navigation.navigate(['/feature/pm/project']);
-        },
-      });
-  }
-
+  // Used to refresh trace links after adding a new relationship via the
+  // "Add Link" dialog (see openAddLinkDialog below) — not for the initial load,
+  // which is handled by pmrt05Resolver.
   loadTraceLinks(reqId: string) {
     this.http
       .get<TraceLink[]>(`${environment.apiBaseUrl}/api/trace/links/source/REQUIREMENT/${reqId}`)

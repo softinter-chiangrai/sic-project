@@ -24,7 +24,8 @@ import { SicInputComponent } from 'sic-ng';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { burt03Service } from '../../burt03/burt03.service';
-import { ModulePermission, RolePermissionData } from './burt02A.model';
+import { Burt02AModel, ModulePermission, RolePermissionData, Burt02APageData } from './burt02A.model';
+import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 // ============================================================
@@ -126,6 +127,8 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   readonly translate = inject(TranslateService);
   private cdr = inject(ChangeDetectorRef);
 
+  formData!: SicFromData<Burt02AModel>;
+
   roleId: string | null = null;
   roleCode = '';
   roleName = '';
@@ -138,7 +141,11 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
   currentPage = signal(1);
   pageSize = signal(10);
   modules = signal<ModulePermission[]>([]);
-  private initialModulesSnapshot = signal<string>('');
+
+  private syncFormModules(updated: ModulePermission[]): void {
+    this.modules.set(updated);
+    this.formData.formGroup.get('modules')?.setValue(updated);
+  }
 
   groupOptions: { value: string; text: string }[] = [];
 
@@ -205,10 +212,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
     return !!this.modules().find((m) => m.moduleId === moduleId)?.[permKey];
   }
 
-  pageDirty = (): boolean => {
-    if (!this.initialModulesSnapshot()) return false;
-    return this.initialModulesSnapshot() !== JSON.stringify(this.modules());
-  };
+  pageDirty = (): boolean => this.formData?.isChanged ?? false;
 
   onSearch(event: Event, grid: SicGridPanelComponent) {
     const input = event.target as HTMLInputElement;
@@ -235,43 +239,18 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       { value: 'SU', text: this.translate.instant('BURT02A_GROUP_SU') },
     ];
     this.gridConfig = this.buildGridConfig();
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.roleId = id;
-        this.loadData(id);
-      } else {
-        this.router.navigate(['/feature/bu/burt02']);
-      }
-    });
-  }
 
-  loadData(roleId: string) {
-    this.isLoading.set(true);
-    this.cdr.markForCheck();
-
-    forkJoin({
-      permissions: this.service.getRolePermissions(roleId),
-      roleDetail: this.roleService.getRole(roleId),
-    })
-      .pipe(
-        finalize(() => {
-          this.isLoading.set(false);
-          this.cdr.markForCheck();
-        }),
-      )
-      .subscribe({
-        next: ({ permissions, roleDetail }) => {
-          this.roleCode = permissions.roleCode || roleDetail.roleCode;
-          this.roleName = roleDetail.roleName || roleDetail.roleNameEn || roleDetail.roleCode;
-          this.modules.set(permissions.modules);
-          this.initialModulesSnapshot.set(JSON.stringify(permissions.modules));
-        },
-        error: (error) => {
-          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-          this.dialog.error(this.translate.instant('BURT02A_LOAD_FAILED_TITLE'), this.translate.instant('BURT02A_LOAD_FAILED_MSG'));
-        },
-      });
+    const page: Burt02APageData = this.route.snapshot.data['form'];
+    this.formData = page.formData;
+    const data = this.formData.value;
+    if (!data.roleId) {
+      this.router.navigate(['/feature/bu/permission']);
+      return;
+    }
+    this.roleId = data.roleId;
+    this.roleCode = data.roleCode;
+    this.roleName = data.roleName;
+    this.modules.set(data.modules);
   }
 
   // Toggle individual permission checkbox
@@ -304,7 +283,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       return m;
     });
 
-    this.modules.set(updated);
+    this.syncFormModules(updated);
     this.cdr.markForCheck();
   }
 
@@ -362,7 +341,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       return m;
     });
 
-    this.modules.set(updated);
+    this.syncFormModules(updated);
     this.cdr.markForCheck();
   }
 
@@ -393,7 +372,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       return m;
     });
 
-    this.modules.set(updated);
+    this.syncFormModules(updated);
     this.cdr.markForCheck();
   }
 
@@ -458,7 +437,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       return m;
     });
 
-    this.modules.set(updated);
+    this.syncFormModules(updated);
     this.cdr.markForCheck();
   }
 
@@ -497,7 +476,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       )
       .subscribe({
         next: () => {
-          this.initialModulesSnapshot.set(JSON.stringify(this.modules()));
+          this.formData.markAsPristine();
           this.dialog.success(this.translate.instant('BURT02A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT02A_SAVE_SUCCESS_MSG')).then(() => {
             this.router.navigate(['/feature/bu/permission']);
           });

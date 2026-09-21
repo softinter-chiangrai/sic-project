@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { forkJoin, map } from 'rxjs';
+import { finalize, forkJoin, map } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AuthService } from '../../core/auth/auth.service';
 import { SicButtonComponent } from 'sic-ng';
@@ -288,26 +288,26 @@ export class Profile implements OnInit {
     data.referenceNumber = this.formVerifyData.value.referenceNumber;
     data.verifyToken = this.formVerifyData.value.verifyToken;
 
-    this.service.save(data).subscribe({
-      next: (response: any) => {
-        this.isVerifying.set(false);
+    this.isVerifying.set(true);
+    this.service.save(data)
+      .pipe(finalize(() => this.isVerifying.set(false)))
+      .subscribe({
+        next: (response: any) => {
+          if (response?.success === false || response?.error) {
+            const errorMessage = response?.message || response?.error || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
+            this.handleSaveError(errorMessage);
+            return;
+          }
 
-        if (response?.success === false || response?.error) {
-          const errorMessage = response?.message || response?.error || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
+          this.dialog.success(this.translate.instant('PROFILE_SAVE_SUCCESS_TITLE'), this.translate.instant('PROFILE_SAVE_SUCCESS_MSG')).then(() => {
+            this.router.navigate(['feature']);
+          });
+        },
+        error: (error) => {
+          const errorMessage = error?.error?.message || error?.message || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
           this.handleSaveError(errorMessage);
-          return;
-        }
-
-        this.dialog.success(this.translate.instant('PROFILE_SAVE_SUCCESS_TITLE'), this.translate.instant('PROFILE_SAVE_SUCCESS_MSG')).then(() => {
-          this.router.navigate(['feature']);
-        });
-      },
-      error: (error) => {
-        this.isVerifying.set(false);
-        const errorMessage = error?.error?.message || error?.message || this.translate.instant('PROFILE_SAVE_FAILED_MSG');
-        this.handleSaveError(errorMessage);
-      },
-    });
+        },
+      });
   }
 
   // ✅ จัดการ Error ทั้งหมด

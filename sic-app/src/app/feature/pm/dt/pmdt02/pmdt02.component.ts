@@ -7,7 +7,7 @@ import dayjs from '../../../../core/dayjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 
-import type { PhaseResponse, CalendarItemDetail } from './pmdt02.model';
+import type { PhaseResponse, CalendarItemDetail, PhasePageData } from './pmdt02.model';
 import type { MilestoneResponse } from './pmdt02A/pmdt02A.model';
 import type { WorkPackageResponse } from './pmdt02B/pmdt02B.model';
 import type { TaskResponse } from './pmdt02C/pmdt02C.model';
@@ -470,6 +470,8 @@ export class Pmdt02Component implements OnInit {
 
   // ===== LIFECYCLE =====
   ngOnInit() {
+    const pageData: PhasePageData | undefined = this.route.snapshot.data['pageData'];
+
     this.route.paramMap.subscribe((params) => {
       const phaseId = params.get('id');
       this.route.queryParams.subscribe((qParams) => {
@@ -479,7 +481,14 @@ export class Pmdt02Component implements OnInit {
         }
         if (phaseId) {
           this.currentPhaseId.set(phaseId);
-          this.loadPhaseDetail(phaseId);
+          if (pageData?.phaseDetail && pageData.phaseDetail.id === phaseId) {
+            // Resolver already fetched the phase detail; skip the duplicate initial fetch.
+            this.phase.set(pageData.phaseDetail);
+            this.loadCustomItems();
+            this.loadMilestones(phaseId);
+          } else {
+            this.loadPhaseDetail(phaseId);
+          }
         }
       });
     });

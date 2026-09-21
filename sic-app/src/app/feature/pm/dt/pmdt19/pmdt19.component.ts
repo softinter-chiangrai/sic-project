@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
+import { skip } from 'rxjs';
 
 import { Pmdt19AService } from './pmdt19A/pmdt19A.service';
 import { DocumentVersionModel } from './pmdt19A/pmdt19A.model';
+import { Pmdt19PageData } from './pmdt19.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
@@ -103,7 +105,17 @@ export class Pmdt19Component implements OnInit {
   }
 
   ngOnInit(): void {
-    this.route.queryParams.subscribe((params) => {
+    // Initial data comes from the resolver (real service call) — no fetch here.
+    const page = this.route.snapshot.data['pageData'] as Pmdt19PageData;
+    this.activeProjectId.set(page.projectId);
+    this.filterType.set(page.filterType || 'ALL');
+    this.filterDocId.set(page.filterDocId || '');
+    this.versions.set(page.items || []);
+    this.applyFilter();
+
+    // Subsequent navigations to the same route instance (e.g. query param changes)
+    // are handled reactively; skip(1) avoids re-fetching the data the resolver already loaded.
+    this.route.queryParams.pipe(skip(1)).subscribe((params) => {
       const projectId = params['projectId'] || null;
       this.activeProjectId.set(projectId);
 

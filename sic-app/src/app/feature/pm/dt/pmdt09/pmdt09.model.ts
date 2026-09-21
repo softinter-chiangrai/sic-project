@@ -48,4 +48,8 @@ export interface Pmdt09PageData {
   formData?: SicFromData<Pmdt09Model>;
   detail?: any;
   items?: any[];
+  /** actual data the design-review list page (pmdt09.component.ts) needs, preloaded by pmdt09Resolver */
+  projectId: string | null;
+  reviews: DesignReview[];
+  totalElements: number;
 }

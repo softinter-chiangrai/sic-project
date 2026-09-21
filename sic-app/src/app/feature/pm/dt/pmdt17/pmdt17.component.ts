@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { HttpClient, httpResource } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
-import { Pmdt17AService } from './pmdt17A/pmdt17A.service';
+import { Pmdt17Service } from './pmdt17.service';
+import { Pmdt17PageData } from './pmdt17.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalService } from '../pmdt03/approval.service';
 
@@ -40,7 +41,7 @@ export class Pmdt17Component implements OnInit {
   private translate = inject(TranslateService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-  private service = inject(Pmdt17AService);
+  private service = inject(Pmdt17Service);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
   private approvalService = inject(ApprovalService);
@@ -58,13 +59,11 @@ export class Pmdt17Component implements OnInit {
   showDrawer = signal(false);
   selectedTicket = signal<any | null>(null);
 
-  ticketsResource = httpResource<any>(() => {
-    let url = `${apiBaseUrl}/api/pm/ma-tickets/paging?page=${this.currentPage()}&size=${this.pageSize()}`;
-    const keyword = this.searchTerm().trim();
-    if (keyword) url += `&keyword=${encodeURIComponent(keyword)}`;
-    if (this.filterStatus() !== 'all') url += `&status=${this.filterStatus()}`;
-    return url;
-  });
+  // ===== Grid data (lazily loaded via handleGridLoad; seeded once from the resolver's preload) =====
+  rows = signal<any[]>([]);
+  totalItems = signal(0);
+  /** Holds the resolver's preloaded page until the grid's first handleGridLoad call consumes it, avoiding a duplicate fetch. */
+  private pendingPreload: { tickets: any[]; total: number; page: number } | null = null;
 
   @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
@@ -100,24 +99,45 @@ export class Pmdt17Component implements OnInit {
   visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   showColumnMenu = signal(false);
 
-  constructor() {
-    effect(() => {
-      const res = this.ticketsResource.value();
-      const content = res?.data;
-      if (content && Array.isArray(content)) {
-        this.loadApprovalStatuses(content);
-        this.gridRef?.setRows(content as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
-      }
-    });
-  }
-
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.currentPage.set(request.pageNumber);
     this.syncFiltersToUrl();
-    const res = this.ticketsResource.value();
-    if (res?.data) {
-      grid.setRows(res.data as unknown as SicGridRowData[], { totalElements: res.pageable?.totalElements || res.data.length }, request.requestId);
+
+    // Consume the resolver's preload on the very first grid load instead of firing a duplicate request.
+    if (this.pendingPreload && request.pageNumber === this.pendingPreload.page) {
+      const { tickets, total } = this.pendingPreload;
+      this.pendingPreload = null;
+      this.rows.set(tickets);
+      this.totalItems.set(total);
+      this.loadApprovalStatuses(tickets);
+      grid.setRows(tickets as unknown as SicGridRowData[], { totalElements: total }, request.requestId);
+      return;
     }
+    this.pendingPreload = null;
+
+    this.isLoading.set(true);
+    this.service
+      .getTickets(request.pageNumber, request.pageSize, this.searchTerm().trim() || undefined, this.filterStatus())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (res) => {
+          const items = res?.data ?? [];
+          const total = res?.pageable?.totalElements ?? items.length;
+          this.rows.set(items);
+          this.totalItems.set(total);
+          this.loadApprovalStatuses(items);
+          grid.setRows(items as unknown as SicGridRowData[], { totalElements: total }, request.requestId);
+        },
+        error: (err) => {
+          console.error('Load MA tickets error', err);
+          this.dialog.error(
+            this.translate.instant('PMDT17_ERROR_TITLE'),
+            this.translate.instant('PMDT17_LOAD_TICKET_FAILED_MSG') || 'Failed to load MA tickets',
+          );
+          grid.setRows([], { totalElements: 0 }, request.requestId);
+          grid.setLoadError(this.translate.instant('PMDT17_ERROR_TITLE'), request.requestId);
+        },
+      });
   }
 
   loadApprovalStatuses(items: any[]): void {
@@ -134,16 +154,25 @@ export class Pmdt17Component implements OnInit {
     });
   }
 
-  totalItems = computed(() => this.ticketsResource.value()?.pageable?.totalElements || 0);
-
-  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว (ผ่าน ticketsResource) เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
-  filteredTickets = computed(() => this.ticketsResource.value()?.data || []);
+  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
+  filteredTickets = computed(() => this.rows());
 
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
     if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
     if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
     if (qp['page'] !== undefined) this.currentPage.set(+qp['page'] || 1);
+
+    const pageData: Pmdt17PageData = this.route.snapshot.data['pageData'];
+    if (pageData) {
+      this.rows.set(pageData.initialTickets ?? []);
+      this.totalItems.set(pageData.initialTotal ?? 0);
+      this.pendingPreload = {
+        tickets: pageData.initialTickets ?? [],
+        total: pageData.initialTotal ?? 0,
+        page: pageData.initialPage ?? 1,
+      };
+    }
   }
 
   // ===== URL State Sync =====
@@ -320,7 +349,7 @@ export class Pmdt17Component implements OnInit {
   }
 
   goToView(id: string) {
-    const ticket = (this.ticketsResource.value()?.data || []).find((item: any) => item.id === id) || this.selectedTicket();
+    const ticket = this.rows().find((item: any) => item.id === id) || this.selectedTicket();
     if (ticket) {
       this.recentItems.record({
         id,
@@ -381,7 +410,7 @@ export class Pmdt17Component implements OnInit {
         this.service.delete(id).subscribe({
           next: () => {
             this.dialog.success(this.translate.instant('PMDT17_SUCCESS_TITLE'), this.translate.instant('PMDT17_DELETE_SUCCESS_MSG'));
-            this.ticketsResource.reload();
+            this.gridRef?.reload();
           },
           error: (err) => {
             this.dialog.error(this.translate.instant('PMDT17_ERROR_TITLE'), err.message || this.translate.instant('PMDT17_DELETE_FAILED_MSG'));

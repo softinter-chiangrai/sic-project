@@ -24,7 +24,11 @@ export const pmdt07Resolver: ResolveFn<PaginationResponse<PmSpecificationModel> 
     );
 };
 
-export const pmdt07CreateResolver: ResolveFn<Pmdt07Form> = (route) => {
+export interface Pmdt07AResolvedPageData {
+    specification: SicFromData<PmSpecificationModel>;
+}
+
+export const pmdt07CreateResolver: ResolveFn<Pmdt07AResolvedPageData> = (route) => {
     const fb = inject(FormBuilder);
     const form = Pmdt07Form.createForm(fb);
 
@@ -43,7 +47,7 @@ export const pmdt07CreateResolver: ResolveFn<Pmdt07Form> = (route) => {
     };
 };
 
-export const pmdt07EditResolver: ResolveFn<Pmdt07Form> = (route) => {
+export const pmdt07EditResolver: ResolveFn<Pmdt07AResolvedPageData> = (route) => {
     const fb = inject(FormBuilder);
     const service = inject(Pmdt07Service);
     const router = inject(Router);

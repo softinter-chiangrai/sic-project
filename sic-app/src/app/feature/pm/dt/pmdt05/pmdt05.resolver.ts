@@ -1,35 +1,29 @@
 // src/app/feature/pm/dt/pmdt05/pmdt05.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt05Service } from './pmdt05.service';
-import { Pmdt05Form } from './pmdt05.form';
-import { Pmdt05Model, Pmdt05PageData } from './pmdt05.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { ResolveFn } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
+import { DiagramService } from './diagram.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { Pmdt05PageData } from './pmdt05.model';
 
 export const pmdt05Resolver: ResolveFn<Pmdt05PageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmdt05Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
+  const service = inject(DiagramService);
+  const customerState = inject(CustomerStateService);
 
-  const form = Pmdt05Form.createForm(fb);
-
-  if (!id) {
-    return { diagramData: new SicFromData<Pmdt05Model>(form) };
+  // This route ('diagram') has no :id param — it's a multi-tab diagram editor
+  // driven entirely by queryParams (tabId/projectId), resolved reactively in
+  // the component. We only preload the tab list when a projectId is already
+  // known up front, to skip the component's own first getTabs() call.
+  const projectId = route.queryParams['projectId'] || customerState.getProjectId() || null;
+  if (!projectId) {
+    return { initialTabs: null, projectId: null };
   }
 
   try {
-    const data = await lastValueFrom(service.getDiagramById(id));
-    if (data) {
-      form.patchValue(data);
-      return { diagramData: new SicFromData<Pmdt05Model>(form, data) };
-    }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+    const tabs = await lastValueFrom(service.getTabs(projectId));
+    return { initialTabs: tabs ?? [], projectId };
+  } catch (err) {
+    console.error('pmdt05Resolver: failed to preload diagram tabs', err);
+    return { initialTabs: null, projectId };
   }
 };

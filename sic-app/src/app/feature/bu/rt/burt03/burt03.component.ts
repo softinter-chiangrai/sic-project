@@ -2,7 +2,7 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import {
@@ -11,7 +11,7 @@ import {
 } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.component';
 import { SicOrganizationalChartNode } from '../../../../core/component/sic-organizational-chart/sic-organizational-chart.model';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { Role } from './burt03.model';
+import { Burt03PageData, Role } from './burt03.model';
 import { burt03Service } from './burt03.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -25,6 +25,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   styleUrl: './burt03.component.css',
 })
 export class Burt03Component implements OnInit {
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private dialog = inject(DialogService);
   private service = inject(burt03Service);
@@ -97,29 +98,14 @@ export class Burt03Component implements OnInit {
   hasData = computed(() => this.roles().length > 0);
 
   ngOnInit(): void {
-    this.loadBusinessId();
-  }
-
-  loadBusinessId() {
-    this.service.getMyBusinesses().subscribe({
-      next: (businesses) => {
-        if (businesses && businesses.length > 0) {
-          const stored = localStorage.getItem('businessId');
-          const matched = businesses.find((b) => b.id === stored);
-          const activeBiz = matched || businesses.find((b) => b.isDefault) || businesses[0];
-          this.businessId.set(activeBiz.id);
-          localStorage.setItem('businessId', activeBiz.id);
-          this.loadRoles();
-        } else {
-          this.dialog.error(this.translate.instant('BURT03_NO_BUSINESS_TITLE'), this.translate.instant('BURT03_SELECT_BUSINESS_MSG'));
-          this.router.navigate(['/management/business']);
-        }
-      },
-      error: () => {
-        this.dialog.error(this.translate.instant('BURT03_ERROR_TITLE'), this.translate.instant('BURT03_LOAD_BUSINESS_FAILED_MSG'));
-        this.router.navigate(['/management/business']);
-      },
-    });
+    const page: Burt03PageData = this.route.snapshot.data['form'];
+    if (!page.businessId) {
+      this.dialog.error(this.translate.instant('BURT03_NO_BUSINESS_TITLE'), this.translate.instant('BURT03_SELECT_BUSINESS_MSG'));
+      this.router.navigate(['/management/business']);
+      return;
+    }
+    this.businessId.set(page.businessId);
+    this.roles.set(page.roles);
   }
 
   loadRoles() {

@@ -2,10 +2,10 @@
 import { inject } from '@angular/core';
 import { ResolveFn, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
+import { lastValueFrom } from 'rxjs';
 import { Pmrt04AService } from './pmrt04A.service';
 import { Pmrt04AForm } from './pmrt04A.form';
-import { Pmrt04AModel, Pmrt04APageData } from './pmrt04A.model';
+import { ContractModel, Pmrt04APageData } from './pmrt04A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export const pmrt04AResolver: ResolveFn<Pmrt04APageData> = async (route) => {
@@ -14,22 +14,25 @@ export const pmrt04AResolver: ResolveFn<Pmrt04APageData> = async (route) => {
   const router = inject(Router);
   const id = route.paramMap.get('id');
 
-  const form = Pmrt04AForm.createForm(fb);
-
   if (!id) {
-    return { installmentData: new SicFromData<Pmrt04AModel>(form) };
+    const form = Pmrt04AForm.createForm(fb, null);
+    return { contractData: new SicFromData<ContractModel>(form), isEdit: false };
   }
 
   try {
     const data = await lastValueFrom(service.getContract(id));
-    if (data) {
-      form.patchValue(data as any);
-      return { installmentData: new SicFromData<Pmrt04AModel>(form, data as any) };
+    if (!data) {
+      router.navigate(['/not-found']);
+      return { contractData: new SicFromData<ContractModel>(Pmrt04AForm.createForm(fb, null)), isEdit: false };
     }
+    const form = Pmrt04AForm.createForm(fb, data);
+    return {
+      contractData: new SicFromData<ContractModel>(form, form.getRawValue() as ContractModel),
+      isEdit: true,
+    };
+  } catch (err) {
+    console.error('Failed to load contract:', err);
     router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+    return { contractData: new SicFromData<ContractModel>(Pmrt04AForm.createForm(fb, null)), isEdit: false };
   }
 };

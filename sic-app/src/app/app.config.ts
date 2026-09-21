@@ -15,6 +15,7 @@ import {
 } from './core/services/app-translate-loader.service';
 import { provideSicNumberConfig } from './core/component/sic-number/sic-number.config';
 import { authTokenInterceptor } from './core/interceptors/auth-token.interceptor';
+import { errorInterceptor } from './core/interceptors/error.interceptor';
 import { provideMarkdown } from 'ngx-markdown';
 import { provideAngularQuery, QueryClient } from '@tanstack/angular-query-experimental';
 import { provideAteEditor } from '@flogeez/angular-tiptap-editor';
@@ -26,7 +27,7 @@ export const appConfig: ApplicationConfig = {
     provideAnimations(),
     provideAngularQuery(new QueryClient()),
     provideRouter(routes),
-    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor])),
+    provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor, errorInterceptor])),
     provideEnvironmentNgxMask(),
     provideSicNumberConfig({ decimal: 2 }),
     provideOAuthClient(),

@@ -4,29 +4,30 @@ import { ContractModel } from './pmrt04A.model';
 import { ToForm } from '../../../../../core/types/form.type';
 
 export class Pmrt04AForm {
-  static createForm(fb: FormBuilder): FormGroup<ToForm<ContractModel>> {
+  static createForm(fb: FormBuilder, model?: ContractModel | null): FormGroup<ToForm<ContractModel>> {
     return fb.group<ToForm<ContractModel>>({
-      id: fb.control(null),
-      contractNo: fb.control(null, [Validators.required, Validators.maxLength(50)]),
-      contractType: fb.control(null, [Validators.required]),
-      customerId: fb.control(null),
-      customerName: fb.control(null),
-      projectId: fb.control(null),
-      projectName: fb.control(null),
-      startDate: fb.control(null, [Validators.required]),
-      endDate: fb.control(null, [Validators.required]),
-      contractValue: fb.control(null, [Validators.required, Validators.min(0)]),
-      paymentTerms: fb.control(null),
-      scopeSummary: fb.control(null),
-      signStatus: fb.control('Draft'),
-      renewalStatus: fb.control(null),
-      parentContractId: fb.control(null),
-      parentContractNo: fb.control(null),
-      isActive: fb.control(true),
+      id: fb.control(model?.id ?? null),
+      contractNo: fb.control(model?.contractNo ?? null, [Validators.required, Validators.maxLength(50)]),
+      contractType: fb.control(model?.contractType ?? null, [Validators.required]),
+      customerId: fb.control(model?.customerId ?? null),
+      customerName: fb.control(model?.customerName ?? null),
+      projectId: fb.control(model?.projectId ?? null),
+      projectName: fb.control(model?.projectName ?? null),
+      startDate: fb.control(model?.startDate ?? null, [Validators.required]),
+      endDate: fb.control(model?.endDate ?? null, [Validators.required]),
+      contractValue: fb.control(model?.contractValue ?? null, [Validators.required, Validators.min(0)]),
+      paymentTerms: fb.control(model?.paymentTerms ?? null),
+      scopeSummary: fb.control(model?.scopeSummary ?? null),
+      signStatus: fb.control(model?.signStatus ?? 'Draft'),
+      isLocked: fb.control(model?.isLocked ?? false),
+      renewalStatus: fb.control(model?.renewalStatus ?? null),
+      parentContractId: fb.control(model?.parentContractId ?? null),
+      parentContractNo: fb.control(model?.parentContractNo ?? null),
+      isActive: fb.control(model?.isActive ?? true),
       state: fb.control(null),
-      rowVersion: fb.control(null),
-      createdAt: fb.control(null),
-      updatedAt: fb.control(null),
+      rowVersion: fb.control(model?.rowVersion ?? null),
+      createdAt: fb.control(model?.createdAt ?? null),
+      updatedAt: fb.control(model?.updatedAt ?? null),
     });
   }
 }

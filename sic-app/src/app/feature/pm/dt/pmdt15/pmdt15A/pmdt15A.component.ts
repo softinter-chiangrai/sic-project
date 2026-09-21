@@ -24,6 +24,7 @@ import { ApprovalFlow } from '../../pmdt03/approval.model';
 import { Pmdt15AForm } from './pmdt15A.form';
 import { Pmdt15AService } from './pmdt15A.service';
 import { PmUserManualModel, PmUserManualSectionModel } from './pmdt15A.model';
+import { Pmdt15APageData } from './pmdt15A.resolver';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 
 @Component({
@@ -149,15 +150,18 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       }
     });
 
-    this.route.params.subscribe((params) => {
-      const paramId = params['id'];
-      if (paramId) {
-        this.isEdit.set(true);
-        this.id.set(paramId);
+    const page: Pmdt15APageData = this.route.snapshot.data['pageData'];
+    const paramId = this.route.snapshot.paramMap.get('id');
+    if (paramId) {
+      this.isEdit.set(true);
+      this.id.set(paramId);
+      if (page?.data) {
+        this.applyManualData(page.data);
+      } else {
         this.loadData(paramId);
       }
-      this.cdr.markForCheck();
-    });
+    }
+    this.cdr.markForCheck();
   }
 
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Delivery/AI options ของโครงการที่เลือกใหม่
@@ -442,37 +446,39 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   loadData(id: string): void {
     this.service.getById(id).subscribe({
-      next: (data) => {
-        this.formData.form.patchValue(data);
-        if (data.projectId) {
-          this.loadDeliveryOptions(data.projectId);
-        }
-        this.isProjectDerived.set(!!(data as any).relatedSpecId || !!data.deliveryId);
-        if (data.sections && data.sections.length > 0) {
-          this.sections.set(data.sections);
-        } else {
-          this.initDefaultSections();
-        }
-        if (data.isLocked) {
-          this.isLocked.set(true);
-          this.formData.form.disable();
-        } else {
-          this.isLocked.set(false);
-          const isViewRoute = this.router.url.includes('/view');
-          if (isViewRoute) {
-            this.formData.form.disable();
-          } else {
-            this.formData.form.enable();
-          }
-        }
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
-        this.cdr.markForCheck();
-      },
+      next: (data) => this.applyManualData(data),
       error: (err) => {
         this.dialog.error(this.translate.instant('PMDT15_ERROR_WORD'), err.message || this.translate.instant('PMDT15_LOAD_DATA_FAILED_MSG'));
         this.cdr.markForCheck();
       },
     });
+  }
+
+  private applyManualData(data: PmUserManualModel): void {
+    this.formData.form.patchValue(data);
+    if (data.projectId) {
+      this.loadDeliveryOptions(data.projectId);
+    }
+    this.isProjectDerived.set(!!(data as any).relatedSpecId || !!data.deliveryId);
+    if (data.sections && data.sections.length > 0) {
+      this.sections.set(data.sections);
+    } else {
+      this.initDefaultSections();
+    }
+    if (data.isLocked) {
+      this.isLocked.set(true);
+      this.formData.form.disable();
+    } else {
+      this.isLocked.set(false);
+      const isViewRoute = this.router.url.includes('/view');
+      if (isViewRoute) {
+        this.formData.form.disable();
+      } else {
+        this.formData.form.enable();
+      }
+    }
+    this.formData.resetModel(this.formData.form.getRawValue() as any);
+    this.cdr.markForCheck();
   }
 
   initDefaultSections(): void {

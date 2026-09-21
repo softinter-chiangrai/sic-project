@@ -2,6 +2,8 @@
 import { SicBaseStateModel } from '../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 
+// Kept for compatibility — this page is a read-only dashboard, not a form,
+// but the model/form pair is preserved per project standard (never removed).
 export interface Pmrt03Model extends SicBaseStateModel {
   id: string;
   projectId: string;
@@ -12,7 +14,8 @@ export interface Pmrt03Model extends SicBaseStateModel {
 }
 
 export interface Pmrt03PageData {
-  dashboardData: SicFromData<Pmrt03Model>;
+  dashboard: ProjectDashboard | null;
+  projectId: string;
 }
 
 export interface ProjectDashboard {
@@ -80,4 +83,3 @@ export interface ProjectHealth {
   status: 'Green' | 'Yellow' | 'Red';
   factors: ProjectHealthFactor[];
 }
-

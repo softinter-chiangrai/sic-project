@@ -19,6 +19,7 @@ import { SicCheckboxComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { environment } from '../../../../../../environments/environment';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
+import { Pmdt12BPageData } from './pmdt12B.resolver';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -113,14 +114,17 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       this.loadTasks();
     }
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.scenarioId = id;
-        this.isEdit.set(!this.isView());
+    const page: Pmdt12BPageData = this.route.snapshot.data['pageData'];
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.scenarioId = id;
+      this.isEdit.set(!this.isView());
+      if (page?.data) {
+        this.applyScenarioData(page.data);
+      } else {
         this.loadScenario(id);
       }
-    });
+    }
   }
 
   loadTasks(projectId?: string): void {
@@ -296,16 +300,8 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.service.getTestScenarioById(id).subscribe({
       next: (data) => {
-        this.formData.form.patchValue({
-          ...data,
-          status: data.status || 'Active',
-        });
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
+        this.applyScenarioData(data);
         this.isLoading.set(false);
-        // โหลด Task list ใหม่ด้วย projectId ของ record จริง เผื่อตอน ngOnInit ยังไม่มี projectId ใน cache
-        if (data.projectId) {
-          this.loadTasks(data.projectId);
-        }
       },
       error: () => {
         this.isLoading.set(false);
@@ -313,6 +309,18 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
         this.onBack();
       },
     });
+  }
+
+  private applyScenarioData(data: PmTestScenarioModel): void {
+    this.formData.form.patchValue({
+      ...data,
+      status: data.status || 'Active',
+    });
+    this.formData.resetModel(this.formData.form.getRawValue() as any);
+    // โหลด Task list ใหม่ด้วย projectId ของ record จริง เผื่อตอน ngOnInit ยังไม่มี projectId ใน cache
+    if (data.projectId) {
+      this.loadTasks(data.projectId);
+    }
   }
 
   onSubmit(): void {

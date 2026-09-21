@@ -22,7 +22,7 @@ import type { ApprovalFlow } from '../../../dt/pmdt03/approval.model';
 import { Pmrt02AService } from './pmrt02A.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
-import { ProjectModel } from './pmrt02A.model';
+import { Pmrt02AModel, Pmrt02APageData, ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -61,7 +61,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   private aiHistoryService = inject(AiHistoryService);
   private translate = inject(TranslateService);
 
-  formData!: SicFromData<any>;
+  formData!: SicFromData<Pmrt02AModel>;
   get form(): FormGroup {
     return this.formData?.formGroup;
   }
@@ -127,7 +127,28 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   ngOnInit(): void {
-    this.initForm();
+    const page: Pmrt02APageData = this.route.snapshot.data['form'];
+    this.formData = page.projectData;
+    this.isEdit = page.isEdit;
+    this.projectId = this.route.snapshot.paramMap.get('id');
+
+    const data = this.formData.value;
+    if (data.customerName) {
+      this.customerName.set(data.customerName);
+    }
+
+    if (this.isEdit) {
+      if (data.isApproved || data.isLocked || data.approvalStatus === 'APPROVED') {
+        this.isLocked = true;
+        this.isViewOnly = true;
+      } else {
+        this.isLocked = false;
+        this.isViewOnly = this.router.url.includes('/view');
+      }
+      if (this.projectId) {
+        this.loadApprovalFlowForProject(this.projectId);
+      }
+    }
 
     this.route.queryParams.subscribe((params) => {
       const mode = params['mode'];
@@ -136,22 +157,17 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       }
       const customerId = params['customerId'];
       const customerName = params['customerName'] || '';
-      if (customerId) {
-        this.formData.patchValue({ customerId: customerId });
+      if (customerId && !this.isEdit) {
+        this.formData.formGroup.patchValue({ customerId: customerId });
         if (customerName) {
           this.customerName.set(customerName);
         }
       }
     });
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.projectId = id;
-        this.loadProject(id);
-      }
-    });
+    if (this.isViewOnly || this.isLocked) {
+      this.form.disable();
+    }
 
     this.loadFlows();
   }
@@ -207,67 +223,6 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         // ไม่มี approval หรือ error
       }
     });
-  }
-
-  initForm(): void {
-    this.formData = new SicFromData<any>(this.fb.group({
-      id: [null],
-      projectCode: [null, [Validators.required, Validators.maxLength(30)]],
-      projectName: [null, [Validators.required, Validators.maxLength(255)]],
-      customerId: [null, [Validators.required]],
-      contractId: [null],
-      contractNo: [null],
-      startDate: [null, [Validators.required]],
-      plannedEndDate: [null, [Validators.required]],
-      actualEndDate: [null],
-      budgetManday: [null, [Validators.required, Validators.min(0)]],
-      usedManday: [0, [Validators.min(0)]],
-      status: ['Prospect', [Validators.required]],
-      priority: ['Medium', [Validators.required]],
-      description: [null],
-      isActive: [true],
-      approvalFlowId: [null],
-    }));
-  }
-
-  loadProject(id: string) {
-    this.isLoading = true;
-    this.projectService
-      .getById(id)
-      .pipe(finalize(() => {
-      this.isLoading = false;
-      if (this.isViewOnly || this.isLocked) {
-        this.form.disable();
-      }
-      this.formData.resetModel(this.form.getRawValue());
-      this.cdr.detectChanges(); // ✅ บังคับอัปเดต View ทันที
-    }))
-      .subscribe({
-        next: (data: ProjectModel) => {
-          this.formData.patchValue(data);
-          if (data.customerName) {
-            this.customerName.set(data.customerName);
-          }
-          if (data.isApproved || data.isLocked || data.approvalStatus === 'APPROVED') {
-            this.isLocked = true;
-            this.isViewOnly = true;
-          } else {
-            this.isLocked = false;
-            this.isViewOnly = this.router.url.includes('/view');
-          }
-          if (this.isViewOnly) {
-            this.form.disable();
-          } else {
-            this.form.enable();
-          }
-          this.loadApprovalFlowForProject(id);
-        },
-        error: (err) => {
-          console.error('Load project error:', err);
-          this.dialog.error(this.translate.instant('PMRT02A_LOAD_ERROR_TITLE'), this.translate.instant('PMRT02A_LOAD_ERROR_MSG'));
-          this.navigation.navigate(['/feature/pm/project']);
-        },
-      });
   }
 
   onBack(): void {

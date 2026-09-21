@@ -231,6 +231,7 @@ export class Pmrt02Component implements OnInit {
           this.dialog.error(this.translate.instant('PMRT02_LOAD_ERROR_TITLE'), err.message || this.translate.instant('PMRT02_GENERIC_ERROR_MSG'));
           this.projects.set([]);
           this.totalItems.set(0);
+          grid.setRows([], { totalElements: 0 }, request.requestId);
           grid.setLoadError(this.translate.instant('PMRT02_LOAD_ERROR_TITLE'), request.requestId);
         },
       });

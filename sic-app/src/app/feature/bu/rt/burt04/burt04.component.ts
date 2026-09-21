@@ -2,12 +2,12 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { burt04Service } from './burt04.service';
-import { MemberWithUI, TeamMember } from './burt04.model';
+import { Burt04PageData, MemberWithUI, TeamMember } from './burt04.model';
 
 
 import { FormsModule } from '@angular/forms';
@@ -22,6 +22,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   templateUrl: './burt04.component.html',
 })
 export class Burt04AComponent implements OnInit {
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private burt04Service = inject(burt04Service);
   private dialog = inject(DialogService);
@@ -74,41 +75,14 @@ export class Burt04AComponent implements OnInit {
       { value: 'inactive', text: this.translate.instant('BURT04_INACTIVE_OPT') },
     ];
     this.gridConfig = this.buildGridConfig();
-    this.loadBusinessId();
-  }
 
-  loadBusinessId() {
-    let id = this.burt04Service.getBusinessId();
-    if (id) {
-      this.businessId = id;
-      this.loadRoleOptions();
+    const page: Burt04PageData = this.route.snapshot.data['form'];
+    if (!page.businessId) {
+      this.router.navigate(['/management/business']);
       return;
     }
-
-    this.burt04Service.getMyBusinesses().subscribe({
-      next: (businesses) => {
-        if (businesses && businesses.length > 0) {
-          const defaultBiz = businesses.find((b) => b.isDefault) || businesses[0];
-          this.businessId = defaultBiz.id;
-          this.burt04Service.setBusinessId(this.businessId);
-          this.loadRoleOptions();
-        } else {
-          this.router.navigate(['/management/business']);
-        }
-      },
-      error: () => {
-        this.router.navigate(['/management/business']);
-      },
-    });
-  }
-
-  loadRoleOptions() {
-    this.burt04Service.getComboboxRoles().subscribe({
-      next: (roles) => {
-        this.roleOptions.set(roles.map((r) => r.text)); // ✅ ดึง role_name_local จาก Database
-      },
-      error: (err) => console.error('Load role options error', err),
-    });
+    this.businessId = page.businessId;
+    this.roleOptions.set(page.roleOptions);
   }
 
   // goToPage(1) no-op เงียบๆ ถ้า grid อยู่หน้า 1 อยู่แล้ว

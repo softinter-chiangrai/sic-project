@@ -12,7 +12,7 @@ export interface Burt06Model extends SicBaseStateModel {
 }
 
 export interface Burt06PageData {
-  memberData: SicFromData<Burt06Model>;
+  flows: ApprovalFlow[];
 }
 
 export interface ApprovalFlowStep {

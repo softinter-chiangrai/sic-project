@@ -14,7 +14,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { HttpClient } from '@angular/common/http';
 import { Pmdt02CService } from './pmdt02C.service';
 import { Pmdt02CForm } from './pmdt02C.form';
-import { TaskModel, TaskRequest, TaskResponse } from './pmdt02C.model';
+import { TaskModel, TaskPageData, TaskRequest, TaskResponse } from './pmdt02C.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
@@ -88,14 +88,30 @@ export class Pmdt02CComponent implements OnInit {
       this.assignedToApiUrl = `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`;
     }
 
+    const pageData: TaskPageData | undefined = this.route.snapshot.data['pageData'];
+    if (pageData?.taskData) {
+      this.formData = pageData.taskData;
+    }
+    if (pageData?.taskDetail) {
+      this.data = pageData.taskDetail;
+      this.isEdit = true;
+      this.taskId = pageData.taskDetail.id;
+      if (pageData.taskDetail.workPackageId) {
+        this.workPackageId = pageData.taskDetail.workPackageId;
+      }
+      if (pageData.taskDetail.assigneeNames) {
+        this.assigneeNames = pageData.taskDetail.assigneeNames;
+      }
+    }
+
     this.route.paramMap.subscribe((params) => {
       this.taskId = params.get('id');
       this.isEdit = !!this.taskId;
     });
 
     this.route.queryParams.subscribe((qParams) => {
-      this.workPackageId = qParams['workPackageId'] || '';
-      this.projectId = qParams['projectId'] || this.customerState.getProjectId() || '';
+      this.workPackageId = qParams['workPackageId'] || this.workPackageId;
+      this.projectId = qParams['projectId'] || this.data?.projectId || this.customerState.getProjectId() || '';
       this.phaseId = qParams['phaseId'] || '';
 
       if (this.workPackageId) {
@@ -114,8 +130,10 @@ export class Pmdt02CComponent implements OnInit {
           endTime: '18:00',
         });
       }
-      if (this.isEdit && this.taskId) {
+      if (this.isEdit && this.taskId && !this.data) {
         this.loadTask(this.taskId);
+      } else if (this.isEdit && this.taskId && this.data) {
+        this.loadLinkedTestCases(this.taskId, this.data.projectId || this.projectId);
       }
     });
   }

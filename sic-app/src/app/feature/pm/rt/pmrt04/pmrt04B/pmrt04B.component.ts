@@ -26,6 +26,7 @@ import { ContractModel } from '../pmrt04A/pmrt04A.model';
 import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
+import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
 
 
 @Component({
@@ -60,7 +61,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   private ngZone = inject(NgZone); // ✅ ใช้ NgZone เพื่อบังคับ Change Detection
   private translate = inject(TranslateService);
 
-  formData!: SicFromData<any>;
+  formData!: SicFromData<Pmrt04BModel>;
   get form(): FormGroup {
     return this.formData?.formGroup;
   }
@@ -93,59 +94,28 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
-    this.initForm();
+    // resolver โหลดสัญญาต้นฉบับ + สร้างฟอร์มต่อสัญญาพร้อมค่าเริ่มต้นมาให้แล้ว
+    const page: Pmrt04BPageData = this.route.snapshot.data['form'];
+    if (!page?.originalContract) {
+      this.dialog.error(this.translate.instant('PMRT04B_CONTRACT_ID_NOT_FOUND_TITLE'), this.translate.instant('PMRT04B_PLEASE_SPECIFY_CONTRACT_ID_MSG'));
+      this.navigation.navigate(['/feature/pm/contract']);
+      return;
+    }
+
+    this.formData = page.renewalData;
+    this.originalContract = page.originalContract;
+    this.contractId = this.route.snapshot.paramMap.get('id');
+    this.resolveCustomerAndProjectNames(this.originalContract);
+
     this.loadFlows();
 
-    // Check queryParams for projectId
+    // เผื่อผู้ใช้เข้ามาพร้อม query param projectId อื่น (เช่น deep link) — override ชื่อโครงการที่เดาไว้
     this.route.queryParams.subscribe((queryParams) => {
       const qProjectId = queryParams['projectId'];
       if (qProjectId) {
         this.fetchProjectName(qProjectId);
       }
     });
-
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.contractId = id;
-        this.loadContract(id);
-      } else {
-        this.dialog.error(this.translate.instant('PMRT04B_CONTRACT_ID_NOT_FOUND_TITLE'), this.translate.instant('PMRT04B_PLEASE_SPECIFY_CONTRACT_ID_MSG'));
-        this.navigation.navigate(['/feature/pm/contract']);
-      }
-    });
-  }
-
-  initForm(): void {
-    this.formData = new SicFromData<any>(
-      this.fb.group(
-        {
-          newContractNo: ['', Validators.required],
-          newStartDate: [null, Validators.required],
-          newEndDate: [null, Validators.required],
-          newContractValue: [null, [Validators.required, Validators.min(0)]],
-          renewalRemark: [''],
-          renewalStatus: ['ต่อแล้ว'],
-          approvalFlowId: [null],
-        },
-        { validators: this.dateRangeValidator.bind(this) },
-      )
-    );
-  }
-
-  private computeRenewalContractNo(originalContractNo: string): string {
-    if (!originalContractNo) return '';
-    const match = originalContractNo.match(/^(.*?)-R(\d+)$/i);
-    if (match) {
-      const base = match[1];
-      const seq = parseInt(match[2], 10) + 1;
-      return `${base}-R${seq}`;
-    }
-    if (originalContractNo.endsWith('-R') || originalContractNo.endsWith('-r')) {
-      const base = originalContractNo.substring(0, originalContractNo.length - 2);
-      return `${base}-R1`;
-    }
-    return `${originalContractNo}-R1`;
   }
 
   loadFlows(): void {
@@ -176,51 +146,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       return { endDateInvalid: this.translate.instant('PMRT04B_END_DATE_MUST_BE_AFTER_START') };
     }
     return null;
-  }
-
-  loadContract(id: string): void {
-    this.isLoading = true;
-    this.service
-      .getContract(id)
-      .pipe(
-        finalize(() => {
-          // ✅ ใช้ NgZone.run() เพื่อให้ Angular รับรู้การเปลี่ยนแปลงทันที
-          this.ngZone.run(() => {
-            this.isLoading = false;
-            this.cdr.detectChanges();
-          });
-        }),
-      )
-      .subscribe({
-        next: (data) => {
-          this.originalContract = data;
-          this.resolveCustomerAndProjectNames(data);
-
-          const currentEndDate = new Date(data.endDate);
-          const newStartDate = new Date(currentEndDate);
-          newStartDate.setDate(newStartDate.getDate() + 1);
-          const newEndDate = new Date(newStartDate);
-          newEndDate.setFullYear(newEndDate.getFullYear() + 1);
-
-          this.formData.patchValue({
-            newContractNo: this.computeRenewalContractNo(data.contractNo),
-            newStartDate: newStartDate.toISOString().split('T')[0],
-            newEndDate: newEndDate.toISOString().split('T')[0],
-            newContractValue: data.contractValue,
-            renewalStatus: 'ต่อแล้ว',
-          });
-
-          // ✅ อัปเดต View หลังจาก patchValue
-          this.ngZone.run(() => {
-            this.cdr.detectChanges();
-          });
-        },
-        error: (error) => {
-          console.error('Load contract error:', error);
-          this.dialog.error(this.translate.instant('PMRT04B_LOAD_FAILED_TITLE'), this.translate.instant('PMRT04B_CONTRACT_NOT_FOUND_MSG'));
-          this.navigation.navigate(['/feature/pm/contract']);
-        },
-      });
   }
 
   private resolveCustomerAndProjectNames(contract: ContractModel): void {

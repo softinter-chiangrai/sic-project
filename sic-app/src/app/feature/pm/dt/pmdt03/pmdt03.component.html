@@ -54,6 +54,9 @@
       [class]="viewMode() === 'pending' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'"
     >
       <i class="bi bi-clock-history mr-1"></i> {{ 'PMDT03_TAB_PENDING' | translate }}
+      @if (summary()?.totalPending; as pendingCount) {
+        <span class="ml-1 rounded-full bg-[var(--crm-primary)]/15 px-2 py-0.5 text-xs font-semibold text-[var(--crm-primary)]">{{ pendingCount }}</span>
+      }
     </button>
     <button
       (click)="setViewMode('approvedHistory', grid)"

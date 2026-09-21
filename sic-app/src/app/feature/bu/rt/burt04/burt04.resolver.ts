@@ -1,35 +1,35 @@
 // src/app/feature/bu/rt/burt04/burt04.resolver.ts
 import { inject } from '@angular/core';
-import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
+import { ResolveFn } from '@angular/router';
+import { lastValueFrom } from 'rxjs';
 import { burt04Service } from './burt04.service';
-import { Burt04Form } from './burt04.form';
-import { Burt04Model, Burt04PageData } from './burt04.model';
-import { SicFromData } from '../../../../core/model/sic-from-data';
+import { Burt04PageData } from './burt04.model';
 
-export const burt04Resolver: ResolveFn<Burt04PageData> = async (route) => {
-  const fb = inject(FormBuilder);
+async function resolveBusinessId(service: burt04Service): Promise<string> {
+  const existing = service.getBusinessId();
+  if (existing) return existing;
+
+  const businesses = await lastValueFrom(service.getMyBusinesses());
+  if (!businesses || businesses.length === 0) return '';
+
+  const defaultBiz = businesses.find((b) => b.isDefault) || businesses[0];
+  service.setBusinessId(defaultBiz.id);
+  return defaultBiz.id;
+}
+
+export const burt04Resolver: ResolveFn<Burt04PageData> = async () => {
   const service = inject(burt04Service);
-  const router = inject(Router);
-  const id = route.paramMap.get('id');
-
-  const form = Burt04Form.createForm(fb);
-
-  if (!id) {
-    return { teamData: new SicFromData<Burt04Model>(form) };
-  }
 
   try {
-    const data = await lastValueFrom(service.getMemberById(id));
-    if (data) {
-      form.patchValue(data as any);
-      return { teamData: new SicFromData<Burt04Model>(form, data as any) };
+    const businessId = await resolveBusinessId(service);
+    if (!businessId) {
+      return { businessId: '', roleOptions: [] };
     }
-    router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+
+    const roles = await lastValueFrom(service.getComboboxRoles());
+    return { businessId, roleOptions: roles.map((r) => r.text) };
+  } catch (err) {
+    console.error('Failed to load team page data:', err);
+    return { businessId: '', roleOptions: [] };
   }
 };

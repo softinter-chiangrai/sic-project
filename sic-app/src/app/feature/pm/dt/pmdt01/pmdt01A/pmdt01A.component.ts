@@ -1,8 +1,9 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../../environments/environment';
 import { SicDatepickerComponent } from 'sic-ng';
@@ -15,7 +16,6 @@ import { Pmdt01AService } from './pmdt01A.service';
 import { Pmdt01AForm } from './pmdt01A.form';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicButtonComponent } from "sic-ng";
 
 @Component({
@@ -47,6 +47,7 @@ export class Pmdt01AComponent implements OnInit {
   projectId = '';
   phaseId: string | null = null;
   isEdit = false;
+  isSaving = signal(false);
   data: Pmdt01AModel | null = null;
   userApiUrl = '';
   selectedOwnerNames: Record<string, string> = {};
@@ -82,30 +83,6 @@ export class Pmdt01AComponent implements OnInit {
     if (this.isEdit && this.data) {
       this.patchForm(this.data);
     }
-
-    this.route.paramMap.subscribe((params) => {
-      const id = params.get('id');
-      if (id) {
-        this.phaseId = id;
-        this.isEdit = true;
-        if (!this.data) {
-          this.loadPhase(id);
-        }
-      } else if (!this.isEdit) {
-        this.isEdit = false;
-        this.phaseId = null;
-      }
-    });
-  }
-
-  loadPhase(id: string) {
-    this.phaseService.getPhaseById(id).subscribe({
-      next: (data) => {
-        this.data = data;
-        this.patchForm(data);
-      },
-      error: (err) => this.dialog.error(this.translate.instant('PMDT01_LOAD_FAIL_TITLE'), err.message),
-    });
   }
 
   patchForm(data: Pmdt01AModel) {
@@ -197,21 +174,24 @@ export class Pmdt01AComponent implements OnInit {
         ? this.phaseService.updatePhase(this.phaseId, phasePayload)
         : this.phaseService.createPhase(phasePayload);
 
-    request.subscribe({
-      next: () => {
-        this.form.markAsPristine();
-        this.dialog.success(
-          this.translate.instant('PMDT01_SUCCESS_TITLE'),
-          this.isEdit ? this.translate.instant('PMDT01_UPDATE_SUCCESS_MSG') : this.translate.instant('PMDT01_CREATE_SUCCESS_MSG'),
-        ).then(() => {
+    this.isSaving.set(true);
+    request
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
           this.form.markAsPristine();
-          this.router.navigate(['/feature/pm/phase'], {
-            queryParams: { projectId: this.projectId },
+          this.dialog.success(
+            this.translate.instant('PMDT01_SUCCESS_TITLE'),
+            this.isEdit ? this.translate.instant('PMDT01_UPDATE_SUCCESS_MSG') : this.translate.instant('PMDT01_CREATE_SUCCESS_MSG'),
+          ).then(() => {
+            this.form.markAsPristine();
+            this.router.navigate(['/feature/pm/phase'], {
+              queryParams: { projectId: this.projectId },
+            });
           });
-        });
-      },
-      error: (err) => this.dialog.error(this.translate.instant('PMDT01_FAIL_TITLE'), err.message),
-    });
+        },
+        error: (err) => this.dialog.error(this.translate.instant('PMDT01_FAIL_TITLE'), err.error?.message || err.message || this.translate.instant('PMDT01_FAIL_TITLE')),
+      });
   }
 
   cancel() {

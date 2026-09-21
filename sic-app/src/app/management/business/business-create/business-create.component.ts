@@ -1,7 +1,8 @@
-import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { SicFromData } from '../../../core/model/sic-from-data';
 import { BusinessCreateModel, BusinessFormData } from './business-create.model';
 import { SicProfileComponent } from "../../../core/component/sic-profile/sic-profile.component";
@@ -44,6 +45,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   readonly translate = inject(TranslateService);
   
   formBusinessData!: SicFromData<BusinessCreateModel>;
+  isSaving = signal(false);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formBusinessData?.isChanged ?? false);
@@ -88,21 +90,24 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
       this.dialog.warn(this.translate.instant('BUSINESS_CREATE_INVALID_FORM_TITLE'), this.translate.instant('BUSINESS_CREATE_INVALID_FORM_MSG'));
     } else {
       const data = this.formBusinessData.value;
-      this.service.save(data).subscribe({
-      next: (response) => {
-        this.isSaved = true;
-        if (response) {
-          localStorage.setItem('businessId', response);
-        }
-        this.dialog.success(this.translate.instant('BUSINESS_CREATE_SAVED_TITLE'), this.translate.instant('BUSINESS_CREATE_SAVED_MSG')).then((confirmed) => {
-          this.formBusinessData.markAsPristine();
-          this.router.navigate(['feature']);
+      this.isSaving.set(true);
+      this.service.save(data)
+        .pipe(finalize(() => this.isSaving.set(false)))
+        .subscribe({
+          next: (response) => {
+            this.isSaved = true;
+            if (response) {
+              localStorage.setItem('businessId', response);
+            }
+            this.dialog.success(this.translate.instant('BUSINESS_CREATE_SAVED_TITLE'), this.translate.instant('BUSINESS_CREATE_SAVED_MSG')).then((confirmed) => {
+              this.formBusinessData.markAsPristine();
+              this.router.navigate(['feature']);
+            });
+          },
+          error: (error) => {
+            this.dialog.error(this.translate.instant('BUSINESS_CREATE_SAVE_FAILED_TITLE'), error.error?.message || error.message || this.translate.instant('BUSINESS_CREATE_SAVE_FAILED_TITLE'));
+          }
         });
-      },
-      error: (error) => {
-        this.dialog.error(this.translate.instant('BUSINESS_CREATE_SAVE_FAILED_TITLE'), error);
-      }
-    });
     }
   }
 

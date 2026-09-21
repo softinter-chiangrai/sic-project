@@ -80,6 +80,16 @@ export class Pmdt18Component implements OnInit {
         this.gridRef?.setRows(content as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
       }
     });
+
+    effect(() => {
+      const err = this.renewalsResource.error();
+      if (err) {
+        const msg = (err as any)?.error?.message || this.translate.instant('PMDT18_LOAD_ERROR');
+        this.gridRef?.setRows([], { totalElements: 0 });
+        this.gridRef?.setLoadError(msg);
+        this.dialog.error(this.translate.instant('PMDT18_LOAD_ERROR'), msg);
+      }
+    });
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {

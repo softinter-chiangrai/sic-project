@@ -20,7 +20,7 @@ import { ApprovalService } from '../../dt/pmdt03/approval.service';
 import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 import { Pmrt04Service } from './pmrt04.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
-import { Contract } from './pmrt04.model';
+import { Contract, Pmrt04ListPageData } from './pmrt04.model';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
@@ -145,7 +145,7 @@ export class Pmrt04Component implements OnInit {
   ngOnInit() {
     this.loadContractTypes();
 
-    const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
+    const resolved: Pmrt04ListPageData | null = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
     if (resolved && resolved.project) {
       const project = resolved.project;
       const contractsRes = resolved.contracts;
@@ -331,6 +331,7 @@ export class Pmrt04Component implements OnInit {
           this.dialog.error(this.translate.instant('PMRT04_LOAD_ERROR_TITLE'), this.translate.instant('PMRT04_LOAD_ERROR_MSG'));
           this.contracts.set([]);
           this.totalItems.set(0);
+          grid.setRows([], { totalElements: 0 }, request.requestId);
           grid.setLoadError(this.translate.instant('PMRT04_LOAD_ERROR_TITLE'), request.requestId);
         },
       });

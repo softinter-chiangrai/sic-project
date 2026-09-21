@@ -25,6 +25,7 @@ import { SqlExportDialogComponent } from './sql-export-dialog.component';
 import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { DiagramModel } from './diagram.model';
+import { Pmdt05PageData } from './pmdt05.model';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { TraceLinkService, TraceRelationshipType } from '../../../../core/services/trace-link.service';
 
@@ -79,6 +80,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private isLoadingDiagram = false;
   private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
 
+  // Preloaded by the resolver for the first getTabs() call only — cleared after use.
+  private resolvedTabs: DiagramModel[] | null = null;
+  private resolvedTabsProjectId: string | null = null;
+
   // เก็บ requirementId/requirementTitle ไว้ใช้เสมอ (แม้ URL จะถูกลบเพื่อความสะอาด)
   private requirementId: string | null = null;
   private requirementTitle: string = '';
@@ -90,6 +95,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
   // ===== Lifecycle =====
   ngAfterViewInit(): void {
+    const page: Pmdt05PageData = this.route.snapshot.data['form'];
+    if (page?.initialTabs) {
+      this.resolvedTabs = page.initialTabs;
+      this.resolvedTabsProjectId = page.projectId;
+    }
+
     this.drawioService.init(this.iframe.nativeElement);
 
     this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready: any) => {
@@ -249,41 +260,53 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   // ===== Tabs Management =====
   loadTabs(preferredTabId?: string | null, openCreateAfterLoad: boolean = false): void {
     if (!this.projectId) return;
-    this.isLoadingTabs = true;
 
+    if (this.resolvedTabs && this.resolvedTabsProjectId === this.projectId) {
+      const tabs = this.resolvedTabs;
+      this.resolvedTabs = null;
+      this.resolvedTabsProjectId = null;
+      this.applyLoadedTabs(tabs, preferredTabId, openCreateAfterLoad);
+      return;
+    }
+
+    this.isLoadingTabs = true;
     this.diagramService.getTabs(this.projectId).subscribe({
       next: (tabs) => {
-        this.tabs.set(tabs);
         this.isLoadingTabs = false;
-
-        if (tabs.length > 0) {
-          const targetTabId = (preferredTabId && tabs.some((t) => t.id === preferredTabId))
-            ? preferredTabId
-            : tabs[0].id;
-
-          this.currentTabId = targetTabId;
-          this.cleanUpUrl(this.currentTabId);
-
-          if (this.drawioReady && this.loadedDiagramTabId !== this.currentTabId) {
-            this.loadExistingDiagram();
-          }
-        } else {
-          this.currentTabId = null;
-          if (openCreateAfterLoad || this.pendingCreate) {
-            const reqId = this.pendingCreate?.requirementId || this.requirementId || '';
-            const reqTitle = this.pendingCreate?.requirementTitle || this.requirementTitle || '';
-            this.openCreateDialogWithRequirement(reqId, reqTitle);
-            this.pendingCreate = null;
-          } else {
-            this.createDefaultTab();
-          }
-        }
+        this.applyLoadedTabs(tabs, preferredTabId, openCreateAfterLoad);
       },
       error: () => {
         this.isLoadingTabs = false;
         this.tabs.set([]);
       },
     });
+  }
+
+  private applyLoadedTabs(tabs: DiagramModel[], preferredTabId?: string | null, openCreateAfterLoad: boolean = false): void {
+    this.tabs.set(tabs);
+
+    if (tabs.length > 0) {
+      const targetTabId = (preferredTabId && tabs.some((t) => t.id === preferredTabId))
+        ? preferredTabId
+        : tabs[0].id;
+
+      this.currentTabId = targetTabId;
+      this.cleanUpUrl(this.currentTabId);
+
+      if (this.drawioReady && this.loadedDiagramTabId !== this.currentTabId) {
+        this.loadExistingDiagram();
+      }
+    } else {
+      this.currentTabId = null;
+      if (openCreateAfterLoad || this.pendingCreate) {
+        const reqId = this.pendingCreate?.requirementId || this.requirementId || '';
+        const reqTitle = this.pendingCreate?.requirementTitle || this.requirementTitle || '';
+        this.openCreateDialogWithRequirement(reqId, reqTitle);
+        this.pendingCreate = null;
+      } else {
+        this.createDefaultTab();
+      }
+    }
   }
 
   createDefaultTab(): void {

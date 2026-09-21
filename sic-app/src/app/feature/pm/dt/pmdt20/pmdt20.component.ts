@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
 // ===== Interfaces =====
 interface AuditLog {
@@ -21,10 +21,13 @@ interface AuditLog {
 }
 
 import { FormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { AuditLogService } from './audit-log.service';
+import { Pmdt20PageData } from './pmdt20.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { DialogService } from '../../../../core/services/dialog.service';
 
 @Component({
   selector: 'app-pmdt20',
@@ -35,8 +38,10 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmdt20Component implements OnInit {
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private auditLogService = inject(AuditLogService);
+  private dialog = inject(DialogService);
   private translate = inject(TranslateService);
 
   // ===== State =====
@@ -61,37 +66,23 @@ export class Pmdt20Component implements OnInit {
   ];
 
   ngOnInit() {
-    this.loadFilterOptions();
-  }
+    const page: Pmdt20PageData = this.route.snapshot.data['pageData'] || {};
 
-  loadFilterOptions() {
-    this.auditLogService.getModules().subscribe({
-      next: (modules) => {
-        if (modules && modules.length > 0) {
-          this.moduleSelectOptions.set(modules.map((m) => ({ value: m, text: m })));
-        }
-      },
-      error: (err) => {
-        console.warn('Failed to load audit modules from backend:', err);
-      },
-    });
+    const modules = page.modules || [];
+    if (modules.length > 0) {
+      this.moduleSelectOptions.set(modules.map((m) => ({ value: m, text: m })));
+    }
 
-    this.auditLogService.getUsers().subscribe({
-      next: (users) => {
-        if (users && users.length > 0) {
-          this.userSelectOptions.set(
-            users.map((u) => {
-              const val = u.userId || u.username || u.userFullname || '';
-              const text = u.userFullname || u.username || u.userId || '';
-              return { value: val, text };
-            })
-          );
-        }
-      },
-      error: (err) => {
-        console.warn('Failed to load audit users from backend:', err);
-      },
-    });
+    const users = page.users || [];
+    if (users.length > 0) {
+      this.userSelectOptions.set(
+        users.map((u) => {
+          const val = u.userId || u.username || u.userFullname || '';
+          const text = u.userFullname || u.username || u.userId || '';
+          return { value: val, text };
+        })
+      );
+    }
   }
 
   // ===== Server Pagination State =====
@@ -137,7 +128,7 @@ export class Pmdt20Component implements OnInit {
       size: request.pageSize,
       sortBy: request.sortField ?? 'createdDate',
       sortDir: request.sortDescending ? 'desc' : 'asc',
-    }).subscribe({
+    }).pipe(finalize(() => this.isLoading.set(false))).subscribe({
       next: (res) => {
         let totalElements = 0;
         if (res && res.content) {
@@ -166,14 +157,15 @@ export class Pmdt20Component implements OnInit {
           this.totalItems.set(0);
           grid.setRows([], { totalElements: 0 }, request.requestId);
         }
-        this.isLoading.set(false);
       },
       error: (err) => {
         console.warn('Backend AuditLog API error:', err);
-        this.isLoading.set(false);
         this.logs.set([]);
         this.totalItems.set(0);
-        grid.setLoadError(this.translate.instant('PMDT20_LOAD_ERROR_MSG'), request.requestId);
+        const msg = this.translate.instant('PMDT20_LOAD_ERROR_MSG');
+        grid.setRows([], { totalElements: 0 }, request.requestId);
+        grid.setLoadError(msg, request.requestId);
+        this.dialog.error(this.translate.instant('PMDT20_LOAD_ERROR_TITLE'), msg);
       }
     });
   }

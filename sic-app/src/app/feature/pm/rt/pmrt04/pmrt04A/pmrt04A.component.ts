@@ -32,7 +32,7 @@ import { environment } from '../../../../../../environments/environment';
 import { ApprovalService } from '../../../dt/pmdt03/approval.service';
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt04AForm } from './pmrt04A.form';
-import { ContractModel } from './pmrt04A.model';
+import { ContractModel, Pmrt04APageData } from './pmrt04A.model';
 import { Pmrt04AService, ContractSummary } from './pmrt04A.service';
 import { SicEntitySummaryComponent, EntitySummaryCard } from '../../../../../core/component/sic-entity-summary/sic-entity-summary.component';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
@@ -180,21 +180,38 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   };
 
   ngOnInit(): void {
-    this.initForm();
+    // resolver โหลดฟอร์ม + (ถ้าเป็นโหมดแก้ไข) ข้อมูลสัญญามาให้แล้ว — ไม่ต้องยิง HTTP ซ้ำ
+    const page: Pmrt04APageData = this.route.snapshot.data['form'];
+    this.formData = page.contractData;
+    this.isEdit = page.isEdit;
+    this.contractId = this.route.snapshot.paramMap.get('id');
 
     if (this.router.url.includes('/view')) {
       this.isView = true;
     }
 
-    // 1. รับค่า id จาก route params (ถ้ามี)
-    const id = this.route.snapshot.params['id'];
-    if (id) {
-      this.isEdit = true;
-      this.contractId = id;
-      this.loadContract(id);
+    if (this.isEdit) {
+      const data = this.formData.value;
+      if (data.customerId) this.customerId = data.customerId;
+      if (data.customerName) this.customerName = data.customerName;
+      if (data.projectId) this.projectId = data.projectId;
+      if (data.projectName) this.projectName = data.projectName;
+
+      if (data.isLocked) {
+        this.isLocked = true;
+        this.isView = true;
+      } else {
+        this.isLocked = false;
+      }
+      if (this.isView) {
+        this.form.disable();
+      }
+      if (this.contractId) {
+        this.loadSummary(this.contractId);
+      }
     }
 
-    // 2. รับ projectId และ customerId จาก queryParams
+    // รับ projectId และ customerId จาก queryParams
     this.route.queryParams.subscribe((params) => {
       if (params['mode'] === 'view') {
         this.isView = true;
@@ -223,10 +240,6 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         });
       }
     });
-  }
-
-  initForm(): void {
-    this.formData = new SicFromData<ContractModel>(Pmrt04AForm.createForm(this.fb));
   }
 
   loadContract(id: string) {

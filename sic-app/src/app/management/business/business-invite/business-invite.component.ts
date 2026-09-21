@@ -2,6 +2,7 @@ import { Component, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy }
 import { CommonModule } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { finalize } from 'rxjs';
 import { BusinessInviteService } from './business-invite.service';
 import { BusinessInviteFormData, InviteEmailModel, InviteTokenModel } from './business-invite.model';
 import { DialogService } from '../../../core/services/dialog.service';
@@ -68,14 +69,20 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
-    this.service.getInvites().subscribe({
-      next: (list) => {
-        grid.setRows((list || []) as unknown as SicGridRowData[], { totalElements: list?.length || 0 }, request.requestId);
-      },
-      error: () => {
-        grid.setRows([], { totalElements: 0 }, request.requestId);
-      },
-    });
+    this.loading.set(true);
+    this.service.getInvites()
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: (list) => {
+          grid.setRows((list || []) as unknown as SicGridRowData[], { totalElements: list?.length || 0 }, request.requestId);
+        },
+        error: (error) => {
+          const msg = error.error?.message || error.message || this.translate.instant('BUSINESS_INVITE_LOAD_FAIL_MSG');
+          grid.setRows([], { totalElements: 0 }, request.requestId);
+          grid.setLoadError(msg, request.requestId);
+          this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), msg);
+        },
+      });
   }
 
   ngOnInit(): void {
@@ -96,17 +103,18 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
       roleId: v.roleId ?? '',
       inviteType: 'email',
       inviteEmail: v.inviteEmail ?? '',
-    }).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.emailForm.reset();
-        this.grid?.reload();
-      },
-      error: async () => {
-        this.loading.set(false);
-        await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), this.translate.instant('BUSINESS_INVITE_CREATE_EMAIL_FAIL_MSG'));
-      },
-    });
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => {
+          this.emailForm.reset();
+          this.grid?.reload();
+        },
+        error: async (error) => {
+          const msg = error.error?.message || error.message || this.translate.instant('BUSINESS_INVITE_CREATE_EMAIL_FAIL_MSG');
+          await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), msg);
+        },
+      });
   }
 
   submitToken(): void {
@@ -117,17 +125,18 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
       roleId: v.roleId ?? '',
       inviteType: 'token',
       maxUses: v.maxUses ?? undefined,
-    }).subscribe({
-      next: () => {
-        this.loading.set(false);
-        this.tokenForm.reset();
-        this.grid?.reload();
-      },
-      error: async () => {
-        this.loading.set(false);
-        await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), this.translate.instant('BUSINESS_INVITE_CREATE_TOKEN_FAIL_MSG'));
-      },
-    });
+    })
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe({
+        next: () => {
+          this.tokenForm.reset();
+          this.grid?.reload();
+        },
+        error: async (error) => {
+          const msg = error.error?.message || error.message || this.translate.instant('BUSINESS_INVITE_CREATE_TOKEN_FAIL_MSG');
+          await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), msg);
+        },
+      });
   }
 
   async onGridAction(event: { action: string; row?: Record<string, unknown> | null }): Promise<void> {

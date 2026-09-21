@@ -1,17 +1,21 @@
 // src/app/feature/pm/rt/pmrt04/pmrt04B/pmrt04B.model.ts
-import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { ContractModel } from '../pmrt04A/pmrt04A.model';
 
-export interface Pmrt04BModel extends SicBaseStateModel {
-  id: string;
-  contractId: string;
-  deliverableCode: string;
-  deliverableName: string;
-  description?: string;
-  dueDate?: string;
-  status?: string;
+// Page data for the CONTRACT RENEWAL wizard (pmrt04B.component.ts) — builds a
+// NEW contract from an existing one, so it is not a classic CRUD-by-id form
+// and does not extend SicBaseStateModel.
+export interface Pmrt04BModel {
+  newContractNo: string;
+  newStartDate: string | null;
+  newEndDate: string | null;
+  newContractValue: number | null;
+  renewalRemark?: string | null;
+  renewalStatus: string;
+  approvalFlowId?: string | null;
 }
 
 export interface Pmrt04BPageData {
-  deliverableData: SicFromData<Pmrt04BModel>;
+  renewalData: SicFromData<Pmrt04BModel>;
+  originalContract: ContractModel | null;
 }

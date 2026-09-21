@@ -18,7 +18,7 @@ import { environment } from '../../../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { AttachmentFile } from './pmdt08.model';
+import { AttachmentFile, Pmdt08PageData } from './pmdt08.model';
 import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 
 @Component({
@@ -88,6 +88,10 @@ export class Pmdt08Component implements OnInit {
   // Cache for attachments (key = groupId)
   private attachmentCache = new Map<string, AttachmentFile[]>();
 
+  // guards against re-fetching on the first (synchronous) queryParams emission,
+  // since that initial value was already preloaded by pmdt08Resolver
+  private hasConsumedResolverData = false;
+
   ngOnInit(): void {
     this.currentUserId.set(this.authService.getUserId());
     this.sidebarService.getProfile().subscribe({
@@ -119,11 +123,33 @@ export class Pmdt08Component implements OnInit {
       content: ['', Validators.required],
     });
 
-    // ดึง projectId จาก queryParams
+    // Seed initial state from the resolver (preloaded first page of posts) instead of
+    // fetching again here.
+    const pageData: Pmdt08PageData = this.route.snapshot.data['pageData'];
+    if (pageData?.projectId) {
+      this.projectId.set(pageData.projectId);
+      this.posts.set(pageData.posts || []);
+      this.totalElements.set(pageData.totalElements || 0);
+      this.totalPages.set(pageData.totalPages || 0);
+      this.posts().forEach((post) => {
+        if (post.attachmentGroupId) {
+          this.loadAttachments(post.attachmentGroupId);
+        }
+      });
+      this.hasConsumedResolverData = true;
+    }
+
+    // ดึง projectId จาก queryParams (รองรับกรณีเปลี่ยน projectId โดยไม่ reload route)
     this.route.queryParams.subscribe((params) => {
       const pId = params['projectId'] || params['id'] || null;
+      if (pId && pId === this.projectId() && this.hasConsumedResolverData) {
+        // first emission already satisfied by the resolver, skip duplicate fetch
+        this.hasConsumedResolverData = false;
+        return;
+      }
       if (pId) {
         this.projectId.set(pId);
+        this.currentPage.set(0);
         this.loadPosts();
       }
     });

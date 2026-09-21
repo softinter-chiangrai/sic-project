@@ -13,7 +13,7 @@ export interface Burt05Model extends SicBaseStateModel {
 }
 
 export interface Burt05PageData {
-  projectData: SicFromData<Burt05Model>;
+  programs: Program[];
 }
 
 export interface Program {

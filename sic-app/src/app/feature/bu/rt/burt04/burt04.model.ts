@@ -12,7 +12,8 @@ export interface Burt04Model extends SicBaseStateModel {
 }
 
 export interface Burt04PageData {
-  teamData: SicFromData<Burt04Model>;
+  businessId: string;
+  roleOptions: string[];
 }
 
 export interface TeamMember {

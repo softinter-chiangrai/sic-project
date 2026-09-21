@@ -1,12 +1,10 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
 
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -23,130 +21,9 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
-import { ToForm } from '../../../../../core/types/form.type';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
-
-// ===== Model =====
-export interface ReviewCommentModel {
-  id: string;
-  author: string;
-  text: string;
-  type: string;
-  createdAt: string;
-}
-
-export interface DesignReviewModel {
-  id: string;
-  reviewCode: string;
-  title: string;
-  description: string;
-  projectId: string;
-  projectName?: string;
-  reviewableType?: string;
-  reviewableId: string;
-  reviewableName?: string;
-  reviewer?: string;
-  assignedTo?: string;
-  severity: string;
-  status: string;
-  isLocked?: boolean;
-  dueDate: string;
-  figmaUrl?: string;
-  embedMode?: 'design' | 'prototype';
-  approvalFlowId?: string;
-  isActive: boolean;
-  comments?: ReviewCommentModel[];
-  state?: number;
-  rowVersion?: number;
-}
-
-// ===== Form =====
-class Pmdt09AForm {
-  static createForm(fb: FormBuilder): FormGroup<ToForm<DesignReviewModel>> {
-    return fb.group<ToForm<DesignReviewModel>>({
-      id: fb.control(null),
-      reviewCode: fb.control(null, [Validators.required, Validators.maxLength(30)]),
-      title: fb.control(null, [Validators.required, Validators.maxLength(255)]),
-      description: fb.control(null, [Validators.required]),
-      reviewableType: fb.control(null),
-      reviewableId: fb.control(null, [Validators.required]),
-      reviewableName: fb.control(null),
-      projectId: fb.control(null, [Validators.required]),
-      projectName: fb.control(null),
-      reviewer: fb.control(null),
-      assignedTo: fb.control(null, [Validators.required]),
-      severity: fb.control('Medium', [Validators.required]),
-      status: fb.control('Open', [Validators.required]),
-      dueDate: fb.control(null, [Validators.required]),
-      figmaUrl: fb.control(null),
-      embedMode: fb.control('design'),
-      approvalFlowId: fb.control(null),
-      isActive: fb.control(true),
-      comments: fb.control([]),
-      state: fb.control(null),
-      rowVersion: fb.control(null),
-    });
-  }
-}
-
-// ===== Service =====
-@Injectable({ providedIn: 'root' })
-export class Pmdt09AService {
-  private http = inject(HttpClient);
-  private translate = inject(TranslateService);
-
-  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-project`;
-  apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
-  apiGetComboboxSpecification = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
-  apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-requirement`;
-  apiGetComboboxTask = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-task`;
-  apiGetComboboxUser = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-user`;
-  apiGetUsers = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-user`;
-  apiGetApprovalFlows = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/DESIGN_REVIEW`;
-  apiGetLovSeverity = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-severity`;
-  apiGetLovStatus = `${environment.apiBaseUrl}/api/pm/design-reviews/lov-status`;
-
-  get severityOptions() {
-    return [
-      { value: 'Low', label: this.translate.instant('PMDT09_SEV_LOW') },
-      { value: 'Medium', label: this.translate.instant('PMDT09_SEV_MEDIUM') },
-      { value: 'High', label: this.translate.instant('PMDT09_SEV_HIGH') },
-      { value: 'Critical', label: this.translate.instant('PMDT09_SEV_CRITICAL') },
-    ];
-  }
-
-  get statusOptions() {
-    return [
-      { value: 'Open', label: this.translate.instant('PMDT09_ST_OPEN') },
-      { value: 'In Progress', label: this.translate.instant('PMDT09_ST_INPROGRESS') },
-      { value: 'Resolved', label: this.translate.instant('PMDT09_ST_RESOLVED') },
-      { value: 'Closed', label: this.translate.instant('PMDT09_ST_CLOSED') },
-    ];
-  }
-
-  save(data: DesignReviewModel): Observable<any> {
-    console.log('📝 Saving design review:', data);
-    return this.http.post(`${environment.apiBaseUrl}/api/pm/design-reviews`, data);
-  }
-
-  getDesignReview(id: string): Observable<DesignReviewModel> {
-    return this.http.get<DesignReviewModel>(`${environment.apiBaseUrl}/api/pm/design-reviews/${id}`);
-  }
-
-  addComment(reviewId: string, text: string, type = 'GENERAL'): Observable<ReviewCommentModel> {
-    return this.http.post<ReviewCommentModel>(
-      `${environment.apiBaseUrl}/api/pm/design-reviews/${reviewId}/comments`,
-      { text, type }
-    );
-  }
-
-  deleteComment(reviewId: string, commentId: string): Observable<void> {
-    return this.http.delete<void>(
-      `${environment.apiBaseUrl}/api/pm/design-reviews/${reviewId}/comments/${commentId}`
-    );
-  }
-}
-
+import { DesignReviewModel, Pmdt09APageData } from './pmdt09A.model';
+import { Pmdt09AService } from './pmdt09A.service';
 
 // ===== Component =====
 @Component({
@@ -215,42 +92,30 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
-    const rawForm = Pmdt09AForm.createForm(this.fb);
-    this.formData = new SicFromData<DesignReviewModel>(rawForm);
+    // Data is preloaded by pmdt09AResolver: form built + patched (create mode seeds
+    // projectId/reviewableId from queryParams, edit mode fetches the real design review).
+    const pageData: Pmdt09APageData = this.route.snapshot.data['pageData'];
+    this.formData = pageData.formData;
+    this.isEdit = pageData.isEdit;
+    this.reviewId = pageData.reviewId;
+
     this.loadFlows();
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.reviewId = id;
-        this.loadDesignReview(id);
+    if (this.isEdit && this.reviewId) {
+      const data = this.formData.value;
+      if (data.isLocked) {
+        this.isLocked = true;
+        this.form.disable();
       } else {
-        this.updateEmbedUrl();
-      }
-      this.cdr.markForCheck();
-    });
-
-    // รับค่า queryParams หรือดึงจาก CustomerStateService เมื่อกดสร้างใหม่
-    this.route.queryParams.subscribe((queryParams) => {
-      if (!this.isEdit) {
-        const projectId = queryParams['projectId'] || null;
-
-        if (projectId) {
-          this.formData.patchValue({
-            projectId: projectId,
-          } as any);
-        }
-
-        if (queryParams['requirementId']) {
-          this.formData.patchValue({
-            reviewableType: 'Requirement',
-            reviewableId: queryParams['requirementId'],
-          } as any);
+        this.isLocked = false;
+        const isViewRoute = this.router.url.includes('/view');
+        if (isViewRoute) {
+          this.form.disable();
         }
       }
-      this.cdr.markForCheck();
-    });
+      this.loadApprovalFlowForReview(this.reviewId);
+    }
+    this.updateEmbedUrl();
 
     this.form.get('reviewableType')?.valueChanges.subscribe(() => {
       this.form.patchValue({ reviewableId: null });
@@ -316,50 +181,6 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   ngOnDestroy(): void {}
-
-  initForm(): void {
-    const rawForm = Pmdt09AForm.createForm(this.fb);
-    this.formData = new SicFromData<DesignReviewModel>(rawForm);
-    this.cdr.markForCheck();
-  }
-
-  loadDesignReview(id: string) {
-    this.isLoading = true;
-    this.service.getDesignReview(id).subscribe({
-      next: (data) => {
-        const formData: any = { ...data };
-        if (typeof formData.assignedTo === 'string' && formData.assignedTo.trim()) {
-          formData.assignedTo = formData.assignedTo.split(',').map((s: string) => s.trim());
-        }
-        this.form.patchValue(formData);
-        this.formData.resetModel(this.form.getRawValue() as any);
-        this.isLoading = false;
-        if (formData.isLocked) {
-          this.isLocked = true;
-          this.form.disable();
-        } else {
-          this.isLocked = false;
-          const isViewRoute = this.router.url.includes('/view');
-          if (isViewRoute) {
-            this.form.disable();
-          } else {
-            this.form.enable();
-          }
-        }
-        this.updateEmbedUrl();
-        this.loadApprovalFlowForReview(id);
-        console.log('✅ โหลดข้อมูล Design Review สำเร็จ:', data);
-        this.cdr.markForCheck();
-      },
-      error: (error) => {
-        this.isLoading = false;
-        console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-        this.dialog.error(this.translate.instant('PMDT09_LOAD_ERROR_TITLE'), this.translate.instant('PMDT09_LOAD_ERROR_MSG'));
-        this.router.navigate(['/feature/pm/design-review']);
-        this.cdr.markForCheck();
-      },
-    });
-  }
 
   // ===== Figma URL Formatter & Sanitizer =====
   updateEmbedUrl(): void {

@@ -1,35 +1,31 @@
 // src/app/feature/pm/dt/pmdt06/pmdt06A/pmdt06A.resolver.ts
 import { inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { ResolveFn, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
-import { lastValueFrom, EMPTY } from 'rxjs';
-import { Pmdt06AService } from './pmdt06A.service';
-import { Pmdt06AForm } from './pmdt06A.form';
-import { Pmdt06AModel, Pmdt06APageData } from './pmdt06A.model';
-import { SicFromData } from '../../../../../core/model/sic-from-data';
+import { lastValueFrom } from 'rxjs';
+import { environment } from '../../../../../../environments/environment';
+import { ChangeRequestFormModel, Pmdt06APageData } from './pmdt06A.model';
 
 export const pmdt06AResolver: ResolveFn<Pmdt06APageData> = async (route) => {
-  const fb = inject(FormBuilder);
-  const service = inject(Pmdt06AService);
+  const http = inject(HttpClient);
   const router = inject(Router);
   const id = route.paramMap.get('id');
-
-  const form = Pmdt06AForm.createForm(fb);
+  const baseUrl = environment.apiBaseUrl + '/api/pm/change-requests';
 
   if (!id) {
-    return { changeRequestData: new SicFromData<Pmdt06AModel>(form) };
+    return { data: null };
   }
 
   try {
-    const data = await lastValueFrom(service.getChangeRequestById(id));
-    if (data) {
-      form.patchValue(data);
-      return { changeRequestData: new SicFromData<Pmdt06AModel>(form, data) };
+    const data = await lastValueFrom(http.get<ChangeRequestFormModel>(`${baseUrl}/${id}`));
+    if (!data) {
+      router.navigate(['/not-found']);
+      return { data: null };
     }
+    return { data };
+  } catch (err) {
+    console.error('Failed to load change request:', err);
     router.navigate(['/not-found']);
-    return EMPTY as any;
-  } catch {
-    router.navigate(['/not-found']);
-    return EMPTY as any;
+    return { data: null };
   }
 };

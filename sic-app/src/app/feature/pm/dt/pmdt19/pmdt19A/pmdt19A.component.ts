@@ -16,7 +16,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 
 import { Pmdt19AForm } from './pmdt19A.form';
 import { Pmdt19AService } from './pmdt19A.service';
-import { DocumentVersionModel } from './pmdt19A.model';
+import { DocumentVersionModel, Pmdt19APageData } from './pmdt19A.model';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -71,41 +71,12 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
   ngOnInit(): void {
-    const rawForm = Pmdt19AForm.createForm(this.fb);
-    this.formData = new SicFromData<DocumentVersionModel>(rawForm);
-
-    const projId = resolveProjectId(this.route, this.customerState);
-    const qType = this.route.snapshot.queryParams['documentType'];
-    const qId = this.route.snapshot.queryParams['documentId'];
-    const qCode = this.route.snapshot.queryParams['documentCode'];
-
-    if (projId || qType || qId || qCode) {
-      this.formData.patchValue({
-        ...(projId ? { projectId: projId } : {}),
-        ...(qType ? { documentType: qType } : {}),
-        ...(qId ? { documentId: qId } : {}),
-        ...(qCode ? { documentCode: qCode } : {}),
-      } as any);
+    const page: Pmdt19APageData = this.route.snapshot.data['pageData'];
+    this.formData = page.formData;
+    this.isEdit.set(page.isEdit);
+    if (page.id) {
+      this.id.set(page.id);
     }
-
-    const paramId = this.route.snapshot.params['id'];
-    if (paramId) {
-      this.isEdit.set(true);
-      this.id.set(paramId);
-      this.loadData(paramId);
-    }
-  }
-
-  loadData(id: string): void {
-    this.service.getVersion(id).subscribe({
-      next: (data) => {
-        this.formData.form.patchValue(data);
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
-      },
-      error: (err) => {
-        this.dialog.error('Error', err.message || this.translate.instant('PMDT19A_LOAD_ERROR_MSG'));
-      },
-    });
   }
 
   onSubmit(): void {

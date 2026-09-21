@@ -22,6 +22,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { Pmdt14AForm } from './pmdt14A.form';
 import { Pmdt14AService } from './pmdt14A.service';
 import { PmDeliveryModel, PmDeliveryChecklistModel, PmDeliveryGateCheckResponse } from './pmdt14A.model';
+import { Pmdt14APageData } from './pmdt14A.resolver';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { ApprovalFlow } from '../../pmdt03/approval.model';
@@ -262,23 +263,26 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
     this.loadApprovalFlows();
 
-    this.route.params.subscribe((params) => {
-      const isViewUrl = this.router.url.includes('/view');
-      this.isView.set(isViewUrl);
-      const paramId = params['id'];
-      if (paramId) {
-        this.id.set(paramId);
-        this.isEdit.set(!isViewUrl);
-        this.loadData(paramId);
+    const page: Pmdt14APageData = this.route.snapshot.data['pageData'];
+    const isViewUrl = this.router.url.includes('/view');
+    this.isView.set(isViewUrl);
+    const paramId = this.route.snapshot.paramMap.get('id');
+    if (paramId) {
+      this.id.set(paramId);
+      this.isEdit.set(!isViewUrl);
+      if (page?.data) {
+        this.applyDeliveryData(paramId, page.data);
       } else {
-        this.id.set(null);
-        this.isEdit.set(false);
-        this.initDefaultChecklist();
-        if (projId) {
-          this.runGateCheck(projId);
-        }
+        this.loadData(paramId);
       }
-    });
+    } else {
+      this.id.set(null);
+      this.isEdit.set(false);
+      this.initDefaultChecklist();
+      if (projId) {
+        this.runGateCheck(projId);
+      }
+    }
   }
 
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Contract + Gate Check ของโครงการที่เลือกใหม่
@@ -316,36 +320,38 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   loadData(id: string): void {
     this.service.getById(id).subscribe({
-      next: (data) => {
-        this.formData.form.patchValue({
-          ...data,
-          id: id,
-        });
-        if (data.isLocked) {
-          this.isLocked.set(true);
-          this.isView.set(true);
-        } else {
-          this.isLocked.set(false);
-          this.isView.set(this.router.url.includes('/view'));
-        }
-        if (this.isView()) {
-          this.formData.form.disable();
-        } else {
-          this.formData.form.enable();
-        }
-        if (data.checklists) {
-          this.checklists.set(data.checklists);
-        }
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
-        if (data.projectId) {
-          this.loadContractOptions(data.projectId);
-          this.runGateCheck(data.projectId, id);
-        }
-      },
+      next: (data) => this.applyDeliveryData(id, data),
       error: (err) => {
         this.dialog.error(this.translate.instant('PMDT14_ERROR_WORD'), err.message || this.translate.instant('PMDT14_LOAD_DATA_FAILED_MSG'));
       },
     });
+  }
+
+  private applyDeliveryData(id: string, data: PmDeliveryModel): void {
+    this.formData.form.patchValue({
+      ...data,
+      id: id,
+    });
+    if (data.isLocked) {
+      this.isLocked.set(true);
+      this.isView.set(true);
+    } else {
+      this.isLocked.set(false);
+      this.isView.set(this.router.url.includes('/view'));
+    }
+    if (this.isView()) {
+      this.formData.form.disable();
+    } else {
+      this.formData.form.enable();
+    }
+    if (data.checklists) {
+      this.checklists.set(data.checklists);
+    }
+    this.formData.resetModel(this.formData.form.getRawValue() as any);
+    if (data.projectId) {
+      this.loadContractOptions(data.projectId);
+      this.runGateCheck(data.projectId, id);
+    }
   }
 
   runGateCheck(projectId?: string, deliveryId?: string): void {

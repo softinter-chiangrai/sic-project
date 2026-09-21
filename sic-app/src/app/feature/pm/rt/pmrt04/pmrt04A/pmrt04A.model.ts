@@ -12,8 +12,10 @@ export interface Pmrt04AModel extends SicBaseStateModel {
   status?: string;
 }
 
+// Page data for the CONTRACT form (pmrt04A.component.ts) built by pmrt04AResolver.
 export interface Pmrt04APageData {
-  installmentData: SicFromData<Pmrt04AModel>;
+  contractData: SicFromData<ContractModel>;
+  isEdit: boolean;
 }
 
 export interface ContractModel {

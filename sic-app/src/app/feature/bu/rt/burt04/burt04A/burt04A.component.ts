@@ -1,8 +1,8 @@
 // src/app/feature/bu/rt/burt04/burt04A/burt04A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { SicButtonComponent } from 'sic-ng';
@@ -13,10 +13,8 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { ComboboxRole } from '../burt04.model';
 import { burt04Service } from '../burt04.service';
 
-
 import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { SicEntityState } from '../../../../../core/model/sic-entity-state';
-import { Burt04AForm, Burt04AFormModel } from './burt04A.form';
+import { Burt04AModel, Burt04APageData } from './burt04A.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -39,7 +37,6 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   private router = inject(Router);
   private service = inject(burt04Service);
   private dialog = inject(DialogService);
-  private fb = inject(FormBuilder);
   private translate = inject(TranslateService);
 
   // ✅ URL สำหรับ combobox บทบาท
@@ -52,7 +49,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   businessId = this.service.getBusinessId() || '';
   allRoles = signal<ComboboxRole[]>([]);
 
-  formData!: SicFromData<Burt04AFormModel>;
+  formData!: SicFromData<Burt04AModel>;
 
   get form(): FormGroup {
     return this.formData?.formGroup;
@@ -67,17 +64,11 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       this.router.navigate(['/feature/bu/burt04']);
       return;
     }
-    this.formData = new SicFromData<Burt04AFormModel>(Burt04AForm.createForm(this.fb));
+    const page: Burt04APageData = this.route.snapshot.data['form'];
+    this.formData = page.memberData;
+    this.memberId = this.route.snapshot.paramMap.get('id');
+    this.isEdit = !!this.memberId;
     this.loadRoles();
-
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.memberId = id;
-        this.loadMember(id);
-      }
-    });
   }
 
   // ✅ เพิ่ม type ให้กับ callback parameters
@@ -88,30 +79,6 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err: any) => console.error('Load roles error', err),
     });
-  }
-
-  loadMember(id: string) {
-    this.isLoading.set(true);
-    this.service
-      .getMemberById(id)
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (member: any) => {
-          this.formData.patchValue({
-            id: member.id,
-            userId: member.userId,
-            userName: member.userName,
-            userEmail: member.userEmail,
-            roleIds: member.roleIds || [],
-            isActive: member.isActive,
-          } as any);
-        },
-        error: (err: any) => {
-          console.error('Load member error', err);
-          this.dialog.error(this.translate.instant('BURT04A_LOAD_FAILED_TITLE'), this.translate.instant('BURT04A_MEMBER_NOT_FOUND_MSG'));
-          this.router.navigate(['/feature/bu/team']);
-        },
-      });
   }
 
   onBack() {

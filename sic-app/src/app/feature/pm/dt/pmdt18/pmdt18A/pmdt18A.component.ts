@@ -76,6 +76,15 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
 
   constructor() {
     effect(() => {
+      const err = this.dataResource.error();
+      if (err) {
+        const msg = (err as any)?.error?.message || this.translate.instant('PMDT18A_LOAD_ERROR_MSG');
+        this.dialog.error(this.translate.instant('PMDT18A_LOAD_ERROR_TITLE'), msg);
+        this.router.navigate(['/feature/pm/renewal']);
+      }
+    });
+
+    effect(() => {
       const data = this.dataResource.value();
       if (data) {
         this.formData.resetModel(data);

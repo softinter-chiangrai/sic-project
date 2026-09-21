@@ -18,6 +18,7 @@ import { DialogService } from '../../../../../core/services/dialog.service';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { Pmdt12AForm } from './pmdt12A.form';
 import { PmTestCaseModel } from './pmdt12A.model';
+import { Pmdt12APageData } from './pmdt12A.resolver';
 import { Pmdt12AService } from './pmdt12A.service';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -148,14 +149,17 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       this.loadScenarios();
     }
 
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.testCaseId = id;
-        this.isEdit.set(!this.isView() && !this.isExecution());
+    const page: Pmdt12APageData = this.route.snapshot.data['pageData'];
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.testCaseId = id;
+      this.isEdit.set(!this.isView() && !this.isExecution());
+      if (page?.data) {
+        this.applyTestCaseData(page.data);
+      } else {
         this.loadTestCase(id);
       }
-    });
+    }
 
     this.route.queryParams.subscribe((queryParams) => {
       const scenarioId = queryParams['scenarioId'];
@@ -474,32 +478,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.isLoading.set(true);
     this.service.getTestCaseById(id).subscribe({
       next: (data) => {
-        if (data.projectId) {
-          this.loadTasks(data.projectId);
-          this.loadScenarios(data.projectId);
-          this.checkActiveBug(data.testCaseCode, data.projectId, data.taskId);
-        }
-        if (data.taskId) {
-          this.service.getTaskById(data.taskId).subscribe({
-            next: (task) => {
-              if (task) {
-                this.checkTaskStatus(task.status);
-              }
-            },
-          });
-        }
-        this.formData.form.patchValue(data);
-        if (data.scenarioName && !data.scenarioId) {
-          this.formData.form.patchValue({ scenarioName: data.scenarioName });
-        }
-        if (data.tester) {
-          const names = data.tester.split(',').map((s: string) => s.trim()).filter((s: string) => !!s);
-          this.testerValues.set(names);
-        } else {
-          this.testerValues.set([]);
-        }
-        this.formData.resetModel(this.formData.form.getRawValue() as any);
-        this.updateTestTypeLockState(data.scenarioId);
+        this.applyTestCaseData(data);
         this.isLoading.set(false);
       },
       error: () => {
@@ -508,6 +487,35 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
         this.onBack();
       },
     });
+  }
+
+  private applyTestCaseData(data: PmTestCaseModel): void {
+    if (data.projectId) {
+      this.loadTasks(data.projectId);
+      this.loadScenarios(data.projectId);
+      this.checkActiveBug(data.testCaseCode, data.projectId, data.taskId);
+    }
+    if (data.taskId) {
+      this.service.getTaskById(data.taskId).subscribe({
+        next: (task) => {
+          if (task) {
+            this.checkTaskStatus(task.status);
+          }
+        },
+      });
+    }
+    this.formData.form.patchValue(data);
+    if (data.scenarioName && !data.scenarioId) {
+      this.formData.form.patchValue({ scenarioName: data.scenarioName });
+    }
+    if (data.tester) {
+      const names = data.tester.split(',').map((s: string) => s.trim()).filter((s: string) => !!s);
+      this.testerValues.set(names);
+    } else {
+      this.testerValues.set([]);
+    }
+    this.formData.resetModel(this.formData.form.getRawValue() as any);
+    this.updateTestTypeLockState(data.scenarioId);
   }
 
   onSubmit(): void {

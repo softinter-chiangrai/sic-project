@@ -149,6 +149,7 @@ export const PM_ROUTES: Routes = [
     path: 'matrix',
     loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
     resolve: { pageData: pmrt05Resolver },
+    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
   },
 
   // ===== Executive Dashboard (merged into /feature/dashboard) =====
@@ -238,13 +239,13 @@ export const PM_ROUTES: Routes = [
   {
     path: 'approval',
     loadComponent: () => import('./dt/pmdt03/pmdt03.component').then((m) => m.Pmdt03Component),
-    resolve: { form: pmdt03Resolver },
+    resolve: { pageData: pmdt03Resolver },
   },
   {
     path: 'approval/:id',
     loadComponent: () =>
       import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
-    resolve: { form: pmdt03AResolver },
+    resolve: { pageData: pmdt03AResolver },
   },
 
   // ============================================================
@@ -350,7 +351,7 @@ export const PM_ROUTES: Routes = [
   {
     path: 'discussion',
     loadComponent: () => import('./dt/pmdt08/pmdt08.component').then((m) => m.Pmdt08Component),
-    resolve: { form: pmdt08Resolver },
+    resolve: { pageData: pmdt08Resolver },
   },
 
   // ============================================================

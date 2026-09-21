@@ -16,7 +16,7 @@ export interface Pmdt06AModel extends SicBaseStateModel {
 }
 
 export interface Pmdt06APageData {
-  changeRequestData: SicFromData<Pmdt06AModel>;
+  data: ChangeRequestFormModel | null;
 }
 
 export interface ChangeRequestFormModel {

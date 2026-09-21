@@ -12,7 +12,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmdt02AService } from './pmdt02A.service';
 import { Pmdt02AForm } from './pmdt02A.form';
-import { MilestoneModel, MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
+import { MilestoneModel, MilestonePageData, MilestoneRequest, MilestoneResponse } from './pmdt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicButtonComponent } from "sic-ng";
 import { environment } from '../../../../../../environments/environment';
@@ -57,13 +57,26 @@ export class Pmdt02AComponent implements OnInit {
   }
 
   ngOnInit() {
+    const pageData: MilestonePageData | undefined = this.route.snapshot.data['pageData'];
+    if (pageData?.milestoneData) {
+      this.formData = pageData.milestoneData;
+    }
+    if (pageData?.milestoneDetail) {
+      this.data = pageData.milestoneDetail;
+      this.isEdit = true;
+      this.milestoneId = pageData.milestoneDetail.id;
+      if (pageData.milestoneDetail.phaseId) {
+        this.phaseId = pageData.milestoneDetail.phaseId;
+      }
+    }
+
     this.route.paramMap.subscribe((params) => {
       this.milestoneId = params.get('id');
       this.isEdit = !!this.milestoneId;
     });
 
     this.route.queryParams.subscribe((qParams) => {
-      this.phaseId = qParams['phaseId'] || '';
+      this.phaseId = qParams['phaseId'] || this.phaseId;
       this.projectId = qParams['projectId'] || '';
       const dateParam = qParams['dueDate'] || qParams['date'];
       if (!this.isEdit && dateParam) {
@@ -73,7 +86,7 @@ export class Pmdt02AComponent implements OnInit {
           dueTime: '17:00',
         });
       }
-      if (this.isEdit && this.milestoneId) {
+      if (this.isEdit && this.milestoneId && !this.data) {
         this.loadMilestone(this.milestoneId);
       }
     });

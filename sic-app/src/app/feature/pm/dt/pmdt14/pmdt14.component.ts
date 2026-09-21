@@ -111,9 +111,14 @@ export class Pmdt14Component implements OnInit {
         grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
         this.loadApprovalStatuses(items, grid, request.requestId, totalElements);
       },
-      error: () => {
+      error: (err) => {
         this.isLoading.set(false);
-        grid.setLoadError(this.translate.instant('PMDT14_LOAD_ERROR'), request.requestId);
+        const msg = err.error?.message || this.translate.instant('PMDT14_LOAD_ERROR');
+        this.deliveries.set([]);
+        this.totalElements.set(0);
+        grid.setRows([], { totalElements: 0 }, request.requestId);
+        grid.setLoadError(msg, request.requestId);
+        this.dialog.error(this.translate.instant('PMDT14_LOAD_ERROR'), msg);
       },
     });
   }

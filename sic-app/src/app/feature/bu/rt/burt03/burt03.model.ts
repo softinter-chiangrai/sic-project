@@ -11,7 +11,8 @@ export interface Burt03Model extends SicBaseStateModel {
 }
 
 export interface Burt03PageData {
-  roleData: SicFromData<Burt03Model>;
+  businessId: string;
+  roles: Role[];
 }
 
 export interface Role {

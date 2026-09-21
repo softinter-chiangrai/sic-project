@@ -6,20 +6,6 @@ export interface Pmrt02AModel extends SicBaseStateModel {
   id: string;
   projectCode: string;
   projectName: string;
-  description?: string;
-  startDate?: string;
-  endDate?: string;
-  status?: string;
-}
-
-export interface Pmrt02APageData {
-  projectData: SicFromData<Pmrt02AModel>;
-}
-
-export interface ProjectModel {
-  id?: string;
-  projectCode: string;
-  projectName: string;
   customerId: string;
   customerName?: string;
   contractId?: string;
@@ -38,5 +24,12 @@ export interface ProjectModel {
   isApproved?: boolean;
   isLocked?: boolean;
   createdAt?: string;
-  rowVersion?: number;
 }
+
+export interface Pmrt02APageData {
+  projectData: SicFromData<Pmrt02AModel>;
+  isEdit: boolean;
+}
+
+// Backward-compatible alias — the component/service historically referenced this name.
+export type ProjectModel = Pmrt02AModel;

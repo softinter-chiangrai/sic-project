@@ -1,11 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { ApprovalFlow } from './burt06.model';
+import { ApprovalFlow, Burt06PageData } from './burt06.model';
 import { Burt06Service } from './burt06.service';
 
 
@@ -23,6 +23,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   styleUrl: './burt06.component.css',
 })
 export class Burt06Component implements OnInit {
+  private route = inject(ActivatedRoute);
   private service = inject(Burt06Service);
   private dialog = inject(DialogService);
   private router = inject(Router);
@@ -131,17 +132,8 @@ export class Burt06Component implements OnInit {
       { value: 'inactive', text: this.translate.instant('BURT06_INACTIVE_OPT') },
     ];
     this.gridConfig = this.buildGridConfig();
-    this.loadFlows();
-  }
-
-  loadFlows(): void {
-    this.isLoading.set(true);
-    this.service.getFlows()
-      .pipe(finalize(() => this.isLoading.set(false)))
-      .subscribe({
-        next: (data) => this.flows.set(data),
-        error: () => this.dialog.error(this.translate.instant('BURT06_LOAD_FAILED_TITLE'), this.translate.instant('BURT06_LOAD_FAILED_MSG')),
-      });
+    const page: Burt06PageData = this.route.snapshot.data['form'];
+    this.flows.set(page.flows);
   }
 
   openCreateForm(): void {

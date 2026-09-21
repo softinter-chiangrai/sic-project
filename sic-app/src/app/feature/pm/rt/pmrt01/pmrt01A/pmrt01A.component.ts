@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt01/pmrt01A/pmrt01A.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -58,7 +58,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   formCustomerData!: SicFromData<CustomerModel>;
   isEdit = false;
   customerId: string | null = null;
-  isLoading = false;
+  isSaving = signal(false);
   businessId = '';
 
   // ✅ Getter สำหรับรูปโปรไฟล์ — อ่านจาก uploadGroupData โดยตรง
@@ -87,58 +87,23 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
-    // รับข้อมูลจาก resolver
+    // รับข้อมูลจาก resolver (customerCreateResolver / customerEditResolver โหลดข้อมูลมาให้แล้ว)
     const data = this.route.snapshot.data['form'];
     if (data && data.customer) {
       this.formCustomerData = data.customer;
       this.formCustomerData.formGroup.updateValueAndValidity();
-      this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดต
     } else {
       const form = Pmrt01AForm.createForm(this.fb);
       this.formCustomerData = new SicFromData<CustomerModel>(form);
-      this.cdr.detectChanges();
     }
+    this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดต
 
-    // ตรวจสอบว่าเป็นโหมดแก้ไขหรือไม่
-    this.route.params.subscribe((params) => {
-      const id = params['id'];
-      if (id) {
-        this.isEdit = true;
-        this.customerId = id;
-        if (!this.formCustomerData.formGroup.get('id')?.value) {
-          this.loadCustomer(id);
-        }
-      }
-    });
-  }
-
-  loadCustomer(id: string) {
-    this.isLoading = true;
-    this.service
-      .getCustomer(id)
-      .pipe(
-        finalize(() => {
-          this.isLoading = false;
-          // ไม่ต้องใช้ detectChanges ที่นี่ (อาจเร็วเกินไป)
-        }),
-      )
-      .subscribe({
-        next: (data) => {
-          this.formCustomerData.patchValue(data);
-          this.formCustomerData.formGroup.updateValueAndValidity();
-
-          // ✅ บังคับให้ view อัปเดตทันทีที่ข้อมูลใหม่เข้ามา
-          this.cdr.detectChanges();
-
-          console.log('✅ โหลดข้อมูลสำเร็จ:', data);
-        },
-        error: (error) => {
-          this.isLoading = false;
-          console.error('❌ โหลดข้อมูลไม่สำเร็จ:', error);
-          this.dialog.error(this.translate.instant('PMRT01A_LOAD_ERROR_TITLE'), this.translate.instant('PMRT01A_LOAD_ERROR_MSG'));
-          this.navigation.navigate(['/feature/pm/customer']);
-        },
-      });
+    // ตรวจสอบว่าเป็นโหมดแก้ไขหรือไม่ (ข้อมูลถูกโหลดมาจาก resolver แล้ว ไม่ต้องยิง HTTP ซ้ำ)
+    const id = this.route.snapshot.paramMap.get('id');
+    if (id) {
+      this.isEdit = true;
+      this.customerId = id;
+    }
   }
 
   // ---- Event Handlers ----
@@ -189,32 +154,23 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
 
     const data = this.formCustomerData.value as CustomerModel;
 
-    if (this.isEdit && this.customerId) {
-      this.service.updateCustomer(this.customerId, data).subscribe({
-        next: () => {
-          this.isSaved = true;
-          this.formCustomerData.markAsPristine();
-          this.dialog.success(this.translate.instant('PMRT01A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT01A_SAVE_SUCCESS_MSG')).then(() => {
-            this.navigation.navigate(['/feature/pm/customer']);
-          });
-        },
-        error: (err) => {
-          this.dialog.error(this.translate.instant('PMRT01A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT01A_GENERIC_ERROR_MSG'));
-        },
-      });
-    } else {
-      this.service.createCustomer(this.businessId, data).subscribe({
-        next: () => {
-          this.isSaved = true;
-          this.formCustomerData.markAsPristine();
-          this.dialog.success(this.translate.instant('PMRT01A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT01A_SAVE_SUCCESS_MSG')).then(() => {
-            this.navigation.navigate(['/feature/pm/customer']);
-          });
-        },
-        error: (err) => {
-          this.dialog.error(this.translate.instant('PMRT01A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT01A_GENERIC_ERROR_MSG'));
-        },
-      });
-    }
+    this.isSaving.set(true);
+    const request =
+      this.isEdit && this.customerId
+        ? this.service.updateCustomer(this.customerId, data)
+        : this.service.createCustomer(this.businessId, data);
+
+    request.pipe(finalize(() => this.isSaving.set(false))).subscribe({
+      next: () => {
+        this.isSaved = true;
+        this.formCustomerData.markAsPristine();
+        this.dialog.success(this.translate.instant('PMRT01A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMRT01A_SAVE_SUCCESS_MSG')).then(() => {
+          this.navigation.navigate(['/feature/pm/customer']);
+        });
+      },
+      error: (err) => {
+        this.dialog.error(this.translate.instant('PMRT01A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT01A_GENERIC_ERROR_MSG'));
+      },
+    });
   }
 }

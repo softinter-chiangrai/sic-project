@@ -356,6 +356,7 @@ export class Pmdt10Component implements OnInit {
         console.error('Load tasks error:', err);
         this.allTasks.set([]);
         this.isLoading.set(false);
+        this.dialog.error(this.translate.instant('PMDT10_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT10_LOAD_TASKS_FAIL_MSG'));
       },
     });
 
@@ -367,6 +368,7 @@ export class Pmdt10Component implements OnInit {
       error: (err) => {
         console.error('Load bugs error:', err);
         this.allBugs.set([]);
+        this.dialog.error(this.translate.instant('PMDT10_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT10_LOAD_BUGS_FAIL_MSG'));
       },
     });
   }

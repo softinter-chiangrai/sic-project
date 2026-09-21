@@ -2,9 +2,9 @@
 
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DialogService } from '../../../../core/services/dialog.service';
-import { Program, TreeNode } from './burt05.model';
+import { Burt05PageData, Program, TreeNode } from './burt05.model';
 import { burt05Service } from './burt05.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -28,6 +28,7 @@ function getProgramName(program: Program | TreeNode, fallback: string): string {
   styleUrls: ['./burt05.component.css'],
 })
 export class Burt05Component implements OnInit {
+  private route = inject(ActivatedRoute);
   private service = inject(burt05Service);
   private dialog = inject(DialogService);
   private router = inject(Router);
@@ -60,7 +61,9 @@ export class Burt05Component implements OnInit {
   });
 
   ngOnInit() {
-    this.loadData();
+    const page: Burt05PageData = this.route.snapshot.data['form'];
+    this.programs.set(page.programs);
+    this.buildTree(page.programs);
   }
 
   loadData() {

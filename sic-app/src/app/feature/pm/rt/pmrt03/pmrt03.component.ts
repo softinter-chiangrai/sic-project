@@ -8,7 +8,7 @@ import { finalize } from 'rxjs/operators';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
-import { ProjectDashboard, ProjectHealth, RecentPhase, RecentTask } from './pmrt03.model';
+import { Pmrt03PageData, ProjectDashboard, ProjectHealth, RecentPhase, RecentTask } from './pmrt03.model';
 import { Pmrt03Service } from './pmrt03.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -190,9 +190,19 @@ export class Pmrt03Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
+    // resolver preload ข้อมูล dashboard ของ projectId จาก query param มาให้แล้ว (ครั้งแรก)
+    const page: Pmrt03PageData | undefined = this.route.snapshot.data['form'];
+    if (page?.projectId) {
+      this.projectId.set(page.projectId);
+    }
+    if (page?.dashboard) {
+      this.project.set(page.dashboard);
+    }
+
+    // รอบถัดไป: ถ้า projectId ใน query params เปลี่ยน (เช่นสลับโปรเจกต์จากหน้าเดิม) ต้องยิงโหลดใหม่เอง
     this.route.queryParams.subscribe((params) => {
       const projectId = params['projectId'] || null;
-      if (projectId) {
+      if (projectId && projectId !== this.projectId()) {
         this.projectId.set(projectId);
         this.loadDashboard(projectId);
       }

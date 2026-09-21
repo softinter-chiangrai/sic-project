@@ -9,14 +9,14 @@ import {
   OnInit,
   signal,
 } from '@angular/core';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { FormsModule } from '@angular/forms';
 import { burt03Service } from '../burt03/burt03.service';
 import { burt04Service } from '../burt04/burt04.service';
 import { burt02AService } from './burt02A/burt02A.component';
-import { RolePermissionSummary, ProgramPermissionSummary } from './burt02.model';
+import { Burt02PageData, RolePermissionSummary, ProgramPermissionSummary } from './burt02.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -29,6 +29,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Burt02Component implements OnInit {
+  private route = inject(ActivatedRoute);
   private router = inject(Router);
   private roleService = inject(burt03Service);
   private burt04Service = inject(burt04Service);
@@ -105,65 +106,8 @@ export class Burt02Component implements OnInit {
       { value: 'hasUsers', text: this.translate.instant('BURT02_HAS_USERS_OPT') },
       { value: 'noUsers', text: this.translate.instant('BURT02_NO_USERS_OPT') },
     ];
-    this.loadRolesAndMembers();
-  }
-
-  /** ดึงบทบาท + จำนวนผู้ใช้จริง */
-  loadRolesAndMembers() {
-    this.isLoading.set(true);
-    const businessId = localStorage.getItem('businessId');
-    if (!businessId) {
-      this.isLoading.set(false);
-      return;
-    }
-
-    this.roleService.getRoles(businessId).subscribe({
-      next: (roles) => {
-        this.burt04Service.getMembers(businessId, 0, 1000).subscribe({
-          next: (res) => {
-            const members = res?.data || [];
-            const userCountMap = new Map<string, number>();
-
-            members.forEach((member) => {
-              const roleIds = member.roleIds || [];
-              roleIds.forEach((roleId) => {
-                userCountMap.set(roleId, (userCountMap.get(roleId) || 0) + 1);
-              });
-            });
-
-            // ✅ ใช้ roleName (แปลแล้ว)
-            const mapped: RolePermissionSummary[] = roles.map((r) => ({
-              roleId: r.id,
-              roleCode: r.roleCode,
-              roleName: r.roleName || r.roleNameEn || r.roleCode, // fallback
-              userCount: userCountMap.get(r.id) || 0,
-              isActive: r.isActive,
-              permissions: [],
-            }));
-
-            this.roles.set(mapped);
-            this.isLoading.set(false);
-          },
-          error: () => {
-            // Fallback: userCount = 0
-            const mapped: RolePermissionSummary[] = roles.map((r) => ({
-              roleId: r.id,
-              roleCode: r.roleCode,
-              roleName: r.roleName || r.roleNameEn || r.roleCode, // ✅ ใช้ roleName
-              userCount: 0,
-              isActive: r.isActive,
-              permissions: [],
-            }));
-            this.roles.set(mapped);
-            this.isLoading.set(false);
-          },
-        });
-      },
-      error: (err) => {
-        this.isLoading.set(false);
-        console.error('Error loading roles:', err);
-      },
-    });
+    const page: Burt02PageData = this.route.snapshot.data['form'];
+    this.roles.set(page.roles);
   }
 
   // ===== Options =====

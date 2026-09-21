@@ -17,6 +17,13 @@ export interface Pmrt04PageData {
   contractData: SicFromData<Pmrt04Model>;
 }
 
+// Preload data for the contract LIST page (pmrt04.component.ts) — the project
+// filter context + the first page of contracts, fetched by pmrt04Resolver.
+export interface Pmrt04ListPageData {
+  project: { id: string; customerId: string; customerName: string; projectName?: string; projectCode?: string } | null;
+  contracts: { data: Contract[]; pageable?: { totalElements?: number } } | null;
+}
+
 export interface ComboboxItem {
   value: string;
   text: string;

@@ -7,7 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { Pmdt09Service } from './pmdt09.service';
-import { DesignReview, ReviewComment } from './pmdt09.model';
+import { DesignReview, ReviewComment, Pmdt09PageData } from './pmdt09.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -116,11 +116,32 @@ export class Pmdt09Component implements OnInit {
   severityOptions = ['Low', 'Medium', 'High'];
   commentTypeOptions = ['Suggestion', 'Correction', 'Risk', 'Question', 'Approval Note'];
 
+  // guards against re-fetching on the first (synchronous) queryParams emission,
+  // since that initial value was already preloaded by pmdt09Resolver
+  private hasConsumedResolverData = false;
+
   // ===== Lifecycle =====
   ngOnInit() {
+    const pageData: Pmdt09PageData = this.route.snapshot.data['pageData'];
+    if (pageData) {
+      if (pageData.projectId) {
+        this.projectId.set(pageData.projectId);
+      }
+      this.reviews.set(pageData.reviews || []);
+      this.totalElements.set(pageData.totalElements || 0);
+      this.loadApprovalStatuses(pageData.reviews || []);
+      this.hasConsumedResolverData = true;
+    }
+
     this.route.queryParams.subscribe((params) => {
-      if (params['projectId']) {
-        this.projectId.set(params['projectId']);
+      const projectId = params['projectId'] || null;
+      if (this.hasConsumedResolverData && projectId === this.projectId()) {
+        // first emission already satisfied by the resolver, skip duplicate fetch
+        this.hasConsumedResolverData = false;
+        return;
+      }
+      if (projectId) {
+        this.projectId.set(projectId);
       }
       this.loadData();
     });
