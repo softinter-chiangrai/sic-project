@@ -4,13 +4,19 @@ import { CanActivateFn, Router } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 
 export const businessGuard: CanActivateFn = async (_route, _state) => {
     const platformId = inject(PLATFORM_ID);
     const router = inject(Router);
     const http = inject(HttpClient);
+    const authService = inject(AuthService);
 
     if (!isPlatformBrowser(platformId)) {
+        return true;
+    }
+
+    if (!authService.isLoggedIn()) {
         return true;
     }
 

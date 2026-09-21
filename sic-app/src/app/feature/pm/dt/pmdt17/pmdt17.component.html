@@ -116,8 +116,10 @@
 
       <ng-template sicGridPanelTemplate="customerInfo" section="cell" let-row>
         @let r = $any(row);
-        <div class="font-medium text-[var(--text-active)]">{{ r.customerName || 'N/A' }}</div>
-        <div class="text-xs text-[var(--text-muted)]">{{ r.projectName || 'N/A' }}</div>
+        <div class="w-full flex flex-col justify-center min-w-0 text-left py-1">
+          <div class="font-medium text-[var(--text-active)] truncate max-w-full" [title]="r.customerName || 'N/A'">{{ r.customerName || 'N/A' }}</div>
+          <div class="text-xs text-[var(--text-muted)] truncate max-w-full" [title]="r.projectName || 'N/A'">{{ r.projectName || 'N/A' }}</div>
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="typeText" section="cell" let-row>
@@ -127,37 +129,43 @@
 
       <ng-template sicGridPanelTemplate="severityBadge" section="cell" let-row>
         @let r = $any(row);
-        <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getSeverityClass(r.severity)">
-          {{ r.severity }}
-        </span>
+        <div class="w-full flex items-center justify-center">
+          <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getSeverityClass(r.severity)">
+            {{ r.severity }}
+          </span>
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
         @let r = $any(row);
-        <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(r.status)">
-          {{ getStatusText(r.status) }}
-        </span>
+        <div class="w-full flex items-center justify-center">
+          <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(r.status)">
+            {{ getStatusText(r.status) }}
+          </span>
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="approvalBadge" section="cell" let-row>
         @let r = $any(row);
-        @if (r.status?.toUpperCase() === 'CHANGED') {
-          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-            {{ 'PMDT17_PENDING_SUBMIT' | translate }}
-          </span>
-        } @else if (approvalStatusMap()[r.id]) {
-          <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[r.id])">
-            {{ getApprovalStatusText(approvalStatusMap()[r.id]) }}
-          </span>
-        } @else if (r.approvalStatus) {
-          <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(r.approvalStatus)">
-            {{ getApprovalStatusText(r.approvalStatus) }}
-          </span>
-        } @else {
-          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-            {{ 'PMDT17_NOT_APPROVED' | translate }}
-          </span>
-        }
+        <div class="w-full flex items-center justify-center">
+          @if (r.status?.toUpperCase() === 'CHANGED') {
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
+              {{ 'PMDT17_PENDING_SUBMIT' | translate }}
+            </span>
+          } @else if (approvalStatusMap()[r.id]) {
+            <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[r.id])">
+              {{ getApprovalStatusText(approvalStatusMap()[r.id]) }}
+            </span>
+          } @else if (r.approvalStatus) {
+            <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(r.approvalStatus)">
+              {{ getApprovalStatusText(r.approvalStatus) }}
+            </span>
+          } @else {
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+              {{ 'PMDT17_NOT_APPROVED' | translate }}
+            </span>
+          }
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="assignedText" section="cell" let-row>

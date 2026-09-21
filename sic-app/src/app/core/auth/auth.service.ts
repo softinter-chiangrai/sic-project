@@ -105,11 +105,14 @@ export class AuthService {
     }
   }
 
-  login(returnUrl: string) {
+  async login(returnUrl: string): Promise<void> {
     if (!this.isBrowser) return;
     console.log('[DEBUG] auth.login called with returnUrl:', returnUrl);
-    console.log('[DEBUG] loginUrl from discovery:', this.oauth.loginUrl);
     try {
+      if (!this.oauth.discoveryDocumentLoaded) {
+        await this.oauth.loadDiscoveryDocument();
+      }
+      console.log('[DEBUG] loginUrl from discovery:', this.oauth.loginUrl);
       this.oauth.initCodeFlow(returnUrl);
     } catch (err) {
       console.error('[DEBUG] initCodeFlow crashed!', err);

@@ -60,14 +60,14 @@ export class Pmdt18Component implements OnInit {
     showToolbar: false,
     pageSize: this.pageSize(),
     column: [
-      { label: this.translate.instant('PMDT18_COL_RENEWAL_NO'), name: 'renewalNo', type: 'code', minWidth: 140 },
-      { label: this.translate.instant('PMDT18_COL_CONTRACT_REF'), name: 'contractNo', type: 'contractText', minWidth: 130 },
-      { label: this.translate.instant('PMDT18_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', minWidth: 160 },
-      { label: this.translate.instant('PMDT18_COL_NEW_TERM'), name: 'newStartDate', type: 'dateRangeText', minWidth: 150 },
-      { label: this.translate.instant('PMDT18_COL_PROPOSED_AMOUNT'), name: 'proposedAmount', type: 'amountText', align: 'right', minWidth: 120 },
-      { label: this.translate.instant('PMDT18_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', minWidth: 110 },
-      { label: this.translate.instant('PMDT18_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: this.translate.instant('PMDT18_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
+      { label: this.translate.instant('PMDT18_COL_RENEWAL_NO'), name: 'renewalNo', type: 'code', width: 150 },
+      { label: this.translate.instant('PMDT18_COL_CONTRACT_REF'), name: 'contractNo', type: 'contractText', width: 140 },
+      { label: this.translate.instant('PMDT18_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', width: 220 },
+      { label: this.translate.instant('PMDT18_COL_NEW_TERM'), name: 'newStartDate', type: 'dateRangeText', width: 160 },
+      { label: this.translate.instant('PMDT18_COL_PROPOSED_AMOUNT'), name: 'proposedAmount', type: 'amountText', align: 'right', width: 130 },
+      { label: this.translate.instant('PMDT18_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', width: 120 },
+      { label: this.translate.instant('PMDT18_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', width: 130 },
+      { label: this.translate.instant('PMDT18_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 120 },
     ],
   };
 

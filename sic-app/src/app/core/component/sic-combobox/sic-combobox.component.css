@@ -231,14 +231,16 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  align-content: center;
   padding: 0.35rem 0.55rem 0.35rem 0.6rem;
   row-gap: 0.35rem;
   min-height: var(--sic-control-height-md, 2.9rem);
+  height: auto;
 }
 
 .sic-combobox__field--multiple .sic-combobox__field-input {
   min-height: auto;
-  height: 2rem;
+  height: 1.85rem;
   padding: 0 0.4rem;
   flex: 1 1 60px;
   width: auto;
@@ -250,7 +252,7 @@
 }
 
 .sic-combobox__chips {
-  display: flex;
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 0.35rem;

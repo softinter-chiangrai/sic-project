@@ -55,13 +55,13 @@ export class Pmdt14Component implements OnInit {
     showToolbar: false,
     pageSize: this.size(),
     column: [
-      { label: this.translate.instant('PMDT14_COL_CODE_TITLE'), name: 'deliveryCode', type: 'codeTitle', minWidth: 140 },
-      { label: this.translate.instant('PMDT14_COL_TYPE'), name: 'deliveryType', type: 'typeTag', minWidth: 100 },
-      { label: this.translate.instant('PMDT14_COL_VERSION'), name: 'deliveryVersion', type: 'versionText', minWidth: 90 },
-      { label: this.translate.instant('PMDT14_COL_DELIVERY_DATE'), name: 'deliveryDate', type: 'dateText', minWidth: 110 },
-      { label: this.translate.instant('PMDT14_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 140 },
-      { label: this.translate.instant('PMDT14_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: this.translate.instant('PMDT14_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 120 },
+      { label: this.translate.instant('PMDT14_COL_CODE_TITLE'), name: 'deliveryCode', type: 'codeTitle', width: 220 },
+      { label: this.translate.instant('PMDT14_COL_TYPE'), name: 'deliveryType', type: 'typeTag', width: 120 },
+      { label: this.translate.instant('PMDT14_COL_VERSION'), name: 'deliveryVersion', type: 'versionText', width: 90 },
+      { label: this.translate.instant('PMDT14_COL_DELIVERY_DATE'), name: 'deliveryDate', type: 'dateText', width: 120 },
+      { label: this.translate.instant('PMDT14_COL_STATUS'), name: 'status', type: 'statusBadge', width: 160 },
+      { label: this.translate.instant('PMDT14_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', width: 140 },
+      { label: this.translate.instant('PMDT14_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 140 },
     ],
   };
 

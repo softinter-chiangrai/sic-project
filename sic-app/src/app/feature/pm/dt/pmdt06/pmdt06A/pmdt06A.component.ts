@@ -263,10 +263,6 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             .subscribe({
                 next: (flows) => {
                     this.flows = flows || [];
-                    if (!this.selectedFlowId && this.flows.length > 0 && !this.changeRequestId) {
-                        this.selectedFlowId = this.flows[0].id;
-                        this.form.patchValue({ approvalFlowId: this.selectedFlowId });
-                    }
                     this.cdr.detectChanges();
                 },
                 error: () => {

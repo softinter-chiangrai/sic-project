@@ -97,12 +97,12 @@ export class Pmdt20Component implements OnInit {
       defaultSortDescending: true,
       pageSize: this.pageSize(),
       column: [
-        { label: this.translate.instant('PMDT20_COL_USER'), name: 'user', type: 'userInfo', sortable: true, minWidth: 100 },
-        { label: this.translate.instant('PMDT20_COL_ACTION'), name: 'action', type: 'text', sortable: true, minWidth: 120 },
-        { label: this.translate.instant('PMDT20_COL_MODULE'), name: 'module', type: 'text', sortable: true, minWidth: 130 },
-        { label: this.translate.instant('PMDT20_COL_DESCRIPTION'), name: 'description', type: 'descText', minWidth: 200 },
-        { label: this.translate.instant('PMDT20_COL_TIMESTAMP'), name: 'timestamp', type: 'dateText', sortable: true, minWidth: 150 },
-        { label: this.translate.instant('PMDT20_COL_STATUS'), name: 'status', type: 'statusBadge', sortable: true, minWidth: 80 },
+        { label: this.translate.instant('PMDT20_COL_USER'), name: 'user', type: 'userInfo', sortable: true, width: 180 },
+        { label: this.translate.instant('PMDT20_COL_ACTION'), name: 'action', type: 'text', sortable: true, width: 130 },
+        { label: this.translate.instant('PMDT20_COL_MODULE'), name: 'module', type: 'text', sortable: true, width: 140 },
+        { label: this.translate.instant('PMDT20_COL_DESCRIPTION'), name: 'description', type: 'descText', width: 280 },
+        { label: this.translate.instant('PMDT20_COL_TIMESTAMP'), name: 'timestamp', type: 'dateText', sortable: true, width: 160 },
+        { label: this.translate.instant('PMDT20_COL_STATUS'), name: 'status', type: 'statusBadge', sortable: true, width: 100 },
       ],
     };
   }

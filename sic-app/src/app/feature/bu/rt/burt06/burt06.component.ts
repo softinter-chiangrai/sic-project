@@ -38,6 +38,7 @@ export class Burt06Component implements OnInit {
   searchTerm = signal('');
   filterStatus = signal('all');
   filterDocumentType = signal('all');
+  filterApprovalMode = signal('all');
 
   documentTypeMap: Record<string, string> = {
     REQUIREMENT: 'Requirement',
@@ -57,11 +58,18 @@ export class Burt06Component implements OnInit {
   statusSelectOptions: { value: string; text: string }[] = [];
 
   docTypeSelectOptions = computed(() => {
-    return Object.entries(this.documentTypeMap).map(([key, label]) => ({
+    return Object.keys(this.documentTypeMap).map((key) => ({
       value: key,
-      text: label,
+      text: this.getDocumentTypeText(key),
     }));
   });
+
+  modeSelectOptions = computed(() => [
+    { value: 'CHAIN', text: this.getApprovalModeText('CHAIN') },
+    { value: 'PARALLEL', text: this.getApprovalModeText('PARALLEL') },
+    { value: 'ANY', text: this.getApprovalModeText('ANY') },
+    { value: 'SINGLE', text: this.getApprovalModeText('SINGLE') },
+  ]);
 
   // Filtered list
   filteredFlows = computed(() => {
@@ -85,6 +93,11 @@ export class Burt06Component implements OnInit {
       list = list.filter((f) => f.documentType === docType);
     }
 
+    const mode = this.filterApprovalMode();
+    if (mode !== 'all') {
+      list = list.filter((f) => f.approvalMode === mode);
+    }
+
     return list;
   });
 
@@ -101,13 +114,13 @@ export class Burt06Component implements OnInit {
       showToolbar: false,
       pageSize: this.pageSize(),
       column: [
-        { label: this.translate.instant('BURT06_COL_FLOWCODE'), name: 'flowCode', type: 'flowCode', sortable: true, minWidth: 150 },
-        { label: this.translate.instant('BURT06_COL_FLOWNAME'), name: 'flowName', type: 'flowName', sortable: true, minWidth: 180 },
-        { label: this.translate.instant('BURT06_COL_DOCTYPE'), name: 'documentType', type: 'docType', sortable: true, minWidth: 130 },
-        { label: this.translate.instant('BURT06_COL_MODE'), name: 'approvalMode', type: 'approvalMode', minWidth: 100 },
-        { label: 'Steps', name: 'steps', type: 'stepsCount', align: 'center', minWidth: 60 },
-        { label: this.translate.instant('BURT06_COL_STATUS'), name: 'active', type: 'statusBadge', sortable: true, minWidth: 80 },
-        { label: this.translate.instant('BURT06_COL_ACTION'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
+        { label: this.translate.instant('BURT06_COL_FLOWCODE'), name: 'flowCode', type: 'flowCode', sortable: true, width: 250 },
+        { label: this.translate.instant('BURT06_COL_FLOWNAME'), name: 'flowName', type: 'flowName', sortable: true, width: 280 },
+        { label: this.translate.instant('BURT06_COL_DOCTYPE'), name: 'documentType', type: 'docType', sortable: true, width: 160 },
+        { label: this.translate.instant('BURT06_COL_MODE'), name: 'approvalMode', type: 'approvalMode', width: 140 },
+        { label: 'Steps', name: 'steps', type: 'stepsCount', align: 'center', width: 80 },
+        { label: this.translate.instant('BURT06_COL_STATUS'), name: 'active', type: 'statusBadge', sortable: true, width: 100 },
+        { label: this.translate.instant('BURT06_COL_ACTION'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 110 },
       ],
     };
   }
@@ -191,6 +204,12 @@ export class Burt06Component implements OnInit {
     this.reloadFromPage1(grid);
   }
 
+  onFilterModeChange(value: any, grid: SicGridPanelComponent): void {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterApprovalMode.set(val || 'all');
+    this.reloadFromPage1(grid);
+  }
+
   getApprovalModeText(mode: string): string {
     const map: Record<string, string> = {
       CHAIN: this.translate.instant('BURT06_MODE_CHAIN'),
@@ -202,6 +221,29 @@ export class Burt06Component implements OnInit {
   }
 
   getDocumentTypeText(type: string): string {
+    const isThai = (this.translate.currentLang || this.translate.defaultLang) === 'th';
+    const thMap: Record<string, string> = {
+      REQUIREMENT: 'ข้อกำหนดความต้องการ (Requirement)',
+      SPECIFICATION: 'ข้อกำหนดเชิงเทคนิค (Specification)',
+      DIAGRAM: 'แผนภาพระบบ (Diagram)',
+      DFD: 'DFD (Data Flow Diagram)',
+      ER: 'ER Diagram',
+      DESIGN_REVIEW: 'การตรวจรับแบบดีไซน์ (Design Review)',
+      DELIVERY: 'เอกสารส่งมอบงาน (Delivery)',
+      INVOICE: 'ใบแจ้งหนี้ (Invoice)',
+      MA_RENEWAL: 'ต่ออายุสัญญาบำรุงรักษา (MA Renewal)',
+      CONTRACT: 'สัญญา (Contract)',
+      CHANGE_REQUEST: 'คำขอเปลี่ยนแปลง (Change Request)',
+      TEST_PLAN: 'แผนการทดสอบ (Test Plan)',
+      UAT: 'การตรวจรับระบบโดยผู้ใช้ (UAT)',
+      USER_MANUAL: 'คู่มือการใช้งาน (User Manual)',
+      TASK: 'งาน / กิจกรรม (Task)',
+      PROJECT: 'โครงการ (Project)',
+      MA_TICKET: 'ตั๋วแจ้งปัญหา MA (MA Ticket)',
+    };
+    if (isThai && thMap[type]) {
+      return thMap[type];
+    }
     return this.documentTypeMap[type] || type;
   }
 

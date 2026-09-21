@@ -2,6 +2,7 @@ import { Component, inject, PLATFORM_ID, signal, ChangeDetectionStrategy } from 
 import { Router, RouterOutlet } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
 import { AppLanguage, LanguageService } from '../../core/services/language.service';
+import { AuthService } from '../../core/auth/auth.service';
 import { TooltipDirective } from "../../core/directive/tooltip/tootop.directive";
 import { SicButtonComponent } from "sic-ng";
 import { TranslateModule } from '@ngx-translate/core';
@@ -20,6 +21,7 @@ export class Index {
   private readonly router = inject(Router);
   private readonly themeService = inject(ThemeService);
   private readonly languageService = inject(LanguageService);
+  private readonly authService = inject(AuthService);
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
 
@@ -35,15 +37,11 @@ export class Index {
 
   login(): void {
     console.log('[DEBUG] "Sign In" button clicked!');
-    const token = localStorage.getItem('access_token');
-    console.log('[DEBUG] Current access token in storage:', token ? 'EXISTS' : 'NULL');
-    console.log('[DEBUG] Attempting to navigate to /feature ...');
-    
-    this.router.navigate(['feature']).then(success => {
-      console.log('[DEBUG] Navigation to /feature result:', success);
-    }).catch(err => {
-      console.error('[DEBUG] Navigation error:', err);
-    });
+    if (this.authService.isLoggedIn()) {
+      void this.router.navigate(['feature']);
+    } else {
+      void this.authService.login('/feature/dashboard');
+    }
   }
   
 }

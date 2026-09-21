@@ -68,8 +68,10 @@
   >
       <ng-template sicGridPanelTemplate="codeTitle" section="cell" let-row>
         @let r = $any(row);
-        <div class="font-semibold text-[var(--text-active)]">{{ r.deliveryCode }}</div>
-        <div class="text-xs text-[var(--text-muted)]">{{ r.deliveryTitle }}</div>
+        <div class="w-full flex flex-col justify-center min-w-0 text-left py-1">
+          <div class="font-semibold text-[var(--text-active)] truncate max-w-full" [title]="r.deliveryCode">{{ r.deliveryCode }}</div>
+          <div class="text-xs text-[var(--text-muted)] truncate max-w-full" [title]="r.deliveryTitle">{{ r.deliveryTitle }}</div>
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="typeTag" section="cell" let-row>

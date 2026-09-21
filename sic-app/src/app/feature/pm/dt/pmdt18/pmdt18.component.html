@@ -71,8 +71,10 @@
 
       <ng-template sicGridPanelTemplate="customerInfo" section="cell" let-row>
         @let r = $any(row);
-        <div class="font-medium text-[var(--text-active)]">{{ r.customerName || 'N/A' }}</div>
-        <div class="text-xs text-[var(--text-muted)]">{{ r.projectName || 'N/A' }}</div>
+        <div class="w-full flex flex-col justify-center min-w-0 text-left py-1">
+          <div class="font-medium text-[var(--text-active)] truncate max-w-full" [title]="r.customerName || 'N/A'">{{ r.customerName || 'N/A' }}</div>
+          <div class="text-xs text-[var(--text-muted)] truncate max-w-full" [title]="r.projectName || 'N/A'">{{ r.projectName || 'N/A' }}</div>
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="dateRangeText" section="cell" let-row>
@@ -89,20 +91,24 @@
 
       <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
         @let r = $any(row);
-        <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(r.status)">
-          {{ getStatusText(r.status) }}
-        </span>
+        <div class="w-full flex items-center justify-center">
+          <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(r.status)">
+            {{ getStatusText(r.status) }}
+          </span>
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="approvalBadge" section="cell" let-row>
         @let r = $any(row);
-        @if (approvalStatusMap()[r.id]) {
-          <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[r.id])">
-            {{ getApprovalStatusText(approvalStatusMap()[r.id]) }}
-          </span>
-        } @else {
-          <span class="text-xs text-[var(--text-muted)]">-</span>
-        }
+        <div class="w-full flex items-center justify-center">
+          @if (approvalStatusMap()[r.id]) {
+            <span [class]="'inline-block px-2.5 py-0.5 rounded-full text-xs font-medium ' + getApprovalStatusClass(approvalStatusMap()[r.id])">
+              {{ getApprovalStatusText(approvalStatusMap()[r.id]) }}
+            </span>
+          } @else {
+            <span class="text-xs text-[var(--text-muted)]">-</span>
+          }
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>

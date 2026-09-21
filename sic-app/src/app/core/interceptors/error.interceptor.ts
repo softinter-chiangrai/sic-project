@@ -23,7 +23,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   return next(req).pipe(
     catchError((err: unknown) => {
       if (err instanceof HttpErrorResponse && isSicApiRequest && err.status === 401) {
-        authService.logout();
+        if (authService.isLoggedIn()) {
+          authService.logout();
+        }
       }
       return throwError(() => err);
     }),

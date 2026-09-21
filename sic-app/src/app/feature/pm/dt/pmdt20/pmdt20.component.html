@@ -86,10 +86,12 @@
   >
       <ng-template sicGridPanelTemplate="userInfo" section="cell" let-row>
         @let r = $any(row);
-        <span class="font-medium text-[var(--text-active)]">{{ r.user }}</span>
-        @if (r.ipAddress) {
-          <div class="text-xs text-[var(--text-muted)]">{{ r.ipAddress }}</div>
-        }
+        <div class="w-full flex flex-col justify-center min-w-0 text-left py-1">
+          <span class="font-medium text-[var(--text-active)] truncate max-w-full" [title]="r.user">{{ r.user }}</span>
+          @if (r.ipAddress) {
+            <span class="text-xs text-[var(--text-muted)] truncate max-w-full" [title]="r.ipAddress">{{ r.ipAddress }}</span>
+          }
+        </div>
       </ng-template>
 
       <ng-template sicGridPanelTemplate="descText" section="cell" let-row>
@@ -106,9 +108,11 @@
 
       <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
         @let r = $any(row);
-        <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-          {{ r.status }}
-        </span>
+        <div class="w-full flex items-center justify-center">
+          <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+            {{ r.status }}
+          </span>
+        </div>
       </ng-template>
     </sic-gridpanel>
 </div>
