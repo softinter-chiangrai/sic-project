@@ -87,7 +87,7 @@ export class Pmdt06Component implements OnInit {
 
     const status = this.filterStatus();
     if (status && status !== 'all') {
-      list = list.filter((cr) => cr.status === status);
+      list = list.filter((cr) => cr.status?.toUpperCase() === status.toUpperCase());
     }
 
     const ids = this.selectedProjectIds();
@@ -256,13 +256,15 @@ export class Pmdt06Component implements OnInit {
   }
 
   // Options
-  readonly statusOptions = [
-    { value: 'Draft', text: this.translate.instant('PMDT06_STATUS_DRAFT') },
-    { value: 'Submitted', text: this.translate.instant('PMDT06_STATUS_SUBMITTED') },
-    { value: 'Approved', text: this.translate.instant('PMDT06_STATUS_APPROVED') },
-    { value: 'Rejected', text: this.translate.instant('PMDT06_STATUS_REJECTED') },
-    { value: 'Implemented', text: this.translate.instant('PMDT06_STATUS_IMPLEMENTED') },
-  ];
+  get statusOptions() {
+    return [
+      { value: 'DRAFT', text: this.translate.instant('PMDT06_STATUS_DRAFT') },
+      { value: 'SUBMITTED', text: this.translate.instant('PMDT06_STATUS_SUBMITTED') },
+      { value: 'APPROVED', text: this.translate.instant('PMDT06_STATUS_APPROVED') },
+      { value: 'REJECTED', text: this.translate.instant('PMDT06_STATUS_REJECTED') },
+      { value: 'IMPLEMENTED', text: this.translate.instant('PMDT06_STATUS_IMPLEMENTED') },
+    ];
+  }
 
   onFilterChange(value: any, grid: SicGridPanelComponent) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';

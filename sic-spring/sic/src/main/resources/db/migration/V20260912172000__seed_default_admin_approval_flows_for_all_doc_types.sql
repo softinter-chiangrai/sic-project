@@ -40,7 +40,10 @@ DECLARE
     v_flow_code VARCHAR(100);
     v_flow_name VARCHAR(255);
     v_description TEXT;
+    v_business_id UUID;
 BEGIN
+    SELECT id INTO v_business_id FROM su_business WHERE is_delete = false ORDER BY created_date ASC LIMIT 1;
+
     FOR r IN (
         SELECT parameter_value, COALESCE(parameter_name_local, parameter_name_en, parameter_value) AS doc_name
         FROM db_parameter
@@ -72,15 +75,16 @@ BEGIN
         IF v_flow_id IS NULL THEN
             v_flow_id := gen_random_uuid();
             INSERT INTO pm_approval_flow (
-                id, flow_code, flow_name, document_type, approval_mode, is_active, description,
+                id, business_id, flow_code, flow_name, document_type, approval_mode, is_active, description,
                 created_by, created_date, updated_by, updated_date, is_delete
             ) VALUES (
-                v_flow_id, v_flow_code, v_flow_name, r.parameter_value, 'CHAIN', true, v_description,
+                v_flow_id, v_business_id, v_flow_code, v_flow_name, r.parameter_value, 'CHAIN', true, v_description,
                 'system', NOW(), 'system', NOW(), false
             );
         ELSE
             UPDATE pm_approval_flow 
             SET flow_name = v_flow_name,
+                business_id = COALESCE(business_id, v_business_id),
                 approval_mode = 'CHAIN',
                 is_active = true,
                 description = v_description,

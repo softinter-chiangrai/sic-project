@@ -72,12 +72,6 @@
 
             <div class="flex justify-end gap-2 mt-3 border-t border-[var(--border)] pt-3">
               <button
-                (click)="openQuickView(phase, $event)"
-                class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
-              >
-                <i class="bi bi-layout-sidebar-inset"></i> {{ 'PMDT01_QUICK_VIEW' | translate }}
-              </button>
-              <button
                 (click)="editPhase(phase, $event)"
                 class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
               >
@@ -102,67 +96,6 @@
     }
   }
 
-  <!-- QUICK VIEW DRAWER -->
-  <sic-drawer
-    [isOpen]="showDrawer()"
-    [title]="selectedPhase() ? (selectedPhase()!.phaseCode ? selectedPhase()!.phaseCode + ' · ' : '') + selectedPhase()!.phaseName : ('PMDT01_DETAIL_TITLE_DEFAULT' | translate)"
-    size="md"
-    (closed)="closeQuickView()"
-  >
-    @if (selectedPhase(); as phase) {
-      <div class="space-y-5">
-        <div class="flex items-center gap-2">
-          <span [class]="getStatusClass(phase.status) + ' px-2.5 py-0.5 rounded-full text-xs font-medium'">
-            {{ getStatusText(phase.status) }}
-          </span>
-          <span class="text-xs text-[var(--text-muted)]">
-            <i class="bi bi-calendar3"></i> {{ formatDate(phase.startDate) }} - {{ formatDate(phase.endDate) }}
-          </span>
-        </div>
 
-        <p class="text-sm text-[var(--text)] whitespace-pre-line">
-          {{ (phase.description | sicStripHtml) || ('PMDT01_NO_DESCRIPTION' | translate) }}
-        </p>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] p-3 text-center">
-            <div class="text-xl font-semibold text-[var(--text-active)]">{{ phase.milestoneCount }}</div>
-            <div class="text-xs text-[var(--text-muted)]"><i class="bi bi-flag text-[var(--crm-primary)]"></i> Milestones</div>
-          </div>
-          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] p-3 text-center">
-            <div class="text-xl font-semibold text-[var(--text-active)]">{{ phase.taskCompletedCount }}/{{ phase.taskCount }}</div>
-            <div class="text-xs text-[var(--text-muted)]"><i class="bi bi-list-task text-[var(--crm-primary)]"></i> Tasks</div>
-          </div>
-        </div>
-
-        <div>
-          <div class="w-full bg-[var(--bg)] rounded-full h-2 overflow-hidden">
-            <div class="h-full bg-[var(--crm-primary)] rounded-full transition-all" [style.width.%]="phase.progress"></div>
-          </div>
-          <div class="flex justify-between text-xs text-[var(--text-muted)] mt-1">
-            <span>{{ 'PMDT01_PROGRESS' | translate }}</span>
-            <span>{{ phase.progress }}%</span>
-          </div>
-        </div>
-      </div>
-    }
-
-    @if (selectedPhase(); as phase) {
-      <div drawer-footer class="flex flex-wrap items-center justify-end gap-2">
-        <button
-          (click)="closeQuickView(); editPhase(phase, $event)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-pencil"></i> {{ 'PMDT01_EDIT' | translate }}
-        </button>
-        <button
-          (click)="closeQuickView(); goToDetail(phase.id)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-        >
-          <i class="bi bi-arrow-up-right-square"></i> {{ 'PMDT01_VIEW_FULL' | translate }}
-        </button>
-      </div>
-    }
-  </sic-drawer>
 
 </div>

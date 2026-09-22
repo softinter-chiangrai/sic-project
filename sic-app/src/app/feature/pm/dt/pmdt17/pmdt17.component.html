@@ -176,14 +176,6 @@
       <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
         @let r = $any(row);
         <div class="flex items-center justify-center gap-1">
-          <!-- ปุ่มดูสรุปด่วน (Quick View Drawer) -->
-          <button
-            (click)="openQuickView(r)"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            [title]="'PMDT17_QUICK_VIEW_TOOLTIP' | translate"
-          >
-            <i class="bi bi-layout-sidebar-inset"></i>
-          </button>
           <sic-table-actions
             [showView]="true"
             [showEdit]="true"
@@ -215,102 +207,5 @@
     </div>
   }
 
-  <!-- QUICK VIEW DRAWER -->
-  <sic-drawer
-    [isOpen]="showDrawer()"
-    [title]="selectedTicket() ? (('PMDT17_TICKET_PREFIX' | translate) + ' ' + (selectedTicket()!.ticketNo || '')) : ('PMDT17_TICKET_DETAILS_TITLE' | translate)"
-    size="md"
-    (closed)="closeQuickView()"
-  >
-    @if (selectedTicket(); as ticket) {
-      <div class="space-y-5">
-        <div class="flex items-center gap-2 flex-wrap">
-          <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getStatusClass(ticket.status)">
-            {{ getStatusText(ticket.status) }}
-          </span>
-          <span [class]="'px-2.5 py-0.5 rounded-full text-xs font-medium ' + getSeverityClass(ticket.severity)">
-            {{ ticket.severity }}
-          </span>
-          @if (approvalStatusMap()[ticket.id] || ticket.approvalStatus) {
-            <span
-              [class]="
-                'px-2.5 py-0.5 rounded-full text-xs font-medium ' +
-                getApprovalStatusClass(approvalStatusMap()[ticket.id] || ticket.approvalStatus)
-              "
-            >
-              {{ getApprovalStatusText(approvalStatusMap()[ticket.id] || ticket.approvalStatus) }}
-            </span>
-          }
-        </div>
 
-        <div>
-          <h3 class="text-base font-semibold text-[var(--text-active)]">{{ ticket.title }}</h3>
-          @if (ticket.description) {
-            <p class="text-sm text-[var(--text)] mt-1 whitespace-pre-line">{{ ticket.description }}</p>
-          }
-        </div>
-
-        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMDT17_COL_TICKET_NO' | translate }}</dt>
-            <dd class="font-mono font-semibold text-[var(--text-active)]">{{ ticket.ticketNo }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMDT17_COL_TYPE' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ ticket.ticketType }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMDT17_LABEL_CUSTOMER' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ ticket.customerName || 'N/A' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMDT17_LABEL_PROJECT' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ ticket.projectName || 'N/A' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMDT17_COL_ASSIGNED' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ ticket.assignedTo || ('PMDT17_NOT_ASSIGNED' | translate) }}</dd>
-          </div>
-          @if (ticket.startDate || ticket.endDate) {
-            <div>
-              <dt class="text-[var(--text-muted)]">{{ 'PMDT17_LABEL_DURATION' | translate }}</dt>
-              <dd class="font-mono text-[var(--text-active)]">
-                {{ ticket.startDate || '-' }} @if (ticket.endDate) { - {{ ticket.endDate }} }
-              </dd>
-            </div>
-          }
-        </dl>
-
-        @if (ticket.resolutionSummary) {
-          <div class="rounded-xl border border-[var(--border)] bg-[var(--sidebar)] p-3">
-            <dt class="text-xs text-[var(--text-muted)] mb-1">{{ 'PMDT17_LABEL_RESOLUTION_SUMMARY' | translate }}</dt>
-            <dd class="text-sm text-[var(--text-active)] whitespace-pre-line">{{ ticket.resolutionSummary }}</dd>
-          </div>
-        }
-      </div>
-    }
-
-    @if (selectedTicket(); as ticket) {
-      <div drawer-footer class="flex flex-wrap items-center justify-end gap-2">
-        <button
-          (click)="printTicket(ticket)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-printer"></i> {{ 'PMDT17_PRINT_BUTTON' | translate }}
-        </button>
-        <button
-          (click)="closeQuickView(); goToEdit(ticket.id)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-pencil"></i> {{ 'PMDT17_EDIT_BUTTON' | translate }}
-        </button>
-        <button
-          (click)="closeQuickView(); goToView(ticket.id)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-        >
-          <i class="bi bi-arrow-up-right-square"></i> {{ 'PMDT17_VIEW_FULL_BUTTON' | translate }}
-        </button>
-      </div>
-    }
-  </sic-drawer>
 </div>

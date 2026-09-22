@@ -124,19 +124,21 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     }
 
     selectedTargetType = signal('REQUIREMENT');
-    readonly targetTypeOptions = [
-        { value: 'PROJECT', text: this.translate.instant('PMDT06_COL_PROJECT') },
-        { value: 'REQUIREMENT', text: this.translate.instant('PMDT06_TARGET_REQ_FULL') },
-        { value: 'SPECIFICATION', text: this.translate.instant('PMDT06_TARGET_SPEC_FULL') },
-        { value: 'DIAGRAM', text: this.translate.instant('PMDT06_TARGET_DIAGRAM_FULL') },
-        { value: 'CONTRACT', text: this.translate.instant('PMDT06_TARGET_CONTRACT') },
-        { value: 'DESIGN_REVIEW', text: this.translate.instant('PMDT06_TARGET_DESIGN_REVIEW') },
-        { value: 'DELIVERY', text: this.translate.instant('PMDT06_TARGET_DELIVERY') },
-        { value: 'USER_MANUAL', text: this.translate.instant('PMDT06_TARGET_USER_MANUAL') },
-        { value: 'INVOICE', text: this.translate.instant('PMDT06_TARGET_INVOICE') },
-        { value: 'MA_TICKET', text: this.translate.instant('PMDT06_TARGET_MA_TICKET') },
-        { value: 'MA_RENEWAL', text: this.translate.instant('PMDT06_TARGET_MA_RENEWAL') },
-    ];
+    get targetTypeOptions() {
+        return [
+            { value: 'PROJECT', text: this.translate.instant('PMDT06_COL_PROJECT') },
+            { value: 'REQUIREMENT', text: this.translate.instant('PMDT06_TARGET_REQ_FULL') },
+            { value: 'SPECIFICATION', text: this.translate.instant('PMDT06_TARGET_SPEC_FULL') },
+            { value: 'DIAGRAM', text: this.translate.instant('PMDT06_TARGET_DIAGRAM_FULL') },
+            { value: 'CONTRACT', text: this.translate.instant('PMDT06_TARGET_CONTRACT') },
+            { value: 'DESIGN_REVIEW', text: this.translate.instant('PMDT06_TARGET_DESIGN_REVIEW') },
+            { value: 'DELIVERY', text: this.translate.instant('PMDT06_TARGET_DELIVERY') },
+            { value: 'USER_MANUAL', text: this.translate.instant('PMDT06_TARGET_USER_MANUAL') },
+            { value: 'INVOICE', text: this.translate.instant('PMDT06_TARGET_INVOICE') },
+            { value: 'MA_TICKET', text: this.translate.instant('PMDT06_TARGET_MA_TICKET') },
+            { value: 'MA_RENEWAL', text: this.translate.instant('PMDT06_TARGET_MA_RENEWAL') },
+        ];
+    }
     targetDocumentOptions = signal<any[]>([]);
     isTargetLocked = signal(false);
     selectedAssignees = signal<{ userId: string; userName: string }[]>([]);

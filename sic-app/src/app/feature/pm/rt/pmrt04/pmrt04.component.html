@@ -215,15 +215,6 @@
       <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
         @let r = $any(row);
         <div class="flex items-center justify-center gap-1.5 flex-wrap">
-          <!-- ปุ่มดูสรุปด่วน (Quick View Drawer) -->
-          <button
-            (click)="openQuickView(r)"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            [title]="'PMRT04_QUICK_VIEW_TITLE' | translate"
-          >
-            <i class="bi bi-layout-sidebar-inset"></i>
-          </button>
-
           <!-- ปุ่มดูข้อมูล -->
           <button
             (click)="goToView(r.id)"
@@ -289,88 +280,5 @@
     </div>
   }
 
-  <!-- QUICK VIEW DRAWER -->
-  <sic-drawer
-    [isOpen]="showDrawer()"
-    [title]="selectedContract() ? (('PMRT04_CONTRACT_SUMMARY_TITLE' | translate) + ' ' + selectedContract()!.contractNo) : ('PMRT04_CONTRACT_SUMMARY_TITLE' | translate)"
-    size="md"
-    (closed)="closeQuickView()"
-  >
-    @if (selectedContract(); as contract) {
-      <div class="space-y-5">
-        <div class="flex items-center gap-3">
-          <span
-            [class]="
-              getStatusClass(contract.signStatus) +
-              ' inline-block px-3 py-1 rounded-full text-xs font-medium'
-            "
-          >
-            {{ getStatusText(contract.signStatus) }}
-          </span>
-          @if (contract.approvalStatus) {
-            <span
-              [class]="
-                getApprovalStatusClass(contract.approvalStatus) +
-                ' inline-block px-3 py-1 rounded-full text-xs font-medium'
-              "
-            >
-              {{ getApprovalStatusText(contract.approvalStatus) }}
-            </span>
-          }
-        </div>
 
-        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_CONTRACT_NO' | translate }}</dt>
-            <dd class="font-mono font-semibold text-[var(--text-active)]">{{ contract.contractNo }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_TYPE' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ contract.contractType }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_CUSTOMER' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ contract.customerName }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_PROJECT' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ contract.projectName || '-' }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_CONTRACT_VALUE_LABEL' | translate }}</dt>
-            <dd class="font-mono text-[var(--text-active)]">{{ formatCurrency(contract.contractValue) }}</dd>
-          </div>
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMRT04_COL_DURATION' | translate }}</dt>
-            <dd class="font-mono text-[var(--text-active)]">
-              {{ formatDate(contract.startDate) }} - {{ formatDate(contract.endDate) }}
-            </dd>
-          </div>
-        </dl>
-      </div>
-    }
-
-    @if (selectedContract(); as contract) {
-      <div drawer-footer class="flex flex-wrap items-center justify-end gap-2">
-        <button
-          (click)="printContract(contract); "
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-printer"></i> {{ 'PMRT04_PRINT_BTN' | translate }}
-        </button>
-        <button
-          (click)="closeQuickView(); goToEdit(contract.id)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-pencil"></i> {{ 'PMRT04_EDIT_TITLE' | translate }}
-        </button>
-        <button
-          (click)="closeQuickView(); goToView(contract.id)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-        >
-          <i class="bi bi-arrow-up-right-square"></i> {{ 'PMRT04_VIEW_FULL_BTN' | translate }}
-        </button>
-      </div>
-    }
-  </sic-drawer>
 </div>

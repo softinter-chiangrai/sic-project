@@ -80,13 +80,6 @@
             </p>
           </div>
           <div class="flex items-center gap-1">
-            <!-- ปุ่มอ่าน/ตอบกลับด่วน (Quick View Drawer) -->
-            <button
-              (click)="openQuickView(post, $event)"
-              class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-              [title]="'PMDT08_QUICK_READ_REPLY_TITLE' | translate">
-              <i class="bi bi-layout-sidebar-inset text-sm"></i>
-            </button>
             @if (isAuthor(post.createdBy)) {
               <button
                 (click)="openEditModal(post)"
@@ -503,70 +496,6 @@
     ></app-pmdt08a>
   }
 
-  <!-- QUICK VIEW DRAWER -->
-  <sic-drawer
-    [isOpen]="showDrawer()"
-    [title]="selectedPost() ? selectedPost()!.subject : ('PMDT08_POST_DETAILS' | translate)"
-    size="md"
-    (closed)="closeQuickView()"
-  >
-    @if (selectedPost(); as post) {
-      <div class="space-y-5">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full overflow-hidden border border-[var(--border)] bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
-            @if (post.userAvatarUrl) {
-              <img [src]="getAvatarUrl(post.userAvatarUrl)" [alt]="post.createdByName" class="w-full h-full object-cover" />
-            } @else {
-              <span class="text-sm font-bold text-[var(--crm-primary)]">
-                {{ post.createdByName?.charAt(0) || '?' }}
-              </span>
-            }
-          </div>
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-sm text-[var(--text-active)]">{{ post.createdByName }}</p>
-            <p class="text-xs text-[var(--text-muted)]">{{ formatDate(post.createdDate) }}</p>
-          </div>
-          @if (post.pinned) {
-            <span class="text-xs px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 font-normal">📌 {{ 'PMDT08_PINNED' | translate }}</span>
-          }
-        </div>
 
-        <div
-          class="text-sm text-[var(--text)] leading-relaxed rich-text-content prose-sm max-w-none"
-          [innerHTML]="post.content"
-        ></div>
-
-        <dl class="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
-          <div>
-            <dt class="text-[var(--text-muted)]">{{ 'PMDT08_COMMENTS' | translate }}</dt>
-            <dd class="text-[var(--text-active)]">{{ post.replyCount }} {{ 'PMDT08_ITEMS_UNIT' | translate }}</dd>
-          </div>
-          @if (post.attachmentGroupId) {
-            <div>
-              <dt class="text-[var(--text-muted)]">{{ 'PMDT08_ATTACHMENTS' | translate }}</dt>
-              <dd class="text-[var(--text-active)]">{{ getAttachments(post.attachmentGroupId).length }} {{ 'PMDT08_FILES_UNIT' | translate }}</dd>
-            </div>
-          }
-        </dl>
-      </div>
-    }
-
-    @if (selectedPost(); as post) {
-      <div drawer-footer class="flex flex-wrap items-center justify-end gap-2">
-        <button
-          (click)="replyFromQuickView(post)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-reply"></i> {{ 'PMDT08_REPLY' | translate }}
-        </button>
-        <button
-          (click)="openFullDiscussion(post)"
-          class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-        >
-          <i class="bi bi-arrow-up-right-square"></i> {{ 'PMDT08_VIEW_ALL_COMMENTS' | translate }}
-        </button>
-      </div>
-    }
-  </sic-drawer>
 
 </div>

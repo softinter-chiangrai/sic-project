@@ -27,14 +27,13 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, SicDrawerComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -74,10 +73,6 @@ export class Pmrt04Component implements OnInit {
 
   // guard: ป้องกัน handleGridLoad ยิงซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
   private syncingUrl = false;
-
-  // ===== Quick View Drawer =====
-  protected showDrawer = signal(false);
-  protected selectedContract = signal<Contract | null>(null);
 
   // ===== Preset Filter Tabs =====
   protected activePreset = signal<'all' | 'expiring'>('all');
@@ -581,15 +576,6 @@ export class Pmrt04Component implements OnInit {
     } else {
       this.navigation.navigate(['/feature/pm/project']);
     }
-  }
-
-  openQuickView(contract: Contract): void {
-    this.selectedContract.set(contract);
-    this.showDrawer.set(true);
-  }
-
-  closeQuickView(): void {
-    this.showDrawer.set(false);
   }
 
   goToProject(projectId: string) {

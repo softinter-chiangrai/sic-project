@@ -8,13 +8,12 @@ import { PhaseModel } from './pmdt01.model';
 import { Pmdt01Service } from './pmdt01.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
-import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [CommonModule, SicStripHtmlPipe, SicDrawerComponent, TranslateModule],
+  imports: [CommonModule, SicStripHtmlPipe, TranslateModule],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {
@@ -42,10 +41,6 @@ export class Pmdt01Component implements OnInit {
     return all.filter((p) => idSet.has(p.projectId));
   });
 
-  // ===== Quick View Drawer =====
-  showDrawer = signal(false);
-  selectedPhase = signal<PhaseModel | null>(null);
-
   ngOnInit() {
     const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
     if (resolved && Array.isArray(resolved)) {
@@ -72,18 +67,8 @@ export class Pmdt01Component implements OnInit {
     });
   }
 
-  openQuickView(phase: PhaseModel, event: Event) {
-    event.stopPropagation();
-    this.selectedPhase.set(phase);
-    this.showDrawer.set(true);
-  }
-
-  closeQuickView() {
-    this.showDrawer.set(false);
-  }
-
   goToDetail(phaseId: string) {
-    const phase = this.phases().find((p) => p.id === phaseId) || this.selectedPhase();
+    const phase = this.phases().find((p) => p.id === phaseId);
     if (phase) {
       this.recentItems.record({
         id: phase.id,

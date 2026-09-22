@@ -14,7 +14,6 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
@@ -31,7 +30,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicComboboxComponent,
     SicGridPanelComponent,
     SicGridPanelTemplate,
-    SicDrawerComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt17.component.html',
@@ -56,10 +54,6 @@ export class Pmdt17Component implements OnInit {
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
-
-  // ===== Quick View Drawer =====
-  showDrawer = signal(false);
-  selectedTicket = signal<any | null>(null);
 
   // ===== Grid data (lazily loaded via handleGridLoad; seeded once from the resolver's preload) =====
   rows = signal<any[]>([]);
@@ -338,21 +332,12 @@ export class Pmdt17Component implements OnInit {
     URL.revokeObjectURL(url);
   }
 
-  openQuickView(item: any): void {
-    this.selectedTicket.set(item);
-    this.showDrawer.set(true);
-  }
-
-  closeQuickView(): void {
-    this.showDrawer.set(false);
-  }
-
   goToAdd() {
     this.router.navigate(['/feature/pm/ma-ticket/new']);
   }
 
   goToView(id: string) {
-    const ticket = this.rows().find((item: any) => item.id === id) || this.selectedTicket();
+    const ticket = this.rows().find((item: any) => item.id === id);
     if (ticket) {
       this.recentItems.record({
         id,

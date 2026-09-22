@@ -19,7 +19,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { AttachmentFile, Pmdt08PageData } from './pmdt08.model';
-import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-drawer.component';
 
 @Component({
   selector: 'app-pmdt08',
@@ -32,7 +31,6 @@ import { SicDrawerComponent } from '../../../../core/component/sic-drawer/sic-dr
     SicDatePipe,
     Pmdt08AComponent,
     SicInputUploadComponent,
-    SicDrawerComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt08.component.html',
@@ -65,10 +63,6 @@ export class Pmdt08Component implements OnInit {
 
   isModalOpen = signal(false);
   postToEdit = signal<Post | null>(null);
-
-  // ===== Quick View Drawer =====
-  showDrawer = signal(false);
-  selectedPost = signal<Post | null>(null);
 
   currentUserId = signal<string | null>(null);
   currentUserName = signal<string>(this.translate.instant('PMDT08_DEFAULT_USER_NAME'));
@@ -297,31 +291,6 @@ export class Pmdt08Component implements OnInit {
       },
       error: () => {},
     });
-  }
-
-  // ===== Quick View Drawer =====
-  openQuickView(post: Post, event?: Event): void {
-    event?.stopPropagation();
-    this.selectedPost.set(post);
-    this.showDrawer.set(true);
-  }
-
-  closeQuickView(): void {
-    this.showDrawer.set(false);
-  }
-
-  // เปิดโพสต์เต็ม (ขยายความคิดเห็น) จาก drawer แล้วปิด drawer
-  openFullDiscussion(post: Post): void {
-    this.closeQuickView();
-    if (this.expandedPostId() !== post.id) {
-      this.toggleExpand(post.id);
-    }
-  }
-
-  // เริ่มตอบกลับจาก drawer แล้วปิด drawer (ใช้กล่องตอบกลับเดิมในฟีด)
-  replyFromQuickView(post: Post): void {
-    this.closeQuickView();
-    this.startReply(post.id);
   }
 
   // ===== Toggle Expand =====
