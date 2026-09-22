@@ -4,10 +4,12 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PmTestCaseModel, PmTestScenarioModel } from './pmdt12.model';
+import { LanguageService } from '../../../../core/services/language.service';
 
 @Injectable({ providedIn: 'root' })
 export class Pmdt12Service {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private apiBase = environment.apiBaseUrl;
 
   getTestCases(projectId?: string | null, keyword?: string | null, page = 1, size = 10, sortBy = 'createdDate', sortDirection = 'DESC'): Observable<any> {
@@ -85,7 +87,7 @@ export class Pmdt12Service {
   }
 
   exportUatReport(projectId?: string | null, testType: string = 'UAT', scenarioId?: string | null): Observable<Blob> {
-    let params = new HttpParams().set('testType', testType);
+    let params = new HttpParams().set('testType', testType).set('lang', this.languageService.getCurrentLanguage());
     if (projectId) {
       params = params.set('projectId', projectId);
     }

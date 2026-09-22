@@ -15,6 +15,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../../core/services/language.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
@@ -61,6 +62,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly approvalService = inject(ApprovalService);
   private readonly http = inject(HttpClient);
+  private readonly languageService = inject(LanguageService);
   private readonly aiHistoryService = inject(AiHistoryService);
   private readonly translate = inject(TranslateService);
 
@@ -674,7 +676,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
     this.isPrinting.set(true);
     const url = `${apiBaseUrl}/api/pm/manual/${manualId}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isPrinting.set(false)))
       .subscribe({
         next: (blob) => {

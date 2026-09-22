@@ -4,8 +4,6 @@ import java.util.UUID;
 
 import lombok.Data;
 
-import lombok.Data;
-
 @Data
 public class ApprovalFlowStepResponse {
     private UUID id;

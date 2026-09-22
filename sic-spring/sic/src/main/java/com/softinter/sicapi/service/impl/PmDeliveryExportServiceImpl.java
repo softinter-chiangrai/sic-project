@@ -41,8 +41,9 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportDeliveryHandoverPdf(UUID deliveryId, UUID businessId) {
-        log.info("Generating Delivery PDF: id={}, businessId={}", deliveryId, businessId);
+    public byte[] exportDeliveryHandoverPdf(UUID deliveryId, UUID businessId, String lang) {
+        String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
+        log.info("Generating Delivery PDF: id={}, businessId={}, lang={}", deliveryId, businessId, normalizedLang);
 
         PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(deliveryId, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ ID: " + deliveryId));
@@ -75,6 +76,8 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("deliveryDate", deliveryDateStr);
         parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
         parameters.put("deliverySummary", stripHtml(delivery.getDeliverySummary()));
+        parameters.put("lang", normalizedLang);
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

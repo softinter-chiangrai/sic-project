@@ -5,16 +5,19 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { lastValueFrom } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PmSpecificationModel } from './pmdt07.model';
+import { LanguageService } from '../../../../core/services/language.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class SpecificationExportService {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private apiBaseUrl = environment.apiBaseUrl;
 
   async exportSpecification(data: PmSpecificationModel, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
-    const url = `${this.apiBaseUrl}/api/pm/specifications/export`;
+    const lang = this.languageService.getCurrentLanguage();
+    const url = `${this.apiBaseUrl}/api/pm/specifications/export?lang=${lang}`;
 
     const payload = {
       specificationId: data.id,

@@ -13,6 +13,19 @@ public class ReportHelper {
     private ReportHelper() {}
 
     /**
+     * Resolve and normalize language parameter ('th' or 'en')
+     */
+    public static String resolveLang(String lang, String headerLang) {
+        if (lang != null && !lang.trim().isEmpty()) {
+            return lang.trim().equalsIgnoreCase("en") ? "en" : "th";
+        }
+        if (headerLang != null && !headerLang.trim().isEmpty()) {
+            return headerLang.trim().equalsIgnoreCase("en") ? "en" : "th";
+        }
+        return "th";
+    }
+
+    /**
      * คืนค่า InputStream ของรูป Logo บริษัท (หรือ null ถ้าไม่พบไฟล์)
      */
     public static InputStream getLogoInputStream() {

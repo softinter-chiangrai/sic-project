@@ -72,6 +72,24 @@ export class Pmdt12Component implements OnInit {
   protected testCases = signal<PmTestCaseModel[]>([]);
   protected projectTasks = signal<any[]>([]);
 
+  // ===== Navbar context filter (client-side) =====
+  // Always load ALL test cases/scenarios of ALL projects; the navbar project-context selection filters what's shown.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  protected filteredScenarios = computed(() => {
+    const ids = this.selectedProjectIds();
+    const all = this.scenarios();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((s) => s.projectId != null && idSet.has(s.projectId));
+  });
+  protected filteredTestCases = computed(() => {
+    const ids = this.selectedProjectIds();
+    const all = this.testCases();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((tc) => tc.projectId != null && idSet.has(tc.projectId));
+  });
+
   // ===== AI Batch Create State =====
   protected showAiBatchModal = signal(false);
   protected aiBatchSaving = signal(false);
@@ -155,17 +173,17 @@ export class Pmdt12Component implements OnInit {
 
   // ===== Computed Counts for Test Types =====
   protected sitCount = computed(() => {
-    return this.testCases().filter((tc) => (tc.testType || 'SIT').toUpperCase() === 'SIT').length;
+    return this.filteredTestCases().filter((tc) => (tc.testType || 'SIT').toUpperCase() === 'SIT').length;
   });
 
   protected uatCount = computed(() => {
-    return this.testCases().filter((tc) => (tc.testType || 'SIT').toUpperCase() === 'UAT').length;
+    return this.filteredTestCases().filter((tc) => (tc.testType || 'SIT').toUpperCase() === 'UAT').length;
   });
 
   // ===== Computed Groups =====
   protected scenarioGroups = computed(() => {
-    const rawScenarios = this.scenarios();
-    const rawTestCases = this.testCases();
+    const rawScenarios = this.filteredScenarios();
+    const rawTestCases = this.filteredTestCases();
     const search = this.searchTerm().trim().toLowerCase();
     const status = this.filterStatus();
     const priority = this.filterPriority();
@@ -352,13 +370,15 @@ export class Pmdt12Component implements OnInit {
 
   loadData() {
     this.isLoading.set(true);
+    // Always load ALL test cases/scenarios of ALL projects; navbar context filters client-side.
     const projectId = resolveProjectId(this.route, this.customerState);
 
     const requests: any = {
-      scenarios: this.service.getTestScenarios(projectId),
-      testCasesRes: this.service.getTestCases(projectId, null, 1, 1000, 'testCaseCode', 'ASC'),
+      scenarios: this.service.getTestScenarios(),
+      testCasesRes: this.service.getTestCases(undefined, null, 1, 1000, 'testCaseCode', 'ASC'),
     };
 
+    // projectTasks (used for bug-tracking helpers) remains scoped to the current route project, if any.
     if (projectId) {
       requests.tasks = this.service.getTasksByProjectId(projectId);
     }

@@ -5,11 +5,13 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type { ChangeRequest, ImpactAnalysis } from './change-request.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { LanguageService } from '../../../../core/services/language.service';
 
 
 @Injectable({ providedIn: 'root' })
 export class ChangeRequestService {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/change-requests'; // สมมติ endpoint
   private impactUrl = environment.apiBaseUrl + '/api/pm/impact-analysis';
 
@@ -82,6 +84,10 @@ export class ChangeRequestService {
   }
 
   exportPdf(id: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/${id}/export-pdf`, { responseType: 'blob' });
+    const lang = this.languageService.getCurrentLanguage();
+    return this.http.get(`${this.baseUrl}/${id}/export-pdf`, {
+      params: { lang },
+      responseType: 'blob',
+    });
   }
 }

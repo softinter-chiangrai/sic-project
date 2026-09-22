@@ -70,7 +70,7 @@ export class Pmrt02Component implements OnInit {
       { label: this.translate.instant('PMRT02_COL_CUSTOMER'), name: 'customerName', type: 'text', sortable: true, minWidth: 120 },
       { label: this.translate.instant('PMRT02_COL_STATUS'), name: 'status', type: 'statusBadge', sortable: true, minWidth: 130 },
       { label: this.translate.instant('PMRT02_COL_APPROVAL_STATUS'), name: 'approvalStatus', type: 'approvalBadge', minWidth: 120 },
-      { label: 'Manday', name: 'usedManday', type: 'mandayProgress', minWidth: 100 },
+      { label: 'Manday', name: 'usedManday', type: 'mandayProgress', minWidth: 150 },
       { label: this.translate.instant('PMRT02_COL_DURATION'), name: 'startDate', type: 'dateRangeText', minWidth: 120 },
       { label: this.translate.instant('PMRT02_COL_PRIORITY'), name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 100 },
       { label: this.translate.instant('PMRT02_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
@@ -447,9 +447,11 @@ export class Pmrt02Component implements OnInit {
     }
   }
 
-  getProgress(used: number, budget: number): number {
-    if (budget === 0) return 0;
-    return Math.min(Math.round((used / budget) * 100), 100);
+  getProgress(used?: number | null, budget?: number | null): number {
+    const u = used || 0;
+    const b = budget || 0;
+    if (b <= 0) return 0;
+    return Math.min(Math.round((u / b) * 100), 100);
   }
 
   getApprovalStatusClass(status?: string): string {

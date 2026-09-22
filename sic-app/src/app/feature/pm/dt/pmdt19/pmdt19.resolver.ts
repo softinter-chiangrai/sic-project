@@ -17,11 +17,14 @@ export const pmdt19Resolver: ResolveFn<Pmdt19PageData> = async (route) => {
 
   const qType = route.queryParamMap.get('documentType') || 'ALL';
   const qId = route.queryParamMap.get('documentId') || historyCode || '';
+  // Kept only to preselect the project when creating a new version from context, and for
+  // goBack() — no longer passed to the service, so the list always loads all projects'
+  // versions and the navbar context-switcher filters client-side (see pmdt19.component.ts).
   const qProjectId = route.queryParamMap.get('projectId') || null;
 
   try {
     const items = await lastValueFrom(
-      service.getVersions(qType, qId || undefined, qProjectId || undefined),
+      service.getVersions(qType, qId || undefined),
     );
     return {
       items: items ?? [],

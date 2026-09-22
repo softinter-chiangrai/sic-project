@@ -5,10 +5,12 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { PmCustomerProject } from './pmrt02.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
+import { LanguageService } from '../../../../core/services/language.service';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt02Service {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/customer-projects';
 
   private getBusinessId(): string {
@@ -64,6 +66,10 @@ export class Pmrt02Service {
   }
 
   exportProjectPdf(id: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/${id}/export?format=pdf`, { responseType: 'blob' });
+    const lang = this.languageService.getCurrentLanguage();
+    return this.http.get(`${this.baseUrl}/${id}/export`, {
+      params: { format: 'pdf', lang },
+      responseType: 'blob',
+    });
   }
 }

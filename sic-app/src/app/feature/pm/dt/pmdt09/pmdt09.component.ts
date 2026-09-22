@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -9,6 +9,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { Pmdt09Service } from './pmdt09.service';
 import { DesignReview, ReviewComment, Pmdt09PageData } from './pmdt09.model';
 import { ApprovalService } from '../pmdt03/approval.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
@@ -29,6 +30,7 @@ export class Pmdt09Component implements OnInit {
   private dialog = inject(DialogService);
   private approvalService = inject(ApprovalService);
   private translate = inject(TranslateService);
+  private customerState = inject(CustomerStateService);
 
   @ViewChild('modalFigmaIframe') modalFigmaIframe?: ElementRef<HTMLIFrameElement>;
 
@@ -65,10 +67,16 @@ export class Pmdt09Component implements OnInit {
   protected reviews = signal<DesignReview[]>([]);
   protected totalElements = signal(0);
 
+  // ===== Navbar context filter (client-side) =====
+  // The resolver/loadData now always fetch ALL projects' design reviews; the navbar
+  // project-context selection filters what's shown, client-side, exactly like pmdt01.
+  protected readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+
   // ===== Computed =====
   protected filteredReviews = computed(() => {
     const type = this.filterType();
     const severity = this.filterSeverity();
+    const ids = this.selectedProjectIds();
 
     let result = this.reviews();
 
@@ -80,12 +88,23 @@ export class Pmdt09Component implements OnInit {
       result = result.filter((r) => r.severity === severity);
     }
 
+    if (ids && ids.length > 0) {
+      const idSet = new Set(ids);
+      result = result.filter((r) => r.projectId && idSet.has(r.projectId));
+    }
+
     return result;
   });
 
-  protected paginatedReviews = computed(() => this.filteredReviews());
+  // Client-side pagination over the filtered set (data is now fetched in one large
+  // batch per loadData()/search/status change — see loadData()).
+  protected paginatedReviews = computed(() => {
+    const all = this.filteredReviews();
+    const start = (this.currentPage() - 1) * this.pageSize();
+    return all.slice(start, start + this.pageSize());
+  });
 
-  protected totalItems = computed(() => this.totalElements());
+  protected totalItems = computed(() => this.filteredReviews().length);
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()) || 1);
 
   // ===== Options =====
@@ -116,12 +135,21 @@ export class Pmdt09Component implements OnInit {
   severityOptions = ['Low', 'Medium', 'High'];
   commentTypeOptions = ['Suggestion', 'Correction', 'Risk', 'Question', 'Approval Note'];
 
-  // guards against re-fetching on the first (synchronous) queryParams emission,
-  // since that initial value was already preloaded by pmdt09Resolver
-  private hasConsumedResolverData = false;
+  constructor() {
+    // Keep the current page in range whenever filtering (type/severity/navbar project)
+    // shrinks the result set.
+    effect(() => {
+      const pages = this.totalPages();
+      if (this.currentPage() > pages) {
+        this.currentPage.set(1);
+      }
+    });
+  }
 
   // ===== Lifecycle =====
   ngOnInit() {
+    // projectId is kept only to preselect the project when creating a new design review
+    // from context — it is no longer used to filter the loaded list (see filteredReviews).
     const pageData: Pmdt09PageData = this.route.snapshot.data['pageData'];
     if (pageData) {
       if (pageData.projectId) {
@@ -130,36 +158,24 @@ export class Pmdt09Component implements OnInit {
       this.reviews.set(pageData.reviews || []);
       this.totalElements.set(pageData.totalElements || 0);
       this.loadApprovalStatuses(pageData.reviews || []);
-      this.hasConsumedResolverData = true;
     }
-
-    this.route.queryParams.subscribe((params) => {
-      const projectId = params['projectId'] || null;
-      if (this.hasConsumedResolverData && projectId === this.projectId()) {
-        // first emission already satisfied by the resolver, skip duplicate fetch
-        this.hasConsumedResolverData = false;
-        return;
-      }
-      if (projectId) {
-        this.projectId.set(projectId);
-      }
-      this.loadData();
-    });
   }
 
   loadData() {
     this.isLoading.set(true);
+    // Always fetch ALL projects' design reviews; the navbar context-switcher filters
+    // client-side via filteredReviews(). Status/keyword stay server-side since they
+    // aren't part of the navbar project filter.
     this.service.getDesignReviews({
-      projectId: this.projectId() || undefined,
       status: this.filterStatus(),
       keyword: this.searchTerm() || undefined,
-      page: this.currentPage(),
-      size: this.pageSize(),
+      page: 1,
+      size: 1000,
     }).subscribe({
       next: (res) => {
         const data = res.data || [];
         this.reviews.set(data);
-        this.totalElements.set(res.pageable?.totalElements || 0);
+        this.totalElements.set(res.pageable?.totalElements || data.length);
         this.isLoading.set(false);
         this.loadApprovalStatuses(data);
       },
@@ -355,8 +371,8 @@ export class Pmdt09Component implements OnInit {
 
   onPageChange(page: number) {
     if (page < 1 || page > this.totalPages()) return;
+    // Client-side pagination now — no refetch needed.
     this.currentPage.set(page);
-    this.loadData();
   }
 
   clearSearch() {

@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt16AService } from './pmdt16A/pmdt16A.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -34,6 +35,7 @@ export class Pmdt16Component implements OnInit {
   private service = inject(Pmdt16AService);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private approvalService = inject(ApprovalService);
   private customerState = inject(CustomerStateService);
   private recentItems = inject(RecentItemsService);
@@ -46,14 +48,20 @@ export class Pmdt16Component implements OnInit {
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
+  // Kept only to preselect the project when creating a new invoice from context — no longer
+  // used to filter the loaded list (that's now done client-side, see `filteredInvoices`).
   filterProjectId = signal<string | null>(null);
 
+  // ===== Navbar context filter (client-side) =====
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+
+  // Always fetch ALL invoices (unfiltered by project) matching only keyword/status; the grid is
+  // configured with `lazy: false` so it paginates/sorts the result locally, and the navbar's
+  // selected project(s) filter it further, client-side, in `filteredInvoices` below. `size` is
+  // bumped well past any realistic invoice count per keyword/status filter — there's no
+  // unpaginated "get all" endpoint to use instead.
   invoicesResource = httpResource<any>(() => {
-    const projectId = this.filterProjectId();
-    let url = `${apiBaseUrl}/api/pm/invoices/paging?page=${this.currentPage()}&size=${this.pageSize()}`;
-    if (projectId) {
-      url += `&projectId=${projectId}`;
-    }
+    let url = `${apiBaseUrl}/api/pm/invoices/paging?page=1&size=10000`;
     const keyword = this.searchTerm().trim();
     if (keyword) {
       url += `&keyword=${encodeURIComponent(keyword)}`;
@@ -72,6 +80,7 @@ export class Pmdt16Component implements OnInit {
       id: 'id',
       selectable: true,
       showToolbar: false,
+      lazy: false,
       pageSize: this.pageSize(),
       column: [
         { label: this.translate.instant('PMDT16_COL_INVOICE_NO'), name: 'invoiceNo', type: 'code', width: 160 },
@@ -111,23 +120,25 @@ export class Pmdt16Component implements OnInit {
       }
     });
 
+    // Re-filter and re-render whenever the fetched dataset or the navbar's selected
+    // project(s) change — `filteredInvoices` depends on both, so reading it here covers
+    // both cases without another HTTP request for a project-selection change.
     effect(() => {
-      const res = this.invoicesResource.value();
-      const content = res?.data;
-      if (content && Array.isArray(content)) {
-        this.loadApprovalStatuses(content);
-        this.gridRef?.setRows(content as unknown as SicGridRowData[], { totalElements: res?.pageable?.totalElements || content.length });
-      }
+      if (!this.invoicesResource.value()) return;
+      const content = this.filteredInvoices();
+      this.loadApprovalStatuses(content);
+      this.gridRef?.setRows(content as unknown as SicGridRowData[], { totalElements: content.length });
     });
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.currentPage.set(request.pageNumber);
     this.syncFiltersToUrl();
-    // httpResource() รีเฟรชอัตโนมัติเมื่อ currentPage เปลี่ยน — ถ้ามีค่าอยู่แล้ว (mount ครั้งแรก) ส่งเข้า grid ทันที
-    const res = this.invoicesResource.value();
-    if (res?.data) {
-      grid.setRows(res.data as unknown as SicGridRowData[], { totalElements: res.pageable?.totalElements || res.data.length }, request.requestId);
+    // httpResource() already fetched (or is fetching) the full dataset; if it has a value
+    // already (e.g. first mount), push the current client-filtered rows in immediately.
+    if (this.invoicesResource.value()) {
+      const content = this.filteredInvoices();
+      grid.setRows(content as unknown as SicGridRowData[], { totalElements: content.length }, request.requestId);
     }
   }
 
@@ -145,10 +156,17 @@ export class Pmdt16Component implements OnInit {
     });
   }
 
-  totalItems = computed(() => this.invoicesResource.value()?.pageable?.totalElements || 0);
+  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว (ผ่าน invoicesResource); การกรองตามโปรเจกต์ที่เลือกใน navbar
+  // ทำที่ client-side ตรงนี้ เพื่อให้เห็นข้อมูลทุกโปรเจกต์เป็นค่าเริ่มต้น และกรองได้ทันทีโดยไม่ยิง request ใหม่
+  filteredInvoices = computed(() => {
+    const all = (this.invoicesResource.value()?.data || []) as any[];
+    const ids = this.selectedProjectIds();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((inv) => inv.projectId && idSet.has(inv.projectId));
+  });
 
-  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว (ผ่าน invoicesResource) เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
-  filteredInvoices = computed(() => this.invoicesResource.value()?.data || []);
+  totalItems = computed(() => this.filteredInvoices().length);
 
   // guard: ป้องกัน reload ซ้ำซ้อนเมื่อ navigation เกิดจาก syncFiltersToUrl() เอง
   private syncingUrl = false;
@@ -229,9 +247,10 @@ export class Pmdt16Component implements OnInit {
 
     this.isLoading.set(true);
     let remaining = ids.length;
+    const lang = this.languageService.getCurrentLanguage();
     ids.forEach((id) => {
       const url = `${apiBaseUrl}/api/pm/invoices/${id}/export-pdf`;
-      this.http.get(url, { responseType: 'blob' }).subscribe({
+      this.http.get(url, { params: { lang }, responseType: 'blob' }).subscribe({
         next: (blob) => {
           const pdfUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           const a = document.createElement('a');
@@ -282,9 +301,10 @@ export class Pmdt16Component implements OnInit {
   exportCsv(): void {
     this.isLoading.set(true);
 
-    let params = new HttpParams().set('page', '1').set('size', '1000');
-    const projectId = this.filterProjectId();
-    if (projectId) params = params.set('projectId', projectId);
+    // Always fetch ALL invoices (unfiltered by project) matching only keyword/status, then
+    // apply the navbar's selected-project(s) filter client-side before exporting — same
+    // client-side filtering as the grid, so the CSV matches what's shown on screen.
+    let params = new HttpParams().set('page', '1').set('size', '10000');
     const keyword = this.searchTerm();
     if (keyword) params = params.set('keyword', keyword);
     if (this.filterStatus() !== 'all') params = params.set('paymentStatus', this.filterStatus());
@@ -293,7 +313,14 @@ export class Pmdt16Component implements OnInit {
       .get<any>(`${apiBaseUrl}/api/pm/invoices/paging`, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (res) => this.downloadCsv(res.data || []),
+        next: (res) => {
+          const all = (res.data || []) as any[];
+          const ids = this.selectedProjectIds();
+          const filtered = !ids || ids.length === 0
+            ? all
+            : all.filter((inv) => inv.projectId && ids.includes(inv.projectId));
+          this.downloadCsv(filtered);
+        },
         error: () => this.dialog.error(this.translate.instant('PMDT16_EXPORT_ERROR_TITLE'), this.translate.instant('PMDT16_EXPORT_ALL_ERROR_MSG')),
       });
   }
@@ -359,7 +386,8 @@ export class Pmdt16Component implements OnInit {
 
     this.isLoading.set(true);
     const url = `${apiBaseUrl}/api/pm/invoices/${item.id}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob) => {

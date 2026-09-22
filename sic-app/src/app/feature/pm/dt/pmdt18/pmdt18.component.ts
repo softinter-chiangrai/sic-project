@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt18AService } from './pmdt18A/pmdt18A.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { ApprovalService } from '../pmdt03/approval.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -32,6 +33,7 @@ export class Pmdt18Component implements OnInit {
   private service = inject(Pmdt18AService);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private approvalService = inject(ApprovalService);
   private recentItems = inject(RecentItemsService);
   isLoading = signal(false);
@@ -202,7 +204,8 @@ export class Pmdt18Component implements OnInit {
 
     this.isLoading.set(true);
     const url = `${apiBaseUrl}/api/pm/renewals/${item.id}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob) => {

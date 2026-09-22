@@ -6,6 +6,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   OnInit,
   signal,
@@ -17,7 +18,6 @@ import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { ApprovalService } from '../../dt/pmdt03/approval.service';
-import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 import { Pmrt04Service } from './pmrt04.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract, Pmrt04ListPageData } from './pmrt04.model';
@@ -43,7 +43,6 @@ export class Pmrt04Component implements OnInit {
   private route = inject(ActivatedRoute);
   private http = inject(HttpClient);
   private dialog = inject(DialogService);
-  private projectService = inject(Pmrt02Service);
   private contractService = inject(Pmrt04Service);
   private approvalService = inject(ApprovalService);
   private navigation = inject(NavigationService);
@@ -136,29 +135,42 @@ export class Pmrt04Component implements OnInit {
   statusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
   signStatusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
 
-  // resolver อาจ preload โครงการ+สัญญาหน้าแรกมาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
+  // resolver preload สัญญาหน้าแรก (ทั้งหมด ไม่กรองโครงการ) มาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
   private initialResolverContracts: { data: Contract[]; totalElements: number } | null = null;
-  // true เมื่อรู้ customerId/ชื่อโครงการของ projectId นี้แล้ว (จาก resolver หรือ fetch เอง) — ป้องกันการยิง contracts ก่อนรู้ customerId
-  private projectResolved = false;
+
+  // ===== Navbar context filter (client-side) =====
+  // Contracts are always fetched unfiltered by project; the navbar project-context selection
+  // filters what's shown, matched directly against each contract's own projectId.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  readonly filteredContracts = computed(() => {
+    const ids = this.selectedProjectIds();
+    const all = this.contracts();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((c) => idSet.has(c.projectId));
+  });
+
+  constructor() {
+    // Re-render already-loaded rows whenever the navbar project selection changes,
+    // without re-fetching from the backend.
+    effect(() => {
+      const filtered = this.filteredContracts();
+      const grid = this.gridRef;
+      if (grid) {
+        grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length });
+        this.totalItems.set(filtered.length);
+      }
+    });
+  }
 
   // ===== Lifecycle =====
   ngOnInit() {
     this.loadContractTypes();
 
     const resolved: Pmrt04ListPageData | null = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
-    if (resolved && resolved.project) {
-      const project = resolved.project;
-      const contractsRes = resolved.contracts;
-      this.filterCustomerId.set(project.customerId);
-      this.filterCustomerName.set(project.customerName);
-      this.filterProjectId.set(project.id);
-      this.filterProjectName.set(project.projectName || '');
-      this.filterProjectCode.set(project.projectCode || '');
-      this.projectResolved = true;
-      if (contractsRes) {
-        const items = contractsRes.data || [];
-        this.initialResolverContracts = { data: items, totalElements: contractsRes.pageable?.totalElements || items.length || 0 };
-      }
+    if (resolved && resolved.contracts) {
+      const items = resolved.contracts.data || [];
+      this.initialResolverContracts = { data: items, totalElements: resolved.contracts.pageable?.totalElements || items.length || 0 };
     }
 
     this.route.queryParams.subscribe((params) => {
@@ -173,16 +185,20 @@ export class Pmrt04Component implements OnInit {
       if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
       if (params['preset'] !== undefined) this.activePreset.set(params['preset'] === 'expiring' ? 'expiring' : 'all');
 
+      // projectId/customerId are kept only for "create new" context prefill and the
+      // customer breadcrumb — they no longer filter the loaded list (navbar selection does that).
       const projectId = params['projectId'] || null;
-
-      if (projectId) {
-        this.filterProjectId.set(projectId);
-        if (!resolved || !resolved.project) {
-          this.projectResolved = false;
-        }
+      const customerId = params['customerId'] || null;
+      this.filterProjectId.set(projectId);
+      if (customerId) {
+        this.filterCustomerId.set(customerId);
       } else {
-        this.filterProjectId.set(null);
-        this.projectResolved = true;
+        this.filterCustomerId.set(null);
+        this.filterCustomerName.set('');
+      }
+      if (!projectId) {
+        this.filterProjectName.set('');
+        this.filterProjectCode.set('');
       }
 
       // ข้ามรอบแรก: grid จะ mount และยิง loadData เองอัตโนมัติ — รอบถัดไปจาก URL เปลี่ยนต้อง reload เอง
@@ -223,35 +239,13 @@ export class Pmrt04Component implements OnInit {
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
-    const projectId = this.filterProjectId();
-
-    // ยังไม่รู้ customerId ของโครงการนี้ — ต้อง fetch project ก่อนค่อยโหลด contracts (customerId เป็น query param)
-    if (!this.projectResolved && projectId) {
-      this.isLoading.set(true);
-      this.projectService.getProject(projectId).subscribe({
-        next: (project) => {
-          this.filterCustomerId.set(project.customerId);
-          this.filterCustomerName.set(project.customerName);
-          this.filterProjectName.set(project.projectName || '');
-          this.filterProjectCode.set(project.projectCode || '');
-          this.projectResolved = true;
-          this.fetchContracts(request, grid, 1);
-        },
-        error: (err) => {
-          console.error('Error loading project:', err);
-          this.projectResolved = true;
-          this.fetchContracts(request, grid);
-        },
-      });
-      return;
-    }
-
     if (this.initialResolverContracts) {
       const { data, totalElements } = this.initialResolverContracts;
       this.initialResolverContracts = null;
       this.contracts.set(data);
-      this.totalItems.set(totalElements);
-      grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
+      const filtered = this.filteredContracts();
+      this.totalItems.set(this.selectedProjectIds().length ? filtered.length : totalElements);
+      grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: this.totalItems() }, request.requestId);
       this.loadApprovalStatuses(data, grid, request.requestId);
       return;
     }
@@ -259,25 +253,17 @@ export class Pmrt04Component implements OnInit {
     this.fetchContracts(request, grid);
   }
 
-  private fetchContracts(request: SicGridLoadRequest, grid: SicGridPanelComponent, forcePage?: number): void {
+  private fetchContracts(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.isLoading.set(true);
-    const pageNumber = forcePage ?? request.pageNumber;
+    const pageNumber = request.pageNumber;
     this.currentPage.set(pageNumber);
     this.syncFiltersToUrl();
 
+    // Always fetch contracts unfiltered by project/customer — the navbar project-context
+    // selection filters the result client-side (see filteredContracts).
     let params = new HttpParams()
       .set('page', pageNumber.toString())
       .set('size', request.pageSize.toString());
-
-    const projectId = this.filterProjectId();
-    if (projectId) {
-      params = params.set('projectId', projectId);
-    }
-
-    const customerId = this.filterCustomerId();
-    if (customerId) {
-      params = params.set('customerId', customerId);
-    }
 
     const keyword = this.searchTerm();
     if (keyword) {
@@ -309,8 +295,9 @@ export class Pmrt04Component implements OnInit {
           const items = response.data || (response as any).content || [];
           const total = response.pageable?.totalElements ?? (response as any).totalElements ?? 0;
           this.contracts.set(items);
-          this.totalItems.set(total);
-          grid.setRows(items as unknown as SicGridRowData[], { totalElements: total }, request.requestId);
+          const filtered = this.filteredContracts();
+          this.totalItems.set(this.selectedProjectIds().length ? filtered.length : total);
+          grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: this.totalItems() }, request.requestId);
           this.loadApprovalStatuses(items, grid, request.requestId);
 
           if (this.filterCustomerId() && !this.filterCustomerName()) {
@@ -357,6 +344,8 @@ export class Pmrt04Component implements OnInit {
         type: this.filterType() !== 'all' ? this.filterType() : null,
         page: this.currentPage() > 1 ? this.currentPage() : null,
         preset: this.activePreset() !== 'all' ? this.activePreset() : null,
+        projectId: this.filterProjectId() || null,
+        customerId: this.filterCustomerId() || null,
       },
       queryParamsHandling: 'merge',
       replaceUrl: true,
@@ -457,11 +446,9 @@ export class Pmrt04Component implements OnInit {
   exportCsv(): void {
     this.isLoading.set(true);
 
+    // Fetch unfiltered by project (same as the list), then apply the navbar project-context
+    // filter client-side so the CSV matches what's on screen.
     let params = new HttpParams().set('page', '1').set('size', '1000');
-    const projectId = this.filterProjectId();
-    if (projectId) params = params.set('projectId', projectId);
-    const customerId = this.filterCustomerId();
-    if (customerId) params = params.set('customerId', customerId);
     const keyword = this.searchTerm();
     if (keyword) params = params.set('keyword', keyword);
     const status = this.filterStatus();
@@ -474,7 +461,12 @@ export class Pmrt04Component implements OnInit {
       .get<PaginationResponse<Contract>>(this.apiUrl, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (res) => this.downloadCsv(res.data || []),
+        next: (res) => {
+          const items = res.data || [];
+          const ids = this.selectedProjectIds();
+          const filtered = ids && ids.length ? items.filter((c) => new Set(ids).has(c.projectId)) : items;
+          this.downloadCsv(filtered);
+        },
         error: () => this.dialog.error(this.translate.instant('PMRT04_EXPORT_ERROR_TITLE'), this.translate.instant('PMRT04_EXPORT_LIST_ERROR_MSG')),
       });
   }

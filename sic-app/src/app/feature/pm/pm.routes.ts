@@ -16,7 +16,7 @@ import { pmdt04Resolver } from './dt/pmdt04/pmdt04.resolver';
 import { pmdt04AResolver } from './dt/pmdt04/pmdt04A/pmdt04A.resolver';
 import { pmdt04BResolver } from './dt/pmdt04/pmdt04B/pmdt04B.resolver';
 import { pmdt05Resolver } from './dt/pmdt05/pmdt05.resolver';
-import { pmdt06Resolver } from './dt/pmdt06/pmdt06.resolver';
+import { pmdt06Resolver, pmdt06ListResolver } from './dt/pmdt06/pmdt06.resolver';
 import { pmdt06AResolver } from './dt/pmdt06/pmdt06A/pmdt06A.resolver';
 import { pmdt07Resolver, pmdt07CreateResolver, pmdt07EditResolver } from './dt/pmdt07/pmdt07.resolver';
 import { pmdt07AResolver } from './dt/pmdt07/pmdt07A/pmdt07A.resolver';
@@ -299,7 +299,9 @@ export const PM_ROUTES: Routes = [
   {
     path: 'change-request',
     loadComponent: () => import('./dt/pmdt06/pmdt06.component').then(m => m.Pmdt06Component),
-    resolve: { form: pmdt06Resolver },
+    // 'form' (pmdt06Resolver) is the edit/create form resolver — kept for backward-compat
+    // but unused by the list component. 'list' (pmdt06ListResolver) preloads the full grid.
+    resolve: { form: pmdt06Resolver, list: pmdt06ListResolver },
   },
   {
     path: 'change-request/new',

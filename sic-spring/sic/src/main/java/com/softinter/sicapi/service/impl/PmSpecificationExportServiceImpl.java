@@ -30,8 +30,9 @@ public class PmSpecificationExportServiceImpl implements PmSpecificationExportSe
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Asia/Bangkok"));
 
     @Override
-    public byte[] exportSpecificationPdf(UUID specId, UUID businessId) {
-        log.info("Generating Specification PDF: id={}, businessId={}", specId, businessId);
+    public byte[] exportSpecificationPdf(UUID specId, UUID businessId, String lang) {
+        String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
+        log.info("Generating Specification PDF: id={}, businessId={}, lang={}", specId, businessId, normalizedLang);
 
         String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
 
@@ -39,6 +40,8 @@ public class PmSpecificationExportServiceImpl implements PmSpecificationExportSe
         parameters.put("specificationId", specId != null ? specId.toString() : "");
         parameters.put("businessId", businessId != null ? businessId.toString() : "");
         parameters.put("exportDate", exportDate);
+        parameters.put("lang", normalizedLang);
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

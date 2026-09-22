@@ -80,9 +80,13 @@ public class PmUserManualController {
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export official User Manual Document as PDF using JasperReports")
-    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+    public ResponseEntity<byte[]> exportPdf(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
-        byte[] pdfBytes = exportService.exportUserManualPdf(id, businessId);
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        byte[] pdfBytes = exportService.exportUserManualPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
                 .header("Content-Disposition", "attachment; filename=\"user-manual-" + id + ".pdf\"")

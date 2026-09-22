@@ -126,12 +126,34 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
 
   @ViewChild('messageContainer') messageContainer?: ElementRef<HTMLElement>;
 
+  // ── Draggable FAB state ──
+  readonly fabOffset = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  readonly isFabDragging = signal<boolean>(false);
+  readonly fabTransform = computed(() => {
+    const { x, y } = this.fabOffset();
+    return `translate3d(${x}px, ${y}px, 0)`;
+  });
+  private dragStartPointer = { x: 0, y: 0 };
+  private dragStartOffset = { x: 0, y: 0 };
+  private didDragMove = false;
+
   // ─────────────────────────────────────────────────────────────────────────
   // Lifecycle
   // ─────────────────────────────────────────────────────────────────────────
 
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
+
+    try {
+      const saved = localStorage.getItem('sic_headchat_fab_offset');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          this.fabOffset.set(parsed);
+        }
+      }
+    } catch { /* ignore */ }
+
     if (!this.auth.isLoggedIn()) return;
 
     this.currentUserId.set(this.chatSvc.getCurrentUserId());
@@ -144,6 +166,69 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     this.chatSvc.togglePanel$.pipe(takeUntil(this.destroy$)).subscribe(() => {
       this.togglePanel();
     });
+  }
+
+  onFabPointerDown(event: MouseEvent): void {
+    if (event.button !== 0) return;
+    this.startFabDrag(event.clientX, event.clientY);
+  }
+
+  onFabTouchStart(event: TouchEvent): void {
+    if (event.touches.length > 0) {
+      const touch = event.touches[0];
+      this.startFabDrag(touch.clientX, touch.clientY);
+    }
+  }
+
+  private startFabDrag(clientX: number, clientY: number): void {
+    this.isFabDragging.set(true);
+    this.didDragMove = false;
+    this.dragStartPointer = { x: clientX, y: clientY };
+    this.dragStartOffset = { ...this.fabOffset() };
+
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      const curX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const curY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      const deltaX = curX - this.dragStartPointer.x;
+      const deltaY = curY - this.dragStartPointer.y;
+
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        this.didDragMove = true;
+      }
+
+      this.fabOffset.set({
+        x: this.dragStartOffset.x + deltaX,
+        y: this.dragStartOffset.y + deltaY,
+      });
+    };
+
+    const onEnd = () => {
+      this.isFabDragging.set(false);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+
+      if (this.didDragMove) {
+        try {
+          localStorage.setItem('sic_headchat_fab_offset', JSON.stringify(this.fabOffset()));
+        } catch { /* ignore */ }
+      }
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  }
+
+  onFabClick(event: MouseEvent): void {
+    if (this.didDragMove) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    this.togglePanel();
   }
 
   ngOnDestroy(): void {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, effect, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -9,6 +9,7 @@ import { environment } from '../../../../../environments/environment';
 import { Pmdt14AService } from './pmdt14A/pmdt14A.service';
 import { PmDeliveryModel } from './pmdt14A/pmdt14A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
@@ -34,6 +35,7 @@ export class Pmdt14Component implements OnInit {
   private readonly service = inject(Pmdt14AService);
   private readonly dialog = inject(DialogService);
   private readonly http = inject(HttpClient);
+  private readonly languageService = inject(LanguageService);
   private readonly approvalService = inject(ApprovalService);
   private readonly customerState = inject(CustomerStateService);
   private readonly route = inject(ActivatedRoute);
@@ -49,10 +51,19 @@ export class Pmdt14Component implements OnInit {
   filterStatus = signal('all');
   projectId = signal<string | null>(null);
 
+  // ===== Navbar context filter (client-side) =====
+  // Always load ALL deliveries of ALL projects in one shot (lazy: false below makes the
+  // grid paginate/sort the full set locally); the navbar project-context selection filters
+  // that set further, client-side, without another server round-trip.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  private rawDeliveries = signal<PmDeliveryModel[]>([]);
+  private gridRef = signal<SicGridPanelComponent | null>(null);
+
   gridConfig: SicGridPanelConfig = {
     id: 'id',
     selectable: false,
     showToolbar: false,
+    lazy: false,
     pageSize: this.size(),
     column: [
       { label: this.translate.instant('PMDT14_COL_CODE_TITLE'), name: 'deliveryCode', type: 'codeTitle', width: 220 },
@@ -65,12 +76,33 @@ export class Pmdt14Component implements OnInit {
     ],
   };
 
+  constructor() {
+    // Re-filter and re-render the already-fetched full dataset whenever the navbar's
+    // selected project(s) change, without issuing another HTTP request.
+    effect(() => {
+      const ids = this.selectedProjectIds();
+      const all = this.rawDeliveries();
+      const grid = this.gridRef();
+      if (!grid) return;
+
+      const filtered = !ids || ids.length === 0
+        ? all
+        : all.filter((d) => d.projectId && ids.includes(d.projectId));
+
+      this.deliveries.set(filtered);
+      this.totalElements.set(filtered.length);
+      grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length });
+      this.loadApprovalStatuses(filtered, grid, undefined, filtered.length);
+    });
+  }
+
   ngOnInit(): void {
     const qp = this.route.snapshot.queryParams;
     if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
     if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
     if (qp['page'] !== undefined) this.page.set(+qp['page'] || 1);
 
+    // Kept only to preselect the project for the "back to project" navigation context.
     const projId = resolveProjectId(this.route, this.customerState);
     this.projectId.set(projId);
   }
@@ -93,27 +125,28 @@ export class Pmdt14Component implements OnInit {
     this.isLoading.set(true);
     this.page.set(request.pageNumber);
     this.syncFiltersToUrl();
+    this.gridRef.set(grid);
 
-    const projectId = resolveProjectId(this.route, this.customerState) || undefined;
+    // Always fetch ALL deliveries across ALL projects in one shot — the grid is configured
+    // with `lazy: false` so it paginates/sorts the full result set locally, and the effect
+    // above filters it by the navbar's selected project(s) client-side. `size` is bumped well
+    // past any realistic delivery count per keyword/status filter so the client actually has
+    // the full matching dataset to work with (no unpaginated "get all" endpoint exists).
     this.service.getPaging({
-      page: request.pageNumber,
-      size: request.pageSize,
-      projectId,
+      page: 1,
+      size: 10000,
       keyword: this.searchTerm().trim(),
       status: this.filterStatus(),
     }).subscribe({
       next: (res) => {
-        const items = res.data || [];
-        const totalElements = res.pageable?.totalElements || 0;
-        this.deliveries.set(items);
-        this.totalElements.set(totalElements);
+        this.rawDeliveries.set((res.data || []) as PmDeliveryModel[]);
         this.isLoading.set(false);
-        grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
-        this.loadApprovalStatuses(items, grid, request.requestId, totalElements);
+        // Rendering into the grid happens via the `selectedProjectIds`/`rawDeliveries` effect.
       },
       error: (err) => {
         this.isLoading.set(false);
         const msg = err.error?.message || this.translate.instant('PMDT14_LOAD_ERROR');
+        this.rawDeliveries.set([]);
         this.deliveries.set([]);
         this.totalElements.set(0);
         grid.setRows([], { totalElements: 0 }, request.requestId);
@@ -123,7 +156,7 @@ export class Pmdt14Component implements OnInit {
     });
   }
 
-  loadApprovalStatuses(deliveries: PmDeliveryModel[], grid: SicGridPanelComponent, requestId: number, totalElements: number): void {
+  loadApprovalStatuses(deliveries: PmDeliveryModel[], grid: SicGridPanelComponent, requestId: number | undefined, totalElements: number): void {
     deliveries.forEach((delivery) => {
       if (!delivery.id) return;
       this.approvalService.getDocumentStatus('DELIVERY', delivery.id).subscribe({
@@ -201,7 +234,8 @@ export class Pmdt14Component implements OnInit {
 
     this.isLoading.set(true);
     const url = `${environment.apiBaseUrl}/api/pm/delivery/${item.id}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob) => {

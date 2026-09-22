@@ -212,14 +212,17 @@ public class PmRequirementController {
     @Operation(summary = "Export requirement document as PDF")
     public ResponseEntity<byte[]> exportRequirement(
             @PathVariable UUID id,
-            @RequestParam(defaultValue = "pdf") String format) {
+            @RequestParam(defaultValue = "pdf") String format,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        byte[] pdfBytes = requirementExportService.exportRequirementPdf(id, businessId);
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        byte[] pdfBytes = requirementExportService.exportRequirementPdf(id, businessId, finalLang);
 
         // Resolve the filename from requirement code
         String filename = "requirement_" + id + ".pdf";
@@ -247,7 +250,9 @@ public class PmRequirementController {
     @PostMapping("/export")
     @Operation(summary = "Export requirement document (POST, matches frontend export service)")
     public ResponseEntity<byte[]> exportRequirementPost(
-            @RequestBody java.util.Map<String, Object> body) {
+            @RequestBody java.util.Map<String, Object> body,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
@@ -266,7 +271,11 @@ public class PmRequirementController {
             return ResponseEntity.badRequest().build();
         }
 
-        byte[] pdfBytes = requirementExportService.exportRequirementPdf(requirementId, businessId);
+        Object bodyLangObj = body.get("lang");
+        String bodyLang = bodyLangObj != null ? bodyLangObj.toString() : null;
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(
+                lang != null ? lang : bodyLang, headerLang);
+        byte[] pdfBytes = requirementExportService.exportRequirementPdf(requirementId, businessId, finalLang);
 
         String filename = "requirement_" + requirementId + ".pdf";
         try {

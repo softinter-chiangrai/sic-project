@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -9,6 +9,8 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Pmdt15AService } from './pmdt15A/pmdt15A.service';
 import { PmUserManualModel } from './pmdt15A/pmdt15A.model';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -31,15 +33,29 @@ export class Pmdt15Component implements OnInit {
   private readonly dialog = inject(DialogService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly http = inject(HttpClient);
+  private readonly languageService = inject(LanguageService);
   private readonly approvalService = inject(ApprovalService);
   private readonly translate = inject(TranslateService);
+  private readonly customerState = inject(CustomerStateService);
 
   manuals = signal<PmUserManualModel[]>([]);
   isLoading = signal(false);
   totalElements = signal(0);
   page = signal(1);
   size = signal(50);
+  // Kept for "create/edit manual" navigation context and the back button only —
+  // no longer used to filter the loaded list (navbar selection does that, client-side).
   projectId = signal<string | null>(null);
+
+  // ===== Navbar context filter (client-side) =====
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  readonly filteredManuals = computed(() => {
+    const ids = this.selectedProjectIds();
+    const all = this.manuals();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((m) => idSet.has(m.projectId));
+  });
 
   searchTerm = signal('');
   filterType = signal('');
@@ -78,21 +94,33 @@ export class Pmdt15Component implements OnInit {
     ],
   };
 
+  constructor() {
+    // Re-render already-loaded rows whenever the navbar project selection changes,
+    // without re-fetching from the backend.
+    effect(() => {
+      const filtered = this.filteredManuals();
+      const grid = this.gridRef;
+      if (grid) {
+        grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length });
+        this.totalElements.set(filtered.length);
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.route.queryParams.subscribe((params) => {
       const qProjectId = params['projectId'];
       this.projectId.set(qProjectId || null);
       this.cdr.markForCheck();
-      // ครั้งแรก grid ยัง mount ไม่เสร็จ (จะยิง loadData เองอัตโนมัติ) — ครั้งถัดไปเมื่อ projectId เปลี่ยนต้อง reload เอง
-      this.gridRef?.reload();
     });
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.isLoading.set(true);
+    // Always fetch all manuals unfiltered by project; navbar project-context selection
+    // filters the result client-side (see filteredManuals).
     this.service
       .getPaging({
-        projectId: this.projectId() || undefined,
         page: request.pageNumber,
         size: request.pageSize,
         keyword: this.searchTerm().trim() || undefined,
@@ -103,10 +131,12 @@ export class Pmdt15Component implements OnInit {
       .subscribe({
         next: (res) => {
           const items = res.data || [];
-          const totalElements = res.pageable?.totalElements || 0;
+          const total = res.pageable?.totalElements || 0;
           this.manuals.set(items);
+          const filtered = this.filteredManuals();
+          const totalElements = this.selectedProjectIds().length ? filtered.length : total;
           this.totalElements.set(totalElements);
-          grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
+          grid.setRows(filtered as unknown as SicGridRowData[], { totalElements }, request.requestId);
           this.loadApprovalStatuses(items, grid, request.requestId);
         },
         error: (err) => {
@@ -130,7 +160,7 @@ export class Pmdt15Component implements OnInit {
               item.id === manual.id ? { ...item, approvalStatus: approval.status } : item
             )
           );
-          grid.setRows(this.manuals() as unknown as SicGridRowData[], { totalElements: this.totalElements() }, requestId);
+          grid.setRows(this.filteredManuals() as unknown as SicGridRowData[], { totalElements: this.totalElements() }, requestId);
           this.cdr.markForCheck();
         },
         error: () => {
@@ -202,7 +232,8 @@ export class Pmdt15Component implements OnInit {
 
     this.isLoading.set(true);
     const url = `${apiBaseUrl}/api/pm/manual/${item.id}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob) => {

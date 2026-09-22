@@ -13,10 +13,12 @@ import { PmSpecificationModel } from './pmdt07.model';
 
 export const pmdt07Resolver: ResolveFn<PaginationResponse<PmSpecificationModel> | null> = (route) => {
     const service = inject(Pmdt07Service);
-    const projectId = route.queryParams['projectId'] || undefined;
     const requirementId = route.queryParams['requirementId'] || undefined;
 
-    return service.getList({ projectId, requirementId, page: 0, size: 10 }).pipe(
+    // Always fetch all projects' specifications; navbar context filters client-side.
+    // size bumped well above the default page size so the client has the (near-)full
+    // dataset to filter against — see pmdt07.component.ts filteredSpecs / gridConfig.lazy.
+    return service.getList({ requirementId, page: 0, size: 1000 }).pipe(
         catchError((err) => {
             console.error('pmdt07Resolver error:', err);
             return of(null);

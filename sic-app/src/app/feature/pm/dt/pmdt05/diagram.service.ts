@@ -12,6 +12,7 @@ import type {
   DiagramVersion,
 } from './diagram.model';
 import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+import { LanguageService } from '../../../../core/services/language.service';
 
 export interface PmChatResponse {
   id: string;
@@ -26,6 +27,7 @@ export interface PmChatResponse {
 @Injectable({ providedIn: 'root' })
 export class DiagramService {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private apiUrl = environment.apiBaseUrl;
 
   private projectsSubject = new BehaviorSubject<DiagramProject[]>([]);
@@ -243,13 +245,17 @@ export class DiagramService {
   }
 
   exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
+    const lang = this.languageService.getCurrentLanguage();
     return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
+      params: { lang },
       responseType: 'blob',
     });
   }
 
   exportProject(projectId: string): Observable<Blob> {
+    const lang = this.languageService.getCurrentLanguage();
     return this.http.get(`${this.apiUrl}/api/diagram/projects/${projectId}/export`, {
+      params: { lang },
       responseType: 'blob',
     });
   }

@@ -37,9 +37,12 @@ public class PmTestCaseController {
     public ResponseEntity<byte[]> exportUatReport(
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false, defaultValue = "UAT") String testType,
-            @RequestParam(required = false) UUID scenarioId) {
+            @RequestParam(required = false) UUID scenarioId,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
-        byte[] pdfBytes = uatExportService.exportUatReportPdf(projectId, businessId, testType, scenarioId);
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        byte[] pdfBytes = uatExportService.exportUatReportPdf(projectId, businessId, testType, scenarioId, finalLang);
         String filename = "uat-report-" + (scenarioId != null ? "scenario-" + scenarioId : (projectId != null ? projectId : "all")) + ".pdf";
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")

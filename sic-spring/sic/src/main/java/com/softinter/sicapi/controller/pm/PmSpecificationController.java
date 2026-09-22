@@ -46,12 +46,16 @@ public class PmSpecificationController {
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export Specification Document as PDF using JasperReports")
-    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+    public ResponseEntity<byte[]> exportPdf(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
-        byte[] pdfBytes = exportService.exportSpecificationPdf(id, businessId);
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        byte[] pdfBytes = exportService.exportSpecificationPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
                 .header("Content-Disposition", "attachment; filename=\"spec-" + id + ".pdf\"")

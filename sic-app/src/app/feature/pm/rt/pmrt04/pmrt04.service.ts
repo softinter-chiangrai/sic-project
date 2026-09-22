@@ -4,10 +4,12 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { ComboboxItem, Pmrt04Model } from './pmrt04.model';
+import { LanguageService } from '../../../../core/services/language.service';
 
 @Injectable({ providedIn: 'root' })
 export class Pmrt04Service {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private baseUrl = environment.apiBaseUrl + '/api/pm/contracts';
 
   private getBusinessId(): string {
@@ -19,7 +21,11 @@ export class Pmrt04Service {
   }
 
   exportContractPdf(id: string): Observable<Blob> {
-    return this.http.get(`${this.baseUrl}/${id}/export-pdf`, { responseType: 'blob' });
+    const lang = this.languageService.getCurrentLanguage();
+    return this.http.get(`${this.baseUrl}/${id}/export-pdf`, {
+      params: { lang },
+      responseType: 'blob',
+    });
   }
 
   /** ดึงสัญญาสำหรับ combobox โดยสามารถกรองตาม customerId */

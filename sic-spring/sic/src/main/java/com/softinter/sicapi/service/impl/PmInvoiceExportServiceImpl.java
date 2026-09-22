@@ -56,8 +56,9 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportInvoicePdf(UUID invoiceId, UUID businessId) {
-        log.info("Generating Invoice PDF: id={}, businessId={}", invoiceId, businessId);
+    public byte[] exportInvoicePdf(UUID invoiceId, UUID businessId, String lang) {
+        String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
+        log.info("Generating Invoice PDF: id={}, businessId={}, lang={}", invoiceId, businessId, normalizedLang);
 
         PmInvoice invoice = invoiceRepository.findByIdAndBusinessIdAndIsDeleteFalse(invoiceId, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลใบแจ้งหนี้ ID: " + invoiceId));
@@ -102,6 +103,8 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
         parameters.put("remark", (invoice.getRemark() != null && !invoice.getRemark().isBlank())
                 ? invoice.getRemark()
                 : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน");
+        parameters.put("lang", normalizedLang);
+        parameters.put(net.sf.jasperreports.engine.JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

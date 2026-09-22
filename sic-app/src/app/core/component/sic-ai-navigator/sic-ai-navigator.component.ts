@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, ViewChild, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, AiModelOption } from '../../config/ai-models.config';
@@ -16,7 +16,7 @@ import { DateTimeUtil } from '../../utils/datetime.util';
   styleUrl: './sic-ai-navigator.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SicAiNavigatorComponent {
+export class SicAiNavigatorComponent implements OnInit {
   protected readonly navSvc = inject(AiNavigatorService);
   protected readonly translate = inject(TranslateService);
   private readonly dialog = inject(DialogService);
@@ -29,6 +29,17 @@ export class SicAiNavigatorComponent {
   readonly attachedFiles = signal<File[]>([]);
   readonly isDraggingFile = signal<boolean>(false);
 
+  // Draggable FAB state
+  readonly fabOffset = signal<{ x: number; y: number }>({ x: 0, y: 0 });
+  readonly isFabDragging = signal<boolean>(false);
+  readonly fabTransform = computed(() => {
+    const { x, y } = this.fabOffset();
+    return `translate3d(${x}px, ${y}px, 0)`;
+  });
+  private dragStartPointer = { x: 0, y: 0 };
+  private dragStartOffset = { x: 0, y: 0 };
+  private didDragMove = false;
+
   /** History panel and model dropdown are mutually exclusive - one tri-state signal instead of
    *  two booleans that each toggle method had to remember to clear on the other. */
   private readonly activePanel = signal<'history' | 'model' | null>(null);
@@ -37,11 +48,87 @@ export class SicAiNavigatorComponent {
 
   readonly availableModels: AiModelOption[] = AI_MODEL_OPTIONS;
 
+  ngOnInit(): void {
+    try {
+      const saved = localStorage.getItem('sic_ai_fab_offset');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
+          this.fabOffset.set(parsed);
+        }
+      }
+    } catch { /* ignore */ }
+  }
+
+  onFabPointerDown(event: MouseEvent): void {
+    if (event.button !== 0) return;
+    this.startFabDrag(event.clientX, event.clientY);
+  }
+
+  onFabTouchStart(event: TouchEvent): void {
+    if (event.touches.length > 0) {
+      const touch = event.touches[0];
+      this.startFabDrag(touch.clientX, touch.clientY);
+    }
+  }
+
+  private startFabDrag(clientX: number, clientY: number): void {
+    this.isFabDragging.set(true);
+    this.didDragMove = false;
+    this.dragStartPointer = { x: clientX, y: clientY };
+    this.dragStartOffset = { ...this.fabOffset() };
+
+    const onMove = (e: MouseEvent | TouchEvent) => {
+      const curX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+      const curY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY;
+      const deltaX = curX - this.dragStartPointer.x;
+      const deltaY = curY - this.dragStartPointer.y;
+
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        this.didDragMove = true;
+      }
+
+      this.fabOffset.set({
+        x: this.dragStartOffset.x + deltaX,
+        y: this.dragStartOffset.y + deltaY,
+      });
+    };
+
+    const onEnd = () => {
+      this.isFabDragging.set(false);
+      window.removeEventListener('mousemove', onMove);
+      window.removeEventListener('mouseup', onEnd);
+      window.removeEventListener('touchmove', onMove);
+      window.removeEventListener('touchend', onEnd);
+
+      if (this.didDragMove) {
+        try {
+          localStorage.setItem('sic_ai_fab_offset', JSON.stringify(this.fabOffset()));
+        } catch { /* ignore */ }
+      }
+    };
+
+    window.addEventListener('mousemove', onMove);
+    window.addEventListener('mouseup', onEnd);
+    window.addEventListener('touchmove', onMove, { passive: false });
+    window.addEventListener('touchend', onEnd);
+  }
+
+  onFabClick(event: MouseEvent): void {
+    if (this.didDragMove) {
+      event.preventDefault();
+      event.stopPropagation();
+      return;
+    }
+    this.toggle();
+  }
+
   toggle(): void {
     this.navSvc.toggle();
     if (this.navSvc.isOpen()) {
       queueMicrotask(() => {
         this.scrollToEnd();
+        this.autoResizeTextarea();
         this.chatTextarea?.nativeElement.focus();
       });
     }
@@ -80,6 +167,7 @@ export class SicAiNavigatorComponent {
     this.activePanel.set(null);
     this.inputText = '';
     this.attachedFiles.set([]);
+    this.resetTextareaHeight();
     queueMicrotask(() => {
       this.scrollToEnd();
       this.chatTextarea?.nativeElement.focus();
@@ -156,6 +244,7 @@ export class SicAiNavigatorComponent {
 
     this.inputText = '';
     this.attachedFiles.set([]);
+    this.resetTextareaHeight();
 
     let attachments = undefined;
     if (currentFiles.length > 0) {
@@ -164,6 +253,20 @@ export class SicAiNavigatorComponent {
 
     this.navSvc.sendMessage(text, attachments);
     queueMicrotask(() => this.scrollToEnd());
+  }
+
+  autoResizeTextarea(): void {
+    const el = this.chatTextarea?.nativeElement;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  }
+
+  private resetTextareaHeight(): void {
+    const el = this.chatTextarea?.nativeElement;
+    if (el) {
+      el.style.height = 'auto';
+    }
   }
 
   onEnter(event: Event): void {

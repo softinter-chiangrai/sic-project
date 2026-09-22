@@ -1,12 +1,13 @@
 // src/app/feature/pm/dt/pmdt04/pmdt04.component.ts
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, effect, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import type { ApprovalStatus } from '../pmdt03/approval.model';
 import { ApprovalService } from '../pmdt03/approval.service';
@@ -30,6 +31,7 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 })
 export class Pmdt04Component implements OnInit {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private dialog = inject(DialogService);
@@ -44,9 +46,43 @@ export class Pmdt04Component implements OnInit {
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected isLoading = signal(false);
+
+  // Full unfiltered-by-project dataset, loaded once (all projects, backend projectId omitted).
   protected requirements = signal<RequirementItem[]>([]);
 
-  protected totalItems = signal(0);
+  // ===== Navbar context filter (client-side) =====
+  // Always load ALL requirements of ALL projects; the navbar project-context selection,
+  // plus the existing keyword/status filters, are applied client-side against that full set.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  protected readonly filteredRequirements = computed(() => {
+    let list = this.requirements();
+
+    const term = this.searchTerm().trim().toLowerCase();
+    if (term) {
+      list = list.filter(
+        (r) =>
+          r.requirementCode?.toLowerCase().includes(term) ||
+          r.title?.toLowerCase().includes(term),
+      );
+    }
+
+    const status = this.filterStatus();
+    if (status && status !== 'all') {
+      list = list.filter((r) => r.status === status);
+    }
+
+    const ids = this.selectedProjectIds();
+    if (ids && ids.length > 0) {
+      const idSet = new Set(ids);
+      list = list.filter((r) => idSet.has(r.projectId));
+    }
+
+    return list;
+  });
+
+  protected totalItems = computed(() => this.filteredRequirements().length);
+
+  @ViewChild('grid') private gridRef?: SicGridPanelComponent;
 
   // ===== Options =====
   readonly statusOptions = [
@@ -58,8 +94,11 @@ export class Pmdt04Component implements OnInit {
   ];
 
   // ===== Grid =====
+  // lazy: false — the full (all-projects) dataset is loaded once; the grid sorts/paginates
+  // it locally, and we re-supply it via setRows() whenever the client-side filters change.
   protected gridConfig: SicGridPanelConfig = {
     id: 'id',
+    lazy: false,
     selectable: false,
     showToolbar: false,
     defaultSortField: 'requirementCode',
@@ -76,14 +115,23 @@ export class Pmdt04Component implements OnInit {
     ],
   };
 
-  // resolver อาจ preload ข้อมูลหน้าแรกมาให้แล้ว — ใช้แทนการยิง HTTP รอบแรกใน handleGridLoad()
-  private initialResolverData: { data: RequirementItem[]; totalElements: number } | null = null;
+  constructor() {
+    // Re-push the currently-visible rows whenever anything the computed depends on changes —
+    // most importantly the navbar's globally-selected project(s), which the grid itself has
+    // no way to react to since it only calls back into us via (loadData)/reload().
+    effect(() => {
+      const list = this.filteredRequirements();
+      this.gridRef?.setRows(list as unknown as SicGridRowData[], { totalElements: list.length });
+    });
+  }
 
   ngOnInit() {
     const resolved = this.route.snapshot.data['form'] || this.route.snapshot.data['pageData'];
     if (resolved && resolved.data) {
-      const data = resolved.data || [];
-      this.initialResolverData = { data, totalElements: resolved.pageable?.totalElements || data.length || 0 };
+      this.requirements.set(resolved.data || []);
+      this.loadApprovalStatuses(this.requirements());
+    } else {
+      this.fetchAll();
     }
   }
 
@@ -97,32 +145,11 @@ export class Pmdt04Component implements OnInit {
   }
 
   // ===== Load Data =====
-  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
-    if (this.initialResolverData) {
-      const { data, totalElements } = this.initialResolverData;
-      this.initialResolverData = null;
-      this.requirements.set(data);
-      this.totalItems.set(totalElements);
-      grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
-      this.loadApprovalStatuses(data, grid, request.requestId);
-      return;
-    }
-
-    const projectId = resolveProjectId(this.route, this.customerState);
-
+  // Loads the FULL (all-projects) dataset once from the backend — projectId is intentionally
+  // omitted so navbar project-context filtering can be applied entirely client-side.
+  private fetchAll(): void {
     this.isLoading.set(true);
-    this.currentPage.set(request.pageNumber);
-    let params = new HttpParams()
-      .set('page', request.pageNumber.toString())
-      .set('size', request.pageSize.toString())
-      .set('keyword', this.searchTerm() || '')
-      .set('status', this.filterStatus() === 'all' ? '' : this.filterStatus())
-      .set('sortBy', request.sortField ?? 'requirementCode')
-      .set('sortDirection', request.sortDescending ? 'desc' : 'asc');
-
-    if (projectId) {
-      params = params.set('projectId', projectId);
-    }
+    const params = new HttpParams().set('page', '1').set('size', '1000');
 
     this.http
       .get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params })
@@ -130,22 +157,24 @@ export class Pmdt04Component implements OnInit {
       .subscribe({
         next: (res) => {
           const data = res.data || [];
-          const totalElements = res.pageable?.totalElements || 0;
           this.requirements.set(data);
-          this.totalItems.set(totalElements);
-          grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
-          this.loadApprovalStatuses(data, grid, request.requestId);
+          this.loadApprovalStatuses(data);
         },
         error: () => {
           this.dialog.error(this.translate.instant('PMDT04_LOAD_FAIL_TITLE'), this.translate.instant('PMDT04_LOAD_REQUIREMENTS_FAIL_MSG'));
           this.requirements.set([]);
-          this.totalItems.set(0);
-          grid.setLoadError(this.translate.instant('PMDT04_LOAD_FAIL_TITLE'), request.requestId);
         },
       });
   }
 
-  loadApprovalStatuses(requirements: RequirementItem[], grid: SicGridPanelComponent, requestId: number) {
+  // lazy: false grid — (loadData) fires once on mount (plus explicit reload()); we simply hand
+  // back the currently-filtered rows. The effect() above keeps the grid in sync afterwards.
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    const list = this.filteredRequirements();
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
+  }
+
+  loadApprovalStatuses(requirements: RequirementItem[]) {
     requirements.forEach((req) => {
       this.approvalService.getDocumentStatus('REQUIREMENT', req.id).subscribe({
         next: (approval) => {
@@ -154,7 +183,6 @@ export class Pmdt04Component implements OnInit {
               item.id === req.id ? { ...item, approvalStatus: approval.status } : item,
             ),
           );
-          grid.setRows(this.requirements() as unknown as SicGridRowData[], { totalElements: this.totalItems() }, requestId);
         },
         error: () => {
           // ไม่มีสถานะอนุมัติ หรือ error – ปล่อย null
@@ -214,7 +242,8 @@ export class Pmdt04Component implements OnInit {
 
     this.isLoading.set(true);
     const url = `${environment.apiBaseUrl}/api/pm/requirement/${req.id}/export?format=pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob) => {
@@ -242,7 +271,9 @@ export class Pmdt04Component implements OnInit {
         this.http.delete(`${environment.apiBaseUrl}/api/pm/requirement/${id}`).subscribe({
           next: () => {
             this.dialog.success(this.translate.instant('PMDT04_DELETE_SUCCESS_TITLE'), this.translate.instant('PMDT04_DELETE_SUCCESS_MSG'));
-            grid.reload();
+            // Refetch the full dataset (lazy grid holds it locally, so a plain grid.reload()
+            // would just re-render the stale, already-deleted row from the client-side cache).
+            this.fetchAll();
           },
           error: () => this.dialog.error(this.translate.instant('PMDT04_DELETE_FAIL_TITLE'), this.translate.instant('PMDT04_GENERIC_ERROR_MSG')),
         });

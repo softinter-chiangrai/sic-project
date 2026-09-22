@@ -9,10 +9,10 @@ import { PhaseModel, PhasePageData } from './pmdt01.model';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
-export const pmdt01Resolver: ResolveFn<PhaseModel[] | null> = (route) => {
+export const pmdt01Resolver: ResolveFn<PhaseModel[] | null> = () => {
   const service = inject(Pmdt01Service);
-  const projectId = route.queryParams['projectId'] || undefined;
-  return service.getPhases(projectId).pipe(
+  // Always load all phases of all projects; navbar context filters client-side.
+  return service.getPhases().pipe(
     catchError((err) => {
       console.error('pmdt01Resolver error:', err);
       return of(null);

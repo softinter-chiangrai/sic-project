@@ -7,6 +7,7 @@ import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt17Service } from './pmdt17.service';
 import { Pmdt17PageData } from './pmdt17.model';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { ApprovalService } from '../pmdt03/approval.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -44,6 +45,7 @@ export class Pmdt17Component implements OnInit {
   private service = inject(Pmdt17Service);
   private dialog = inject(DialogService);
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private approvalService = inject(ApprovalService);
   private recentItems = inject(RecentItemsService);
   isLoading = signal(false);
@@ -234,9 +236,10 @@ export class Pmdt17Component implements OnInit {
 
     this.isLoading.set(true);
     let remaining = ids.length;
+    const lang = this.languageService.getCurrentLanguage();
     ids.forEach((id) => {
       const url = `${apiBaseUrl}/api/pm/ma-tickets/${id}/export-pdf`;
-      this.http.get(url, { responseType: 'blob' }).subscribe({
+      this.http.get(url, { params: { lang }, responseType: 'blob' }).subscribe({
         next: (blob) => {
           const pdfUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           const a = document.createElement('a');
@@ -377,7 +380,8 @@ export class Pmdt17Component implements OnInit {
 
     this.isLoading.set(true);
     const url = `${apiBaseUrl}/api/pm/ma-tickets/${item.id}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (blob) => {

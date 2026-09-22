@@ -1,17 +1,18 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../core/services/language.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { Pmdt07Service } from './pmdt07.service';
 import { PmSpecificationModel } from './pmdt07.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from '../pmdt03/approval.service';
-import { resolveProjectId, resolveRequirementId } from '../../../../core/utils/resolve-context.util';
+import { resolveRequirementId } from '../../../../core/utils/resolve-context.util';
 
 import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -35,6 +36,7 @@ export class Pmdt07Component implements OnInit {
     public customerState = inject(CustomerStateService);
     private approvalService = inject(ApprovalService);
     private http = inject(HttpClient);
+    private languageService = inject(LanguageService);
     private translate = inject(TranslateService);
 
     isLoading = signal(false);
@@ -45,8 +47,36 @@ export class Pmdt07Component implements OnInit {
     searchTerm = signal('');
     filterStatus = signal('all');
 
+    @ViewChild('grid') gridRef?: SicGridPanelComponent;
+
+    // ===== Navbar context filter (client-side) =====
+    // The resolver/handleGridLoad now always fetch ALL projects' specifications;
+    // the navbar project-context selection filters what's shown, client-side.
+    readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+    readonly filteredSpecs = computed(() => {
+        const ids = this.selectedProjectIds();
+        const all = this.specs();
+        if (!ids || ids.length === 0) return all;
+        const idSet = new Set(ids);
+        return all.filter((s) => s.projectId && idSet.has(s.projectId));
+    });
+
+    constructor() {
+        // Keep the grid in sync whenever the navbar project selection changes,
+        // without refetching from the server.
+        effect(() => {
+            const filtered = this.filteredSpecs();
+            if (!this.gridRef) return;
+            this.totalItems.set(filtered.length);
+            this.gridRef.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length });
+        });
+    }
+
     gridConfig: SicGridPanelConfig = {
         id: 'id',
+        // Data is now fetched once (all projects) per load/reload and filtered+paginated
+        // entirely client-side — see filteredSpecs / handleGridLoad.
+        lazy: false,
         selectable: false,
         showToolbar: false,
         pageSize: this.pageSize(),
@@ -106,28 +136,29 @@ export class Pmdt07Component implements OnInit {
 
     handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
         if (this.initialResolverData) {
-            const { data, totalElements } = this.initialResolverData;
+            const { data } = this.initialResolverData;
             this.initialResolverData = null;
             this.specs.set(data);
-            this.totalItems.set(totalElements);
-            grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
-            this.loadApprovalStatuses(data, grid, request.requestId);
+            const filtered = this.filteredSpecs();
+            this.totalItems.set(filtered.length);
+            grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length }, request.requestId);
+            this.loadApprovalStatuses(filtered, grid, request.requestId);
             return;
         }
 
         this.isLoading.set(true);
-        this.currentPage.set(request.pageNumber);
         this.syncFiltersToUrl();
 
+        // Always fetch ALL projects' specifications (no projectId filter) — the navbar
+        // context-switcher filters client-side via filteredSpecs(). requirementId stays
+        // server-side since it's not part of the navbar project filter.
         const requirementId = resolveRequirementId(this.route, this.customerState);
-        const projectId = resolveProjectId(this.route, this.customerState);
         const params = {
-            projectId: projectId || undefined,
             requirementId: requirementId || undefined,
             keyword: this.searchTerm() || undefined,
             status: this.filterStatus() === 'all' ? undefined : this.filterStatus(),
-            page: request.pageNumber,
-            size: request.pageSize,
+            page: 0,
+            size: 1000,
             sortBy: 'createdDate',
             sortDirection: 'desc',
         };
@@ -137,11 +168,11 @@ export class Pmdt07Component implements OnInit {
             .subscribe({
                 next: (res: PaginationResponse<PmSpecificationModel>) => {
                     const data = res.data || [];
-                    const totalElements = res.pageable?.totalElements || 0;
                     this.specs.set(data);
-                    this.totalItems.set(totalElements);
-                    grid.setRows(data as unknown as SicGridRowData[], { totalElements }, request.requestId);
-                    this.loadApprovalStatuses(data, grid, request.requestId);
+                    const filtered = this.filteredSpecs();
+                    this.totalItems.set(filtered.length);
+                    grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length }, request.requestId);
+                    this.loadApprovalStatuses(filtered, grid, request.requestId);
                 },
                 error: () => {
                     this.dialog.error(this.translate.instant('PMDT07_LOAD_FAIL_TITLE'), this.translate.instant('PMDT07_LOAD_FAIL_MSG'));
@@ -162,7 +193,8 @@ export class Pmdt07Component implements OnInit {
                             item.id === spec.id ? { ...item, approvalStatus: approval.status } : item
                         )
                     );
-                    grid.setRows(this.specs() as unknown as SicGridRowData[], { totalElements: this.totalItems() }, requestId);
+                    const filtered = this.filteredSpecs();
+                    grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length }, requestId);
                 },
                 error: () => {
                     // ไม่มีสถานะอนุมัติ ปล่อย null
@@ -216,7 +248,8 @@ export class Pmdt07Component implements OnInit {
 
         this.isLoading.set(true);
         const url = `${environment.apiBaseUrl}/api/pm/specifications/${spec.id}/export-pdf`;
-        this.http.get(url, { responseType: 'blob' })
+        const lang = this.languageService.getCurrentLanguage();
+        this.http.get(url, { params: { lang }, responseType: 'blob' })
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({
                 next: (blob) => {

@@ -42,8 +42,9 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportUserManualPdf(UUID manualId, UUID businessId) {
-        log.info("Generating User Manual PDF: id={}, businessId={}", manualId, businessId);
+    public byte[] exportUserManualPdf(UUID manualId, UUID businessId, String lang) {
+        String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
+        log.info("Generating User Manual PDF: id={}, businessId={}, lang={}", manualId, businessId, normalizedLang);
 
         PmUserManual manual = userManualRepository.findById(manualId)
                 .filter(m -> businessId.equals(m.getBusinessId()) && !Boolean.TRUE.equals(m.getIsDelete()))
@@ -74,6 +75,8 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
         parameters.put("version", manual.getVersion() != null ? manual.getVersion() : "1.0");
         parameters.put("status", manual.getStatus() != null ? manual.getStatus() : "-");
         parameters.put("deliveryCode", deliveryCode);
+        parameters.put("lang", normalizedLang);
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

@@ -560,7 +560,13 @@
   }
 
   <!-- ── Toggle button ──────────────────────────────────────────────────── -->
-  <button class="headchat-toggle" (click)="togglePanel()" [class.active]="showPanel()"
+  <button class="headchat-toggle"
+          [class.is-dragging]="isFabDragging()"
+          [style.transform]="fabTransform()"
+          (mousedown)="onFabPointerDown($event)"
+          (touchstart)="onFabTouchStart($event)"
+          (click)="onFabClick($event)"
+          [class.active]="showPanel()"
           [title]="'HEADCHAT_CHAT_TOGGLE_LABEL' | translate">
     <i class="bi" [class.bi-chat-dots-fill]="!showPanel()" [class.bi-x-lg]="showPanel()"></i>
     @if (totalUnread() > 0) {

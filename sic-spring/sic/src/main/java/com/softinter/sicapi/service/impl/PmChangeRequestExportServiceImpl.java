@@ -31,14 +31,17 @@ public class PmChangeRequestExportServiceImpl implements PmChangeRequestExportSe
                              .withZone(ZoneId.of("Asia/Bangkok"));
 
     @Override
-    public byte[] exportChangeRequestPdf(UUID id) {
-        log.info("Exporting Change Request PDF: id={}", id);
+    public byte[] exportChangeRequestPdf(UUID id, String lang) {
+        String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
+        log.info("Exporting Change Request PDF: id={}, lang={}", id, normalizedLang);
 
         String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("changeRequestId", id != null ? id.toString() : "");
         parameters.put("exportDate", exportDate);
+        parameters.put("lang", normalizedLang);
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

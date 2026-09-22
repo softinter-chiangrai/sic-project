@@ -127,9 +127,13 @@ public class PmDeliveryController {
 
     @GetMapping("/{id}/export-pdf")
     @Operation(summary = "Export official Delivery Handover Document as PDF using JasperReports")
-    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
+    public ResponseEntity<byte[]> exportPdf(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
         UUID businessId = BusinessContextHolder.getBusinessId();
-        byte[] pdfBytes = exportService.exportDeliveryHandoverPdf(id, businessId);
+        byte[] pdfBytes = exportService.exportDeliveryHandoverPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
                 .header("Content-Disposition", "attachment; filename=\"delivery-handover-" + id + ".pdf\"")

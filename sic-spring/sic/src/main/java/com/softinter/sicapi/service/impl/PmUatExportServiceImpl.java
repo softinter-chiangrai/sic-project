@@ -44,8 +44,9 @@ public class PmUatExportServiceImpl implements PmUatExportService {
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm").withZone(ZoneId.of("Asia/Bangkok"));
 
     @Override
-    public byte[] exportUatReportPdf(UUID projectId, UUID businessId, String testTypeFilter, UUID scenarioId) {
-        log.info("Generating UAT Report PDF: projectId={}, businessId={}, testTypeFilter={}, scenarioId={}", projectId, businessId, testTypeFilter, scenarioId);
+    public byte[] exportUatReportPdf(UUID projectId, UUID businessId, String testTypeFilter, UUID scenarioId, String lang) {
+        String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
+        log.info("Generating UAT Report PDF: projectId={}, businessId={}, testTypeFilter={}, scenarioId={}, lang={}", projectId, businessId, testTypeFilter, scenarioId, normalizedLang);
 
         String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
         String projectName = "-";
@@ -116,6 +117,8 @@ public class PmUatExportServiceImpl implements PmUatExportService {
         parameters.put("blockedCount", String.valueOf(blocked));
         parameters.put("pendingCount", String.valueOf(pending));
         parameters.put("passRate", passRate);
+        parameters.put("lang", normalizedLang);
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

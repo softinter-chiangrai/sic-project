@@ -2,35 +2,22 @@
 import { inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ResolveFn } from '@angular/router';
-import { catchError, map, of, switchMap } from 'rxjs';
+import { catchError, map, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { Contract, Pmrt04ListPageData } from './pmrt04.model';
 
-export const pmrt04Resolver: ResolveFn<Pmrt04ListPageData | null> = (route) => {
+// Always load all contracts (page 1, unfiltered by project/customer);
+// navbar project-context selection filters what's shown client-side.
+export const pmrt04Resolver: ResolveFn<Pmrt04ListPageData | null> = () => {
   const http = inject(HttpClient);
-  const projectService = inject(Pmrt02Service);
-  const projectId = route.queryParams['projectId'] || null;
+  const params = new HttpParams().set('page', '1').set('size', '10');
 
-  if (!projectId) {
-    return of(null);
-  }
-
-  return projectService.getProject(projectId).pipe(
-    switchMap((project) => {
-      let params = new HttpParams().set('page', '0').set('size', '10');
-      if (project?.customerId) {
-        params = params.set('customerId', project.customerId);
-      }
-      return http.get<PaginationResponse<Contract>>(`${environment.apiBaseUrl}/api/pm/contracts`, { params }).pipe(
-        map((contracts) => ({ project, contracts }))
-      );
-    }),
+  return http.get<PaginationResponse<Contract>>(`${environment.apiBaseUrl}/api/pm/contracts`, { params }).pipe(
+    map((contracts) => ({ project: null, contracts })),
     catchError((err) => {
       console.error('pmrt04Resolver error:', err);
       return of(null);
     })
   );
 };
-

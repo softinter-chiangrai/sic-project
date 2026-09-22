@@ -3,12 +3,14 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Pmrt01Model, pmrt01, PaginatedResponse, pmrt01FilterParams } from './pmrt01.model';
+import { LanguageService } from '../../../../core/services/language.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class Pmrt01Service {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private baseUrl = '/api/pmrt01s';
 
   getpmrt01s(params: pmrt01FilterParams): Observable<PaginatedResponse<pmrt01>> {
@@ -51,7 +53,7 @@ export class Pmrt01Service {
   }
 
   exportpmrt01s(params: pmrt01FilterParams): Observable<Blob> {
-    let httpParams = new HttpParams();
+    let httpParams = new HttpParams().set('lang', this.languageService.getCurrentLanguage());
     if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
     if (params.status && params.status !== 'all')
       httpParams = httpParams.set('status', params.status);

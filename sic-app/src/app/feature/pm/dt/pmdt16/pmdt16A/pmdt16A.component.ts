@@ -18,6 +18,7 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../../core/services/language.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
@@ -66,6 +67,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   private customerState = inject(CustomerStateService);
   private approvalService = inject(ApprovalService);
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private aiHistoryService = inject(AiHistoryService);
   private translate = inject(TranslateService);
 
@@ -594,7 +596,8 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
     this.isPrinting.set(true);
     const url = `${apiBaseUrl}/api/pm/invoices/${invoiceId}/export-pdf`;
-    this.http.get(url, { responseType: 'blob' })
+    const lang = this.languageService.getCurrentLanguage();
+    this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isPrinting.set(false)))
       .subscribe({
         next: (blob) => {

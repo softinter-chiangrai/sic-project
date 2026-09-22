@@ -94,8 +94,12 @@ public class PmChangeRequestController {
     }
 
     @GetMapping("/{id}/export-pdf")
-    public ResponseEntity<byte[]> exportPdf(@PathVariable UUID id) {
-        byte[] pdfBytes = changeRequestExportService.exportChangeRequestPdf(id);
+    public ResponseEntity<byte[]> exportPdf(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        byte[] pdfBytes = changeRequestExportService.exportChangeRequestPdf(id, finalLang);
 
         String filename = "CR_" + id.toString().substring(0, 8).toUpperCase() + ".pdf";
         org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();

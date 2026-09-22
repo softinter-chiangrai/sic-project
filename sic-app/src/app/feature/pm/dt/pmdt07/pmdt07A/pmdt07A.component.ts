@@ -17,6 +17,7 @@ import { SicApprovalComponent } from '../../../../../core/component/sic-approval
 import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../../core/services/language.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { BusinessService } from '../../../../../core/services/business.service';
@@ -149,6 +150,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     readonly exportService = inject(SpecificationExportService);
     private readonly approvalService = inject(ApprovalService);
     private readonly http = inject(HttpClient);
+    private readonly languageService = inject(LanguageService);
     private readonly auth = inject(AuthService);
     readonly aiHistoryService = inject(AiHistoryService);
     private readonly translate = inject(TranslateService);
@@ -711,7 +713,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         this.isLoading = true;
         const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
-        this.http.get(url, { responseType: 'blob' })
+        const printLang = this.languageService.getCurrentLanguage();
+        this.http.get(url, { params: { lang: printLang }, responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;
                 this.cdr.markForCheck();
@@ -745,7 +748,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         this.isLoading = true;
         const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
-        this.http.get(url, { responseType: 'blob' })
+        const lang = this.languageService.getCurrentLanguage();
+        this.http.get(url, { params: { lang }, responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;
                 this.cdr.markForCheck();

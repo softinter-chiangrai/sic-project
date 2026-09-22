@@ -101,14 +101,17 @@ public class PmCustomerProjectController {
     @Operation(summary = "Export project document as PDF (JasperReports)")
     public ResponseEntity<byte[]> exportProject(
             @PathVariable UUID id,
-            @RequestParam(defaultValue = "pdf") String format) {
+            @RequestParam(defaultValue = "pdf") String format,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
 
-        byte[] pdfBytes = projectExportService.exportProjectPdf(id, businessId);
+        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        byte[] pdfBytes = projectExportService.exportProjectPdf(id, businessId, finalLang);
 
         String filename = "project_" + id + ".pdf";
         try {

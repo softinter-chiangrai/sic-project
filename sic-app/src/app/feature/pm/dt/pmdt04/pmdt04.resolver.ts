@@ -4,20 +4,15 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { ResolveFn } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
-export const pmdt04Resolver: ResolveFn<any> = (route) => {
+// Always load ALL requirements of ALL projects (backend projectId is optional and
+// omitted here); the navbar project-context selection filters what's shown client-side.
+export const pmdt04Resolver: ResolveFn<any> = () => {
   const http = inject(HttpClient);
-  const projectId = route.queryParams['projectId'] || null;
-
-  if (!projectId) {
-    return of(null);
-  }
 
   const params = new HttpParams()
-    .set('page', '0')
-    .set('size', '10')
-    .set('projectId', projectId);
+    .set('page', '1')
+    .set('size', '1000');
 
   return http.get<any>(`${environment.apiBaseUrl}/api/pm/requirement`, { params }).pipe(
     catchError((err) => {

@@ -20,6 +20,7 @@ import { SicInputAreaComponent } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../../core/services/language.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
@@ -61,6 +62,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     private fb = inject(FormBuilder);
     private http = inject(HttpClient);
+    private languageService = inject(LanguageService);
     private route = inject(ActivatedRoute);
     private router = inject(Router);
     private dialog = inject(DialogService);
@@ -556,7 +558,8 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
         this.isLoading = true;
         const url = `${this.baseUrl}/${id}/export-pdf`;
-        this.http.get(url, { responseType: 'blob' })
+        const lang = this.languageService.getCurrentLanguage();
+        this.http.get(url, { params: { lang }, responseType: 'blob' })
             .pipe(finalize(() => {
                 this.isLoading = false;
             }))

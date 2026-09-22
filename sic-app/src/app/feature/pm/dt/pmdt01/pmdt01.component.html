@@ -28,9 +28,9 @@
 
   <!-- ===== LIST VIEW ===== -->
   @if (!isLoading()) {
-    @if (phases().length > 0) {
+    @if (filteredPhases().length > 0) {
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        @for (phase of phases(); track phase.id) {
+        @for (phase of filteredPhases(); track phase.id) {
           <div
             (click)="goToDetail(phase.id)"
             class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-5 shadow-sm hover:shadow-md hover:border-[var(--crm-primary)]/30 cursor-pointer transition-all"

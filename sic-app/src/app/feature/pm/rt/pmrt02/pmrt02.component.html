@@ -115,16 +115,20 @@
 
       <ng-template sicGridPanelTemplate="mandayProgress" section="cell" let-row>
         @let r = $any(row);
-        <div class="flex flex-col gap-0.5">
-          <div class="flex justify-between text-xs">
-            <span class="text-[var(--text-muted)]">{{ r.usedManday }}/{{ r.budgetManday }}</span>
-            <span class="font-medium text-[var(--text-active)]">{{ getProgress(r.usedManday, r.budgetManday) }}%</span>
+        <div class="flex flex-col gap-1 w-full min-w-[120px] py-0.5">
+          <div class="flex items-center justify-between text-xs leading-none">
+            <span class="text-[var(--text-muted)] font-mono text-[0.75rem]">
+              {{ (r.usedManday || 0) | number }} / {{ (r.budgetManday || 0) | number }}
+            </span>
+            <span class="font-semibold text-[var(--text-active)] text-[0.75rem] ml-2 shrink-0">
+              {{ getProgress(r.usedManday, r.budgetManday) }}%
+            </span>
           </div>
-          <div class="w-full h-1.5 bg-[var(--bg)] rounded-full overflow-hidden">
+          <div class="w-full h-1.5 bg-[var(--bg)] border border-[var(--border)] rounded-full overflow-hidden">
             <div
-              class="h-full rounded-full transition-all"
+              class="h-full rounded-full transition-all duration-300"
               [style.width.%]="getProgress(r.usedManday, r.budgetManday)"
-              [style.background]="getProgress(r.usedManday, r.budgetManday) > 80 ? 'var(--crm-danger)' : getProgress(r.usedManday, r.budgetManday) > 50 ? 'var(--crm-warning)' : 'var(--crm-success)'"
+              [style.background]="getProgress(r.usedManday, r.budgetManday) > 80 ? 'var(--crm-danger,#ef4444)' : getProgress(r.usedManday, r.budgetManday) > 50 ? 'var(--crm-warning,#f59e0b)' : 'var(--crm-success,#10b981)'"
             ></div>
           </div>
         </div>

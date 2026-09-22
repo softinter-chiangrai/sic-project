@@ -1,0 +1,47 @@
+/* src/app/core/component/sic-context-switcher/sic-context-switcher.component.css */
+
+.sic-switcher-btn {
+  user-select: none;
+}
+
+.sic-filter-popover {
+  backdrop-filter: blur(14px);
+  box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border);
+}
+
+/* Scrollbar styles for results list */
+.sic-results-list::-webkit-scrollbar,
+.sic-filter-popover div::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sic-results-list::-webkit-scrollbar-track,
+.sic-filter-popover div::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sic-results-list::-webkit-scrollbar-thumb,
+.sic-filter-popover div::-webkit-scrollbar-thumb {
+  background: var(--border, #cbd5e1);
+  border-radius: 9999px;
+}
+
+:where(.dark, .dark *) .sic-results-list::-webkit-scrollbar-thumb,
+:where(.dark, .dark *) .sic-filter-popover div::-webkit-scrollbar-thumb {
+  background: var(--dark-border, #334155);
+}
+
+/* Spin animation */
+.spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}

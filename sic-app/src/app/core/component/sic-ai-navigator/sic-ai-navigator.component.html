@@ -2,7 +2,11 @@
 <button
   type="button"
   class="ai-nav-fab"
-  (click)="toggle()"
+  [class.is-dragging]="isFabDragging()"
+  [style.transform]="fabTransform()"
+  (mousedown)="onFabPointerDown($event)"
+  (touchstart)="onFabTouchStart($event)"
+  (click)="onFabClick($event)"
   [title]="'AI_NAV_FAB_TITLE' | translate"
   [attr.aria-label]="'AI_NAV_FAB_TITLE' | translate"
 >
@@ -273,6 +277,7 @@
         rows="1"
         [placeholder]="'AI_NAV_INPUT_PLACEHOLDER' | translate"
         [(ngModel)]="inputText"
+        (input)="autoResizeTextarea()"
         (keydown.enter)="onEnter($event)"
       ></textarea>
 

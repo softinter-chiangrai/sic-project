@@ -1,53 +1,387 @@
-<div class="relative">
-  <button type="button"
-    class="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-left text-[0.8rem] transition-colors hover:bg-[var(--sidebar-hover)] max-w-[220px] cursor-pointer"
-    (click)="toggle()">
-    <i class="bi bi-folder2-open text-[var(--crm-primary)] flex-shrink-0"></i>
-    <span class="min-w-0 flex-1">
-      @if (currentProjectId()) {
-        <span class="block truncate font-medium text-[var(--text-active)]">{{ currentProjectName() || currentProjectId() }}</span>
-        <span class="block truncate text-[0.7rem] text-[var(--text-muted)]">{{ currentCustomerName() }}</span>
+<div class="relative inline-block">
+  <!-- ── Trigger Button on Navbar ── -->
+  <button
+    type="button"
+    class="sic-switcher-btn flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-1.5 text-left text-[0.82rem] transition-all hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] cursor-pointer max-w-[320px] shadow-sm"
+    [class.border-[var(--crm-primary)]]="isOpen() || hasActiveFilters()"
+    [class.bg-[color-mix(in_srgb,var(--crm-primary)_6%,var(--bg))]]="isOpen() || selectedProjectCount() > 0"
+    (click)="toggle()"
+    [title]="'CONTEXT_SWITCHER_TITLE' | translate"
+  >
+    <!-- Icon -->
+    <div class="flex h-6 w-6 items-center justify-center rounded-lg bg-[color-mix(in_srgb,var(--crm-primary)_15%,transparent)] text-[var(--crm-primary)] flex-shrink-0">
+      <i class="bi bi-funnel-fill text-xs" *ngIf="hasActiveFilters(); else defaultIcon"></i>
+      <ng-template #defaultIcon>
+        <i class="bi bi-folder2-open text-xs"></i>
+      </ng-template>
+    </div>
+
+    <!-- Label & Subtext -->
+    <div class="min-w-0 flex-1 flex flex-col leading-tight">
+      @if (selectedProjectCount() === 1) {
+        <span class="truncate font-semibold text-[var(--text-active)] text-[0.82rem]">
+          {{ currentProjectName() || currentProjectId() }}
+        </span>
+        <span class="truncate text-[0.68rem] text-[var(--text-muted)]">
+          {{ currentCustomerName() || ('CONTEXT_SWITCHER_SELECTED_PROJECT' | translate) }}
+        </span>
+      } @else if (selectedProjectCount() > 1) {
+        <span class="truncate font-semibold text-[var(--text-active)] text-[0.82rem]">
+          {{ selectedProjectCount() }} {{ 'CONTEXT_SWITCHER_PROJECTS_SELECTED' | translate }}
+        </span>
+        <span class="truncate text-[0.68rem] text-[var(--text-muted)]">
+          {{ currentCustomerName() || ('CONTEXT_SWITCHER_PROJECTS_SELECTED' | translate) }}
+        </span>
+      } @else if (currentCustomerId()) {
+        <span class="truncate font-semibold text-[var(--text-active)] text-[0.82rem]">
+          {{ currentCustomerName() }}
+        </span>
+        <span class="truncate text-[0.68rem] text-[var(--crm-primary)]">
+          {{ 'CONTEXT_SWITCHER_CUSTOMER_SELECTED' | translate }}
+        </span>
       } @else {
-        <span class="text-[var(--text-muted)]">{{ 'CONTEXT_SWITCHER_SELECT_PROJECT_TEXT' | translate }}</span>
+        <span class="text-[var(--text-muted)] truncate font-medium text-[0.8rem]">
+          {{ 'CONTEXT_SWITCHER_SELECT_PROMPT' | translate }}
+        </span>
       }
-    </span>
-    <i class="bi bi-chevron-down text-[0.7rem] flex-shrink-0 transition-transform" [class.rotate-180]="isOpen()"></i>
+    </div>
+
+    <!-- Filter Count Badge -->
+    @if (hasActiveFilters()) {
+      <span class="flex h-5 items-center justify-center rounded-full bg-[var(--crm-primary)] px-1.5 text-[0.65rem] font-bold text-white shadow-xs">
+        {{ activeFilterCount() }}
+      </span>
+    }
+
+    <!-- Arrow -->
+    <i class="bi bi-chevron-down text-[0.7rem] text-[var(--text-muted)] flex-shrink-0 transition-transform duration-200" [class.rotate-180]="isOpen()"></i>
   </button>
 
+  <!-- ── Rich Filter & Switcher Popover ── -->
   @if (isOpen()) {
-    <div class="absolute left-0 top-[calc(100%+0.4rem)] z-[1000] w-80 max-w-[90vw] rounded-xl border border-[var(--border)] bg-[var(--bg)] shadow-lg">
-      <div class="border-b border-[var(--border)] p-2">
-        <input type="text" [ngModel]="keyword()" (ngModelChange)="onKeywordChange($event)"
-          [placeholder]="'CONTEXT_SWITCHER_SEARCH_PLACEHOLDER' | translate" autofocus
-          class="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[0.85rem] outline-none focus:border-[var(--crm-primary)]" />
-      </div>
+    <div class="sic-filter-popover fixed top-16 right-4 md:right-6 z-[1000] w-[490px] max-w-[calc(100vw-2rem)] rounded-2xl border border-[var(--border)] bg-[var(--sidebar,#ffffff)] shadow-2xl animate-in fade-in zoom-in-95 duration-150 flex flex-col">
+      
+      <!-- Popover Header -->
+      <div class="flex items-center justify-between border-b border-[var(--border)] px-4 py-3 bg-[color-mix(in_srgb,var(--bg)_50%,var(--sidebar))] rounded-t-2xl">
+        <div class="flex items-center gap-2">
+          <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--crm-primary)] text-white text-xs shadow-xs">
+            <i class="bi bi-sliders2-vertical"></i>
+          </div>
+          <div>
+            <h3 class="text-[0.88rem] font-bold text-[var(--text-active)] m-0 leading-none">{{ 'CONTEXT_SWITCHER_POPOVER_TITLE' | translate }}</h3>
+            <span class="text-[0.7rem] text-[var(--text-muted)]">{{ 'CONTEXT_SWITCHER_POPOVER_SUBTITLE' | translate }}</span>
+          </div>
+        </div>
 
-      <div class="max-h-72 overflow-y-auto p-1">
-        @if (isLoading()) {
-          <div class="px-3 py-4 text-center text-[0.8rem] text-[var(--text-muted)]">{{ 'CONTEXT_SWITCHER_SEARCHING_TEXT' | translate }}</div>
-        } @else if (results().length === 0) {
-          <div class="px-3 py-4 text-center text-[0.8rem] text-[var(--text-muted)]">{{ 'CONTEXT_SWITCHER_NO_PROJECTS_TEXT' | translate }}</div>
-        } @else {
-          @for (project of results(); track project.id) {
-            <button type="button"
-              class="flex w-full flex-col items-start gap-0.5 rounded-lg px-3 py-2 text-left transition-colors hover:bg-[var(--sidebar-hover)] cursor-pointer"
-              [class.bg-[var(--sidebar-hover)]]="project.id === currentProjectId()"
-              (click)="selectProject(project)">
-              <span class="truncate text-[0.85rem] font-medium text-[var(--text-active)]">{{ project.projectName }}</span>
-              <span class="truncate text-[0.72rem] text-[var(--text-muted)]">{{ project.customerName }} · {{ project.projectCode }}</span>
+        <div class="flex items-center gap-2">
+          @if (hasActiveFilters()) {
+            <button
+              type="button"
+              (click)="resetFilters()"
+              class="text-[0.72rem] font-medium text-[var(--crm-danger,#ef4444)] hover:underline cursor-pointer bg-transparent border-none px-1.5 py-1"
+            >
+              <i class="bi bi-arrow-counterclockwise mr-1"></i>{{ 'CONTEXT_SWITCHER_RESET_FILTERS' | translate }}
             </button>
           }
-        }
-      </div>
-
-      @if (currentProjectId()) {
-        <div class="border-t border-[var(--border)] p-2">
-          <button type="button" (click)="clearContext($event)"
-            class="w-full rounded-lg px-3 py-1.5 text-center text-[0.78rem] text-[var(--text-muted)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-danger)] cursor-pointer">
-            {{ 'CONTEXT_SWITCHER_CLEAR_SELECTED_TEXT' | translate }}
+          <button
+            type="button"
+            (click)="close()"
+            class="flex h-7 w-7 items-center justify-center rounded-lg text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] transition-colors border-none bg-transparent cursor-pointer"
+          >
+            <i class="bi bi-x-lg text-xs"></i>
           </button>
         </div>
-      }
+      </div>
+
+      <!-- Popover Body / Controls -->
+      <div class="p-3.5 space-y-3 overflow-y-auto max-h-[72vh]">
+        
+        <!-- Search Keyword Input -->
+        <div class="relative">
+          <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-xs text-[var(--text-muted)] pointer-events-none"></i>
+          <input
+            type="text"
+            [ngModel]="keyword()"
+            (ngModelChange)="onKeywordChange($event)"
+            [placeholder]="'CONTEXT_SWITCHER_SEARCH_PLACEHOLDER' | translate"
+            class="w-full rounded-xl border border-[var(--border)] bg-[var(--bg)] pl-8 pr-8 py-2 text-[0.82rem] text-[var(--text-active)] outline-none focus:border-[var(--crm-primary)] focus:ring-2 focus:ring-[var(--crm-primary)]/15 transition-all"
+          />
+          @if (keyword()) {
+            <button
+              type="button"
+              (click)="onKeywordChange('')"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-active)] bg-transparent border-none cursor-pointer"
+            >
+              <i class="bi bi-x-circle-fill text-xs"></i>
+            </button>
+          }
+        </div>
+
+        <!-- Customer Combobox -->
+        <div class="sic-customer-combobox-wrapper relative flex flex-col gap-1">
+          <label class="text-[0.72rem] font-semibold text-[var(--text-muted)] flex items-center gap-1">
+            <i class="bi bi-building text-[var(--crm-primary)]"></i> {{ 'CONTEXT_SWITCHER_CUSTOMER_LABEL' | translate }}
+          </label>
+          
+          <button
+            type="button"
+            (click)="toggleCustomerDropdown($event)"
+            class="w-full flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-[0.8rem] text-left transition-all hover:border-[var(--crm-primary)] cursor-pointer"
+            [class.border-[var(--crm-primary)]]="isCustomerDropdownOpen()"
+          >
+            <span class="truncate text-[var(--text-active)] font-medium">
+              {{ selectedCustomerLabel() }}
+            </span>
+            <div class="flex items-center gap-1 shrink-0 ml-1">
+              @if (selectedCustomerId()) {
+                <span
+                  role="button"
+                  tabindex="0"
+                  (click)="$event.stopPropagation(); selectCustomerOption('')"
+                  class="text-[var(--text-muted)] hover:text-[var(--crm-danger,#ef4444)] p-0.5"
+                >
+                  <i class="bi bi-x-lg text-[0.7rem]"></i>
+                </span>
+              }
+              <i class="bi bi-chevron-down text-[0.65rem] text-[var(--text-muted)] transition-transform" [class.rotate-180]="isCustomerDropdownOpen()"></i>
+            </div>
+          </button>
+
+          <!-- Customer Dropdown Panel -->
+          @if (isCustomerDropdownOpen()) {
+            <div class="absolute top-full left-0 right-0 z-50 mt-1 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100 flex flex-col max-h-56">
+              <!-- Search input inside dropdown -->
+              <div class="p-2 border-b border-[var(--border)] bg-[var(--bg)]">
+                <input
+                  type="text"
+                  [ngModel]="customerSearchTerm()"
+                  (ngModelChange)="customerSearchTerm.set($event)"
+                  [placeholder]="'CONTEXT_SWITCHER_CUSTOMER_SEARCH_PLACEHOLDER' | translate"
+                  class="w-full rounded-lg border border-[var(--border)] bg-[var(--sidebar)] px-2.5 py-1 text-[0.78rem] text-[var(--text-active)] outline-none focus:border-[var(--crm-primary)]"
+                  (click)="$event.stopPropagation()"
+                  autofocus
+                />
+              </div>
+
+              <!-- Customer Items List -->
+              <div class="overflow-y-auto p-1 space-y-0.5">
+                @if (filteredCustomers().length === 0) {
+                  <div class="p-3 text-center text-[0.75rem] text-[var(--text-muted)]">{{ 'CONTEXT_SWITCHER_CUSTOMER_NOT_FOUND' | translate }}</div>
+                }
+
+                @for (cust of filteredCustomers(); track cust.id) {
+                  <button
+                    type="button"
+                    (click)="selectCustomerOption(cust.id || '')"
+                    class="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-left text-[0.78rem] transition-colors hover:bg-[var(--sidebar-hover)] cursor-pointer border-none bg-transparent"
+                    [class.bg-[color-mix(in_srgb,var(--crm-primary)_10%,transparent)]]="selectedCustomerId() === cust.id"
+                    [class.text-[var(--crm-primary)]]="selectedCustomerId() === cust.id"
+                  >
+                    <div class="truncate min-w-0 pr-2">
+                      <span class="font-medium text-[var(--text-active)] block truncate">{{ getCustomerDisplayName(cust) }}</span>
+                      <span class="text-[0.68rem] text-[var(--text-muted)] font-mono">{{ cust.customerCode }}</span>
+                    </div>
+                    <i class="bi bi-check2 text-xs shrink-0" *ngIf="selectedCustomerId() === cust.id"></i>
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </div>
+
+        <!-- Status Filter Chips -->
+        <div class="flex flex-col gap-1.5 pt-1">
+          <label class="text-[0.72rem] font-semibold text-[var(--text-muted)] flex items-center gap-1">
+            <i class="bi bi-tag text-[var(--crm-primary)]"></i> {{ 'CONTEXT_SWITCHER_STATUS_LABEL' | translate }}
+          </label>
+          <div class="flex flex-wrap gap-1.5">
+            @for (opt of statusOptions; track opt.id) {
+              <button
+                type="button"
+                (click)="onStatusChange(opt.id)"
+                class="flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[0.74rem] font-medium transition-all cursor-pointer"
+                [class.border-[var(--crm-primary)]]="selectedStatus() === opt.id"
+                [class.bg-[var(--crm-primary)]]="selectedStatus() === opt.id"
+                [class.text-white]="selectedStatus() === opt.id"
+                [class.border-[var(--border)]]="selectedStatus() !== opt.id"
+                [class.bg-[var(--bg)]]="selectedStatus() !== opt.id"
+                [class.text-[var(--text)]]="selectedStatus() !== opt.id"
+                [class.hover:bg-[var(--sidebar-hover)]]="selectedStatus() !== opt.id"
+              >
+                <span
+                  class="h-1.5 w-1.5 rounded-full"
+                  [class]="selectedStatus() === opt.id ? 'bg-white' : opt.dotColor"
+                ></span>
+                <span>{{ opt.labelKey | translate }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Priority Filter Chips -->
+        <div class="flex flex-col gap-1.5 pt-1">
+          <label class="text-[0.72rem] font-semibold text-[var(--text-muted)] flex items-center gap-1">
+            <i class="bi bi-lightning-charge text-[var(--crm-primary)]"></i> {{ 'CONTEXT_SWITCHER_PRIORITY_LABEL' | translate }}
+          </label>
+          <div class="flex flex-wrap gap-1.5">
+            @for (p of priorityOptions; track p.id) {
+              <button
+                type="button"
+                (click)="onPriorityChange(p.id)"
+                class="flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-[0.74rem] font-medium transition-all cursor-pointer"
+                [class.border-[var(--crm-primary)]]="selectedPriority() === p.id"
+                [class.bg-[var(--crm-primary)]]="selectedPriority() === p.id"
+                [class.text-white]="selectedPriority() === p.id"
+                [class.border-[var(--border)]]="selectedPriority() !== p.id"
+                [class.bg-[var(--bg)]]="selectedPriority() !== p.id"
+                [class.text-[var(--text)]]="selectedPriority() !== p.id"
+                [class.hover:bg-[var(--sidebar-hover)]]="selectedPriority() !== p.id"
+              >
+                <i
+                  class="bi text-[0.75rem]"
+                  [class]="p.icon"
+                  [class.text-white]="selectedPriority() === p.id"
+                  [class]="selectedPriority() !== p.id ? p.colorClass : ''"
+                ></i>
+                <span>{{ p.labelKey | translate }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+        <!-- Matching Projects Results List (Multi-Select Tick Cards) -->
+        <div class="pt-2.5 border-t border-[var(--border)]">
+          <div class="flex items-center justify-between pb-2">
+            <div class="flex items-center gap-1.5">
+              <span class="text-[0.72rem] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                <i class="bi bi-folder-fill text-[var(--crm-primary)]"></i>
+                {{ 'CONTEXT_SWITCHER_MATCHING_PROJECTS' | translate }} ({{ matchingProjects().length }})
+              </span>
+              @if (selectedProjectCount() > 0) {
+                <span class="rounded-full bg-[var(--crm-primary)]/15 px-2 py-0.2 text-[0.68rem] font-bold text-[var(--crm-primary)]">
+                  {{ selectedProjectCount() }} {{ 'CONTEXT_SWITCHER_PROJECTS_SELECTED' | translate }}
+                </span>
+              }
+            </div>
+
+            <div class="flex items-center gap-2">
+              @if (matchingProjects().length > 0) {
+                <button
+                  type="button"
+                  (click)="toggleSelectAllProjects()"
+                  class="text-[0.72rem] font-semibold text-[var(--crm-primary)] hover:underline cursor-pointer bg-transparent border-none p-0 flex items-center gap-1"
+                >
+                  <i class="bi" [class.bi-check-all]="!isAllProjectsSelected()" [class.bi-dash-square]="isAllProjectsSelected()"></i>
+                  {{ (isAllProjectsSelected() ? 'CONTEXT_SWITCHER_UNSELECT_ALL' : 'CONTEXT_SWITCHER_SELECT_ALL') | translate }}
+                </button>
+              }
+              @if (isLoadingProjects()) {
+                <span class="text-[0.7rem] text-[var(--crm-primary)] animate-pulse">
+                  <i class="bi bi-arrow-repeat spin"></i> {{ 'CONTEXT_SWITCHER_LOADING_PROJECTS' | translate }}
+                </span>
+              }
+            </div>
+          </div>
+
+          <div class="sic-results-list space-y-1.5 max-h-52 overflow-y-auto pr-1">
+            @if (isLoadingProjects() && matchingProjects().length === 0) {
+              <div class="p-6 text-center text-[0.8rem] text-[var(--text-muted)]">
+                <i class="bi bi-hourglass-split text-lg mb-1 block"></i>
+                {{ 'CONTEXT_SWITCHER_LOADING_PROJECTS' | translate }}
+              </div>
+            } @else if (matchingProjects().length === 0) {
+              <div class="p-6 text-center text-[0.8rem] text-[var(--text-muted)] rounded-xl border border-dashed border-[var(--border)] bg-[var(--bg)]">
+                <i class="bi bi-folder-x text-2xl mb-1 block opacity-40"></i>
+                {{ 'CONTEXT_SWITCHER_NO_MATCHING_PROJECTS' | translate }}
+              </div>
+            } @else {
+              @for (proj of matchingProjects(); track proj.id) {
+                <div
+                  (click)="toggleProject(proj)"
+                  class="w-full flex items-center justify-between gap-3 p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] transition-all text-left cursor-pointer group select-none"
+                  [class.border-[var(--crm-primary)]]="isProjectSelected(proj.id)"
+                  [class.bg-[color-mix(in_srgb,var(--crm-primary)_8%,var(--bg))]]="isProjectSelected(proj.id)"
+                >
+                  <!-- Checkbox on left -->
+                  <div
+                    class="flex h-5 w-5 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--sidebar)] transition-all flex-shrink-0 group-hover:border-[var(--crm-primary)]"
+                    [class.bg-[var(--crm-primary)]]="isProjectSelected(proj.id)"
+                    [class.border-[var(--crm-primary)]]="isProjectSelected(proj.id)"
+                  >
+                    <i class="bi bi-check-lg text-xs text-white font-bold" *ngIf="isProjectSelected(proj.id)"></i>
+                  </div>
+
+                  <!-- Project Info -->
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5">
+                      <span class="font-bold text-[0.84rem] text-[var(--text-active)] truncate group-hover:text-[var(--crm-primary)]">
+                        {{ proj.projectName }}
+                      </span>
+                      <span class="rounded bg-[var(--border)] px-1.5 py-0.5 text-[0.65rem] font-mono font-semibold text-[var(--text-muted)] shrink-0">
+                        {{ proj.projectCode }}
+                      </span>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1 text-[0.72rem] text-[var(--text-muted)] truncate">
+                      <span><i class="bi bi-building"></i> {{ proj.customerName }}</span>
+                      @if (proj.status) {
+                        <span>•</span>
+                        <span class="rounded-md border px-1.5 py-0.2 text-[0.65rem]" [class]="getStatusBadgeClass(proj.status)">
+                          {{ getStatusLabelKey(proj.status) | translate }}
+                        </span>
+                      }
+                      @if (proj.priority) {
+                        <span>•</span>
+                        <span class="flex items-center gap-0.5 text-[0.68rem]">
+                          <i class="bi text-[0.7rem]" [class]="getPriorityBadge(proj.priority).icon" [ngClass]="getPriorityBadge(proj.priority).color"></i>
+                          <span>{{ getPriorityBadge(proj.priority).labelKey | translate }}</span>
+                        </span>
+                      }
+                    </div>
+                  </div>
+
+                  <!-- Right Tag for Selected -->
+                  @if (isProjectSelected(proj.id)) {
+                    <div class="shrink-0 flex items-center">
+                      <span class="rounded-full bg-[var(--crm-primary)] px-2 py-0.5 text-[0.65rem] font-bold text-white shadow-xs">
+                        {{ 'CONTEXT_SWITCHER_CURRENT' | translate }}
+                      </span>
+                    </div>
+                  }
+                </div>
+              }
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Popover Footer (No Apply button, instant selection) -->
+      <div class="flex items-center justify-between border-t border-[var(--border)] p-3 bg-[color-mix(in_srgb,var(--bg)_60%,var(--sidebar))] rounded-b-2xl gap-3">
+        @if (currentCustomerId() || selectedProjectCount() > 0 || hasActiveFilters()) {
+          <button
+            type="button"
+            (click)="clearContext($event)"
+            class="flex items-center gap-1.5 text-[0.75rem] font-medium text-[var(--text-muted)] hover:text-[var(--crm-danger,#ef4444)] transition-colors bg-transparent border-none cursor-pointer whitespace-nowrap"
+          >
+            <i class="bi bi-x-circle"></i>
+            {{ 'CONTEXT_SWITCHER_CLEAR_CONTEXT' | translate }}
+          </button>
+        } @else {
+          <div></div>
+        }
+
+        <div class="flex items-center gap-2 shrink-0">
+          <button
+            type="button"
+            (click)="close()"
+            class="rounded-xl border border-[var(--border)] bg-[var(--bg)] px-4 py-1.5 text-[0.78rem] font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer whitespace-nowrap shadow-xs"
+          >
+            {{ 'CONTEXT_SWITCHER_CLOSE' | translate }}
+          </button>
+        </div>
+      </div>
+
     </div>
   }
 </div>
+

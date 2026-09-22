@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { Router, RouterModule, ActivatedRoute } from '@angular/router';
 import { skip } from 'rxjs';
 
@@ -62,7 +62,33 @@ export class Pmdt19Component implements OnInit {
     ];
   }
 
-  filteredVersions = signal<DocumentVersionModel[]>([]);
+  // ===== Navbar context filter (client-side) =====
+  // The resolver/loadVersions now always fetch ALL projects' versions; the navbar
+  // project-context selection filters what's shown, client-side, exactly like pmdt01.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+
+  filteredVersions = computed(() => {
+    const term = (this.filterDocId() || '').trim().toLowerCase();
+    let list = this.versions();
+
+    if (term) {
+      list = list.filter((v) =>
+        (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
+        (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
+        (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
+        (v.documentId && v.documentId.toLowerCase().includes(term)) ||
+        (v.createdBy && v.createdBy.toLowerCase().includes(term))
+      );
+    }
+
+    const ids = this.selectedProjectIds();
+    if (ids && ids.length > 0) {
+      const idSet = new Set(ids);
+      list = list.filter((v) => v.projectId && idSet.has(v.projectId));
+    }
+
+    return list;
+  });
 
   // ===== Pagination State =====
   currentPage = signal(0);
@@ -104,6 +130,20 @@ export class Pmdt19Component implements OnInit {
     grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
   }
 
+  constructor() {
+    // Keep the grid in sync whenever the navbar project selection changes,
+    // without refetching from the server.
+    effect(() => {
+      this.selectedProjectIds();
+      if (!this.gridRef) return;
+      if (this.gridRef.currentPage === 1) {
+        this.gridRef.reload();
+      } else {
+        this.gridRef.goToPage(1);
+      }
+    });
+  }
+
   ngOnInit(): void {
     // Initial data comes from the resolver (real service call) — no fetch here.
     const page = this.route.snapshot.data['pageData'] as Pmdt19PageData;
@@ -113,29 +153,41 @@ export class Pmdt19Component implements OnInit {
     this.versions.set(page.items || []);
     this.applyFilter();
 
-    // Subsequent navigations to the same route instance (e.g. query param changes)
-    // are handled reactively; skip(1) avoids re-fetching the data the resolver already loaded.
+    // Subsequent navigations to the same route instance (e.g. documentType/documentId
+    // query param changes) are handled reactively; skip(1) avoids re-fetching the data
+    // the resolver already loaded. projectId is kept only to preselect the project when
+    // creating a new version from context / for goBack() — it no longer triggers a
+    // server refetch (the navbar context-switcher filters client-side instead).
     this.route.queryParams.pipe(skip(1)).subscribe((params) => {
       const projectId = params['projectId'] || null;
       this.activeProjectId.set(projectId);
 
       const qType = params['documentType'];
       const qId = params['documentId'];
-      if (qType) this.filterType.set(qType);
-      if (qId) this.filterDocId.set(qId);
+      let needsReload = false;
+      if (qType && qType !== this.filterType()) {
+        this.filterType.set(qType);
+        needsReload = true;
+      }
+      if (qId && qId !== this.filterDocId()) {
+        this.filterDocId.set(qId);
+        needsReload = true;
+      }
 
-      this.loadVersions();
+      if (needsReload) {
+        this.loadVersions();
+      }
     });
   }
 
   loadVersions(): void {
-    const projectId = this.activeProjectId() || undefined;
-
     this.isLoading.set(true);
     const docType = this.filterType();
     const docId = this.filterDocId() || undefined;
 
-    this.service.getVersions(docType, docId, projectId).subscribe({
+    // Always fetch ALL projects' versions; the navbar context-switcher filters
+    // client-side via filteredVersions().
+    this.service.getVersions(docType, docId).subscribe({
       next: (list) => {
         this.versions.set(list || []);
         this.applyFilter();
@@ -149,19 +201,6 @@ export class Pmdt19Component implements OnInit {
 
   applyFilter(): void {
     this.currentPage.set(0);
-    const term = (this.filterDocId() || '').trim().toLowerCase();
-    if (!term) {
-      this.filteredVersions.set(this.versions());
-    } else {
-      const filtered = this.versions().filter((v) =>
-        (v.documentCode && v.documentCode.toLowerCase().includes(term)) ||
-        (v.versionNo && v.versionNo.toLowerCase().includes(term)) ||
-        (v.changeSummary && v.changeSummary.toLowerCase().includes(term)) ||
-        (v.documentId && v.documentId.toLowerCase().includes(term)) ||
-        (v.createdBy && v.createdBy.toLowerCase().includes(term))
-      );
-      this.filteredVersions.set(filtered);
-    }
     if (this.gridRef?.currentPage === 1) {
       this.gridRef?.reload();
     } else {

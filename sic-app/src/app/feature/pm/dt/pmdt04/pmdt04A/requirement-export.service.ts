@@ -5,18 +5,21 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, lastValueFrom } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { RequirementModel } from './pmdt04A.model';
+import { LanguageService } from '../../../../../core/services/language.service';
 
 @Injectable({
   providedIn: 'root',
 })
 export class RequirementExportService {
   private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
   private apiBaseUrl = environment.apiBaseUrl;
 
 
   async exportRequirement(data: RequirementModel, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
     // POST /api/pm/requirement/export
-    const url = `${this.apiBaseUrl}/api/pm/requirement/export`;
+    const lang = this.languageService.getCurrentLanguage();
+    const url = `${this.apiBaseUrl}/api/pm/requirement/export?lang=${lang}`;
 
     const payload = {
       requirementId: data.id,
@@ -46,7 +49,8 @@ export class RequirementExportService {
    */
   async exportWithJasper(requirementId: string, format: 'pdf' | 'docx' | 'html'): Promise<Blob> {
     // GET /api/pm/requirement/{id}/export?format=pdf
-    const url = `${this.apiBaseUrl}/api/pm/requirement/${requirementId}/export?format=${format}`;
+    const lang = this.languageService.getCurrentLanguage();
+    const url = `${this.apiBaseUrl}/api/pm/requirement/${requirementId}/export?format=${format}&lang=${lang}`;
     
     const response = await lastValueFrom(
       this.http.get(url, {

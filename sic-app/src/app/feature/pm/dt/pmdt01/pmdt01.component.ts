@@ -1,6 +1,6 @@
 // src/app/feature/pm/dt/pmdt01/pmdt01.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -26,9 +26,21 @@ export class Pmdt01Component implements OnInit {
   private recentItems = inject(RecentItemsService);
   private translate = inject(TranslateService);
 
+  // Kept for "create/edit phase" navigation context only — no longer used to filter the loaded list.
   projectId = signal<string>('');
   phases = signal<PhaseModel[]>([]);
   isLoading = signal(false);
+
+  // ===== Navbar context filter (client-side) =====
+  // Always load ALL phases of ALL projects; the navbar project-context selection filters what's shown.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  readonly filteredPhases = computed(() => {
+    const ids = this.selectedProjectIds();
+    const all = this.phases();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((p) => idSet.has(p.projectId));
+  });
 
   // ===== Quick View Drawer =====
   showDrawer = signal(false);
@@ -43,17 +55,14 @@ export class Pmdt01Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
-      const pid = params['projectId'] || '';
-      this.projectId.set(pid);
-      if (!resolved || !Array.isArray(resolved)) {
-        this.loadPhases();
-      }
+      // projectId is kept only to preselect the project when creating a new phase from context.
+      this.projectId.set(params['projectId'] || '');
     });
   }
 
   loadPhases() {
     this.isLoading.set(true);
-    this.phaseService.getPhases(this.projectId() || undefined).subscribe({
+    this.phaseService.getPhases().subscribe({
       next: (data) => this.phases.set(data),
       error: (err) => {
         console.error(err);

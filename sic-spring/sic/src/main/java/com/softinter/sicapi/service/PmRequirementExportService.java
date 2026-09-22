@@ -11,5 +11,9 @@ public interface PmRequirementExportService {
      * @param businessId Business UUID (for security scope)
      * @return PDF bytes
      */
-    byte[] exportRequirementPdf(UUID id, UUID businessId);
+    byte[] exportRequirementPdf(UUID id, UUID businessId, String lang);
+
+    default byte[] exportRequirementPdf(UUID id, UUID businessId) {
+        return exportRequirementPdf(id, businessId, "th");
+    }
 }
