@@ -58,7 +58,8 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   }
 
   onCountryChange(event: any): void {
-    this.formData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
+    const supportLocal = !!event?.supportLocalAddress;
+    this.formData.formGroup.get('supportLocalAddress')?.setValue(supportLocal);
     this.formData.formGroup.get('provinceId')?.setValue(null);
     this.formData.formGroup.get('districtId')?.setValue(null);
     this.formData.formGroup.get('subDistrictId')?.setValue(null); 
@@ -77,7 +78,7 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   }
 
   onSubDistrictChange(event: any): void {
-    this.formData.formGroup.get('zipCode')?.setValue(event.zipCode);// You can add any logic here if needed when the sub-district changes 
+    this.formData.formGroup.get('zipCode')?.setValue(event?.zipCode ?? null);
   }
 
   submit() {

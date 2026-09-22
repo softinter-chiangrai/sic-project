@@ -83,7 +83,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         }
 
         var data = countryPage.getContent().stream()
-                .map(c -> new LovResponse(c.getId(), LocalizationHelper.getCountryName(c))) // ✅
+                .map(c -> new LovResponse(c.getId(), LocalizationHelper.getCountryName(c), c.getSupportLocalAddress())) // ✅
                 .collect(Collectors.toList());
 
         return PaginationUtil.of(data, page, size, countryPage.getTotalElements());
@@ -122,10 +122,18 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbDistrict> districtPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            districtPage = districtRepository.findByProvinceIdAndIsActiveTrueAndDistrictNameEnContainingIgnoreCase(
-                    provinceId, keyword, pageable);
+            if (provinceId != null) {
+                districtPage = districtRepository.findByProvinceIdAndIsActiveTrueAndDistrictNameEnContainingIgnoreCase(
+                        provinceId, keyword, pageable);
+            } else {
+                districtPage = districtRepository.findByIsActiveTrueAndDistrictNameEnContainingIgnoreCase(keyword, pageable);
+            }
         } else {
-            districtPage = districtRepository.findByProvinceIdAndIsActiveTrue(provinceId, pageable);
+            if (provinceId != null) {
+                districtPage = districtRepository.findByProvinceIdAndIsActiveTrue(provinceId, pageable);
+            } else {
+                districtPage = districtRepository.findByIsActiveTrue(pageable);
+            }
         }
 
         var data = districtPage.getContent().stream()
@@ -141,14 +149,22 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbSubDistrict> subDistrictPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(
-                    districtId, keyword, pageable);
+            if (districtId != null) {
+                subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(
+                        districtId, keyword, pageable);
+            } else {
+                subDistrictPage = subDistrictRepository.findByIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(keyword, pageable);
+            }
         } else {
-            subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrue(districtId, pageable);
+            if (districtId != null) {
+                subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrue(districtId, pageable);
+            } else {
+                subDistrictPage = subDistrictRepository.findByIsActiveTrue(pageable);
+            }
         }
 
         var data = subDistrictPage.getContent().stream()
-                .map(s -> new LovResponse(s.getId(), LocalizationHelper.getSubDistrictName(s))) // ✅
+                .map(s -> new LovResponse(s.getId(), LocalizationHelper.getSubDistrictName(s), s.getZipCode())) // ✅
                 .collect(Collectors.toList());
 
         return PaginationUtil.of(data, page, size, subDistrictPage.getTotalElements());
@@ -168,7 +184,7 @@ public class ComboboxServiceImpl implements ComboboxService {
     @Override
     public LovResponse getCountryById(UUID id, String lang) {
         return countryRepository.findById(id)
-                .map(c -> new LovResponse(c.getId(), LocalizationHelper.getCountryName(c)))
+                .map(c -> new LovResponse(c.getId(), LocalizationHelper.getCountryName(c), c.getSupportLocalAddress()))
                 .orElse(null);
     }
 
@@ -189,7 +205,7 @@ public class ComboboxServiceImpl implements ComboboxService {
     @Override
     public LovResponse getSubDistrictById(UUID id, String lang) {
         return subDistrictRepository.findById(id)
-                .map(s -> new LovResponse(s.getId(), LocalizationHelper.getSubDistrictName(s)))
+                .map(s -> new LovResponse(s.getId(), LocalizationHelper.getSubDistrictName(s), s.getZipCode()))
                 .orElse(null);
     }
 
@@ -244,7 +260,8 @@ public class ComboboxServiceImpl implements ComboboxService {
         return countries.stream()
                 .map(c -> new LovResponse(
                         c.getId().toString(),
-                        LocalizationHelper.getCountryName(c) // ✅
+                        LocalizationHelper.getCountryName(c),
+                        c.getSupportLocalAddress()
                 ))
                 .collect(Collectors.toList());
     }
@@ -304,7 +321,8 @@ public class ComboboxServiceImpl implements ComboboxService {
         return subDistricts.stream()
                 .map(s -> new LovResponse(
                         s.getId().toString(),
-                        LocalizationHelper.getSubDistrictName(s) 
+                        LocalizationHelper.getSubDistrictName(s),
+                        s.getZipCode()
                 ))
                 .collect(Collectors.toList());
     }

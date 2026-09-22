@@ -1,0 +1,28 @@
+flowchart LR
+  user[ผู้ใช้งานระบบ<br/>PM / SA / Developer / Tester / Admin]
+  customer[ลูกค้า / ผู้เกี่ยวข้อง]
+  keycloak[Keycloak<br/>Authentication Server]
+  ai[AI Provider<br/>Gemini / Claude]
+  report[Report Service]
+
+  p0([0<br/>SIC Project Management System])
+
+  user -->|ข้อมูลเข้าสู่ระบบ / คำขอจัดการงานโครงการ| p0
+  p0 -->|ผลการเข้าสู่ระบบ / ข้อมูลโครงการ / เอกสาร / แจ้งเตือน| user
+
+  customer -->|ข้อมูลลูกค้า / Requirement / ข้อมูลสัญญา / Sign-off| p0
+  p0 -->|สถานะโครงการ / เอกสารส่งมอบ / ใบแจ้งหนี้| customer
+
+  p0 -->|ข้อมูลตรวจสอบตัวตน| keycloak
+  keycloak -->|Token / สิทธิ์การใช้งาน| p0
+
+  p0 -->|Prompt สำหรับสร้างเอกสารและ Diagram| ai
+  ai -->|ผลลัพธ์ที่สร้างจาก AI| p0
+
+  p0 -->|คำขอสร้างรายงาน PDF| report
+  report -->|ไฟล์รายงาน| p0
+
+  classDef entity fill:#fff2a8,stroke:#111,stroke-width:1px,color:#111;
+  classDef process fill:#fff2a8,stroke:#111,stroke-width:1px,color:#111;
+  class user,customer,keycloak,ai,report entity;
+  class p0 process;

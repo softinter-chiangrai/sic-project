@@ -57,7 +57,8 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   
 
   onCountryChange(event: any): void {
-    this.formBusinessData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
+    const supportLocal = !!event?.supportLocalAddress;
+    this.formBusinessData.formGroup.get('supportLocalAddress')?.setValue(supportLocal);
     this.formBusinessData.formGroup.get('provinceId')?.setValue(null);
     this.formBusinessData.formGroup.get('districtId')?.setValue(null);
     this.formBusinessData.formGroup.get('subDistrictId')?.setValue(null); 
@@ -76,7 +77,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   }
 
   onSubDistrictChange(event: any): void {
-    this.formBusinessData.formGroup.get('zipCode')?.setValue(event.zipCode);// You can add any logic here if needed when the sub-district changes 
+    this.formBusinessData.formGroup.get('zipCode')?.setValue(event?.zipCode ?? null);
   }
   
   onBack(): void {

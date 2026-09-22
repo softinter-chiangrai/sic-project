@@ -73,7 +73,8 @@ export class Profile implements OnInit {
   }
 
   onCountryChange(event: any): void {
-    this.formProfileData.formGroup.get('supportLocalAddress')?.setValue(event.supportLocalAddress);
+    const supportLocal = !!event?.supportLocalAddress;
+    this.formProfileData.formGroup.get('supportLocalAddress')?.setValue(supportLocal);
     this.formProfileData.formGroup.get('provinceId')?.setValue(null);
     this.formProfileData.formGroup.get('districtId')?.setValue(null);
     this.formProfileData.formGroup.get('subDistrictId')?.setValue(null);
@@ -92,7 +93,7 @@ export class Profile implements OnInit {
   }
 
   onSubDistrictChange(event: any): void {
-    this.formProfileData.formGroup.get('zipCode')?.setValue(event.zipCode);
+    this.formProfileData.formGroup.get('zipCode')?.setValue(event?.zipCode ?? null);
   }
 
   verifyEmail(): void {

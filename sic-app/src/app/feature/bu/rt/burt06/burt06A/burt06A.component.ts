@@ -81,6 +81,10 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     this.formData = page.flowData;
     this.isEdit = page.isEdit;
     this.flowId = this.route.snapshot.paramMap.get('id');
+    const docTypeQuery = this.route.snapshot.queryParamMap.get('documentType');
+    if (!this.isEdit && docTypeQuery && !this.form.get('documentType')?.value) {
+      this.form.get('documentType')?.setValue(docTypeQuery);
+    }
   }
 
   timeoutActionOptions: { value: string; text: string }[] = [];

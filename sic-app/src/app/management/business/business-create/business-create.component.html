@@ -69,21 +69,47 @@
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
         <sic-input-area [label]="'BUSINESS_CREATE_ADDRESS_LOCAL_LABEL' | translate" formControlName="addressLocal"></sic-input-area>
       </div>
-      @if(data1.formGroup.get('supportLocalAddress')?.value) {
+      <!-- Province / District / Sub-District / Zip Code (Only for Thailand / Local Address) -->
+      @if (data1.formGroup.get('supportLocalAddress')?.value) {
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox [label]="'BUSINESS_CREATE_PROVINCE_LABEL' | translate" formControlName="provinceId" [apiUrl]="service.apiGetComboboxProvince" [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }" (selectionChanged)="onProvinceChange($event)">
+          <sic-combobox
+            [label]="'BUSINESS_CREATE_PROVINCE_LABEL' | translate"
+            formControlName="provinceId"
+            [placeholder]="'BUSINESS_CREATE_PROVINCE_PLACEHOLDER' | translate"
+            [apiUrl]="service.apiGetComboboxProvince"
+            [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }"
+            (selectionChanged)="onProvinceChange($event)"
+          >
           </sic-combobox>
         </div>
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox [label]="'BUSINESS_CREATE_DISTRICT_LABEL' | translate" formControlName="districtId" [apiUrl]="service.apiGetComboboxDistrict" [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }" (selectionChanged)="onDistrictChange($event)">
+          <sic-combobox
+            [label]="'BUSINESS_CREATE_DISTRICT_LABEL' | translate"
+            formControlName="districtId"
+            [placeholder]="'BUSINESS_CREATE_DISTRICT_PLACEHOLDER' | translate"
+            [apiUrl]="service.apiGetComboboxDistrict"
+            [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }"
+            (selectionChanged)="onDistrictChange($event)"
+          >
           </sic-combobox>
         </div>
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-combobox [label]="'BUSINESS_CREATE_SUBDISTRICT_LABEL' | translate" formControlName="subDistrictId" [apiUrl]="service.apiGetComboboxSubDistrict" [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }" (selectionChanged)="onSubDistrictChange($event)">
+          <sic-combobox
+            [label]="'BUSINESS_CREATE_SUBDISTRICT_LABEL' | translate"
+            formControlName="subDistrictId"
+            [placeholder]="'BUSINESS_CREATE_SUBDISTRICT_PLACEHOLDER' | translate"
+            [apiUrl]="service.apiGetComboboxSubDistrict"
+            [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }"
+            (selectionChanged)="onSubDistrictChange($event)"
+          >
           </sic-combobox>
         </div>
         <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">
-          <sic-input [label]="'BUSINESS_CREATE_ZIPCODE_LABEL' | translate" formControlName="zipCode"></sic-input>
+          <sic-input
+            [label]="'BUSINESS_CREATE_ZIPCODE_LABEL' | translate"
+            formControlName="zipCode"
+            placeholder="10110"
+          ></sic-input>
         </div>
       }
       <div class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3">

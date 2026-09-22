@@ -117,7 +117,7 @@ public class ComboboxController {
     @GetMapping("/combobox-sub-district")
     @Operation(summary = "Get sub-districts by districtId with pagination")
     public ResponseEntity<PaginationResponse<LovResponse>> getSubDistricts(
-            @RequestParam UUID districtId,
+            @RequestParam(required = false) UUID districtId,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) UUID value,
             @RequestParam(name = "pageNumber", defaultValue = "1") int pageNumber,

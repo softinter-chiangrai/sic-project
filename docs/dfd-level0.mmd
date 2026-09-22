@@ -1,0 +1,29 @@
+flowchart LR
+  user[ผู้ใช้งานระบบ<br/>PM / SA / Dev / Tester / Admin]
+  customer[ลูกค้า / ผู้เกี่ยวข้องภายนอก]
+  keycloak[Keycloak<br/>Identity Provider]
+  ai[AI Provider<br/>Gemini / Claude]
+  report[Report Service]
+
+  sic((0<br/>SIC Project Management System))
+
+  db[(PostgreSQL<br/>SIC Application Data)]
+  object[(SeaweedFS / S3<br/>File & Document Storage)]
+
+  user -->|เข้าสู่ระบบ, จัดการโปรเจกต์, เอกสาร, งาน, อนุมัติ| sic
+  sic -->|หน้าจอ, ข้อมูลโปรเจกต์, รายงาน, แจ้งเตือน| user
+
+  customer -->|ข้อมูลลูกค้า, สัญญา, requirement, sign-off| sic
+  sic -->|เอกสาร, สถานะงาน, delivery, invoice| customer
+
+  sic -->|ตรวจสอบ token / profile| keycloak
+  keycloak -->|JWT / ข้อมูลสิทธิ์| sic
+
+  sic -->|คำขอสร้าง requirement, DFD, spec, test, draft| ai
+  ai -->|ผลลัพธ์ที่ AI สร้าง| sic
+
+  sic -->|คำขอสร้าง PDF / รายงาน| report
+  report -->|ไฟล์รายงาน| sic
+
+  sic <-->|อ่าน/บันทึกข้อมูลธุรกิจและโปรเจกต์| db
+  sic <-->|อัปโหลด/ดาวน์โหลดไฟล์แนบและเอกสาร| object

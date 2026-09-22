@@ -218,6 +218,12 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     this.cdr.detectChanges();
   }
 
+  goToCreateApprovalFlow(): void {
+    this.router.navigate(['/feature/bu/approval-flow/new'], {
+      queryParams: { documentType: 'PROJECT' },
+    });
+  }
+
   loadApprovalFlowForProject(prjId: string) {
     this.approvalService.getDocumentStatus('PROJECT', prjId).subscribe({
       next: (approval) => {

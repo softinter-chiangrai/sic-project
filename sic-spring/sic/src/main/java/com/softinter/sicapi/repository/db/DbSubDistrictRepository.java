@@ -15,7 +15,9 @@ import com.softinter.sicapi.entity.db.DbSubDistrict;
 
 @Repository
 public interface DbSubDistrictRepository extends JpaRepository<DbSubDistrict, UUID>, JpaSpecificationExecutor<DbSubDistrict> {
+    Page<DbSubDistrict> findByIsActiveTrue(Pageable pageable);
     Page<DbSubDistrict> findByDistrictIdAndIsActiveTrue(UUID districtId, Pageable pageable);
+    Page<DbSubDistrict> findByIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(String keyword, Pageable pageable);
     Page<DbSubDistrict> findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(UUID districtId, String keyword, Pageable pageable);
     
     @Query("SELECT s FROM DbSubDistrict s " +

@@ -114,7 +114,7 @@
         <sic-input-area [label]="'PROFILE_ADDRESS_LOCAL_LABEL' | translate" formControlName="addressLocal"></sic-input-area>
       </div>
 
-      <!-- Local Address -->
+      <!-- Province / District / Sub-District / Zip Code (Only for Thailand / Local Address) -->
       @if (data1.formGroup.get('supportLocalAddress')?.value) {
         <div
           class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
@@ -122,6 +122,7 @@
           <sic-combobox
             [label]="'PROFILE_PROVINCE_LABEL' | translate"
             formControlName="provinceId"
+            [placeholder]="'PROFILE_PROVINCE_PLACEHOLDER' | translate"
             [apiUrl]="service.apiGetComboboxProvince"
             [params]="{ countryId: $safeNavigationMigration(data1.formGroup.get('countryId')?.value) }"
             (selectionChanged)="onProvinceChange($event)"
@@ -134,6 +135,7 @@
           <sic-combobox
             [label]="'PROFILE_DISTRICT_LABEL' | translate"
             formControlName="districtId"
+            [placeholder]="'PROFILE_DISTRICT_PLACEHOLDER' | translate"
             [apiUrl]="service.apiGetComboboxDistrict"
             [params]="{ provinceId: $safeNavigationMigration(data1.formGroup.get('provinceId')?.value) }"
             (selectionChanged)="onDistrictChange($event)"
@@ -146,6 +148,7 @@
           <sic-combobox
             [label]="'PROFILE_SUBDISTRICT_LABEL' | translate"
             formControlName="subDistrictId"
+            [placeholder]="'PROFILE_SUBDISTRICT_PLACEHOLDER' | translate"
             [apiUrl]="service.apiGetComboboxSubDistrict"
             [params]="{ districtId: $safeNavigationMigration(data1.formGroup.get('districtId')?.value) }"
             (selectionChanged)="onSubDistrictChange($event)"
@@ -155,7 +158,11 @@
         <div
           class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
         >
-          <sic-input [label]="'PROFILE_ZIPCODE_LABEL' | translate" formControlName="zipCode"></sic-input>
+          <sic-input
+            [label]="'PROFILE_ZIPCODE_LABEL' | translate"
+            formControlName="zipCode"
+            placeholder="10110"
+          ></sic-input>
         </div>
       }
 
