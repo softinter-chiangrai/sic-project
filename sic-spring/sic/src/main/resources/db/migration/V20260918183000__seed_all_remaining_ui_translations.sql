@@ -800,7 +800,7 @@ VALUES
   (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT01_FAIL_TITLE', 'Fail Title', 'ไม่สำเร็จ', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_BACK', 'Back', 'ย้อนกลับ', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_NO_DESCRIPTION', 'No Description', 'ไม่มีคำอธิบาย', 'system', NOW(), 'system', NOW(), false),
-  (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_TASKS_WORD', 'Tasks Word', 'phaseTaskCompletedCount() / phaseTaskCount()  Tasks', 'system', NOW(), 'system', NOW(), false),
+  (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_TASKS_WORD', 'Tasks', 'งาน', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_TAB_LIST', 'Tab List', 'รายการ', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_TAB_CALENDAR', 'Tab Calendar', 'รายการ', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'COMMON', 'ALL', 'PMDT02_GANTT_CHART', 'Gantt Chart', 'รายการ', 'system', NOW(), 'system', NOW(), false),

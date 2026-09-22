@@ -47,8 +47,8 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
     @Query("SELECT t FROM PmTask t " +
            "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph JOIN ph.project p " +
            "WHERE p.id = :projectId AND t.isDelete = false " +
-           "AND (:keyword IS NULL OR LOWER(t.taskName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(t.taskCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.taskName) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')) " +
+           "OR LOWER(t.taskCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     Page<PmTask> searchByProjectIdAndKeyword(@Param("projectId") UUID projectId,
                                               @Param("keyword") String keyword,
                                               Pageable pageable);
@@ -56,8 +56,8 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
     @Query("SELECT t FROM PmTask t " +
            "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph JOIN ph.project p " +
            "WHERE p.businessId = :businessId AND t.isDelete = false AND p.isDelete = false " +
-           "AND (:keyword IS NULL OR LOWER(t.taskName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(t.taskCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(t.taskName) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')) " +
+           "OR LOWER(t.taskCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     List<PmTask> findByBusinessIdAndKeyword(@Param("businessId") UUID businessId,
                                              @Param("keyword") String keyword);
 }

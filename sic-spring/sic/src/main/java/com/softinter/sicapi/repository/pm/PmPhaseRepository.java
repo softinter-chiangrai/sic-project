@@ -15,8 +15,10 @@ public interface PmPhaseRepository extends JpaRepository<PmPhase, UUID> {
     List<PmPhase> findByProjectIdAndIsDeleteFalseOrderByStartDateAsc(UUID projectId);
     long countByProjectId(UUID projectId);
 
+    List<PmPhase> findByProjectBusinessIdAndIsDeleteFalseAndProjectIsDeleteFalse(UUID businessId);
+
     @Query("SELECT p FROM PmPhase p WHERE p.project.businessId = :businessId AND p.isDelete = false AND p.project.isDelete = false " +
-           "AND (:keyword IS NULL OR LOWER(p.phaseName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(p.phaseCode) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(p.phaseName) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')) " +
+           "OR LOWER(p.phaseCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     List<PmPhase> findByBusinessIdAndKeyword(@Param("businessId") UUID businessId, @Param("keyword") String keyword);
 }

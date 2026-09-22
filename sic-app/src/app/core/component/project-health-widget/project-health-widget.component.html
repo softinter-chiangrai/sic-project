@@ -1,0 +1,110 @@
+<div class="bg-[var(--sidebar)] rounded-2xl border border-[var(--border)] p-6 shadow-sm flex flex-col justify-between">
+  <!-- Header with Title, Project Selector, and Health Status Badge -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-5">
+    <div class="flex items-center gap-2.5">
+      <div class="w-8 h-8 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-500">
+        <i class="bi bi-heart-pulse-fill text-base"></i>
+      </div>
+      <div>
+        <h3 class="font-bold text-base text-[var(--text-active)] tracking-tight">สุขภาพโครงการ</h3>
+        @if (project(); as proj) {
+          <p class="text-xs text-[var(--text-muted)] mt-0.5">
+            {{ proj.projectCode }} - {{ proj.projectName }}
+          </p>
+        }
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3">
+      <!-- Project Dropdown (if more than 1 project exists) -->
+      @if (projects().length > 1) {
+        <select
+          [ngModel]="selectedProjectId()"
+          (ngModelChange)="onProjectChange($event)"
+          class="text-xs px-2.5 py-1.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)] cursor-pointer"
+        >
+          @for (p of projects(); track p.id) {
+            <option [value]="p.id">{{ p.projectName }}</option>
+          }
+        </select>
+      }
+
+      <!-- Status Pill Badge -->
+      <span
+        [class]="
+          getHealthStatusClass(projectHealth().status) +
+          ' px-3 py-1 rounded-full text-xs font-semibold'
+        "
+      >
+        {{ getHealthStatusText(projectHealth().status) }} ({{ projectHealth().score }}%)
+      </span>
+    </div>
+  </div>
+
+  <!-- Body: Gauge + Breakdown -->
+  <div class="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
+    <!-- Left: Circular Health Score Gauge -->
+    <div class="md:col-span-4 flex flex-col items-center justify-center p-5 bg-[var(--bg)] rounded-xl border border-[var(--border)]/50 min-h-[170px]">
+      <div class="relative w-28 h-28 flex items-center justify-center">
+        <svg class="w-28 h-28 -rotate-90" viewBox="0 0 36 36">
+          <circle
+            cx="18"
+            cy="18"
+            r="15.5"
+            fill="none"
+            stroke="var(--border)"
+            stroke-width="2.8"
+            opacity="0.4"
+          />
+          <circle
+            cx="18"
+            cy="18"
+            r="15.5"
+            fill="none"
+            [style.stroke]="getHealthStatusColor(projectHealth().status)"
+            stroke-width="2.8"
+            stroke-dasharray="97.4"
+            [attr.stroke-dashoffset]="97.4 - (projectHealth().score * 97.4 / 100)"
+            stroke-linecap="round"
+            class="transition-all duration-700 ease-out"
+          />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+          <span class="text-2xl font-black text-[var(--text-active)] tracking-tight">
+            {{ projectHealth().score }}%
+          </span>
+          <span
+            class="text-[10px] font-bold uppercase tracking-wider mt-0.5"
+            [style.color]="getHealthStatusColor(projectHealth().status)"
+          >
+            {{ projectHealth().status }}
+          </span>
+        </div>
+      </div>
+      <p class="text-xs font-medium text-[var(--text-muted)] mt-2.5">คะแนนสุขภาพรวม</p>
+    </div>
+
+    <!-- Right: 5 Health Breakdown Factor Bars -->
+    <div class="md:col-span-8">
+      <div class="space-y-3.5">
+        @for (factor of projectHealth().factors; track factor.name) {
+          <div>
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="text-[var(--text-muted)] font-medium">{{ factor.name }}</span>
+              <span class="text-[var(--text-active)] font-semibold text-xs">
+                {{ factor.detail }}
+              </span>
+            </div>
+            <div class="w-full h-2 bg-[var(--bg)] rounded-full overflow-hidden border border-[var(--border)]/40">
+              <div
+                class="h-full rounded-full transition-all duration-700 ease-out"
+                [style.width.%]="factor.percent"
+                [style.background]="factor.color || 'var(--crm-success)'"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+</div>

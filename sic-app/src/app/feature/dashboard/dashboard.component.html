@@ -127,7 +127,12 @@
   }
 
   <!-- ========================================================================= -->
-  <!-- 🎯 TIER 3: CORE WORKSPACE GRID (My Work & Focus vs Sprint Health)         -->
+  <!-- 💓 TIER 3: PROJECT HEALTH SCORE WIDGET (Real Project Score & Breakdown)   -->
+  <!-- ========================================================================= -->
+  <app-project-health-widget [projects]="realProjects()"></app-project-health-widget>
+
+  <!-- ========================================================================= -->
+  <!-- 🎯 TIER 4: CORE WORKSPACE GRID (My Work & Focus vs Sprint Health)         -->
   <!-- ========================================================================= -->
   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
     <!-- Left: Personal Assigned Work Hub -->

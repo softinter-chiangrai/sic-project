@@ -39,11 +39,15 @@ export class Pmrt04AService {
     return `${this.apiUrl}/lov-sign-status`;
   }
 
-  getComboboxProject(customerId: string | null): string {
+  getComboboxProject(customerId?: string | null): string {
     if (!customerId) {
       return `${this.apiUrl}/combobox-project`;
     }
     return `${this.apiUrl}/combobox-project?customerId=${customerId}`;
+  }
+
+  getComboboxCustomer(): string {
+    return `${environment.apiBaseUrl}/api/pm/customers/combobox`;
   }
 
   getInstallmentById(id: string): Observable<Pmrt04AModel> {

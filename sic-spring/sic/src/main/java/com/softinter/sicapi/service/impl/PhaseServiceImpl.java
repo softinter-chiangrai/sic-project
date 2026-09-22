@@ -62,8 +62,13 @@ public class PhaseServiceImpl implements PhaseService {
     @Transactional(readOnly = true)
     public List<PhaseResponse> getPhasesByBusinessId(UUID businessId, String keyword) {
         String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
-        return phaseRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword)
-                .stream().map(this::toResponse).collect(Collectors.toList());
+        List<PmPhase> phases;
+        if (normalizedKeyword != null) {
+            phases = phaseRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        } else {
+            phases = phaseRepository.findByProjectBusinessIdAndIsDeleteFalseAndProjectIsDeleteFalse(businessId);
+        }
+        return phases.stream().map(this::toResponse).collect(Collectors.toList());
     }
 
     @Override

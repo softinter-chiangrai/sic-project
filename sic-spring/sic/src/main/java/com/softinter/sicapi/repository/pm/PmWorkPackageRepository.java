@@ -15,6 +15,6 @@ public interface PmWorkPackageRepository extends JpaRepository<PmWorkPackage, UU
     List<PmWorkPackage> findByMilestoneIdAndIsDeleteFalse(UUID milestoneId);
 
     @Query("SELECT w FROM PmWorkPackage w WHERE w.businessId = :businessId AND w.isDelete = false " +
-           "AND (:keyword IS NULL OR LOWER(w.packageName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(w.packageName) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     List<PmWorkPackage> findByBusinessIdAndKeyword(@Param("businessId") UUID businessId, @Param("keyword") String keyword);
 }

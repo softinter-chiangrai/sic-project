@@ -175,6 +175,55 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   // Approval Integration
   selectedFlowId: string | null = null;
   apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/CONTRACT`;
+  apiGetCustomersUrl = this.service.getComboboxCustomer();
+  apiGetProjectsUrl = this.service.getComboboxProject();
+
+  onCustomerSelected(item: any): void {
+    const customerId = item?.value ?? item?.id ?? null;
+    this.customerId = customerId;
+    this.customerName = item?.text ?? item?.label ?? null;
+    this.form.patchValue({
+      customerId,
+      customerName: this.customerName,
+    });
+    // Update projects combobox URL to filter by selected customer
+    this.apiGetProjectsUrl = this.service.getComboboxProject(customerId);
+    this.cdr.detectChanges();
+  }
+
+  onProjectSelected(item: any): void {
+    const projectId = item?.value ?? item?.id ?? null;
+    this.projectId = projectId;
+    this.projectName = item?.text ?? item?.label ?? null;
+    this.form.patchValue({
+      projectId,
+      projectName: this.projectName,
+    });
+
+    if (projectId) {
+      this.projectService.getProject(projectId).subscribe({
+        next: (project) => {
+          if (project) {
+            this.customerId = project.customerId || null;
+            this.customerName = project.customerName || null;
+            this.projectName = project.projectName || this.projectName;
+            this.form.patchValue({
+              customerId: project.customerId,
+              customerName: project.customerName || null,
+              projectName: project.projectName || this.projectName,
+            });
+            this.cdr.detectChanges();
+          }
+        },
+      });
+    } else {
+      this.projectName = null;
+      this.form.patchValue({
+        projectName: null,
+      });
+      this.cdr.detectChanges();
+    }
+  }
 
   isSaved = false;
 
@@ -372,10 +421,17 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       data.endDate = DateTimeUtil.toInstantIsoString(data.endDate) || data.endDate;
     }
 
-    if (this.customerId) {
-      data.customerId = this.customerId;
-    } else {
-      this.dialog.warn(this.translate.instant('PMRT04A_NO_CUSTOMER_DATA_TITLE'), this.translate.instant('PMRT04A_SELECT_CUSTOMER_FIRST_MSG'));
+    data.customerId = this.form.get('customerId')?.value || this.customerId;
+    data.projectId = this.form.get('projectId')?.value || this.projectId;
+
+    if (!data.customerId) {
+      this.dialog.warn(this.translate.instant('PMRT04A_NO_CUSTOMER_DATA_TITLE') || 'ข้อมูลไม่ครบถ้วน', this.translate.instant('PMRT04A_SELECT_CUSTOMER_FIRST_MSG') || 'กรุณาเลือกลูกค้า');
+      this.isSaving = false;
+      return;
+    }
+
+    if (!data.projectId) {
+      this.dialog.warn(this.translate.instant('PMRT04A_FORM_INVALID_TITLE') || 'ข้อมูลไม่ครบถ้วน', 'กรุณาเลือกโครงการ');
       this.isSaving = false;
       return;
     }

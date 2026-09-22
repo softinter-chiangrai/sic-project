@@ -154,7 +154,7 @@ export class SicCommandPaletteComponent {
         this.navigate([row.item.path]);
         break;
       case 'project':
-        this.navigate(['/feature/pm/project-dashboard'], { projectId: row.item.id });
+        this.navigate(['/feature/dashboard'], { projectId: row.item.id });
         break;
       case 'contract':
         this.navigate(['/feature/pm/contract', row.item.id, 'view']);

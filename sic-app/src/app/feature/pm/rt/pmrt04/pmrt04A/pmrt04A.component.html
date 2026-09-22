@@ -69,6 +69,36 @@
       <!-- Single Unified Form Card -->
       <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- Customer -->
+          <div>
+            <sic-combobox
+              [label]="'PMRT04A_CUSTOMER_LABEL' | translate"
+              formControlName="customerId"
+              [apiUrl]="apiGetCustomersUrl"
+              valueField="value"
+              textField="text"
+              [required]="true"
+              placeholder="เลือกลูกค้า..."
+              [errorMessages]="{ required: 'กรุณาเลือกลูกค้า' }"
+              (selectionChanged)="onCustomerSelected($event)"
+            ></sic-combobox>
+          </div>
+
+          <!-- Project -->
+          <div>
+            <sic-combobox
+              [label]="'PMRT04A_PROJECT_LABEL' | translate"
+              formControlName="projectId"
+              [apiUrl]="apiGetProjectsUrl"
+              valueField="value"
+              textField="text"
+              [required]="true"
+              placeholder="เลือกโครงการ..."
+              [errorMessages]="{ required: 'กรุณาเลือกโครงการ' }"
+              (selectionChanged)="onProjectSelected($event)"
+            ></sic-combobox>
+          </div>
+
           <!-- Contract No -->
           <div>
             <sic-input

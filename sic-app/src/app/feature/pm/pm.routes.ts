@@ -46,19 +46,17 @@ import { pmrt01Resolver } from './rt/pmrt01/pmrt01.resolver';
 import { customerCreateResolver, customerEditResolver } from './rt/pmrt01/pmrt01A/pmrt01A.resolver';
 import { pmrt02Resolver } from './rt/pmrt02/pmrt02.resolver';
 import { pmrt02AResolver } from './rt/pmrt02/pmrt02A/pmrt02A.resolver';
-import { pmrt03Resolver } from './rt/pmrt03/pmrt03.resolver';
 import { pmrt04Resolver } from './rt/pmrt04/pmrt04.resolver';
 import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
 import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
-import { pmrt05Resolver } from './rt/pmrt05/pmrt05.resolver';
 import { pmrt07Resolver } from './rt/pmrt07/pmrt07.resolver';
 import { ganttResolver } from '../../core/component/sic-gantt/gantt.resolver';
 
 export const PM_ROUTES: Routes = [
   {
     path: '',
-    loadComponent: () => import('./rt/pmrt03/pmrt03.component').then(m => m.Pmrt03Component),
-    resolve: { form: pmrt03Resolver },
+    redirectTo: 'project',
+    pathMatch: 'full',
   },
 
   // ===== Customer =====
@@ -103,11 +101,10 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmrt02AResolver },
   },
 
-  // ===== Project Dashboard =====
+  // ===== Project Dashboard (redirect to main dashboard) =====
   {
     path: 'project-dashboard',
-    loadComponent: () => import('./rt/pmrt03/pmrt03.component').then((m) => m.Pmrt03Component),
-    resolve: { form: pmrt03Resolver },
+    redirectTo: '/feature/dashboard',
   },
 
   // ===== Contract =====
@@ -144,12 +141,10 @@ export const PM_ROUTES: Routes = [
     resolve: { form: pmrt04BResolver },
   },
 
-  // ===== Requirement Matrix =====
+  // ===== Requirement Matrix (redirect to project) =====
   {
     path: 'matrix',
-    loadComponent: () => import('./rt/pmrt05/pmrt05.component').then(m => m.Pmrt05Component),
-    resolve: { pageData: pmrt05Resolver },
-    runGuardsAndResolvers: 'paramsOrQueryParamsChange',
+    redirectTo: '/feature/pm/project',
   },
 
   // ===== Executive Dashboard (merged into /feature/dashboard) =====

@@ -8,6 +8,7 @@ import { businessCreateResolver } from './management/business/business-create/bu
 import { businessInviteResolver } from './management/business/business-invite/business-invite.resolver';
 import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
 import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
+import { dashboardResolver } from './feature/dashboard/dashboard.resolver';
 
 export const routes: Routes = [
   {
@@ -52,6 +53,7 @@ export const routes: Routes = [
         path: 'dashboard',
         loadComponent: () =>
           import('./feature/dashboard/dashboard.component').then((m) => m.DashboardComponent),
+        resolve: { form: dashboardResolver },
       },
       {
         path: 'bu',

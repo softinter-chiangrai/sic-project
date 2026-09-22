@@ -43,7 +43,12 @@ public class PhaseController {
             return ResponseEntity.badRequest().build();
         }
         String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
-        List<PmPhase> phases = phaseRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        List<PmPhase> phases;
+        if (normalizedKeyword != null) {
+            phases = phaseRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        } else {
+            phases = phaseRepository.findByProjectBusinessIdAndIsDeleteFalseAndProjectIsDeleteFalse(businessId);
+        }
         List<ComboboxResponse> list = phases.stream()
                 .map(p -> new ComboboxResponse(p.getId().toString(),
                         (p.getPhaseCode() != null ? p.getPhaseCode() + " - " : "") + p.getPhaseName()))

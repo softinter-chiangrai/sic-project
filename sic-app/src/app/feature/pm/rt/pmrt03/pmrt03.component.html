@@ -25,6 +25,24 @@
   </div>
 }
 
+<!-- ===== EMPTY STATE ===== -->
+@if (!isLoading() && !error() && !project()) {
+  <div class="flex flex-col items-center justify-center py-24 gap-4 text-center">
+    <div class="w-16 h-16 rounded-2xl bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center text-3xl mb-2">
+      <i class="bi bi-kanban"></i>
+    </div>
+    <h2 class="text-xl font-bold text-[var(--text-active)]">ยังไม่มีข้อมูลโครงการ</h2>
+    <p class="text-sm text-[var(--text-muted)] max-w-md">ยังไม่มีโครงการในระบบ หรือยังไม่ได้เลือกโครงการ กรุณาสร้างโครงการใหม่เพื่อเริ่มใช้งาน</p>
+    <a
+      routerLink="/feature/pm/project/new"
+      class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all shadow-sm cursor-pointer mt-2"
+    >
+      <i class="bi bi-plus-lg"></i>
+      สร้างโครงการใหม่
+    </a>
+  </div>
+}
+
 <!-- ===== DASHBOARD ===== -->
 @if (project(); as p) {
   <div class="space-y-6 p-0.5">

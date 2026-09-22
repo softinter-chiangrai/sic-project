@@ -21,6 +21,6 @@ public interface PmMilestoneRepository extends JpaRepository<PmMilestone, UUID> 
 
     @Query("SELECT m FROM PmMilestone m WHERE m.phase.project.businessId = :businessId AND m.isDelete = false " +
            "AND m.phase.isDelete = false AND m.phase.project.isDelete = false " +
-           "AND (:keyword IS NULL OR LOWER(m.milestoneName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+           "AND (:keyword IS NULL OR :keyword = '' OR LOWER(m.milestoneName) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     List<PmMilestone> findByBusinessIdAndKeyword(@Param("businessId") UUID businessId, @Param("keyword") String keyword);
 }

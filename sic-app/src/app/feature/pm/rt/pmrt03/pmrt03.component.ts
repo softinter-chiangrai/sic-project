@@ -1,7 +1,7 @@
 // src/app/feature/pm/rt/pmrt03/pmrt03.component.ts
 
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs/operators';
 
@@ -10,6 +10,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt03PageData, ProjectDashboard, ProjectHealth, RecentPhase, RecentTask } from './pmrt03.model';
 import { Pmrt03Service } from './pmrt03.service';
+import { Pmrt02Service } from '../pmrt02/pmrt02.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -27,6 +28,7 @@ export class Pmrt03Component implements OnInit {
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
   private customerState = inject(CustomerStateService);
+  private pmrt02Service = inject(Pmrt02Service);
   private translate = inject(TranslateService);
 
   // ===== State =====
@@ -34,6 +36,16 @@ export class Pmrt03Component implements OnInit {
   protected project = signal<ProjectDashboard | null>(null);
   protected projectId = signal<string>('');
   protected error = signal<string | null>(null);
+
+  constructor() {
+    effect(() => {
+      const globalProjectId = this.customerState.currentProjectId();
+      if (globalProjectId && globalProjectId !== this.projectId()) {
+        this.projectId.set(globalProjectId);
+        this.loadDashboard(globalProjectId);
+      }
+    });
+  }
 
   // ===== Project Health Score (คำนวณจากข้อมูลโครงการ) =====
   protected projectHealth = computed<ProjectHealth>(() => {
@@ -197,6 +209,25 @@ export class Pmrt03Component implements OnInit {
     }
     if (page?.dashboard) {
       this.project.set(page.dashboard);
+    }
+
+    if (!this.projectId()) {
+      const storedId = this.customerState.getProjectId();
+      if (storedId) {
+        this.projectId.set(storedId);
+        this.loadDashboard(storedId);
+      } else {
+        this.pmrt02Service.getProjects({ page: 0, size: 1 }).subscribe({
+          next: (res) => {
+            if (res?.data && res.data.length > 0) {
+              const defaultProj = res.data[0];
+              this.projectId.set(defaultProj.id);
+              this.customerState.setProject(defaultProj.id, defaultProj.projectName);
+              this.loadDashboard(defaultProj.id);
+            }
+          }
+        });
+      }
     }
 
     // รอบถัดไป: ถ้า projectId ใน query params เปลี่ยน (เช่นสลับโปรเจกต์จากหน้าเดิม) ต้องยิงโหลดใหม่เอง

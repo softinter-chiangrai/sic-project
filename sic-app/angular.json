@@ -66,6 +66,7 @@
             "ssr": {
               "entry": "src/server.ts"
             },
+            "prerender": false,
             "security": {
               "allowedHosts": ["*"]
             }

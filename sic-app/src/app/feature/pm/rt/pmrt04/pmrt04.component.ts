@@ -517,7 +517,7 @@ export class Pmrt04Component implements OnInit {
   }
 
   goToView(id: string) {
-    const contract = this.contracts().find((c) => c.id === id) || this.selectedContract();
+    const contract = this.contracts().find((c) => c.id === id);
     if (contract) {
       this.recentItems.record({
         id: contract.id,

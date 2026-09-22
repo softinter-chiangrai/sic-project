@@ -28,6 +28,8 @@ import { DiagramModel } from './diagram.model';
 import { Pmdt05PageData } from './pmdt05.model';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { TraceLinkService, TraceRelationshipType } from '../../../../core/services/trace-link.service';
+import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
+import { PmCustomerProject } from '../../rt/pmrt02/pmrt02.model';
 
 @Component({
   selector: 'app-pmdt05',
@@ -50,6 +52,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private dialogService = inject(DialogService);
   private customerState = inject(CustomerStateService);
   private traceLinkService = inject(TraceLinkService);
+  private pmrt02Service = inject(Pmrt02Service);
   private translate = inject(TranslateService);
   private isCreateDialogOpened = false;
 
@@ -63,6 +66,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   unreadCount = 0;
   currentDiagram: DiagramModel | null = null;
   private loadedDiagramTabId: string | null = null;
+
+  // ===== Projects List =====
+  readonly projects = signal<PmCustomerProject[]>([]);
+  readonly noProjectsAvailable = signal<boolean>(false);
 
   // ===== Tabs =====
   tabs = signal<DiagramModel[]>([]);
@@ -121,6 +128,9 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       }
     }, 5000);
 
+    // โหลดรายชื่อโครงการทั้งหมดเพื่อให้เลือกสลับได้อิสระ
+    this.loadProjectsList();
+
     // รับ query params
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const tabIdFromUrl = params['tabId'] || params['diagramId'] || null;
@@ -155,14 +165,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
             }
           },
           error: () => {
-            this.router.navigate(['/feature/pm/project']);
+            this.loadProjectsList();
           },
         });
         return;
       }
 
       if (!projectIdFromUrl) {
-        this.router.navigate(['/feature/pm/project']);
+        // ให้ loadProjectsList() ดึงโครงการแรกมาให้อัตโนมัติ ไม่ต้อง redirect หนี
         return;
       }
 
@@ -821,5 +831,49 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
           console.error('Failed to create trace link:', err);
         },
       });
+  }
+
+  // ===== Projects Management =====
+  loadProjectsList(): void {
+    this.pmrt02Service.getProjects({ page: 0, size: 50, sortBy: 'createdDate', sortDir: 'desc' }).subscribe({
+      next: (res: any) => {
+        const list: PmCustomerProject[] = res?.data || [];
+        this.projects.set(list);
+        if (list.length === 0) {
+          this.noProjectsAvailable.set(true);
+          return;
+        }
+        this.noProjectsAvailable.set(false);
+
+        // ถ้ายังไม่มีโปรเจกต์ที่เลือก ให้เลือกโปรเจกต์แรกมาใช้งานอัตโนมัติ
+        if (!this.projectId) {
+          const first = list[0];
+          this.onProjectSelect(first.id);
+        } else {
+          const curr = list.find((p) => p.id === this.projectId);
+          if (curr) {
+            this.projectName = curr.projectName;
+          }
+        }
+      },
+      error: (err: any) => {
+        console.error('Failed to load projects list for diagram:', err);
+      },
+    });
+  }
+
+  onProjectSelect(newProjectId: string): void {
+    if (!newProjectId) return;
+    this.projectId = newProjectId;
+    const proj = this.projects().find((p) => p.id === newProjectId);
+    if (proj) {
+      this.projectName = proj.projectName;
+      this.customerState.setProject(proj.id, proj.projectName);
+    }
+    this.currentTabId = null;
+    this.currentDiagram = null;
+    this.loadedDiagramTabId = null;
+    this.tabs.set([]);
+    this.loadTabs(null, false);
   }
 }

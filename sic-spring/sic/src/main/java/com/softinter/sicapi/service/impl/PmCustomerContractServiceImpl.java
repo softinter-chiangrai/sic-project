@@ -401,11 +401,16 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         );
     }
 
-    // ✅ Combobox Project (กรองตาม customerId)
+    // ✅ Combobox Project (กรองตาม customerId ถ้ามี หรือดึงทั้งหมดของ business)
     @Override
     public List<ComboboxResponse> getComboboxProjects(UUID businessId, UUID customerId) {
         if (customerId == null) {
-            return Collections.emptyList();
+            Page<PmCustomerProject> projects = projectRepository.findByBusinessIdAndIsDeleteFalse(
+                    businessId, PageRequest.of(0, 100)
+            );
+            return projects.getContent().stream()
+                    .map(p -> new ComboboxResponse(p.getId().toString(), p.getProjectName()))
+                    .collect(Collectors.toList());
         }
 
         Page<PmCustomerProject> projects = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalse(

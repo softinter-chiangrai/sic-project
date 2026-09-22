@@ -15,13 +15,26 @@
     class="flex items-center justify-between gap-3 px-6 py-2.5 bg-gradient-to-r from-[var(--sidebar,#ffffff)] to-[var(--bg,#f8f9fa)] border-b-2 border-[var(--crm-primary,#1a73e8)] shadow-md flex-shrink-0 flex-wrap min-h-[64px] max-md:flex-col max-md:items-stretch max-md:gap-2 max-md:px-4 max-md:py-3"
   >
     <div class="flex items-center gap-3">
-      @if (projectName) {
-        <span
-          class="text-2xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
-        >
-          {{ projectName }}
-        </span>
-      }
+      <div class="flex items-center gap-2">
+        <i class="bi bi-kanban text-[var(--crm-primary,#1a73e8)] text-lg"></i>
+        @if (projects().length > 1) {
+          <select
+            [ngModel]="projectId"
+            (ngModelChange)="onProjectSelect($event)"
+            class="text-sm font-bold px-3 py-1.5 rounded-xl border border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f6f8fa)] text-[var(--text-active,#1e293b)] focus:outline-none focus:border-[var(--crm-primary,#1a73e8)] cursor-pointer shadow-xs max-w-[280px]"
+          >
+            @for (p of projects(); track p.id) {
+              <option [value]="p.id">{{ p.projectCode }} - {{ p.projectName }}</option>
+            }
+          </select>
+        } @else if (projectName) {
+          <span
+            class="text-xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
+          >
+            {{ projectName }}
+          </span>
+        }
+      </div>
     </div>
 
     <div class="flex gap-2.5 flex-shrink-0 items-center max-md:justify-end">
@@ -214,6 +227,22 @@
 
   <!-- ===== Draw.io Editor ===== -->
   <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
+    @if (noProjectsAvailable()) {
+      <div class="absolute inset-0 z-20 bg-[var(--bg,#f0f2f5)] flex flex-col items-center justify-center p-8 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-[var(--crm-primary,#1a73e8)]/10 text-[var(--crm-primary,#1a73e8)] flex items-center justify-center text-3xl mb-4">
+          <i class="bi bi-folder-plus"></i>
+        </div>
+        <h3 class="text-lg font-bold text-[var(--text-active)] mb-1">ยังไม่มีโครงการในระบบ</h3>
+        <p class="text-xs text-[var(--text-muted)] max-w-sm mb-4">กรุณาสร้างโครงการก่อนเพื่อเริ่มต้นสร้าง Diagram</p>
+        <a
+          routerLink="/feature/pm/project/new"
+          class="px-4 py-2 rounded-xl bg-[var(--crm-primary,#1a73e8)] text-white text-xs font-semibold hover:bg-[var(--crm-primary,#1a73e8)]/90 transition-all shadow-xs"
+        >
+          <i class="bi bi-plus-lg me-1"></i> สร้างโครงการใหม่
+        </a>
+      </div>
+    }
+
     @if (isLoading) {
       <div
         class="absolute inset-0 z-10 bg-white/80 backdrop-blur-sm flex flex-col items-center justify-center gap-3 text-[var(--text-muted,#6c757d)] text-sm"
