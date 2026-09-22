@@ -13,8 +13,12 @@ import com.softinter.sicapi.dto.request.SaveBusinessRequest;
 import com.softinter.sicapi.dto.response.BusinessResponse;
 import com.softinter.sicapi.dto.response.BusinessResponseDto;
 import com.softinter.sicapi.dto.response.ChangeBusinessResponse;
+import com.softinter.sicapi.entity.enums.ApprovalMode;
+import com.softinter.sicapi.entity.enums.DocumentType;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
+import com.softinter.sicapi.entity.pm.PmApprovalFlow;
+import com.softinter.sicapi.entity.pm.PmApprovalFlowStep;
 import com.softinter.sicapi.entity.su.SuBusiness;
 import com.softinter.sicapi.entity.su.SuBusinessAudit;
 import com.softinter.sicapi.entity.su.SuBusinessRole;
@@ -28,6 +32,8 @@ import com.softinter.sicapi.repository.db.DbDistrictRepository;
 import com.softinter.sicapi.repository.db.DbProvinceRepository;
 import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
 import com.softinter.sicapi.repository.db.DbTitleRepository;
+import com.softinter.sicapi.repository.pm.PmApprovalFlowRepository;
+import com.softinter.sicapi.repository.pm.PmApprovalFlowStepRepository;
 import com.softinter.sicapi.repository.su.SuBusinessAuditRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
@@ -66,6 +72,8 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     private final FileStorageService fileStorageService;   
     private final SuUploadRepository uploadRepository;
     private final AuditLogService auditLogService;
+    private final PmApprovalFlowRepository approvalFlowRepository;
+    private final PmApprovalFlowStepRepository approvalFlowStepRepository;
 
     @Override
     public UUID getBusinessId() {
@@ -266,6 +274,9 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
 
             grantAllProgramPermissions(adminRole);
 
+            // สร้าง Approve Flow เริ่มต้นให้ทุก Document Type โดยตั้งผู้สมัคร business เป็นผู้อนุมัติทันที
+            createDefaultApprovalFlows(business, userId);
+
             // 5. Sync uploads หลังจาก save (ถ้ามี)
             if (finalUploadGroupId != null && uploadRefs != null && !uploadRefs.isEmpty()) {
                 fileStorageService.syncUploads(finalUploadGroupId, uploadRefs);
@@ -328,6 +339,34 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         }
 
         throw new IllegalStateException("Unexpected state: " + request.getState());
+    }
+
+    // สร้าง Approve Flow เริ่มต้น (1 step) ให้ทุก Document Type โดยผู้สมัคร business เป็นผู้อนุมัติขั้นตอนเดียว
+    private void createDefaultApprovalFlows(SuBusiness business, String userId) {
+        // flow_code เป็น unique key ระดับระบบ (ไม่ผูกกับ business) จึงใช้ businessId ย่อเป็นส่วนหนึ่งของรหัส
+        // เพื่อไม่ให้ชนกับ business อื่น และไม่เกิน varchar(50)
+        String businessSuffix = business.getId().toString().replace("-", "").substring(0, 8);
+        for (DocumentType documentType : DocumentType.values()) {
+            PmApprovalFlow flow = new PmApprovalFlow();
+            flow.setBusinessId(business.getId());
+            flow.setFlowCode("DEF-" + documentType.name() + "-" + businessSuffix);
+            flow.setFlowName("Default " + documentType.getDisplayName() + " Approval");
+            flow.setDocumentType(documentType.name());
+            flow.setApprovalMode(ApprovalMode.SINGLE);
+            flow.setIsActive(true);
+            flow.setDescription("สร้างอัตโนมัติเมื่อสมัครธุรกิจ โดยตั้งผู้สมัครเป็นผู้อนุมัติเริ่มต้น");
+            flow = approvalFlowRepository.save(flow);
+
+            PmApprovalFlowStep step = new PmApprovalFlowStep();
+            step.setFlow(flow);
+            step.setStepOrder(1);
+            step.setStepName("Approve");
+            step.setApproverUserId(userId);
+            step.setIsRequired(true);
+            step.setTimeoutAction("NONE");
+            step.setCanSkip(false);
+            approvalFlowStepRepository.save(step);
+        }
     }
 
     // Helper method เพื่อ reuse การ mapping

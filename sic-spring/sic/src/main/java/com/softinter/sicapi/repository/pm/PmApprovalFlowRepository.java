@@ -14,9 +14,9 @@ public interface PmApprovalFlowRepository extends JpaRepository<PmApprovalFlow, 
 
     Optional<PmApprovalFlow> findByFlowCode(String flowCode);
 
-    Optional<PmApprovalFlow> findByDocumentTypeAndIsActiveTrue(String documentType);
+    Optional<PmApprovalFlow> findByBusinessIdAndDocumentTypeAndIsActiveTrue(UUID businessId, String documentType);
 
-    List<PmApprovalFlow> findByDocumentTypeAndIsActiveTrueOrderByFlowCode(String documentType);
+    List<PmApprovalFlow> findByBusinessIdAndDocumentTypeAndIsActiveTrueOrderByFlowCode(UUID businessId, String documentType);
 
     List<PmApprovalFlow> findByIsActiveTrueOrderByFlowCode();
 }

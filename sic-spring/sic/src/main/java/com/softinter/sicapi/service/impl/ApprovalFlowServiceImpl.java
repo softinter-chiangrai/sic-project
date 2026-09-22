@@ -50,7 +50,8 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
     @Override
     @Transactional(readOnly = true)
     public ApprovalFlowResponse getFlowByDocumentType(String documentType) {
-        PmApprovalFlow flow = flowRepository.findByDocumentTypeAndIsActiveTrue(documentType)
+        PmApprovalFlow flow = flowRepository
+                .findByBusinessIdAndDocumentTypeAndIsActiveTrue(currentUserService.getBusinessId(), documentType)
                 .orElseThrow(() -> new ResourceNotFoundException("No approval flow defined for " + documentType));
         return toResponse(flow);
     }
@@ -67,7 +68,8 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
     @Override
     @Transactional(readOnly = true)
     public List<ApprovalFlowResponse> getFlowsByDocumentType(String documentType) {
-        return flowRepository.findByDocumentTypeAndIsActiveTrueOrderByFlowCode(documentType)
+        return flowRepository
+                .findByBusinessIdAndDocumentTypeAndIsActiveTrueOrderByFlowCode(currentUserService.getBusinessId(), documentType)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

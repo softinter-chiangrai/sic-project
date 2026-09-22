@@ -123,7 +123,8 @@ public class ApprovalServiceImpl implements ApprovalService {
             flow = flowRepository.findById(request.getFlowId())
                     .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
         } else {
-            flow = flowRepository.findByDocumentTypeAndIsActiveTrue(request.getDocumentType())
+            flow = flowRepository.findByBusinessIdAndDocumentTypeAndIsActiveTrue(
+                            currentUserService.getBusinessId(), request.getDocumentType())
                     .orElseThrow(() -> new ResourceNotFoundException(
                             "No approval flow defined for " + request.getDocumentType()));
         }
