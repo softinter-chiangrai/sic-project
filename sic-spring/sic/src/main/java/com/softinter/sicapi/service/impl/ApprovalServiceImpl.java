@@ -199,6 +199,12 @@ public class ApprovalServiceImpl implements ApprovalService {
                     if (Boolean.FALSE.equals(step.getIsRequired()) && flow.getApprovalMode() == ApprovalMode.CHAIN) {
                         stepStatus.setStatus(ApprovalStatus.APPROVED);
                         stepStatus.setIsCompleted(true);
+                    } else if (userId != null && userId.equals(uid)) {
+                        // Requester is in the approval flow -> auto-approve requester's step
+                        stepStatus.setStatus(ApprovalStatus.APPROVED);
+                        stepStatus.setIsCompleted(true);
+                        stepStatus.setApprovalDate(Instant.now());
+                        stepStatus.setComment("Auto-approved by requester upon submission");
                     }
                     stepStatuses.add(stepStatus);
                 }
@@ -215,10 +221,14 @@ public class ApprovalServiceImpl implements ApprovalService {
             }
         }
 
-        if (currentStep == null) {
+        boolean allCompleted = stepStatuses.stream()
+                .allMatch(ss -> Boolean.TRUE.equals(ss.getIsCompleted()));
+
+        if (allCompleted || currentStep == null) {
             approval.setStatus(ApprovalStatus.APPROVED);
-            approval.setFinalApprover("system");
+            approval.setFinalApprover(userId);
             approval.setFinalApprovalDate(Instant.now());
+            approval.setCurrentStep(null);
         } else {
             approval.setCurrentStep(currentStep);
         }
@@ -227,16 +237,27 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         createLog(approval, null, "SUBMIT", userId, userName, "Submitted for approval", null, ApprovalStatus.PENDING);
 
-        updateDocumentStatusOnSubmit(approval);
+        // Record approval log for steps that were auto-approved for the requester
+        for (PmApprovalStepStatus ss : stepStatuses) {
+            if (userId != null && userId.equals(ss.getApprover()) && Boolean.TRUE.equals(ss.getIsCompleted()) && ss.getStatus() == ApprovalStatus.APPROVED) {
+                createLog(approval, ss, "APPROVE", userId, userName, "Auto-approved by requester upon submission", ApprovalStatus.PENDING, ApprovalStatus.APPROVED);
+            }
+        }
 
-        notificationService.notifySubmitted(approval);
+        if (approval.getStatus() == ApprovalStatus.APPROVED) {
+            updateDocumentStatusOnApprove(approval);
+            notificationService.notifyApproved(approval, "Auto-Approved");
+        } else {
+            updateDocumentStatusOnSubmit(approval);
+            notificationService.notifySubmitted(approval);
+        }
 
         // Audit Log
         try {
             auditLogService.log(
                     "SUBMIT_FOR_APPROVAL",
                     "Approval Center / " + request.getDocumentType(),
-                    "ส่งเอกสาร " + (request.getDocumentCode() != null ? request.getDocumentCode() : request.getDocumentType()) + " เพื่อขออนุมัติ",
+                    "ส่งเอกสาร " + (request.getDocumentCode() != null ? request.getDocumentCode() : request.getDocumentType()) + " เพื่อขออนุมัติ" + (approval.getStatus() == ApprovalStatus.APPROVED ? " (อนุมัติอัตโนมัติแล้ว)" : ""),
                     request.getDocumentType(),
                     request.getDocumentId(),
                     null, null, "Success", "Requested by: " + userName);

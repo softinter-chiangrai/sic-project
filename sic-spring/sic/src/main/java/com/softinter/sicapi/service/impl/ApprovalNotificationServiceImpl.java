@@ -28,7 +28,7 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
     public void notifySubmitted(PmApproval approval) {
         log.info("🔔 Approval submitted: {} - {}", approval.getDocumentCode(), approval.getDocumentTitle());
         String recipient = approval.getCurrentStep() != null ? approval.getCurrentStep().getApproverUserId() : null;
-        if (recipient != null && !recipient.isBlank()) {
+        if (recipient != null && !recipient.isBlank() && !recipient.equals(approval.getRequestedBy())) {
             sendNotification(
                     recipient,
                     approval.getRequestedBy(),

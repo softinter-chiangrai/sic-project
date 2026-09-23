@@ -203,7 +203,10 @@ public class PmRequirementController {
                         meta.put("projectName", r.getProject().getProjectName());
                         meta.put("customerId", r.getProject().getCustomerId());
                         if (r.getProject().getCustomer() != null) {
-                            meta.put("customerName", r.getProject().getCustomer().getCustomerName());
+                            String custName = r.getProject().getCustomer().getCompanyNameLocal() != null && !r.getProject().getCustomer().getCompanyNameLocal().isBlank()
+                                    ? r.getProject().getCustomer().getCompanyNameLocal()
+                                    : r.getProject().getCustomer().getCompanyNameEn();
+                            meta.put("customerName", custName);
                         }
                     }
                     cbResp.setData(meta);
