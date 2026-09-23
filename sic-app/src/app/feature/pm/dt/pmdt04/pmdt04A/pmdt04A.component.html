@@ -48,7 +48,7 @@
         <button
           type="button"
           (click)="openAiAssist()"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all transform hover:-translate-y-0.5 cursor-pointer"
           [title]="'PMDT04_AI_GENERATE_TITLE' | translate"
         >
           <i class="bi bi-stars"></i>
@@ -89,24 +89,24 @@
             <!-- Customer & Project -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <sic-combobox
-                label="ลูกค้า"
+                [label]="'PMDT04_CUSTOMER_LABEL' | translate"
                 formControlName="customerId"
                 [apiUrl]="service.apiGetComboboxCustomer"
                 valueField="value"
                 textField="text"
-                placeholder="ค้นหาและเลือกลูกค้า"
+                [placeholder]="'PMDT04_SELECT_CUSTOMER_PLACEHOLDER' | translate"
                 [clearable]="true"
                 (selectionChanged)="onCustomerSelected($event)">
               </sic-combobox>
 
               <sic-combobox
-                label="โครงการ"
+                [label]="'PMDT04_PROJECT_LABEL' | translate"
                 formControlName="projectId"
                 [apiUrl]="service.apiGetComboboxProject"
                 [params]="projectParams"
                 valueField="value"
                 textField="text"
-                placeholder="ค้นหาและเลือกโครงการ"
+                [placeholder]="'PMDT04_SELECT_PROJECT_PLACEHOLDER' | translate"
                 [clearable]="true"
                 [required]="true"
                 (selectionChanged)="onProjectSelected($event)">
@@ -278,10 +278,10 @@
       <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[85vh] animate-scale-in">
         
         <!-- Modal Header with Tabs -->
-        <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-transparent flex-shrink-0">
+        <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
           <div class="flex items-center justify-between pb-3">
             <div class="flex items-center gap-3">
-              <div class="w-9 h-9 rounded-xl bg-purple-500/15 flex items-center justify-center text-purple-600 dark:text-purple-400">
+              <div class="w-9 h-9 rounded-xl bg-[var(--crm-primary)]/15 flex items-center justify-center text-[var(--crm-primary)]">
                 <i class="bi bi-stars text-lg"></i>
               </div>
               <div>
@@ -303,9 +303,9 @@
               type="button"
               (click)="aiAssistTab = 'generate'"
               class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
-              [class.text-purple-600]="aiAssistTab === 'generate'"
+              [class.text-[var(--crm-primary)]]="aiAssistTab === 'generate'"
               [class.border-b-2]="aiAssistTab === 'generate'"
-              [class.border-purple-600]="aiAssistTab === 'generate'"
+              [class.border-[var(--crm-primary)]]="aiAssistTab === 'generate'"
               [class.text-[var(--text-muted)]]="aiAssistTab !== 'generate'">
               <i class="bi bi-lightning-charge-fill"></i>
               <span>{{ 'PMDT04_AI_TAB_GENERATE' | translate }}</span>
@@ -314,14 +314,14 @@
               type="button"
               (click)="aiAssistTab = 'history'"
               class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
-              [class.text-purple-600]="aiAssistTab === 'history'"
+              [class.text-[var(--crm-primary)]]="aiAssistTab === 'history'"
               [class.border-b-2]="aiAssistTab === 'history'"
-              [class.border-purple-600]="aiAssistTab === 'history'"
+              [class.border-[var(--crm-primary)]]="aiAssistTab === 'history'"
               [class.text-[var(--text-muted)]]="aiAssistTab !== 'history'">
               <i class="bi bi-clock-history"></i>
               <span>{{ 'PMDT04_AI_TAB_HISTORY' | translate }}</span>
               @if (aiHistories.length > 0) {
-                <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-purple-500/15 text-purple-600">
+                <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                   {{ aiHistories.length }}
                 </span>
               }
@@ -354,7 +354,7 @@
                 type="text"
                 [(ngModel)]="aiAssistTitle"
                 [placeholder]="'PMDT04_AI_TITLE_INPUT_PLACEHOLDER' | translate"
-                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50"
+                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all placeholder-[var(--text-muted)]/50"
               />
             </div>
 
@@ -367,7 +367,7 @@
                 [(ngModel)]="aiAssistPrompt"
                 rows="3"
                 [placeholder]="'PMDT04_AI_PROMPT_PLACEHOLDER' | translate"
-                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none"
+                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all placeholder-[var(--text-muted)]/50 resize-none"
               ></textarea>
             </div>
 
@@ -377,18 +377,18 @@
             ></sic-ai-attachment-picker>
 
             @if (isGeneratingAiAssist) {
-              <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
-                <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                <p class="text-xs font-medium text-purple-600 dark:text-purple-400">{{ 'PMDT04_AI_ANALYZING' | translate }}</p>
+              <div class="p-4 rounded-xl bg-[var(--crm-primary)]/5 border border-[var(--crm-primary)]/20 flex items-center gap-3">
+                <div class="w-5 h-5 border-2 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
+                <p class="text-xs font-medium text-[var(--crm-primary)]">{{ 'PMDT04_AI_ANALYZING' | translate }}</p>
               </div>
             }
 
             <!-- Latest Result Preview -->
             @if (aiCurrentDraft) {
-              <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-3">
+              <div class="p-4 rounded-xl border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5 space-y-3">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-600 text-white">
+                    <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-[var(--crm-primary)] text-white">
                       v{{ aiCurrentVersionNo }} {{ 'PMDT04_LATEST_LABEL' | translate }}
                     </span>
                     <span class="text-xs font-bold text-[var(--text-active)] truncate max-w-xs">
@@ -406,7 +406,7 @@
                     <button
                       type="button"
                       (click)="pasteRequirementDraft(aiCurrentDraft)"
-                      class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                      class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm flex items-center gap-1.5 cursor-pointer">
                       <i class="bi bi-clipboard-check"></i>
                       <span>{{ 'PMDT04_PASTE_TO_FORM_LABEL' | translate }}</span>
                     </button>
@@ -416,7 +416,7 @@
                 <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto">
                   <div *ngIf="aiCurrentDraft.description" [innerHTML]="aiCurrentDraft.description" class="prose prose-sm max-w-none text-xs"></div>
                   <div *ngIf="aiCurrentDraft.acceptanceCriteria" class="pt-2 border-t border-[var(--border)]">
-                    <strong class="text-purple-600">Acceptance Criteria:</strong>
+                    <strong class="text-[var(--crm-primary)]">Acceptance Criteria:</strong>
                     <div [innerHTML]="aiCurrentDraft.acceptanceCriteria" class="mt-1"></div>
                   </div>
                 </div>
@@ -436,7 +436,7 @@
             <button
               (click)="generateWithAi()"
               [disabled]="isGeneratingAiAssist || (!aiAssistTitle && !aiAssistPrompt)"
-              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+              class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 disabled:opacity-50 shadow-md shadow-[var(--crm-primary)]/20 transition-all cursor-pointer">
               @if (isGeneratingAiAssist) {
                 <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                 <span>{{ 'PMDT04_PROCESSING_LABEL' | translate }}</span>
@@ -458,16 +458,16 @@
                 <button
                   type="button"
                   (click)="aiAssistTab = 'generate'"
-                  class="text-xs text-purple-600 underline cursor-pointer hover:opacity-80">
+                  class="text-xs text-[var(--crm-primary)] underline cursor-pointer hover:opacity-80">
                   {{ 'PMDT04_CLICK_START_FIRST_VERSION' | translate }}
                 </button>
               </div>
             } @else {
               @for (item of aiHistories; track item.id) {
-                <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-purple-500/40 transition-all space-y-2.5 shadow-sm">
+                <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/40 transition-all space-y-2.5 shadow-sm">
                   <div class="flex items-center justify-between">
                     <div class="flex items-center gap-2">
-                      <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-500/15 text-purple-600">
+                      <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                         v{{ item.versionNo }}
                       </span>
                       <span class="text-xs font-semibold text-[var(--text-active)] truncate max-w-[200px]" [title]="item.data?.title || item.title">
@@ -500,7 +500,7 @@
                     <button
                       type="button"
                       (click)="togglePreview(item.id)"
-                      class="text-xs text-purple-600 hover:underline flex items-center gap-1 font-medium cursor-pointer">
+                      class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 font-medium cursor-pointer">
                       <i class="bi" [class.bi-chevron-up]="previewHistoryId === item.id" [class.bi-chevron-down]="previewHistoryId !== item.id"></i>
                       <span>{{ previewHistoryId === item.id ? ('PMDT04_HIDE_PREVIEW_LABEL' | translate) : ('PMDT04_VIEW_PREVIEW_LABEL' | translate) }}</span>
                     </button>
@@ -518,7 +518,7 @@
                       <button
                         type="button"
                         (click)="pasteRequirementDraft(item.data)"
-                        class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                        class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm flex items-center gap-1.5 cursor-pointer">
                         <i class="bi bi-clipboard-check"></i>
                         <span>{{ 'PMDT04_PASTE_TO_FORM_LABEL' | translate }}</span>
                       </button>
@@ -530,7 +530,7 @@
                     <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--sidebar)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto mt-2">
                       <div *ngIf="item.data?.description" [innerHTML]="item.data?.description" class="prose prose-sm max-w-none text-xs"></div>
                       <div *ngIf="item.data?.acceptanceCriteria" class="pt-2 border-t border-[var(--border)]">
-                        <strong class="text-purple-600">Acceptance Criteria:</strong>
+                        <strong class="text-[var(--crm-primary)]">Acceptance Criteria:</strong>
                         <div [innerHTML]="item.data?.acceptanceCriteria" class="mt-1"></div>
                       </div>
                     </div>

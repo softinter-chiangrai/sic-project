@@ -36,7 +36,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  color: #6366f1;
+  color: var(--crm-primary, #29c296);
 }
 
 .ai-batch-close {
@@ -126,8 +126,8 @@
   gap: 6px;
   padding: 7px 12px;
   border-radius: 8px;
-  border: 1px dashed rgba(99, 102, 241, 0.5);
-  color: #6366f1;
+  border: 1px dashed var(--crm-primary, #29c296);
+  color: var(--crm-primary, #29c296);
   font-size: 0.82rem;
   cursor: pointer;
 }
@@ -138,7 +138,7 @@
   gap: 6px;
   padding: 6px 10px;
   border-radius: 8px;
-  background: rgba(99, 102, 241, 0.08);
+  background: rgba(41, 194, 150, 0.08);
   font-size: 0.8rem;
 }
 
@@ -165,7 +165,7 @@
   padding: 10px 16px;
   border-radius: 10px;
   border: none;
-  background: linear-gradient(135deg, #6366f1, #a855f7);
+  background: var(--crm-primary, #29c296);
   color: #fff;
   font-weight: 600;
   cursor: pointer;
@@ -243,7 +243,7 @@
 .ai-batch-cell-textarea:hover,
 .ai-batch-cell-input:focus,
 .ai-batch-cell-textarea:focus {
-  border-color: rgba(99, 102, 241, 0.4);
+  border-color: var(--crm-primary, #29c296);
 }
 
 .ai-batch-footer {

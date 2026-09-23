@@ -13,6 +13,8 @@ public interface DocumentVersionService {
 
     List<DocumentVersionResponse> getVersionsByProject(UUID projectId, String documentType);
 
+    List<DocumentVersionResponse> getAllVersions(String documentType);
+
     DocumentVersionResponse getVersion(UUID id);
 
     UUID saveVersion(DocumentVersionRequest request);

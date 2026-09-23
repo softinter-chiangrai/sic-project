@@ -52,6 +52,23 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<DocumentVersionResponse> getAllVersions(String documentType) {
+        UUID bizId = businessAccessService != null ? businessAccessService.getBusinessId() : null;
+        if (bizId == null) {
+            bizId = BusinessContextHolder.getBusinessId();
+        }
+        boolean hasType = documentType != null && !documentType.isBlank() && !"ALL".equalsIgnoreCase(documentType);
+        List<PmDocumentVersion> list;
+        if (hasType) {
+            list = versionRepository.findAllByBusinessIdAndDocumentType(bizId, documentType);
+        } else {
+            list = versionRepository.findAllByBusinessId(bizId);
+        }
+        return list.stream().map(this::toResponse).collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public DocumentVersionResponse getVersion(UUID id) {
         PmDocumentVersion version = versionRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Document version not found"));

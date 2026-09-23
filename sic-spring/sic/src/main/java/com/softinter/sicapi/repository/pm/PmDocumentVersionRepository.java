@@ -2,6 +2,8 @@ package com.softinter.sicapi.repository.pm;
 
 import com.softinter.sicapi.entity.pm.PmDocumentVersion;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -15,4 +17,16 @@ public interface PmDocumentVersionRepository extends JpaRepository<PmDocumentVer
     List<PmDocumentVersion> findByProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID projectId);
     List<PmDocumentVersion> findByProjectIdAndDocumentTypeAndIsDeleteFalseOrderByCreatedDateDesc(UUID projectId, String documentType);
     boolean existsByDocumentTypeAndDocumentId(String documentType, UUID documentId);
-}
+
+    @Query("SELECT v FROM PmDocumentVersion v WHERE (v.isDelete IS NULL OR v.isDelete = false) AND (:businessId IS NULL OR v.businessId = :businessId OR v.businessId IS NULL) ORDER BY v.createdDate DESC")
+    List<PmDocumentVersion> findAllByBusinessId(@Param("businessId") UUID businessId);
+
+    @Query("SELECT v FROM PmDocumentVersion v WHERE (v.isDelete IS NULL OR v.isDelete = false) AND (:businessId IS NULL OR v.businessId = :businessId OR v.businessId IS NULL) AND v.documentType = :documentType ORDER BY v.createdDate DESC")
+    List<PmDocumentVersion> findAllByBusinessIdAndDocumentType(@Param("businessId") UUID businessId, @Param("documentType") String documentType);
+
+    @Query("SELECT v FROM PmDocumentVersion v WHERE (v.isDelete IS NULL OR v.isDelete = false) ORDER BY v.createdDate DESC")
+    List<PmDocumentVersion> findByIsDeleteFalseOrderByCreatedDateDesc();
+
+    @Query("SELECT v FROM PmDocumentVersion v WHERE (v.isDelete IS NULL OR v.isDelete = false) AND v.documentType = :documentType ORDER BY v.createdDate DESC")
+    List<PmDocumentVersion> findByDocumentTypeAndIsDeleteFalseOrderByCreatedDateDesc(@Param("documentType") String documentType);
+}

@@ -46,7 +46,7 @@
                 <button
                     type="button"
                     (click)="openAiAssist()"
-                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 transition-all transform hover:-translate-y-0.5"
+                    class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all transform hover:-translate-y-0.5 cursor-pointer"
                     [title]="'PMDT07_AI_ASSIST_TITLE' | translate">
                     <i class="bi bi-stars"></i>
                     {{ 'PMDT07_AI_ASSIST_BTN' | translate }}
@@ -89,33 +89,34 @@
                         <!-- Primary Parent Selector: Requirement -->
                         <div class="grid grid-cols-1 gap-4">
                             <sic-combobox
-                                label="ความต้องการ (Requirement)"
+                                [label]="'PMDT07_REQUIREMENT_LABEL' | translate"
                                 formControlName="requirementId"
                                 [apiUrl]="service.apiGetComboboxRequirement"
                                 valueField="value"
                                 textField="text"
-                                placeholder="เลือกความต้องการที่เกี่ยวข้อง เพื่อเชื่อมโยงโครงการและลูกค้าอัตโนมัติ"
+                                [placeholder]="'PMDT07_REQUIREMENT_PLACEHOLDER' | translate"
                                 [clearable]="true"
                                 [required]="true"
+                                [errorMessages]="{ required: ('PMDT07_REQUIRED_REQUIREMENT' | translate) }"
                                 (selectionChanged)="onRequirementSelected($event)">
                             </sic-combobox>
                         </div>
 
-                        <!-- Auto-Derived Context Banner -->
+                        <!-- Auto-Derived Context Banner (Clean Design Tokens - No Hardcoded Blue) -->
                         @if (projectName() || form.value.projectId) {
-                            <div class="flex items-center flex-wrap gap-3 p-3 bg-blue-50/80 dark:bg-blue-950/40 rounded-xl border border-blue-200/80 dark:border-blue-800/60 shadow-xs">
-                                <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300 flex items-center gap-1.5">
-                                    <i class="bi bi-diagram-3-fill"></i> ข้อมูลสืบทอดอัตโนมัติ
+                            <div class="flex items-center flex-wrap gap-3 p-3 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-xs">
+                                <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 flex items-center gap-1.5">
+                                    <i class="bi bi-diagram-3-fill"></i> {{ 'PMDT07_AUTO_DERIVED_LABEL' | translate }}
                                 </span>
-                                <div class="text-sm font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                                    <span class="text-slate-500 dark:text-slate-400">โครงการ:</span>
-                                    <span class="font-bold text-blue-600 dark:text-blue-400">{{ projectName() || form.value.projectName || '-' }}</span>
+                                <div class="text-sm font-medium text-[var(--text-active)] flex items-center gap-1.5">
+                                    <span class="text-[var(--text-muted)]">{{ 'PMDT07_PROJECT_LABEL' | translate }}:</span>
+                                    <span class="font-bold text-[var(--crm-primary)]">{{ projectName() || form.value.projectName || '-' }}</span>
                                 </div>
                                 @if (customerName()) {
-                                    <span class="text-slate-300 dark:text-slate-600">|</span>
-                                    <div class="text-sm font-medium text-slate-700 dark:text-slate-200 flex items-center gap-1.5">
-                                        <span class="text-slate-500 dark:text-slate-400">ลูกค้า:</span>
-                                        <span class="font-medium text-slate-800 dark:text-slate-200">{{ customerName() }}</span>
+                                    <span class="text-[var(--border)]">|</span>
+                                    <div class="text-sm font-medium text-[var(--text-active)] flex items-center gap-1.5">
+                                        <span class="text-[var(--text-muted)]">{{ 'PMDT07_CUSTOMER_LABEL' | translate }}:</span>
+                                        <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
                                     </div>
                                 }
                             </div>
@@ -124,99 +125,100 @@
                         <!-- Basic Info -->
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <sic-input
-                                label="รหัส Specification"
+                                [label]="'PMDT07_SPEC_CODE_LABEL' | translate"
                                 formControlName="specificationCode"
                                 [required]="true"
-                                placeholder="SPEC-001">
+                                [placeholder]="'PMDT07_SPEC_CODE_PLACEHOLDER' | translate">
                             </sic-input>
                             <sic-combobox
-                                label="ประเภท Specification"
+                                [label]="'PMDT07_SPEC_TYPE_LABEL' | translate"
                                 formControlName="specificationType"
                                 [options]="specificationTypeOptions"
                                 valueField="value"
                                 textField="text"
-                                placeholder="เลือกประเภท Specification"
+                                [placeholder]="'PMDT07_SPEC_TYPE_PLACEHOLDER' | translate"
                                 [clearable]="true"
                                 [required]="true">
                             </sic-combobox>
                             <sic-input
-                                label="ชื่อเรื่อง"
+                                [label]="'PMDT07_TITLE_LABEL' | translate"
                                 formControlName="title"
                                 [required]="true"
-                                placeholder="Customer Management">
+                                [placeholder]="'PMDT07_TITLE_PLACEHOLDER' | translate">
                             </sic-input>
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <sic-combobox
-                                label="ลำดับความสำคัญ"
+                                [label]="'PMDT07_PRIORITY_LABEL' | translate"
                                 formControlName="priority"
                                 [apiUrl]="service.apiGetLovPriority"
                                 valueField="value"
                                 textField="text"
+                                [placeholder]="'PMDT07_PRIORITY_PLACEHOLDER' | translate"
                                 [required]="true">
                             </sic-combobox>
                             <sic-combobox
-                                label="ผู้รับผิดชอบ"
+                                [label]="'PMDT07_ASSIGNEE_LABEL' | translate"
                                 formControlName="owner"
                                 [apiUrl]="userApiUrl"
                                 valueField="value"
                                 textField="text"
-                                placeholder="เลือกผู้รับผิดชอบ"
+                                [placeholder]="'PMDT07_ASSIGNEE_PLACEHOLDER' | translate"
                                 [clearable]="true"
                                 [multiple]="true">
                             </sic-combobox>
-                            <sic-number label="Manday โดยประมาณ" formControlName="estimatedManday" placeholder="0" [decimal]="0"></sic-number>
+                            <sic-number [label]="'PMDT07_ESTIMATED_MANDAY_LABEL' | translate" formControlName="estimatedManday" [placeholder]="'PMDT07_ESTIMATED_MANDAY_PLACEHOLDER' | translate" [decimal]="0"></sic-number>
                         </div>
 
                         <!-- Tiptap Editor -->
                         <div>
                             <div class="flex items-center justify-between mb-1">
                                 <span class="text-sm font-medium text-[var(--text-active)]">
-                                    รายละเอียด <span class="text-red-500">*</span>
+                                    {{ 'PMDT07_DESC_LABEL' | translate }} <span class="text-red-500">*</span>
                                 </span>
-                                <span class="text-xs text-[var(--text-muted)]">รองรับการจัดรูปแบบข้อความ</span>
+                                <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT07_SUPPORTS_RICH_TEXT' | translate }}</span>
                             </div>
                             <sic-tiptap-editor
                                 formControlName="description"
-                                placeholderInput="กรอกรายละเอียด Specification..."
+                                [placeholderInput]="'PMDT07_DESC_PLACEHOLDER' | translate"
                                 minHeightInput="200px">
                             </sic-tiptap-editor>
                             @if (form.get('description')?.touched && form.get('description')?.invalid) {
-                                <p class="text-xs text-[var(--crm-danger)] mt-1">กรุณาระบุรายละเอียด</p>
+                                <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT07_REQUIRED_DESC' | translate }}</p>
                             }
                         </div>
 
                         <!-- Attachments -->
                         <div class="space-y-1">
-                            <span class="text-sm font-medium text-[var(--text-active)]">เอกสารแนบ</span>
+                            <span class="text-sm font-medium text-[var(--text-active)]">{{ 'PMDT07_ATTACHMENTS_LABEL' | translate }}</span>
                             <sic-upload
                                 formControlName="uploadGroupId"
                                 [multiple]="true"
                                 category="all"
                                 [visibility]="1"
-                                helperText="อัปโหลดรูปภาพ, PDF, Word, Excel เพื่อประกอบ Specification">
+                                [helperText]="'PMDT07_ATTACHMENTS_HELPER' | translate">
                             </sic-upload>
                         </div>
 
                         <!-- Active -->
                         <div>
-                            <sic-checkbox label="เปิดใช้งาน" formControlName="isActive"></sic-checkbox>
+                            <sic-checkbox [label]="'PMDT07_IS_ACTIVE_LABEL' | translate" formControlName="isActive"></sic-checkbox>
                         </div>
 
                         <!-- Approval Flow -->
                         <div class="border-t border-[var(--border)] pt-4 mt-2">
                             <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
                                 <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                                การอนุมัติ
+                                {{ 'PMDT07_APPROVAL_SECTION_TITLE' | translate }}
                             </div>
                             <div class="grid grid-cols-1 gap-4">
                                 <sic-combobox
-                                    label="กระบวนการอนุมัติ"
+                                    [label]="'PMDT07_APPROVAL_FLOW_LABEL' | translate"
                                     [apiUrl]="service.apiGetApprovals"
                                     valueField="id"
                                     textField="flowName"
-                                    placeholder="เลือกกระบวนการอนุมัติ"
+                                    [placeholder]="'PMDT07_APPROVAL_FLOW_PLACEHOLDER' | translate"
                                     [clearable]="true"
                                     (selectionChanged)="selectedFlowId = $event?.id">
                                 </sic-combobox>
@@ -242,16 +244,16 @@
                         <!-- Buttons -->
                         <div class="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border)] mt-4">
                             <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
-                                <i class="bi bi-arrow-left"></i> ย้อนกลับ
+                                <i class="bi bi-arrow-left"></i> {{ 'PMDT07_BACK_BTN' | translate }}
                             </sic-button>
                             @if (isLocked) {
                                 <sic-button type="button" variant="solid" color="primary" (click)="requestChange()">
-                                    <i class="bi bi-pencil-square"></i> ขอแก้ไข
+                                    <i class="bi bi-pencil-square"></i> {{ 'PMDT07_REQUEST_CHANGE_BTN' | translate }}
                                 </sic-button>
                             } @else if (!isViewOnly) {
                                 <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving || form.invalid">
                                     @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
-                                    {{ isSaving ? 'กำลังบันทึก...' : (isEdit ? 'บันทึก' : 'สร้าง') }}
+                                    {{ isSaving ? ('PMDT07_SAVING_BTN' | translate) : (isEdit ? ('PMDT07_SAVE_BTN' | translate) : ('PMDT07_CREATE_BTN' | translate)) }}
                                 </sic-button>
                             }
                         </div>
@@ -259,7 +261,7 @@
                         @if (isLocked) {
                             <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
                                 <i class="bi bi-lock-fill"></i>
-                                เอกสารนี้ผ่านการอนุมัติแล้ว (ล็อก Baseline) กรุณาใช้ปุ่ม "ขอแก้ไข" เพื่อดำเนินการผ่านคำขอเปลี่ยนแปลง
+                                {{ 'PMDT07_LOCKED_BANNER_MSG' | translate }}
                             </div>
                         }
                     </form>
@@ -272,9 +274,9 @@
                     <div class="flex items-center justify-between mb-3">
                         <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
                             <i class="bi bi-eye text-[var(--crm-primary)]"></i>
-                            ตัวอย่างเอกสาร
+                            {{ 'PMDT07_PREVIEW_TITLE' | translate }}
                         </h3>
-                        <span class="text-xs text-[var(--text-muted)]">อัปเดตอัตโนมัติ</span>
+                        <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT07_AUTO_UPDATE_HINT' | translate }}</span>
                     </div>
                     <sic-specification-preview [data]="getPreviewData()"></sic-specification-preview>
                 </div>
@@ -285,25 +287,22 @@
     <!-- ============================================================ -->
     <!-- AI ASSISTANT MODAL (IN-FORM) -->
     <!-- ============================================================ -->
-    <!-- ============================================================ -->
-    <!-- AI ASSISTANT MODAL (IN-FORM) -->
-    <!-- ============================================================ -->
     @if (showAiAssistModal) {
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fadeIn">
             <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] transition-all">
                 
                 <!-- Modal Header with Tabs -->
-                <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20 flex-shrink-0">
+                <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-[var(--sidebar)] flex-shrink-0">
                     <div class="flex items-center justify-between pb-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+                            <div class="w-10 h-10 rounded-xl bg-[var(--crm-primary)]/15 flex items-center justify-center text-[var(--crm-primary)]">
                                 <i class="bi bi-stars text-lg"></i>
                             </div>
                             <div>
                                 <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
-                                    สร้าง Specification ด้วย AI
+                                    {{ 'PMDT07_AI_MODAL_TITLE' | translate }}
                                 </h2>
-                                <p class="text-xs text-[var(--text-muted)]">วิเคราะห์และร่างข้อมูล Specification พร้อมเนื้อหาที่สมบูรณ์</p>
+                                <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT07_AI_MODAL_SUBTITLE' | translate }}</p>
                             </div>
                         </div>
                         <button
@@ -320,25 +319,25 @@
                             type="button"
                             (click)="aiAssistTab = 'generate'"
                             class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
-                            [class.text-purple-600]="aiAssistTab === 'generate'"
+                            [class.text-[var(--crm-primary)]]="aiAssistTab === 'generate'"
                             [class.border-b-2]="aiAssistTab === 'generate'"
-                            [class.border-purple-600]="aiAssistTab === 'generate'"
+                            [class.border-[var(--crm-primary)]]="aiAssistTab === 'generate'"
                             [class.text-[var(--text-muted)]]="aiAssistTab !== 'generate'">
                             <i class="bi bi-lightning-charge-fill"></i>
-                            <span>สร้างเนื้อหา (Generate)</span>
+                            <span>{{ 'PMDT07_AI_TAB_GENERATE' | translate }}</span>
                         </button>
                         <button
                             type="button"
                             (click)="aiAssistTab = 'history'"
                             class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
-                            [class.text-purple-600]="aiAssistTab === 'history'"
+                            [class.text-[var(--crm-primary)]]="aiAssistTab === 'history'"
                             [class.border-b-2]="aiAssistTab === 'history'"
-                            [class.border-purple-600]="aiAssistTab === 'history'"
+                            [class.border-[var(--crm-primary)]]="aiAssistTab === 'history'"
                             [class.text-[var(--text-muted)]]="aiAssistTab !== 'history'">
                             <i class="bi bi-clock-history"></i>
-                            <span>ประวัติเวอร์ชัน (History Log)</span>
+                            <span>{{ 'PMDT07_AI_TAB_HISTORY' | translate }}</span>
                             @if (aiHistories.length > 0) {
-                                <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-purple-500/15 text-purple-600">
+                                <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                                     {{ aiHistories.length }}
                                 </span>
                             }
@@ -352,11 +351,11 @@
                         <!-- AI Model Selection -->
                         <div>
                             <sic-combobox
-                                label="โมเดล AI ที่ต้องการใช้"
+                                [label]="'PMDT07_AI_MODEL_LABEL' | translate"
                                 [options]="aiModels"
                                 valueField="id"
                                 textField="name"
-                                placeholder="เลือกโมเดล AI"
+                                [placeholder]="'PMDT07_AI_MODEL_PLACEHOLDER' | translate"
                                 [(ngModel)]="aiAssistModel"
                                 [clearable]="false">
                             </sic-combobox>
@@ -365,10 +364,10 @@
                         <!-- Requirement Selection (Optional) -->
                         <div>
                             <sic-combobox
-                                label="อ้างอิงจากความต้องการ (ถ้ามี)"
+                                [label]="'PMDT07_AI_REF_REQ_LABEL' | translate"
                                 [apiUrl]="service.apiGetComboboxRequirement"
                                 [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                                placeholder="-- ไม่ระบุ (สร้างจากหัวข้อหรือคำสั่งอิสระ) --"
+                                [placeholder]="'PMDT07_AI_REF_REQ_PLACEHOLDER' | translate"
                                 [(ngModel)]="aiAssistRequirementId"
                                 [clearable]="true">
                             </sic-combobox>
@@ -377,12 +376,12 @@
                         <!-- Diagram Selection (Multiple) -->
                         <div>
                             <sic-combobox
-                                label="อ้างอิงจาก Diagram (ถ้ามี)"
+                                [label]="'PMDT07_AI_REF_DIAGRAM_LABEL' | translate"
                                 [apiUrl]="service.apiGetComboboxDiagram"
                                 [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
                                 valueField="id"
                                 textField="name"
-                                placeholder="-- ไม่ระบุ หรือเลือกหลายแผนภาพ --"
+                                [placeholder]="'PMDT07_AI_REF_DIAGRAM_PLACEHOLDER' | translate"
                                 [(ngModel)]="aiAssistDiagramIds"
                                 [multiple]="true"
                                 [clearable]="true">
@@ -391,13 +390,13 @@
 
                         <div>
                             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-                                คำสั่งหรือประเด็นความต้องการเพิ่มเติม
+                                {{ 'PMDT07_AI_PROMPT_LABEL' | translate }}
                             </label>
                             <textarea
                                 [(ngModel)]="aiAssistPrompt"
                                 rows="3"
-                                placeholder="ระบุสิ่งที่ต้องการให้ AI เน้น เช่น 'ขอให้เพิ่มข้อกำหนดเกี่ยวกับความปลอดภัย การจำกัดสิทธิ์ Admin และ API สำหรับ Export รายงานเป็น Excel'..."
-                                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+                                [placeholder]="'PMDT07_AI_PROMPT_PLACEHOLDER' | translate"
+                                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all placeholder-[var(--text-muted)]/50 resize-none">
                             </textarea>
                         </div>
 
@@ -407,19 +406,19 @@
                         ></sic-ai-attachment-picker>
 
                         @if (isGeneratingAiAssist) {
-                            <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
-                                <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-                                <p class="text-xs font-medium text-purple-600 dark:text-purple-400">AI กำลังวิเคราะห์และเรียบเรียงเนื้อหา Specification...</p>
+                            <div class="p-4 rounded-xl bg-[var(--crm-primary)]/5 border border-[var(--crm-primary)]/20 flex items-center gap-3">
+                                <div class="w-5 h-5 border-2 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
+                                <p class="text-xs font-medium text-[var(--crm-primary)]">{{ 'PMDT07_AI_GENERATING_MSG' | translate }}</p>
                             </div>
                         }
 
                         <!-- Latest Result Preview -->
                         @if (aiCurrentDraft) {
-                            <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-3">
+                            <div class="p-4 rounded-xl border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5 space-y-3">
                                 <div class="flex items-center justify-between">
                                     <div class="flex items-center gap-2">
-                                        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-600 text-white">
-                                            v{{ aiCurrentVersionNo }} (ล่าสุด)
+                                        <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-[var(--crm-primary)] text-white">
+                                            v{{ aiCurrentVersionNo }} ({{ 'PMDT07_AI_LATEST_BADGE' | translate }})
                                         </span>
                                         <span class="text-xs font-bold text-[var(--text-active)] truncate max-w-xs">
                                             {{ aiCurrentDraft.title }}
@@ -431,14 +430,14 @@
                                             (click)="copyDraft(aiCurrentDraft, 'current')"
                                             class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] flex items-center gap-1 cursor-pointer">
                                             <i class="bi" [class.bi-clipboard]="copiedId !== 'current'" [class.bi-check-lg]="copiedId === 'current'" [class.text-green-500]="copiedId === 'current'"></i>
-                                            <span>{{ copiedId === 'current' ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                                            <span>{{ copiedId === 'current' ? ('PMDT07_AI_COPIED_BTN' | translate) : ('PMDT07_AI_COPY_BTN' | translate) }}</span>
                                         </button>
                                         <button
                                             type="button"
                                             (click)="pasteSpecificationDraft(aiCurrentDraft)"
-                                            class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                            class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm flex items-center gap-1.5 cursor-pointer">
                                             <i class="bi bi-clipboard-check"></i>
-                                            <span>วางลงในฟอร์ม (Paste)</span>
+                                            <span>{{ 'PMDT07_AI_PASTE_BTN' | translate }}</span>
                                         </button>
                                     </div>
                                 </div>
@@ -456,19 +455,19 @@
                             (click)="closeAiAssist()"
                             [disabled]="isGeneratingAiAssist"
                             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-                            ปิด
+                            {{ 'PMDT07_AI_CLOSE_BTN' | translate }}
                         </button>
 
                         <button
                             (click)="generateWithAi()"
                             [disabled]="isGeneratingAiAssist"
-                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+                            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 disabled:opacity-50 shadow-md shadow-[var(--crm-primary)]/20 transition-all cursor-pointer">
                             @if (isGeneratingAiAssist) {
                                 <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                <span>กำลังประมวลผล...</span>
+                                <span>{{ 'PMDT07_AI_PROCESSING_BTN' | translate }}</span>
                             } @else {
                                 <i class="bi bi-stars"></i>
-                                <span>{{ aiCurrentDraft ? 'Generate ใหม่' : 'สร้างเนื้อหา' }}</span>
+                                <span>{{ aiCurrentDraft ? ('PMDT07_AI_REGENERATE_BTN' | translate) : ('PMDT07_AI_GENERATE_BTN' | translate) }}</span>
                             }
                         </button>
                     </div>
@@ -480,20 +479,20 @@
                         @if (aiHistories.length === 0) {
                             <div class="py-12 text-center text-[var(--text-muted)] flex flex-col items-center gap-2">
                                 <i class="bi bi-clock-history text-3xl opacity-40"></i>
-                                <p class="text-xs">ยังไม่มีประวัติการสร้าง Specification ด้วย AI สำหรับเอกสารนี้</p>
+                                <p class="text-xs">{{ 'PMDT07_AI_NO_HISTORY' | translate }}</p>
                                 <button
                                     type="button"
                                     (click)="aiAssistTab = 'generate'"
-                                    class="text-xs text-purple-600 underline cursor-pointer hover:opacity-80">
-                                    คลิกที่นี่เพื่อเริ่มสร้างเวอร์ชันแรก
+                                    class="text-xs text-[var(--crm-primary)] underline cursor-pointer hover:opacity-80">
+                                    {{ 'PMDT07_AI_START_FIRST_VER' | translate }}
                                 </button>
                             </div>
                         } @else {
                             @for (item of aiHistories; track item.id) {
-                                <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-purple-500/40 transition-all space-y-2.5 shadow-sm">
+                                <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/40 transition-all space-y-2.5 shadow-sm">
                                     <div class="flex items-center justify-between">
                                         <div class="flex items-center gap-2">
-                                            <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-500/15 text-purple-600">
+                                            <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                                                 v{{ item.versionNo }}
                                             </span>
                                             <span class="text-xs font-semibold text-[var(--text-active)] truncate max-w-[200px]" [title]="item.data?.title || item.title">
@@ -509,7 +508,7 @@
                                             <button
                                                 (click)="deleteAiHistory(item.id, $event)"
                                                 class="p-1 text-[var(--text-muted)] hover:text-red-500 transition-colors cursor-pointer"
-                                                title="ลบประวัตินี้">
+                                                [title]="'PMDT07_AI_DELETE_HISTORY_TIP' | translate">
                                                 <i class="bi bi-trash"></i>
                                             </button>
                                         </div>
@@ -526,9 +525,9 @@
                                         <button
                                             type="button"
                                             (click)="togglePreview(item.id)"
-                                            class="text-xs text-purple-600 hover:underline flex items-center gap-1 font-medium cursor-pointer">
+                                            class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 font-medium cursor-pointer">
                                             <i class="bi" [class.bi-chevron-up]="previewHistoryId === item.id" [class.bi-chevron-down]="previewHistoryId !== item.id"></i>
-                                            <span>{{ previewHistoryId === item.id ? 'ซ่อนตัวอย่าง' : 'ดูตัวอย่างเนื้อหา' }}</span>
+                                            <span>{{ previewHistoryId === item.id ? ('PMDT07_AI_HIDE_PREVIEW' | translate) : ('PMDT07_AI_SHOW_PREVIEW' | translate) }}</span>
                                         </button>
 
                                         <div class="flex items-center gap-2">
@@ -537,16 +536,16 @@
                                                 (click)="copyDraft(item.data, item.id)"
                                                 class="px-2.5 py-1 text-xs rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] text-[var(--text-active)] flex items-center gap-1 cursor-pointer">
                                                 <i class="bi" [class.bi-clipboard]="copiedId !== item.id" [class.bi-check-lg]="copiedId === item.id" [class.text-green-500]="copiedId === item.id"></i>
-                                                <span>{{ copiedId === item.id ? 'คัดลอกแล้ว' : 'คัดลอก' }}</span>
+                                                <span>{{ copiedId === item.id ? ('PMDT07_AI_COPIED_BTN' | translate) : ('PMDT07_AI_COPY_BTN' | translate) }}</span>
                                             </button>
                                             
                                             <!-- PASTE BUTTON -->
                                             <button
                                                 type="button"
                                                 (click)="pasteSpecificationDraft(item.data)"
-                                                class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                                                class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm flex items-center gap-1.5 cursor-pointer">
                                                 <i class="bi bi-clipboard-check"></i>
-                                                <span>วางลงในฟอร์ม (Paste)</span>
+                                                <span>{{ 'PMDT07_AI_PASTE_BTN' | translate }}</span>
                                             </button>
                                         </div>
                                     </div>
@@ -567,10 +566,10 @@
                         <button
                             (click)="closeAiAssist()"
                             class="px-4 py-2 rounded-xl text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all cursor-pointer">
-                            ปิด
+                            {{ 'PMDT07_AI_CLOSE_BTN' | translate }}
                         </button>
                         <span class="text-xs text-[var(--text-muted)]">
-                            มีประวัติทั้งหมด {{ aiHistories.length }} เวอร์ชัน
+                            {{ 'PMDT07_AI_TOTAL_HISTORY_PREFIX' | translate }}{{ aiHistories.length }}{{ 'PMDT07_AI_TOTAL_HISTORY_SUFFIX' | translate }}
                         </span>
                     </div>
                 }

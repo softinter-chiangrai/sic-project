@@ -47,8 +47,8 @@
           <button
             type="button"
             (click)="openAiAssist()"
-            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-sm hover:shadow transition-all cursor-pointer">
-            <i class="bi bi-stars text-amber-300"></i>
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all cursor-pointer">
+            <i class="bi bi-stars"></i>
             <span>{{ 'PMRT04A_CREATE_WITH_AI' | translate }}</span>
           </button>
         }
@@ -78,8 +78,8 @@
               valueField="value"
               textField="text"
               [required]="true"
-              placeholder="เลือกลูกค้า..."
-              [errorMessages]="{ required: 'กรุณาเลือกลูกค้า' }"
+              [placeholder]="'PMRT04A_CUSTOMER_PLACEHOLDER' | translate"
+              [errorMessages]="{ required: ('PMRT04A_CUSTOMER_REQUIRED' | translate) }"
               (selectionChanged)="onCustomerSelected($event)"
             ></sic-combobox>
           </div>
@@ -93,8 +93,8 @@
               valueField="value"
               textField="text"
               [required]="true"
-              placeholder="เลือกโครงการ..."
-              [errorMessages]="{ required: 'กรุณาเลือกโครงการ' }"
+              [placeholder]="'PMRT04A_PROJECT_PLACEHOLDER' | translate"
+              [errorMessages]="{ required: ('PMRT04A_PROJECT_REQUIRED' | translate) }"
               (selectionChanged)="onProjectSelected($event)"
             ></sic-combobox>
           </div>
@@ -278,15 +278,15 @@
     <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden animate-scale-up">
 
       <!-- Modal Header -->
-      <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-gradient-to-r from-purple-500/10 via-indigo-500/10 to-transparent flex-shrink-0">
+      <div class="px-6 py-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--sidebar)] flex-shrink-0">
         <div class="flex items-center gap-2.5">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white shadow-md shadow-purple-500/20">
+          <div class="w-9 h-9 rounded-xl bg-[var(--crm-primary)] flex items-center justify-center text-white shadow-md shadow-[var(--crm-primary)]/20">
             <i class="bi bi-stars text-base"></i>
           </div>
           <div>
             <h3 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
               AI Contract & Scope Drafting Generator
-              <span class="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/15 text-purple-700 dark:text-purple-300 font-semibold border border-purple-500/30">
+              <span class="text-[10px] px-2 py-0.5 rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] font-semibold border border-[var(--crm-primary)]/30">
                 PRO
               </span>
             </h3>
@@ -306,18 +306,18 @@
         <button
           type="button"
           (click)="aiActiveTab.set('generate')"
-          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
+          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
           <i class="bi bi-magic"></i>
           {{ 'PMRT04A_AI_TAB_GENERATE' | translate }}
         </button>
         <button
           type="button"
           (click)="aiActiveTab.set('history')"
-          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-purple-600 text-purple-600 dark:text-purple-400' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
+          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
           <i class="bi bi-clock-history"></i>
           {{ 'PMRT04A_AI_TAB_HISTORY' | translate }}
           @if (aiHistories().length > 0) {
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 font-bold">
+            <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-[var(--crm-primary)]/20 text-[var(--crm-primary)] font-bold">
               {{ aiHistories().length }}
             </span>
           }
@@ -330,7 +330,7 @@
           <!-- AI Model Selection -->
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              <i class="bi bi-cpu text-purple-500 mr-1"></i>
+              <i class="bi bi-cpu text-[var(--crm-primary)] mr-1"></i>
               {{ 'PMRT04A_AI_MODEL_LABEL' | translate }}
             </label>
             <sic-combobox
@@ -347,7 +347,7 @@
           <!-- Contract Type Selection -->
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              <i class="bi bi-file-earmark-ruled text-purple-500 mr-1"></i>
+              <i class="bi bi-file-earmark-ruled text-[var(--crm-primary)] mr-1"></i>
               {{ 'PMRT04A_CONTRACT_TYPE_LABEL' | translate }}
             </label>
             <sic-combobox
@@ -363,7 +363,7 @@
           <!-- Prompt / Instructions -->
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">
-              <i class="bi bi-chat-left-text text-indigo-500 mr-1"></i>
+              <i class="bi bi-chat-left-text text-[var(--crm-primary)] mr-1"></i>
               {{ 'PMRT04A_AI_PROMPT_LABEL' | translate }}
             </label>
             <textarea
@@ -371,7 +371,7 @@
               (ngModelChange)="aiPrompt.set($event)"
               rows="3"
               [placeholder]="'PMRT04A_AI_PROMPT_PLACEHOLDER' | translate"
-              class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"></textarea>
+              class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all resize-none"></textarea>
           </div>
 
           <sic-ai-attachment-picker
@@ -380,10 +380,10 @@
           ></sic-ai-attachment-picker>
 
           @if (isGeneratingAi()) {
-            <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
-              <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="p-4 rounded-xl bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 flex items-center gap-3">
+              <div class="w-6 h-6 border-2 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ 'PMRT04A_AI_GENERATING_TITLE' | translate }}</p>
+                <p class="text-sm font-semibold text-[var(--crm-primary)]">{{ 'PMRT04A_AI_GENERATING_TITLE' | translate }}</p>
                 <p class="text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AI_GENERATING_SUBTITLE' | translate }}</p>
               </div>
             </div>
@@ -393,7 +393,7 @@
           @if (aiCurrentDraft()) {
             <div class="p-4 rounded-xl bg-[var(--bg)] border border-[var(--border)] space-y-3">
               <div class="flex items-center justify-between border-b border-[var(--border)] pb-2 flex-wrap gap-2">
-                <span class="text-xs font-bold text-purple-600 dark:text-purple-400 flex items-center gap-1.5">
+                <span class="text-xs font-bold text-[var(--crm-primary)] flex items-center gap-1.5">
                   <i class="bi bi-check-circle-fill"></i>
                   {{ 'PMRT04A_AI_LATEST_RESULT' | translate: { version: aiCurrentVersionNo() } }}
                 </span>
@@ -408,7 +408,7 @@
                   <button
                     type="button"
                     (click)="pasteContractDraft(aiCurrentDraft())"
-                    class="px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer">
+                    class="px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all cursor-pointer">
                     <i class="bi bi-arrow-down-circle"></i>
                     {{ 'PMRT04A_PASTE_TO_FORM' | translate }}
                   </button>
@@ -443,12 +443,12 @@
             type="button"
             (click)="generateAiDraft()"
             [disabled]="isGeneratingAi()"
-            class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 shadow-md shadow-purple-500/20 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-2">
+            class="px-5 py-2 rounded-xl text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-md shadow-[var(--crm-primary)]/20 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-2">
             @if (isGeneratingAi()) {
               <div class="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               <span>{{ 'PMRT04A_GENERATING' | translate }}</span>
             } @else {
-              <i class="bi bi-stars text-amber-300"></i>
+              <i class="bi bi-stars"></i>
               <span>{{ 'PMRT04A_GENERATE_WITH_AI' | translate }}</span>
             }
           </button>
@@ -476,10 +476,10 @@
             </div>
 
             @for (item of aiHistories(); track item.id) {
-              <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-purple-500/40 transition-all space-y-2">
+              <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/40 transition-all space-y-2">
                 <div class="flex items-center justify-between flex-wrap gap-2">
                   <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-500/15 text-purple-700 dark:text-purple-300 border border-purple-500/30">
+                    <span class="px-2 py-0.5 rounded-md text-[11px] font-bold bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] border border-[var(--crm-primary)]/30">
                       v{{ item.versionNo }}
                     </span>
                     <span class="text-xs font-semibold text-[var(--text-active)]">
@@ -518,7 +518,7 @@
                   <button
                     type="button"
                     (click)="pasteContractDraft(item.data)"
-                    class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-purple-600 hover:bg-purple-700 transition-all cursor-pointer flex items-center gap-1.5">
+                    class="px-3 py-1 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all cursor-pointer flex items-center gap-1.5">
                     <i class="bi bi-arrow-down-circle"></i>
                     {{ 'PMRT04A_PASTE_TO_FORM' | translate }}
                   </button>

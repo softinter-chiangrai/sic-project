@@ -34,8 +34,9 @@ public class DocumentVersionController {
             return ResponseEntity.ok(versionService.getVersions(documentType, documentId));
         } else if (projectId != null) {
             return ResponseEntity.ok(versionService.getVersionsByProject(projectId, documentType));
+        } else {
+            return ResponseEntity.ok(versionService.getAllVersions(documentType));
         }
-        return ResponseEntity.ok(List.of());
     }
 
     @GetMapping("/{id}")

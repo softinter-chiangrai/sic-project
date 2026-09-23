@@ -194,8 +194,9 @@ export class Pmdt02AComponent implements OnInit {
     }
 
     const raw = this.form.value;
+    const targetPhaseId = raw.phaseId || this.phaseId;
     const data: MilestoneRequest = {
-      phaseId: this.phaseId,
+      phaseId: targetPhaseId,
       milestoneName: raw.milestoneName!,
       description: raw.description || undefined,
       dueDate: this.buildISOString(raw.dueDate, raw.dueTime!),
@@ -209,17 +210,26 @@ export class Pmdt02AComponent implements OnInit {
     request.subscribe({
       next: (res) => {
         this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_MS_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_MS_SUCCESS_MSG'));
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
+        if (targetPhaseId) {
+          this.router.navigate(['/feature/pm/phase', targetPhaseId], {
+            queryParams: this.projectId ? { projectId: this.projectId } : undefined,
+          });
+        } else {
+          this.router.navigate(['/feature/pm/phase']);
+        }
       },
       error: (err) => this.dialog.error(this.translate.instant('PMDT02_FAIL_TITLE'), err.message),
     });
   }
 
   cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
+    const targetPhaseId = this.form.get('phaseId')?.value || this.phaseId;
+    if (targetPhaseId) {
+      this.router.navigate(['/feature/pm/phase', targetPhaseId], {
+        queryParams: this.projectId ? { projectId: this.projectId } : undefined,
+      });
+    } else {
+      window.history.back();
+    }
   }
 }

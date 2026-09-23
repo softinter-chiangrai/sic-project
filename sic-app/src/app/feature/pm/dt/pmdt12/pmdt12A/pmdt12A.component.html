@@ -38,7 +38,7 @@
           <button
             type="button"
             (click)="openAiAssist()"
-            class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 shadow-md shadow-purple-500/25 transition-all transform hover:-translate-y-0.5 cursor-pointer"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all cursor-pointer"
             [title]="'PMDT12A_GENERATE_WITH_AI_TITLE' | translate">
             <i class="bi bi-stars text-sm"></i>
             <span>{{ 'PMDT12A_GENERATE_WITH_AI' | translate }}</span>
@@ -304,10 +304,10 @@
     <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all">
       
       <!-- Modal Header with Tabs -->
-      <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20 flex-shrink-0">
+      <div class="px-6 pt-4 pb-0 border-b border-[var(--border)] bg-[var(--crm-primary)]/5 flex-shrink-0">
         <div class="flex items-center justify-between pb-3">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
+            <div class="w-10 h-10 rounded-xl bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] border border-[var(--crm-primary)]/30 flex items-center justify-center shadow-sm">
               <i class="bi bi-stars text-lg"></i>
             </div>
             <div>
@@ -332,9 +332,9 @@
             type="button"
             (click)="aiAssistTab.set('generate')"
             class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
-            [class.text-purple-600]="aiAssistTab() === 'generate'"
+            [class.text-[var(--crm-primary)]]="aiAssistTab() === 'generate'"
             [class.border-b-2]="aiAssistTab() === 'generate'"
-            [class.border-purple-600]="aiAssistTab() === 'generate'"
+            [class.border-[var(--crm-primary)]]="aiAssistTab() === 'generate'"
             [class.text-[var(--text-muted)]]="aiAssistTab() !== 'generate'">
             <i class="bi bi-lightning-charge-fill"></i>
             <span>{{ 'PMDT12A_GENERATE_TAB' | translate }}</span>
@@ -343,14 +343,14 @@
             type="button"
             (click)="aiAssistTab.set('history')"
             class="pb-2.5 text-xs font-semibold transition-all relative flex items-center gap-1.5 cursor-pointer"
-            [class.text-purple-600]="aiAssistTab() === 'history'"
+            [class.text-[var(--crm-primary)]]="aiAssistTab() === 'history'"
             [class.border-b-2]="aiAssistTab() === 'history'"
-            [class.border-purple-600]="aiAssistTab() === 'history'"
+            [class.border-[var(--crm-primary)]]="aiAssistTab() === 'history'"
             [class.text-[var(--text-muted)]]="aiAssistTab() !== 'history'">
             <i class="bi bi-clock-history"></i>
             <span>{{ 'PMDT12A_HISTORY_TAB' | translate }}</span>
             @if (aiHistories().length > 0) {
-              <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-purple-500/15 text-purple-600">
+              <span class="px-1.5 py-0.2 text-[10px] font-bold rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                 {{ aiHistories().length }}
               </span>
             }
@@ -400,7 +400,7 @@
               (ngModelChange)="aiAssistPrompt.set($event)"
               rows="3"
               [placeholder]="'PMDT12A_PROMPT_PLACEHOLDER' | translate"
-              class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all placeholder-[var(--text-muted)]/50 resize-none">
+              class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all placeholder-[var(--text-muted)]/50 resize-none">
             </textarea>
           </div>
 
@@ -410,18 +410,18 @@
           ></sic-ai-attachment-picker>
 
           @if (isGeneratingAiAssist()) {
-            <div class="p-4 rounded-xl bg-purple-500/5 border border-purple-500/20 flex items-center gap-3">
-              <div class="w-5 h-5 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
-              <p class="text-xs font-medium text-purple-600 dark:text-purple-400">{{ 'PMDT12A_AI_ANALYZING' | translate }}</p>
+            <div class="p-4 rounded-xl bg-[var(--crm-primary)]/5 border border-[var(--crm-primary)]/20 flex items-center gap-3">
+              <div class="w-5 h-5 border-2 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
+              <p class="text-xs font-medium text-[var(--crm-primary)]">{{ 'PMDT12A_AI_ANALYZING' | translate }}</p>
             </div>
           }
 
           <!-- Latest Result Preview -->
           @if (aiCurrentDraft()) {
-            <div class="p-4 rounded-xl border border-purple-500/30 bg-purple-500/5 space-y-3">
+            <div class="p-4 rounded-xl border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5 space-y-3">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-600 text-white">
+                  <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-[var(--crm-primary)] text-white">
                     v{{ aiCurrentVersionNo() }} ({{ 'PMDT12A_LATEST' | translate }})
                   </span>
                   <span class="text-xs font-bold text-[var(--text-active)] truncate max-w-xs">
@@ -439,7 +439,7 @@
                   <button
                     type="button"
                     (click)="pasteTestCaseDraft(aiCurrentDraft())"
-                    class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                    class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm flex items-center gap-1.5 cursor-pointer">
                     <i class="bi bi-clipboard-check"></i>
                     <span>{{ 'PMDT12A_PASTE_TO_FORM' | translate }}</span>
                   </button>
@@ -448,11 +448,11 @@
 
               <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--bg)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto">
                 <div *ngIf="aiCurrentDraft().testStep" class="space-y-1">
-                  <strong class="text-purple-600 font-semibold">{{ 'PMDT12A_TEST_STEPS_LABEL' | translate }}:</strong>
+                  <strong class="text-[var(--crm-primary)] font-semibold">{{ 'PMDT12A_TEST_STEPS_LABEL' | translate }}:</strong>
                   <div [innerHTML]="aiCurrentDraft().testStep" class="prose prose-sm max-w-none text-xs"></div>
                 </div>
                 <div *ngIf="aiCurrentDraft().expectedResult" class="pt-2 border-t border-[var(--border)] space-y-1">
-                  <strong class="text-purple-600 font-semibold">{{ 'PMDT12A_EXPECTED_RESULT_LABEL2' | translate }}:</strong>
+                  <strong class="text-[var(--crm-primary)] font-semibold">{{ 'PMDT12A_EXPECTED_RESULT_LABEL2' | translate }}:</strong>
                   <div [innerHTML]="aiCurrentDraft().expectedResult" class="prose prose-sm max-w-none text-xs"></div>
                 </div>
               </div>
@@ -474,7 +474,7 @@
             type="button"
             (click)="generateWithAi()"
             [disabled]="isGeneratingAiAssist()"
-            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 disabled:opacity-50 shadow-md shadow-purple-500/20 transition-all cursor-pointer">
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 disabled:opacity-50 shadow-md shadow-[var(--crm-primary)]/20 transition-all cursor-pointer">
             @if (isGeneratingAiAssist()) {
               <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
               <span>{{ 'PMDT12A_PROCESSING' | translate }}</span>
@@ -496,16 +496,16 @@
               <button
                 type="button"
                 (click)="aiAssistTab.set('generate')"
-                class="text-xs text-purple-600 underline cursor-pointer hover:opacity-80">
+                class="text-xs text-[var(--crm-primary)] underline cursor-pointer hover:opacity-80">
                 {{ 'PMDT12A_CLICK_TO_START_FIRST_VERSION' | translate }}
               </button>
             </div>
           } @else {
             @for (item of aiHistories(); track item.id) {
-              <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-purple-500/40 transition-all space-y-2.5 shadow-sm">
+              <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:border-[var(--crm-primary)]/40 transition-all space-y-2.5 shadow-sm">
                 <div class="flex items-center justify-between">
                   <div class="flex items-center gap-2">
-                    <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-purple-500/15 text-purple-600">
+                    <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)]">
                       v{{ item.versionNo }}
                     </span>
                     <span class="text-xs font-semibold text-[var(--text-active)] truncate max-w-[200px]" [title]="item.data?.title || item.title">
@@ -538,7 +538,7 @@
                   <button
                     type="button"
                     (click)="togglePreview(item.id)"
-                    class="text-xs text-purple-600 hover:underline flex items-center gap-1 font-medium cursor-pointer">
+                    class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 font-medium cursor-pointer">
                     <i class="bi" [class.bi-chevron-up]="previewHistoryId() === item.id" [class.bi-chevron-down]="previewHistoryId() !== item.id"></i>
                     <span>{{ previewHistoryId() === item.id ? ('PMDT12A_HIDE_PREVIEW' | translate) : ('PMDT12A_VIEW_PREVIEW' | translate) }}</span>
                   </button>
@@ -556,7 +556,7 @@
                     <button
                       type="button"
                       (click)="pasteTestCaseDraft(item.data)"
-                      class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-sm flex items-center gap-1.5 cursor-pointer">
+                      class="px-3 py-1 text-xs rounded-lg font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm flex items-center gap-1.5 cursor-pointer">
                       <i class="bi bi-clipboard-check"></i>
                       <span>{{ 'PMDT12A_PASTE_TO_FORM' | translate }}</span>
                     </button>
@@ -567,11 +567,11 @@
                 @if (previewHistoryId() === item.id) {
                   <div class="text-xs text-[var(--text)] space-y-2 bg-[var(--sidebar)] p-3 rounded-lg border border-[var(--border)] max-h-48 overflow-y-auto mt-2">
                     <div *ngIf="item.data?.testStep" class="space-y-1">
-                      <strong class="text-purple-600 font-semibold">{{ 'PMDT12A_TEST_STEPS_LABEL' | translate }}:</strong>
+                      <strong class="text-[var(--crm-primary)] font-semibold">{{ 'PMDT12A_TEST_STEPS_LABEL' | translate }}:</strong>
                       <div [innerHTML]="item.data?.testStep" class="prose prose-sm max-w-none text-xs"></div>
                     </div>
                     <div *ngIf="item.data?.expectedResult" class="pt-2 border-t border-[var(--border)] space-y-1">
-                      <strong class="text-purple-600 font-semibold">{{ 'PMDT12A_EXPECTED_RESULT_LABEL2' | translate }}:</strong>
+                      <strong class="text-[var(--crm-primary)] font-semibold">{{ 'PMDT12A_EXPECTED_RESULT_LABEL2' | translate }}:</strong>
                       <div [innerHTML]="item.data?.expectedResult" class="prose prose-sm max-w-none text-xs"></div>
                     </div>
                   </div>

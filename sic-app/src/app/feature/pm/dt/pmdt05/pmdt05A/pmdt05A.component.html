@@ -72,7 +72,7 @@
         <!-- New Chat Button -->
         <button
           (click)="createNewSession(true)"
-          class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-sm shadow-purple-500/20 transition-all cursor-pointer active:scale-95"
+          class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm shadow-[var(--crm-primary)]/20 transition-all cursor-pointer active:scale-95"
           [title]="'PMDT05_NEW_SESSION_TITLE' | translate"
         >
           <i class="bi bi-plus-lg text-xs"></i>
@@ -106,14 +106,14 @@
           <span>{{ 'PMDT05_BACK_LABEL' | translate }}</span>
         </button>
         <span class="text-xs font-bold text-[var(--text-active)] flex items-center gap-1.5">
-          <i class="bi bi-clock-history text-purple-500"></i>
+          <i class="bi bi-clock-history text-[var(--crm-primary)]"></i>
           {{ 'PMDT05_CHAT_HISTORY_LABEL' | translate }}
         </span>
       </div>
 
       <button
         (click)="createNewSession(true)"
-        class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 shadow-sm shadow-purple-500/20 transition-all cursor-pointer active:scale-95"
+        class="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 shadow-sm shadow-[var(--crm-primary)]/20 transition-all cursor-pointer active:scale-95"
         [title]="'PMDT05_NEW_SESSION_TITLE' | translate"
       >
         <i class="bi bi-plus-lg text-xs"></i>
@@ -289,7 +289,7 @@
         <!-- Welcome & Suggested Prompts -->
         <div class="flex flex-col items-center text-center py-6 px-3">
           <div
-            class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 via-indigo-600 to-blue-500 flex items-center justify-center text-white text-2xl shadow-lg shadow-purple-500/20 mb-3 animate-bounce-subtle"
+            class="w-14 h-14 rounded-2xl bg-[var(--crm-primary)] flex items-center justify-center text-white text-2xl shadow-lg shadow-[var(--crm-primary)]/20 mb-3 animate-bounce-subtle"
           >
             <i class="bi bi-robot"></i>
           </div>
@@ -307,17 +307,17 @@
               @for (item of promptSuggestions; track item.title) {
                 <button
                   (click)="applyPrompt(item.prompt)"
-                  class="flex items-center justify-between p-2.5 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] hover:border-purple-500/40 text-left transition-all group cursor-pointer"
+                  class="flex items-center justify-between p-2.5 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)]/40 text-left transition-all group cursor-pointer"
                 >
                   <div class="min-w-0 pr-2">
-                    <span class="text-xs font-semibold text-[var(--text-active)] group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                    <span class="text-xs font-semibold text-[var(--text-active)] group-hover:text-[var(--crm-primary)] transition-colors">
                       {{ item.title }}
                     </span>
                     <p class="text-[11px] text-[var(--text-muted)] truncate mt-0.5">
                       {{ item.prompt }}
                     </p>
                   </div>
-                  <i class="bi bi-arrow-right-short text-base text-[var(--text-muted)] group-hover:text-purple-500 group-hover:translate-x-0.5 transition-all flex-shrink-0"></i>
+                  <i class="bi bi-arrow-right-short text-base text-[var(--text-muted)] group-hover:text-[var(--crm-primary)] group-hover:translate-x-0.5 transition-all flex-shrink-0"></i>
                 </button>
               }
             </div>
@@ -331,7 +331,7 @@
               <!-- Avatar -->
               @if (message.role === 'assistant') {
                 <div
-                  class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs shadow-sm shadow-purple-500/20 flex-shrink-0 mt-0.5"
+                  class="w-7 h-7 rounded-lg bg-[var(--crm-primary)] flex items-center justify-center text-white text-xs shadow-sm shadow-[var(--crm-primary)]/20 flex-shrink-0 mt-0.5"
                 >
                   <i class="bi bi-robot"></i>
                 </div>
@@ -340,9 +340,7 @@
               <!-- Bubble -->
               <div
                 class="px-3.5 py-2.5 rounded-2xl relative shadow-sm text-xs leading-relaxed min-w-0 max-w-full break-words overflow-hidden"
-                [class.bg-gradient-to-r]="message.role === 'user'"
-                [class.from-purple-600]="message.role === 'user'"
-                [class.to-indigo-600]="message.role === 'user'"
+                [class.bg-[var(--crm-primary)]]="message.role === 'user'"
                 [class.text-white]="message.role === 'user'"
                 [class.rounded-tr-xs]="message.role === 'user'"
                 [class.bg-[var(--sidebar)]]="message.role === 'assistant'"
@@ -382,7 +380,7 @@
                     } @else {
                       <button
                         (click)="copyMermaidCode(message.content, message.id)"
-                        class="text-purple-600 dark:text-purple-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer flex-shrink-0"
+                        class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 font-semibold cursor-pointer flex-shrink-0"
                         [title]="'PMDT05_COPY_MERMAID_TITLE' | translate"
                       >
                         <i class="bi bi-clipboard"></i> {{ 'PMDT05_COPY_MERMAID_LABEL' | translate }}
@@ -400,7 +398,7 @@
       @if (isLoading()) {
         <div class="flex items-start gap-2 max-w-[94%] min-w-0">
           <div
-            class="w-7 h-7 rounded-lg bg-gradient-to-tr from-purple-600 to-indigo-600 flex items-center justify-center text-white text-xs shadow-sm flex-shrink-0 mt-0.5 animate-pulse"
+            class="w-7 h-7 rounded-lg bg-[var(--crm-primary)] flex items-center justify-center text-white text-xs shadow-sm flex-shrink-0 mt-0.5 animate-pulse"
           >
             <i class="bi bi-robot"></i>
           </div>
@@ -408,9 +406,9 @@
             class="bg-[var(--sidebar)] border border-[var(--border)] px-4 py-3 rounded-2xl rounded-tl-xs shadow-sm flex items-center gap-2 min-w-0 max-w-full"
           >
             <div class="flex gap-1 flex-shrink-0">
-              <span class="w-1.5 h-1.5 rounded-full bg-purple-500 animate-bounce"></span>
-              <span class="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-bounce [animation-delay:0.2s]"></span>
-              <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce [animation-delay:0.4s]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-[var(--crm-primary)] animate-bounce"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-[var(--crm-primary)]/70 animate-bounce [animation-delay:0.2s]"></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-[var(--crm-primary)]/40 animate-bounce [animation-delay:0.4s]"></span>
             </div>
             <span class="text-xs text-[var(--text-muted)] font-medium ml-1 truncate">{{ 'PMDT05_AI_PROCESSING_LABEL' | translate }}</span>
           </div>
@@ -440,12 +438,12 @@
           (keydown.enter)="sendMessage()"
           [disabled]="isLoading()"
           [placeholder]="'PMDT05_CHAT_INPUT_PLACEHOLDER' | translate"
-          class="flex-1 px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text-active)] placeholder-[var(--text-muted)] outline-none focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 transition-all disabled:opacity-60"
+          class="flex-1 px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text-active)] placeholder-[var(--text-muted)] outline-none focus:border-[var(--crm-primary)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 transition-all disabled:opacity-60"
         />
         <button
           (click)="sendMessage()"
           [disabled]="isLoading() || !userInput.trim()"
-          class="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white text-xs font-semibold shadow-md shadow-purple-500/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
+          class="px-4 py-2.5 rounded-xl bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 text-white text-xs font-semibold shadow-md shadow-[var(--crm-primary)]/20 disabled:opacity-40 disabled:cursor-not-allowed transition-all active:scale-95 flex items-center gap-1.5 flex-shrink-0 cursor-pointer"
         >
           <span>{{ 'PMDT05_SEND_BTN' | translate }}</span>
           <i class="bi bi-send-fill text-[11px]"></i>

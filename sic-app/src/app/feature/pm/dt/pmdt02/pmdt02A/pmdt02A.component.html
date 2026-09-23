@@ -6,24 +6,12 @@
 
   <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-4">
 
-    <!-- Project & Phase -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-      <sic-combobox
-        label="โครงการ"
-        formControlName="projectId"
-        [apiUrl]="apiGetComboboxProject"
-        valueField="value"
-        textField="text"
-        placeholder="ค้นหาและเลือกโครงการ"
-        [clearable]="true"
-        (selectionChanged)="onProjectSelected($event)">
-      </sic-combobox>
-
+    <!-- Phase Selection -->
+    <div>
       <sic-combobox
         label="เฟส (Phase)"
         formControlName="phaseId"
         [apiUrl]="apiGetComboboxPhase"
-        [params]="phaseParams"
         valueField="value"
         textField="text"
         placeholder="ค้นหาและเลือกเฟส"

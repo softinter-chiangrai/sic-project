@@ -30,9 +30,9 @@
         <button
           type="button"
           (click)="openAiModal()"
-          class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-medium text-sm shadow-md hover:shadow-lg shadow-purple-500/20 transition-all cursor-pointer"
+          class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all cursor-pointer"
         >
-          <i class="bi bi-stars text-base animate-pulse"></i>
+          <i class="bi bi-stars text-sm"></i>
           <span>{{ 'PMDT16A_AI_GENERATE_BTN' | translate }}</span>
         </button>
       }
@@ -371,11 +371,11 @@
     <div class="bg-[var(--sidebar)] border border-[var(--border)] w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-all max-h-[90vh]">
 
       <!-- Modal Header with Tabs -->
-      <div class="px-6 py-4 border-b border-[var(--border)] bg-gradient-to-r from-purple-900/20 via-indigo-900/20 to-blue-900/20">
+      <div class="px-6 py-4 border-b border-[var(--border)] bg-[var(--crm-primary)]/5">
         <div class="flex items-center justify-between mb-3">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-purple-600 via-indigo-500 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-purple-500/30">
-              <i class="bi bi-stars text-lg animate-pulse"></i>
+            <div class="w-10 h-10 rounded-xl bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] border border-[var(--crm-primary)]/30 flex items-center justify-center shadow-sm">
+              <i class="bi bi-stars text-lg"></i>
             </div>
             <div>
               <h2 class="text-base font-bold text-[var(--text-active)] flex items-center gap-2">
@@ -403,7 +403,7 @@
             (click)="aiAssistTab.set('generate')"
             [class]="'px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ' +
               (aiAssistTab() === 'generate'
-                ? 'bg-purple-600 text-white shadow-sm'
+                ? 'bg-[var(--crm-primary)] text-white shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
           >
             <i class="bi bi-lightning-charge-fill text-xs"></i>
@@ -414,13 +414,13 @@
             (click)="aiAssistTab.set('history'); loadAiHistory()"
             [class]="'px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ' +
               (aiAssistTab() === 'history'
-                ? 'bg-purple-600 text-white shadow-sm'
+                ? 'bg-[var(--crm-primary)] text-white shadow-sm'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
           >
             <i class="bi bi-clock-history text-xs"></i>
             <span>{{ 'PMDT16A_TAB_HISTORY' | translate }}</span>
             @if (aiHistories().length > 0) {
-              <span class="px-1.5 py-0.2 text-[10px] rounded-full bg-purple-200 text-purple-900 font-bold ml-0.5">
+              <span class="px-1.5 py-0.2 text-[10px] rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] font-bold ml-0.5">
                 {{ aiHistories().length }}
               </span>
             }
@@ -434,7 +434,7 @@
           <!-- AI Model Selection -->
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              <i class="bi bi-stars text-purple-500 mr-1"></i>
+              <i class="bi bi-stars text-[var(--crm-primary)] mr-1"></i>
               {{ 'PMDT16A_LBL_AI_MODEL' | translate }}
             </label>
             <sic-combobox
@@ -452,7 +452,7 @@
           <!-- Billing Type Selection -->
           <div class="space-y-1">
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider">
-              <i class="bi bi-receipt text-indigo-500 mr-1"></i>
+              <i class="bi bi-receipt text-[var(--crm-primary)] mr-1"></i>
               {{ 'PMDT16A_LBL_AI_BILLING_TYPE' | translate }}
             </label>
             <sic-combobox
@@ -477,7 +477,7 @@
               (ngModelChange)="aiPrompt.set($event)"
               rows="3"
               [placeholder]="'PMDT16A_PH_AI_PROMPT' | translate"
-              class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all resize-none"
+              class="w-full px-3 py-2 text-xs bg-[var(--bg)] border border-[var(--border)] rounded-xl text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all resize-none"
             ></textarea>
           </div>
 
@@ -487,10 +487,10 @@
           ></sic-ai-attachment-picker>
 
           @if (isGeneratingAi()) {
-            <div class="p-4 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center gap-3">
-              <div class="w-6 h-6 border-2 border-purple-600 border-t-transparent rounded-full animate-spin"></div>
+            <div class="p-4 rounded-xl bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 flex items-center gap-3">
+              <div class="w-6 h-6 border-2 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
               <div>
-                <p class="text-sm font-semibold text-purple-700 dark:text-purple-300">{{ 'PMDT16A_AI_LOADING_TITLE' | translate }}</p>
+                <p class="text-sm font-semibold text-[var(--crm-primary)]">{{ 'PMDT16A_AI_LOADING_TITLE' | translate }}</p>
                 <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT16A_AI_LOADING_DESC' | translate }}</p>
               </div>
             </div>
@@ -498,10 +498,10 @@
 
           <!-- Latest Result Preview Card -->
           @if (aiCurrentDraft()) {
-            <div class="mt-4 p-4 rounded-xl border-2 border-purple-500/30 bg-purple-500/5 space-y-3 animate-fadeIn">
+            <div class="mt-4 p-4 rounded-xl border-2 border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5 space-y-3 animate-fadeIn">
               <div class="flex items-center justify-between">
                 <div class="flex items-center gap-2">
-                  <span class="px-2 py-0.5 text-xs font-bold rounded-md bg-purple-600 text-white">
+                  <span class="px-2 py-0.5 text-xs font-bold rounded-md bg-[var(--crm-primary)] text-white">
                     v{{ aiCurrentVersionNo() || 1 }} {{ 'PMDT16A_LATEST_TAG' | translate }}
                   </span>
                   <span class="text-xs font-bold text-[var(--text-active)]">{{ 'PMDT16A_DRAFT_RESULT_TITLE' | translate }}</span>
@@ -518,7 +518,7 @@
                   <button
                     type="button"
                     (click)="pasteInvoiceDraft(aiCurrentDraft())"
-                    class="px-3 py-1 text-xs rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                    class="px-3 py-1 text-xs rounded-lg bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                   >
                     <i class="bi bi-clipboard-check"></i>
                     <span>{{ 'PMDT16A_PASTE_TO_FORM_LONG' | translate }}</span>
@@ -576,10 +576,10 @@
             } @else {
               <div class="space-y-2.5">
                 @for (hist of aiHistories(); track hist.id) {
-                  <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] space-y-2.5 hover:border-purple-500/40 transition-all">
+                  <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] space-y-2.5 hover:border-[var(--crm-primary)]/40 transition-all">
                     <div class="flex items-center justify-between">
                       <div class="flex items-center gap-2">
-                        <span class="px-2 py-0.5 text-xs font-bold rounded-md bg-purple-600 text-white">
+                        <span class="px-2 py-0.5 text-xs font-bold rounded-md bg-[var(--crm-primary)] text-white">
                           v{{ hist.versionNo }}
                         </span>
                         <span class="text-xs text-[var(--text-muted)]">
@@ -601,7 +601,7 @@
                         <button
                           type="button"
                           (click)="pasteInvoiceDraft(hist.data)"
-                          class="px-2.5 py-1 text-xs rounded-lg bg-green-600 hover:bg-green-700 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
+                          class="px-2.5 py-1 text-xs rounded-lg bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 text-white font-medium shadow-sm transition-all flex items-center gap-1 cursor-pointer"
                         >
                           <i class="bi bi-clipboard-check"></i>
                           <span>{{ 'PMDT16A_PASTE_TO_FORM_SHORT' | translate }}</span>
@@ -619,7 +619,7 @@
 
                     @if (hist.prompt) {
                       <div class="text-[11px] text-[var(--text-muted)] bg-[var(--sidebar)] p-2 rounded-lg border border-[var(--border)]/50">
-                        <span class="font-semibold text-purple-600 dark:text-purple-400">{{ 'PMDT16A_PROMPT_LABEL' | translate }}</span> {{ hist.prompt }}
+                        <span class="font-semibold text-[var(--crm-primary)]">{{ 'PMDT16A_PROMPT_LABEL' | translate }}</span> {{ hist.prompt }}
                       </div>
                     }
 
@@ -657,7 +657,7 @@
             type="button"
             (click)="generateWithAi()"
             [disabled]="isGeneratingAi()"
-            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 hover:from-purple-500 hover:via-indigo-500 hover:to-blue-500 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-purple-500/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 text-white font-semibold text-sm shadow-md hover:shadow-lg shadow-[var(--crm-primary)]/25 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             @if (isGeneratingAi()) {
               <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
