@@ -14,10 +14,9 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmRequirement {
-        uuid project_id FK "-> PmCustomerProject (mapped, read-only join)"
+        uuid project_id
         string requirement_code
         string title
         text description
@@ -35,7 +34,7 @@ erDiagram
     PmDiagramTab {
         uuid business_id
         string user_id
-        uuid project_id "(inferred) -> PmCustomerProject"
+        uuid project_id
         string name
         string diagram_code
         string diagram_type
@@ -48,7 +47,7 @@ erDiagram
 
     PmDiagramVersion {
         uuid business_id
-        uuid diagram_id FK "-> PmDiagramTab (mapped)"
+        uuid diagram_id
         text mermaid_script
         int version_number
         text change_comment
@@ -56,7 +55,7 @@ erDiagram
 
     PmDiagramChat {
         uuid business_id
-        uuid diagram_id FK "-> PmDiagramTab (mapped)"
+        uuid diagram_id
         string user_id
         string role
         text content
@@ -64,13 +63,6 @@ erDiagram
         string session_title
         jsonb context_data
     }
-
-    %% external entity, defined in another module diagram
-    PmCustomerProject {
-    }
-
-    PmCustomerProject ||--o{ PmRequirement : "owns (project_id, mapped)"
-    PmCustomerProject ||--o{ PmDiagramTab : "owns (project_id, inferred)"
 
     PmDiagramTab ||--o{ PmDiagramVersion : "has version history"
     PmDiagramTab ||--o{ PmDiagramChat : "has AI chat log"

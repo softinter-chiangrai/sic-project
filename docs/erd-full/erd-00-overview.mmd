@@ -1,0 +1,124 @@
+%% title: ERD 00 - Module Overview Map (entity names only, no columns)
+%% purpose: see how the 8 detailed ERD files relate to each other. For real columns, open the module file:
+%%   erd-01-auth-business.mmd, erd-02-chat-notification.mmd, erd-03-customer-project-finance.mmd,
+%%   erd-04a-requirement-design.mmd, erd-04b-review-changerequest-trace.mmd,
+%%   erd-05-task-approval-bug.mmd, erd-06-storage.mmd, erd-07-reference-master.mmd
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff", "fontSize": "20px"}}}%%
+flowchart TB
+  subgraph M1["Module 1 - Auth / Profile / Business / Access (D1)"]
+    direction TB
+    SuProfile["SuProfile"]
+    SuBusiness["SuBusiness"]
+    SuBusinessRole["SuBusinessRole"]
+    SuBusinessRoleProgram["SuBusinessRoleProgram"]
+    SuUserBusiness["SuUserBusiness"]
+    SuUserBusinessRole["SuUserBusinessRole"]
+    SuProgram["SuProgram"]
+    SuBusinessInvite["SuBusinessInvite"]
+    SuBusinessAudit["SuBusinessAudit"]
+    SuAuditLog["SuAuditLog"]
+    SuVerify["SuVerify"]
+    SuTask["SuTask"]
+    SuUserTask["SuUserTask"]
+  end
+
+  subgraph M2["Module 2 - Chat / Messaging / Notification (D2)"]
+    direction TB
+    SuChatGroup["SuChatGroup"]
+    SuChatGroupMember["SuChatGroupMember"]
+    SuChatGroupLog["SuChatGroupLog"]
+    SuChatGroupCallParticipant["SuChatGroupCallParticipant"]
+    SuChatLog["SuChatLog"]
+    SuMessage["SuMessage"]
+    SuNotification["SuNotification"]
+  end
+
+  subgraph M3["Module 3 - Customer / Project / Contract / Delivery / Finance (D3)"]
+    direction TB
+    PmCustomer["PmCustomer"]
+    PmCustomerContract["PmCustomerContract"]
+    PmCustomerProject["PmCustomerProject"]
+    PmDelivery["PmDelivery"]
+    PmDeliveryChecklist["PmDeliveryChecklist"]
+    PmDeliveryItem["PmDeliveryItem"]
+    PmInvoice["PmInvoice"]
+    PmInvoiceItem["PmInvoiceItem"]
+    PmPayment["PmPayment"]
+    PmMaRenewal["PmMaRenewal"]
+    PmMaTicket["PmMaTicket"]
+    PmMaTicketAssignee["PmMaTicketAssignee"]
+  end
+
+  subgraph M4["Module 4 - Requirement / Analysis / Design / Traceability (D4)"]
+    direction TB
+    PmRequirement["PmRequirement"]
+    PmDiagramTab["PmDiagramTab"]
+    PmDiagramVersion["PmDiagramVersion"]
+    PmSpecification["PmSpecification"]
+    PmTestScenario["PmTestScenario"]
+    PmTestCase["PmTestCase"]
+    PmUserManual["PmUserManual"]
+    PmTraceLink["PmTraceLink"]
+    PmChangeRequest["PmChangeRequest"]
+    PmDesignReview["PmDesignReview"]
+    PmDocumentVersion["PmDocumentVersion"]
+    PmEditSession["PmEditSession"]
+  end
+
+  subgraph M5["Module 5 - Phase / Milestone / Task / Approval / Bug (D5)"]
+    direction TB
+    PmPhase["PmPhase"]
+    PmMilestone["PmMilestone"]
+    PmWorkPackage["PmWorkPackage"]
+    PmTask["PmTask"]
+    PmTaskAssignee["PmTaskAssignee"]
+    PmApproval["PmApproval"]
+    PmApprovalFlow["PmApprovalFlow"]
+    PmApprovalFlowStep["PmApprovalFlowStep"]
+    PmApprovalLog["PmApprovalLog"]
+    PmBug["PmBug"]
+  end
+
+  subgraph M6["Module 6 - File Storage (D6, D8)"]
+    direction TB
+    SuUpload["SuUpload"]
+    StorageUploadReference["StorageUploadReference (DTO)"]
+  end
+
+  subgraph M7["Module 7 - Reference / Master Data (D7)"]
+    direction TB
+    DbCountry["DbCountry"]
+    DbProvince["DbProvince"]
+    DbDistrict["DbDistrict"]
+    DbSubDistrict["DbSubDistrict"]
+    DbTitle["DbTitle"]
+    DbParameter["DbParameter"]
+    DbMailTemplate["DbMailTemplate"]
+    DbMailConfig["DbMailConfig"]
+    DbMailQueue["DbMailQueue"]
+  end
+
+  M3 -->|"owned by"| M1
+  M2 -->|"member/business of"| M1
+  M2 -->|"attachment"| M6
+  M3 -->|"attachment"| M6
+  M4 -->|"attachment"| M6
+  M5 -->|"attachment"| M6
+  M1 -->|"address lookup"| M7
+  M3 -->|"address lookup"| M7
+  M4 -->|"belongs to project"| M3
+  M5 -->|"belongs to project"| M3
+  M5 -->|"trace/impact target"| M4
+  M3 -->|"revision / approval request"| M5
+  M4 -->|"review / approval request"| M5
+  M5 -->|"approval outcome notification"| M2
+
+  classDef node fill:#ffffff,stroke:#000000,stroke-width:1px,color:#000000;
+  class SuProfile,SuBusiness,SuBusinessRole,SuBusinessRoleProgram,SuUserBusiness,SuUserBusinessRole,SuProgram,SuBusinessInvite,SuBusinessAudit,SuAuditLog,SuVerify,SuTask,SuUserTask,SuChatGroup,SuChatGroupMember,SuChatGroupLog,SuChatGroupCallParticipant,SuChatLog,SuMessage,SuNotification,PmCustomer,PmCustomerContract,PmCustomerProject,PmDelivery,PmDeliveryChecklist,PmDeliveryItem,PmInvoice,PmInvoiceItem,PmPayment,PmMaRenewal,PmMaTicket,PmMaTicketAssignee,PmRequirement,PmDiagramTab,PmDiagramVersion,PmSpecification,PmTestScenario,PmTestCase,PmUserManual,PmTraceLink,PmChangeRequest,PmDesignReview,PmDocumentVersion,PmEditSession,PmPhase,PmMilestone,PmWorkPackage,PmTask,PmTaskAssignee,PmApproval,PmApprovalFlow,PmApprovalFlowStep,PmApprovalLog,PmBug,SuUpload,StorageUploadReference,DbCountry,DbProvince,DbDistrict,DbSubDistrict,DbTitle,DbParameter,DbMailTemplate,DbMailConfig,DbMailQueue node
+  style M1 fill:#ffffff,stroke:#000000,color:#000000
+  style M2 fill:#ffffff,stroke:#000000,color:#000000
+  style M3 fill:#ffffff,stroke:#000000,color:#000000
+  style M4 fill:#ffffff,stroke:#000000,color:#000000
+  style M5 fill:#ffffff,stroke:#000000,color:#000000
+  style M6 fill:#ffffff,stroke:#000000,color:#000000
+  style M7 fill:#ffffff,stroke:#000000,color:#000000

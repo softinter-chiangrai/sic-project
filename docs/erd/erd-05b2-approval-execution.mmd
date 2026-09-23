@@ -4,21 +4,12 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
-    %% external entity, defined in erd-05b1-approval-flow-definition.mmd (same module)
-    PmApprovalFlowStep {
-    }
-
-    %% external entity, defined in erd-05b1-approval-flow-definition.mmd (same module)
-    PmApproval {
-    }
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmApprovalStepStatus {
-        UUID id PK
-        UUID approval_id FK
-        UUID step_id FK
-        ApprovalStatus status "enum ApprovalStatus"
+        UUID id
+        UUID approval_id
+        UUID step_id
+        ApprovalStatus status
         string approver
         string approver_name
         timestamp approval_date
@@ -37,15 +28,15 @@ erDiagram
     }
 
     PmApprovalLog {
-        UUID id PK
-        UUID approval_id FK
-        UUID step_status_id FK "nullable"
+        UUID id
+        UUID approval_id
+        UUID step_status_id
         string action
         string actor
         string actor_name
         string comment
-        ApprovalStatus old_status "enum ApprovalStatus"
-        ApprovalStatus new_status "enum ApprovalStatus"
+        ApprovalStatus old_status
+        ApprovalStatus new_status
         string ip_address
         string user_agent
         json extra_data
@@ -59,9 +50,9 @@ erDiagram
     }
 
     PmApprovalReminder {
-        UUID id PK
-        UUID approval_id FK
-        UUID step_status_id FK "nullable"
+        UUID id
+        UUID approval_id
+        UUID step_status_id
         string reminder_type
         timestamp sent_at
         string recipient
@@ -78,9 +69,6 @@ erDiagram
         timestamp delete_date
     }
 
-    PmApprovalFlowStep ||--o{ PmApprovalStepStatus : "tracked by"
-    PmApproval ||--o{ PmApprovalStepStatus : "has"
-    PmApproval ||--o{ PmApprovalLog : "logs"
     PmApprovalStepStatus |o--o{ PmApprovalLog : "logs for"
-    PmApproval ||--o{ PmApprovalReminder : "reminders"
+
     PmApprovalStepStatus |o--o{ PmApprovalReminder : "reminders for"

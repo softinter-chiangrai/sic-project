@@ -11,10 +11,9 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmSpecification {
-        string specification_code UK
+        string specification_code
         string specification_type
         string title
         string version
@@ -24,28 +23,28 @@ erDiagram
         int estimated_manday
         text description
         uuid upload_group_id
-        uuid project_id FK "-> PmCustomerProject (mapped, required)"
-        uuid requirement_id FK "-> PmRequirement (mapped, optional)"
+        uuid project_id
+        uuid requirement_id
         boolean is_active
     }
 
     PmTestScenario {
-        uuid project_id "(inferred) -> PmCustomerProject"
+        uuid project_id
         uuid test_plan_id
-        uuid task_id FK "-> PmTask (mapped, read-only join)"
+        uuid task_id
         string scenario_code
         string scenario_name
         string priority
         string status
-        string test_type "SIT default"
+        string test_type
         text description
     }
 
     PmTestCase {
         uuid project_id
-        uuid scenario_id FK "-> PmTestScenario (mapped, read-only join)"
+        uuid scenario_id
         string scenario_name
-        uuid task_id FK "-> PmTask (mapped, read-only join)"
+        uuid task_id
         string test_case_code
         string title
         string priority
@@ -53,7 +52,7 @@ erDiagram
         text expected_result
         text actual_result
         string test_status
-        string test_type "SIT default"
+        string test_type
         string tester
         datetime test_date
         text related_requirement
@@ -65,16 +64,16 @@ erDiagram
         uuid project_id
         string manual_code
         string manual_title
-        string manual_type "USER/ADMIN/INSTALLATION/OPERATION/TROUBLESHOOT"
+        string manual_type
         string version
         uuid related_spec_id
         uuid delivery_id
-        string status "DRAFT/REVIEW/APPROVED/PUBLISHED"
+        string status
         uuid attachment_group_id
     }
 
     PmUserManualSection {
-        uuid manual_id "(inferred) -> PmUserManual, no JPA object mapping"
+        uuid manual_id
         string section_code
         string section_title
         text content
@@ -82,28 +81,6 @@ erDiagram
         text permission_roles
         uuid screenshot_group_id
     }
-
-    %% external entity, defined in another module diagram
-    PmCustomerProject {
-    }
-
-    %% external entity, defined in another module diagram
-    PmTask {
-    }
-
-    %% external entity, defined in erd-04a1-requirement-diagram.mmd (same module)
-    PmRequirement {
-    }
-
-    PmCustomerProject ||--o{ PmSpecification : "owns (project_id, mapped)"
-    PmCustomerProject ||--o{ PmTestScenario : "owns (project_id, inferred)"
-    PmCustomerProject ||--o{ PmUserManual : "owns (project_id, inferred)"
-
-    PmRequirement ||--o{ PmSpecification : "documented by (requirement_id, optional)"
-
-    PmTask ||--o{ PmTestScenario : "verified by (task_id)"
-    PmTask ||--o{ PmTestCase : "verified by (task_id)"
-    PmSpecification ||--o{ PmTask : "implemented by (spec_id, from PmTask)"
 
     PmTestScenario ||--o{ PmTestCase : "has test cases (scenario_id)"
 

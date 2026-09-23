@@ -1,0 +1,59 @@
+%% title: DFD Level 1 - Process 3.0 (Part 2) - Invoice, Payment, MA Renewal & Support Ticket
+%% notation: Gane-Sarson box style (rectangle=process/entity, grey rectangle=data store)
+%% source of truth: PmInvoiceController, PmPaymentController, PmMaRenewalController, PmMaTicketController
+%%{init: {'flowchart': {'nodeSpacing': 22, 'rankSpacing': 50, 'curve': 'basis'}}}%%
+flowchart TD
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+  customer["ลูกค้า / ผู้เกี่ยวข้องภายนอก"]
+  ai["AI Provider<br/>Gemini / Claude"]
+  report["Report Service"]
+
+  p34ext["3.4<br/>Delivery and Acceptance<br/>(see part 1)"]
+  p35["3.5<br/>Invoice and<br/>Billing"]
+  p36["3.6<br/>Payment<br/>Recording"]
+  p37["3.7<br/>MA Renewal and<br/>Support Ticket"]
+
+  d3["D3<br/>Customer / Project / Contract /<br/>Delivery / Finance Data"]
+  d5ext["D5<br/>Task / Approval / Bug<br/>(external)"]
+
+  %% ===== 3.5 Invoice and Billing =====
+  p34ext -->|"create invoice"| p35
+  user -->|"manage invoice"| p35
+  p35 -->|"save invoice"| d3
+  d3 -->|"invoice data"| p35
+  p35 -->|"invoice list"| user
+  p35 -->|"invoice doc"| customer
+  p35 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p35
+  p35 -->|"export request"| report
+  report -->|"invoice PDF"| p35
+  p35 -->|"revision request"| d5ext
+  d5ext -->|"approval status"| p35
+
+  %% ===== 3.6 Payment Recording =====
+  user -->|"record payment"| p36
+  p36 -->|"save payment"| d3
+  d3 -->|"payment data"| p36
+  p36 -->|"payment list"| user
+
+  %% ===== 3.7 MA Renewal and Support Ticket =====
+  user -->|"manage renewal/ticket"| p37
+  p37 -->|"save record"| d3
+  d3 -->|"renewal/ticket data"| p37
+  p37 -->|"renewal list"| user
+  customer -->|"ticket request"| p37
+  p37 -->|"renewal doc"| customer
+  p37 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p37
+  p37 -->|"export request"| report
+  report -->|"renewal PDF"| p37
+  p37 -->|"revision request"| d5ext
+  d5ext -->|"approval status"| p37
+
+  class user,customer,ai,report entity
+  class p34ext,p35,p36,p37 process
+  class d3,d5ext store

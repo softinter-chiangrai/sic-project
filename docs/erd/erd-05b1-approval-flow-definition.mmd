@@ -4,23 +4,14 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
-    %% external entity, defined in another module diagram
-    SuUpload {
-    }
-
-    %% external entity, defined in erd-05b2-approval-execution.mmd (same module)
-    PmApprovalStepStatus {
-    }
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmApprovalFlow {
-        UUID id PK
+        UUID id
         UUID business_id
-        string flow_code UK
+        string flow_code
         string flow_name
         string document_type
-        ApprovalMode approval_mode "enum ApprovalMode"
+        ApprovalMode approval_mode
         boolean is_active
         string description
         string created_by
@@ -33,8 +24,8 @@ erDiagram
     }
 
     PmApprovalFlowStep {
-        UUID id PK
-        UUID flow_id FK
+        UUID id
+        UUID flow_id
         int step_order
         string step_name
         string approver_role
@@ -54,23 +45,23 @@ erDiagram
     }
 
     PmApproval {
-        UUID id PK
+        UUID id
         UUID business_id
-        string document_type "polymorphic target type"
-        UUID document_id "polymorphic target id"
+        string document_type
+        UUID document_id
         string document_code
         string document_title
         string version
         string requested_by
         string requested_by_name
         timestamp requested_date
-        UUID flow_id FK
-        UUID current_step_id FK "nullable"
-        ApprovalStatus status "enum ApprovalStatus"
+        UUID flow_id
+        UUID current_step_id
+        ApprovalStatus status
         string final_approver
         timestamp final_approval_date
         string comment
-        UUID attachment_id FK "nullable, external SuUpload"
+        UUID attachment_id
         UUID reference_id
         boolean is_active
         json extra_data
@@ -86,6 +77,4 @@ erDiagram
     PmApprovalFlow ||--o{ PmApprovalFlowStep : "defines"
     PmApprovalFlow ||--o{ PmApproval : "governs"
     PmApprovalFlowStep |o--o{ PmApproval : "current step of"
-    PmApprovalFlowStep ||--o{ PmApprovalStepStatus : "tracked by"
-    PmApproval ||--o{ PmApprovalStepStatus : "has"
-    SuUpload |o--o{ PmApproval : "attached to"
+

@@ -151,16 +151,6 @@
       <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
         @let r = $any(row);
         <div class="flex items-center justify-center gap-1">
-          <!-- ปุ่มไปหน้า Dashboard (PMRT03) -->
-          <button
-            type="button"
-            (click)="goToDashboard(r.id)"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            [title]="'PMRT02_VIEW_DASHBOARD_TITLE' | translate"
-          >
-            <i class="bi bi-speedometer2"></i>
-          </button>
-
           <!-- Reusable Table Actions (View, Print, Edit, Delete) -->
           <sic-table-actions
             [showView]="true"

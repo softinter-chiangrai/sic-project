@@ -4,18 +4,17 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PM_INVOICE {
-        UUID id PK
-        UUID business_id FK
+        UUID id
+        UUID business_id
         varchar invoice_no
-        UUID customer_id FK
-        UUID project_id FK
-        UUID contract_id FK
-        UUID delivery_id FK
-        UUID milestone_id FK
-        BillingType billing_type "enum"
+        UUID customer_id
+        UUID project_id
+        UUID contract_id
+        UUID delivery_id
+        UUID milestone_id
+        BillingType billing_type
         date issue_date
         date due_date
         decimal subtotal_amount
@@ -23,7 +22,7 @@ erDiagram
         decimal vat_amount
         decimal total_amount
         decimal paid_amount
-        PaymentStatus payment_status "enum"
+        PaymentStatus payment_status
         varchar approval_status
         text receipt_file_ref
         text remark
@@ -38,8 +37,8 @@ erDiagram
     }
 
     PM_INVOICE_ITEM {
-        UUID id PK
-        UUID invoice_id FK
+        UUID id
+        UUID invoice_id
         varchar item_name
         text description
         decimal amount
@@ -55,17 +54,17 @@ erDiagram
     }
 
     PM_PAYMENT {
-        UUID id PK
-        UUID business_id FK
+        UUID id
+        UUID business_id
         varchar payment_no
-        UUID invoice_id FK
+        UUID invoice_id
         date payment_date
-        PaymentMethod payment_method "enum"
+        PaymentMethod payment_method
         decimal amount
         varchar reference_no
         varchar bank_name
         text receipt_file
-        PaymentStatus payment_status "enum"
+        PaymentStatus payment_status
         text notes
         varchar created_by
         timestamp created_date
@@ -78,18 +77,18 @@ erDiagram
     }
 
     PM_MA_RENEWAL {
-        UUID id PK
-        UUID business_id FK
+        UUID id
+        UUID business_id
         varchar renewal_no
-        UUID contract_id FK
-        UUID customer_id FK
-        UUID project_id FK
+        UUID contract_id
+        UUID customer_id
+        UUID project_id
         date current_end_date
         date new_start_date
         date new_end_date
         decimal proposed_amount
-        MaRenewalStatus status "enum"
-        UUID new_contract_id FK
+        MaRenewalStatus status
+        UUID new_contract_id
         text remark
         varchar created_by
         timestamp created_date
@@ -102,17 +101,17 @@ erDiagram
     }
 
     PM_MA_TICKET {
-        UUID id PK
-        UUID business_id FK
+        UUID id
+        UUID business_id
         varchar ticket_no
-        UUID customer_id FK
-        UUID project_id FK
-        UUID contract_id FK
-        MaTicketType ticket_type "enum"
+        UUID customer_id
+        UUID project_id
+        UUID contract_id
+        MaTicketType ticket_type
         varchar title
         text description
-        MaTicketSeverity severity "enum"
-        MaTicketStatus status "enum"
+        MaTicketSeverity severity
+        MaTicketStatus status
         varchar assigned_to
         varchar reported_by
         timestamp reported_date
@@ -136,9 +135,9 @@ erDiagram
     }
 
     PM_MA_TICKET_ASSIGNEE {
-        UUID id PK
-        UUID business_id FK
-        UUID ma_ticket_id FK
+        UUID id
+        UUID business_id
+        UUID ma_ticket_id
         varchar user_id
         varchar created_by
         timestamp created_date
@@ -150,57 +149,10 @@ erDiagram
         int row_version
     }
 
-    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
-    PM_CUSTOMER {
-    }
-
-    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
-    PM_CUSTOMER_CONTRACT {
-    }
-
-    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
-    PM_CUSTOMER_PROJECT {
-    }
-
-    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
-    PM_DELIVERY {
-    }
-
-    %% external entity, defined in another module diagram
-    SU_BUSINESS {
-    }
-
-    %% external entity, defined in another module diagram
-    PM_MILESTONE {
-    }
-
     %% ===== Relationships =====
-
-    PM_CUSTOMER ||--o{ PM_INVOICE : "billed on"
-    PM_CUSTOMER ||--o{ PM_MA_RENEWAL : "renews MA for"
-    PM_CUSTOMER ||--o{ PM_MA_TICKET : "raises tickets"
-
-    PM_CUSTOMER_CONTRACT ||--o{ PM_INVOICE : "billed under"
-    PM_CUSTOMER_CONTRACT ||--o{ PM_MA_RENEWAL : "renewal of"
-    PM_CUSTOMER_CONTRACT |o--o{ PM_MA_RENEWAL : "results in (new_contract_id)"
-    PM_CUSTOMER_CONTRACT ||--o{ PM_MA_TICKET : "covers MA for"
-
-    PM_CUSTOMER_PROJECT ||--o{ PM_INVOICE : "billed for"
-    PM_CUSTOMER_PROJECT ||--o{ PM_MA_RENEWAL : "renews MA for"
-    PM_CUSTOMER_PROJECT ||--o{ PM_MA_TICKET : "raises tickets for"
-
-    PM_DELIVERY |o--o{ PM_INVOICE : "billed via"
 
     PM_INVOICE ||--o{ PM_INVOICE_ITEM : "line items"
     PM_INVOICE ||--o{ PM_PAYMENT : "receives payments"
-    PM_INVOICE }o--o| PM_MILESTONE : "tied to"
-    PM_INVOICE }o--|| SU_BUSINESS : "belongs to"
-
-    PM_PAYMENT }o--|| SU_BUSINESS : "belongs to"
-
-    PM_MA_RENEWAL }o--|| SU_BUSINESS : "belongs to"
 
     PM_MA_TICKET ||--o{ PM_MA_TICKET_ASSIGNEE : "assigned to"
-    PM_MA_TICKET }o--|| SU_BUSINESS : "belongs to"
 
-    PM_MA_TICKET_ASSIGNEE }o--|| SU_BUSINESS : "belongs to"

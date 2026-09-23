@@ -17,33 +17,30 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmTraceLink {
         uuid project_id
-        string source_type "polymorphic: REQUIREMENT / DFD(diagram) / SPEC / TASK / TEST_CASE / BUG / ER ..."
-        uuid source_id "polymorphic target row id"
-        string target_type "polymorphic: REQUIREMENT / DFD(diagram) / SPEC / TASK / TEST_CASE / BUG / ER ..."
-        uuid target_id "polymorphic target row id"
-        enum relationship_type "TraceRelationship (NAMED_ENUM, DB enum type)"
+        string source_type
+        uuid source_id
+        string target_type
+        uuid target_id
+        enum relationship_type
     }
 
-    %% Not a table - Java enum com.softinter.sicapi.entity.enums.TraceRelationship, stored as a native Postgres enum
-    %% on pm_trace_link.relationship_type. Shown as a reference box for completeness per task requirements.
     TraceRelationship {
-        enum DESIGNED_BY "DFD designed from Requirement"
-        enum IMPLEMENTED_BY "ER/Spec/Task implemented from source"
-        enum DOCUMENTED_BY "Spec documents Requirement/ER"
-        enum VERIFIED_BY "TestCase verifies Task"
-        enum FAILED_BY "Bug caused by failed TestCase"
-        enum AFFECTED_BY "used in Impact Analysis"
-        enum RELATED_TO "generic relation"
+        enum DESIGNED_BY
+        enum IMPLEMENTED_BY
+        enum DOCUMENTED_BY
+        enum VERIFIED_BY
+        enum FAILED_BY
+        enum AFFECTED_BY
+        enum RELATED_TO
     }
 
     PmComment {
-        string target_type "polymorphic: PROJECT/TASK/REQUIREMENT/etc."
-        uuid target_id "polymorphic target id"
-        uuid parent_comment_id FK "-> PmComment (self, mapped, optional)"
+        string target_type
+        uuid target_id
+        uuid parent_comment_id
         string subject
         text content
         uuid attachment_group_id
@@ -55,36 +52,7 @@ erDiagram
         jsonb extra_data
     }
 
-    %% external entity, defined in erd-04a1-requirement-diagram.mmd (same module)
-    PmRequirement {
-    }
-
-    %% external entity, defined in erd-04a1-requirement-diagram.mmd (same module)
-    PmDiagramTab {
-    }
-
-    %% external entity, defined in erd-04a2-spec-test-manual.mmd (same module)
-    PmSpecification {
-    }
-
-    %% external entity, defined in erd-04a2-spec-test-manual.mmd (same module)
-    PmTestCase {
-    }
-
-    %% external entity, defined in another module diagram
-    PmTask {
-    }
-
-    %% external entity, defined in another module diagram
-    PmBug {
-    }
-
     PmComment ||--o{ PmComment : "has replies (parent_comment_id, self-ref)"
 
     PmTraceLink }o--|| TraceRelationship : "relationship_type (enum)"
-    PmTraceLink }o..o{ PmRequirement : "polymorphic source/target"
-    PmTraceLink }o..o{ PmDiagramTab : "polymorphic source/target (DFD/ER)"
-    PmTraceLink }o..o{ PmSpecification : "polymorphic source/target"
-    PmTraceLink }o..o{ PmTestCase : "polymorphic source/target"
-    PmTraceLink }o..o{ PmTask : "polymorphic source/target"
-    PmTraceLink }o..o{ PmBug : "polymorphic source/target"
+

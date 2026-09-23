@@ -4,19 +4,10 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
-    %% external entity, defined in another module diagram
-    PmCustomerProject {
-    }
-
-    %% external entity, defined in erd-05a2-workpackage-task-bug.mmd (same module)
-    PmWorkPackage {
-    }
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmPhase {
-        UUID id PK
-        UUID project_id FK
+        UUID id
+        UUID project_id
         string phase_code
         string phase_name
         string description
@@ -25,7 +16,7 @@ erDiagram
         date end_date
         string owner
         string status
-        UUID dependency FK "self-ref PmPhase, nullable"
+        UUID dependency
         int progress
         string created_by
         timestamp created_date
@@ -37,8 +28,8 @@ erDiagram
     }
 
     PmMilestone {
-        UUID id PK
-        UUID phase_id FK
+        UUID id
+        UUID phase_id
         string milestone_name
         string description
         date due_date
@@ -53,7 +44,6 @@ erDiagram
         timestamp delete_date
     }
 
-    PmCustomerProject ||--o{ PmPhase : "has"
     PmPhase |o--o{ PmPhase : "depends on"
     PmPhase ||--o{ PmMilestone : "has"
-    PmMilestone ||--o{ PmWorkPackage : "has"
+

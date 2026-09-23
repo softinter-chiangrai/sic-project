@@ -1,0 +1,10 @@
+:host {
+  display: block;
+  width: 100%;
+}
+
+/* Custom scrollbar adjustments for seamless integration */
+::ng-deep sic-calendar-timeline {
+  display: block;
+  width: 100%;
+}

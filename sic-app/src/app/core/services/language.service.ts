@@ -1,6 +1,6 @@
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { Observable } from 'rxjs';
+import { firstValueFrom, Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
 
 export type AppLanguage = 'th' | 'en';
@@ -78,6 +78,29 @@ export class LanguageService {
       PROJECT_HEALTH_DETAIL_DELAYED: 'ล่าช้ากว่ากำหนด',
       PROJECT_HEALTH_DETAIL_COMPLETED: 'เสร็จสิ้นตามเป้าหมาย',
       PROJECT_HEALTH_DETAIL_OVERDUE: 'เกินกำหนดส่งมอบ',
+      PORTFOLIO_GANTT_TITLE: 'ผังระยะเวลาโครงการองค์กร (Enterprise Portfolio Roadmap)',
+      PORTFOLIO_GANTT_SUBTITLE: 'แสดงระยะเวลาและสถานะดำเนินงานทุกโครงการ แยกตามลูกค้ารายองค์กร',
+      PORTFOLIO_GANTT_TOTAL_CUSTOMERS: 'ลูกค้าทั้งหมด',
+      PORTFOLIO_GANTT_TOTAL_PROJECTS: 'โครงการทั้งหมด',
+      PORTFOLIO_GANTT_ACTIVE: 'กำลังดำเนินงาน',
+      PORTFOLIO_GANTT_DELAYED: 'ล่าช้ากว่าแผน',
+      PORTFOLIO_GANTT_COMPLETED: 'เสร็จสิ้นแล้ว',
+      PORTFOLIO_GANTT_EXPAND_ALL: 'ขยายทั้งหมด',
+      PORTFOLIO_GANTT_COLLAPSE_ALL: 'พับทั้งหมด',
+      PORTFOLIO_GANTT_VIEW_MONTH: 'รายเดือน',
+      PORTFOLIO_GANTT_VIEW_WEEK: 'รายสัปดาห์',
+      PORTFOLIO_GANTT_VIEW_DAY: 'รายวัน',
+      PORTFOLIO_GANTT_SEARCH_PLACEHOLDER: 'ค้นหาโครงการ, ลูกค้า, หรือ PM...',
+      PORTFOLIO_GANTT_CUSTOMER_ALL: 'ทุกลูกค้า (All Customers)',
+      PORTFOLIO_GANTT_STATUS_ALL: 'ทุกสถานะ',
+      PORTFOLIO_GANTT_LEGEND_ON_TRACK: 'ตามแผนงาน',
+      PORTFOLIO_GANTT_LEGEND_DELAYED: 'ล่าช้ากว่ากำหนด',
+      PORTFOLIO_GANTT_LEGEND_PLANNING: 'กำลังวางแผน',
+      PORTFOLIO_GANTT_LEGEND_COMPLETED: 'เสร็จสิ้น',
+      PORTFOLIO_GANTT_NO_DATA: 'ไม่พบข้อมูลโครงการตามเงื่อนไขตัวกรอง',
+      PORTFOLIO_GANTT_VIEW_DETAILS: 'ดูรายละเอียดโครงการ',
+      PORTFOLIO_GANTT_VIEW_BOARD: 'เปิด Task Board & Phase Gantt',
+      PORTFOLIO_GANTT_PROJECTS_COUNT: '{{count}} โครงการ',
     },
     en: {
       CONTEXT_SWITCHER_TITLE: 'Filter & Switch Project',
@@ -138,15 +161,49 @@ export class LanguageService {
       PROJECT_HEALTH_DETAIL_DELAYED: 'Behind Schedule',
       PROJECT_HEALTH_DETAIL_COMPLETED: 'Completed as Planned',
       PROJECT_HEALTH_DETAIL_OVERDUE: 'Overdue / Delivery Passed',
+      PORTFOLIO_GANTT_TITLE: 'Enterprise Portfolio Roadmap (Gantt Chart)',
+      PORTFOLIO_GANTT_SUBTITLE: 'Project timeline and execution status across all enterprise customers',
+      PORTFOLIO_GANTT_TOTAL_CUSTOMERS: 'Total Customers',
+      PORTFOLIO_GANTT_TOTAL_PROJECTS: 'Total Projects',
+      PORTFOLIO_GANTT_ACTIVE: 'Active',
+      PORTFOLIO_GANTT_DELAYED: 'Delayed',
+      PORTFOLIO_GANTT_COMPLETED: 'Completed',
+      PORTFOLIO_GANTT_EXPAND_ALL: 'Expand All',
+      PORTFOLIO_GANTT_COLLAPSE_ALL: 'Collapse All',
+      PORTFOLIO_GANTT_VIEW_MONTH: 'Month',
+      PORTFOLIO_GANTT_VIEW_WEEK: 'Week',
+      PORTFOLIO_GANTT_VIEW_DAY: 'Day',
+      PORTFOLIO_GANTT_SEARCH_PLACEHOLDER: 'Search project, customer, or PM...',
+      PORTFOLIO_GANTT_CUSTOMER_ALL: 'All Customers',
+      PORTFOLIO_GANTT_STATUS_ALL: 'All Statuses',
+      PORTFOLIO_GANTT_LEGEND_ON_TRACK: 'On Track',
+      PORTFOLIO_GANTT_LEGEND_DELAYED: 'Behind Schedule',
+      PORTFOLIO_GANTT_LEGEND_PLANNING: 'Planning',
+      PORTFOLIO_GANTT_LEGEND_COMPLETED: 'Completed',
+      PORTFOLIO_GANTT_NO_DATA: 'No project data found for current filters',
+      PORTFOLIO_GANTT_VIEW_DETAILS: 'View Project Details',
+      PORTFOLIO_GANTT_VIEW_BOARD: 'Open Task Board & Phase Gantt',
+      PORTFOLIO_GANTT_PROJECTS_COUNT: '{{count}} projects',
     },
   };
 
-  initLanguage(): Observable<any> {
+  private initPromise: Promise<any> | null = null;
+
+  initLanguage(): Promise<any> {
+    if (this.initPromise) {
+      return this.initPromise;
+    }
     this.translate.setTranslation('th', this.defaultTranslations.th, true);
     this.translate.setTranslation('en', this.defaultTranslations.en, true);
     const lang = this.resolveInitialLanguage();
     this.updateHtmlLang(lang);
-    return this.translate.use(lang);
+
+    this.initPromise = firstValueFrom(this.translate.use(lang)).catch((err) => {
+      console.error('Failed to load translations:', err);
+      return null;
+    });
+
+    return this.initPromise;
   }
 
   setLanguage(lang: AppLanguage): void {

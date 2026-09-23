@@ -11,11 +11,10 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     su_business_invite {
-        UUID id PK
-        UUID role_id FK
+        UUID id
+        UUID role_id
         string invite_type
         UUID business_id
         string invite_email
@@ -35,8 +34,8 @@ erDiagram
     }
 
     su_business_audit {
-        UUID id PK
-        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        UUID id
+        UUID business_id
         string user_id
         string session_id
         string username
@@ -54,8 +53,8 @@ erDiagram
     }
 
     su_audit_log {
-        UUID id PK
-        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        UUID id
+        UUID business_id
         string user_id
         string username
         string user_fullname
@@ -81,8 +80,8 @@ erDiagram
     }
 
     su_task {
-        UUID id PK
-        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        UUID id
+        UUID business_id
         string task_code
         string task_name_en
         string task_name_local
@@ -98,13 +97,13 @@ erDiagram
     }
 
     su_user_task {
-        UUID id PK
-        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        UUID id
+        UUID business_id
         string title
         timestamp start_time
         timestamp end_time
         string description
-        UUID task_id FK
+        UUID task_id
         string created_by
         timestamp created_date
         string updated_by
@@ -115,19 +114,6 @@ erDiagram
         int row_version
     }
 
-    %% external entity, defined in erd-01a-business-role-program.mmd (same module)
-    su_business {
-    }
-
-    %% external entity, defined in erd-01a-business-role-program.mmd (same module)
-    su_business_role {
-    }
-
     %% Relationships
-
-    su_business_role ||--o{ su_business_invite : "used by"
-
-    su_business ||--o{ su_business_audit : "logs activity of"
-    su_business ||--o{ su_audit_log : "has audit entries"
 
     su_task ||--o{ su_user_task : "assigned as"

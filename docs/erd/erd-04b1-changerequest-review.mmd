@@ -16,19 +16,18 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmChangeRequest {
         string cr_code
-        string target_type "REQUIREMENT / SPECIFICATION / ER / DFD / TASK"
+        string target_type
         uuid target_id
         string title
         text description
-        string change_reason "SCOPE / BUDGET / SCHEDULE / TECHNICAL"
+        string change_reason
         string requester_id
-        uuid project_id "(inferred) -> PmCustomerProject"
+        uuid project_id
         string assignee_id
-        string status "DRAFT/SUBMITTED/APPROVED/REJECTED/IMPLEMENTED/CANCELLED"
+        string status
         string priority
         string target_version
         string approved_by
@@ -37,15 +36,15 @@ erDiagram
     }
 
     PmChangeImpact {
-        uuid change_request_id FK "-> PmChangeRequest (mapped)"
+        uuid change_request_id
         string impacted_type
         uuid impacted_id
         string impacted_title
-        string impact_level "LOW/MEDIUM/HIGH"
+        string impact_level
     }
 
     ChangeImpactAnalysis {
-        uuid change_request_id FK "-> PmChangeRequest (mapped), table pm_change_impact_analysis"
+        uuid change_request_id
         text dfd_impact
         text er_impact
         text ui_impact
@@ -70,9 +69,9 @@ erDiagram
         string review_code
         string title
         text description
-        uuid project_id FK "-> PmCustomerProject (mapped, required)"
-        string review_item_type "polymorphic target type"
-        uuid review_item_id "polymorphic target id"
+        uuid project_id
+        string review_item_type
+        uuid review_item_id
         string reviewer
         string assigned_to
         string severity
@@ -84,7 +83,7 @@ erDiagram
     }
 
     PmReviewComment {
-        uuid review_id FK "-> PmDesignReview (mapped)"
+        uuid review_id
         string comment_type
         text comment_text
         string severity
@@ -93,34 +92,28 @@ erDiagram
     }
 
     PmCrAssignee {
-        uuid change_request_id FK "-> PmChangeRequest (mapped)"
+        uuid change_request_id
         string user_id
-        string target_type "polymorphic target type"
-        uuid target_id "polymorphic target id"
-        string status "PENDING/IN_PROGRESS/COMPLETED"
+        string target_type
+        uuid target_id
+        string status
         datetime completed_at
     }
 
     PmEditSession {
-        uuid change_request_id "(inferred) -> PmChangeRequest, no JPA object mapping"
-        string target_type "polymorphic target type"
-        uuid target_id "polymorphic target id"
+        uuid change_request_id
+        string target_type
+        uuid target_id
         string assignee_id
         datetime granted_at
         datetime expires_at
         boolean is_active
-        string edit_type "default CHANGE_REQUEST"
-    }
-
-    %% external entity, defined in another module diagram
-    PmCustomerProject {
+        string edit_type
     }
 
     PmChangeRequest ||--o{ PmChangeImpact : "has impacts"
     PmChangeRequest ||--o{ ChangeImpactAnalysis : "has analysis"
     PmChangeRequest ||--o{ PmCrAssignee : "has assignees"
     PmChangeRequest ||--o{ PmEditSession : "grants edit sessions (inferred)"
-    PmCustomerProject ||--o{ PmChangeRequest : "owns (project_id, inferred)"
-    PmCustomerProject ||--o{ PmDesignReview : "owns (project_id, mapped)"
 
     PmDesignReview ||--o{ PmReviewComment : "has comments"

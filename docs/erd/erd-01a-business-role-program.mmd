@@ -7,17 +7,16 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     su_profile {
-        UUID id PK
-        string user_id UK
+        UUID id
+        string user_id
         string tax_id
-        UUID title_id FK
-        UUID country_id FK
-        UUID province_id FK
-        UUID district_id FK
-        UUID sub_district_id FK
+        UUID title_id
+        UUID country_id
+        UUID province_id
+        UUID district_id
+        UUID sub_district_id
         string first_name_en
         string middle_name_en
         string last_name_en
@@ -42,25 +41,25 @@ erDiagram
     }
 
     su_business {
-        UUID id PK
+        UUID id
         string tax_id
         string business_code
         string branch_code
         string person_type
-        UUID title_id FK
+        UUID title_id
         string first_name_en
         string middle_name_en
         string last_name_en
         string first_name_local
         string middle_name_local
         string last_name_local
-        UUID country_id FK
+        UUID country_id
         boolean support_local_address
         string address_en
         string address_local
-        UUID province_id FK
-        UUID district_id FK
-        UUID sub_district_id FK
+        UUID province_id
+        UUID district_id
+        UUID sub_district_id
         string zip_code
         string email
         string phone_number
@@ -78,9 +77,9 @@ erDiagram
     }
 
     su_business_role {
-        UUID id PK
-        UUID business_id FK
-        UUID parent_role_id FK
+        UUID id
+        UUID business_id
+        UUID parent_role_id
         string role_code
         string role_name_en
         string role_name_local
@@ -99,9 +98,9 @@ erDiagram
     }
 
     su_business_role_program {
-        UUID id PK
-        UUID business_role_id FK
-        UUID program_id FK
+        UUID id
+        UUID business_role_id
+        UUID program_id
         boolean is_active
         boolean is_add
         boolean is_back
@@ -120,8 +119,8 @@ erDiagram
     }
 
     su_user_business {
-        UUID id PK
-        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        UUID id
+        UUID business_id
         string user_id
         boolean is_default
         boolean is_active
@@ -136,9 +135,9 @@ erDiagram
     }
 
     su_user_business_role {
-        UUID id PK
-        UUID user_business_id FK
-        UUID business_role_id FK
+        UUID id
+        UUID user_business_id
+        UUID business_role_id
         boolean is_primary
         boolean is_active
         string created_by
@@ -152,8 +151,8 @@ erDiagram
     }
 
     su_program {
-        UUID id PK
-        UUID parent_program_id FK
+        UUID id
+        UUID parent_program_id
         string program_code
         string icon
         string name_en
@@ -177,26 +176,6 @@ erDiagram
         int row_version
     }
 
-    %% external entity, defined in another module diagram (reference/db module)
-    DbTitle {
-    }
-
-    %% external entity, defined in another module diagram (reference/db module)
-    DbCountry {
-    }
-
-    %% external entity, defined in another module diagram (reference/db module)
-    DbProvince {
-    }
-
-    %% external entity, defined in another module diagram (reference/db module)
-    DbDistrict {
-    }
-
-    %% external entity, defined in another module diagram (reference/db module)
-    DbSubDistrict {
-    }
-
     %% Relationships
 
     su_business ||--o{ su_user_business : "has members"
@@ -211,14 +190,3 @@ erDiagram
 
     su_user_business ||--o{ su_user_business_role : "has role assignments"
 
-    su_profile }o--|| DbTitle : "has title"
-    su_profile }o--o| DbCountry : "located in"
-    su_profile }o--o| DbProvince : "located in"
-    su_profile }o--o| DbDistrict : "located in"
-    su_profile }o--o| DbSubDistrict : "located in"
-
-    su_business }o--|| DbTitle : "has title"
-    su_business }o--|| DbCountry : "registered in"
-    su_business }o--o| DbProvince : "located in"
-    su_business }o--o| DbDistrict : "located in"
-    su_business }o--o| DbSubDistrict : "located in"

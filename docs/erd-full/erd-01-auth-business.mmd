@@ -1,0 +1,320 @@
+%% title: ERD 01 - Authentication / Profile / Business / Access Management
+%% Module: Auth / Profile / Business / Access (full module, not split into sub-files)
+
+erDiagram
+    direction LR
+
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 18}}}%%
+
+    SuProfile {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string user_id
+        string tax_id
+        UUID title_id
+        UUID country_id
+        UUID province_id
+        UUID district_id
+        UUID sub_district_id
+        string first_name_en
+        string middle_name_en
+        string last_name_en
+        string first_name_local
+        string middle_name_local
+        string last_name_local
+        boolean support_local_address
+        string address_en
+        string address_local
+        string zip_code
+        string email
+        string phone_number
+        UUID upload_group_id
+    }
+
+    SuBusiness {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string tax_id
+        string business_code
+        string branch_code
+        string person_type
+        UUID title_id
+        string first_name_en
+        string middle_name_en
+        string last_name_en
+        string first_name_local
+        string middle_name_local
+        string last_name_local
+        UUID country_id
+        boolean support_local_address
+        string address_en
+        string address_local
+        UUID province_id
+        UUID district_id
+        UUID sub_district_id
+        string zip_code
+        string email
+        string phone_number
+        string fax
+        UUID upload_group_id
+        boolean is_active
+    }
+
+    SuBusinessRole {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        UUID business_id
+        UUID parent_role_id
+        string role_code
+        string role_name_en
+        string role_name_local
+        string role_level
+        int sort_order
+        boolean is_active
+        string color
+    }
+
+    SuBusinessRoleProgram {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        UUID business_role_id
+        UUID program_id
+        boolean is_active
+        boolean is_add
+        boolean is_back
+        boolean is_print
+        boolean is_remove
+        boolean is_save
+        boolean is_search
+    }
+
+    SuUserBusiness {
+        UUID id
+        UUID business_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string user_id
+        boolean is_default
+        boolean is_active
+    }
+
+    SuUserBusinessRole {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        UUID user_business_id
+        UUID business_role_id
+        boolean is_primary
+        boolean is_active
+    }
+
+    SuProgram {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        UUID parent_program_id
+        string program_code
+        string icon
+        string name_en
+        string name_local
+        string route_path
+        int sort_order
+        boolean is_active
+        boolean is_add
+        boolean is_back
+        boolean is_print
+        boolean is_remove
+        boolean is_save
+        boolean is_search
+    }
+
+    SuBusinessInvite {
+        UUID id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        UUID role_id
+        string invite_type
+        UUID business_id
+        string invite_email
+        string invite_token
+        boolean is_activated
+        timestamp expire_at
+        int max_uses
+        int use_count
+    }
+
+    SuBusinessAudit {
+        UUID id
+        UUID business_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string user_id
+        string session_id
+        string username
+        string client_ip
+        boolean is_active
+        string remark
+    }
+
+    SuAuditLog {
+        UUID id
+        UUID business_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string user_id
+        string username
+        string user_fullname
+        string action
+        string module
+        text description
+        string target_type
+        UUID target_id
+        json old_value
+        json new_value
+        string ip_address
+        text user_agent
+        string status
+        text details
+    }
+
+    SuTask {
+        UUID id
+        UUID business_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string task_code
+        string task_name_en
+        string task_name_local
+        boolean is_active
+    }
+
+    SuUserTask {
+        UUID id
+        UUID business_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+        string title
+        timestamp start_time
+        timestamp end_time
+        string description
+        UUID task_id
+    }
+
+    %% external entity, defined in another module
+    DbTitle {
+    }
+
+    %% external entity, defined in another module
+    DbCountry {
+    }
+
+    %% external entity, defined in another module
+    DbProvince {
+    }
+
+    %% external entity, defined in another module
+    DbDistrict {
+    }
+
+    %% external entity, defined in another module
+    DbSubDistrict {
+    }
+
+    SuBusiness ||--o{ SuUserBusiness : "assigns users to"
+    SuBusiness ||--o{ SuBusinessRole : "defines"
+    SuBusiness ||--o{ SuBusinessAudit : "logs audit for"
+    SuBusiness ||--o{ SuAuditLog : "records activity for"
+    SuBusinessRole ||--o{ SuBusinessRoleProgram : "grants permission via"
+    SuBusinessRole ||--o{ SuUserBusinessRole : "assigned via"
+    SuBusinessRole ||--o{ SuBusinessInvite : "used by"
+    SuBusinessRole ||--o{ SuBusinessRole : "has sub-role"
+    SuProgram ||--o{ SuBusinessRoleProgram : "granted via"
+    SuProgram ||--o{ SuProgram : "has sub-program"
+    SuUserBusiness ||--o{ SuUserBusinessRole : "grants role via"
+    SuTask ||--o{ SuUserTask : "scheduled as"
+    DbTitle ||--o{ SuProfile : "classifies"
+    DbCountry ||--o{ SuProfile : "locates"
+    DbProvince ||--o{ SuProfile : "locates"
+    DbDistrict ||--o{ SuProfile : "locates"
+    DbSubDistrict ||--o{ SuProfile : "locates"
+    DbTitle ||--o{ SuBusiness : "classifies"
+    DbCountry ||--o{ SuBusiness : "locates"
+    DbProvince ||--o{ SuBusiness : "locates"
+    DbDistrict ||--o{ SuBusiness : "locates"
+    DbSubDistrict ||--o{ SuBusiness : "locates"

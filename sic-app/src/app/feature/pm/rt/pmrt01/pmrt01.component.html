@@ -116,13 +116,6 @@
         @let r = $any(row);
         <div class="flex items-center justify-center gap-1">
           <button
-            (click)="goToProjects(r)"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
-            [title]="'PMRT01_VIEW_PROJECTS_TITLE' | translate"
-          >
-            <i class="bi bi-briefcase"></i>
-          </button>
-          <button
             (click)="goToEdit(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
             [title]="'PMRT01_EDIT_TITLE' | translate"

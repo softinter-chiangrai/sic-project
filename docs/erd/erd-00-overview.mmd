@@ -1,8 +1,13 @@
 %% title: ERD 00 - Module Overview Map (entity names only, no columns)
-%% purpose: see how the 7 detailed ERDs relate to each other. For real columns/PK/FK, open the module file:
-%%   erd-01-auth-business.mmd, erd-02-chat-notification.mmd, erd-03-project-customer-finance.mmd,
-%%   erd-04a-requirement-diagram-spec-test.mmd, erd-04b-review-changerequest-trace.mmd,
-%%   erd-05-task-approval.mmd, erd-06-storage.mmd, erd-07-reference-master.mmd
+%% purpose: see how the 16 detailed ERD files relate to each other. For real columns/PK/FK, open the module file:
+%%   erd-01a-business-role-program.mmd, erd-01b-access-invite-audit.mmd, erd-02-chat-notification.mmd,
+%%   erd-03a-customer-contract-project.mmd, erd-03b-invoice-payment-ma.mmd,
+%%   erd-04a1-requirement-diagram.mmd, erd-04a2-spec-test-manual.mmd,
+%%   erd-04b1-changerequest-review.mmd, erd-04b2-trace-comment.mmd,
+%%   erd-05a1-phase-milestone.mmd, erd-05a2-workpackage-task-bug.mmd,
+%%   erd-05b1-approval-flow-definition.mmd, erd-05b2-approval-execution.mmd,
+%%   erd-06-storage.mmd, erd-07-reference-master.mmd
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff", "fontSize": "20px"}}}%%
 flowchart TB
   subgraph M1["Module 1 - Auth / Profile / Business / Access (D1)"]
     direction TB
@@ -111,3 +116,13 @@ flowchart TB
   M3 -->|"revision / approval request"| M5
   M4 -->|"review / approval request"| M5
   M5 -->|"approval outcome notification"| M2
+
+  classDef node fill:#ffffff,stroke:#000000,stroke-width:1px,color:#000000;
+  class SuProfile,SuBusiness,SuBusinessRole,SuBusinessRoleProgram,SuUserBusiness,SuUserBusinessRole,SuProgram,SuBusinessInvite,SuBusinessAudit,SuAuditLog,SuVerify,SuTask,SuUserTask,SuChatGroup,SuChatGroupMember,SuChatGroupLog,SuChatGroupCallParticipant,SuChatLog,SuMessage,SuNotification,PmCustomer,PmCustomerContract,PmCustomerProject,PmDelivery,PmDeliveryChecklist,PmDeliveryItem,PmInvoice,PmInvoiceItem,PmPayment,PmMaRenewal,PmMaTicket,PmMaTicketAssignee,PmRequirement,PmDiagramTab,PmDiagramVersion,PmSpecification,PmTestScenario,PmTestCase,PmUserManual,PmTraceLink,PmChangeRequest,PmDesignReview,PmDocumentVersion,PmEditSession,PmPhase,PmMilestone,PmWorkPackage,PmTask,PmTaskAssignee,PmApproval,PmApprovalFlow,PmApprovalFlowStep,PmApprovalLog,PmBug,SuUpload,StorageUploadReference,DbCountry,DbProvince,DbDistrict,DbSubDistrict,DbTitle,DbParameter,DbMailTemplate,DbMailConfig,DbMailQueue node
+  style M1 fill:#ffffff,stroke:#000000,color:#000000
+  style M2 fill:#ffffff,stroke:#000000,color:#000000
+  style M3 fill:#ffffff,stroke:#000000,color:#000000
+  style M4 fill:#ffffff,stroke:#000000,color:#000000
+  style M5 fill:#ffffff,stroke:#000000,color:#000000
+  style M6 fill:#ffffff,stroke:#000000,color:#000000
+  style M7 fill:#ffffff,stroke:#000000,color:#000000

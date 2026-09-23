@@ -14,7 +14,6 @@ import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { FormsModule } from '@angular/forms';
@@ -37,7 +36,6 @@ export class Pmrt01Component implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(Pmrt01AService);
   private dialog = inject(DialogService);
-  private customerState = inject(CustomerStateService);
   private navigation = inject(NavigationService);
   private recentItems = inject(RecentItemsService);
   private translate = inject(TranslateService);
@@ -302,10 +300,4 @@ export class Pmrt01Component implements OnInit {
     }
     return `${environment.apiBaseUrl}/api/storage/avatar/${customer.uploadGroupId}`;
   }
-  goToProjects(customer: CustomerModel) {
-  this.customerState.setCustomer(customer.id!, customer.companyNameEn);
-  this.navigation.navigate(['/feature/pm/project'], {
-    queryParams: { customerId: customer.id }
-  });
-}
 }

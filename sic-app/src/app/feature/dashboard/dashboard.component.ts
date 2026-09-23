@@ -47,6 +47,7 @@ import { MyWorkWidgetComponent } from '../../core/component/my-work-widget/my-wo
 import { SprintHealthWidgetComponent } from '../../core/component/sprint-health-widget/sprint-health-widget.component';
 import { TeamWorkloadWidgetComponent } from '../../core/component/team-workload-widget/team-workload-widget.component';
 import { ProjectHealthWidgetComponent } from '../../core/component/project-health-widget/project-health-widget.component';
+import { PortfolioGanttWidgetComponent } from '../../core/component/portfolio-gantt-widget/portfolio-gantt-widget.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -62,6 +63,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SprintHealthWidgetComponent,
     TeamWorkloadWidgetComponent,
     ProjectHealthWidgetComponent,
+    PortfolioGanttWidgetComponent,
     TranslateModule,
   ],
   templateUrl: './dashboard.component.html',

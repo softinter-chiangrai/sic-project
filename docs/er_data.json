@@ -1,0 +1,451 @@
+{
+  "docs/erd/erd-00-overview.mmd": {
+    "title": "ERD 00 - Module Overview Map (entity names only, no columns)",
+    "entities": []
+  },
+  "docs/erd/erd-01a-business-role-program.mmd": {
+    "title": "ERD 01a - Business / Profile / Role / Program",
+    "entities": [
+      {
+        "name": "su_profile",
+        "cols": 29,
+        "stub": false
+      },
+      {
+        "name": "su_business",
+        "cols": 33,
+        "stub": false
+      },
+      {
+        "name": "su_business_role",
+        "cols": 18,
+        "stub": false
+      },
+      {
+        "name": "su_business_role_program",
+        "cols": 18,
+        "stub": false
+      },
+      {
+        "name": "su_user_business",
+        "cols": 13,
+        "stub": false
+      },
+      {
+        "name": "su_user_business_role",
+        "cols": 13,
+        "stub": false
+      },
+      {
+        "name": "su_program",
+        "cols": 23,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-01b-access-invite-audit.mmd": {
+    "title": "ERD 01b - Business Invite / Audit / Task",
+    "entities": [
+      {
+        "name": "su_business_invite",
+        "cols": 18,
+        "stub": false
+      },
+      {
+        "name": "su_business_audit",
+        "cols": 16,
+        "stub": false
+      },
+      {
+        "name": "su_audit_log",
+        "cols": 24,
+        "stub": false
+      },
+      {
+        "name": "su_task",
+        "cols": 14,
+        "stub": false
+      },
+      {
+        "name": "su_user_task",
+        "cols": 15,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-02-chat-notification.mmd": {
+    "title": "ERD 02 - Chat / Messaging / Notification",
+    "entities": [
+      {
+        "name": "SU_CHAT_GROUP",
+        "cols": 11,
+        "stub": false
+      },
+      {
+        "name": "SU_CHAT_GROUP_MEMBER",
+        "cols": 12,
+        "stub": false
+      },
+      {
+        "name": "SU_CHAT_GROUP_LOG",
+        "cols": 19,
+        "stub": false
+      },
+      {
+        "name": "SU_CHAT_GROUP_CALL_PARTICIPANT",
+        "cols": 11,
+        "stub": false
+      },
+      {
+        "name": "SU_CHAT_LOG",
+        "cols": 23,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-03a-customer-contract-project.mmd": {
+    "title": "ERD 03a - Customer / Contract / Project / Delivery",
+    "entities": [
+      {
+        "name": "PM_CUSTOMER",
+        "cols": 28,
+        "stub": false
+      },
+      {
+        "name": "PM_CUSTOMER_CONTRACT",
+        "cols": 23,
+        "stub": false
+      },
+      {
+        "name": "PM_CUSTOMER_PROJECT",
+        "cols": 23,
+        "stub": false
+      },
+      {
+        "name": "PM_DELIVERY",
+        "cols": 27,
+        "stub": false
+      },
+      {
+        "name": "PM_DELIVERY_CHECKLIST",
+        "cols": 17,
+        "stub": false
+      },
+      {
+        "name": "PM_DELIVERY_ITEM",
+        "cols": 17,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-03b-invoice-payment-ma.mmd": {
+    "title": "ERD 03b - Invoice / Payment / MA Renewal / MA Ticket",
+    "entities": [
+      {
+        "name": "PM_INVOICE",
+        "cols": 28,
+        "stub": false
+      },
+      {
+        "name": "PM_INVOICE_ITEM",
+        "cols": 14,
+        "stub": false
+      },
+      {
+        "name": "PM_PAYMENT",
+        "cols": 20,
+        "stub": false
+      },
+      {
+        "name": "PM_MA_RENEWAL",
+        "cols": 21,
+        "stub": false
+      },
+      {
+        "name": "PM_MA_TICKET",
+        "cols": 31,
+        "stub": false
+      },
+      {
+        "name": "PM_MA_TICKET_ASSIGNEE",
+        "cols": 12,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-04a1-requirement-diagram.mmd": {
+    "title": "ERD 04a1 - Requirement / Diagram",
+    "entities": [
+      {
+        "name": "PmRequirement",
+        "cols": 13,
+        "stub": false
+      },
+      {
+        "name": "PmDiagramTab",
+        "cols": 11,
+        "stub": false
+      },
+      {
+        "name": "PmDiagramVersion",
+        "cols": 5,
+        "stub": false
+      },
+      {
+        "name": "PmDiagramChat",
+        "cols": 8,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-04a2-spec-test-manual.mmd": {
+    "title": "ERD 04a2 - Specification / Test / User Manual",
+    "entities": [
+      {
+        "name": "PmSpecification",
+        "cols": 13,
+        "stub": false
+      },
+      {
+        "name": "PmTestScenario",
+        "cols": 9,
+        "stub": false
+      },
+      {
+        "name": "PmTestCase",
+        "cols": 17,
+        "stub": false
+      },
+      {
+        "name": "PmUserManual",
+        "cols": 9,
+        "stub": false
+      },
+      {
+        "name": "PmUserManualSection",
+        "cols": 7,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-04b1-changerequest-review.mmd": {
+    "title": "ERD 04b1 - Change Request / Design Review",
+    "entities": [
+      {
+        "name": "PmChangeRequest",
+        "cols": 15,
+        "stub": false
+      },
+      {
+        "name": "PmChangeImpact",
+        "cols": 5,
+        "stub": false
+      },
+      {
+        "name": "ChangeImpactAnalysis",
+        "cols": 19,
+        "stub": false
+      },
+      {
+        "name": "PmDesignReview",
+        "cols": 14,
+        "stub": false
+      },
+      {
+        "name": "PmReviewComment",
+        "cols": 6,
+        "stub": false
+      },
+      {
+        "name": "PmCrAssignee",
+        "cols": 6,
+        "stub": false
+      },
+      {
+        "name": "PmEditSession",
+        "cols": 8,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-04b2-trace-comment.mmd": {
+    "title": "ERD 04b2 - Traceability / Comment",
+    "entities": [
+      {
+        "name": "PmTraceLink",
+        "cols": 6,
+        "stub": false
+      },
+      {
+        "name": "TraceRelationship",
+        "cols": 7,
+        "stub": false
+      },
+      {
+        "name": "PmComment",
+        "cols": 12,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-05a1-phase-milestone.mmd": {
+    "title": "ERD 05a1 - Phase / Milestone",
+    "entities": [
+      {
+        "name": "PmPhase",
+        "cols": 19,
+        "stub": false
+      },
+      {
+        "name": "PmMilestone",
+        "cols": 14,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-05a2-workpackage-task-bug.mmd": {
+    "title": "ERD 05a2 - Work Package / Task / Bug",
+    "entities": [
+      {
+        "name": "PmWorkPackage",
+        "cols": 16,
+        "stub": false
+      },
+      {
+        "name": "PmTask",
+        "cols": 24,
+        "stub": false
+      },
+      {
+        "name": "PmTaskAssignee",
+        "cols": 12,
+        "stub": false
+      },
+      {
+        "name": "PmBug",
+        "cols": 28,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-05b1-approval-flow-definition.mmd": {
+    "title": "ERD 05b1 - Approval Flow Definition / Approval",
+    "entities": [
+      {
+        "name": "PmApprovalFlow",
+        "cols": 15,
+        "stub": false
+      },
+      {
+        "name": "PmApprovalFlowStep",
+        "cols": 18,
+        "stub": false
+      },
+      {
+        "name": "PmApproval",
+        "cols": 27,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-05b2-approval-execution.mmd": {
+    "title": "ERD 05b2 - Approval Step Status / Log / Reminder",
+    "entities": [
+      {
+        "name": "PmApprovalStepStatus",
+        "cols": 19,
+        "stub": false
+      },
+      {
+        "name": "PmApprovalLog",
+        "cols": 19,
+        "stub": false
+      },
+      {
+        "name": "PmApprovalReminder",
+        "cols": 17,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-06-storage.mmd": {
+    "title": "ERD 06 - File Storage",
+    "entities": [
+      {
+        "name": "SU_UPLOAD",
+        "cols": 24,
+        "stub": false
+      },
+      {
+        "name": "STORAGE_UPLOAD_REFERENCE",
+        "cols": 10,
+        "stub": false
+      },
+      {
+        "name": "PM_APPROVAL",
+        "cols": 2,
+        "stub": false
+      },
+      {
+        "name": "SU_CHAT_LOG",
+        "cols": 2,
+        "stub": false
+      },
+      {
+        "name": "SU_CHAT_GROUP_LOG",
+        "cols": 2,
+        "stub": false
+      },
+      {
+        "name": "PM_DOCUMENT_VERSION",
+        "cols": 2,
+        "stub": false
+      },
+      {
+        "name": "EX_EXAMPLE",
+        "cols": 2,
+        "stub": false
+      }
+    ]
+  },
+  "docs/erd/erd-07-reference-master.mmd": {
+    "title": "ERD 07 - Reference / Master Data",
+    "entities": [
+      {
+        "name": "DB_COUNTRY",
+        "cols": 15,
+        "stub": false
+      },
+      {
+        "name": "DB_PROVINCE",
+        "cols": 14,
+        "stub": false
+      },
+      {
+        "name": "DB_DISTRICT",
+        "cols": 14,
+        "stub": false
+      },
+      {
+        "name": "DB_SUB_DISTRICT",
+        "cols": 17,
+        "stub": false
+      },
+      {
+        "name": "DB_MAIL_TEMPLATE",
+        "cols": 18,
+        "stub": false
+      },
+      {
+        "name": "DB_MAIL_CONFIG",
+        "cols": 20,
+        "stub": false
+      },
+      {
+        "name": "DB_MAIL_QUEUE",
+        "cols": 22,
+        "stub": false
+      }
+    ]
+  }
+}

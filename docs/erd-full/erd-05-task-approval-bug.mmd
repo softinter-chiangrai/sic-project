@@ -1,0 +1,307 @@
+%% title: ERD 05 - Phase / Milestone / Work Package / Task / Approval / Bug
+%% Module: Phase / Milestone / Task / Approval / Bug (full module, not split into sub-files)
+
+erDiagram
+    direction LR
+
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 18}}}%%
+
+    PmPhase {
+        UUID id
+        UUID project_id
+        string phase_code
+        string phase_name
+        string description
+        string color
+        date start_date
+        date end_date
+        string owner
+        string status
+        UUID dependency
+        int progress
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmMilestone {
+        UUID id
+        UUID phase_id
+        string milestone_name
+        string description
+        date due_date
+        string color
+        string status
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmWorkPackage {
+        UUID id
+        UUID business_id
+        UUID milestone_id
+        string package_name
+        string description
+        date start_date
+        date end_date
+        string color
+        string status
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmTask {
+        UUID id
+        UUID business_id
+        UUID work_package_id
+        UUID spec_id
+        string task_code
+        string task_name
+        string description
+        string assigned_to
+        date start_date
+        date end_date
+        date actual_start
+        date actual_end
+        int estimate_manday
+        string color
+        int actual_manday
+        string status
+        string priority
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmTaskAssignee {
+        UUID id
+        UUID business_id
+        UUID task_id
+        string user_id
+        string role_in_task
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmBug {
+        UUID id
+        UUID business_id
+        UUID project_id
+        UUID task_id
+        UUID test_case_id
+        string bug_code
+        string title
+        string description
+        string steps_to_reproduce
+        string environment
+        string issue_type
+        UUID attachment_group_id
+        string severity
+        string priority
+        string found_by
+        string assigned_to
+        timestamp found_date
+        date fix_due_date
+        timestamp fixed_date
+        string status
+        string related_spec
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalFlow {
+        UUID id
+        UUID business_id
+        string flow_code
+        string flow_name
+        string document_type
+        ApprovalMode approval_mode
+        boolean is_active
+        string description
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalFlowStep {
+        UUID id
+        UUID flow_id
+        int step_order
+        string step_name
+        string approver_role
+        string approver_user_id
+        boolean is_required
+        int timeout_days
+        string timeout_action
+        boolean can_skip
+        string condition_expression
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApproval {
+        UUID id
+        UUID business_id
+        string document_type
+        UUID document_id
+        string document_code
+        string document_title
+        string version
+        string requested_by
+        string requested_by_name
+        timestamp requested_date
+        UUID flow_id
+        UUID current_step_id
+        ApprovalStatus status
+        string final_approver
+        timestamp final_approval_date
+        string comment
+        UUID attachment_id
+        UUID reference_id
+        boolean is_active
+        json extra_data
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalStepStatus {
+        UUID id
+        UUID approval_id
+        UUID step_id
+        ApprovalStatus status
+        string approver
+        string approver_name
+        timestamp approval_date
+        string comment
+        string signature_url
+        string ip_address
+        string user_agent
+        boolean is_completed
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalLog {
+        UUID id
+        UUID approval_id
+        UUID step_status_id
+        string action
+        string actor
+        string actor_name
+        string comment
+        ApprovalStatus old_status
+        ApprovalStatus new_status
+        string ip_address
+        string user_agent
+        json extra_data
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalReminder {
+        UUID id
+        UUID approval_id
+        UUID step_status_id
+        string reminder_type
+        timestamp sent_at
+        string recipient
+        string recipient_email
+        string channel
+        string message
+        boolean is_read
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmCustomerProject {
+    }
+    %% external entity, defined in another module
+
+    PmSpecification {
+    }
+    %% external entity, defined in another module
+
+    PmTestCase {
+    }
+    %% external entity, defined in another module
+
+    SuUpload {
+    }
+    %% external entity, defined in another module
+
+    PmCustomerProject ||--o{ PmPhase : "has phases"
+    PmPhase |o--o{ PmPhase : "depends on"
+    PmPhase ||--o{ PmMilestone : "has"
+    PmMilestone ||--o{ PmWorkPackage : "has"
+    PmWorkPackage |o--o{ PmTask : "has"
+    PmSpecification |o--o{ PmTask : "specifies"
+    PmTask ||--o{ PmTaskAssignee : "assigned to"
+    PmTask |o--o{ PmBug : "reported for"
+    PmTestCase |o--o{ PmBug : "found in"
+    PmApprovalFlow ||--o{ PmApprovalFlowStep : "defines"
+    PmApprovalFlow ||--o{ PmApproval : "governs"
+    PmApprovalFlowStep |o--o{ PmApproval : "current step of"
+    PmApprovalFlowStep ||--o{ PmApprovalStepStatus : "status for"
+    PmApproval ||--o{ PmApprovalStepStatus : "has steps"
+    PmApproval ||--o{ PmApprovalLog : "logs"
+    PmApproval ||--o{ PmApprovalReminder : "reminders for"
+    SuUpload |o--o{ PmApproval : "attachment for"
+    PmApprovalStepStatus |o--o{ PmApprovalLog : "logs for"
+    PmApprovalStepStatus |o--o{ PmApprovalReminder : "reminders for"

@@ -1,0 +1,160 @@
+%% title: ERD 04a - Requirement / Diagram / Specification / Test / Manual
+%% Module: Requirement / Analysis / Design authoring (full, part 1 of 2 - see erd-04b for governance/traceability)
+%% NOTE: All entities extend BaseEntity or BaseBusinessEntity (Lombok @Data), which contribute these audit/base
+%%       columns not repeated per-entity below: id (PK, UUID), created_by, created_date, updated_by, updated_date,
+%%       is_delete, delete_by, delete_date, rowVersion (xmin). BaseBusinessEntity additionally adds business_id (UUID).
+%%       Only business-specific columns are listed in each entity box.
+%% NOTE: Relationships marked "(inferred)" come from a plain *_id UUID column that follows FK naming convention but
+%%       has NO @ManyToOne/@JoinColumn mapping in the Java source (no JPA object graph, DB-level FK only/assumed).
+%%       Relationships marked "(mapped)" come from an actual @ManyToOne/@JoinColumn in the entity.
+%% NOTE: PmDiagramSqlHistory (tab_id is varchar, not a real UUID FK) and ExExample (generic demo/scaffold table,
+%%       unrelated to any entity here) have NO relationship to anything in this module - omitted entirely.
+%% NOTE: PmCustomerProject and PmTask are external entities (defined in other modules), shown as empty stubs
+%%       because they are referenced from this module's entities.
+
+erDiagram
+    direction LR
+
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 18}}}%%
+
+    PmRequirement {
+        uuid project_id
+        string requirement_code
+        string title
+        text description
+        string requirement_type
+        string source
+        string priority
+        string business_value
+        text acceptance_criteria
+        string version
+        string status
+        boolean is_active
+        uuid upload_group_id
+    }
+
+    PmDiagramTab {
+        uuid business_id
+        string user_id
+        uuid project_id
+        string name
+        string diagram_code
+        string diagram_type
+        text mermaid_script
+        jsonb metadata
+        jsonb graph_data
+        int sort_order
+        boolean is_active
+    }
+
+    PmDiagramVersion {
+        uuid business_id
+        uuid diagram_id
+        text mermaid_script
+        int version_number
+        text change_comment
+    }
+
+    PmDiagramChat {
+        uuid business_id
+        uuid diagram_id
+        string user_id
+        string role
+        text content
+        uuid session_id
+        string session_title
+        jsonb context_data
+    }
+
+    PmSpecification {
+        string specification_code
+        string specification_type
+        string title
+        string version
+        string status
+        string priority
+        string owner
+        int estimated_manday
+        text description
+        uuid upload_group_id
+        uuid project_id
+        uuid requirement_id
+        boolean is_active
+    }
+
+    PmTestScenario {
+        uuid project_id
+        uuid test_plan_id
+        uuid task_id
+        string scenario_code
+        string scenario_name
+        string priority
+        string status
+        string test_type
+        text description
+    }
+
+    PmTestCase {
+        uuid project_id
+        uuid scenario_id
+        string scenario_name
+        uuid task_id
+        string test_case_code
+        string title
+        string priority
+        text test_step
+        text expected_result
+        text actual_result
+        string test_status
+        string test_type
+        string tester
+        datetime test_date
+        text related_requirement
+        text related_spec
+        text related_task
+    }
+
+    PmUserManual {
+        uuid project_id
+        string manual_code
+        string manual_title
+        string manual_type
+        string version
+        uuid related_spec_id
+        uuid delivery_id
+        string status
+        uuid attachment_group_id
+    }
+
+    PmUserManualSection {
+        uuid manual_id
+        string section_code
+        string section_title
+        text content
+        int sort_order
+        text permission_roles
+        uuid screenshot_group_id
+    }
+
+    PmCustomerProject {
+    }
+    %% external entity, defined in another module
+
+    PmTask {
+    }
+    %% external entity, defined in another module
+
+    PmCustomerProject ||--o{ PmRequirement : "has requirements (project_id, mapped)"
+    PmCustomerProject ||--o{ PmDiagramTab : "has diagrams (project_id, inferred)"
+    PmDiagramTab ||--o{ PmDiagramVersion : "has version history (mapped)"
+    PmDiagramTab ||--o{ PmDiagramChat : "has AI chat log (mapped)"
+    PmCustomerProject ||--o{ PmSpecification : "has specifications (project_id, mapped)"
+    PmRequirement |o--o{ PmSpecification : "has specifications (requirement_id, mapped, optional)"
+    PmCustomerProject |o--o{ PmTestScenario : "has test scenarios (project_id, inferred, optional)"
+    PmTask |o--o{ PmTestScenario : "has test scenarios (task_id, mapped, optional)"
+    PmTestScenario |o--o{ PmTestCase : "has test cases (scenario_id, mapped, optional)"
+    PmTask |o--o{ PmTestCase : "has test cases (task_id, mapped, optional)"
+    PmCustomerProject |o--o{ PmTestCase : "has test cases (project_id, inferred, optional)"
+    PmCustomerProject ||--o{ PmUserManual : "has user manuals (project_id, inferred)"
+    PmUserManual ||--o{ PmUserManualSection : "has sections (manual_id, inferred)"
+    PmSpecification |o--o{ PmUserManual : "related spec (related_spec_id, inferred, optional)"

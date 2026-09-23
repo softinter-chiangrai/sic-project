@@ -4,24 +4,11 @@
 erDiagram
     direction LR
 
-%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
-
-    %% external entity, defined in erd-05a1-phase-milestone.mmd (same module)
-    PmMilestone {
-    }
-
-    %% external entity, defined in another module diagram
-    PmSpecification {
-    }
-
-    %% external entity, defined in another module diagram
-    PmTestCase {
-    }
-
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmWorkPackage {
-        UUID id PK
+        UUID id
         UUID business_id
-        UUID milestone_id FK
+        UUID milestone_id
         string package_name
         string description
         date start_date
@@ -38,10 +25,10 @@ erDiagram
     }
 
     PmTask {
-        UUID id PK
+        UUID id
         UUID business_id
-        UUID work_package_id FK "nullable"
-        UUID spec_id FK "nullable, external PmSpecification"
+        UUID work_package_id
+        UUID spec_id
         string task_code
         string task_name
         string description
@@ -65,9 +52,9 @@ erDiagram
     }
 
     PmTaskAssignee {
-        UUID id PK
+        UUID id
         UUID business_id
-        UUID task_id FK
+        UUID task_id
         string user_id
         string role_in_task
         string created_by
@@ -80,11 +67,11 @@ erDiagram
     }
 
     PmBug {
-        UUID id PK
+        UUID id
         UUID business_id
-        UUID project_id "plain column, no JPA relation"
-        UUID task_id FK "nullable, also mirrors relation task"
-        UUID test_case_id FK "nullable, external PmTestCase, mirrors relation testCase"
+        UUID project_id
+        UUID task_id
+        UUID test_case_id
         string bug_code
         string title
         string description
@@ -110,9 +97,8 @@ erDiagram
         timestamp delete_date
     }
 
-    PmMilestone ||--o{ PmWorkPackage : "has"
     PmWorkPackage |o--o{ PmTask : "has"
-    PmSpecification |o--o{ PmTask : "specifies"
+
     PmTask ||--o{ PmTaskAssignee : "assigned to"
     PmTask |o--o{ PmBug : "reported for"
-    PmTestCase |o--o{ PmBug : "found via"
+

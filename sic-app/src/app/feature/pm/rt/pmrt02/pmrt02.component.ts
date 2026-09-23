@@ -11,7 +11,6 @@ import {
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
-import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from './pmrt02.service';
@@ -36,7 +35,6 @@ export class Pmrt02Component implements OnInit {
   private route = inject(ActivatedRoute);
   private service = inject(Pmrt02Service);
   private dialog = inject(DialogService);
-  private customerState = inject(CustomerStateService);
   private navigation = inject(NavigationService);
   private recentItems = inject(RecentItemsService);
   private translate = inject(TranslateService);
@@ -289,16 +287,6 @@ export class Pmrt02Component implements OnInit {
     } else {
       this.navigation.navigate(['/feature/pm/project/new']);
     }
-  }
-
-  goToDashboard(projectId: string) {
-    const project = this.projects().find(p => p.id === projectId);
-    if (project) {
-      this.customerState.setProject(project.id, project.projectName);
-    }
-    this.navigation.navigate(['/feature/pm/project-dashboard'], {
-      queryParams: { projectId: projectId }
-    });
   }
 
   goToDetailView(id: string) {

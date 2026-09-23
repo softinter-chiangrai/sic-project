@@ -1,0 +1,367 @@
+%% title: ERD 03 - Customer / Project / Contract / Delivery / Finance
+%% Module: Customer / Project / Contract / Delivery / Finance (full module, not split into sub-files)
+
+erDiagram
+    direction LR
+
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 18}}}%%
+
+    PM_CUSTOMER {
+        UUID id
+        UUID business_id
+        varchar customer_code
+        UUID upload_group_id
+        varchar tax_id
+        varchar company_name_en
+        varchar company_name_local
+        varchar contact_person
+        varchar phone_number
+        varchar email
+        varchar line_id
+        varchar address_en
+        varchar address_local
+        varchar zip_code
+        varchar person_type
+        boolean is_active
+        text remark
+        UUID province_id
+        UUID district_id
+        UUID sub_district_id
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_CUSTOMER_CONTRACT {
+        UUID id
+        UUID business_id
+        UUID customer_id
+        varchar contract_no
+        varchar contract_type
+        date start_date
+        date end_date
+        decimal contract_value
+        varchar sign_status
+        boolean is_active
+        varchar payment_terms
+        text scope_summary
+        varchar renewal_status
+        UUID parent_contract_id
+        UUID project_id
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_CUSTOMER_PROJECT {
+        UUID id
+        UUID business_id
+        UUID customer_id
+        UUID contract_id
+        varchar project_code
+        varchar project_name
+        date start_date
+        date planned_end_date
+        date actual_end_date
+        int budget_manday
+        int used_manday
+        varchar status
+        varchar priority
+        text description
+        boolean is_active
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_DELIVERY {
+        UUID id
+        UUID business_id
+        UUID project_id
+        varchar delivery_code
+        varchar delivery_title
+        varchar delivery_type
+        UUID contract_id
+        UUID milestone_id
+        date delivery_date
+        varchar delivery_version
+        text release_note
+        text delivery_summary
+        varchar status
+        varchar pm_approved_by
+        timestamp pm_approved_date
+        varchar customer_signed_by
+        timestamp customer_signed_date
+        UUID attachment_group_id
+        boolean is_locked
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_DELIVERY_CHECKLIST {
+        UUID id
+        UUID delivery_id
+        varchar item_name
+        varchar item_category
+        boolean is_checked
+        varchar checked_by
+        timestamp checked_date
+        text remark
+        int sort_order
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_DELIVERY_ITEM {
+        UUID id
+        UUID delivery_id
+        varchar item_type
+        UUID item_id
+        varchar item_code
+        varchar item_title
+        varchar item_status
+        text remark
+        int sort_order
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_INVOICE {
+        UUID id
+        UUID business_id
+        varchar invoice_no
+        UUID customer_id
+        UUID project_id
+        UUID contract_id
+        UUID delivery_id
+        UUID milestone_id
+        BillingType billing_type
+        date issue_date
+        date due_date
+        decimal subtotal_amount
+        decimal vat_rate
+        decimal vat_amount
+        decimal total_amount
+        decimal paid_amount
+        PaymentStatus payment_status
+        varchar approval_status
+        text receipt_file_ref
+        text remark
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_INVOICE_ITEM {
+        UUID id
+        UUID invoice_id
+        varchar item_name
+        text description
+        decimal amount
+        int sort_order
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_PAYMENT {
+        UUID id
+        UUID business_id
+        varchar payment_no
+        UUID invoice_id
+        date payment_date
+        PaymentMethod payment_method
+        decimal amount
+        varchar reference_no
+        varchar bank_name
+        text receipt_file
+        PaymentStatus payment_status
+        text notes
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_MA_RENEWAL {
+        UUID id
+        UUID business_id
+        varchar renewal_no
+        UUID contract_id
+        UUID customer_id
+        UUID project_id
+        date current_end_date
+        date new_start_date
+        date new_end_date
+        decimal proposed_amount
+        MaRenewalStatus status
+        UUID new_contract_id
+        text remark
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_MA_TICKET {
+        UUID id
+        UUID business_id
+        varchar ticket_no
+        UUID customer_id
+        UUID project_id
+        UUID contract_id
+        MaTicketType ticket_type
+        varchar title
+        text description
+        MaTicketSeverity severity
+        MaTicketStatus status
+        varchar assigned_to
+        varchar reported_by
+        timestamp reported_date
+        timestamp target_response_date
+        timestamp target_resolve_date
+        timestamp resolved_date
+        timestamp closed_date
+        date start_date
+        varchar start_time
+        date end_date
+        varchar end_time
+        text resolution_summary
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_MA_TICKET_ASSIGNEE {
+        UUID id
+        UUID business_id
+        UUID ma_ticket_id
+        varchar user_id
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    %% external entity, defined in another module
+    SU_BUSINESS {
+    }
+
+    %% external entity, defined in another module
+    DB_PROVINCE {
+    }
+
+    %% external entity, defined in another module
+    DB_DISTRICT {
+    }
+
+    %% external entity, defined in another module
+    DB_SUB_DISTRICT {
+    }
+
+    %% external entity, defined in another module
+    PM_MILESTONE {
+    }
+
+    %% external entity, defined in another module
+    STORAGE_UPLOAD_REFERENCE {
+    }
+
+    %% ===== Relationships =====
+
+    PM_CUSTOMER ||--o{ PM_CUSTOMER_CONTRACT : "has contracts"
+    PM_CUSTOMER ||--o{ PM_CUSTOMER_PROJECT : "has projects"
+    PM_CUSTOMER ||--o{ PM_INVOICE : "billed on (customer_id FK)"
+    PM_CUSTOMER ||--o{ PM_MA_RENEWAL : "renews for (customer_id FK)"
+    PM_CUSTOMER ||--o{ PM_MA_TICKET : "raises tickets (customer_id FK)"
+    PM_CUSTOMER }o--o| DB_PROVINCE : "located in"
+    PM_CUSTOMER }o--o| DB_DISTRICT : "located in"
+    PM_CUSTOMER }o--o| DB_SUB_DISTRICT : "located in"
+    PM_CUSTOMER }o--o| STORAGE_UPLOAD_REFERENCE : "attaches uploads (upload_group_id)"
+
+    PM_CUSTOMER_CONTRACT ||--o{ PM_CUSTOMER_PROJECT : "governs (project.contract_id FK)"
+    PM_CUSTOMER_CONTRACT |o--o{ PM_CUSTOMER_CONTRACT : "renewed into (parent_contract_id FK)"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_DELIVERY : "covers (contract_id FK)"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_INVOICE : "billed under (contract_id FK)"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_MA_RENEWAL : "renewed by (contract_id FK)"
+    PM_CUSTOMER_CONTRACT |o--o{ PM_MA_RENEWAL : "results in (new_contract_id FK)"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_MA_TICKET : "covers (contract_id FK)"
+
+    PM_CUSTOMER_PROJECT ||--o{ PM_CUSTOMER_CONTRACT : "may originate (contract.project_id FK)"
+    PM_CUSTOMER_PROJECT ||--o{ PM_DELIVERY : "produces (project_id FK)"
+    PM_CUSTOMER_PROJECT ||--o{ PM_INVOICE : "billed on (project_id FK)"
+    PM_CUSTOMER_PROJECT ||--o{ PM_MA_RENEWAL : "renews for (project_id FK)"
+    PM_CUSTOMER_PROJECT ||--o{ PM_MA_TICKET : "raises tickets (project_id FK)"
+    PM_CUSTOMER_PROJECT }o--|| SU_BUSINESS : "scoped to (business_id FK)"
+
+    PM_DELIVERY ||--o{ PM_DELIVERY_CHECKLIST : "checklist items"
+    PM_DELIVERY ||--o{ PM_DELIVERY_ITEM : "included items"
+    PM_DELIVERY |o--o{ PM_INVOICE : "billed by (delivery_id FK)"
+    PM_DELIVERY }o--o| PM_MILESTONE : "tied to (milestone_id FK)"
+    PM_DELIVERY }o--o| STORAGE_UPLOAD_REFERENCE : "attaches uploads (attachment_group_id)"
+
+    PM_INVOICE ||--o{ PM_INVOICE_ITEM : "line items"
+    PM_INVOICE ||--o{ PM_PAYMENT : "receives payments"
+    PM_INVOICE }o--o| PM_MILESTONE : "tied to (milestone_id FK)"
+
+    PM_MA_TICKET ||--o{ PM_MA_TICKET_ASSIGNEE : "assigned to"

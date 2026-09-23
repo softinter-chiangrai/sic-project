@@ -1,0 +1,216 @@
+%% title: ERD 04b - Change Request / Design Review / Traceability / Comment
+%% Module: Requirement / Analysis / Design governance (full, part 2 of 2 - see erd-04a for authoring)
+%% NOTE: All entities extend BaseEntity or BaseBusinessEntity (Lombok @Data), which contribute these audit/base
+%%       columns not repeated per-entity below: id (PK, UUID), created_by, created_date, updated_by, updated_date,
+%%       is_delete, delete_by, delete_date, rowVersion (xmin). BaseBusinessEntity additionally adds business_id (UUID).
+%%       Only business-specific columns are listed in each entity box.
+%% NOTE on PmTraceLink / PmComment:
+%%       these use POLYMORPHIC association pairs (a "*_type" string column + a "*_id" UUID column) instead of a
+%%       real FK to one table, so the same column pair can point at PmRequirement, PmDiagramTab, PmSpecification,
+%%       PmTestCase, PmTask, PmBug (and, for PmComment.target, also PmCustomerProject) depending on the value of
+%%       *_type. Mermaid cannot express "one column set, many possible target tables" as a real FK, so these are
+%%       drawn as dashed/non-identifying relationships (`..`) to each documented candidate target, labelled
+%%       "polymorphic source/target". This is the most accurate representation without inventing a constraint
+%%       that does not exist in the schema.
+%% NOTE: PmDesignReview.review_item_type / review_item_id, PmChangeRequest.target_type / target_id,
+%%       PmChangeImpact.impacted_type / impacted_id and PmCrAssignee/PmEditSession target_type / target_id are
+%%       also polymorphic-shaped columns, but are left as plain attributes (no dashed fan-out) to keep this
+%%       diagram readable - PmTraceLink and PmComment are the documented example of this pattern.
+%% NOTE: Relationships marked "(inferred)" come from a plain *_id UUID column with FK naming convention but NO
+%%       @ManyToOne/@JoinColumn mapping in the Java source. Relationships marked "(mapped)" are real @ManyToOne.
+%% NOTE: PmDocumentVersion is intentionally excluded - it has no real relationship to any entity in this module.
+
+erDiagram
+    direction LR
+
+%%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 18}}}%%
+
+    PmChangeRequest {
+        string cr_code
+        string target_type
+        uuid target_id
+        string title
+        text description
+        string change_reason
+        string requester_id
+        uuid project_id
+        string assignee_id
+        string status
+        string priority
+        string target_version
+        string approved_by
+        datetime approved_at
+        datetime implemented_at
+    }
+
+    PmChangeImpact {
+        uuid change_request_id
+        string impacted_type
+        uuid impacted_id
+        string impacted_title
+        string impact_level
+    }
+
+    ChangeImpactAnalysis {
+        uuid change_request_id
+        text dfd_impact
+        text er_impact
+        text ui_impact
+        text api_impact
+        text test_impact
+        int manday_impact
+        int timeline_impact
+        text cost_impact
+        uuid_array impacted_requirement_ids
+        uuid_array impacted_spec_ids
+        uuid_array impacted_task_ids
+        uuid_array impacted_test_case_ids
+        uuid_array impacted_bug_ids
+        uuid_array impacted_diagram_ids
+        text_array impacted_table_names
+        string analysis_status
+        datetime analyzed_at
+        string analyzed_by
+    }
+
+    PmCrAssignee {
+        uuid change_request_id
+        string user_id
+        string target_type
+        uuid target_id
+        string status
+        datetime completed_at
+    }
+
+    PmEditSession {
+        uuid change_request_id
+        string target_type
+        uuid target_id
+        string assignee_id
+        datetime granted_at
+        datetime expires_at
+        boolean is_active
+        string edit_type
+    }
+
+    PmDesignReview {
+        string review_code
+        string title
+        text description
+        uuid project_id
+        string review_item_type
+        uuid review_item_id
+        string reviewer
+        string assigned_to
+        string severity
+        string status
+        date due_date
+        text figma_url
+        string embed_mode
+        boolean is_active
+    }
+
+    PmReviewComment {
+        uuid review_id
+        string comment_type
+        text comment_text
+        string severity
+        string assigned_to
+        string status
+    }
+
+    PmTraceLink {
+        uuid project_id
+        string source_type
+        uuid source_id
+        string target_type
+        uuid target_id
+        enum relationship_type
+    }
+
+    TraceRelationship {
+        enum DESIGNED_BY
+        enum IMPLEMENTED_BY
+        enum DOCUMENTED_BY
+        enum VERIFIED_BY
+        enum FAILED_BY
+        enum AFFECTED_BY
+        enum RELATED_TO
+    }
+
+    PmComment {
+        string target_type
+        uuid target_id
+        uuid parent_comment_id
+        string subject
+        text content
+        uuid attachment_group_id
+        boolean is_decision
+        boolean is_question
+        boolean is_resolved
+        boolean pinned
+        string mention_user_id
+        jsonb extra_data
+    }
+
+    PmCustomerProject {
+    }
+    %% external entity, defined in another module
+
+    PmRequirement {
+    }
+    %% external entity, defined in another module
+
+    PmDiagramTab {
+    }
+    %% external entity, defined in another module
+
+    PmSpecification {
+    }
+    %% external entity, defined in another module
+
+    PmTestCase {
+    }
+    %% external entity, defined in another module
+
+    PmTask {
+    }
+    %% external entity, defined in another module
+
+    PmBug {
+    }
+    %% external entity, defined in another module
+
+    PmChangeRequest ||--o{ PmChangeImpact : "has impacts"
+    PmChangeRequest ||--o{ ChangeImpactAnalysis : "has analysis"
+    PmChangeRequest ||--o{ PmCrAssignee : "has assignees"
+    PmChangeRequest ||--o{ PmEditSession : "grants edit sessions (inferred)"
+
+    PmDesignReview ||--o{ PmReviewComment : "has comments"
+    PmDesignReview }o--|| PmCustomerProject : "reviews design of (mapped)"
+
+    PmComment ||--o{ PmComment : "has replies (parent_comment_id, self-ref)"
+
+    PmTraceLink }o--|| TraceRelationship : "relationship_type (enum)"
+
+    PmTraceLink }o..o{ PmRequirement : "polymorphic source (source_type/source_id)"
+    PmTraceLink }o..o{ PmDiagramTab : "polymorphic source (source_type/source_id)"
+    PmTraceLink }o..o{ PmSpecification : "polymorphic source (source_type/source_id)"
+    PmTraceLink }o..o{ PmTestCase : "polymorphic source (source_type/source_id)"
+    PmTraceLink }o..o{ PmTask : "polymorphic source (source_type/source_id)"
+    PmTraceLink }o..o{ PmBug : "polymorphic source (source_type/source_id)"
+
+    PmTraceLink }o..o{ PmRequirement : "polymorphic target (target_type/target_id)"
+    PmTraceLink }o..o{ PmDiagramTab : "polymorphic target (target_type/target_id)"
+    PmTraceLink }o..o{ PmSpecification : "polymorphic target (target_type/target_id)"
+    PmTraceLink }o..o{ PmTestCase : "polymorphic target (target_type/target_id)"
+    PmTraceLink }o..o{ PmTask : "polymorphic target (target_type/target_id)"
+    PmTraceLink }o..o{ PmBug : "polymorphic target (target_type/target_id)"
+
+    PmComment }o..o{ PmCustomerProject : "polymorphic target (target_type/target_id)"
+    PmComment }o..o{ PmRequirement : "polymorphic target (target_type/target_id)"
+    PmComment }o..o{ PmDiagramTab : "polymorphic target (target_type/target_id)"
+    PmComment }o..o{ PmSpecification : "polymorphic target (target_type/target_id)"
+    PmComment }o..o{ PmTestCase : "polymorphic target (target_type/target_id)"
+    PmComment }o..o{ PmTask : "polymorphic target (target_type/target_id)"
+    PmComment }o..o{ PmBug : "polymorphic target (target_type/target_id)"
