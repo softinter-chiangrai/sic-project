@@ -42,20 +42,33 @@
           {{ 'PMDT12B_SECTION_INFO' | translate }}
         </h3>
 
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div>
+            <sic-combobox
+              [label]="'PMDT12B_TASK_TRACE_LABEL' | translate"
+              formControlName="taskId"
+              [items]="taskOptions()"
+              [placeholder]="'PMDT12B_TASK_TRACE_PLACEHOLDER' | translate"
+              [required]="true"
+              (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
+              [disabled]="isView()"
+            ></sic-combobox>
+          </div>
           <div>
             <sic-input
               formControlName="scenarioCode"
               [label]="'PMDT12B_SCENARIO_CODE_LABEL' | translate"
               [placeholder]="'PMDT12B_SCENARIO_CODE_PLACEHOLDER' | translate"
+              [required]="true"
               [disabled]="isView()"
             ></sic-input>
           </div>
-          <div class="md:col-span-1">
+          <div>
             <sic-input
               formControlName="scenarioName"
               [label]="'PMDT12B_SCENARIO_NAME_LABEL' | translate"
               [placeholder]="'PMDT12B_SCENARIO_NAME_PLACEHOLDER' | translate"
+              [required]="true"
               [disabled]="isView()"
             ></sic-input>
           </div>
@@ -76,16 +89,6 @@
               [placeholder]="'PMDT12B_PRIORITY_PLACEHOLDER' | translate"
               valueField="value"
               textField="text"
-              [disabled]="isView()"
-            ></sic-combobox>
-          </div>
-          <div>
-            <sic-combobox
-              [label]="'PMDT12B_TASK_TRACE_LABEL' | translate"
-              formControlName="taskId"
-              [items]="taskOptions()"
-              [placeholder]="'PMDT12B_TASK_TRACE_PLACEHOLDER' | translate"
-              (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
               [disabled]="isView()"
             ></sic-combobox>
           </div>

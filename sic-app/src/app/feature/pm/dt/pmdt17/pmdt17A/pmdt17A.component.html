@@ -49,27 +49,14 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          label="สัญญา (Contract — เลือกแล้วระบบจะผูกลูกค้า/โครงการให้อัตโนมัติ)"
+          [label]="'PMDT17A_CONTRACT_LABEL' | translate"
           [options]="contractOptions()"
-          placeholder="เลือกสัญญา"
+          [placeholder]="'PMDT17A_SELECT_CONTRACT_PLACEHOLDER' | translate"
           valueField="value"
           displayField="text"
           [clearable]="true"
           formControlName="contractId"
           (selectionChanged)="onContractSelected($event)"
-        ></sic-combobox>
-
-        <sic-combobox
-          [label]="isProjectDerived() ? 'โครงการ (ผูกอัตโนมัติจากสัญญาที่เลือก)' : 'โครงการ'"
-          [apiUrl]="apiGetComboboxProject"
-          valueField="value"
-          textField="text"
-          placeholder="ค้นหาและเลือกโครงการ"
-          [clearable]="true"
-          [required]="true"
-          [disabled]="isProjectDerived()"
-          formControlName="projectId"
-          (selectionChanged)="onProjectSelected($event)"
         ></sic-combobox>
 
         <sic-input

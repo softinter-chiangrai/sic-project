@@ -14,24 +14,24 @@
         <!-- Customer & Project (เมื่อไม่ได้เปิดมาจากเอกสารที่ล็อค) -->
         <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4" *ngIf="!isTargetLocked()">
           <sic-combobox
-            label="ลูกค้า"
+            [label]="'PMDT06_CUSTOMER_LABEL' | translate"
             formControlName="customerId"
             [apiUrl]="apiGetComboboxCustomer"
             valueField="value"
             textField="text"
-            placeholder="ค้นหาและเลือกลูกค้า"
+            [placeholder]="'PMDT06_CUSTOMER_PLACEHOLDER' | translate"
             [clearable]="true"
             (selectionChanged)="onCustomerSelected($event)">
           </sic-combobox>
 
           <sic-combobox
-            label="โครงการ"
+            [label]="'PMDT06_PROJECT_LABEL' | translate"
             formControlName="projectId"
             [apiUrl]="apiGetComboboxProject"
             [params]="projectParams"
             valueField="value"
             textField="text"
-            placeholder="ค้นหาและเลือกโครงการ"
+            [placeholder]="'PMDT06_PROJECT_PLACEHOLDER' | translate"
             [clearable]="true"
             [required]="true"
             (selectionChanged)="onProjectSelected($event)">

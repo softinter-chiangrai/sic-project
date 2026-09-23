@@ -9,12 +9,12 @@
     <!-- Phase Selection -->
     <div>
       <sic-combobox
-        label="เฟส (Phase)"
+        [label]="'PMDT02_PHASE_LABEL' | translate"
         formControlName="phaseId"
         [apiUrl]="apiGetComboboxPhase"
         valueField="value"
         textField="text"
-        placeholder="ค้นหาและเลือกเฟส"
+        [placeholder]="'PMDT02_SELECT_PHASE_PLACEHOLDER' | translate"
         [clearable]="true"
         [required]="true"
         (selectionChanged)="onPhaseSelected($event)">

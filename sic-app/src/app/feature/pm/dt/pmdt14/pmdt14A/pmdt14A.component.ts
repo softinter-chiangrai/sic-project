@@ -316,6 +316,21 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  onContractSelected(item: any): void {
+    const contractId = item?.value ?? item?.id ?? null;
+    if (!contractId) {
+      return;
+    }
+    this.service.getContractById(contractId).subscribe({
+      next: (contract) => {
+        if (contract?.projectId) {
+          this.formData.patchValue({ projectId: contract.projectId } as any);
+          this.runGateCheck(contract.projectId);
+        }
+      },
+    });
+  }
+
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Contract + Gate Check ของโครงการที่เลือกใหม่
   onProjectSelected(item: any): void {
     const projId = item?.value ?? item?.id ?? null;

@@ -9,27 +9,17 @@
     <!-- Work Package Selection -->
     <div>
       <sic-combobox
-        label="แพ็กเกจงาน (Work Package)"
+        [label]="'PMDT02_WORK_PACKAGE_LABEL' | translate"
         formControlName="workPackageId"
         [apiUrl]="apiGetComboboxWorkPackage"
+        [params]="wpComboboxParams"
         valueField="value"
         textField="text"
-        placeholder="ค้นหาและเลือกแพ็กเกจงาน"
+        [placeholder]="'PMDT02_SELECT_WP_PLACEHOLDER' | translate"
         [clearable]="true"
         [required]="true"
         (selectionChanged)="onWorkPackageSelected($event)">
       </sic-combobox>
-    </div>
-
-    <!-- Specification Selection -->
-    <div>
-      <label class="block text-sm font-medium text-[var(--text)] mb-1">Specification</label>
-      <sic-combobox
-        formControlName="specificationId"
-        [options]="specOptions()"
-        [placeholder]="'PMDT02_SELECT_SPEC_PLACEHOLDER' | translate"
-        [clearable]="true"
-      ></sic-combobox>
     </div>
 
     <!-- Task Code & Name -->

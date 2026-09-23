@@ -96,17 +96,6 @@
 
         <div class="md:col-span-3">
           <sic-combobox
-            formControlName="relatedSpecId"
-            [label]="'PMDT15_RELATED_SPEC_LABEL' | translate"
-            [options]="specificationOptions()"
-            [placeholder]="'PMDT15_RELATED_SPEC_PLACEHOLDER' | translate"
-            [clearable]="true"
-            (selectionChanged)="onRelatedSpecSelected($event)">
-          </sic-combobox>
-        </div>
-
-        <div class="md:col-span-3">
-          <sic-combobox
             formControlName="deliveryId"
             [label]="'PMDT15_DELIVERY_LABEL' | translate"
             [options]="deliveryOptions()"

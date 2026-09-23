@@ -116,15 +116,14 @@
 
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
-          formControlName="projectId"
-          [label]="'PMDT14_PROJECT_LABEL' | translate"
-          [apiUrl]="apiGetComboboxProject"
+          formControlName="contractId"
+          [label]="'PMDT14_CONTRACT_LABEL' | translate"
+          [placeholder]="'PMDT14_CONTRACT_PLACEHOLDER' | translate"
+          [options]="contractOptions()"
           valueField="value"
-          textField="text"
-          [placeholder]="'PMDT14_PROJECT_PLACEHOLDER' | translate"
+          displayField="text"
           [clearable]="true"
-          [required]="true"
-          (selectionChanged)="onProjectSelected($event)">
+          (selectionChanged)="onContractSelected($event)">
         </sic-combobox>
 
         <sic-input
@@ -145,16 +144,6 @@
           [items]="typeOptions"
           valueField="value"
           displayField="label">
-        </sic-combobox>
-
-        <sic-combobox
-          formControlName="contractId"
-          [label]="'PMDT14_CONTRACT_LABEL' | translate"
-          [placeholder]="'PMDT14_CONTRACT_PLACEHOLDER' | translate"
-          [options]="contractOptions()"
-          valueField="value"
-          displayField="text"
-          [clearable]="true">
         </sic-combobox>
 
         <sic-datepicker

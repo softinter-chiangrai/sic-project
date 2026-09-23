@@ -86,8 +86,8 @@
             @if (viewMode !== 'preview') {
                 <div class="pmdt08-panel pmdt08-panel--edit">
                     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-                        <!-- Primary Parent Selector: Requirement -->
-                        <div class="grid grid-cols-1 gap-4">
+                        <!-- Form Inputs Grid -->
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <sic-combobox
                                 [label]="'PMDT07_REQUIREMENT_LABEL' | translate"
                                 formControlName="requirementId"
@@ -100,30 +100,6 @@
                                 [errorMessages]="{ required: ('PMDT07_REQUIRED_REQUIREMENT' | translate) }"
                                 (selectionChanged)="onRequirementSelected($event)">
                             </sic-combobox>
-                        </div>
-
-                        <!-- Auto-Derived Context Banner (Clean Design Tokens - No Hardcoded Blue) -->
-                        @if (projectName() || form.value.projectId) {
-                            <div class="flex items-center flex-wrap gap-3 p-3 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] shadow-xs">
-                                <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20 flex items-center gap-1.5">
-                                    <i class="bi bi-diagram-3-fill"></i> {{ 'PMDT07_AUTO_DERIVED_LABEL' | translate }}
-                                </span>
-                                <div class="text-sm font-medium text-[var(--text-active)] flex items-center gap-1.5">
-                                    <span class="text-[var(--text-muted)]">{{ 'PMDT07_PROJECT_LABEL' | translate }}:</span>
-                                    <span class="font-bold text-[var(--crm-primary)]">{{ projectName() || form.value.projectName || '-' }}</span>
-                                </div>
-                                @if (customerName()) {
-                                    <span class="text-[var(--border)]">|</span>
-                                    <div class="text-sm font-medium text-[var(--text-active)] flex items-center gap-1.5">
-                                        <span class="text-[var(--text-muted)]">{{ 'PMDT07_CUSTOMER_LABEL' | translate }}:</span>
-                                        <span class="font-medium text-[var(--text-active)]">{{ customerName() }}</span>
-                                    </div>
-                                }
-                            </div>
-                        }
-
-                        <!-- Basic Info -->
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <sic-input
                                 [label]="'PMDT07_SPEC_CODE_LABEL' | translate"
                                 formControlName="specificationCode"
@@ -146,9 +122,6 @@
                                 [required]="true"
                                 [placeholder]="'PMDT07_TITLE_PLACEHOLDER' | translate">
                             </sic-input>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                             <sic-combobox
                                 [label]="'PMDT07_PRIORITY_LABEL' | translate"
                                 formControlName="priority"
@@ -168,7 +141,12 @@
                                 [clearable]="true"
                                 [multiple]="true">
                             </sic-combobox>
-                            <sic-number [label]="'PMDT07_ESTIMATED_MANDAY_LABEL' | translate" formControlName="estimatedManday" [placeholder]="'PMDT07_ESTIMATED_MANDAY_PLACEHOLDER' | translate" [decimal]="0"></sic-number>
+                            <sic-number
+                                [label]="'PMDT07_ESTIMATED_MANDAY_LABEL' | translate"
+                                formControlName="estimatedManday"
+                                [placeholder]="'PMDT07_ESTIMATED_MANDAY_PLACEHOLDER' | translate"
+                                [decimal]="0">
+                            </sic-number>
                         </div>
 
                         <!-- Tiptap Editor -->

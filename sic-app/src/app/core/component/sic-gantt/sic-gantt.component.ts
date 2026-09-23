@@ -1,5 +1,3 @@
-// src/app/core/component/sic-gantt/sic-gantt.component.ts
-
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -8,101 +6,127 @@ import { DialogService } from '../../services/dialog.service';
 import { NavigationService } from '../../services/navigation.service';
 import { CustomerStateService } from '../../services/customer-state.service';
 import { Pmrt02Service } from '../../../feature/pm/rt/pmrt02/pmrt02.service';
+import { PmCustomerProject } from '../../../feature/pm/rt/pmrt02/pmrt02.model';
 import { buildTimelineItems } from '../../../feature/pm/dt/pmdt02/pmdt02.utils';
 import { Pmdt02AService } from '../../../feature/pm/dt/pmdt02/pmdt02A/pmdt02A.service';
 import { Pmdt02BService } from '../../../feature/pm/dt/pmdt02/pmdt02B/pmdt02B.service';
 import { Pmdt02CService } from '../../../feature/pm/dt/pmdt02/pmdt02C/pmdt02C.service';
 import { Pmdt02Service } from '../../../feature/pm/dt/pmdt02/pmdt02.service';
+import { PortfolioGanttWidgetComponent } from '../portfolio-gantt-widget/portfolio-gantt-widget.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-sic-gantt',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicAvatarComponent, SicCalendarTimelineComponent, TranslateModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    SicAvatarComponent,
+    SicCalendarTimelineComponent,
+    PortfolioGanttWidgetComponent,
+    TranslateModule,
+  ],
   template: `
-    <div class="p-4 h-screen flex flex-col bg-[var(--bg)]">
-      <div class="flex items-center gap-3 mb-4 flex-shrink-0">
-        <button
-          (click)="goBack()"
-          class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-        >
-          <i class="bi bi-arrow-left text-xl"></i>
-        </button>
-        <h1 class="text-xl font-bold text-[var(--text-active)]">
-          Gantt Chart: {{ pageTitle() }}
-        </h1>
-        @if (phaseName()) {
-          <span class="text-sm text-[var(--text-muted)] ml-2">(Phase: {{ phaseName() }})</span>
-        }
-      </div>
-
-      @if (isLoading()) {
-        <div class="flex justify-center items-center h-full">
-          <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+    <div class="p-4 min-h-screen flex flex-col bg-[var(--bg)]">
+      @if (phaseId()) {
+        <!-- Single Phase Gantt View -->
+        <div class="flex items-center gap-3 mb-4 flex-shrink-0">
+          <button
+            (click)="goBack()"
+            class="w-9 h-9 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+          >
+            <i class="bi bi-arrow-left text-xl"></i>
+          </button>
+          <h1 class="text-xl font-bold text-[var(--text-active)]">
+            Gantt Chart: {{ pageTitle() }}
+          </h1>
+          @if (phaseName()) {
+            <span class="text-sm text-[var(--text-muted)] ml-2">(Phase: {{ phaseName() }})</span>
+          }
         </div>
+
+        @if (isLoading()) {
+          <div class="flex justify-center items-center h-full">
+            <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+          </div>
+        } @else {
+          <div class="flex-1 min-h-0 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 overflow-hidden">
+            <sic-calendar-timeline
+              [items]="timelineItems()"
+              [startDate]="startDate()"
+              [endDate]="endDate()"
+              [(viewMode)]="viewMode"
+              [showLabelColumn]="true"
+              [maxHeight]="'calc(100vh - 200px)'"
+              locale="th"
+              era="BE"
+              (rowClick)="onRowClick($event)"
+              (phaseClick)="onPhaseClick($event)">
+              <ng-template #labelTemplate let-row>
+                <div
+                  class="flex items-center gap-1.5 w-full py-1 pr-2 select-none"
+                  [style.padding-left.px]="((row.data?.level || 0) * 16) + 4">
+                  @if (row.data?.hasChildren) {
+                    <button
+                      type="button"
+                      (click)="toggleTimelineRow(row.id, $event)"
+                      class="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white transition-all flex-shrink-0 shadow-sm"
+                      [title]="'GANTT_TOGGLE_ROW_TITLE' | translate">
+                      <i
+                        class="bi bi-chevron-right text-[0.7rem] font-bold transition-transform duration-200"
+                        [class.rotate-90]="isTimelineRowExpanded(row.id)"></i>
+                    </button>
+                  } @else {
+                    <span class="w-5 flex-shrink-0"></span>
+                  }
+                  <span class="text-sm flex-shrink-0">{{ row.data?.icon || '📌' }}</span>
+                  <span class="text-xs font-medium text-[var(--text-active)] truncate flex-1" [title]="row.data?.title || row.label">
+                    {{ row.data?.title || row.label }}
+                  </span>
+                </div>
+              </ng-template>
+              <ng-template #phaseTemplate let-phase let-row="row">
+                <div
+                  class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
+                  [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
+                  [title]="(phase.label || row.label) + getAssigneesTooltip(row.data?.assignees)">
+                  <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
+                  @if (row.data?.assignees && row.data?.assignees.length > 0) {
+                    <div class="flex items-center -space-x-1 flex-shrink-0">
+                      @for (person of row.data?.assignees.slice(0, 3); track $index) {
+                        <sic-avatar
+                          [name]="getAssigneeName(person)"
+                          [src]="getAssigneeAvatar(person)"
+                          size="sm"
+                          class="!w-4 !h-4 text-[0.55rem] ring-1 ring-white/30 rounded-full flex-shrink-0">
+                        </sic-avatar>
+                      }
+                    </div>
+                  }
+                </div>
+              </ng-template>
+            </sic-calendar-timeline>
+          </div>
+        }
       } @else {
-        <div class="flex-1 min-h-0 bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 overflow-hidden">
-          <sic-calendar-timeline
-            [items]="timelineItems()"
-            [startDate]="startDate()"
-            [endDate]="endDate()"
-            [(viewMode)]="viewMode"
-            [showLabelColumn]="true"
-            [maxHeight]="'calc(100vh - 200px)'"
-            locale="th"
-            era="BE"
-            (rowClick)="onRowClick($event)"
-            (phaseClick)="onPhaseClick($event)">
-            <ng-template #labelTemplate let-row>
-              <div
-                class="flex items-center gap-1.5 w-full py-1 pr-2 select-none"
-                [style.padding-left.px]="((row.data?.level || 0) * 16) + 4">
-                @if (row.data?.hasChildren) {
-                  <button
-                    type="button"
-                    (click)="toggleTimelineRow(row.id, $event)"
-                    class="w-5 h-5 flex items-center justify-center rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)] hover:text-white transition-all flex-shrink-0 shadow-sm"
-                    [title]="'GANTT_TOGGLE_ROW_TITLE' | translate">
-                    <i
-                      class="bi bi-chevron-right text-[0.7rem] font-bold transition-transform duration-200"
-                      [class.rotate-90]="isTimelineRowExpanded(row.id)"></i>
-                  </button>
-                } @else {
-                  <span class="w-5 flex-shrink-0"></span>
-                }
-                <span class="text-sm flex-shrink-0">{{ row.data?.icon || '📌' }}</span>
-                <span class="text-xs font-medium text-[var(--text-active)] truncate flex-1" [title]="row.data?.title || row.label">
-                  {{ row.data?.title || row.label }}
-                </span>
-              </div>
-            </ng-template>
-            <ng-template #phaseTemplate let-phase let-row="row">
-              <div
-                class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
-                [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
-                [title]="(phase.label || row.label) + getAssigneesTooltip(row.data?.assignees)">
-                <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
-                @if (row.data?.assignees && row.data?.assignees.length > 0) {
-                  <div class="flex items-center -space-x-1 flex-shrink-0">
-                    @for (person of row.data?.assignees.slice(0, 3); track $index) {
-                      <sic-avatar
-                        [name]="getAssigneeName(person)"
-                        [src]="getAssigneeAvatar(person)"
-                        size="sm"
-                        class="!w-4 !h-4 text-[0.55rem] ring-1 ring-white/30 rounded-full flex-shrink-0">
-                      </sic-avatar>
-                    }
-                  </div>
-                }
-              </div>
-            </ng-template>
-          </sic-calendar-timeline>
+        <!-- Full Screen Portfolio Gantt Widget (All Customers & Projects) -->
+        <div class="w-full flex-1">
+          @if (isLoading() && allProjects().length === 0) {
+            <div class="flex justify-center items-center h-96">
+              <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+            </div>
+          } @else {
+            <app-portfolio-gantt-widget
+              [projects]="allProjects()"
+              [maxHeight]="'calc(100vh - 280px)'">
+            </app-portfolio-gantt-widget>
+          }
         </div>
       }
     </div>
   `,
   styles: [`
-    :host { display: block; height: 100vh; }
+    :host { display: block; min-height: 100vh; }
   `],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -129,6 +153,7 @@ export class SicGanttComponent implements OnInit {
   startDate = signal('');
   endDate = signal('');
   viewMode = signal<'day' | 'week' | 'month'>('week');
+  allProjects = signal<PmCustomerProject[]>([]);
 
   toggleTimelineRow(rowId: string, event?: Event): void {
     if (event) event.stopPropagation();
@@ -179,25 +204,34 @@ export class SicGanttComponent implements OnInit {
   });
 
   ngOnInit() {
-    // ตรวจสอบว่าเป็น route แบบ phase/:id/gantt หรือ gantt (มี projectId ใน query)
+    // Check resolved data for all projects
+    const pageData = this.route.snapshot.data['pageData'];
+    if (pageData?.projects && pageData.projects.length > 0) {
+      this.allProjects.set(pageData.projects);
+    } else {
+      this.loadAllProjects();
+    }
+
+    // Check route parameters
     this.route.paramMap.subscribe((params) => {
       const phaseId = params.get('id');
       if (phaseId) {
         this.phaseId.set(phaseId);
         this.loadPhase(phaseId);
-      } else {
-        // ไม่มี phaseId -> ต้องมี projectId ใน queryParams
-        this.route.queryParams.subscribe((qParams) => {
-          const pid = qParams['projectId'] || null;
-          if (!pid) {
-            this.dialog.warn(this.translate.instant('GANTT_WARN_SELECT_PROJECT_TITLE'), this.translate.instant('GANTT_WARN_PROJECT_CODE_NOT_FOUND'));
-            this.navigation.navigate(['/feature/pm/project']);
-            return;
-          }
-          this.projectId.set(pid);
-          this.loadProject(pid);
-        });
       }
+    });
+  }
+
+  loadAllProjects(): void {
+    this.isLoading.set(true);
+    this.projectService.getProjects({ size: 200 }).subscribe({
+      next: (res) => {
+        this.allProjects.set(res?.data || []);
+        this.isLoading.set(false);
+      },
+      error: () => {
+        this.isLoading.set(false);
+      },
     });
   }
 

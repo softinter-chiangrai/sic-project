@@ -1290,7 +1290,7 @@ VALUES
   (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_PRIORITY_HIGH', 'High', 'สูง', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_PRIORITY_MEDIUM', 'Medium', 'ปานกลาง', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_PRIORITY_LOW', 'Low', 'ต่ำ', 'system', NOW(), 'system', NOW(), false),
-  (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_TASK_TRACE_LABEL', 'Related Task (Trace Link)', 'ความสัมพันธ์กับ Task (Trace Link)', 'system', NOW(), 'system', NOW(), false),
+  (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_TASK_TRACE_LABEL', 'Related Task', 'ความสัมพันธ์กับ Task', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_TASK_TRACE_PLACEHOLDER', 'Select related task', 'เลือก Task ที่เกี่ยวข้อง', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_DESCRIPTION_LABEL', 'Description / Scenario Purpose', 'คำอธิบาย / วัตถุประสงค์ของ Scenario', 'system', NOW(), 'system', NOW(), false),
   (gen_random_uuid(), 'FEATURE', 'APP', 'PMDT12B_RICH_TEXT_HINT', 'Rich text formatting supported', 'รองรับการจัดรูปแบบข้อความ', 'system', NOW(), 'system', NOW(), false),

@@ -1,5 +1,5 @@
 -- Fix PMDT06 (Change Request) UI Translations in su_message table
-UPDATE su_message SET message_en = 'Change Request Control (CR)', message_local = 'ควบคุมการเปลี่ยนแปลง (Change Request)', updated_date = NOW() WHERE message_code = 'PMDT06_HEADER_TITLE';
+UPDATE su_message SET message_en = 'Change Request Control', message_local = 'ควบคุมการเปลี่ยนแปลง (Change Request)', updated_date = NOW() WHERE message_code = 'PMDT06_HEADER_TITLE';
 UPDATE su_message SET message_en = 'items', message_local = 'รายการ', updated_date = NOW() WHERE message_code = 'PMDT06_ITEMS_SUFFIX';
 UPDATE su_message SET message_en = 'New Change Request', message_local = 'เพิ่ม Change Request', updated_date = NOW() WHERE message_code = 'PMDT06_ADD_BTN';
 UPDATE su_message SET message_en = 'Search code, title, project...', message_local = 'ค้นหารหัส, ชื่อ, โครงการ...', updated_date = NOW() WHERE message_code = 'PMDT06_SEARCH_PLACEHOLDER';

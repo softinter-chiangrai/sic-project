@@ -57,14 +57,13 @@
           ></sic-input>
 
           <sic-combobox
-            [label]="'PMDT09_REVIEWABLE_LABEL' | translate"
-            formControlName="reviewableId"
-            [apiUrl]="service.apiGetComboboxReviewable"
-            [params]="{
-              projectId: form.get('projectId')?.value
-            }"
+            [label]="'PMDT09_PROJECT_LABEL' | translate"
+            formControlName="projectId"
+            [apiUrl]="service.apiGetComboboxProject"
+            valueField="value"
+            textField="text"
             [required]="true"
-            [placeholder]="'PMDT09_REVIEWABLE_PLACEHOLDER' | translate"
+            [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
           ></sic-combobox>
 
           <sic-combobox

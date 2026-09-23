@@ -38,7 +38,7 @@ export class Pmdt10Service {
   }
 
   // ===== Specifications =====
-  getSpecificationsByProject(projectId: string): Observable<SpecificationSummary[]> {
+  getSpecificationsByProject(projectId?: string | null): Observable<SpecificationSummary[]> {
     const params = new HttpParams().set('page', '1').set('size', '100');
     return this.http.get<any>(this.specUrl, { params }).pipe(
       map((res) => {
@@ -67,8 +67,11 @@ export class Pmdt10Service {
   }
 
   // ===== Phases & WorkPackages =====
-  getPhasesByProject(projectId: string): Observable<any[]> {
-    return this.http.get<any[]>(`${this.projectUrl}/${projectId}/phases`);
+  getPhasesByProject(projectId?: string | null): Observable<any[]> {
+    if (projectId) {
+      return this.http.get<any[]>(`${this.projectUrl}/${projectId}/phases`);
+    }
+    return this.http.get<any[]>(`${environment.apiBaseUrl}/api/pm/phases`);
   }
 
   // ===== Bugs =====

@@ -68,7 +68,7 @@ export class Pmdt10AComponent implements OnInit {
   get wpOptions() {
     return this.workPackages.map((wp) => ({
       value: wp.id,
-      text: `${wp.packageName} (${wp.phaseName})`,
+      text: wp.packageName,
     }));
   }
 

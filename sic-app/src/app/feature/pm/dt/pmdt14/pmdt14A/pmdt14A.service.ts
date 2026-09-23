@@ -48,6 +48,10 @@ export class Pmdt14AService {
     return this.http.get<Array<{ value: string; text: string }>>(`${apiBaseUrl}/api/pm/contracts/combobox`, { params: httpParams });
   }
 
+  getContractById(contractId: string): Observable<any> {
+    return this.http.get<any>(`${apiBaseUrl}/api/pm/customer-contracts/${contractId}`);
+  }
+
   generateDraft(data: { projectId?: string; deliveryName?: string; prompt?: string; model?: string; attachments?: AiAttachmentPayload[] }): Observable<any> {
     return this.http.post<any>(`${apiBaseUrl}/api/pm/delivery/generate/draft`, data);
   }

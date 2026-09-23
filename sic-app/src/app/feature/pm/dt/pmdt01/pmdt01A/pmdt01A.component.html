@@ -9,23 +9,23 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <sic-combobox
         formControlName="customerId"
-        label="ลูกค้า"
+        [label]="'PMDT01_CUSTOMER_LABEL' | translate"
         [apiUrl]="apiGetComboboxCustomer"
         valueField="value"
         textField="text"
-        placeholder="ค้นหาและเลือกลูกค้า"
+        [placeholder]="'PMDT01_CUSTOMER_PLACEHOLDER' | translate"
         [clearable]="true"
         (selectionChanged)="onCustomerSelected($event)">
       </sic-combobox>
 
       <sic-combobox
         formControlName="projectId"
-        label="โครงการ"
+        [label]="'PMDT01_PROJECT_LABEL' | translate"
         [apiUrl]="apiGetComboboxProject"
         [params]="projectParams"
         valueField="value"
         textField="text"
-        placeholder="ค้นหาและเลือกโครงการ"
+        [placeholder]="'PMDT01_PROJECT_PLACEHOLDER' | translate"
         [clearable]="true"
         [required]="true"
         (selectionChanged)="onProjectSelected($event)">

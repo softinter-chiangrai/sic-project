@@ -128,7 +128,7 @@
       <input
         type="text"
         class="sic-search-input pl-10 pr-9"
-        placeholder="ค้นหา Scenario, รหัสเคส, หัวข้อ, ผู้ทดสอบ..."
+        [placeholder]="'PMDT12_SEARCH_PLACEHOLDER' | translate"
         [value]="searchTerm()"
         (input)="onSearch($event)"
       />
@@ -148,7 +148,7 @@
         [options]="statusSelectOptions"
         [ngModel]="filterStatus()"
         (ngModelChange)="onFilterStatusChange($event)"
-        placeholder="📊 ทุกสถานะ Test Case"
+        [placeholder]="'PMDT12_FILTER_STATUS_PH' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -159,7 +159,7 @@
         [options]="prioritySelectOptions"
         [ngModel]="filterPriority()"
         (ngModelChange)="onFilterPriorityChange($event)"
-        placeholder="⚡ ทุกระดับความสำคัญ"
+        [placeholder]="'PMDT12_FILTER_PRIORITY_PH' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -170,7 +170,7 @@
         [options]="taskStatusSelectOptions"
         [ngModel]="filterTaskStatus()"
         (ngModelChange)="onFilterTaskStatusChange($event)"
-        placeholder="🎯 ทุกสถานะ Task"
+        [placeholder]="'PMDT12_FILTER_TASK_STATUS_PH' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>
@@ -640,9 +640,9 @@
 
           <div>
             <sic-combobox
-              label="ระดับความรุนแรง"
+              [label]="'PMDT12_SEVERITY_LABEL' | translate"
               [apiUrl]="priorityApiUrl"
-              placeholder="เลือกระดับความรุนแรง"
+              [placeholder]="'PMDT12_SEVERITY_PH' | translate"
               [ngModel]="bugForm().priority"
               (selectionChanged)="updateBugFormField('priority', $event?.value || $event?.id || $event || 'HIGH')"
               valueField="value"
@@ -655,13 +655,13 @@
         <!-- Bug Title -->
         <div>
           <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-            ชื่อ / หัวข้อ Bug 
+            {{ 'PMDT12_BUG_TITLE_LABEL' | translate }}
           </label>
           <input
             type="text"
             [value]="bugForm().taskName"
             (input)="updateBugFormField('taskName', $any($event.target).value)"
-            placeholder="ระบุข้อผิดพลาดที่พบ..."
+            [placeholder]="'PMDT12_BUG_TITLE_PH' | translate"
             class="w-full h-[2.9rem] min-h-[2.9rem] px-3.5 py-2.5 rounded-[0.95rem] border border-[var(--border)] bg-transparent text-sm text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
           />
         </div>
@@ -670,9 +670,9 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <sic-combobox
-              label="ผู้รับผิดชอบแก้ไข"
+              [label]="'PMDT12_ASSIGNED_TO_LABEL' | translate"
               [apiUrl]="memberApiUrl()"
-              placeholder="เลือกสมาชิกทีมผู้รับผิดชอบ"
+              [placeholder]="'PMDT12_ASSIGNED_TO_PH' | translate"
               [ngModel]="bugForm().assignedTo"
               (selectionChanged)="updateBugFormField('assignedTo', $event?.value || $event?.id || $event || null)"
               [clearable]="true"
@@ -681,7 +681,7 @@
 
           <div>
             <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-              ประมาณการ Manday
+              {{ 'PMDT12_MANDAY_LABEL' | translate }}
             </label>
             <input
               type="number"

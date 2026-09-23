@@ -7,7 +7,7 @@ export class Pmdt10Form {
     return fb.group<ToForm<TaskModel>>({
       id: fb.control(null),
       workPackageId: fb.control(null, [Validators.required]),
-      specificationId: fb.control(null, [Validators.required]),
+      specificationId: fb.control(null),
       taskCode: fb.control(null, [Validators.required]),
       taskName: fb.control(null, [Validators.required]),
       description: fb.control(null),

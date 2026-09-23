@@ -37,13 +37,24 @@ public class WorkPackageController {
     // ===== Work Package Combobox (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน) =====
     @GetMapping("/combobox")
     public ResponseEntity<List<ComboboxResponse>> getComboboxWorkPackages(
-            @RequestParam(required = false) String keyword) {
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) UUID value,
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) UUID milestoneId) {
+        
+        if (value != null) {
+            return workPackageRepository.findById(value)
+                    .filter(w -> !Boolean.TRUE.equals(w.getIsDelete()))
+                    .map(w -> ResponseEntity.ok(List.of(new ComboboxResponse(w.getId().toString(), w.getPackageName()))))
+                    .orElseGet(() -> ResponseEntity.ok(List.of()));
+        }
+
         UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
         String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
-        List<PmWorkPackage> workPackages = workPackageRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
+        List<PmWorkPackage> workPackages = workPackageRepository.findByBusinessIdAndFilters(businessId, projectId, milestoneId, normalizedKeyword);
         List<ComboboxResponse> list = workPackages.stream()
                 .map(w -> new ComboboxResponse(w.getId().toString(), w.getPackageName()))
                 .collect(java.util.stream.Collectors.toList());

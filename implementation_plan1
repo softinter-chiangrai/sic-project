@@ -1,0 +1,212 @@
+# Comprehensive Implementation Plan: Smart Auto-Inheritance & Traceability Model
+
+Refactor the document relationship and traceability architecture across the entire SIC system. Under this model:
+- **Root Documents** retain explicit `Customer` and `Project` comboboxes at the top row of their forms.
+- **Child Documents** eliminate redundant manual `Customer` and `Project` selection. Instead, they bind directly to their **Parent Document** (Traceability Target) and **auto-derive/inherit** Customer and Project data.
+- **Visual Feedback**: The derived Project and Customer are displayed as sleek, read-only badges/info chips on the form.
+- **Backend Safety**: API services automatically fall back to inheriting `projectId` / `businessId` from the referenced parent entity if not explicitly provided.
+
+---
+
+## Architecture Overview & Binding Matrix
+
+| Module Code | Document / Screen Name | Type | Primary Parent Document Selector | Auto-Derived Context (Read-Only Chip / Hidden) |
+| :--- | :--- | :---: | :--- | :--- |
+| **PMRT01** | Customer Management | 🟢 Root | — | Root entity |
+| **PMRT02** | Project Management | 🟢 Root | Customer (`customerId`) | Direct child of Customer |
+| **PMRT04** | Contract Management | 🟢 Root | Customer & Project | Authoritative contract agreement |
+| **PMDT01** | Phase / WBS Milestone | 🟢 Root | Project (`projectId`) | Direct timeline child of Project |
+| **PMDT04** | Requirement Specification | 🟢 Root | Customer & Project (Top Row) | Baseline requirement documentation |
+| **PMDT07** | System Specification (SRS) | 🔵 Child | **Requirement (`requirementId`)** | Auto-derives Project & Customer |
+| **PMDT05** | Technical Diagrams | 🔵 Child | **Requirement (`requirementId`)** or Specification | Auto-derives Project & Customer |
+| **PMDT09** | Design Review | 🔵 Child | **Specification** or **Diagram** | Auto-derives Project & Customer |
+| **PMDT10 / PMDT02C** | Task / Work Items / Kanban | 🔵 Child | **Specification (`specificationId`)** | Auto-derives Project & Requirement |
+| **PMDT11** | Task Member Assignment | 🔵 Child | **Task (`taskId`)** | Auto-derives Task & Project |
+| **PMDT12** | Test Management (Test Plan/Case/Scenario) | 🔵 Child | **Task (`taskId`)** | Auto-derives Project, Requirement & Spec |
+| **PMDT13** | Bug / Defect Tracking | 🔵 Child | **Test Case (`testCaseId`)** | Auto-derives Task, Spec, Requirement & Project |
+| **PMDT15** | User Manual / Docs | 🔵 Child | **Specification (`specificationId`)** | Auto-derives Project & Customer |
+| **PMDT14** | Delivery / Handover | 🟡 Child | **Contract (`contractId`)** or Phase | Auto-derives Customer & Project |
+| **PMDT16** | Invoice & Payment | 🟡 Child | **Delivery (`deliveryId`)** or Contract | Auto-derives Customer, Project & Amount |
+| **PMDT17** | MA Service Ticket | 🟡 Child | **Contract (`contractId` - MA Contract)** | Auto-derives Customer & Project |
+| **PMDT18** | Contract Renewal | 🟡 Child | **Contract (`contractId`)** | Auto-derives Customer, Project & Terms |
+| **PMDT06** | Change Request (CR) | 🔴 Control | **Target Entity (Req / Spec / Task / Diagram)** | Auto-derives & locks Project context; runs Auto-Impact Analysis |
+
+---
+
+## Traceability Data Flow Diagram
+
+```mermaid
+graph TD
+    subgraph Root_Layer["🟢 1. Root Context Layer (Customer & Project Authoritative)"]
+        PMRT01["Customer (PMRT01)"] --> PMRT02["Project (PMRT02)"]
+        PMRT02 --> PMRT04["Contract (PMRT04)"]
+        PMRT02 --> PMDT01["Phase / WBS (PMDT01)"]
+        PMRT02 --> PMDT04["Requirement (PMDT04)"]
+    end
+
+    subgraph Dev_QA_Layer["🔵 2. Design, Dev & QA Layer (Strict Auto-Inherit Chain)"]
+        PMDT04 -->|"1 : N"| PMDT07["Specification SRS (PMDT07)"]
+        PMDT04 -.->|"1 : N"| PMDT05["Diagram (PMDT05)"]
+        PMDT07 -->|"1 : N"| PMDT10["Task / Kanban (PMDT10 / PMDT02C)"]
+        PMDT07 & PMDT05 --> PMDT09["Design Review (PMDT09)"]
+        PMDT10 -->|"1 : N"| PMDT11["Assignee (PMDT11)"]
+        PMDT10 -->|"1 : N"| PMDT12["Test Case / Scenario (PMDT12)"]
+        PMDT12 -->|"1 : N"| PMDT13["Bug Tracking (PMDT13)"]
+        PMDT07 --> PMDT15["User Manual (PMDT15)"]
+    end
+
+    subgraph Finance_Delivery_Layer["🟡 3. Delivery & Finance Layer (Auto-Inherit via Contract / Phase)"]
+        PMRT04 & PMDT01 --> PMDT14["Delivery Handover (PMDT14)"]
+        PMDT14 & PMRT04 --> PMDT16["Invoice & Billing (PMDT16)"]
+        PMRT04 --> PMDT17["MA Ticket (PMDT17)"]
+        PMRT04 --> PMDT18["Contract Renewal (PMDT18)"]
+    end
+
+    subgraph Governance_Layer["🔴 4. Change Impact Governance Layer"]
+        PMDT06["Change Request Engine (PMDT06)"]
+        PMDT06 -.->|"Impact Scan"| PMDT04
+        PMDT06 -.->|"Impact Scan"| PMDT07
+        PMDT06 -.->|"Impact Scan"| PMDT10
+        PMDT06 -.->|"Impact Scan"| PMDT12
+    end
+```
+
+---
+
+## Detailed Implementation Roadmap by Module
+
+### Stage 1: Design & Requirements Backbone (PMDT07 & PMDT05)
+1. **PMDT07 (Specification)**:
+   - **Frontend**:
+     - Remove standalone `customerId` & `projectId` combobox inputs from [pmdt07A.component.html](file:///c:/Users/lovew/Student/Project-Main/Java-intern/sic-project/sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.html).
+     - Place `Requirement` combobox as the primary selector at the top.
+     - Add auto-derived header badge showing `Project Name` and `Customer Name` once a Requirement is chosen.
+     - In [pmdt07A.component.ts](file:///c:/Users/lovew/Student/Project-Main/Java-intern/sic-project/sic-app/src/app/feature/pm/dt/pmdt07/pmdt07A/pmdt07A.component.ts), on requirement selection, extract and set `projectId` and `customerId` on the form model.
+   - **Backend**:
+     - In [PmSpecificationServiceImpl.java](file:///c:/Users/lovew/Student/Project-Main/Java-intern/sic-project/sic-spring/sic/src/main/java/com/softinter/sicapi/service/impl/PmSpecificationServiceImpl.java), ensure that if `projectId` is null or omitted in payload, it is inherited directly from `pmRequirementRepository.findById(requirementId).getProjectId()`.
+2. **PMDT05 (Diagrams)**:
+   - Validate optional `requirementId` or `specificationId` binding in [new-diagram-dialog.component.ts](file:///c:/Users/lovew/Student/Project-Main/Java-intern/sic-project/sic-app/src/app/feature/pm/dt/pmdt05/new-diagram-dialog.component.ts).
+   - Display inherited Project name in the diagram canvas info bar.
+
+---
+
+### Stage 2: Work Breakdown & Tasks (PMDT10 & PMDT02C & PMDT11)
+1. **PMDT10 / PMDT02C (Task & Kanban)**:
+   - **Frontend**:
+     - Set `Specification` (`specificationId`) as the primary parent selector in task creation.
+     - Auto-fill `projectId` and `requirementId` based on the selected Specification.
+     - Remove redundant manual Customer/Project dropdowns from task create/edit modal.
+   - **Backend**:
+     - In `PmTaskServiceImpl.java`, if `projectId` is missing, populate from `specification.getProjectId()`.
+2. **PMDT11 (Task Assignment)**:
+   - Preserves direct relationship to `taskId`, displaying inherited Task and Project context.
+
+---
+
+### Stage 3: Quality Assurance & Defect Tracking (PMDT12 & PMDT13)
+1. **PMDT12 (Test Management - Test Scenario & Test Case)**:
+   - **Parent Binding**: ผูกตรงกับ **Task (`taskId`)** เท่านั้น (Task -> Test Case)
+   - **Frontend**:
+     - เปลี่ยนตัวเลือกหลักให้เลือก **Task** ที่ต้องการทดสอบ
+     - Auto-derive และแสดง Badge: Project, Requirement, และ Specification ที่เกี่ยวข้องจาก Task อัตโนมัติ
+     - ตัด Combobox เลือกลูกค้าและโปรเจกต์ออกจากฟอร์ม
+   - **Backend**:
+     - ใน `PmTestCaseServiceImpl.java`, ดึง `taskId` -> ตรวจหา `task.getSpecificationId()` และ `task.getProjectId()` แล้วบันทึกให้อัตโนมัติเมื่อค่าเป็น null
+2. **PMDT13 (Bug Tracking / Defect Management)**:
+   - **Parent Binding**: ผูกตรงกับ **Test Case (`testCaseId`)** เท่านั้น (Test Case -> Bug)
+   - **Frontend**:
+     - ตัวเลือกหลักคือ **Test Case** ที่เกิด Bug/ไม่ผ่านการทดสอบ
+     - Auto-derive และแสดง Badge สายสัมพันธ์: Task -> Specification -> Requirement -> Project
+     - ตัด Combobox เลือกลูกค้าและโปรเจกต์ออกจากฟอร์ม
+   - **Backend**:
+     - ใน `PmBugTrackingServiceImpl.java`, ดึง `testCaseId` -> สืบทอด `taskId` และ `projectId` อัตโนมัติลง entity ก่อนบันทึก
+
+---
+
+### Stage 4: Delivery, Invoicing & Maintenance (PMDT14, PMDT16, PMDT17, PMDT18)
+1. **PMDT14 (Delivery & Milestone Handover)**:
+   - Primary selector: **Contract** (`contractId`) or **Phase / Milestone** (`phaseId`).
+   - Auto-derive Customer & Project from the contract/phase.
+2. **PMDT16 (Invoice & Billing)**:
+   - Primary selector: **Delivery Handover** (`deliveryId`) or **Contract** (`contractId`).
+   - Auto-derive Customer, Project, Milestone, and billing amount.
+3. **PMDT17 (MA Service Ticket)**:
+   - Primary selector: **MA Contract** (`contractId`).
+   - Auto-derive Customer and Project from the active SLA/MA contract.
+4. **PMDT18 (Contract Renewal)**:
+   - Primary selector: **Original Contract** (`contractId`).
+   - Inherits customer, project, and past contract timeline automatically.
+
+---
+
+### Stage 5: Change Request & Impact Analysis Engine (PMDT06)
+1. **PMDT06 (Change Request Engine)**:
+   - When the user chooses **Target Type** (Requirement, Specification, Task, Diagram) and selects the specific document:
+     - Instantly auto-derive `customerId` and `projectId`.
+     - Render read-only badge indicating the affected Project.
+   - Run the automated Impact Analysis query across the full chain:
+     - If Target is **Requirement**: detects affected Specifications -> Tasks -> Test Cases -> Bugs.
+     - If Target is **Specification**: detects parent Requirement, sibling Diagrams, child Tasks, Test Cases, and Bugs.
+     - If Target is **Task**: detects affected Test Cases -> Bugs.
+     - If Target is **Test Case**: detects affected Bugs and parent Task/Spec/Req.
+
+---
+
+## Technical Implementation Standards
+
+### 1. Frontend Auto-Derived Context Banner Pattern
+For all child forms, replace duplicate comboboxes with this standard UI chip component/layout:
+```html
+<div class="col-span-12 flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700">
+  <span class="text-xs font-semibold px-2.5 py-1 rounded-md bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300">
+    <i class="bi bi-diagram-3-fill me-1"></i> {{ 'TRACEABILITY_INHERITED' | translate }}
+  </span>
+  <div class="text-sm font-medium text-slate-700 dark:text-slate-200">
+    {{ 'PROJECT' | translate }}: <span class="font-bold text-blue-600 dark:text-blue-400">{{ projectName }}</span>
+  </div>
+  <div class="text-sm text-slate-500 dark:text-slate-400">
+    | {{ 'CUSTOMER' | translate }}: <span class="font-medium text-slate-700 dark:text-slate-300">{{ customerName }}</span>
+  </div>
+</div>
+```
+
+### 2. Backend Fallback Standard (Spring Boot)
+In every child service `save()` / `create()` method:
+```java
+if (entity.getProjectId() == null && entity.getRequirementId() != null) {
+    PmRequirement req = pmRequirementRepository.findById(entity.getRequirementId()).orElse(null);
+    if (req != null) {
+        entity.setProjectId(req.getProjectId());
+        entity.setBusinessId(req.getBusinessId());
+    }
+}
+```
+
+---
+
+## Execution Order
+We will proceed stage-by-stage to ensure uninterrupted functionality and zero build regressions:
+- **Phase A**: Complete PMDT07 (Specification) & PMDT05 (Diagram).
+- **Phase B**: Complete PMDT10 (Task) & PMDT02C & PMDT11 (Assignee).
+- **Phase C**: Complete PMDT12 (Test Management) & PMDT13 (Bug Tracking).
+- **Phase D**: Complete PMDT14 (Delivery), PMDT16 (Invoice), PMDT17 (MA), PMDT18 (Renewal).
+- **Phase E**: Complete PMDT06 (Change Request impact integration).
+
+---
+
+## Verification Plan
+
+### Automated Build Verification
+- **Angular Frontend Build**:
+  ```powershell
+  npm run build --prefix sic-app
+  ```
+- **Spring Boot Backend Compilation**:
+  ```powershell
+  cd sic-spring/sic; ./mvnw clean compile -DskipTests
+  ```
+
+### Functional Manual Verification
+1. **Specification PMDT07A**: Select Requirement -> Confirm Project/Customer badges auto-render -> Save -> Verify `project_id` in database.
+2. **Task Creation PMDT10A / PMDT02C**: Select Specification -> Confirm auto-inheritance -> Save -> Confirm task traceability.
+3. **Change Request PMDT06A**: Select target Requirement -> Verify Project auto-locks -> Click "Auto Detect" -> Confirm auto-detection of all linked child specs, tasks, and tests.

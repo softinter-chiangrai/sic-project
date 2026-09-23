@@ -77,6 +77,7 @@ export class PortfolioGanttWidgetComponent {
   private readonly pmdt02Service = inject(Pmdt02Service);
 
   readonly projects = input<PmCustomerProject[]>([]);
+  readonly maxHeight = input<string>('480px');
 
   // Filter & Search Controls
   readonly searchQuery = signal<string>('');

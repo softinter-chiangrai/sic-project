@@ -7,12 +7,12 @@
 
     <div>
       <sic-combobox
-        label="ไมล์สโตน (Milestone)"
+        [label]="'PMDT02_MILESTONE_LABEL' | translate"
         formControlName="milestoneId"
         [apiUrl]="apiGetComboboxMilestone"
         valueField="value"
         textField="text"
-        placeholder="ค้นหาและเลือกไมล์สโตน"
+        [placeholder]="'PMDT02_SELECT_MILESTONE_PLACEHOLDER' | translate"
         [clearable]="true"
         [required]="true"
         (selectionChanged)="onMilestoneSelected($event)">

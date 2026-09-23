@@ -3,6 +3,7 @@ import { ResolveFn, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { catchError, EMPTY, map, tap } from 'rxjs';
 
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Pmdt09AForm } from './pmdt09A.form';
 import { DesignReviewModel, Pmdt09APageData } from './pmdt09A.model';
@@ -12,14 +13,14 @@ export const pmdt09AResolver: ResolveFn<Pmdt09APageData> = (route) => {
   const fb = inject(FormBuilder);
   const service = inject(Pmdt09AService);
   const router = inject(Router);
+  const customerState = inject(CustomerStateService);
   const id = route.paramMap.get('id');
 
   const form = Pmdt09AForm.createForm(fb);
 
   if (!id) {
-    // create mode: seed the form from queryParams (projectId / requirementId), like the
-    // component used to do in ngOnInit before it consumed the resolver
-    const projectId = route.queryParamMap.get('projectId');
+    // create mode: seed the form from queryParams or customerState
+    const projectId = route.queryParamMap.get('projectId') || customerState.currentProjectId();
     const requirementId = route.queryParamMap.get('requirementId');
     if (projectId) {
       form.patchValue({ projectId } as Partial<DesignReviewModel>);

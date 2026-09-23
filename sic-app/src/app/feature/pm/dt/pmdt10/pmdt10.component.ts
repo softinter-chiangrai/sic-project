@@ -147,7 +147,7 @@ export class Pmdt10Component implements OnInit {
   wpOptions = computed(() => {
     return this.workPackages().map((wp) => ({
       value: wp.id,
-      text: `${wp.packageName} (${wp.phaseName})`,
+      text: wp.packageName,
     }));
   });
 
@@ -302,13 +302,15 @@ export class Pmdt10Component implements OnInit {
 
       if (pId) {
         this.projectId.set(pId);
-        if (specId) this.selectedSpecId.set(specId);
-        this.loadProjectData(pId);
       }
+      if (specId) {
+        this.selectedSpecId.set(specId);
+      }
+      this.loadProjectData(this.projectId());
     });
   }
 
-  loadProjectData(pId: string): void {
+  loadProjectData(pId: string | null): void {
     this.isLoading.set(true);
 
     // 1. Load Specs
@@ -346,31 +348,34 @@ export class Pmdt10Component implements OnInit {
       error: (err) => console.error('Load phases error:', err),
     });
 
-    // 3. Load Tasks
-    this.service.getTasksByProjectId(pId).subscribe({
-      next: (tasks) => {
-        this.allTasks.set(tasks || []);
-        this.isLoading.set(false);
-      },
-      error: (err) => {
-        console.error('Load tasks error:', err);
-        this.allTasks.set([]);
-        this.isLoading.set(false);
-        this.dialog.error(this.translate.instant('PMDT10_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT10_LOAD_TASKS_FAIL_MSG'));
-      },
-    });
+    // 3. Load Tasks & Bugs if project is specified
+    if (pId) {
+      this.service.getTasksByProjectId(pId).subscribe({
+        next: (tasks) => {
+          this.allTasks.set(tasks || []);
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Load tasks error:', err);
+          this.allTasks.set([]);
+          this.isLoading.set(false);
+        },
+      });
 
-    // 4. Load Bugs
-    this.service.getBugsByProject(pId).subscribe({
-      next: (bugs) => {
-        this.allBugs.set(bugs || []);
-      },
-      error: (err) => {
-        console.error('Load bugs error:', err);
-        this.allBugs.set([]);
-        this.dialog.error(this.translate.instant('PMDT10_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT10_LOAD_BUGS_FAIL_MSG'));
-      },
-    });
+      // 4. Load Bugs
+      this.service.getBugsByProject(pId).subscribe({
+        next: (bugs) => {
+          this.allBugs.set(bugs || []);
+        },
+        error: (err) => {
+          console.error('Load bugs error:', err);
+          this.allBugs.set([]);
+        },
+      });
+    } else {
+      this.allTasks.set([]);
+      this.isLoading.set(false);
+    }
   }
 
   // Filter actions

@@ -57,6 +57,14 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setEndDate(request.getEndDate());
         wp.setStatus("Not Started");
         wp.setColor(request.getColor());
+        UUID bId = ms.getBusinessId();
+        if (bId == null && ms.getPhase() != null && ms.getPhase().getProject() != null) {
+            bId = ms.getPhase().getProject().getBusinessId();
+        }
+        if (bId == null) {
+            bId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        }
+        wp.setBusinessId(bId);
 
         wp = wpRepository.save(wp);
 

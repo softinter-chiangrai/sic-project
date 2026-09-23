@@ -10,7 +10,7 @@ export class Pmdt09AForm {
       title: fb.control(null, [Validators.required, Validators.maxLength(255)]),
       description: fb.control(null, [Validators.required]),
       reviewableType: fb.control(null),
-      reviewableId: fb.control(null, [Validators.required]),
+      reviewableId: fb.control(null),
       reviewableName: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
       projectName: fb.control(null),

@@ -6,7 +6,7 @@ export class Pmdt14AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmDeliveryModel>> {
     return fb.group<ToForm<PmDeliveryModel>>({
       id: fb.control(null),
-      projectId: fb.control(null, [Validators.required]),
+      projectId: fb.control(null),
       contractId: fb.control(null),
       deliveryCode: fb.control(null, [Validators.required, Validators.maxLength(50)]),
       deliveryTitle: fb.control(null, [Validators.required, Validators.maxLength(200)]),

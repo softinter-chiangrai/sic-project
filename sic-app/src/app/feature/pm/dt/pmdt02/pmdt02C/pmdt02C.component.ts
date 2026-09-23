@@ -57,7 +57,6 @@ export class Pmdt02CComponent implements OnInit {
   isEdit = false;
   data: TaskResponse | null = null;
   assignedToApiUrl = '';
-  specOptions = signal<{ value: string; text: string }[]>([]);
   linkedTestCases = signal<any[]>([]);
   testCasesLoading = signal(false);
   expandedSteps = signal<Set<string>>(new Set());
@@ -80,6 +79,14 @@ export class Pmdt02CComponent implements OnInit {
 
   get assigneeIds(): FormControl {
     return this.form.get('assigneeIds') as FormControl;
+  }
+
+  get wpComboboxParams(): Record<string, any> {
+    const p: Record<string, any> = {};
+    if (this.projectId) {
+      p['projectId'] = this.projectId;
+    }
+    return p;
   }
 
   ngOnInit() {
@@ -118,8 +125,6 @@ export class Pmdt02CComponent implements OnInit {
         this.form.patchValue({ workPackageId: this.workPackageId });
       }
 
-      this.loadSpecifications(this.projectId);
-
       const dateParam = qParams['startDate'] || qParams['date'];
       if (!this.isEdit && dateParam) {
         const cleanDate = dateParam.split('T')[0];
@@ -136,36 +141,6 @@ export class Pmdt02CComponent implements OnInit {
         this.loadLinkedTestCases(this.taskId, this.data.projectId || this.projectId);
       }
     });
-  }
-
-  loadSpecifications(projectId: string) {
-    this.http
-      .get<any>(`${environment.apiBaseUrl}/api/pm/specifications`, {
-        params: { page: '0', size: '100' },
-      })
-      .subscribe({
-        next: (res) => {
-          const list: any[] = res?.data || res?.content || (Array.isArray(res) ? res : []);
-          const targetProjId = projectId ? String(projectId).toLowerCase() : null;
-          const options = list
-            .filter((item: any) => {
-              if (item.isDelete) return false;
-              if (!targetProjId) return true;
-              const itemProjId = item.projectId
-                ? String(item.projectId).toLowerCase()
-                : item.project?.id
-                ? String(item.project.id).toLowerCase()
-                : null;
-              return !itemProjId || itemProjId === targetProjId;
-            })
-            .map((item: any) => ({
-              value: item.id,
-              text: `[${item.specificationCode || item.specCode || 'SPEC'}] ${item.title || 'Specification'}`,
-            }));
-          this.specOptions.set(options);
-        },
-        error: (err) => console.error('Failed to load specifications in pmdt02C', err),
-      });
   }
 
   loadTask(id: string) {
@@ -307,7 +282,7 @@ export class Pmdt02CComponent implements OnInit {
 
     const raw = this.form.value;
     const data: TaskRequest = {
-      workPackageId: this.workPackageId,
+      workPackageId: (this.workPackageId || raw.workPackageId)!,
       specificationId: raw.specificationId || undefined,
       taskCode: raw.taskCode!,
       taskName: raw.taskName!,

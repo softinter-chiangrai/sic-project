@@ -218,7 +218,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   onDeliverySelected(item: any): void {
     const deliveryId = item?.value ?? item?.id ?? null;
     if (!deliveryId) {
-      this.isProjectDerived.set(!!this.formData.form.get('relatedSpecId')?.value);
+      this.isProjectDerived.set(false);
       this.cdr.markForCheck();
       return;
     }
@@ -488,7 +488,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     if (data.projectId) {
       this.loadDeliveryOptions(data.projectId);
     }
-    this.isProjectDerived.set(!!(data as any).relatedSpecId || !!data.deliveryId);
+    this.isProjectDerived.set(!!data.deliveryId);
     if (data.sections && data.sections.length > 0) {
       this.sections.set(data.sections);
     } else {
