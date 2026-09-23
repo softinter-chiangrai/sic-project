@@ -18,6 +18,7 @@ erDiagram
 
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmChangeRequest {
+        UUID id
         string cr_code
         string target_type
         uuid target_id
@@ -33,17 +34,35 @@ erDiagram
         string approved_by
         datetime approved_at
         datetime implemented_at
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmChangeImpact {
+        UUID id
         uuid change_request_id
         string impacted_type
         uuid impacted_id
         string impacted_title
         string impact_level
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     ChangeImpactAnalysis {
+        UUID id
         uuid change_request_id
         text dfd_impact
         text er_impact
@@ -63,9 +82,19 @@ erDiagram
         string analysis_status
         datetime analyzed_at
         string analyzed_by
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmDesignReview {
+        UUID id
+        UUID business_id
         string review_code
         string title
         text description
@@ -80,27 +109,55 @@ erDiagram
         text figma_url
         string embed_mode
         boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmReviewComment {
+        UUID id
+        UUID business_id
         uuid review_id
         string comment_type
         text comment_text
         string severity
         string assigned_to
         string status
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmCrAssignee {
+        UUID id
         uuid change_request_id
         string user_id
         string target_type
         uuid target_id
         string status
         datetime completed_at
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmEditSession {
+        UUID id
         uuid change_request_id
         string target_type
         uuid target_id
@@ -109,6 +166,14 @@ erDiagram
         datetime expires_at
         boolean is_active
         string edit_type
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmChangeRequest ||--o{ PmChangeImpact : "has impacts"

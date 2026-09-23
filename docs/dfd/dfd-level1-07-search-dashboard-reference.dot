@@ -1,0 +1,43 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  p71 [label="7.1\nGlobal Search", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p72 [label="7.2\nCombobox / Address\nLookup", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p73 [label="7.3\nSystem Parameter\nLOV", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p74 [label="7.4\nOrganization\nDashboard", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p75 [label="7.5\nProject Dashboard\nDetail", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  d7 [label="D7\nReference / Master Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d1ext [label="D1\nAuth/Business data\nexternal", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d3ext [label="D3\nCustomer/Project/Finance\nexternal", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d4ext [label="D4\nRequirement/Analysis/Design\nexternal", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d5ext [label="D5\nTask/Approval/Bug\nexternal", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  { rank=same; user; }
+  { rank=same; p71; p72; p73; p74; p75; }
+  p71 -> p72 [style=invis];
+  p72 -> p73 [style=invis];
+  p73 -> p74 [style=invis];
+  p74 -> p75 [style=invis];
+  { rank=same; d7; d1ext; d3ext; d4ext; d5ext; }
+  d7 -> d1ext [style=invis];
+  d1ext -> d3ext [style=invis];
+  d3ext -> d4ext [style=invis];
+  d4ext -> d5ext [style=invis];
+  user -> p71 [style=invis, weight=10];
+  p71 -> d7 [style=invis, weight=10];
+  user -> p71 [constraint=false, label="search query / search results", dir=both];
+  p71 -> d3ext [constraint=false, label="read customer/project"];
+  user -> p72 [constraint=false, label="lookup request / combobox options", dir=both];
+  p72 -> d7 [constraint=false, label="read address ref"];
+  p72 -> d1ext [constraint=false, label="read members/roles"];
+  user -> p73 [constraint=false, label="parameter LOV request / parameter values", dir=both];
+  p73 -> d7 [constraint=false, label="read params"];
+  user -> p74 [constraint=false, label="org summary request / org summary, risk", dir=both];
+  p74 -> d3ext [constraint=false, label="read projects/customers"];
+  p74 -> d5ext [constraint=false, label="read tasks/bugs due"];
+  user -> p75 [constraint=false, label="project dashboard request / dashboard summary", dir=both];
+  p75 -> d3ext [constraint=false, label="read project data"];
+  p75 -> d4ext [constraint=false, label="read requirement/design"];
+  p75 -> d5ext [constraint=false, label="read tasks/approval/bug"];
+}

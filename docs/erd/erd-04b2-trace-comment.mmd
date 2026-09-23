@@ -19,12 +19,21 @@ erDiagram
 
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmTraceLink {
+        UUID id
         uuid project_id
         string source_type
         uuid source_id
         string target_type
         uuid target_id
         enum relationship_type
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     TraceRelationship {
@@ -38,6 +47,8 @@ erDiagram
     }
 
     PmComment {
+        UUID id
+        UUID business_id
         string target_type
         uuid target_id
         uuid parent_comment_id
@@ -50,6 +61,14 @@ erDiagram
         boolean pinned
         string mention_user_id
         jsonb extra_data
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmComment ||--o{ PmComment : "has replies (parent_comment_id, self-ref)"

@@ -147,21 +147,32 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             } catch (Exception ignored) {}
         }
 
-        // กรองเฉพาะ Test Case ที่ยังไม่ถูกลบ
+        // กรองเฉพาะ Test Case ที่ยังไม่ถูกลบ พร้อมค้นหา Bug ที่ผูกกับ Test Case เหล่านี้
         Set<UUID> activeTestCaseIds = new HashSet<>();
         for (UUID tcId : rawTestCaseIds) {
             testCaseRepository.findById(tcId).ifPresent(tc -> {
                 if (!Boolean.TRUE.equals(tc.getIsDelete())) {
                     activeTestCaseIds.add(tcId);
+                    try {
+                        List<com.softinter.sicapi.entity.pm.PmBug> linkedBugs = bugRepository.findByTestCaseIdAndIsDeleteFalse(tcId);
+                        for (com.softinter.sicapi.entity.pm.PmBug b : linkedBugs) {
+                            rawBugIds.add(b.getId());
+                        }
+                    } catch (Exception ignored) {}
                 }
             });
         }
 
-        // กรองเฉพาะ Bug Task ที่ยังไม่ถูกลบ
+        // กรองเฉพาะ Bug Task และ PmBug ที่ยังไม่ถูกลบ
         Set<UUID> activeBugIds = new HashSet<>();
         for (UUID bId : rawBugIds) {
             taskRepository.findById(bId).ifPresent(task -> {
                 if (!Boolean.TRUE.equals(task.getIsDelete())) {
+                    activeBugIds.add(bId);
+                }
+            });
+            bugRepository.findById(bId).ifPresent(bug -> {
+                if (!Boolean.TRUE.equals(bug.getIsDelete())) {
                     activeBugIds.add(bId);
                 }
             });
@@ -211,6 +222,29 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                     if (task.getSpecification().getRequirement() != null && !Boolean.TRUE.equals(task.getSpecification().getRequirement().getIsDelete())) {
                         activeReqIds.add(task.getSpecification().getRequirement().getId());
                     }
+                }
+            });
+        } else if ("TEST_CASE".equalsIgnoreCase(targetType) && targetId != null) {
+            testCaseRepository.findById(targetId).ifPresent(tc -> {
+                if (tc.getTaskId() != null) {
+                    normalTaskIds.add(tc.getTaskId());
+                    taskRepository.findById(tc.getTaskId()).ifPresent(task -> {
+                        if (task.getSpecification() != null && !Boolean.TRUE.equals(task.getSpecification().getIsDelete())) {
+                            activeSpecIds.add(task.getSpecification().getId());
+                            if (task.getSpecification().getRequirement() != null && !Boolean.TRUE.equals(task.getSpecification().getRequirement().getIsDelete())) {
+                                activeReqIds.add(task.getSpecification().getRequirement().getId());
+                            }
+                        }
+                    });
+                }
+            });
+        } else if ("BUG".equalsIgnoreCase(targetType) && targetId != null) {
+            bugRepository.findById(targetId).ifPresent(bug -> {
+                if (bug.getTestCaseId() != null) {
+                    activeTestCaseIds.add(bug.getTestCaseId());
+                }
+                if (bug.getTaskId() != null) {
+                    normalTaskIds.add(bug.getTaskId());
                 }
             });
         }

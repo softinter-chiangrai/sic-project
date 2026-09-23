@@ -1,0 +1,30 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  customer [label="ลูกค้า / ผู้เกี่ยวข้องภายนอก", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  keycloak [label="Keycloak\nIdentity Provider", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  ai [label="AI Provider\nGemini / Claude", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  report [label="Report Service", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  sic [label="0\nSIC Project\nManagement System", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  db [label="D1-D7\nPostgreSQL", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  object [label="D8\nSeaweedFS / S3", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  { rank=same; user; customer; }
+  user -> customer [style=invis];
+  { rank=same; sic; }
+  { rank=same; db; object; keycloak; ai; report; }
+  db -> object [style=invis];
+  object -> keycloak [style=invis];
+  keycloak -> ai [style=invis];
+  ai -> report [style=invis];
+  user -> sic [style=invis, weight=10];
+  sic -> db [style=invis, weight=10];
+  user -> sic [constraint=false, label="requests / data, screens", dir=both];
+  customer -> sic [constraint=false, label="delivery sign-off"];
+  sic -> keycloak [constraint=false, label="JWKS request / signing keys", dir=both];
+  sic -> ai [constraint=false, label="generation prompt / AI draft", dir=both];
+  sic -> report [constraint=false, label="report request / report file", dir=both];
+  sic -> db [constraint=false, label="CRUD data", dir=both];
+  sic -> object [constraint=false, label="file object", dir=both];
+}

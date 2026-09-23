@@ -1,0 +1,45 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  d4 [label="D4\nRequirement / Analysis /\nDesign / Traceability Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d3ext [label="D3\nCustomer/Project data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d5ext [label="D5\nTask/Approval/Bug data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d1ext [label="D1\nAuth/Business data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  p49 [label="4.9\nTrace Link\nManagement", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p410 [label="4.10\nImpact\nAnalysis", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p411 [label="4.11\nChange Request\nWorkflow", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p412 [label="4.12\nDesign Review\nWorkflow", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p413 [label="4.13\nDocument Version\nControl", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p414 [label="4.14\nEdit Session\nLocking", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  { rank=same; user; }
+  { rank=same; p49; p410; p411; p412; p413; p414; }
+  p49 -> p410 [style=invis];
+  p410 -> p411 [style=invis];
+  p411 -> p412 [style=invis];
+  p412 -> p413 [style=invis];
+  p413 -> p414 [style=invis];
+  { rank=same; d4; d3ext; d5ext; d1ext; }
+  d4 -> d3ext [style=invis];
+  d3ext -> d5ext [style=invis];
+  d5ext -> d1ext [style=invis];
+  user -> p49 [style=invis, weight=10];
+  p49 -> d4 [style=invis, weight=10];
+  user -> p49 [constraint=false, label="manage trace link"];
+  p49 -> d4 [constraint=false, label="trace link data", dir=both];
+  user -> p410 [constraint=false, label="preview/save impact / impact result", dir=both];
+  p410 -> d4 [constraint=false, label="impact analysis data", dir=both];
+  user -> p411 [constraint=false, label="manage change request / exported PDF", dir=both];
+  p411 -> d4 [constraint=false, label="change request data / assignee status", dir=both];
+  p411 -> p410 [constraint=false, label="request impact analysis / impact result", dir=both];
+  user -> p412 [constraint=false, label="manage design review"];
+  p412 -> d4 [constraint=false, label="review and comment data", dir=both];
+  p412 -> d3ext [constraint=false, label="project/req combobox"];
+  p412 -> d5ext [constraint=false, label="task combobox / create revision"];
+  p412 -> d1ext [constraint=false, label="reviewer list"];
+  user -> p413 [constraint=false, label="manage document version"];
+  p413 -> d4 [constraint=false, label="version records", dir=both];
+  user -> p414 [constraint=false, label="check/close edit session / lock status", dir=both];
+  p414 -> d4 [constraint=false, label="edit session data", dir=both];
+}

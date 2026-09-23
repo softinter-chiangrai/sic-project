@@ -1,0 +1,30 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  d5 [label="D5\nPhase / Milestone / Task /\nApproval / Bug Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d3ext [label="D3\nCustomer/Project/Finance\n(external)", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  p51 [label="5.1\nวางแผน\nPhase", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p52 [label="5.2\nวางแผน\nMilestone", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p53 [label="5.3\nจัดการ\nWork Package", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p54 [label="5.4\nมอบหมาย/ติดตาม\nTask", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  { rank=same; user; }
+  { rank=same; p51; p52; p53; p54; }
+  p51 -> p52 [style=invis];
+  p52 -> p53 [style=invis];
+  p53 -> p54 [style=invis];
+  { rank=same; d5; d3ext; }
+  d5 -> d3ext [style=invis];
+  user -> p51 [style=invis, weight=10];
+  p51 -> d5 [style=invis, weight=10];
+  user -> p51 [constraint=false, label="จัดการ Phase / รายการ Phase", dir=both];
+  p51 -> d5 [constraint=false, label="บันทึก Phase / รายการ Phase", dir=both];
+  p51 -> d3ext [constraint=false, label="ตรวจสอบโครงการ / ข้อมูลโครงการ", dir=both];
+  user -> p52 [constraint=false, label="จัดการ Milestone / รายการ Milestone", dir=both];
+  p52 -> d5 [constraint=false, label="บันทึก Milestone / รายการ Milestone", dir=both];
+  user -> p53 [constraint=false, label="จัดการ Work Package / รายการ Work Package", dir=both];
+  p53 -> d5 [constraint=false, label="บันทึก Work Package / รายการ Work Package", dir=both];
+  user -> p54 [constraint=false, label="จัดการ Task / รายการ Task", dir=both];
+  p54 -> d5 [constraint=false, label="บันทึก Task / รายการ Task", dir=both];
+}

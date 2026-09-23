@@ -1,0 +1,104 @@
+[
+  {
+    "id": "5.0",
+    "name": "การจัดการ Phase, Milestone, Task, Approval และการติดตาม Bug (Phase, Milestone, Task, Approval & Bug Tracking)",
+    "description": "กระบวนการวางแผนและติดตามงานของโครงการตามลำดับชั้น Project → Phase → Milestone → Work Package → Task พร้อมคำนวณความคืบหน้าของ Phase อัตโนมัติ ครอบคลุมการบันทึกและติดตาม Bug/Issue การกำหนดผังการอนุมัติ (Approval Flow) และการยื่น/พิจารณาอนุมัติเอกสารแบบหลายขั้นตอนพร้อมบันทึกประวัติและแจ้งเตือนผู้เกี่ยวข้อง",
+    "business_logic": [
+      "ผู้ใช้สร้าง Phase ภายใต้โครงการ แล้วสร้าง Milestone, Work Package และ Task ต่อลงมาตามลำดับชั้น โดยระบบตรวจสอบว่าระดับแม่มีอยู่จริงก่อนบันทึก",
+      "เมื่อ Task ถูกสร้าง แก้ไข หรือลบ ระบบคำนวณ progress ของ Phase ใหม่จากสัดส่วน Task ที่เสร็จ (ไม่นับ Bug Task)",
+      "ผู้ใช้บันทึก Bug/Issue โดยผูกกับ Test Case หรือ Task และระบบสร้าง Trace Link ให้อัตโนมัติ",
+      "ผู้ดูแลกำหนด Approval Flow ต่อประเภทเอกสาร พร้อมขั้นตอน ผู้อนุมัติ และเงื่อนไข timeout",
+      "ผู้ใช้ยื่นเอกสารเข้าสู่ Approval Flow และผู้อนุมัติดำเนินการ approve/reject/revise/delegate โดยระบบบันทึก log อัปเดตสถานะเอกสารต้นทาง และส่งการแจ้งเตือน",
+      "ทุกการสร้าง แก้ไข และลบข้อมูลหลักถูกบันทึก Audit Log และใช้การลบแบบ Soft Delete"
+    ]
+  },
+  {
+    "id": "5.1",
+    "name": "วางแผน Phase (Phase Planning)",
+    "description": "จัดการ Phase ของโครงการ (สร้าง แก้ไข ลบ ค้นหา) โดยตรวจสอบโครงการที่อ้างอิง กำหนด Phase ที่ต้องทำก่อน (dependency) และคำนวณ progress/สถานะของ Phase จาก Task ภายใต้ Phase นั้น",
+    "business_logic": [
+      "ระบบตรวจสอบว่าโครงการ (projectId) มีอยู่จริง หากไม่พบจะแจ้ง Project not found",
+      "หากไม่ระบุรหัส Phase ระบบสร้างรหัสอัตโนมัติรูปแบบ PH-### จากจำนวน Phase ในโครงการ และตั้งสถานะเริ่มต้นเป็น Not Started, progress 0",
+      "หากระบุ dependencyId ระบบตรวจสอบว่า Phase ที่อ้างอิงมีอยู่จริงก่อนผูกความสัมพันธ์",
+      "เมื่อดึงหรือแก้ไข Phase ระบบคำนวณ progress จากจำนวน Task ที่สถานะ Done/Complete/Completed (ไม่นับ Bug Task) และกำหนดสถานะ Done, Delayed, In Progress หรือ Not Started ตามความคืบหน้าและวันที่",
+      "การลบ Phase เป็น Soft Delete และทุกการสร้าง/แก้ไข/ลบถูกบันทึก Audit Log",
+      "ระบบคืนรายการ Phase เรียงตามวันเริ่มต้น พร้อม Milestone, Work Package, Task และสถิติจำนวนงาน"
+    ]
+  },
+  {
+    "id": "5.2",
+    "name": "วางแผน Milestone (Milestone Planning)",
+    "description": "จัดการ Milestone ภายใต้ Phase (สร้าง แก้ไข ลบ ค้นหา) โดยกำหนดชื่อ รายละเอียด วันครบกำหนด สี และสถานะ",
+    "business_logic": [
+      "ระบบตรวจสอบว่า Phase (phaseId) ที่อ้างอิงมีอยู่จริง หากไม่พบจะแจ้ง Phase not found",
+      "Milestone ใหม่ถูกบันทึกพร้อมสถานะเริ่มต้น Not Started",
+      "การแก้ไขปรับชื่อ รายละเอียด วันครบกำหนด และสี ส่วนสถานะจะเปลี่ยนเฉพาะเมื่อมีการส่งค่ามา",
+      "การลบ Milestone เป็น Soft Delete และทุกการเปลี่ยนแปลงถูกบันทึก Audit Log",
+      "ระบบคืนรายการ Milestone ของ Phase เรียงตามวันครบกำหนด พร้อม Work Package และ Task ที่ยังไม่ถูกลบ"
+    ]
+  },
+  {
+    "id": "5.3",
+    "name": "จัดการ Work Package (Work Package Management)",
+    "description": "จัดการ Work Package ภายใต้ Milestone (สร้าง แก้ไข ลบ ค้นหา) เพื่อจัดกลุ่ม Task ตามช่วงเวลาและขอบเขตงาน",
+    "business_logic": [
+      "ระบบตรวจสอบว่า Milestone (milestoneId) ที่อ้างอิงมีอยู่จริง หากไม่พบจะแจ้ง Milestone not found",
+      "Work Package ใหม่ถูกบันทึกพร้อมชื่อ รายละเอียด วันเริ่ม-วันสิ้นสุด สี และสถานะเริ่มต้น Not Started",
+      "การแก้ไขปรับข้อมูลทั่วไป ส่วนสถานะจะเปลี่ยนเฉพาะเมื่อมีการส่งค่ามา",
+      "การลบ Work Package เป็น Soft Delete และทุกการเปลี่ยนแปลงถูกบันทึก Audit Log",
+      "ระบบคืนรายการ Work Package ที่ยังไม่ถูกลบของ Milestone ที่เลือก"
+    ]
+  },
+  {
+    "id": "5.4",
+    "name": "มอบหมาย/ติดตาม Task (Task Assignment & Tracking)",
+    "description": "จัดการ Task ภายใต้ Work Package รวมถึงมอบหมายผู้รับผิดชอบหลายคน บันทึกแผนและ man-day จริง ติดตามสถานะ ผูก Task กับ Specification และค้นหา Task ระดับโครงการ",
+    "business_logic": [
+      "ระบบตรวจสอบว่า Work Package มีอยู่จริง แล้วบันทึก Task โดยสถานะเริ่มต้นเป็น Todo และ actual man-day เริ่มที่ 0 หากไม่ระบุ",
+      "ระบบบันทึกผู้รับผิดชอบร่วม (assignees) ลงตาราง Task Assignee โดยตอนแก้ไขจะลบรายชื่อเดิมแล้วบันทึกใหม่ทั้งหมด",
+      "เมื่อสถานะเปลี่ยนเป็น In Progress/Doing ระบบบันทึก actual start และเมื่อเป็น Done/Complete/Completed ระบบบันทึก actual end หากยังไม่มีค่า",
+      "หากระบุ Specification ระบบผูก Task กับ Specification และสร้าง Trace Link ความสัมพันธ์ IMPLEMENTED_BY ในโครงการ",
+      "ทุกการสร้าง แก้ไข หรือลบ Task ระบบคำนวณ progress ของ Phase ใหม่ และการลบ Task จะ Soft Delete Test Case ที่ผูกอยู่ต่อเนื่อง",
+      "ระบบคืนรายการ Task ตาม Work Package หรือตามโครงการ (รองรับค้นหาแบบแบ่งหน้า) พร้อมชื่อและรูปโปรไฟล์ของผู้รับผิดชอบ"
+    ]
+  },
+  {
+    "id": "5.5",
+    "name": "ติดตาม Bug/Issue (Bug/Issue Tracking)",
+    "description": "บันทึกและติดตาม Bug/Issue ของโครงการ ได้แก่ รหัส หัวข้อ ขั้นตอนการทำซ้ำ สภาพแวดล้อม ประเภท ความรุนแรง ความสำคัญ ผู้พบ ผู้รับผิดชอบ กำหนดแก้ไข และสถานะ โดยจำกัดข้อมูลตาม Business ของผู้ใช้ปัจจุบัน",
+    "business_logic": [
+      "ระบบระบุ businessId และ userId ของผู้ใช้ปัจจุบัน และค้นหา Bug แบบแบ่งหน้าตามโครงการและคำค้น (รหัส หัวข้อ รายละเอียด ผู้รับผิดชอบ)",
+      "หากผูกกับ Test Case ระบบดึง taskId และ projectId จาก Test Case เสมอ มิฉะนั้นจะหา projectId จากลำดับชั้นของ Task",
+      "ระบบกำหนดค่าเริ่มต้น issueType = Bug, severity = Medium, priority = Medium และ status = Open หากไม่ระบุ",
+      "การแก้ไขตรวจสอบ rowVersion เพื่อป้องกันการบันทึกทับข้อมูลที่ผู้อื่นแก้ไขแล้ว และบันทึกผู้แก้ไขและเวลา",
+      "ระบบสร้าง Trace Link จาก Test Case (FAILED_BY) และจาก Task (RELATED_TO) ไปยัง Bug และบันทึก Audit Log",
+      "การลบ Bug เป็น Soft Delete โดยบันทึกผู้ลบและเวลาที่ลบ"
+    ]
+  },
+  {
+    "id": "5.6",
+    "name": "กำหนดค่า Approval Flow (Approval Flow Configuration)",
+    "description": "สร้างและแก้ไขผังการอนุมัติต่อประเภทเอกสาร ประกอบด้วยรหัส ชื่อ โหมดการอนุมัติ และขั้นตอนการอนุมัติ (ลำดับ ผู้อนุมัติแบบ role หรือ user, บังคับหรือไม่, timeout, การข้าม และเงื่อนไข)",
+    "business_logic": [
+      "ระบบตรวจสอบว่า Flow Code ไม่ซ้ำกับผังอื่น หากซ้ำจะปฏิเสธการบันทึก",
+      "ระบบบันทึกผังโดยผูกกับ Business ของผู้ใช้ ใช้โหมด CHAIN และสถานะ active เป็นค่าเริ่มต้น",
+      "ระบบบันทึกแต่ละขั้นตอนพร้อมค่าเริ่มต้น isRequired = true, timeoutAction = NONE และ canSkip = false",
+      "เมื่อแก้ไขหรือลบผัง ระบบยกเลิก Approval ที่ยังค้าง (PENDING, PARTIALLY_APPROVED, NEED_REVISION) ของผังนั้นทั้งหมด",
+      "การแก้ไขจะ Soft Delete ขั้นตอนเดิมแล้วสร้างขั้นตอนใหม่ตามคำขอ ส่วนการลบผังจะ Soft Delete ทั้งผังและขั้นตอน และปิดสถานะ active",
+      "ระบบคืนผังพร้อมขั้นตอนที่ใช้งาน เรียงตามลำดับ และชื่อแสดงผลของประเภทเอกสาร/โหมดการอนุมัติ"
+    ]
+  },
+  {
+    "id": "5.7",
+    "name": "ยื่น/พิจารณา Approval (Approval Submission & Action Processing)",
+    "description": "ยื่นเอกสาร (เช่น Requirement, Specification, Contract, Delivery, Invoice, MA Ticket, User Manual, Project) เข้าสู่ผังการอนุมัติ และให้ผู้อนุมัติดำเนินการ approve, reject, ขอแก้ไข, ยกเลิก หรือมอบหมายต่อ พร้อมบันทึกประวัติ อัปเดตสถานะเอกสารต้นทาง และแจ้งเตือนผู้เกี่ยวข้อง",
+    "business_logic": [
+      "ระบบตรวจสอบว่าเอกสารต้นทางมีอยู่จริงตามประเภท และต้องไม่มี Approval ที่ PENDING อยู่ก่อน แล้วเลือกผังจาก flowId หรือผังที่ active ของประเภทเอกสาร (ต้องมีอย่างน้อยหนึ่งขั้นตอน)",
+      "ระบบสร้างสถานะรายขั้นตอนให้ผู้อนุมัติแต่ละคน จาก approverUserId หรือจากผู้ใช้ที่มี role ตรงกับ approverRole และข้ามขั้นตอนที่ไม่บังคับในโหมด CHAIN อัตโนมัติ",
+      "ผู้อนุมัติต้องเป็นผู้ที่ได้รับมอบหมายในขั้นตอนปัจจุบัน และ Approval ต้องยังไม่อยู่ในสถานะสิ้นสุด จึงจะ approve (แนบลายเซ็นได้), reject, ขอแก้ไข หรือ delegate ได้",
+      "เมื่ออนุมัติ ระบบเลื่อนไปขั้นตอนถัดไป หรือตั้งเป็น APPROVED เมื่อทุกขั้นตอนเสร็จ ส่วน reject/revise จะตั้งสถานะ REJECTED/NEED_REVISION และอัปเดตสถานะเอกสารต้นทางตามผล",
+      "ทุกการกระทำถูกบันทึก Approval Log และระบบส่งการแจ้งเตือนผ่านตาราง Notification และ WebSocket ไปยังผู้อนุมัติหรือผู้ยื่น",
+      "Scheduler ทำงานทุก 15 นาทีเพื่อตรวจขั้นตอนที่เกิน timeout และดำเนินการ AUTO_SKIP, AUTO_APPROVE หรือ AUTO_REJECT ตามที่ตั้งค่าไว้"
+    ]
+  }
+]

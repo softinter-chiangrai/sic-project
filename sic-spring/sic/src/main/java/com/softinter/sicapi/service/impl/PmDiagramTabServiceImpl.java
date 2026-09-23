@@ -61,12 +61,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             throw new RuntimeException("Project not found: " + request.getProjectId());
         }
 
-        // 2. Validate Requirement (บังคับ)
-        if (request.getRequirementId() == null) {
-            throw new IllegalArgumentException("Requirement ID is required for traceability.");
+        // 2. Validate Requirement (ถ้ามีระบุมา)
+        if (request.getRequirementId() != null) {
+            requirementRepository.findById(request.getRequirementId())
+                    .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
         }
-        PmRequirement requirement = requirementRepository.findById(request.getRequirementId())
-                .orElseThrow(() -> new RuntimeException("Requirement not found: " + request.getRequirementId()));
 
         // 3. สร้าง Diagram
         String userId = currentUserService.getUserId();
@@ -100,18 +99,20 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         PmDiagramTab saved = tabRepository.save(tab);
         createVersion(saved, "Initial version");
 
-        // 4. สร้าง Trace Link: Requirement → Diagram
+        // 4. สร้าง Trace Link: Requirement → Diagram (ถ้ามี)
         String diagramType = request.getDiagramType().toUpperCase();
-        traceLinkService.createLink(
-                request.getProjectId(),
-                "REQUIREMENT", request.getRequirementId(),
-                diagramType, saved.getId(),
-                TraceRelationship.DESIGNED_BY);
-        traceLinkService.createLink(
-                request.getProjectId(),
-                "REQUIREMENT", request.getRequirementId(),
-                "DIAGRAM", saved.getId(),
-                TraceRelationship.DESIGNED_BY);
+        if (request.getRequirementId() != null) {
+            traceLinkService.createLink(
+                    request.getProjectId(),
+                    "REQUIREMENT", request.getRequirementId(),
+                    diagramType, saved.getId(),
+                    TraceRelationship.DESIGNED_BY);
+            traceLinkService.createLink(
+                    request.getProjectId(),
+                    "REQUIREMENT", request.getRequirementId(),
+                    "DIAGRAM", saved.getId(),
+                    TraceRelationship.DESIGNED_BY);
+        }
 
         // 5. สร้าง Trace Link เพิ่มเติม (ถ้ามี relatedRequirementIds)
         if (request.getRelatedRequirementIds() != null) {

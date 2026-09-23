@@ -86,22 +86,7 @@
       @if (viewMode !== 'preview') {
         <div class="pmdt05-panel pmdt05-panel--edit">
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-            <!-- Basic Info -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <sic-input
-                [label]="'PMDT04_REQ_CODE_LABEL' | translate"
-                formControlName="requirementCode"
-                [required]="true"
-                placeholder="REQ-001"
-              ></sic-input>
-              <sic-input
-                [label]="'PMDT04_REQ_NAME_LABEL' | translate"
-                formControlName="title"
-                [required]="true"
-                [placeholder]="'PMDT04_REQ_NAME_PLACEHOLDER' | translate"
-              ></sic-input>
-            </div>
-
+            <!-- Customer & Project -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <sic-combobox
                 label="ลูกค้า"
@@ -126,6 +111,22 @@
                 [required]="true"
                 (selectionChanged)="onProjectSelected($event)">
               </sic-combobox>
+            </div>
+
+            <!-- Basic Info -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <sic-input
+                [label]="'PMDT04_REQ_CODE_LABEL' | translate"
+                formControlName="requirementCode"
+                [required]="true"
+                placeholder="REQ-001"
+              ></sic-input>
+              <sic-input
+                [label]="'PMDT04_REQ_NAME_LABEL' | translate"
+                formControlName="title"
+                [required]="true"
+                [placeholder]="'PMDT04_REQ_NAME_PLACEHOLDER' | translate"
+              ></sic-input>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">

@@ -18,7 +18,6 @@ flowchart LR
   d3ext["D3<br/>Customer/Project/Finance<br/>external"]
   d4ext["D4<br/>Requirement/Analysis/Design<br/>external"]
   d5ext["D5<br/>Task/Approval/Bug<br/>external"]
-  d6ext["D6<br/>File Storage metadata<br/>external"]
 
   user -->|"search query"| p71
   p71 -->|"read customer/project"| d3ext
@@ -30,7 +29,7 @@ flowchart LR
   p72 -->|"combobox options"| user
 
   user -->|"parameter LOV request"| p73
-  p73 -->|"read/write params"| d7
+  p73 -->|"read params"| d7
   p73 -->|"parameter values"| user
 
   user -->|"org summary request"| p74
@@ -42,9 +41,8 @@ flowchart LR
   p75 -->|"read project data"| d3ext
   p75 -->|"read requirement/design"| d4ext
   p75 -->|"read tasks/approval/bug"| d5ext
-  p75 -->|"read file metadata"| d6ext
   p75 -->|"dashboard summary"| user
 
   class user entity
   class p71,p72,p73,p74,p75 process
-  class d7,d1ext,d3ext,d4ext,d5ext,d6ext store
+  class d7,d1ext,d3ext,d4ext,d5ext store

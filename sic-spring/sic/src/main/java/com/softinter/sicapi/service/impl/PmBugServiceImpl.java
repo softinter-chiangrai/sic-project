@@ -169,7 +169,17 @@ public class PmBugServiceImpl implements PmBugService {
             entity.setProjectId(tc.getProjectId());
         } else {
             entity.setTaskId(req.getTaskId());
-            entity.setProjectId(req.getProjectId());
+            if (req.getProjectId() != null) {
+                entity.setProjectId(req.getProjectId());
+            } else if (req.getTaskId() != null) {
+                taskRepository.findById(req.getTaskId()).ifPresent(task -> {
+                    if (task.getWorkPackage() != null && task.getWorkPackage().getMilestone() != null
+                            && task.getWorkPackage().getMilestone().getPhase() != null
+                            && task.getWorkPackage().getMilestone().getPhase().getProject() != null) {
+                        entity.setProjectId(task.getWorkPackage().getMilestone().getPhase().getProject().getId());
+                    }
+                });
+            }
         }
         entity.setTestCaseId(req.getTestCaseId());
         entity.setBugCode(req.getBugCode());

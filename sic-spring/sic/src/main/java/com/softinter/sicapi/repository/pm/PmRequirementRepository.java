@@ -60,6 +60,13 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
 
     List<PmRequirement> findByBusinessIdAndIsDeleteFalse(UUID businessId);
     List<PmRequirement> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p LEFT JOIN FETCH p.customer c WHERE r.businessId = :businessId AND r.isDelete = false ORDER BY r.requirementCode ASC")
+    List<PmRequirement> findAllWithProjectByBusinessId(@Param("businessId") UUID businessId);
+
+    @Query("SELECT r FROM PmRequirement r LEFT JOIN FETCH r.project p LEFT JOIN FETCH p.customer c WHERE r.businessId = :businessId AND r.projectId = :projectId AND r.isDelete = false ORDER BY r.requirementCode ASC")
+    List<PmRequirement> findAllWithProjectByBusinessIdAndProjectId(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId);
+
     @Query("SELECT r FROM PmRequirement r WHERE r.id = :id AND r.isDelete = false")
     Optional<PmRequirement> findByIdAndIsDeleteFalse(@Param("id") UUID id);
 

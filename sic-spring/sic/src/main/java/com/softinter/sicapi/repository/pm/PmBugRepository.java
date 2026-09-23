@@ -19,6 +19,10 @@ public interface PmBugRepository extends JpaRepository<PmBug, UUID>, JpaSpecific
 
     Optional<PmBug> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
 
+    java.util.List<PmBug> findByTestCaseIdAndIsDeleteFalse(UUID testCaseId);
+
+    java.util.List<PmBug> findByTaskIdAndIsDeleteFalse(UUID taskId);
+
     long countByBusinessIdAndIsDeleteFalse(UUID businessId);
 
     long countByBusinessIdAndSeverityIgnoreCaseAndIsDeleteFalse(UUID businessId, String severity);

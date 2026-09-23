@@ -20,11 +20,10 @@ flowchart LR
   user -->|"requests"| sic
   sic -->|"data, screens"| user
 
-  customer -->|"requirement, sign-off"| sic
-  sic -->|"status, delivery, invoice"| customer
+  customer -->|"delivery sign-off"| sic
 
-  sic -->|"token request"| keycloak
-  keycloak -->|"JWT claims"| sic
+  sic -->|"JWKS request"| keycloak
+  keycloak -->|"signing keys"| sic
 
   sic -->|"generation prompt"| ai
   ai -->|"AI draft"| sic

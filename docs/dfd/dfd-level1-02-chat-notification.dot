@@ -1,0 +1,38 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  p21 [label="2.1\nChat Group\nManagement", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p22 [label="2.2\nDirect and Group\nMessaging", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p23 [label="2.3\nReal-Time Chat\nTransport", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p24 [label="2.4\nProject Discussion\nThreads", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p25 [label="2.5\nSystem Messages and\nLocalization", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p26 [label="2.6\nNotification\nCenter", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  d2 [label="D2\nChat / Messaging /\nNotification Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d1ext [label="D1\nAuth / Business Data\n(external)", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  { rank=same; user; }
+  { rank=same; p21; p22; p23; p24; p25; p26; }
+  p21 -> p22 [style=invis];
+  p22 -> p23 [style=invis];
+  p23 -> p24 [style=invis];
+  p24 -> p25 [style=invis];
+  p25 -> p26 [style=invis];
+  { rank=same; d2; d1ext; }
+  d2 -> d1ext [style=invis];
+  user -> p21 [style=invis, weight=10];
+  p21 -> d2 [style=invis, weight=10];
+  user -> p21 [constraint=false, label="create/rename group / member list / group list", dir=both];
+  p21 -> d1ext [constraint=false, label="business users"];
+  p21 -> d2 [constraint=false, label="group, member data", dir=both];
+  user -> p22 [constraint=false, label="send/edit message / chat message", dir=both];
+  p22 -> d2 [constraint=false, label="chat log", dir=both];
+  user -> p23 [constraint=false, label="connect / connection token / push event", dir=both];
+  p22 -> p23 [constraint=false, label="broadcast"];
+  user -> p24 [constraint=false, label="post/reply/comment / posts, replies", dir=both];
+  p24 -> d2 [constraint=false, label="discussion data", dir=both];
+  user -> p25 [constraint=false, label="manage system msg / translation result", dir=both];
+  p25 -> d2 [constraint=false, label="messages, i18n", dir=both];
+  user -> p26 [constraint=false, label="get, mark read / notification feed", dir=both];
+  p26 -> d2 [constraint=false, label="notification data", dir=both];
+}

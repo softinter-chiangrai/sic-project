@@ -1,0 +1,76 @@
+[
+  {
+    "id": "6.0",
+    "name": "การจัดเก็บไฟล์และการออกเอกสาร/รายงาน (File Storage & Document/Report Output)",
+    "description": "กระบวนการจัดการไฟล์ของระบบ ครอบคลุมการอัปโหลดไฟล์แบบครั้งเดียวและแบบแบ่ง chunk ไปยัง SeaweedFS ผ่าน S3 API การดาวน์โหลดแบบ stream การจัดกลุ่มไฟล์ด้วย uploadGroupId การลบไฟล์และล้างไฟล์ชั่วคราวที่หมดอายุ รวมถึงการสร้างเอกสาร PDF ผ่าน Report Service ภายนอก",
+    "business_logic": [
+      "ผู้ใช้อัปโหลดไฟล์ ระบบเก็บ bytes ลง bucket ใน SeaweedFS/S3 และบันทึก metadata ลงตาราง SuUpload",
+      "ไฟล์ใหม่มีสถานะชั่วคราว (isActive = false) อายุ 24 ชั่วโมง จนกว่าจะถูก activate หรือผูกกับเอกสารธุรกิจ",
+      "ผู้ใช้ดาวน์โหลดไฟล์หรือเรียกดูรายการไฟล์ตาม uploadGroupId ได้เฉพาะไฟล์ที่ active",
+      "การลบไฟล์จะลบ object ใน storage และปรับ metadata ส่วน Scheduler จะล้างไฟล์ชั่วคราวที่หมดอายุทุก 1 ชั่วโมง",
+      "คำขอ export เอกสารจะรวบรวมข้อมูลธุรกิจ ส่งไปสร้างรายงานที่ Report Service และคืนไฟล์ PDF ให้ผู้ใช้"
+    ]
+  },
+  {
+    "id": "6.1",
+    "name": "การอัปโหลดและตรวจสอบไฟล์ (File Upload and Validation)",
+    "description": "รับไฟล์จากผู้ใช้ผ่าน endpoint upload/image, upload/video, upload/document หรือผ่าน upload session แบบแบ่ง chunk (5 MB ต่อ chunk) แล้วจัดเก็บลง SeaweedFS/S3 พร้อมบันทึก metadata ลง SuUpload",
+    "business_logic": [
+      "กรณีอัปโหลดครั้งเดียว ระบบสร้าง object key เป็น uploads/{UUID}/{ชื่อไฟล์} แล้ว putObject ลง bucket และแปลง category/visibility เป็น enum",
+      "กรณีไฟล์ขนาดใหญ่ ผู้ใช้สร้าง upload session โดยใช้ uploadGroupId เป็น sessionId หากมี session เดิมที่ยังไม่หมดอายุจะใช้ต่อ ส่วน session ที่หมดอายุจะถูกลบ",
+      "แต่ละ chunk ถูกตรวจว่า session ยังไม่หมดอายุ แล้วเก็บเป็น temp/sessions/{sessionId}/part-{index} และคืน nextChunkIndex",
+      "เมื่อสั่ง complete ระบบตรวจว่าจำนวน chunk ที่อัปโหลดครบตาม totalChunks แล้วรวมไฟล์ด้วย copy หรือ S3 multipart upload และลบ chunk ชั่วคราว",
+      "ระบบบันทึก SuUpload พร้อม objectKey, storageUrl, accessUrl, ผู้สร้าง และตั้งเวลาหมดอายุชั่วคราว 24 ชั่วโมงสำหรับไฟล์ที่ยังไม่ active",
+      "ระบบคืนผลการอัปโหลด (id, fileName, fileSize, contentType, URL, uploadGroupId) ให้ผู้ใช้"
+    ]
+  },
+  {
+    "id": "6.2",
+    "name": "การดาวน์โหลดและสตรีมไฟล์ (File Download and Streaming)",
+    "description": "ให้ผู้ใช้ดาวน์โหลดไฟล์ตาม fileId, ตาม bucket/objectKey หรือดึงรูป avatar ล่าสุดของกลุ่ม โดยอ่าน metadata จาก SuUpload และสตรีม bytes จาก SeaweedFS/S3 กลับไปยังผู้ใช้",
+    "business_logic": [
+      "ผู้ใช้ส่งคำขอดาวน์โหลดด้วย fileId, bucketName + objectKey หรือ groupId (avatar)",
+      "ระบบค้นหา metadata ใน SuUpload โดยดาวน์โหลดตาม fileId ได้เฉพาะไฟล์ที่ isActive = true และตรวจว่า bucketName ตรงกับ bucket ของระบบ",
+      "ระบบเรียก getObject จาก S3/SeaweedFS เพื่อเปิด InputStream ของไฟล์",
+      "ระบบตั้ง Content-Type, Content-Length และ Content-Disposition จาก metadata แล้วสตรีมไฟล์กลับไปให้ผู้ใช้",
+      "หากไม่พบไฟล์หรือ S3 ผิดพลาด ระบบแจ้งข้อผิดพลาดกลับไป"
+    ]
+  },
+  {
+    "id": "6.3",
+    "name": "การจัดการ Metadata และกลุ่มไฟล์ (File Metadata and Group Management)",
+    "description": "จัดการข้อมูลอ้างอิงของไฟล์ในตาราง SuUpload ได้แก่ การเรียกดูรายการไฟล์ในกลุ่ม (uploadGroupId) การขอ URL ของไฟล์ การ activate ไฟล์ และการ sync รายการไฟล์ที่แนบกับเอกสารธุรกิจ",
+    "business_logic": [
+      "ผู้ใช้ขอรายการไฟล์ตาม groupId ระบบคืนเฉพาะไฟล์ที่ active เรียงจากใหม่ไปเก่า พร้อม accessUrl สำหรับดาวน์โหลด",
+      "ผู้ใช้ขอ URL ของไฟล์ ระบบสร้าง URL จาก S3 utilities ตาม objectKey ของไฟล์ที่ active",
+      "การ activate ไฟล์ตรวจว่าไฟล์ยังไม่หมดอายุและผู้เรียกเป็นผู้อัปโหลดเอง จากนั้นตั้ง isActive = true และล้าง tempExpiresAt",
+      "เมื่อบันทึกเอกสารธุรกิจ ระบบ resolve uploadGroupId (สร้างใหม่หากยังไม่มี) และ sync รายการไฟล์ โดยลบไฟล์ที่มีสถานะ DELETED และผูกไฟล์ที่เหลือเข้ากลุ่มพร้อมปรับสถานะ active"
+    ]
+  },
+  {
+    "id": "6.4",
+    "name": "การลบไฟล์และควบคุมวงจรชีวิตไฟล์ (File Deletion and Lifecycle Control)",
+    "description": "ลบไฟล์ตามคำขอของผู้ใช้ ยกเลิก upload session และล้างไฟล์ชั่วคราวที่หมดอายุโดยอัตโนมัติผ่าน TemporaryUploadCleanupSchedulerService",
+    "business_logic": [
+      "ผู้ใช้ส่งคำขอลบไฟล์ตาม fileId ระบบค้นหาไฟล์ที่ active หากไม่พบจะแจ้ง File not found",
+      "ระบบลบ object ใน SeaweedFS/S3 แล้วปรับ metadata เป็น isActive = false (soft delete)",
+      "การยกเลิก upload session จะลบ chunk ชั่วคราวใต้ prefix ของ session และลบ record SuUpload ของ session นั้น",
+      "Scheduler ทำงานทุก 1 ชั่วโมงและตอนเริ่มระบบ เพื่อค้นหาไฟล์ที่ isActive = false และ tempExpiresAt เลยเวลาแล้ว",
+      "ไฟล์ที่หมดอายุจะถูกลบ object ใน storage และ soft delete record โดยผู้ใช้ system-cleanup",
+      "ระบบตอบกลับการลบด้วย HTTP 204 No Content"
+    ]
+  },
+  {
+    "id": "6.5",
+    "name": "การร้องขอสร้างรายงาน/เอกสาร (Report/Document Generation Request)",
+    "description": "สร้างเอกสาร PDF ของข้อมูลธุรกิจ เช่น ใบแจ้งหนี้ สัญญา การส่งมอบ Requirement หรือ UAT โดยรวบรวมข้อมูลจากฐานข้อมูลแล้วส่งไปสร้างที่ Report Service ภายนอก และสำรองด้วย JasperReports ภายในเมื่อ Report Service ใช้งานไม่ได้",
+    "business_logic": [
+      "ผู้ใช้เรียก endpoint export-pdf ระบบกำหนดภาษา (th/en) และ businessId จาก context ของผู้ใช้",
+      "Export service อ่านข้อมูลต้นทาง เช่น เอกสาร ลูกค้า โครงการ และสัญญา ภายใต้ businessId แล้วประกอบเป็น parameters ของรายงาน",
+      "ReportServiceClient ส่ง POST /api/reports/generate พร้อม templateCode, parameters, format และ X-Access-Token ไปยัง Report Service",
+      "เมื่อได้ reportFileId ระบบดาวน์โหลดไฟล์จาก /api/reports/files/{id}/download และตรวจว่าไฟล์ไม่ว่าง",
+      "หาก Report Service ล้มเหลวและเปิด fallbackToLocal ระบบสร้าง PDF เองด้วย JasperReports จากไฟล์ jrxml",
+      "ระบบคืนไฟล์ PDF ให้ผู้ใช้ดาวน์โหลดพร้อม Content-Disposition แบบ attachment"
+    ]
+  }
+]

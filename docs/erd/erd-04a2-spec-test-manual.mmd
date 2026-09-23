@@ -13,6 +13,8 @@ erDiagram
 
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmSpecification {
+        UUID id
+        UUID business_id
         string specification_code
         string specification_type
         string title
@@ -26,9 +28,19 @@ erDiagram
         uuid project_id
         uuid requirement_id
         boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmTestScenario {
+        UUID id
+        UUID business_id
         uuid project_id
         uuid test_plan_id
         uuid task_id
@@ -38,9 +50,19 @@ erDiagram
         string status
         string test_type
         text description
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmTestCase {
+        UUID id
+        UUID business_id
         uuid project_id
         uuid scenario_id
         string scenario_name
@@ -58,9 +80,19 @@ erDiagram
         text related_requirement
         text related_spec
         text related_task
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmUserManual {
+        UUID id
+        UUID business_id
         uuid project_id
         string manual_code
         string manual_title
@@ -70,9 +102,18 @@ erDiagram
         uuid delivery_id
         string status
         uuid attachment_group_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmUserManualSection {
+        UUID id
         uuid manual_id
         string section_code
         string section_title
@@ -80,6 +121,14 @@ erDiagram
         int sort_order
         text permission_roles
         uuid screenshot_group_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmTestScenario ||--o{ PmTestCase : "has test cases (scenario_id)"

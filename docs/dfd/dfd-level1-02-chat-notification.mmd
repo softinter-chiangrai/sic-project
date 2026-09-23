@@ -16,7 +16,6 @@ flowchart LR
 
   d2["D2<br/>Chat / Messaging /<br/>Notification Data"]
   d1ext["D1<br/>Auth / Business Data<br/>(external)"]
-  d3ext["D3<br/>Customer / Project / Finance<br/>(external)"]
 
   %% 2.1 Chat Group Management
   user -->|"create/rename group"| p21
@@ -38,7 +37,6 @@ flowchart LR
 
   %% 2.4 Project Discussion Threads
   user -->|"post/reply/comment"| p24
-  p24 -->|"validate project"| d3ext
   p24 <-->|"discussion data"| d2
   p24 -->|"posts, replies"| user
 
@@ -54,4 +52,4 @@ flowchart LR
 
   class user entity
   class p21,p22,p23,p24,p25,p26 process
-  class d2,d1ext,d3ext store
+  class d2,d1ext store

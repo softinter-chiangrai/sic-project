@@ -697,6 +697,25 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       });
     }
 
+    // 3. Create dedicated PmBug entity linked directly to Test Case (Traceability)
+    const bugPayload: any = {
+      bugCode: bugCode,
+      title: finalTaskName,
+      description: desc,
+      testCaseId: data.id || this.testCaseId,
+      taskId: data.taskId || parentTask?.id || null,
+      projectId: data.projectId || this.customerState.getProjectId(),
+      severity: data.priority === 'High' ? 'Critical' : (data.priority || 'Medium'),
+      priority: data.priority === 'High' ? 'Critical' : (data.priority || 'Medium'),
+      status: 'Open',
+      foundBy: data.tester || null,
+      stepsToReproduce: data.testStep || null,
+    };
+    this.service.createBugFromTest(bugPayload).subscribe({
+      next: () => console.log('Created dedicated PmBug entity linked to Test Case'),
+      error: (e) => console.warn('Could not save PmBug entity:', e),
+    });
+
     if (taskPayload.workPackageId) {
       this.service.createTask(taskPayload).subscribe({
         next: () => {

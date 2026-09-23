@@ -1,0 +1,42 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  keycloak [label="Keycloak\nIdentity Provider", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  p11 [label="1.1\nAuthentication and\nSession Verification", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p12 [label="1.2\nProfile Management and\nContact Verification", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p13 [label="1.3\nBusiness Management and\nActive Business Switching", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p14 [label="1.4\nBusiness Invite and\nMembership Management", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p15 [label="1.5\nRole and Program\nAccess Management", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p16 [label="1.6\nMenu, User and Task\nLookup", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p17 [label="1.7\nAudit Log\nManagement", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  d1 [label="D1\nAuth / Profile / Business /\nAccess Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  { rank=same; user; }
+  { rank=same; p11; p12; p13; p14; p15; p16; p17; }
+  p11 -> p12 [style=invis];
+  p12 -> p13 [style=invis];
+  p13 -> p14 [style=invis];
+  p14 -> p15 [style=invis];
+  p15 -> p16 [style=invis];
+  p16 -> p17 [style=invis];
+  { rank=same; d1; keycloak; }
+  d1 -> keycloak [style=invis];
+  user -> p11 [style=invis, weight=10];
+  p11 -> d1 [style=invis, weight=10];
+  user -> p11 [constraint=false, label="login / user info", dir=both];
+  p11 -> keycloak [constraint=false, label="JWKS request / signing keys", dir=both];
+  p11 -> d1 [constraint=false, label="profile summary", dir=both];
+  user -> p12 [constraint=false, label="save profile / verify request / profile, token / verify token / verify status", dir=both];
+  p12 -> d1 [constraint=false, label="duplicate check", dir=both];
+  user -> p13 [constraint=false, label="manage business / business status", dir=both];
+  p13 -> d1 [constraint=false, label="business records", dir=both];
+  user -> p14 [constraint=false, label="manage invites / invite result", dir=both];
+  p14 -> d1 [constraint=false, label="invite, member data", dir=both];
+  user -> p15 [constraint=false, label="manage roles / role result", dir=both];
+  p15 -> d1 [constraint=false, label="permission data", dir=both];
+  user -> p16 [constraint=false, label="request menu / menu, tasks", dir=both];
+  p16 -> d1 [constraint=false, label="permission, task data", dir=both];
+  user -> p17 [constraint=false, label="search logs / log result", dir=both];
+  p17 -> d1 [constraint=false, label="audit records", dir=both];
+}

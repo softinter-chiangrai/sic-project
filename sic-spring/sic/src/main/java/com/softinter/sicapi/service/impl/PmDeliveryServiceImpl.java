@@ -182,6 +182,14 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         boolean isNew = (request.getId() == null);
 
         if (isNew) {
+            // ✅ Derive projectId จาก Contract อัตโนมัติเมื่อไม่ได้ระบุ projectId
+            if (request.getProjectId() == null && request.getContractId() != null) {
+                List<PmCustomerProject> linkedProjects = projectRepository.findByContractIdAndIsDeleteFalse(request.getContractId());
+                if (!linkedProjects.isEmpty()) {
+                    request.setProjectId(linkedProjects.get(0).getId());
+                }
+            }
+
             entity = new PmDelivery();
             entity.setBusinessId(businessId);
             entity.setCreatedBy(userId);

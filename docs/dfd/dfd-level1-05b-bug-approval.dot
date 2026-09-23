@@ -1,0 +1,35 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  d5 [label="D5\nPhase / Milestone / Task /\nApproval / Bug Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d1ext [label="D1\nAuth/Business\n(external)", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d2ext [label="D2\nChat/Notification\n(external)", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d3ext [label="D3\nCustomer/Project/Finance\n(external)", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d4ext [label="D4\nRequirement/Design\n(external)", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  p55 [label="5.5\nติดตาม\nBug/Issue", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p56 [label="5.6\nกำหนดค่า\nApproval Flow", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p57 [label="5.7\nยื่น/พิจารณา\nApproval", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  { rank=same; user; }
+  { rank=same; p55; p56; p57; }
+  p55 -> p56 [style=invis];
+  p56 -> p57 [style=invis];
+  { rank=same; d5; d1ext; d2ext; d3ext; d4ext; }
+  d5 -> d1ext [style=invis];
+  d1ext -> d2ext [style=invis];
+  d2ext -> d3ext [style=invis];
+  d3ext -> d4ext [style=invis];
+  user -> p55 [style=invis, weight=10];
+  p55 -> d5 [style=invis, weight=10];
+  user -> p55 [constraint=false, label="จัดการ Bug / รายการ Bug", dir=both];
+  p55 -> d5 [constraint=false, label="บันทึก Bug / รายการ Bug", dir=both];
+  user -> p56 [constraint=false, label="จัดการ Approval Flow / ผัง Approval Flow", dir=both];
+  p56 -> d5 [constraint=false, label="บันทึกผัง Approval / รายการ Approval Flow", dir=both];
+  user -> p57 [constraint=false, label="ยื่น/พิจารณา Approval / ประวัติ Approval", dir=both];
+  p57 -> d5 [constraint=false, label="อ่านผัง Approval / ผัง Approval ที่ใช้ / บันทึกสถานะ Approval / สถานะ Approval", dir=both];
+  p57 -> d1ext [constraint=false, label="ตรวจสอบผู้อนุมัติ / ข้อมูลผู้ใช้งาน", dir=both];
+  p57 -> d3ext [constraint=false, label="ตรวจสอบเอกสาร / สถานะเอกสาร", dir=both];
+  p57 -> d4ext [constraint=false, label="ตรวจสอบ Requirement / สถานะเอกสาร", dir=both];
+  p57 -> d2ext [constraint=false, label="แจ้งเตือนผล"];
+}

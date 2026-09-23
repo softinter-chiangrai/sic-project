@@ -197,6 +197,12 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     copiedId: string | null = null;
     aiAttachedFiles = signal<File[]>([]);
 
+    // Auto-Inherited Context Signals
+    projectName = signal<string>('');
+    customerName = signal<string>('');
+    requirementCode = signal<string>('');
+    requirementTitle = signal<string>('');
+
     // Auto-save
     private autoSaveSubscription: Subscription | null = null;
     private formChangeSubscription: Subscription | null = null;
@@ -259,6 +265,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                             requirementId: reqId,
                             generatedFromRequirementId: reqId 
                         } as any);
+                        this.loadContextFromRequirement(reqId);
                     }
                     const diagId = qParams['diagramId'];
                     if (diagId) {
@@ -511,6 +518,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 if (project?.customerId) {
                     this.form.patchValue({ customerId: project.customerId });
                     this.projectParams = { customerId: project.customerId };
+                    if (project.customer?.customerName || project.customerName) {
+                        this.customerName.set(project.customer?.customerName || project.customerName || '');
+                    }
                     this.cdr.markForCheck();
                 }
             },
@@ -550,7 +560,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             const owners = data.owner.split(',').map((s: string) => s.trim()).filter(Boolean);
             this.form.patchValue({ owner: owners });
         }
-        if (data.projectId) {
+        if (data.requirementId) {
+            this.loadContextFromRequirement(data.requirementId);
+        } else if (data.projectId) {
             this.loadCustomerFromProject(data.projectId);
             this.fetchProjectName(data.projectId);
         }
@@ -576,12 +588,69 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         this.cdr.markForCheck();
     }
 
-    // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — sync ชื่อโครงการ และล้าง Requirement เดิมที่อาจไม่ตรงกับโครงการใหม่
+    onRequirementSelected(item: any): void {
+        const reqId = item?.value ?? item?.id ?? '';
+        if (reqId) {
+            this.form.patchValue({ requirementId: reqId, generatedFromRequirementId: reqId });
+            if (item?.data) {
+                const meta = item.data;
+                if (meta.projectId) {
+                    this.form.patchValue({ projectId: meta.projectId });
+                    this.projectName.set(meta.projectName || '');
+                }
+                if (meta.customerId) {
+                    this.form.patchValue({ customerId: meta.customerId });
+                    this.customerName.set(meta.customerName || '');
+                }
+                this.requirementTitle.set(item.text || '');
+            } else {
+                this.loadContextFromRequirement(reqId);
+            }
+        } else {
+            this.form.patchValue({ requirementId: null, generatedFromRequirementId: null });
+            this.projectName.set('');
+            this.customerName.set('');
+            this.requirementTitle.set('');
+        }
+        this.cdr.markForCheck();
+    }
+
+    loadContextFromRequirement(reqId: string): void {
+        if (!reqId) return;
+        this.http.get<any>(`${environment.apiBaseUrl}/api/pm/requirement/${reqId}`).subscribe({
+            next: (res) => {
+                const req = res?.data || res;
+                if (req) {
+                    this.requirementCode.set(req.requirementCode || '');
+                    this.requirementTitle.set(req.title || '');
+                    if (req.projectId) {
+                        this.form.patchValue({ projectId: req.projectId });
+                        if (req.project) {
+                            this.projectName.set(req.project.projectName || '');
+                            if (req.project.customerId) {
+                                this.form.patchValue({ customerId: req.project.customerId });
+                            }
+                            if (req.project.customer) {
+                                this.customerName.set(req.project.customer.customerName || '');
+                            }
+                        } else {
+                            this.fetchProjectName(req.projectId);
+                            this.loadCustomerFromProject(req.projectId);
+                        }
+                    }
+                }
+                this.cdr.markForCheck();
+            },
+            error: () => {}
+        });
+    }
+
     onProjectSelected(item: any): void {
         const selectedProjectId = item?.value ?? item?.id ?? '';
         const projectName = item ? (item.text ?? item.label ?? '') : '';
         this.form.patchValue({ projectName, requirementId: null });
         if (selectedProjectId) {
+            this.projectName.set(projectName);
             this.loadCustomerFromProject(selectedProjectId);
         }
         this.cdr.markForCheck();
@@ -596,6 +665,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     const name = project.projectName || project.name || project.text;
                     if (name) {
                         this.form.patchValue({ projectName: name });
+                        this.projectName.set(name);
                         this.formData.resetModel(this.form.getRawValue() as any);
                         this.cdr.markForCheck();
                     }

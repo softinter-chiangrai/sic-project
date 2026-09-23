@@ -1,0 +1,42 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  ai [label="AI Provider\nGemini / Claude", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  d4 [label="D4\nRequirement / Analysis /\nDesign / Traceability Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d3ext [label="D3\nCustomer/Project data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d7ext [label="D7\nReference/Master data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d5ext [label="D5\nTask/Approval/Bug data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  p41 [label="4.1\nRequirement\nManagement", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p42 [label="4.2\nDiagram Tab and\nVersion Management", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p43 [label="4.3\nDiagram Chat and\nAI Mermaid Generation", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p44 [label="4.4\nAI SQL Generation\nfrom ER Diagram", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  { rank=same; user; }
+  { rank=same; p41; p42; p43; p44; }
+  p41 -> p42 [style=invis];
+  p42 -> p43 [style=invis];
+  p43 -> p44 [style=invis];
+  { rank=same; d4; d3ext; d7ext; d5ext; ai; }
+  d4 -> d3ext [style=invis];
+  d3ext -> d7ext [style=invis];
+  d7ext -> d5ext [style=invis];
+  d5ext -> ai [style=invis];
+  user -> p41 [style=invis, weight=10];
+  p41 -> d4 [style=invis, weight=10];
+  user -> p41 [constraint=false, label="manage requirement / exported PDF", dir=both];
+  p41 -> d4 [constraint=false, label="requirement records", dir=both];
+  p41 -> d3ext [constraint=false, label="project list"];
+  p41 -> d7ext [constraint=false, label="LOV request"];
+  p41 -> d5ext [constraint=false, label="create revision"];
+  p41 -> ai [constraint=false, label="AI draft prompt / draft content", dir=both];
+  user -> p42 [constraint=false, label="manage diagram tab"];
+  p42 -> d4 [constraint=false, label="tab and version data", dir=both];
+  p42 -> d5ext [constraint=false, label="create revision"];
+  user -> p43 [constraint=false, label="send chat message"];
+  p43 -> d4 [constraint=false, label="chat history", dir=both];
+  p43 -> ai [constraint=false, label="generation prompt / mermaid and reply", dir=both];
+  user -> p44 [constraint=false, label="request SQL generation / SQL script", dir=both];
+  p44 -> ai [constraint=false, label="schema prompt / generated SQL DDL", dir=both];
+  p44 -> d4 [constraint=false, label="SQL history", dir=both];
+}

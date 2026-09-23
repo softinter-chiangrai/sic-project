@@ -36,40 +36,47 @@ flowchart LR
   d7["D7<br/>Reference/Master"]
   d8["D8<br/>Object Files"]
 
-  user --> p1 --> user
-  p1 <--> keycloak
-  p1 <--> d1
+  user -->|"auth/profile/business request"| p1
+  p1 -->|"auth/profile/business result"| user
+  p1 <-->|"JWKS request / signing keys"| keycloak
+  p1 <-->|"read/write D1"| d1
 
-  user --> p2 --> user
-  p2 <--> d2
+  user -->|"chat/notification request"| p2
+  p2 -->|"chat/notification result"| user
+  p2 <-->|"read/write D2"| d2
   p1 -.->|identity| p2
 
-  user --> p3 --> user
-  customer --> p3 --> customer
-  p3 <--> d3
+  user -->|"customer/project/finance request"| p3
+  p3 -->|"customer/project/finance result"| user
+  customer -->|"delivery sign-off"| p3
+  p3 <-->|"read/write D3"| d3
   p3 <-->|approval| p5
   p3 -->|AI draft| ai
   p3 -->|export| report
 
-  user --> p4 --> user
-  p4 <--> d4
+  user -->|"requirement/design request"| p4
+  p4 -->|"requirement/design result"| user
+  p4 <-->|"read/write D4"| d4
   p4 -->|generate| ai
   p4 <-->|review| p5
   p3 -.->|project ctx| p4
 
-  user --> p5 --> user
-  p5 <--> d5
+  user -->|"task/approval/bug request"| p5
+  p5 -->|"task/approval/bug result"| user
+  p5 <-->|"read/write D5"| d5
   p5 -->|notify| p2
 
-  user --> p6 --> user
-  p6 <--> d6
-  p6 <--> d8
+  user -->|"file/report request"| p6
+  p6 -->|"file/report result"| user
+  p6 <-->|"read/write D6"| d6
+  p6 <-->|"file bytes"| d8
   p6 -->|report| report
   p3 -.->|attach| p6
   p4 -.->|attach| p6
 
-  user --> p7 --> user
-  p7 <--> d7
+  user -->|"search/dashboard request"| p7
+  p7 -->|"search/dashboard result"| user
+  p7 <-->|"read/write D7"| d7
   p7 -.->|read| d1
   p7 -.->|read| d3
   p7 -.->|read| d4

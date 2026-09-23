@@ -84,6 +84,19 @@ export interface DiagramEditData {
               <span>{{ requirementTitle }}</span>
             </div>
           </div>
+        } @else if (!editData) {
+          <div>
+            <sic-combobox
+              label="ความต้องการ (Requirement)"
+              [apiUrl]="requirementComboboxUrl"
+              valueField="value"
+              textField="text"
+              placeholder="เลือกความต้องการที่เกี่ยวข้อง (ไม่บังคับ)"
+              [clearable]="true"
+              [(ngModel)]="selectedRequirementId"
+              (selectionChanged)="selectedRequirementId = $event?.value || $event?.id || ''"
+            ></sic-combobox>
+          </div>
         }
 
         <!-- Approval Flow Selection (แสดงเฉพาะในโหมดแก้ไข) -->
@@ -166,7 +179,7 @@ export class NewDiagramDialogComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.projectId) {
-      this.requirementComboboxUrl = `${environment.apiBaseUrl}/api/pm/requirements/combobox?projectId=${this.projectId}`;
+      this.requirementComboboxUrl = `${environment.apiBaseUrl}/api/pm/requirement/combobox?projectId=${this.projectId}`;
     }
 
     if (this.editData) {

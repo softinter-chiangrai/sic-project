@@ -1,0 +1,116 @@
+[
+  {
+    "id": "4.0",
+    "name": "การจัดการความต้องการ การวิเคราะห์ การออกแบบ และการตรวจสอบย้อนกลับ (Requirement, Analysis, Design & Traceability)",
+    "description": "กระบวนการจัดทำเอกสารวงจรพัฒนาระบบของโครงการ ตั้งแต่ Requirement, Diagram, SQL, Specification, Test Scenario/Test Case และ User Manual โดยมี AI ช่วยร่างเนื้อหา พร้อมควบคุมเวอร์ชันและสถานะการอนุมัติ และเชื่อมโยงเอกสารทั้งหมดผ่าน Trace Link เพื่อรองรับ Traceability, Change Request และ Design Review",
+    "business_logic": [
+      "ผู้ใช้สร้างหรือแก้ไขเอกสารภายใต้โครงการ ระบบกำหนดรหัสเอกสารอัตโนมัติ (REQ-/DIAG-/SPEC-/MAN-) และตรวจสอบรหัสซ้ำภายในโครงการ",
+      "ผู้ใช้สามารถเรียก AI (Gemini/Claude) เพื่อร่างเนื้อหาเอกสาร Mermaid หรือ SQL จากบริบทของโครงการและเอกสารที่เกี่ยวข้อง",
+      "ทุกการบันทึกตรวจสอบ RowVersion และห้ามแก้ไขเอกสารที่อนุมัติแล้ว จากนั้นสร้าง Document Version พร้อม Diff Summary และ Snapshot",
+      "เมื่อแก้ไขเอกสารที่อนุมัติแล้วหรือกำลังรออนุมัติ ระบบยกเลิกคำขออนุมัติที่ค้างอยู่และเปลี่ยนสถานะเป็น Changed ส่วนเอกสารที่อนุมัติแล้วต้องสร้าง Revision ก่อนจึงแก้ไขได้",
+      "ระบบสร้าง Trace Link ระหว่าง Requirement, Diagram, Specification, Task และ Test เพื่อใช้ตรวจสอบย้อนกลับ ประเมินผลกระทบ (Change Request) และทบทวนการออกแบบ (Design Review)",
+      "ผู้ใช้ส่งออกเอกสารเป็น PDF ผ่าน Report Service หรือ JasperReports ภายในระบบกรณี Report Service ใช้งานไม่ได้"
+    ]
+  },
+  {
+    "id": "4.1",
+    "name": "การจัดการความต้องการ (Requirement Management)",
+    "description": "จัดการข้อมูล Requirement ของโครงการ ได้แก่ ค้นหา สร้าง แก้ไข ลบ สร้าง Revision ใช้ AI ร่างเนื้อหา และส่งออกเอกสาร Requirement เป็น PDF",
+    "business_logic": [
+      "ระบบโหลดรายการโครงการและค่า LOV (Type, Priority, Status, Business Value) และแสดงรายการ Requirement แบบแบ่งหน้าตามโครงการ คำค้น และสถานะ",
+      "เมื่อสร้างใหม่ ระบบตั้งสถานะ Draft และเวอร์ชัน v0.1 สร้างรหัส REQ-### อัตโนมัติหรือตรวจรหัสซ้ำ บันทึกไฟล์แนบ และสร้าง Document Version เริ่มต้น",
+      "เมื่อแก้ไข ระบบตรวจว่าเอกสารยังไม่อนุมัติและ RowVersion ตรงกัน เปรียบเทียบฟิลด์เพื่อทำ Diff Summary เพิ่มเวอร์ชัน และเปลี่ยนสถานะเป็น Changed หากเคยอนุมัติหรือมีคำขออนุมัติค้างอยู่",
+      "เมื่อร้องขอ AI Draft ระบบสร้าง Prompt จากข้อมูลโครงการ หัวข้อ และคำสั่งผู้ใช้ ส่งให้ AI แล้วแปลง JSON ที่ได้เป็นร่าง Title, Description, Acceptance Criteria และ Business Value",
+      "การสร้าง Revision ทำได้เฉพาะเอกสารที่อนุมัติแล้วโดยปลดล็อกผ่าน ApprovalService ส่วนการลบเป็น Soft Delete พร้อมลบเวอร์ชันและบันทึก Audit Log",
+      "ผู้ใช้ส่งออก Requirement เป็น PDF ตามภาษาที่เลือก"
+    ]
+  },
+  {
+    "id": "4.2",
+    "name": "การจัดการแท็บไดอะแกรมและเวอร์ชัน (Diagram Tab and Version Management)",
+    "description": "จัดการแท็บไดอะแกรม (Mermaid/Graph) ของโครงการ ได้แก่ สร้าง แก้ไข คัดลอก จัดลำดับ ลบ ดูและกู้คืนเวอร์ชัน และสร้าง Revision พร้อมเชื่อม Trace Link กับ Requirement",
+    "business_logic": [
+      "เมื่อสร้างแท็บ ระบบตรวจว่าโครงการและ Requirement ที่ระบุมีอยู่จริง สร้างรหัส DIAG-### หรือตรวจรหัสซ้ำ และกำหนดลำดับแท็บต่อจากลำดับสูงสุด",
+      "ระบบบันทึก Diagram Version เริ่มต้น และสร้าง Trace Link แบบ DESIGNED_BY จาก Requirement หลักและ Requirement ที่เกี่ยวข้องไปยัง Diagram",
+      "เมื่อแก้ไข ระบบตรวจว่ายังไม่อนุมัติ ตรวจ RowVersion (ผ่อนปรนกรณี Auto-save ของ Script/Graph) ทำ Diff Summary ยกเลิกคำขออนุมัติที่ค้างอยู่หากมีการเปลี่ยนแปลง และสร้าง Document Version ใหม่",
+      "ระบบเก็บ Diagram Version สูงสุด 50 รายการต่อแท็บโดยลบเวอร์ชันเก่าสุดเมื่อเกิน และผู้ใช้สามารถกู้คืน Mermaid Script จากเวอร์ชันที่เลือกได้",
+      "ผู้ใช้คัดลอกแท็บ (ต่อท้ายชื่อด้วย Copy) หรือจัดลำดับแท็บใหม่ได้ และสร้าง Revision ได้เฉพาะไดอะแกรมที่อนุมัติแล้ว",
+      "การลบเป็น Soft Delete ทั้งไดอะแกรม Trace Link ที่เกี่ยวข้อง และ Document Version พร้อมบันทึก Audit Log"
+    ]
+  },
+  {
+    "id": "4.3",
+    "name": "แชทไดอะแกรมและการสร้าง Mermaid ด้วย AI (Diagram Chat and AI Mermaid Generation)",
+    "description": "ให้ผู้ใช้สนทนากับ AI ในแต่ละไดอะแกรมเพื่อสร้างหรือปรับปรุง Mermaid Script โดยเก็บประวัติแชทแยกตาม Session และรองรับการสร้าง Mermaid ใหม่จาก Prompt โดยตรง",
+    "business_logic": [
+      "ระบบตรวจว่าไดอะแกรมมีอยู่จริง กำหนด Session ID (สร้างใหม่หากไม่ระบุ) และตั้งชื่อ Session จากข้อความแรกไม่เกิน 35 ตัวอักษร",
+      "ระบบบันทึกข้อความของผู้ใช้ลงประวัติแชท (role = user)",
+      "ระบบสร้าง Context จากชื่อ ประเภท และ Mermaid Script ปัจจุบันของไดอะแกรม รวมกับข้อความล่าสุด 6 ข้อความใน Session",
+      "ระบบส่ง Prompt พร้อม System Prompt ที่บังคับให้ตอบเป็น Mermaid code block ไปยัง AI ตามโมเดลที่เลือก หากล้มเหลวจะคืน Mermaid แจ้งข้อผิดพลาด",
+      "ระบบบันทึกคำตอบของ AI (role = assistant) และส่งกลับให้ผู้ใช้ ส่วน Endpoint generate-mermaid จะดึงเฉพาะ Mermaid Script จากคำตอบโดยไม่บันทึกประวัติ",
+      "ผู้ใช้ดูรายการ Session และประวัติแชท เปลี่ยนชื่อ Session ลบ Session หรือล้างประวัติแชทของไดอะแกรมได้"
+    ]
+  },
+  {
+    "id": "4.4",
+    "name": "การสร้าง SQL จาก ER Diagram ด้วย AI (AI SQL Generation from ER Diagram)",
+    "description": "แปลง ER Diagram (XML) เป็นสคริปต์ SQL ตาม Database Vendor ที่เลือกด้วย AI โดยสร้าง Full DDL ในครั้งแรกและ Migration Script ในครั้งถัดไป พร้อมเก็บประวัติเวอร์ชัน SQL ต่อแท็บ",
+    "business_logic": [
+      "ระบบแปลง XML ของ ER Diagram เป็นโครงสร้างตาราง คอลัมน์ และความสัมพันธ์ หากไม่พบตารางจะแจ้งข้อผิดพลาด แล้วสรุปเป็น Schema JSON",
+      "ระบบอ่านประวัติ SQL ของแท็บ หากยังไม่มีจะส่ง Prompt ให้ AI สร้าง Full DDL (Primary Key, Foreign Key, Index, created_at/updated_at) ตาม Vendor (ค่าเริ่มต้น PostgreSQL)",
+      "หากมีประวัติแล้ว ระบบส่งสคริปต์ที่เคยสร้างทั้งหมด Schema เดิม และ Schema ปัจจุบันให้ AI สร้าง Migration Script (ALTER/CREATE) เฉพาะส่วนที่เปลี่ยน",
+      "ระบบดึง SQL ออกจากคำตอบของ AI หากดึงไม่ได้จะใช้สคริปต์ Fallback",
+      "ระบบบันทึกประวัติ SQL พร้อมเลขเวอร์ชันถัดไป ประเภท (FULL/MIGRATION) Vendor Schema JSON และผู้สร้าง แล้วส่ง SQL Script กลับให้ผู้ใช้",
+      "ผู้ใช้ดูประวัติ SQL ของแท็บได้ และยังมี Endpoint generate-sql ที่สร้าง DDL แบบ Rule-based โดยไม่ใช้ AI และไม่บันทึกประวัติ"
+    ]
+  },
+  {
+    "id": "4.5",
+    "name": "การจัดทำเอกสาร Specification (Specification Authoring)",
+    "description": "จัดการเอกสาร Specification ของโครงการ ได้แก่ ค้นหา สร้าง แก้ไข ลบ สร้าง Revision ใช้ AI ร่างจาก Requirement และ Diagram และส่งออกเป็น PDF พร้อมเชื่อม Trace Link",
+    "business_logic": [
+      "เมื่อสร้างใหม่ ระบบตรวจ Requirement ที่อ้างอิงและใช้โครงการของ Requirement สร้างรหัส SPEC-### หรือตรวจรหัสซ้ำ ตั้งสถานะ Draft และเวอร์ชัน v0.1 แล้วสร้าง Document Version เริ่มต้น",
+      "ระบบสร้าง Trace Link แบบ DOCUMENTED_BY จาก Requirement และแบบ DESIGNED_BY จาก Diagram ต้นทาง (ถ้ามี) ไปยัง Specification",
+      "เมื่อแก้ไข ระบบตรวจว่ายังไม่อนุมัติและ RowVersion ตรงกัน ทำ Diff Summary เพิ่มเวอร์ชัน และเปลี่ยนสถานะเป็น Changed หากเคยอนุมัติหรือมีคำขออนุมัติค้างอยู่",
+      "เมื่อร้องขอ AI Draft ระบบรวมข้อมูล Requirement, Diagram ที่เลือก และคำสั่งผู้ใช้เป็น Prompt แล้วแปลง JSON ที่ได้เป็นร่างวัตถุประสงค์ ขอบเขต หน้าจอ ฟิลด์ Validation Business Rule และ API",
+      "การสร้าง Revision ทำได้เฉพาะเอกสารที่อนุมัติแล้ว ส่วนการลบเป็น Soft Delete พร้อมลบเวอร์ชัน",
+      "ผู้ใช้ส่งออก Specification เป็น PDF ตามภาษาที่เลือก"
+    ]
+  },
+  {
+    "id": "4.6",
+    "name": "การจัดการ Test Scenario และ Test Case (Test Scenario and Test Case Management)",
+    "description": "จัดการ Test Scenario และ Test Case ของโครงการ ใช้ AI ร่างกรณีทดสอบ บันทึกผลการทดสอบ และส่งออกรายงาน UAT เป็น PDF",
+    "business_logic": [
+      "เมื่อบันทึก Test Scenario ระบบตรวจ RowVersion ส่งต่อ Test Type ไปยัง Test Case ลูกทุกรายการ และสร้าง Trace Link แบบ VERIFIED_BY จาก Task (ถ้ามี)",
+      "เมื่อบันทึก Test Case ระบบตรวจ RowVersion ทำ Diff Summary (Title, Status, Priority) สร้าง Document Version และบันทึก Audit Log",
+      "ระบบสร้าง Trace Link แบบ VERIFIED_BY จาก Task ไปยัง Test Case และปรับสถานะ Task อัตโนมัติเป็น Waiting Fix เมื่อมีกรณีทดสอบ Fail หรือ Done เมื่อผ่านทั้งหมด",
+      "เมื่อร้องขอ AI Draft ระบบรวมข้อมูล Task, Requirement และ Test Scenario ที่เกี่ยวข้องเป็น Prompt แล้วคืนร่าง Test Scenario หรือ Test Case",
+      "ผู้ใช้ส่งออกรายงาน UAT ตามโครงการ ประเภทการทดสอบ หรือ Scenario ที่เลือก โดยระบบคำนวณจำนวน Pass/Fail/Blocked/Pending และ Pass Rate แล้วสร้าง PDF"
+    ]
+  },
+  {
+    "id": "4.7",
+    "name": "การจัดทำคู่มือผู้ใช้ (User Manual Authoring)",
+    "description": "จัดการเอกสารคู่มือการใช้งานระบบของโครงการ ได้แก่ ค้นหา สร้าง แก้ไข ลบ สร้าง Revision ใช้ AI ร่างเนื้อหาจาก Requirement และ Specification และส่งออกเป็น PDF",
+    "business_logic": [
+      "เมื่อสร้างใหม่ ระบบสร้างรหัส MAN-### อัตโนมัติหรือตรวจรหัสซ้ำในโครงการ บันทึกข้อมูล และบันทึก Audit Log",
+      "เมื่อแก้ไข ระบบตรวจว่ายังไม่อนุมัติและ RowVersion ตรงกัน ทำ Diff Summary และเปลี่ยนสถานะเป็น CHANGED หากเคยอนุมัติหรือมีคำขออนุมัติค้างอยู่",
+      "ระบบเพิ่มเลขเวอร์ชันและสร้าง Document Version พร้อม Snapshot เมื่อบันทึก",
+      "เมื่อร้องขอ AI Draft ระบบรวมข้อมูล Requirement และ Specification ที่เลือกกับคำสั่งผู้ใช้เป็น Prompt แล้วคืนร่างคู่มือในรูปแบบ HTML",
+      "การสร้าง Revision ทำได้เฉพาะคู่มือที่อนุมัติแล้ว การลบทำได้เฉพาะคู่มือที่ยังไม่อนุมัติ และผู้ใช้ส่งออกคู่มือเป็น PDF ได้"
+    ]
+  },
+  {
+    "id": "4.8",
+    "name": "การสร้างข้อมูลชุดด้วย AI และผู้ช่วยนำทาง (AI Batch Generation and Navigator Assistant)",
+    "description": "ให้ AI สร้างรายการข้อมูลหลายรายการพร้อมกันตาม Schema ของโมดูลที่เลือก และให้ผู้ช่วย AI ตอบคำถามเรื่องขั้นตอนการใช้งานระบบพร้อมแนะนำหน้าที่ควรไป",
+    "business_logic": [
+      "สำหรับ Batch Generation ระบบค้นหานิยามโมดูลจาก Module Registry หากไม่รู้จักโมดูลจะแจ้งกลับ และจำกัดจำนวนรายการสูงสุด 30 รายการ (ค่าเริ่มต้น 5)",
+      "ระบบสร้าง System Prompt ตาม Schema ของโมดูลโดยห้าม AI กำหนด id/code แล้วส่งให้ AI พร้อมไฟล์แนบ (ถ้ามี)",
+      "ระบบแปลง JSON Array จาก AI เป็นรายการข้อมูลและส่งกลับให้ผู้ใช้ตรวจสอบ ก่อนบันทึกผ่าน API บันทึกของแต่ละโมดูล",
+      "สำหรับ Navigator ระบบสร้าง Prompt จาก Workflow ของระบบ รายชื่อโมดูลและเส้นทาง หน้าปัจจุบันของผู้ใช้ และคำถาม แล้วส่งให้ AI",
+      "ระบบแปลงคำตอบเป็นข้อความตอบกลับ เส้นทางที่แนะนำ และโมดูลที่ผู้ใช้ต้องการสร้างข้อมูล (เพื่อเปิดหน้าสร้าง) หากล้มเหลวจะคืนข้อความขออภัย"
+    ]
+  }
+]

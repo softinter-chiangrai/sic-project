@@ -1,0 +1,79 @@
+[
+  {
+    "id": "4.9",
+    "name": "จัดการความเชื่อมโยงเอกสาร (Trace Link Management)",
+    "description": "สร้าง ค้นหา และลบความเชื่อมโยง (Trace Link) ระหว่างรายการในโครงการ เช่น Requirement, Specification, Diagram, Task, Test Case, Change Request และ Design Review พร้อมระบุประเภทความสัมพันธ์ (TraceRelationship) และรองรับการไล่ความเชื่อมโยงทั้งสายแบบ recursive",
+    "business_logic": [
+      "รับคำขอสร้าง link พร้อม projectId, sourceType/sourceId, targetType/targetId และ relationshipType แล้วแปลงค่า relationshipType เป็น Enum TraceRelationship",
+      "ตรวจสอบว่ามี link ที่ยังไม่ถูกลบ (isDelete = false) ระหว่าง source และ target คู่นี้อยู่แล้วหรือไม่ หากมีให้คืน link เดิมโดยไม่สร้างซ้ำ",
+      "หากยังไม่มี ให้บันทึก Trace Link ใหม่ลงตาราง pm_trace_link",
+      "ค้นหา link ตาม source หรือ target โดยคืนเฉพาะรายการที่ยังไม่ถูกลบ",
+      "ค้นหาแบบ Full Trace ด้วย recursive CTE ที่ไล่ต่อ link ทั้งทิศ source และ target จนครบทุกรายการที่เชื่อมถึงกัน แล้วคืนผลแบบไม่ซ้ำ (DISTINCT)",
+      "การลบ link เป็นแบบ soft delete โดยตั้งค่า isDelete = true"
+    ]
+  },
+  {
+    "id": "4.10",
+    "name": "วิเคราะห์ผลกระทบ (Impact Analysis)",
+    "description": "วิเคราะห์ผลกระทบของการเปลี่ยนแปลงต่อเอกสารเป้าหมาย โดยใช้ Traceability Engine ไล่ Trace Link เพื่อหา Requirement, Specification, Task, Test Case, Bug และ Diagram ที่ได้รับผลกระทบ พร้อมประเมิน Manday และ Timeline เบื้องต้น รองรับทั้งการดูตัวอย่าง (preview) การตรวจจับอัตโนมัติ และการบันทึกแบบ manual",
+    "business_logic": [
+      "รับ targetType/targetId (โหมด preview) หรือ changeRequestId (โหมด auto-detect ซึ่งอ่าน target จาก Change Request) แล้วเรียก Full Trace ของเป้าหมายเพื่อรวบรวมรายการที่เชื่อมโยงแยกตามประเภท",
+      "แยก Task ที่มีรหัสหรือชื่อขึ้นต้น/มีคำว่า BUG ออกเป็น Bug ค้นหา Test Case ที่ผูกกับ Task และกรองทิ้งรายการที่ถูกลบแล้ว (isDelete)",
+      "เสริมผลจากความสัมพันธ์ของ Entity โดยตรง เช่น Specification กับ Requirement, Task กับ Specification, Test Case กับ Task และ Bug กับ Test Case/Task และรวม Diagram ทุกประเภท (DFD, ER, USECASE ฯลฯ)",
+      "คำนวณ Manday = max(1, Spec×2 + Task + Bug + ceil(Diagram×1.5)) และ Timeline = ceil(Manday/2) วัน แล้วตั้งสถานะการวิเคราะห์เป็น AUTO",
+      "โหมด auto-detect จะบันทึกหรือทับผลเดิมของ Change Request ลงตาราง change impact analysis ส่วนโหมด preview คืนผลโดยไม่บันทึก",
+      "การบันทึกแบบ manual รับค่าผลกระทบ (DFD/ER/UI/API/Test/Manday/Timeline/Cost และรายการ ID) จากผู้ใช้ ตั้งสถานะ MANUAL หากยังไม่มีสถานะ และคืนผลพร้อมรหัสและชื่อของแต่ละรายการที่ได้รับผลกระทบ"
+    ]
+  },
+  {
+    "id": "4.11",
+    "name": "กระบวนการคำขอเปลี่ยนแปลง (Change Request Workflow)",
+    "description": "จัดการคำขอเปลี่ยนแปลง (Change Request) ต่อเอกสารที่ผ่านการอนุมัติแล้ว ตั้งแต่สร้าง แก้ไข ส่งอนุมัติ อนุมัติ/ปฏิเสธ จนถึงดำเนินการ (Implement) โดยเชื่อม Trace Link วิเคราะห์ผลกระทบอัตโนมัติ ติดตามสถานะผู้รับผิดชอบ และส่งออกเป็น PDF",
+    "business_logic": [
+      "ตรวจสอบว่าเอกสารเป้าหมายมีอยู่จริงและไม่อยู่ในสถานะ DRAFT (เอกสารร่างแก้ไขได้โดยตรง) หา projectId จากเป้าหมาย ตรวจรหัส CR ไม่ซ้ำในโครงการ หรือสร้างรหัส CR-XXX อัตโนมัติ แล้วบันทึกด้วยสถานะ DRAFT",
+      "หลังบันทึกจะสร้าง Trace Link แบบ AFFECTED_BY ไปยังเป้าหมาย สร้าง Document Version (v0.1 หรือเลขเวอร์ชันถัดไปเมื่อแก้ไข) บันทึกรายชื่อผู้รับผิดชอบ (assignee) สถานะ PENDING และเรียก Impact Analysis อัตโนมัติ",
+      "แก้ไขได้เฉพาะสถานะ DRAFT หรือ SUBMITTED หากมีการเปลี่ยนข้อมูลขณะ SUBMITTED จะยกเลิกคำขออนุมัติที่ค้างอยู่และดึงสถานะกลับเป็น DRAFT",
+      "ส่งอนุมัติได้เฉพาะสถานะ DRAFT โดยส่งเข้า Approval Flow ส่วนการอนุมัติจะตั้งสถานะ APPROVED และปลดล็อกเอกสารเป้าหมายให้แก้ไขได้ ส่วนการปฏิเสธจะตั้งสถานะ REJECTED",
+      "ดำเนินการ (Implement) ได้เฉพาะสถานะ APPROVED โดยตั้งสถานะ IMPLEMENTED และปลดล็อกเอกสารของเป้าหมายหลักและของผู้รับผิดชอบทุกคน หรือเมื่อผู้รับผิดชอบทุกคนกดเสร็จ (COMPLETED) ระบบจะตั้ง IMPLEMENTED ให้อัตโนมัติ",
+      "การลบเป็น soft delete ได้เฉพาะ CR ที่ยังไม่อนุมัติ พร้อมลบ Document Version ที่เกี่ยวข้อง และบันทึก Audit Log ทุกการเปลี่ยนแปลง"
+    ]
+  },
+  {
+    "id": "4.12",
+    "name": "กระบวนการตรวจทานงานออกแบบ (Design Review Workflow)",
+    "description": "จัดการการตรวจทานงานออกแบบ (Design Review) ของ Specification หรือรายการอื่นในโครงการ รวมถึงการเพิ่มความคิดเห็นของผู้ตรวจทาน การเชื่อม Trace Link การเก็บเวอร์ชันเอกสาร และการสร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้ว",
+    "business_logic": [
+      "ตรวจสอบ Business Context และโหลดข้อมูล combobox ของโครงการ Requirement Task รายการที่ตรวจทานได้ และผู้ใช้ (ผู้ตรวจทาน) ให้ผู้ใช้เลือก",
+      "เมื่อบันทึก ตรวจสอบว่าโครงการมีอยู่จริง หากเป็นการแก้ไขต้องยังไม่ถูกอนุมัติ สร้างรหัส DR-XXX อัตโนมัติหากไม่ระบุ และตรวจจับฟิลด์ที่เปลี่ยนแปลง (Auto Diff)",
+      "หากแก้ไขเอกสารที่เคย Resolved หรือมีคำขออนุมัติค้างอยู่ ระบบจะยกเลิกคำขออนุมัตินั้นและเปลี่ยนสถานะเป็น Changed",
+      "หลังบันทึกจะสร้าง Trace Link แบบ RELATED_TO จากรายการที่ตรวจทานไปยัง Design Review สร้าง Document Version (v0.1 หรือเวอร์ชันถัดไปพร้อมสรุปการเปลี่ยนแปลง) และบันทึก Audit Log",
+      "เพิ่มความคิดเห็น (Review Comment) พร้อมประเภท (ค่าเริ่มต้น Suggestion) ความรุนแรง และผู้รับผิดชอบ โดยตั้งสถานะความคิดเห็นเป็น Open",
+      "การลบเป็น soft delete ได้เฉพาะที่ยังไม่อนุมัติ พร้อมลบ Document Version และสามารถสร้าง Revision ใหม่จากเอกสารที่อนุมัติแล้วผ่าน Approval Service"
+    ]
+  },
+  {
+    "id": "4.13",
+    "name": "ควบคุมเวอร์ชันเอกสาร (Document Version Control)",
+    "description": "จัดเก็บและจัดการประวัติเวอร์ชันของเอกสารในโครงการ (เช่น Change Request, Design Review) รวมถึง snapshot ข้อมูล สรุปการเปลี่ยนแปลง การอ้างอิงเวอร์ชันก่อนหน้า และการกำหนดเวอร์ชันที่ใช้งาน (active)",
+    "business_logic": [
+      "ค้นหาเวอร์ชันตาม documentType + documentId หรือตาม projectId (กรองตามประเภทเอกสารได้) โดยเรียงจากล่าสุดก่อน และแปลงรหัสผู้สร้างเป็นชื่อเต็ม",
+      "เมื่อสร้างเวอร์ชันใหม่ ระบบจะหาเวอร์ชันล่าสุดที่ยังไม่ถูกลบมาเป็น previousVersionId บันทึก versionNo, changeSummary, snapshot และตั้ง isActive = true",
+      "การบันทึกผ่าน API ถ้ามี id จะแก้ไขเวอร์ชันเดิม ถ้าไม่มีจะสร้างใหม่ โดยสถานะอนุมัติเริ่มต้นเป็น DRAFT",
+      "การคำนวณเลขเวอร์ชันถัดไปเพิ่มเลข minor (เช่น v0.1 เป็น v0.2) และการยกระดับเป็น major จะปัดเป็นเลขเต็ม (เช่น v1.0)",
+      "การ Activate เวอร์ชันจะตั้งเวอร์ชันที่เลือกเป็น active และตั้งเวอร์ชันอื่นของเอกสารเดียวกันเป็น inactive",
+      "การลบเป็น soft delete (isDelete = true, isActive = false) ทั้งรายเวอร์ชันหรือทุกเวอร์ชันของเอกสาร"
+    ]
+  },
+  {
+    "id": "4.14",
+    "name": "ล็อกการแก้ไขเอกสาร (Edit Session Locking)",
+    "description": "ตรวจสอบและปิด Edit Session ที่ล็อกเอกสารเป้าหมายไว้ให้ผู้รับผิดชอบของ Change Request แก้ไขได้เพียงผู้เดียว โดย session มีอายุการใช้งานจำกัด",
+    "business_logic": [
+      "รับ targetType และ targetId ของเอกสารที่ต้องการตรวจสอบสถานะล็อก",
+      "ค้นหา Edit Session ที่ isActive = true และยังไม่หมดอายุ (expiresAt ว่าง หรือมากกว่าเวลาปัจจุบัน)",
+      "หากพบ คืนข้อมูล session (changeRequestId, assigneeId, grantedAt, expiresAt) เป็นสถานะล็อก หากไม่พบคืนค่าว่างซึ่งหมายถึงเอกสารไม่ถูกล็อก",
+      "เมื่อสั่งปิด session ระบบจะตั้ง isActive = false ให้ session ที่ active อยู่ของเอกสารนั้น",
+      "Service รองรับการสร้าง session ใหม่ (ปิด session เดิมก่อน และกำหนดหมดอายุ 7 วัน) และตรวจสิทธิ์แก้ไขเฉพาะ assignee ของ session"
+    ]
+  }
+]

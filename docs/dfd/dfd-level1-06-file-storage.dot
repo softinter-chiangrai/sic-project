@@ -1,0 +1,41 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  report [label="Report Service\nExternal Microservice", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  d6 [label="D6\nFile Storage\nMetadata", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d8 [label="D8\nSeaweedFS / S3\nObject Files", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d3ext [label="D3\nCustomer/Project data\nexternal", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  p61 [label="6.1\nFile Upload\nand Validation", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p62 [label="6.2\nFile Download\nand Streaming", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p63 [label="6.3\nFile Metadata and\nGroup Management", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p64 [label="6.4\nFile Deletion and\nLifecycle Control", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p65 [label="6.5\nReport/Document\nGeneration Request", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  { rank=same; user; }
+  { rank=same; p61; p62; p63; p64; p65; }
+  p61 -> p62 [style=invis];
+  p62 -> p63 [style=invis];
+  p63 -> p64 [style=invis];
+  p64 -> p65 [style=invis];
+  { rank=same; d6; d8; d3ext; report; }
+  d6 -> d8 [style=invis];
+  d8 -> d3ext [style=invis];
+  d3ext -> report [style=invis];
+  user -> p61 [style=invis, weight=10];
+  p61 -> d6 [style=invis, weight=10];
+  user -> p61 [constraint=false, label="upload file / upload result", dir=both];
+  p61 -> d6 [constraint=false, label="save metadata"];
+  p61 -> d8 [constraint=false, label="store bytes"];
+  user -> p62 [constraint=false, label="download request / file stream", dir=both];
+  p62 -> d6 [constraint=false, label="read metadata"];
+  p62 -> d8 [constraint=false, label="fetch bytes"];
+  user -> p63 [constraint=false, label="list/group files / file list, URL", dir=both];
+  p63 -> d6 [constraint=false, label="query/update metadata"];
+  user -> p64 [constraint=false, label="delete request / delete confirm", dir=both];
+  p64 -> d6 [constraint=false, label="remove metadata"];
+  p64 -> d8 [constraint=false, label="remove bytes"];
+  user -> p65 [constraint=false, label="export request / PDF file", dir=both];
+  p65 -> d3ext [constraint=false, label="query source data"];
+  p65 -> report [constraint=false, label="generate report / report file", dir=both];
+}

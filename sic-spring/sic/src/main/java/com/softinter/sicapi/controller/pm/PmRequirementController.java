@@ -188,12 +188,27 @@ public class PmRequirementController {
         }
         List<PmRequirement> requirements;
         if (projectId != null) {
-            requirements = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
+            requirements = requirementRepository.findAllWithProjectByBusinessIdAndProjectId(businessId, projectId);
         } else {
-            requirements = requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+            requirements = requirementRepository.findAllWithProjectByBusinessId(businessId);
         }
         List<ComboboxResponse> list = requirements.stream()
-                .map(r -> new ComboboxResponse(r.getId().toString(), r.getTitle()))
+                .map(r -> {
+                    String label = (r.getRequirementCode() != null && !r.getRequirementCode().isBlank()
+                            ? "[" + r.getRequirementCode() + "] " : "") + r.getTitle();
+                    ComboboxResponse cbResp = new ComboboxResponse(r.getId().toString(), label);
+                    java.util.Map<String, Object> meta = new java.util.HashMap<>();
+                    meta.put("projectId", r.getProjectId());
+                    if (r.getProject() != null) {
+                        meta.put("projectName", r.getProject().getProjectName());
+                        meta.put("customerId", r.getProject().getCustomerId());
+                        if (r.getProject().getCustomer() != null) {
+                            meta.put("customerName", r.getProject().getCustomer().getCustomerName());
+                        }
+                    }
+                    cbResp.setData(meta);
+                    return cbResp;
+                })
                 .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }

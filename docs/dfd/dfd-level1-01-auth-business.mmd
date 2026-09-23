@@ -17,12 +17,11 @@ flowchart LR
   p17["1.7<br/>Audit Log<br/>Management"]
 
   d1["D1<br/>Auth / Profile / Business /<br/>Access Data"]
-  d5ext["D5<br/>Task / Approval / Bug<br/>(external)"]
 
   %% 1.1 Authentication
   user -->|"login"| p11
-  p11 -->|"validate token"| keycloak
-  keycloak -->|"token claims"| p11
+  p11 -->|"JWKS request"| keycloak
+  keycloak -->|"signing keys"| p11
   p11 <-->|"profile summary"| d1
   p11 -->|"user info"| user
 
@@ -51,9 +50,7 @@ flowchart LR
 
   %% 1.6 Menu, user and task lookup
   user -->|"request menu"| p16
-  p16 <-->|"permission data"| d1
-  p16 -->|"task list"| d5ext
-  d5ext -->|"task records"| p16
+  p16 <-->|"permission, task data"| d1
   p16 -->|"menu, tasks"| user
 
   %% 1.7 Audit log
@@ -63,4 +60,4 @@ flowchart LR
 
   class user,keycloak entity
   class p11,p12,p13,p14,p15,p16,p17 process
-  class d1,d5ext store
+  class d1 store

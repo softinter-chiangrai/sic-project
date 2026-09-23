@@ -43,11 +43,13 @@ flowchart LR
   user -->|"batch generate request"| p48
   p48 -->|"batch prompt"| ai
   ai -->|"generated items"| p48
-  p48 -->|"save items"| d4
   user -->|"ask workflow question"| p48
   p48 -->|"navigator prompt"| ai
   ai -->|"answer and route"| p48
   p48 -->|"answer and route"| user
+
+  p48 -->|"generated items"| user
+  p46 -->|"update task status"| d5ext
 
   class user,ai entity
   class p45,p46,p47,p48 process

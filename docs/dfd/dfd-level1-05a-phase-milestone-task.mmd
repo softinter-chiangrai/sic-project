@@ -1,7 +1,7 @@
 %% title: DFD Level 1 - Process 5.0 (Part 1) - Phase, Milestone, Work Package & Task
 %% notation: Gane-Sarson box style (rectangle=process/entity, grey rectangle=data store)
 %%{init: {'flowchart': {'nodeSpacing': 22, 'rankSpacing': 50, 'curve': 'basis'}}}%%
-flowchart TD
+flowchart LR
   classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
   classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
   classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
@@ -40,8 +40,6 @@ flowchart TD
   user -->|"จัดการ Task"| p54
   p54 -->|"บันทึก Task"| d5
   d5 -->|"รายการ Task"| p54
-  p54 -->|"ตรวจสอบโครงการ"| d3ext
-  d3ext -->|"ข้อมูลโครงการ"| p54
   p54 -->|"รายการ Task"| user
 
   class user entity

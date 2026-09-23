@@ -16,6 +16,8 @@ erDiagram
 
 %%{init: {"theme": "base", "themeVariables": {"primaryColor": "#ffffff", "primaryBorderColor": "#000000", "primaryTextColor": "#000000", "lineColor": "#000000", "secondaryColor": "#ffffff", "tertiaryColor": "#ffffff"}, "er": {"diagramPadding": 8, "entityPadding": 12, "minEntityWidth": 90, "minEntityHeight": 40, "fontSize": 22}}}%%
     PmRequirement {
+        UUID id
+        UUID business_id
         uuid project_id
         string requirement_code
         string title
@@ -29,9 +31,18 @@ erDiagram
         string status
         boolean is_active
         uuid upload_group_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmDiagramTab {
+        UUID id
         uuid business_id
         string user_id
         uuid project_id
@@ -43,17 +54,35 @@ erDiagram
         jsonb graph_data
         int sort_order
         boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmDiagramVersion {
+        UUID id
         uuid business_id
         uuid diagram_id
         text mermaid_script
         int version_number
         text change_comment
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmDiagramChat {
+        UUID id
         uuid business_id
         uuid diagram_id
         string user_id
@@ -62,6 +91,14 @@ erDiagram
         uuid session_id
         string session_title
         jsonb context_data
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
     }
 
     PmDiagramTab ||--o{ PmDiagramVersion : "has version history"

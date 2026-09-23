@@ -1,0 +1,37 @@
+digraph DFD {
+  rankdir=LR; newrank=true; nodesep=0.6; ranksep=1.9; splines=true; pad=0.2;
+  node [shape=box, style="filled", fontname="Tahoma", fontsize=18, margin="0.25,0.14"];
+  edge [fontname="Tahoma", fontsize=15, color="#444444", arrowsize=0.8];
+  user [label="ผู้ใช้งานภายในระบบ\nPM / SA / Dev / Tester / Admin", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  ai [label="AI Provider\nGemini / Claude", fillcolor="#FFF2CC", color="#D6B656", penwidth=1.5];
+  d4 [label="D4\nRequirement / Analysis /\nDesign / Traceability Data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  d5ext [label="D5\nTask/Approval/Bug data", fillcolor="#F5F5F5", color="#666666", penwidth=1];
+  p45 [label="4.5\nSpecification\nAuthoring", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p46 [label="4.6\nTest Scenario and\nTest Case Management", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p47 [label="4.7\nUser Manual\nAuthoring", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  p48 [label="4.8\nAI Batch Generation and\nNavigator Assistant", fillcolor="#FFE6CC", color="#D79B00", penwidth=2];
+  { rank=same; user; }
+  { rank=same; p45; p46; p47; p48; }
+  p45 -> p46 [style=invis];
+  p46 -> p47 [style=invis];
+  p47 -> p48 [style=invis];
+  { rank=same; d4; d5ext; ai; }
+  d4 -> d5ext [style=invis];
+  d5ext -> ai [style=invis];
+  user -> p45 [style=invis, weight=10];
+  p45 -> d4 [style=invis, weight=10];
+  user -> p45 [constraint=false, label="manage specification / exported PDF", dir=both];
+  p45 -> d4 [constraint=false, label="specification records", dir=both];
+  p45 -> ai [constraint=false, label="draft prompt / draft content", dir=both];
+  p45 -> d5ext [constraint=false, label="create revision"];
+  user -> p46 [constraint=false, label="manage test scenario/case / exported UAT report", dir=both];
+  p46 -> d4 [constraint=false, label="scenario/case records", dir=both];
+  p46 -> ai [constraint=false, label="draft prompt / draft content", dir=both];
+  user -> p47 [constraint=false, label="manage user manual / exported PDF", dir=both];
+  p47 -> d4 [constraint=false, label="manual records", dir=both];
+  p47 -> ai [constraint=false, label="draft prompt / draft content", dir=both];
+  p47 -> d5ext [constraint=false, label="create revision"];
+  user -> p48 [constraint=false, label="batch generate request / ask workflow question / answer and route / generated items", dir=both];
+  p48 -> ai [constraint=false, label="batch prompt / generated items / navigator prompt / answer and route", dir=both];
+  p46 -> d5ext [constraint=false, label="update task status"];
+}
