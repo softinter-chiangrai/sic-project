@@ -1,0 +1,91 @@
+%% title: DFD Level 1 - Process 4.0 - Requirement, Analysis, Design and Traceability (Part A: Requirement, Diagram, Specification, Test, Manual authoring)
+%%{init: {'flowchart': {'nodeSpacing': 20, 'rankSpacing': 70, 'curve': 'basis'}}}%%
+flowchart LR
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  %% ===== External entities =====
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+  ai["AI Provider<br/>Gemini / Claude"]
+
+  %% ===== Data stores =====
+  d4["D4<br/>Requirement / Analysis /<br/>Design / Traceability Data"]
+  d3ext["D3<br/>Customer/Project data"]
+  d7ext["D7<br/>Reference/Master data"]
+  d5ext["D5<br/>Task/Approval/Bug data"]
+
+  %% ===== Sub-processes (stacked vertically, single column) =====
+  p41["4.1<br/>Requirement<br/>Management"]
+  p42["4.2<br/>Diagram Tab and<br/>Version Management"]
+  p43["4.3<br/>Diagram Chat and<br/>AI Mermaid Generation"]
+  p44["4.4<br/>AI SQL Generation<br/>from ER Diagram"]
+  p45["4.5<br/>Specification<br/>Authoring"]
+  p46["4.6<br/>Test Scenario and<br/>Test Case Management"]
+  p47["4.7<br/>User Manual<br/>Authoring"]
+  p48["4.8<br/>AI Batch Generation and<br/>Navigator Assistant"]
+
+  %% ===== 4.1 Requirement Management =====
+  user -->|"manage requirement"| p41
+  p41 <-->|"requirement records"| d4
+  p41 -->|"project list"| d3ext
+  p41 -->|"LOV request"| d7ext
+  p41 -->|"create revision"| d5ext
+  p41 -->|"AI draft prompt"| ai
+  ai -->|"draft content"| p41
+  p41 -->|"exported PDF"| user
+
+  %% ===== 4.2 Diagram Tab and Version Management =====
+  user -->|"manage diagram tab"| p42
+  p42 <-->|"tab and version data"| d4
+  p42 -->|"create revision"| d5ext
+
+  %% ===== 4.3 Diagram Chat and AI Mermaid Generation =====
+  user -->|"send chat message"| p43
+  p43 <-->|"chat history"| d4
+  p43 -->|"generation prompt"| ai
+  ai -->|"mermaid and reply"| p43
+
+  %% ===== 4.4 AI SQL Generation from ER Diagram =====
+  user -->|"request SQL generation"| p44
+  p44 -->|"schema prompt"| ai
+  ai -->|"generated SQL DDL"| p44
+  p44 <-->|"SQL history"| d4
+  p44 -->|"SQL script"| user
+
+  %% ===== 4.5 Specification Authoring =====
+  user -->|"manage specification"| p45
+  p45 <-->|"specification records"| d4
+  p45 -->|"draft prompt"| ai
+  ai -->|"draft content"| p45
+  p45 -->|"create revision"| d5ext
+  p45 -->|"exported PDF"| user
+
+  %% ===== 4.6 Test Scenario and Test Case Management =====
+  user -->|"manage test scenario/case"| p46
+  p46 <-->|"scenario/case records"| d4
+  p46 -->|"draft prompt"| ai
+  ai -->|"draft content"| p46
+  p46 -->|"exported UAT report"| user
+
+  %% ===== 4.7 User Manual Authoring =====
+  user -->|"manage user manual"| p47
+  p47 <-->|"manual records"| d4
+  p47 -->|"draft prompt"| ai
+  ai -->|"draft content"| p47
+  p47 -->|"create revision"| d5ext
+  p47 -->|"exported PDF"| user
+
+  %% ===== 4.8 AI Batch Generation and Navigator Assistant =====
+  user -->|"batch generate request"| p48
+  p48 -->|"batch prompt"| ai
+  ai -->|"generated items"| p48
+  p48 -->|"save items"| d4
+  user -->|"ask workflow question"| p48
+  p48 -->|"navigator prompt"| ai
+  ai -->|"answer and route"| p48
+  p48 -->|"answer and route"| user
+
+  class user,ai entity
+  class p41,p42,p43,p44,p45,p46,p47,p48 process
+  class d4,d3ext,d7ext,d5ext store

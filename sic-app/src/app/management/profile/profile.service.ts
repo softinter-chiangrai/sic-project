@@ -18,6 +18,11 @@ export class ProfileService {
   readonly apiGetComboboxDistrict = `${this.apiProfile}/combobox-district`;
   readonly apiGetComboboxSubDistrict = `${this.apiProfile}/combobox-sub-district`;
 
+  // ===== GET Country by ID =====
+  getCountryById(id: string): Observable<any> {
+    return this.http.get<any>(this.apiGetComboboxCountry, { params: { value: id } });
+  }
+
   // ✅ Profile APIs
   readonly apiGetMe = `${this.apiProfile}/me`;
   readonly apiGetMailCheck = `${this.apiProfile}/mail-check`;

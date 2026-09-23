@@ -1,0 +1,90 @@
+%% title: ERD 04b2 - Traceability / Comment
+%% Module: SIC Requirement / Analysis / Design (part 2 of 2, see erd-04b1-changerequest-review.mmd for Change Request/Design Review)
+%% NOTE: All entities extend BaseEntity or BaseBusinessEntity (Lombok @Data), which contribute these audit/base
+%%       columns not repeated per-entity below: id (PK, UUID), created_by, created_date, updated_by, updated_date,
+%%       is_delete, delete_by, delete_date, rowVersion (xmin). BaseBusinessEntity additionally adds business_id (UUID).
+%%       Only business-specific columns are listed in each entity box.
+%% NOTE on PmTraceLink / PmComment:
+%%       these use POLYMORPHIC association pairs (a "*_type" string column + a "*_id" UUID column) instead of a
+%%       real FK to one table, so the same column pair can point at PmRequirement, PmDiagramTab, PmSpecification,
+%%       PmTestCase, PmTask, PmBug, etc. depending on the value of *_type. Mermaid cannot express "one column set,
+%%       many possible target tables" as a real FK, so these are drawn as dashed/non-identifying relationships
+%%       (`..`) to each documented candidate target, labelled "polymorphic". This is the most accurate
+%%       representation without inventing a constraint that does not exist in the schema.
+%% NOTE: Relationships marked "(inferred)" come from a plain *_id UUID column with FK naming convention but NO
+%%       @ManyToOne/@JoinColumn mapping in the Java source. Relationships marked "(mapped)" are real @ManyToOne.
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    PmTraceLink {
+        uuid project_id
+        string source_type "polymorphic: REQUIREMENT / DFD(diagram) / SPEC / TASK / TEST_CASE / BUG / ER ..."
+        uuid source_id "polymorphic target row id"
+        string target_type "polymorphic: REQUIREMENT / DFD(diagram) / SPEC / TASK / TEST_CASE / BUG / ER ..."
+        uuid target_id "polymorphic target row id"
+        enum relationship_type "TraceRelationship (NAMED_ENUM, DB enum type)"
+    }
+
+    %% Not a table - Java enum com.softinter.sicapi.entity.enums.TraceRelationship, stored as a native Postgres enum
+    %% on pm_trace_link.relationship_type. Shown as a reference box for completeness per task requirements.
+    TraceRelationship {
+        enum DESIGNED_BY "DFD designed from Requirement"
+        enum IMPLEMENTED_BY "ER/Spec/Task implemented from source"
+        enum DOCUMENTED_BY "Spec documents Requirement/ER"
+        enum VERIFIED_BY "TestCase verifies Task"
+        enum FAILED_BY "Bug caused by failed TestCase"
+        enum AFFECTED_BY "used in Impact Analysis"
+        enum RELATED_TO "generic relation"
+    }
+
+    PmComment {
+        string target_type "polymorphic: PROJECT/TASK/REQUIREMENT/etc."
+        uuid target_id "polymorphic target id"
+        uuid parent_comment_id FK "-> PmComment (self, mapped, optional)"
+        string subject
+        text content
+        uuid attachment_group_id
+        boolean is_decision
+        boolean is_question
+        boolean is_resolved
+        boolean pinned
+        string mention_user_id
+        jsonb extra_data
+    }
+
+    %% external entity, defined in erd-04a1-requirement-diagram.mmd (same module)
+    PmRequirement {
+    }
+
+    %% external entity, defined in erd-04a1-requirement-diagram.mmd (same module)
+    PmDiagramTab {
+    }
+
+    %% external entity, defined in erd-04a2-spec-test-manual.mmd (same module)
+    PmSpecification {
+    }
+
+    %% external entity, defined in erd-04a2-spec-test-manual.mmd (same module)
+    PmTestCase {
+    }
+
+    %% external entity, defined in another module diagram
+    PmTask {
+    }
+
+    %% external entity, defined in another module diagram
+    PmBug {
+    }
+
+    PmComment ||--o{ PmComment : "has replies (parent_comment_id, self-ref)"
+
+    PmTraceLink }o--|| TraceRelationship : "relationship_type (enum)"
+    PmTraceLink }o..o{ PmRequirement : "polymorphic source/target"
+    PmTraceLink }o..o{ PmDiagramTab : "polymorphic source/target (DFD/ER)"
+    PmTraceLink }o..o{ PmSpecification : "polymorphic source/target"
+    PmTraceLink }o..o{ PmTestCase : "polymorphic source/target"
+    PmTraceLink }o..o{ PmTask : "polymorphic source/target"
+    PmTraceLink }o..o{ PmBug : "polymorphic source/target"

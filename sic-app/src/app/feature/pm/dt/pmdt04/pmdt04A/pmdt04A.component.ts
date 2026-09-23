@@ -67,6 +67,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
 export class Pmdt04AService {
   private http = inject(HttpClient);
 
+  apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
   apiGetLovRequirementType = `${environment.apiBaseUrl}/api/pm/requirement/lov-type`;
   apiGetLovPriority = `${environment.apiBaseUrl}/api/pm/requirement/lov-priority`;
@@ -207,6 +208,47 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   previewHistoryId: string | null = null;
   copiedId: string | null = null;
   aiAttachedFiles = signal<File[]>([]);
+  projectParams: Record<string, any> = {};
+
+  loadCustomerFromProject(projectId: string): void {
+    if (!projectId) return;
+    this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
+      next: (project) => {
+        if (project?.customerId) {
+          this.formData.patchValue({ customerId: project.customerId } as any);
+          this.projectParams = { customerId: project.customerId };
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  onCustomerSelected(item: any): void {
+    const customerId = item?.value ?? item?.id ?? null;
+    if (customerId) {
+      this.projectParams = { customerId };
+    } else {
+      this.projectParams = {};
+    }
+
+    const currentProjectId = this.form.get('projectId')?.value;
+    if (currentProjectId) {
+      this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${currentProjectId}`).subscribe({
+        next: (project) => {
+          if (project?.customerId !== customerId) {
+            this.form.patchValue({ projectId: null, projectName: null });
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => {
+          this.form.patchValue({ projectId: null, projectName: null });
+          this.cdr.markForCheck();
+        }
+      });
+    }
+    this.cdr.markForCheck();
+  }
 
   // ===== CanDeactivate =====
   isSaved = false;
@@ -465,7 +507,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     // If loaded data doesn't have projectName but has projectId, try to fetch it
-    if (!data.projectName && data.projectId) {
+    if (data.projectId) {
+      this.loadCustomerFromProject(data.projectId);
       const cachedName = (this.customerState.getProjectId() && String(this.customerState.getProjectId()) === String(data.projectId))
         ? this.customerState.getProjectName()
         : null;
@@ -495,8 +538,13 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
   onProjectSelected(item: any): void {
+    const selectedProjectId = item?.value ?? item?.id ?? '';
     const projectName = item ? (item.text ?? item.label ?? '') : '';
     this.formData.patchValue({ projectName } as any);
+    if (selectedProjectId) {
+      this.loadCustomerFromProject(selectedProjectId);
+      this.fetchProjectName(selectedProjectId);
+    }
     this.cdr.markForCheck();
   }
 

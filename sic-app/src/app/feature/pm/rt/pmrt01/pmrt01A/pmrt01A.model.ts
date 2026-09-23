@@ -21,6 +21,7 @@ export interface CustomerModel {
   subDistrictId?: string;
   countryId?: string;
   zipCode?: string;
+  supportLocalAddress?: boolean;
   remark?: string;
   isActive?: boolean;
 

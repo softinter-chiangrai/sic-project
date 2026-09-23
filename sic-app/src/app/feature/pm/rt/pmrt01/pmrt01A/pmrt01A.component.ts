@@ -91,6 +91,12 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     const data = this.route.snapshot.data['form'];
     if (data && data.customer) {
       this.formCustomerData = data.customer;
+      const hasLocalAddress = !!(
+        this.formCustomerData.formGroup.get('supportLocalAddress')?.value ||
+        this.formCustomerData.formGroup.get('provinceId')?.value ||
+        this.formCustomerData.value?.provinceId
+      );
+      this.formCustomerData.formGroup.get('supportLocalAddress')?.setValue(hasLocalAddress);
       this.formCustomerData.formGroup.updateValueAndValidity();
     } else {
       const form = Pmrt01AForm.createForm(this.fb);
@@ -108,6 +114,8 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
 
   // ---- Event Handlers ----
   onCountryChange(event: any): void {
+    const supportLocal = !!event?.supportLocalAddress;
+    this.formCustomerData.formGroup.get('supportLocalAddress')?.setValue(supportLocal);
     this.formCustomerData.formGroup.get('provinceId')?.setValue(null);
     this.formCustomerData.formGroup.get('districtId')?.setValue(null);
     this.formCustomerData.formGroup.get('subDistrictId')?.setValue(null);

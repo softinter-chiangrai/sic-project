@@ -1,0 +1,66 @@
+%% title: DFD Level 1 - Process 1.0 - Authentication, Profile, Business & Access Management
+%%{init: {'flowchart': {'nodeSpacing': 25, 'rankSpacing': 55, 'curve': 'basis'}}}%%
+flowchart LR
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+  keycloak["Keycloak<br/>Identity Provider"]
+
+  p11["1.1<br/>Authentication and<br/>Session Verification"]
+  p12["1.2<br/>Profile Management and<br/>Contact Verification"]
+  p13["1.3<br/>Business Management and<br/>Active Business Switching"]
+  p14["1.4<br/>Business Invite and<br/>Membership Management"]
+  p15["1.5<br/>Role and Program<br/>Access Management"]
+  p16["1.6<br/>Menu, User and Task<br/>Lookup"]
+  p17["1.7<br/>Audit Log<br/>Management"]
+
+  d1["D1<br/>Auth / Profile / Business /<br/>Access Data"]
+  d5ext["D5<br/>Task / Approval / Bug<br/>(external)"]
+
+  %% 1.1 Authentication
+  user -->|"login"| p11
+  p11 -->|"validate token"| keycloak
+  keycloak -->|"token claims"| p11
+  p11 <-->|"profile summary"| d1
+  p11 -->|"user info"| user
+
+  %% 1.2 Profile management and verification
+  user -->|"save profile"| p12
+  user -->|"verify request"| p12
+  p12 <-->|"duplicate check"| d1
+  p12 -->|"profile, token"| user
+  user -->|"verify token"| p12
+  p12 -->|"verify status"| user
+
+  %% 1.3 Business management and switching
+  user -->|"manage business"| p13
+  p13 <-->|"business records"| d1
+  p13 -->|"business status"| user
+
+  %% 1.4 Invite and membership
+  user -->|"manage invites"| p14
+  p14 <-->|"invite, member data"| d1
+  p14 -->|"invite result"| user
+
+  %% 1.5 Role and program access
+  user -->|"manage roles"| p15
+  p15 <-->|"permission data"| d1
+  p15 -->|"role result"| user
+
+  %% 1.6 Menu, user and task lookup
+  user -->|"request menu"| p16
+  p16 <-->|"permission data"| d1
+  p16 -->|"task list"| d5ext
+  d5ext -->|"task records"| p16
+  p16 -->|"menu, tasks"| user
+
+  %% 1.7 Audit log
+  user -->|"search logs"| p17
+  p17 <-->|"audit records"| d1
+  p17 -->|"log result"| user
+
+  class user,keycloak entity
+  class p11,p12,p13,p14,p15,p16,p17 process
+  class d1,d5ext store

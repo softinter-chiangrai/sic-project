@@ -472,7 +472,13 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         dto.setMiddleNameLocal(business.getMiddleNameLocal());
         dto.setLastNameLocal(business.getLastNameLocal());
         dto.setCountryId(business.getCountry() != null ? business.getCountry().getId() : null);
-        dto.setSupportLocalAddress(business.getSupportLocalAddress());
+        Boolean supportLocal = false;
+        if (business.getCountry() != null && business.getCountry().getSupportLocalAddress() != null) {
+            supportLocal = business.getCountry().getSupportLocalAddress();
+        } else if (Boolean.TRUE.equals(business.getSupportLocalAddress()) || business.getProvince() != null) {
+            supportLocal = true;
+        }
+        dto.setSupportLocalAddress(supportLocal);
         dto.setAddressEn(business.getAddressEn());
         dto.setAddressLocal(business.getAddressLocal());
         dto.setProvinceId(business.getProvince() != null ? business.getProvince().getId() : null);

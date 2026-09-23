@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize, forkJoin, map } from 'rxjs';
@@ -40,6 +40,7 @@ export class Profile implements OnInit {
   readonly service = inject(ProfileService);
   readonly router = inject(Router);
   readonly translate = inject(TranslateService);
+  private readonly cdr = inject(ChangeDetectorRef);
 
   formProfileData!: SicFromData<ProfileModel>;
   formVerifyData!: SicFromData<EmailVerifyModel>;
@@ -70,6 +71,30 @@ export class Profile implements OnInit {
     this.originalEmail = this.formProfileData.formGroup.get('email')?.value || '';
     this.originalPhone = this.formProfileData.formGroup.get('phoneNumber')?.value || '';
     this.originalTaxId = this.formProfileData.formGroup.get('taxId')?.value || '';
+
+    // ✅ ตรวจสอบและกำหนดค่า supportLocalAddress เมื่อเปิดหน้าจอ
+    const hasLocal = !!(
+      this.formProfileData.formGroup.get('supportLocalAddress')?.value ||
+      this.formProfileData.formGroup.get('provinceId')?.value ||
+      this.formProfileData.value?.provinceId
+    );
+    if (hasLocal) {
+      this.formProfileData.formGroup.get('supportLocalAddress')?.setValue(true);
+    } else {
+      const countryId = this.formProfileData.formGroup.get('countryId')?.value;
+      if (countryId) {
+        this.service.getCountryById(countryId).subscribe({
+          next: (res: any) => {
+            const item = Array.isArray(res) ? res[0] : (res?.data?.[0] ?? res);
+            if (item?.supportLocalAddress) {
+              this.formProfileData.formGroup.get('supportLocalAddress')?.setValue(true);
+              this.cdr.markForCheck();
+            }
+          },
+          error: () => {}
+        });
+      }
+    }
   }
 
   onCountryChange(event: any): void {

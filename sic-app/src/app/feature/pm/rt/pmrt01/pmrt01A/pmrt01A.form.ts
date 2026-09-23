@@ -24,6 +24,7 @@ export class Pmrt01AForm {
       subDistrictId: fb.control(null),
       countryId: fb.control(null),
       zipCode: fb.control(null, [Validators.maxLength(20)]),
+      supportLocalAddress: fb.control(false),
       remark: fb.control(null, [Validators.maxLength(500)]),
       isActive: fb.control(true),
       uploadGroupId: fb.control(null),

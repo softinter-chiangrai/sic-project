@@ -1,0 +1,61 @@
+%% title: DFD Level 1 - Process 4.0 - Requirement, Analysis, Design and Traceability (Part B: Traceability, Impact Analysis, Change Request, Design Review, Document Version, Edit Session)
+%%{init: {'flowchart': {'nodeSpacing': 25, 'rankSpacing': 60, 'curve': 'basis'}}}%%
+flowchart TB
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  %% ===== External entities =====
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+
+  %% ===== Data stores =====
+  d4["D4<br/>Requirement / Analysis /<br/>Design / Traceability Data"]
+  d3ext["D3<br/>Customer/Project data"]
+  d5ext["D5<br/>Task/Approval/Bug data"]
+  d1ext["D1<br/>Auth/Business data"]
+
+  %% ===== Sub-processes =====
+  p49["4.9<br/>Trace Link<br/>Management"]
+  p410["4.10<br/>Impact<br/>Analysis"]
+  p411["4.11<br/>Change Request<br/>Workflow"]
+  p412["4.12<br/>Design Review<br/>Workflow"]
+  p413["4.13<br/>Document Version<br/>Control"]
+  p414["4.14<br/>Edit Session<br/>Locking"]
+
+  %% ===== 4.9 Trace Link Management =====
+  user -->|"manage trace link"| p49
+  p49 <-->|"trace link data"| d4
+
+  %% ===== 4.10 Impact Analysis =====
+  user -->|"preview/save impact"| p410
+  p410 <-->|"impact analysis data"| d4
+  p410 -->|"impact result"| user
+
+  %% ===== 4.11 Change Request Workflow =====
+  user -->|"manage change request"| p411
+  p411 <-->|"change request data"| d4
+  p411 -->|"request impact analysis"| p410
+  p410 -->|"impact result"| p411
+  p411 <-->|"assignee status"| d5ext
+  p411 -->|"exported PDF"| user
+
+  %% ===== 4.12 Design Review Workflow =====
+  user -->|"manage design review"| p412
+  p412 <-->|"review and comment data"| d4
+  p412 -->|"project/req combobox"| d3ext
+  p412 -->|"task combobox"| d5ext
+  p412 -->|"reviewer list"| d1ext
+  p412 -->|"create revision"| d5ext
+
+  %% ===== 4.13 Document Version Control =====
+  user -->|"manage document version"| p413
+  p413 <-->|"version records"| d4
+
+  %% ===== 4.14 Edit Session Locking =====
+  user -->|"check/close edit session"| p414
+  p414 <-->|"edit session data"| d4
+  p414 -->|"lock status"| user
+
+  class user entity
+  class p49,p410,p411,p412,p413,p414 process
+  class d4,d3ext,d5ext,d1ext store

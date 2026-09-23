@@ -14,6 +14,7 @@ export class Pmdt07Service {
     private baseUrl = environment.apiBaseUrl + '/api/pm/specifications';
 
     // Combobox endpoints
+    apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
     apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
     apiGetLovPriority = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
     apiGetLovStatus = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=DOC_STATUS`;

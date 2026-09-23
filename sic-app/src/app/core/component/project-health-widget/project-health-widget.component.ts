@@ -107,11 +107,11 @@ export class ProjectHealthWidgetComponent implements OnInit {
         score: 100,
         status: 'Green',
         factors: [
-          { name: 'ความคืบหน้างาน', value: 25, weight: 25, percent: 100, detail: 'ไม่มีงาน (0/0)', color: 'var(--crm-success)' },
-          { name: 'การใช้ Manday (จากงบทั้งหมด)', value: 25, weight: 25, percent: 0, detail: '0 / 0 Manday (0%)', color: 'var(--crm-success)' },
-          { name: 'คุณภาพ & การแก้ไข Bug', value: 20, weight: 20, percent: 100, detail: 'สมบูรณ์ ไม่มี Bug ในระบบ (0/0)', color: 'var(--crm-success)' },
-          { name: 'ความคืบหน้า Phase', value: 15, weight: 15, percent: 100, detail: 'ไม่มี Phase (0/0)', color: 'var(--crm-success)' },
-          { name: 'สถานะและกำหนดการ', value: 15, weight: 15, percent: 100, detail: 'ตามแผนงาน', color: 'var(--crm-success)' },
+          { name: 'ความคืบหน้างาน', nameKey: 'PROJECT_HEALTH_FACTOR_TASKS', value: 25, weight: 25, percent: 100, detail: 'ไม่มีงาน (0/0)', detailKey: 'PROJECT_HEALTH_DETAIL_NO_TASKS', color: 'var(--crm-success)' },
+          { name: 'การใช้ Manday (จากงบทั้งหมด)', nameKey: 'PROJECT_HEALTH_FACTOR_MANDAY', value: 25, weight: 25, percent: 0, detail: '0 / 0 Manday (0%)', detailKey: 'PROJECT_HEALTH_DETAIL_MANDAY_USAGE', detailParams: { used: 0, budget: 0, percent: 0 }, color: 'var(--crm-success)' },
+          { name: 'คุณภาพ & การแก้ไข Bug', nameKey: 'PROJECT_HEALTH_FACTOR_QUALITY', value: 20, weight: 20, percent: 100, detail: 'สมบูรณ์ ไม่มี Bug ในระบบ (0/0)', detailKey: 'PROJECT_HEALTH_DETAIL_NO_BUGS', color: 'var(--crm-success)' },
+          { name: 'ความคืบหน้า Phase', nameKey: 'PROJECT_HEALTH_FACTOR_PHASE', value: 15, weight: 15, percent: 100, detail: 'ไม่มี Phase (0/0)', detailKey: 'PROJECT_HEALTH_DETAIL_NO_PHASES', color: 'var(--crm-success)' },
+          { name: 'สถานะและกำหนดการ', nameKey: 'PROJECT_HEALTH_FACTOR_TIMELINE', value: 15, weight: 15, percent: 100, detail: 'ตามแผนงาน', detailKey: 'PROJECT_HEALTH_DETAIL_ON_SCHEDULE', color: 'var(--crm-success)' },
         ],
       };
     }
@@ -120,12 +120,16 @@ export class ProjectHealthWidgetComponent implements OnInit {
     let taskScore = 25;
     let taskPercent = 100;
     let taskDetail = 'ไม่มีงาน (0/0)';
+    let taskDetailKey = 'PROJECT_HEALTH_DETAIL_NO_TASKS';
+    let taskDetailParams: Record<string, any> | undefined = undefined;
     let taskColor = 'var(--crm-success)';
     if (p.taskCount > 0) {
       const taskRatio = p.taskCompletedCount / p.taskCount;
       taskPercent = Math.round(taskRatio * 100);
       taskScore = Math.round(taskRatio * 25);
       taskDetail = `งานเสร็จ ${p.taskCompletedCount}/${p.taskCount} งาน (${taskPercent}%)`;
+      taskDetailKey = 'PROJECT_HEALTH_DETAIL_TASKS_PROGRESS';
+      taskDetailParams = { completed: p.taskCompletedCount, total: p.taskCount, percent: taskPercent };
       taskColor = taskPercent >= 80 ? 'var(--crm-success)' : taskPercent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)';
     }
 
@@ -133,11 +137,14 @@ export class ProjectHealthWidgetComponent implements OnInit {
     let mandayScore = 25;
     let mandayPercent = 0;
     let mandayDetail = `${p.usedManday || 0} / ${p.budgetManday || 0} Manday (0%)`;
+    let mandayDetailKey = 'PROJECT_HEALTH_DETAIL_MANDAY_USAGE';
+    let mandayDetailParams: Record<string, any> = { used: p.usedManday || 0, budget: p.budgetManday || 0, percent: 0 };
     let mandayColor = 'var(--crm-success)';
     if (p.budgetManday > 0) {
       const mandayRatio = (p.usedManday || 0) / p.budgetManday;
       mandayPercent = Math.min(100, Math.round(mandayRatio * 100));
       mandayDetail = `${p.usedManday || 0} / ${p.budgetManday} Manday (${Math.round(mandayRatio * 100)}%)`;
+      mandayDetailParams = { used: p.usedManday || 0, budget: p.budgetManday, percent: Math.round(mandayRatio * 100) };
 
       if (mandayRatio <= 0.8) {
         mandayScore = 25;
@@ -161,6 +168,8 @@ export class ProjectHealthWidgetComponent implements OnInit {
     let bugScore = 20;
     let bugPercent = 100;
     let bugDetail = 'สมบูรณ์ ไม่มี Bug ในระบบ (0/0)';
+    let bugDetailKey = 'PROJECT_HEALTH_DETAIL_NO_BUGS';
+    let bugDetailParams: Record<string, any> | undefined = undefined;
     let bugColor = 'var(--crm-success)';
     if (p.bugCount > 0) {
       const closedBugs = Math.max(0, p.bugCount - (p.bugOpenCount || 0));
@@ -168,6 +177,8 @@ export class ProjectHealthWidgetComponent implements OnInit {
       bugPercent = Math.round(closeRatio * 100);
       bugScore = Math.round(closeRatio * 20);
       bugDetail = `แก้ไขแล้ว ${closedBugs}/${p.bugCount} Bug (${bugPercent}%)`;
+      bugDetailKey = 'PROJECT_HEALTH_DETAIL_BUGS_PROGRESS';
+      bugDetailParams = { closed: closedBugs, total: p.bugCount, percent: bugPercent };
       bugColor = bugPercent >= 80 ? 'var(--crm-success)' : bugPercent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)';
     }
 
@@ -175,6 +186,8 @@ export class ProjectHealthWidgetComponent implements OnInit {
     let phaseScore = 15;
     let phasePercent = 100;
     let phaseDetail = 'ไม่มี Phase (0/0)';
+    let phaseDetailKey = 'PROJECT_HEALTH_DETAIL_NO_PHASES';
+    let phaseDetailParams: Record<string, any> | undefined = undefined;
     let phaseColor = 'var(--crm-success)';
     if (p.recentPhases && p.recentPhases.length > 0) {
       const totalProgress = p.recentPhases.reduce((sum, phase) => sum + (phase.progress || 0), 0);
@@ -183,6 +196,8 @@ export class ProjectHealthWidgetComponent implements OnInit {
       phaseScore = Math.round((avgProgress / 100) * 15);
       const completedPhases = p.recentPhases.filter((ph) => ph.status === 'Completed' || (ph.progress || 0) >= 100).length;
       phaseDetail = `${completedPhases}/${p.recentPhases.length} Phase (${phasePercent}%)`;
+      phaseDetailKey = 'PROJECT_HEALTH_DETAIL_PHASES_PROGRESS';
+      phaseDetailParams = { completed: completedPhases, total: p.recentPhases.length, percent: phasePercent };
       phaseColor = phasePercent >= 80 ? 'var(--crm-success)' : phasePercent >= 50 ? 'var(--crm-warning)' : 'var(--crm-danger)';
     }
 
@@ -190,6 +205,7 @@ export class ProjectHealthWidgetComponent implements OnInit {
     let statusScore = 15;
     let statusPercent = 100;
     let statusDetail = 'ตามแผนงาน';
+    let statusDetailKey = 'PROJECT_HEALTH_DETAIL_ON_SCHEDULE';
     let statusColor = 'var(--crm-success)';
     let isOverdue = false;
 
@@ -197,12 +213,14 @@ export class ProjectHealthWidgetComponent implements OnInit {
       statusScore = 3;
       statusPercent = 20;
       statusDetail = 'ล่าช้ากว่ากำหนด';
+      statusDetailKey = 'PROJECT_HEALTH_DETAIL_DELAYED';
       statusColor = 'var(--crm-danger)';
       isOverdue = true;
     } else if (p.status === 'Closed' || p.status === 'Delivered' || p.status === 'Done') {
       statusScore = 15;
       statusPercent = 100;
       statusDetail = 'เสร็จสิ้นตามเป้าหมาย';
+      statusDetailKey = 'PROJECT_HEALTH_DETAIL_COMPLETED';
       statusColor = 'var(--crm-success)';
     } else if (p.plannedEndDate) {
       const now = new Date();
@@ -211,12 +229,14 @@ export class ProjectHealthWidgetComponent implements OnInit {
         statusScore = 3;
         statusPercent = 20;
         statusDetail = 'เกินกำหนดส่งมอบ';
+        statusDetailKey = 'PROJECT_HEALTH_DETAIL_OVERDUE';
         statusColor = 'var(--crm-danger)';
         isOverdue = true;
       } else {
         statusScore = 15;
         statusPercent = 100;
         statusDetail = 'ตามแผนงาน';
+        statusDetailKey = 'PROJECT_HEALTH_DETAIL_ON_SCHEDULE';
         statusColor = 'var(--crm-success)';
       }
     }
@@ -242,11 +262,11 @@ export class ProjectHealthWidgetComponent implements OnInit {
       score: totalScore,
       status,
       factors: [
-        { name: 'ความคืบหน้างาน', value: taskScore, weight: 25, percent: taskPercent, detail: taskDetail, color: taskColor },
-        { name: 'การใช้ Manday (จากงบทั้งหมด)', value: mandayScore, weight: 25, percent: mandayPercent, detail: mandayDetail, color: mandayColor },
-        { name: 'คุณภาพ & การแก้ไข Bug', value: bugScore, weight: 20, percent: bugPercent, detail: bugDetail, color: bugColor },
-        { name: 'ความคืบหน้า Phase', value: phaseScore, weight: 15, percent: phasePercent, detail: phaseDetail, color: phaseColor },
-        { name: 'สถานะและกำหนดการ', value: statusScore, weight: 15, percent: statusPercent, detail: statusDetail, color: statusColor },
+        { name: 'ความคืบหน้างาน', nameKey: 'PROJECT_HEALTH_FACTOR_TASKS', value: taskScore, weight: 25, percent: taskPercent, detail: taskDetail, detailKey: taskDetailKey, detailParams: taskDetailParams, color: taskColor },
+        { name: 'การใช้ Manday (จากงบทั้งหมด)', nameKey: 'PROJECT_HEALTH_FACTOR_MANDAY', value: mandayScore, weight: 25, percent: mandayPercent, detail: mandayDetail, detailKey: mandayDetailKey, detailParams: mandayDetailParams, color: mandayColor },
+        { name: 'คุณภาพ & การแก้ไข Bug', nameKey: 'PROJECT_HEALTH_FACTOR_QUALITY', value: bugScore, weight: 20, percent: bugPercent, detail: bugDetail, detailKey: bugDetailKey, detailParams: bugDetailParams, color: bugColor },
+        { name: 'ความคืบหน้า Phase', nameKey: 'PROJECT_HEALTH_FACTOR_PHASE', value: phaseScore, weight: 15, percent: phasePercent, detail: phaseDetail, detailKey: phaseDetailKey, detailParams: phaseDetailParams, color: phaseColor },
+        { name: 'สถานะและกำหนดการ', nameKey: 'PROJECT_HEALTH_FACTOR_TIMELINE', value: statusScore, weight: 15, percent: statusPercent, detail: statusDetail, detailKey: statusDetailKey, color: statusColor },
       ],
     };
   });
@@ -267,6 +287,15 @@ export class ProjectHealthWidgetComponent implements OnInit {
       Red: 'bg-rose-500/10 text-rose-500 border border-rose-500/20',
     };
     return map[status] || 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20';
+  }
+
+  getHealthStatusKey(status: string): string {
+    const map: Record<string, string> = {
+      Green: 'PROJECT_HEALTH_STATUS_GOOD',
+      Yellow: 'PROJECT_HEALTH_STATUS_WARNING',
+      Red: 'PROJECT_HEALTH_STATUS_CRITICAL',
+    };
+    return map[status] || 'PROJECT_HEALTH_STATUS_GOOD';
   }
 
   getHealthStatusText(status: string): string {

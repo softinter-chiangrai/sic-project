@@ -1,0 +1,112 @@
+%% title: ERD 02 - Chat / Messaging / Notification
+
+%% NOTE: su_message (i18n lookup) and su_notification have NO FK/relationship columns in code at all
+%% (recipient/sender are plain strings, no @ManyToOne) - they are intentionally left off this diagram as
+%% standalone tables (drawing them as disconnected boxes only added whitespace, no real relationship info).
+%% Columns: su_message(id PK, module_code, program_code, message_code, message_en, message_local, + audit columns)
+%% su_notification(id PK, business_id, recipient_user_id, sender_id, sender_name, title, message, type, link_url, is_read, + audit columns)
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 4, "entityPadding": 6, "minEntityWidth": 60, "minEntityHeight": 25, "fontSize": 16}}}%%
+
+    SU_CHAT_GROUP {
+        UUID id PK
+        UUID business_id
+        varchar_200 name
+        varchar_100 created_by
+        timestamp created_date
+        varchar_100 updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar_100 delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    SU_CHAT_GROUP_MEMBER {
+        UUID id PK
+        UUID business_id
+        UUID group_id FK
+        varchar_100 user_id
+        varchar_100 created_by
+        timestamp created_date
+        varchar_100 updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar_100 delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    SU_CHAT_GROUP_LOG {
+        UUID id PK
+        UUID business_id
+        UUID group_id FK
+        varchar_100 sender_id
+        varchar_100 sender_name
+        varchar_4000 message
+        ChatMessageType message_type
+        UUID attachment_id FK
+        boolean is_cancelled
+        timestamp cancelled_at
+        varchar_100 cancelled_by
+        varchar_100 created_by
+        timestamp created_date
+        varchar_100 updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar_100 delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    SU_CHAT_GROUP_CALL_PARTICIPANT {
+        UUID id PK
+        UUID log_id "FK by convention, no JPA relation declared"
+        varchar_100 user_id
+        varchar_100 created_by
+        timestamp created_date
+        varchar_100 updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar_100 delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    SU_CHAT_LOG {
+        UUID id PK
+        UUID business_id
+        varchar_100 sender_id
+        varchar_100 receiver_id
+        varchar_100 sender_name
+        varchar_100 receiver_name
+        varchar_4000 message
+        ChatMessageType message_type
+        UUID attachment_id FK
+        boolean is_cancelled
+        timestamp cancelled_at
+        varchar_100 cancelled_by
+        boolean call_accepted
+        int call_duration_seconds
+        boolean is_read
+        varchar_100 created_by
+        timestamp created_date
+        varchar_100 updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar_100 delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    %% external entity, defined in another module diagram
+    SU_UPLOAD {
+    }
+
+    SU_CHAT_GROUP ||--o{ SU_CHAT_GROUP_MEMBER : "has members"
+    SU_CHAT_GROUP ||--o{ SU_CHAT_GROUP_LOG : "has messages"
+    SU_CHAT_GROUP_LOG }o--o| SU_UPLOAD : "has attachment"
+    SU_CHAT_LOG }o--o| SU_UPLOAD : "has attachment"
+    SU_CHAT_LOG ||--o{ SU_CHAT_GROUP_CALL_PARTICIPANT : "call participants (inferred, no @JoinColumn)"

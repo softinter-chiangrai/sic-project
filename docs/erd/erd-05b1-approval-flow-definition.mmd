@@ -1,0 +1,91 @@
+%% title: ERD 05b1 - Approval Flow Definition / Approval
+%% Module: Approval workflow engine, flow definition + instance (part 3 of 4, see erd-05b2 for StepStatus/Log/Reminder)
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    %% external entity, defined in another module diagram
+    SuUpload {
+    }
+
+    %% external entity, defined in erd-05b2-approval-execution.mmd (same module)
+    PmApprovalStepStatus {
+    }
+
+    PmApprovalFlow {
+        UUID id PK
+        UUID business_id
+        string flow_code UK
+        string flow_name
+        string document_type
+        ApprovalMode approval_mode "enum ApprovalMode"
+        boolean is_active
+        string description
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalFlowStep {
+        UUID id PK
+        UUID flow_id FK
+        int step_order
+        string step_name
+        string approver_role
+        string approver_user_id
+        boolean is_required
+        int timeout_days
+        string timeout_action
+        boolean can_skip
+        string condition_expression
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApproval {
+        UUID id PK
+        UUID business_id
+        string document_type "polymorphic target type"
+        UUID document_id "polymorphic target id"
+        string document_code
+        string document_title
+        string version
+        string requested_by
+        string requested_by_name
+        timestamp requested_date
+        UUID flow_id FK
+        UUID current_step_id FK "nullable"
+        ApprovalStatus status "enum ApprovalStatus"
+        string final_approver
+        timestamp final_approval_date
+        string comment
+        UUID attachment_id FK "nullable, external SuUpload"
+        UUID reference_id
+        boolean is_active
+        json extra_data
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalFlow ||--o{ PmApprovalFlowStep : "defines"
+    PmApprovalFlow ||--o{ PmApproval : "governs"
+    PmApprovalFlowStep |o--o{ PmApproval : "current step of"
+    PmApprovalFlowStep ||--o{ PmApprovalStepStatus : "tracked by"
+    PmApproval ||--o{ PmApprovalStepStatus : "has"
+    SuUpload |o--o{ PmApproval : "attached to"

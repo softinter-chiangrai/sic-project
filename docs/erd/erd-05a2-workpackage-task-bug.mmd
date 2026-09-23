@@ -1,0 +1,118 @@
+%% title: ERD 05a2 - Work Package / Task / Bug
+%% Module: Project work-breakdown structure, execution level (part 2 of 4, see erd-05a1 for Phase/Milestone, erd-05b1/05b2 for approval workflow)
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    %% external entity, defined in erd-05a1-phase-milestone.mmd (same module)
+    PmMilestone {
+    }
+
+    %% external entity, defined in another module diagram
+    PmSpecification {
+    }
+
+    %% external entity, defined in another module diagram
+    PmTestCase {
+    }
+
+    PmWorkPackage {
+        UUID id PK
+        UUID business_id
+        UUID milestone_id FK
+        string package_name
+        string description
+        date start_date
+        date end_date
+        string color
+        string status
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmTask {
+        UUID id PK
+        UUID business_id
+        UUID work_package_id FK "nullable"
+        UUID spec_id FK "nullable, external PmSpecification"
+        string task_code
+        string task_name
+        string description
+        string assigned_to
+        date start_date
+        date end_date
+        date actual_start
+        date actual_end
+        int estimate_manday
+        string color
+        int actual_manday
+        string status
+        string priority
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmTaskAssignee {
+        UUID id PK
+        UUID business_id
+        UUID task_id FK
+        string user_id
+        string role_in_task
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmBug {
+        UUID id PK
+        UUID business_id
+        UUID project_id "plain column, no JPA relation"
+        UUID task_id FK "nullable, also mirrors relation task"
+        UUID test_case_id FK "nullable, external PmTestCase, mirrors relation testCase"
+        string bug_code
+        string title
+        string description
+        string steps_to_reproduce
+        string environment
+        string issue_type
+        UUID attachment_group_id
+        string severity
+        string priority
+        string found_by
+        string assigned_to
+        timestamp found_date
+        date fix_due_date
+        timestamp fixed_date
+        string status
+        string related_spec
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmMilestone ||--o{ PmWorkPackage : "has"
+    PmWorkPackage |o--o{ PmTask : "has"
+    PmSpecification |o--o{ PmTask : "specifies"
+    PmTask ||--o{ PmTaskAssignee : "assigned to"
+    PmTask |o--o{ PmBug : "reported for"
+    PmTestCase |o--o{ PmBug : "found via"

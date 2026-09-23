@@ -1,0 +1,40 @@
+%% title: DFD Level 0 - Context Diagram - SIC Project Management System
+%% notation: Gane-Sarson box style (rectangle=process/entity, grey rectangle=data store)
+%%{init: {'flowchart': {'nodeSpacing': 25, 'rankSpacing': 55, 'curve': 'basis'}}}%%
+flowchart LR
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+  customer["ลูกค้า / ผู้เกี่ยวข้องภายนอก"]
+  keycloak["Keycloak<br/>Identity Provider"]
+  ai["AI Provider<br/>Gemini / Claude"]
+  report["Report Service"]
+
+  sic["0<br/>SIC Project<br/>Management System"]
+
+  db["D1-D7<br/>PostgreSQL"]
+  object["D8<br/>SeaweedFS / S3"]
+
+  user -->|"requests"| sic
+  sic -->|"data, screens"| user
+
+  customer -->|"requirement, sign-off"| sic
+  sic -->|"status, delivery, invoice"| customer
+
+  sic -->|"token request"| keycloak
+  keycloak -->|"JWT claims"| sic
+
+  sic -->|"generation prompt"| ai
+  ai -->|"AI draft"| sic
+
+  sic -->|"report request"| report
+  report -->|"report file"| sic
+
+  sic <-->|"CRUD data"| db
+  sic <-->|"file object"| object
+
+  class user,customer,keycloak,ai,report entity
+  class sic process
+  class db,object store

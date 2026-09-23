@@ -1,0 +1,57 @@
+%% title: DFD Level 1 - Process 2.0 - Chat, Messaging & Notification
+%%{init: {'flowchart': {'nodeSpacing': 25, 'rankSpacing': 55, 'curve': 'basis'}}}%%
+flowchart LR
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+
+  p21["2.1<br/>Chat Group<br/>Management"]
+  p22["2.2<br/>Direct and Group<br/>Messaging"]
+  p23["2.3<br/>Real-Time Chat<br/>Transport"]
+  p24["2.4<br/>Project Discussion<br/>Threads"]
+  p25["2.5<br/>System Messages and<br/>Localization"]
+  p26["2.6<br/>Notification<br/>Center"]
+
+  d2["D2<br/>Chat / Messaging /<br/>Notification Data"]
+  d1ext["D1<br/>Auth / Business Data<br/>(external)"]
+  d3ext["D3<br/>Customer / Project / Finance<br/>(external)"]
+
+  %% 2.1 Chat Group Management
+  user -->|"create/rename group"| p21
+  user -->|"member list"| p21
+  p21 -->|"business users"| d1ext
+  p21 <-->|"group, member data"| d2
+  p21 -->|"group list"| user
+
+  %% 2.2 Direct and Group Messaging
+  user -->|"send/edit message"| p22
+  p22 <-->|"chat log"| d2
+  p22 -->|"chat message"| user
+
+  %% 2.3 Real-Time Chat Transport
+  user -->|"connect"| p23
+  p23 -->|"connection token"| user
+  p22 -->|"broadcast"| p23
+  p23 -->|"push event"| user
+
+  %% 2.4 Project Discussion Threads
+  user -->|"post/reply/comment"| p24
+  p24 -->|"validate project"| d3ext
+  p24 <-->|"discussion data"| d2
+  p24 -->|"posts, replies"| user
+
+  %% 2.5 System Messages and Localization
+  user -->|"manage system msg"| p25
+  p25 <-->|"messages, i18n"| d2
+  p25 -->|"translation result"| user
+
+  %% 2.6 Notification Center
+  user -->|"get, mark read"| p26
+  p26 <-->|"notification data"| d2
+  p26 -->|"notification feed"| user
+
+  class user entity
+  class p21,p22,p23,p24,p25,p26 process
+  class d2,d1ext,d3ext store

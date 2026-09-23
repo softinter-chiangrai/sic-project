@@ -1,0 +1,224 @@
+%% title: ERD 01a - Business / Profile / Role / Program
+%% Module: Authentication / Profile / Business / Access Management (part 1 of 2, see erd-01b-access-invite-audit.mmd for invite/audit/task)
+%% Common audit columns inherited from BaseEntity (id PK, created_by, created_date, updated_by, updated_date, is_delete, delete_by, delete_date, xmin/row_version)
+%% are listed inline on each entity below rather than in a separate box, since they are real DB columns.
+%% BaseBusinessEntity additionally adds a business_id column (see entities marked "extends BaseBusinessEntity" in source).
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    su_profile {
+        UUID id PK
+        string user_id UK
+        string tax_id
+        UUID title_id FK
+        UUID country_id FK
+        UUID province_id FK
+        UUID district_id FK
+        UUID sub_district_id FK
+        string first_name_en
+        string middle_name_en
+        string last_name_en
+        string first_name_local
+        string middle_name_local
+        string last_name_local
+        boolean support_local_address
+        string address_en
+        string address_local
+        string zip_code
+        string email
+        string phone_number
+        UUID upload_group_id
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_business {
+        UUID id PK
+        string tax_id
+        string business_code
+        string branch_code
+        string person_type
+        UUID title_id FK
+        string first_name_en
+        string middle_name_en
+        string last_name_en
+        string first_name_local
+        string middle_name_local
+        string last_name_local
+        UUID country_id FK
+        boolean support_local_address
+        string address_en
+        string address_local
+        UUID province_id FK
+        UUID district_id FK
+        UUID sub_district_id FK
+        string zip_code
+        string email
+        string phone_number
+        string fax
+        UUID upload_group_id
+        boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_business_role {
+        UUID id PK
+        UUID business_id FK
+        UUID parent_role_id FK
+        string role_code
+        string role_name_en
+        string role_name_local
+        string role_level
+        int sort_order
+        boolean is_active
+        string color
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_business_role_program {
+        UUID id PK
+        UUID business_role_id FK
+        UUID program_id FK
+        boolean is_active
+        boolean is_add
+        boolean is_back
+        boolean is_print
+        boolean is_remove
+        boolean is_save
+        boolean is_search
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_user_business {
+        UUID id PK
+        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        string user_id
+        boolean is_default
+        boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_user_business_role {
+        UUID id PK
+        UUID user_business_id FK
+        UUID business_role_id FK
+        boolean is_primary
+        boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_program {
+        UUID id PK
+        UUID parent_program_id FK
+        string program_code
+        string icon
+        string name_en
+        string name_local
+        string route_path
+        int sort_order
+        boolean is_active
+        boolean is_add
+        boolean is_back
+        boolean is_print
+        boolean is_remove
+        boolean is_save
+        boolean is_search
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    %% external entity, defined in another module diagram (reference/db module)
+    DbTitle {
+    }
+
+    %% external entity, defined in another module diagram (reference/db module)
+    DbCountry {
+    }
+
+    %% external entity, defined in another module diagram (reference/db module)
+    DbProvince {
+    }
+
+    %% external entity, defined in another module diagram (reference/db module)
+    DbDistrict {
+    }
+
+    %% external entity, defined in another module diagram (reference/db module)
+    DbSubDistrict {
+    }
+
+    %% Relationships
+
+    su_business ||--o{ su_user_business : "has members"
+    su_business ||--o{ su_business_role : "defines roles"
+
+    su_business_role ||--o{ su_business_role : "parent of"
+    su_business_role ||--o{ su_business_role_program : "grants permission on"
+    su_business_role ||--o{ su_user_business_role : "assigned to"
+
+    su_program ||--o{ su_business_role_program : "included in"
+    su_program ||--o{ su_program : "parent of"
+
+    su_user_business ||--o{ su_user_business_role : "has role assignments"
+
+    su_profile }o--|| DbTitle : "has title"
+    su_profile }o--o| DbCountry : "located in"
+    su_profile }o--o| DbProvince : "located in"
+    su_profile }o--o| DbDistrict : "located in"
+    su_profile }o--o| DbSubDistrict : "located in"
+
+    su_business }o--|| DbTitle : "has title"
+    su_business }o--|| DbCountry : "registered in"
+    su_business }o--o| DbProvince : "located in"
+    su_business }o--o| DbDistrict : "located in"
+    su_business }o--o| DbSubDistrict : "located in"

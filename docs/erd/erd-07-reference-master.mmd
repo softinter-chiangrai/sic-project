@@ -1,0 +1,157 @@
+%% title: ERD 07 - Reference / Master Data
+%% source: com.softinter.sicapi.entity.db.{DbCountry,DbProvince,DbDistrict,DbSubDistrict,DbTitle,DbParameter,DbMailTemplate,DbMailConfig,DbMailQueue}
+%% NOTE: db_title (person title/prefix lookup) and db_parameter (generic module parameter lookup) have NO FK columns
+%%       to/from anything - omitted here as standalone lookup tables. db_title columns: id PK, person_type,
+%%       prefix/suffix_short_name_en/local, prefix/suffix_name_en/local, sort_order, is_active, + audit columns.
+%%       db_parameter columns: id PK, module_code, parameter_code, parameter_value, parameter_name_en/local,
+%%       is_active, sort_order, + audit columns.
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 4, "entityPadding": 6, "minEntityWidth": 60, "minEntityHeight": 25, "fontSize": 16}}}%%
+    DB_COUNTRY {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        varchar country_code "unique"
+        varchar iso_code "unique"
+        varchar country_name_en
+        varchar country_name_local
+        boolean support_local_address
+        boolean is_active
+    }
+
+    DB_PROVINCE {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        uuid country_id FK
+        varchar province_code "unique"
+        varchar province_name_en
+        varchar province_name_local
+        boolean is_active
+    }
+
+    DB_DISTRICT {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        uuid province_id FK
+        varchar district_code "unique"
+        varchar district_name_en
+        varchar district_name_local
+        boolean is_active
+    }
+
+    DB_SUB_DISTRICT {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        uuid district_id FK
+        varchar sub_district_code "unique"
+        varchar sub_district_name_en
+        varchar sub_district_name_local
+        varchar zip_code
+        bigint latitude
+        bigint longitude
+        boolean is_active
+    }
+
+    DB_MAIL_TEMPLATE {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        varchar template_code "unique"
+        varchar template_name
+        varchar subject_en
+        varchar subject_local
+        text content_en
+        text content_local
+        boolean is_html
+        boolean is_active
+        varchar variables
+    }
+
+    DB_MAIL_CONFIG {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        varchar config_name
+        varchar smtp_server
+        int smtp_port
+        varchar email_from
+        varchar username
+        varchar password
+        boolean enable_ssl
+        int sort_order
+        boolean is_active
+        int max_retry
+        varchar description
+    }
+
+    DB_MAIL_QUEUE {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        uuid template_id FK
+        varchar recipient_email
+        varchar recipient_name
+        text body_data
+        varchar status
+        int retry_count
+        varchar error_message
+        timestamp scheduled_at
+        timestamp sent_at
+        timestamp next_retry_at
+        uuid used_config_id "plain UUID column, no FK annotation"
+        boolean use_english
+        uuid db_mail_config_id FK
+    }
+
+    DB_COUNTRY  ||--o{ DB_PROVINCE     : "has (country_id FK)"
+    DB_PROVINCE ||--o{ DB_DISTRICT     : "has (province_id FK)"
+    DB_DISTRICT ||--o{ DB_SUB_DISTRICT : "has (district_id FK)"
+    DB_MAIL_TEMPLATE ||--o{ DB_MAIL_QUEUE : "queues (template_id FK)"
+    DB_MAIL_CONFIG   ||--o{ DB_MAIL_QUEUE : "sends via (db_mail_config_id FK)"

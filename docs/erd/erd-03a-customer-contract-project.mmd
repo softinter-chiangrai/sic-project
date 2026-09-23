@@ -1,0 +1,209 @@
+%% title: ERD 03a - Customer / Contract / Project / Delivery
+%% Module: Project / Customer / Finance (part 1 of 2, see erd-03b-invoice-payment-ma.mmd for invoice/payment/MA renewal/MA ticket)
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    PM_CUSTOMER {
+        UUID id PK
+        UUID business_id FK
+        varchar customer_code
+        UUID upload_group_id FK
+        varchar tax_id
+        varchar company_name_en
+        varchar company_name_local
+        varchar contact_person
+        varchar phone_number
+        varchar email
+        varchar line_id
+        varchar address_en
+        varchar address_local
+        varchar zip_code
+        varchar person_type
+        boolean is_active
+        text remark
+        UUID province_id FK
+        UUID district_id FK
+        UUID sub_district_id FK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_CUSTOMER_CONTRACT {
+        UUID id PK
+        UUID business_id FK
+        UUID customer_id FK
+        varchar contract_no
+        varchar contract_type
+        date start_date
+        date end_date
+        decimal contract_value
+        varchar sign_status
+        boolean is_active
+        varchar payment_terms
+        text scope_summary
+        varchar renewal_status
+        UUID parent_contract_id FK
+        UUID project_id FK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_CUSTOMER_PROJECT {
+        UUID id PK
+        UUID business_id FK
+        UUID customer_id FK
+        UUID contract_id FK
+        varchar project_code
+        varchar project_name
+        date start_date
+        date planned_end_date
+        date actual_end_date
+        int budget_manday
+        int used_manday
+        varchar status
+        varchar priority
+        text description
+        boolean is_active
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_DELIVERY {
+        UUID id PK
+        UUID business_id FK
+        UUID project_id FK
+        varchar delivery_code
+        varchar delivery_title
+        varchar delivery_type "FINAL, PARTIAL, MILESTONE"
+        UUID contract_id FK
+        UUID milestone_id FK
+        date delivery_date
+        varchar delivery_version
+        text release_note
+        text delivery_summary
+        varchar status "DRAFT, PREPARING, READY, DELIVERED, CONFIRMED"
+        varchar pm_approved_by
+        timestamp pm_approved_date
+        varchar customer_signed_by
+        timestamp customer_signed_date
+        UUID attachment_group_id FK
+        boolean is_locked
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_DELIVERY_CHECKLIST {
+        UUID id PK
+        UUID delivery_id FK
+        varchar item_name
+        varchar item_category "REQUIREMENT, SPEC, TEST, BUG, MANUAL, UAT"
+        boolean is_checked
+        varchar checked_by
+        timestamp checked_date
+        text remark
+        int sort_order
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_DELIVERY_ITEM {
+        UUID id PK
+        UUID delivery_id FK
+        varchar item_type "REQUIREMENT, TEST_CASE, USER_MANUAL, CHANGE_REQUEST, SPECIFICATION, DIAGRAM"
+        UUID item_id "polymorphic reference, no single FK"
+        varchar item_code
+        varchar item_title
+        varchar item_status
+        text remark
+        int sort_order
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    %% external entity, defined in another module diagram
+    SU_BUSINESS {
+    }
+
+    %% external entity, defined in another module diagram
+    DB_PROVINCE {
+    }
+
+    %% external entity, defined in another module diagram
+    DB_DISTRICT {
+    }
+
+    %% external entity, defined in another module diagram
+    DB_SUB_DISTRICT {
+    }
+
+    %% external entity, defined in another module diagram
+    STORAGE_UPLOAD_REFERENCE {
+    }
+
+    %% external entity, defined in another module diagram
+    PM_MILESTONE {
+    }
+
+    %% ===== Relationships =====
+
+    PM_CUSTOMER ||--o{ PM_CUSTOMER_CONTRACT : "has contracts"
+    PM_CUSTOMER ||--o{ PM_CUSTOMER_PROJECT : "has projects"
+    PM_CUSTOMER }o--|| DB_PROVINCE : "located in"
+    PM_CUSTOMER }o--|| DB_DISTRICT : "located in"
+    PM_CUSTOMER }o--|| DB_SUB_DISTRICT : "located in"
+    PM_CUSTOMER }o--o| STORAGE_UPLOAD_REFERENCE : "upload group"
+    PM_CUSTOMER }o--|| SU_BUSINESS : "belongs to"
+
+    PM_CUSTOMER_CONTRACT ||--o{ PM_CUSTOMER_PROJECT : "governs (via project.contract_id)"
+    PM_CUSTOMER_CONTRACT |o--o{ PM_CUSTOMER_CONTRACT : "renewed into (parent_contract_id)"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_DELIVERY : "covers"
+    PM_CUSTOMER_CONTRACT }o--|| SU_BUSINESS : "belongs to"
+
+    PM_CUSTOMER_PROJECT ||--o{ PM_CUSTOMER_CONTRACT : "may originate (contract.project_id)"
+    PM_CUSTOMER_PROJECT ||--o{ PM_DELIVERY : "produces"
+    PM_CUSTOMER_PROJECT }o--|| SU_BUSINESS : "belongs to"
+
+    PM_DELIVERY ||--o{ PM_DELIVERY_CHECKLIST : "checklist items"
+    PM_DELIVERY ||--o{ PM_DELIVERY_ITEM : "included items"
+    PM_DELIVERY }o--o| PM_MILESTONE : "tied to"
+    PM_DELIVERY }o--o| STORAGE_UPLOAD_REFERENCE : "attachment group"
+    PM_DELIVERY }o--|| SU_BUSINESS : "belongs to"

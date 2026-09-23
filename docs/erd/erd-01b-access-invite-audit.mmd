@@ -1,0 +1,133 @@
+%% title: ERD 01b - Business Invite / Audit / Task
+%% Module: Authentication / Profile / Business / Access Management (part 2 of 2, see erd-01a-business-role-program.mmd for business/profile/role/program)
+%% Common audit columns inherited from BaseEntity (id PK, created_by, created_date, updated_by, updated_date, is_delete, delete_by, delete_date, xmin/row_version)
+%% are listed inline on each entity below rather than in a separate box, since they are real DB columns.
+%% BaseBusinessEntity additionally adds a business_id column (see entities marked "extends BaseBusinessEntity" in source).
+%% NOTE: su_verify (email/phone verification tokens) and su_upload (file metadata, fully documented in erd-06-storage.mmd)
+%% have NO relationship columns pointing at any entity in this module - omitted here as standalone tables to avoid
+%% disconnected boxes with no real relationship. su_verify columns: id PK, verify_type, reference_number, token,
+%% max_retry, retry_count, expire_at, recipient, + audit columns.
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    su_business_invite {
+        UUID id PK
+        UUID role_id FK
+        string invite_type
+        UUID business_id
+        string invite_email
+        string invite_token
+        boolean is_activated
+        timestamp expire_at
+        int max_uses
+        int use_count
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_business_audit {
+        UUID id PK
+        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        string user_id
+        string session_id
+        string username
+        string client_ip
+        boolean is_active
+        string remark
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_audit_log {
+        UUID id PK
+        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        string user_id
+        string username
+        string user_fullname
+        string action
+        string module
+        text description
+        string target_type
+        UUID target_id
+        JSONB old_value
+        JSONB new_value
+        string ip_address
+        text user_agent
+        string status
+        text details
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_task {
+        UUID id PK
+        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        string task_code
+        string task_name_en
+        string task_name_local
+        boolean is_active
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    su_user_task {
+        UUID id PK
+        UUID business_id "FK, business_id (BaseBusinessEntity)"
+        string title
+        timestamp start_time
+        timestamp end_time
+        string description
+        UUID task_id FK
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    %% external entity, defined in erd-01a-business-role-program.mmd (same module)
+    su_business {
+    }
+
+    %% external entity, defined in erd-01a-business-role-program.mmd (same module)
+    su_business_role {
+    }
+
+    %% Relationships
+
+    su_business_role ||--o{ su_business_invite : "used by"
+
+    su_business ||--o{ su_business_audit : "logs activity of"
+    su_business ||--o{ su_audit_log : "has audit entries"
+
+    su_task ||--o{ su_user_task : "assigned as"

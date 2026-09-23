@@ -39,8 +39,8 @@ export const appConfig: ApplicationConfig = {
     { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
     AppTranslateLoader,
     provideTranslateService({
-      lang: 'th',
       fallbackLang: 'en',
+      extend: true,
       loader: {
         provide: TranslateLoader,
         useExisting: AppTranslateLoader

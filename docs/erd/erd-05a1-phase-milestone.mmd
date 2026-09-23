@@ -1,0 +1,59 @@
+%% title: ERD 05a1 - Phase / Milestone
+%% Module: Project work-breakdown structure, top level (part 1 of 4, see erd-05a2 for WorkPackage/Task/Bug, erd-05b1/05b2 for approval workflow)
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    %% external entity, defined in another module diagram
+    PmCustomerProject {
+    }
+
+    %% external entity, defined in erd-05a2-workpackage-task-bug.mmd (same module)
+    PmWorkPackage {
+    }
+
+    PmPhase {
+        UUID id PK
+        UUID project_id FK
+        string phase_code
+        string phase_name
+        string description
+        string color
+        date start_date
+        date end_date
+        string owner
+        string status
+        UUID dependency FK "self-ref PmPhase, nullable"
+        int progress
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmMilestone {
+        UUID id PK
+        UUID phase_id FK
+        string milestone_name
+        string description
+        date due_date
+        string color
+        string status
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmCustomerProject ||--o{ PmPhase : "has"
+    PmPhase |o--o{ PmPhase : "depends on"
+    PmPhase ||--o{ PmMilestone : "has"
+    PmMilestone ||--o{ PmWorkPackage : "has"

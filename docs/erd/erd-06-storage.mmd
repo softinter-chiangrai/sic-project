@@ -1,0 +1,91 @@
+%% title: ERD 06 - File Storage
+%% source: com.softinter.sicapi.entity.su.SuUpload, com.softinter.sicapi.entity.ex.StorageUploadReference
+%% note: StorageUploadReference is a plain POJO (no @Entity/@Table) used as an in-memory
+%%       transfer object; it has no real database table. It is included here because it
+%%       represents the same uploaded-file concept as SuUpload (shares id, uploadGroupId,
+%%       fileName, contentType, fileSize, accessUrl, isActive, isStreaming, visibility)
+%%       and is used by FileStorageServiceImpl to sync/create SU_UPLOAD rows by matching id.
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 4, "entityPadding": 6, "minEntityWidth": 60, "minEntityHeight": 25, "fontSize": 16}}}%%
+    SU_UPLOAD {
+        uuid id PK
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version "xmin, @Version"
+        uuid business_id "column: bussiness_id"
+        varchar bucket_name
+        varchar object_key
+        varchar file_name
+        varchar content_type
+        bigint file_size
+        enum category "FileCategory: IMAGE, VIDEO, DOCUMENT"
+        enum visibility "FileVisibility: UPLOADER_ONLY, BUSINESS_ONLY, ANYONE_WITH_LINK, PUBLIC"
+        varchar storage_url
+        varchar access_url
+        boolean is_streaming
+        boolean is_active
+        uuid upload_group_id
+        timestamp temp_expires_at
+        uuid session_id
+    }
+
+    STORAGE_UPLOAD_REFERENCE {
+        uuid id "not a JPA entity - no PK constraint"
+        uuid upload_group_id
+        varchar file_name
+        varchar content_type
+        bigint file_size
+        varchar access_url
+        boolean is_active
+        boolean is_streaming
+        varchar visibility "declared as String, not enum-typed"
+        int state "declared as Integer (EntityState imported but unused as type)"
+    }
+
+    %% external entity, defined in another module diagram (pm module)
+    PM_APPROVAL {
+        uuid id PK
+        uuid attachment_id FK
+    }
+
+    %% external entity, defined in another module diagram (su/chat module)
+    SU_CHAT_LOG {
+        uuid id PK
+        uuid attachment_id FK
+    }
+
+    %% external entity, defined in another module diagram (su/chat module)
+    SU_CHAT_GROUP_LOG {
+        uuid id PK
+        uuid attachment_id FK
+    }
+
+    %% external entity, defined in another module diagram (pm module)
+    %% file_ref_id is a plain UUID column with NO @JoinColumn/@ManyToOne annotation -
+    %% it is a logical/unenforced reference, not a real foreign key
+    PM_DOCUMENT_VERSION {
+        uuid id PK
+        uuid file_ref_id "logical reference only, no FK constraint"
+    }
+
+    %% external entity, defined in another module diagram (ex module)
+    %% uses the same upload_group_id + transient List<StorageUploadReference> pattern as SuUpload
+    EX_EXAMPLE {
+        uuid id PK
+        uuid upload_group_id
+    }
+
+    STORAGE_UPLOAD_REFERENCE }o..|| SU_UPLOAD : "syncs to (matched by id, in-memory)"
+    PM_APPROVAL     }o--o| SU_UPLOAD : "attaches (attachment_id FK)"
+    SU_CHAT_LOG     }o--o| SU_UPLOAD : "attaches (attachment_id FK)"
+    SU_CHAT_GROUP_LOG }o--o| SU_UPLOAD : "attaches (attachment_id FK)"
+    PM_DOCUMENT_VERSION }o..o| SU_UPLOAD : "references (file_ref_id, no FK constraint)"
+    EX_EXAMPLE      }o..o{ SU_UPLOAD : "groups uploads (upload_group_id, logical)"
+    EX_EXAMPLE      |o..o{ STORAGE_UPLOAD_REFERENCE : "holds (transient DTO list uploadGroupData)"

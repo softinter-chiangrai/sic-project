@@ -16,6 +16,7 @@ export class Pmdt04AForm {
       priority: fb.control('Must', [Validators.required]),
       businessValue: fb.control(null, [Validators.maxLength(255)]),
       acceptanceCriteria: fb.control(null),
+      customerId: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
       projectName: fb.control(null),
       createdBy: fb.control(null, [Validators.maxLength(100)]),

@@ -25,6 +25,7 @@ export interface MilestoneResponse {
 
 export interface MilestoneModel extends SicBaseStateModel {
   id: string;
+  projectId?: string;
   phaseId: string;
   milestoneName: string;
   description?: string;

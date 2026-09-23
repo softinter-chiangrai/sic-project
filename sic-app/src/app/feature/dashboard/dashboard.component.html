@@ -30,7 +30,7 @@
             "
           >
             <i class="bi" [ngClass]="isAdmin() ? 'bi-shield-lock-fill me-1' : 'bi-person-badge-fill me-1'"></i>
-            {{ realRoleName() }}
+            {{ realRoleKey() ? (realRoleKey() | translate) : realRoleName() }}
           </span>
 
           @if (business()?.name) {
@@ -50,13 +50,13 @@
 
     <!-- Quick Actions Bar & Refresh Button -->
     <div class="flex flex-wrap items-center gap-2">
-      @for (act of quickActions; track act.label) {
+      @for (act of quickActions; track act.labelKey) {
         <a
           [routerLink]="act.route"
           class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] text-[var(--text-active)] transition-all cursor-pointer shadow-xs"
         >
           <i class="bi {{ act.icon }} text-[var(--crm-primary)]"></i>
-          <span>{{ act.label }}</span>
+          <span>{{ act.labelKey | translate }}</span>
         </a>
       }
 
@@ -186,7 +186,7 @@
             <span class="text-[11px] text-[var(--text-muted)] font-medium">{{ 'DASHBOARD_ITEMS_UNIT' | translate }}</span>
           </div>
           <p class="text-[11px] text-[var(--text-muted)] mt-1 truncate group-hover:text-[var(--text-active)] transition-colors">
-            {{ stage.thStage }} &rarr;
+            {{ (stage.thStageKey ? (stage.thStageKey | translate) : stage.thStage) }} &rarr;
           </p>
         </a>
       }

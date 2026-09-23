@@ -1,0 +1,105 @@
+%% title: DFD Level 1 - Process 3.0 - Customer, Project, Contract, Delivery & Finance Management
+%% notation: Gane-Sarson box style (rectangle=process/entity, grey rectangle=data store)
+%% source of truth: PmCustomerController, PmCustomerContractController, PmCustomerProjectController, PmDeliveryController, PmInvoiceController, PmPaymentController, PmMaRenewalController, PmMaTicketController
+%%{init: {'flowchart': {'nodeSpacing': 18, 'rankSpacing': 45, 'curve': 'basis'}}}%%
+flowchart TD
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+  customer["ลูกค้า / ผู้เกี่ยวข้องภายนอก"]
+  ai["AI Provider<br/>Gemini / Claude"]
+  report["Report Service"]
+
+  p31["3.1<br/>Customer Master<br/>Data"]
+  p32["3.2<br/>Customer Project<br/>Setup"]
+  p33["3.3<br/>Customer Contract<br/>Management"]
+  p34["3.4<br/>Delivery and<br/>Acceptance"]
+  p35["3.5<br/>Invoice and<br/>Billing"]
+  p36["3.6<br/>Payment<br/>Recording"]
+  p37["3.7<br/>MA Renewal and<br/>Support Ticket"]
+
+  d3["D3<br/>Customer / Project / Contract /<br/>Delivery / Finance Data"]
+  d5ext["D5<br/>Task / Approval / Bug<br/>(external)"]
+
+  %% ===== 3.1 Customer Master Data =====
+  user -->|"manage customer"| p31
+  p31 -->|"save customer"| d3
+  d3 -->|"customer list"| p31
+  p31 -->|"customer directory"| user
+
+  %% ===== 3.2 Customer Project Setup =====
+  user -->|"manage project"| p32
+  p32 -->|"save project"| d3
+  d3 -->|"project data"| p32
+  p32 -->|"project list"| user
+  p32 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p32
+  p32 -->|"export request"| report
+  report -->|"project PDF"| p32
+
+  %% ===== 3.3 Customer Contract Management =====
+  user -->|"manage contract"| p33
+  p33 -->|"save contract"| d3
+  d3 -->|"contract data"| p33
+  p33 -->|"contract list"| user
+  customer -->|"sign-off"| p33
+  p33 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p33
+  p33 -->|"export request"| report
+  report -->|"contract PDF"| p33
+  p33 -->|"revision request"| d5ext
+  d5ext -->|"approval status"| p33
+
+  %% ===== 3.4 Delivery and Acceptance =====
+  user -->|"manage delivery"| p34
+  p34 -->|"save delivery"| d3
+  d3 -->|"delivery data"| p34
+  p34 -->|"delivery list"| user
+  customer -->|"sign-off"| p34
+  p34 -->|"handover doc"| customer
+  p34 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p34
+  p34 -->|"export request"| report
+  report -->|"delivery PDF"| p34
+  p34 -->|"revision request"| d5ext
+  d5ext -->|"approval status"| p34
+  p34 -->|"create invoice"| p35
+
+  %% ===== 3.5 Invoice and Billing =====
+  user -->|"manage invoice"| p35
+  p35 -->|"save invoice"| d3
+  d3 -->|"invoice data"| p35
+  p35 -->|"invoice list"| user
+  p35 -->|"invoice doc"| customer
+  p35 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p35
+  p35 -->|"export request"| report
+  report -->|"invoice PDF"| p35
+  p35 -->|"revision request"| d5ext
+  d5ext -->|"approval status"| p35
+
+  %% ===== 3.6 Payment Recording =====
+  user -->|"record payment"| p36
+  p36 -->|"save payment"| d3
+  d3 -->|"payment data"| p36
+  p36 -->|"payment list"| user
+
+  %% ===== 3.7 MA Renewal and Support Ticket =====
+  user -->|"manage renewal/ticket"| p37
+  p37 -->|"save record"| d3
+  d3 -->|"renewal/ticket data"| p37
+  p37 -->|"renewal list"| user
+  customer -->|"ticket request"| p37
+  p37 -->|"renewal doc"| customer
+  p37 -->|"draft prompt"| ai
+  ai -->|"AI draft"| p37
+  p37 -->|"export request"| report
+  report -->|"renewal PDF"| p37
+  p37 -->|"revision request"| d5ext
+  d5ext -->|"approval status"| p37
+
+  class user,customer,ai,report entity
+  class p31,p32,p33,p34,p35,p36,p37 process
+  class d3,d5ext store

@@ -1,0 +1,86 @@
+%% title: ERD 05b2 - Approval Step Status / Log / Reminder
+%% Module: Approval workflow engine, execution/audit trail (part 4 of 4, see erd-05b1 for Flow/FlowStep/Approval)
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    %% external entity, defined in erd-05b1-approval-flow-definition.mmd (same module)
+    PmApprovalFlowStep {
+    }
+
+    %% external entity, defined in erd-05b1-approval-flow-definition.mmd (same module)
+    PmApproval {
+    }
+
+    PmApprovalStepStatus {
+        UUID id PK
+        UUID approval_id FK
+        UUID step_id FK
+        ApprovalStatus status "enum ApprovalStatus"
+        string approver
+        string approver_name
+        timestamp approval_date
+        string comment
+        string signature_url
+        string ip_address
+        string user_agent
+        boolean is_completed
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalLog {
+        UUID id PK
+        UUID approval_id FK
+        UUID step_status_id FK "nullable"
+        string action
+        string actor
+        string actor_name
+        string comment
+        ApprovalStatus old_status "enum ApprovalStatus"
+        ApprovalStatus new_status "enum ApprovalStatus"
+        string ip_address
+        string user_agent
+        json extra_data
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalReminder {
+        UUID id PK
+        UUID approval_id FK
+        UUID step_status_id FK "nullable"
+        string reminder_type
+        timestamp sent_at
+        string recipient
+        string recipient_email
+        string channel
+        string message
+        boolean is_read
+        string created_by
+        timestamp created_date
+        string updated_by
+        timestamp updated_date
+        boolean is_delete
+        string delete_by
+        timestamp delete_date
+    }
+
+    PmApprovalFlowStep ||--o{ PmApprovalStepStatus : "tracked by"
+    PmApproval ||--o{ PmApprovalStepStatus : "has"
+    PmApproval ||--o{ PmApprovalLog : "logs"
+    PmApprovalStepStatus |o--o{ PmApprovalLog : "logs for"
+    PmApproval ||--o{ PmApprovalReminder : "reminders"
+    PmApprovalStepStatus |o--o{ PmApprovalReminder : "reminders for"

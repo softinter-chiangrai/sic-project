@@ -98,19 +98,18 @@ export class DashboardComponent implements OnInit {
   readonly myPendingApprovals = signal<Approval[]>([]);
   readonly approvalSummaryTotal = signal(0);
 
-  get quickActions() {
-    return [
-      { label: this.translate.instant('DASHBOARD_QA_PROJECT'), icon: 'bi-kanban-fill', route: '/feature/pm/rt/pmrt02', color: 'primary' },
-      { label: this.translate.instant('DASHBOARD_QA_REQUIREMENT'), icon: 'bi-clipboard2-plus-fill', route: '/feature/pm/dt/pmdt01', color: 'info' },
-      { label: this.translate.instant('DASHBOARD_QA_TASK_BOARD'), icon: 'bi-check2-square', route: '/feature/pm/dt/pmdt02', color: 'primary' },
-      { label: this.translate.instant('DASHBOARD_QA_REPORT_BUG'), icon: 'bi-bug-fill', route: '/feature/pm/dt/pmdt06', color: 'danger' },
-      { label: this.translate.instant('DASHBOARD_QA_REQUEST_APPROVAL'), icon: 'bi-shield-check', route: '/feature/pm/dt/pmdt03', color: 'warning' },
-      { label: this.translate.instant('DASHBOARD_QA_INVOICE'), icon: 'bi-receipt-cutoff', route: '/feature/pm/dt/pmdt07', color: 'success' },
-    ];
-  }
+  readonly quickActions = [
+    { labelKey: 'DASHBOARD_QA_PROJECT', icon: 'bi-kanban-fill', route: '/feature/pm/rt/pmrt02', color: 'primary' },
+    { labelKey: 'DASHBOARD_QA_REQUIREMENT', icon: 'bi-clipboard2-plus-fill', route: '/feature/pm/dt/pmdt01', color: 'info' },
+    { labelKey: 'DASHBOARD_QA_TASK_BOARD', icon: 'bi-check2-square', route: '/feature/pm/dt/pmdt02', color: 'primary' },
+    { labelKey: 'DASHBOARD_QA_REPORT_BUG', icon: 'bi-bug-fill', route: '/feature/pm/dt/pmdt06', color: 'danger' },
+    { labelKey: 'DASHBOARD_QA_REQUEST_APPROVAL', icon: 'bi-shield-check', route: '/feature/pm/dt/pmdt03', color: 'warning' },
+    { labelKey: 'DASHBOARD_QA_INVOICE', icon: 'bi-receipt-cutoff', route: '/feature/pm/dt/pmdt07', color: 'success' },
+  ];
 
   // Real Role Signals
   readonly isAdmin = signal(false);
+  readonly realRoleKey = signal<string>('');
   readonly realRoleName = signal<string>('');
 
   // UI Control Signals
@@ -158,7 +157,7 @@ export class DashboardComponent implements OnInit {
     return [
       {
         stage: 'Planning & Req',
-        thStage: this.translate.instant('DASHBOARD_STAGE_REQ'),
+        thStageKey: 'DASHBOARD_STAGE_REQ',
         icon: 'bi-clipboard-data',
         count: reqCount || 0,
         route: '/feature/pm/dt/pmdt01',
@@ -167,7 +166,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Design & Review',
-        thStage: this.translate.instant('DASHBOARD_STAGE_DESIGN'),
+        thStageKey: 'DASHBOARD_STAGE_DESIGN',
         icon: 'bi-palette2',
         count: reviewCount || 0,
         route: '/feature/pm/dt/pmdt09',
@@ -176,7 +175,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Development',
-        thStage: this.translate.instant('DASHBOARD_STAGE_DEV'),
+        thStageKey: 'DASHBOARD_STAGE_DEV',
         icon: 'bi-code-slash',
         count: devCount || 0,
         route: '/feature/pm/dt/pmdt02',
@@ -185,7 +184,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Testing & QA',
-        thStage: this.translate.instant('DASHBOARD_STAGE_QA'),
+        thStageKey: 'DASHBOARD_STAGE_QA',
         icon: 'bi-shield-check',
         count: qaCount || 0,
         route: '/feature/pm/dt/pmdt05',
@@ -194,7 +193,7 @@ export class DashboardComponent implements OnInit {
       },
       {
         stage: 'Release / Delivery',
-        thStage: this.translate.instant('DASHBOARD_STAGE_RELEASE'),
+        thStageKey: 'DASHBOARD_STAGE_RELEASE',
         icon: 'bi-rocket-takeoff',
         count: releaseCount || 0,
         route: '/feature/pm/dt/pmdt04',
@@ -321,7 +320,8 @@ export class DashboardComponent implements OnInit {
 
   private resolveUserRole(membersResponse: any, currentUserId: string | null): void {
     if (this.isAdmin()) {
-      this.realRoleName.set(this.translate.instant('DASHBOARD_ROLE_ADMIN'));
+      this.realRoleKey.set('DASHBOARD_ROLE_ADMIN');
+      this.realRoleName.set('');
       return;
     }
 
@@ -331,6 +331,7 @@ export class DashboardComponent implements OnInit {
         (m: any) => m.userId === currentUserId
       );
       if (currentMember?.roleNames && currentMember.roleNames.length > 0) {
+        this.realRoleKey.set('');
         this.realRoleName.set(currentMember.roleNames.join(', '));
         return;
       }
@@ -344,13 +345,15 @@ export class DashboardComponent implements OnInit {
         (r) => !r.startsWith('default-') && !r.startsWith('offline_') && r !== 'uma_authorization'
       );
       if (filteredRealm.length > 0) {
+        this.realRoleKey.set('');
         this.realRoleName.set(filteredRealm.join(', '));
         return;
       }
     }
 
     // 3. Fallback to Member
-    this.realRoleName.set(this.translate.instant('DASHBOARD_ROLE_MEMBER'));
+    this.realRoleKey.set('DASHBOARD_ROLE_MEMBER');
+    this.realRoleName.set('');
   }
 
   get profileImage(): string {

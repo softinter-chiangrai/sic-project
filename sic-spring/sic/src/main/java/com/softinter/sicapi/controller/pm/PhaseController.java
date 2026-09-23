@@ -34,9 +34,10 @@ public class PhaseController {
     private final PhaseService phaseService;
     private final PmPhaseRepository phaseRepository;
 
-    // ===== Phase Combobox (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน) =====
+    // ===== Phase Combobox (ค้นหาได้อิสระ หรือกรองตาม projectId) =====
     @GetMapping("/phases/combobox")
     public ResponseEntity<List<ComboboxResponse>> getComboboxPhases(
+            @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String keyword) {
         UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
         if (businessId == null) {
@@ -44,7 +45,9 @@ public class PhaseController {
         }
         String normalizedKeyword = (keyword != null && !keyword.isBlank()) ? keyword.trim() : null;
         List<PmPhase> phases;
-        if (normalizedKeyword != null) {
+        if (projectId != null) {
+            phases = phaseRepository.findByProjectIdAndIsDeleteFalseOrderByStartDateAsc(projectId);
+        } else if (normalizedKeyword != null) {
             phases = phaseRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
         } else {
             phases = phaseRepository.findByProjectBusinessIdAndIsDeleteFalseAndProjectIsDeleteFalse(businessId);

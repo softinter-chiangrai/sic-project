@@ -53,8 +53,16 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   isSaving = signal(false);
 
   ngOnInit(): void {
-     const form:Burt01FormData = this.route.snapshot.data['form'];
+     const form: Burt01FormData = this.route.snapshot.data['form'];
      this.formData = form.businessInfo;
+     const hasLocal = !!(
+       this.formData?.formGroup?.get('supportLocalAddress')?.value ||
+       this.formData?.formGroup?.get('provinceId')?.value ||
+       this.formData?.value?.provinceId
+     );
+     if (hasLocal) {
+       this.formData.formGroup.get('supportLocalAddress')?.setValue(true);
+     }
   }
 
   onCountryChange(event: any): void {

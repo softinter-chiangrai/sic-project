@@ -1,0 +1,126 @@
+%% title: ERD 04b1 - Change Request / Design Review
+%% Module: SIC Requirement / Analysis / Design (part 1 of 2, see erd-04b2-trace-comment.mmd for Traceability/Comment)
+%% NOTE: All entities extend BaseEntity or BaseBusinessEntity (Lombok @Data), which contribute these audit/base
+%%       columns not repeated per-entity below: id (PK, UUID), created_by, created_date, updated_by, updated_date,
+%%       is_delete, delete_by, delete_date, rowVersion (xmin). BaseBusinessEntity additionally adds business_id (UUID).
+%%       Only business-specific columns are listed in each entity box.
+%% NOTE on PmDesignReview / PmCrAssignee / PmEditSession:
+%%       these use POLYMORPHIC association pairs (a "*_type" string column + a "*_id" UUID column) instead of a
+%%       real FK to one table, so the same column pair can point at multiple possible target tables depending on
+%%       the value of *_type. Mermaid cannot express "one column set, many possible target tables" as a real FK,
+%%       so no dashed polymorphic relationship lines are drawn here (see erd-04b2-trace-comment.mmd for the
+%%       polymorphic PmTraceLink relationships, which are the documented example of this pattern).
+%% NOTE: Relationships marked "(inferred)" come from a plain *_id UUID column with FK naming convention but NO
+%%       @ManyToOne/@JoinColumn mapping in the Java source. Relationships marked "(mapped)" are real @ManyToOne.
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    PmChangeRequest {
+        string cr_code
+        string target_type "REQUIREMENT / SPECIFICATION / ER / DFD / TASK"
+        uuid target_id
+        string title
+        text description
+        string change_reason "SCOPE / BUDGET / SCHEDULE / TECHNICAL"
+        string requester_id
+        uuid project_id "(inferred) -> PmCustomerProject"
+        string assignee_id
+        string status "DRAFT/SUBMITTED/APPROVED/REJECTED/IMPLEMENTED/CANCELLED"
+        string priority
+        string target_version
+        string approved_by
+        datetime approved_at
+        datetime implemented_at
+    }
+
+    PmChangeImpact {
+        uuid change_request_id FK "-> PmChangeRequest (mapped)"
+        string impacted_type
+        uuid impacted_id
+        string impacted_title
+        string impact_level "LOW/MEDIUM/HIGH"
+    }
+
+    ChangeImpactAnalysis {
+        uuid change_request_id FK "-> PmChangeRequest (mapped), table pm_change_impact_analysis"
+        text dfd_impact
+        text er_impact
+        text ui_impact
+        text api_impact
+        text test_impact
+        int manday_impact
+        int timeline_impact
+        text cost_impact
+        uuid_array impacted_requirement_ids
+        uuid_array impacted_spec_ids
+        uuid_array impacted_task_ids
+        uuid_array impacted_test_case_ids
+        uuid_array impacted_bug_ids
+        uuid_array impacted_diagram_ids
+        text_array impacted_table_names
+        string analysis_status
+        datetime analyzed_at
+        string analyzed_by
+    }
+
+    PmDesignReview {
+        string review_code
+        string title
+        text description
+        uuid project_id FK "-> PmCustomerProject (mapped, required)"
+        string review_item_type "polymorphic target type"
+        uuid review_item_id "polymorphic target id"
+        string reviewer
+        string assigned_to
+        string severity
+        string status
+        date due_date
+        text figma_url
+        string embed_mode
+        boolean is_active
+    }
+
+    PmReviewComment {
+        uuid review_id FK "-> PmDesignReview (mapped)"
+        string comment_type
+        text comment_text
+        string severity
+        string assigned_to
+        string status
+    }
+
+    PmCrAssignee {
+        uuid change_request_id FK "-> PmChangeRequest (mapped)"
+        string user_id
+        string target_type "polymorphic target type"
+        uuid target_id "polymorphic target id"
+        string status "PENDING/IN_PROGRESS/COMPLETED"
+        datetime completed_at
+    }
+
+    PmEditSession {
+        uuid change_request_id "(inferred) -> PmChangeRequest, no JPA object mapping"
+        string target_type "polymorphic target type"
+        uuid target_id "polymorphic target id"
+        string assignee_id
+        datetime granted_at
+        datetime expires_at
+        boolean is_active
+        string edit_type "default CHANGE_REQUEST"
+    }
+
+    %% external entity, defined in another module diagram
+    PmCustomerProject {
+    }
+
+    PmChangeRequest ||--o{ PmChangeImpact : "has impacts"
+    PmChangeRequest ||--o{ ChangeImpactAnalysis : "has analysis"
+    PmChangeRequest ||--o{ PmCrAssignee : "has assignees"
+    PmChangeRequest ||--o{ PmEditSession : "grants edit sessions (inferred)"
+    PmCustomerProject ||--o{ PmChangeRequest : "owns (project_id, inferred)"
+    PmCustomerProject ||--o{ PmDesignReview : "owns (project_id, mapped)"
+
+    PmDesignReview ||--o{ PmReviewComment : "has comments"

@@ -7,6 +7,7 @@ export class Pmdt01AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<Pmdt01AModel>> {
     return fb.group<ToForm<Pmdt01AModel>>({
       id: fb.control(null),
+      customerId: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
       phaseCode: fb.control(null),
       phaseName: fb.control(null, [Validators.required]),

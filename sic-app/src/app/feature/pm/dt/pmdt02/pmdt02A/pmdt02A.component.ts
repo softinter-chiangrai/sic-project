@@ -1,5 +1,5 @@
-// src/app/feature/pm/dt/pmdt02/pmdt02A/pmdt02A.component.ts
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -37,6 +37,7 @@ import { environment } from '../../../../../../environments/environment';
 })
 export class Pmdt02AComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
   private milestoneService = inject(Pmdt02AService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
@@ -48,7 +49,9 @@ export class Pmdt02AComponent implements OnInit {
   milestoneId: string | null = null;
   isEdit = false;
   data: MilestoneResponse | null = null;
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
   apiGetComboboxPhase = `${environment.apiBaseUrl}/api/pm/phases/combobox`;
+  phaseParams: Record<string, any> = {};
 
   formData: SicFromData<MilestoneModel> = new SicFromData<MilestoneModel>(Pmdt02AForm.createForm(this.fb));
 
@@ -67,6 +70,7 @@ export class Pmdt02AComponent implements OnInit {
       this.milestoneId = pageData.milestoneDetail.id;
       if (pageData.milestoneDetail.phaseId) {
         this.phaseId = pageData.milestoneDetail.phaseId;
+        this.loadProjectFromPhase(this.phaseId);
       }
     }
 
@@ -77,7 +81,14 @@ export class Pmdt02AComponent implements OnInit {
 
     this.route.queryParams.subscribe((qParams) => {
       this.phaseId = qParams['phaseId'] || this.phaseId;
-      this.projectId = qParams['projectId'] || '';
+      this.projectId = qParams['projectId'] || this.projectId;
+      if (this.projectId) {
+        this.form.patchValue({ projectId: this.projectId });
+        this.phaseParams = { projectId: this.projectId };
+      }
+      if (this.phaseId) {
+        this.loadProjectFromPhase(this.phaseId);
+      }
       const dateParam = qParams['dueDate'] || qParams['date'];
       if (!this.isEdit && dateParam) {
         const cleanDate = dateParam.split('T')[0];
@@ -107,6 +118,7 @@ export class Pmdt02AComponent implements OnInit {
     const dueTime = data.dueDate ? data.dueDate.split('T')[1]?.substring(0, 5) : '';
     if (data.phaseId) {
       this.phaseId = data.phaseId;
+      this.loadProjectFromPhase(data.phaseId);
     }
     this.form.patchValue({
       phaseId: data.phaseId,
@@ -118,9 +130,53 @@ export class Pmdt02AComponent implements OnInit {
     });
   }
 
+  loadProjectFromPhase(phaseId: string): void {
+    if (!phaseId) return;
+    this.http.get<any>(`${environment.apiBaseUrl}/api/pm/phases/${phaseId}`).subscribe({
+      next: (phase) => {
+        if (phase?.projectId) {
+          this.projectId = phase.projectId;
+          this.form.patchValue({ projectId: phase.projectId });
+          this.phaseParams = { projectId: phase.projectId };
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  onProjectSelected(item: any): void {
+    const selectedProjectId = item?.value ?? item?.id ?? null;
+    this.projectId = selectedProjectId || '';
+    if (selectedProjectId) {
+      this.phaseParams = { projectId: selectedProjectId };
+    } else {
+      this.phaseParams = {};
+    }
+
+    const currentPhaseId = this.form.get('phaseId')?.value;
+    if (currentPhaseId) {
+      this.http.get<any>(`${environment.apiBaseUrl}/api/pm/phases/${currentPhaseId}`).subscribe({
+        next: (phase) => {
+          if (phase?.projectId !== selectedProjectId) {
+            this.form.patchValue({ phaseId: null });
+            this.phaseId = '';
+          }
+        },
+        error: () => {
+          this.form.patchValue({ phaseId: null });
+          this.phaseId = '';
+        }
+      });
+    }
+  }
+
   // ผู้ใช้เลือกเฟสเองจาก Combobox (ไม่ต้องเคยเข้าหน้าเฟสมาก่อน)
   onPhaseSelected(item: any): void {
-    this.phaseId = item?.value ?? item?.id ?? '';
+    const selectedPhaseId = item?.value ?? item?.id ?? '';
+    this.phaseId = selectedPhaseId;
+    if (selectedPhaseId) {
+      this.loadProjectFromPhase(selectedPhaseId);
+    }
   }
 
   private buildISOString(date: any, time: string): string {

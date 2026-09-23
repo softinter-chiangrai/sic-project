@@ -1,0 +1,48 @@
+%% title: DFD Level 1 - Process 6.0 - File Storage & Document/Report Output
+%%{init: {'flowchart': {'nodeSpacing': 35, 'rankSpacing': 70, 'curve': 'basis'}}}%%
+flowchart LR
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+  report["Report Service<br/>External Microservice"]
+
+  d6["D6<br/>File Storage<br/>Metadata"]
+  d8["D8<br/>SeaweedFS / S3<br/>Object Files"]
+  d3ext["D3<br/>Customer/Project data<br/>external"]
+
+  p61["6.1<br/>File Upload<br/>and Validation"]
+  p62["6.2<br/>File Download<br/>and Streaming"]
+  p63["6.3<br/>File Metadata and<br/>Group Management"]
+  p64["6.4<br/>File Deletion and<br/>Lifecycle Control"]
+  p65["6.5<br/>Report/Document<br/>Generation Request"]
+
+  user -->|"upload file"| p61
+  p61 -->|"save metadata"| d6
+  p61 -->|"store bytes"| d8
+  p61 -->|"upload result"| user
+
+  user -->|"download request"| p62
+  p62 -->|"read metadata"| d6
+  p62 -->|"fetch bytes"| d8
+  p62 -->|"file stream"| user
+
+  user -->|"list/group files"| p63
+  p63 -->|"query/update metadata"| d6
+  p63 -->|"file list, URL"| user
+
+  user -->|"delete request"| p64
+  p64 -->|"remove metadata"| d6
+  p64 -->|"remove bytes"| d8
+  p64 -->|"delete confirm"| user
+
+  user -->|"export request"| p65
+  p65 -->|"query source data"| d3ext
+  p65 -->|"generate report"| report
+  report -->|"report file"| p65
+  p65 -->|"download link"| user
+
+  class user,report entity
+  class p61,p62,p63,p64,p65 process
+  class d6,d8,d3ext store

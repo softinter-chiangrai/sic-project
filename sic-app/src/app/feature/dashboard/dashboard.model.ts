@@ -13,7 +13,8 @@ import { AuditLog } from '../pm/dt/pmdt20/audit-log.service';
 
 export interface SdlcStageSummary {
   stage: string;
-  thStage: string;
+  thStage?: string;
+  thStageKey?: string;
   icon: string;
   count: number;
   route: string;

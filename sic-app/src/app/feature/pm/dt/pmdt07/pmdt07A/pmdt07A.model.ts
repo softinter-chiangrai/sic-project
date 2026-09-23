@@ -24,6 +24,7 @@ export interface Pmdt07AModel extends SicBaseStateModel {
   generatedFromDiagramId?: string;
   projectId?: string;
   projectName?: string;
+  customerId?: string;
   requirementId?: string;
   requirementCode?: string;
   requirementTitle?: string;

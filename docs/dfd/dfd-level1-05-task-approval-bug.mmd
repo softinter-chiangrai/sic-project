@@ -1,0 +1,84 @@
+%% title: DFD Level 1 - Process 5.0 - Phase, Milestone, Task, Approval & Bug Tracking
+%% notation: Gane-Sarson box style (rectangle=process/entity, grey rectangle=data store)
+%%{init: {'flowchart': {'nodeSpacing': 18, 'rankSpacing': 45, 'curve': 'basis'}}}%%
+flowchart TD
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ<br/>PM / SA / Dev / Tester / Admin"]
+
+  d5["D5<br/>Phase / Milestone / Task /<br/>Approval / Bug Data"]
+  d1ext["D1<br/>Auth/Business<br/>(external)"]
+  d2ext["D2<br/>Chat/Notification<br/>(external)"]
+  d3ext["D3<br/>Customer/Project/Finance<br/>(external)"]
+  d4ext["D4<br/>Requirement/Design<br/>(external)"]
+
+  p51["5.1<br/>วางแผน<br/>Phase"]
+  p52["5.2<br/>วางแผน<br/>Milestone"]
+  p53["5.3<br/>จัดการ<br/>Work Package"]
+  p54["5.4<br/>มอบหมาย/ติดตาม<br/>Task"]
+  p55["5.5<br/>ติดตาม<br/>Bug/Issue"]
+  p56["5.6<br/>กำหนดค่า<br/>Approval Flow"]
+  p57["5.7<br/>ยื่น/พิจารณา<br/>Approval"]
+
+  %% ===== 5.1 Phase Planning =====
+  user -->|"จัดการ Phase"| p51
+  p51 -->|"บันทึก Phase"| d5
+  d5 -->|"รายการ Phase"| p51
+  p51 -->|"ตรวจสอบโครงการ"| d3ext
+  d3ext -->|"ข้อมูลโครงการ"| p51
+  p51 -->|"รายการ Phase"| user
+
+  %% ===== 5.2 Milestone Planning =====
+  user -->|"จัดการ Milestone"| p52
+  p52 -->|"บันทึก Milestone"| d5
+  d5 -->|"รายการ Milestone"| p52
+  p52 -->|"รายการ Milestone"| user
+
+  %% ===== 5.3 Work Package Management =====
+  user -->|"จัดการ Work Package"| p53
+  p53 -->|"บันทึก Work Package"| d5
+  d5 -->|"รายการ Work Package"| p53
+  p53 -->|"รายการ Work Package"| user
+
+  %% ===== 5.4 Task Assignment & Tracking =====
+  user -->|"จัดการ Task"| p54
+  p54 -->|"บันทึก Task"| d5
+  d5 -->|"รายการ Task"| p54
+  p54 -->|"ตรวจสอบโครงการ"| d3ext
+  d3ext -->|"ข้อมูลโครงการ"| p54
+  p54 -->|"รายการ Task"| user
+
+  %% ===== 5.5 Bug / Issue Tracking =====
+  user -->|"จัดการ Bug"| p55
+  p55 -->|"บันทึก Bug"| d5
+  d5 -->|"รายการ Bug"| p55
+  p55 -->|"ตรวจสอบผู้แจ้ง"| d1ext
+  d1ext -->|"ข้อมูลผู้ใช้งาน"| p55
+  p55 -->|"รายการ Bug"| user
+
+  %% ===== 5.6 Approval Flow Configuration =====
+  user -->|"จัดการ Approval Flow"| p56
+  p56 -->|"บันทึกผัง Approval"| d5
+  d5 -->|"รายการ Approval Flow"| p56
+  p56 -->|"ผัง Approval Flow"| user
+
+  %% ===== 5.7 Approval Submission & Action Processing =====
+  user -->|"ยื่น/พิจารณา Approval"| p57
+  p57 -->|"อ่านผัง Approval"| d5
+  d5 -->|"ผัง Approval ที่ใช้"| p57
+  p57 -->|"บันทึกสถานะ Approval"| d5
+  d5 -->|"สถานะ Approval"| p57
+  p57 -->|"ตรวจสอบผู้อนุมัติ"| d1ext
+  d1ext -->|"ข้อมูลผู้ใช้งาน"| p57
+  p57 -->|"ตรวจสอบเอกสาร"| d3ext
+  d3ext -->|"สถานะเอกสาร"| p57
+  p57 -->|"ตรวจสอบ Requirement"| d4ext
+  d4ext -->|"สถานะเอกสาร"| p57
+  p57 -->|"แจ้งเตือนผล"| d2ext
+  p57 -->|"ประวัติ Approval"| user
+
+  class user entity
+  class p51,p52,p53,p54,p55,p56,p57 process
+  class d5,d1ext,d2ext,d3ext,d4ext store

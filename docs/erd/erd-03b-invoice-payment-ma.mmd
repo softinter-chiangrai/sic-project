@@ -1,0 +1,206 @@
+%% title: ERD 03b - Invoice / Payment / MA Renewal / MA Ticket
+%% Module: Project / Customer / Finance (part 2 of 2, see erd-03a-customer-contract-project.mmd for customer/contract/project/delivery)
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    PM_INVOICE {
+        UUID id PK
+        UUID business_id FK
+        varchar invoice_no
+        UUID customer_id FK
+        UUID project_id FK
+        UUID contract_id FK
+        UUID delivery_id FK
+        UUID milestone_id FK
+        BillingType billing_type "enum"
+        date issue_date
+        date due_date
+        decimal subtotal_amount
+        decimal vat_rate
+        decimal vat_amount
+        decimal total_amount
+        decimal paid_amount
+        PaymentStatus payment_status "enum"
+        varchar approval_status
+        text receipt_file_ref
+        text remark
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_INVOICE_ITEM {
+        UUID id PK
+        UUID invoice_id FK
+        varchar item_name
+        text description
+        decimal amount
+        int sort_order
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_PAYMENT {
+        UUID id PK
+        UUID business_id FK
+        varchar payment_no
+        UUID invoice_id FK
+        date payment_date
+        PaymentMethod payment_method "enum"
+        decimal amount
+        varchar reference_no
+        varchar bank_name
+        text receipt_file
+        PaymentStatus payment_status "enum"
+        text notes
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_MA_RENEWAL {
+        UUID id PK
+        UUID business_id FK
+        varchar renewal_no
+        UUID contract_id FK
+        UUID customer_id FK
+        UUID project_id FK
+        date current_end_date
+        date new_start_date
+        date new_end_date
+        decimal proposed_amount
+        MaRenewalStatus status "enum"
+        UUID new_contract_id FK
+        text remark
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_MA_TICKET {
+        UUID id PK
+        UUID business_id FK
+        varchar ticket_no
+        UUID customer_id FK
+        UUID project_id FK
+        UUID contract_id FK
+        MaTicketType ticket_type "enum"
+        varchar title
+        text description
+        MaTicketSeverity severity "enum"
+        MaTicketStatus status "enum"
+        varchar assigned_to
+        varchar reported_by
+        timestamp reported_date
+        timestamp target_response_date
+        timestamp target_resolve_date
+        timestamp resolved_date
+        timestamp closed_date
+        date start_date
+        varchar start_time
+        date end_date
+        varchar end_time
+        text resolution_summary
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    PM_MA_TICKET_ASSIGNEE {
+        UUID id PK
+        UUID business_id FK
+        UUID ma_ticket_id FK
+        varchar user_id
+        varchar created_by
+        timestamp created_date
+        varchar updated_by
+        timestamp updated_date
+        boolean is_delete
+        varchar delete_by
+        timestamp delete_date
+        int row_version
+    }
+
+    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
+    PM_CUSTOMER {
+    }
+
+    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
+    PM_CUSTOMER_CONTRACT {
+    }
+
+    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
+    PM_CUSTOMER_PROJECT {
+    }
+
+    %% external entity, defined in erd-03a-customer-contract-project.mmd (same module)
+    PM_DELIVERY {
+    }
+
+    %% external entity, defined in another module diagram
+    SU_BUSINESS {
+    }
+
+    %% external entity, defined in another module diagram
+    PM_MILESTONE {
+    }
+
+    %% ===== Relationships =====
+
+    PM_CUSTOMER ||--o{ PM_INVOICE : "billed on"
+    PM_CUSTOMER ||--o{ PM_MA_RENEWAL : "renews MA for"
+    PM_CUSTOMER ||--o{ PM_MA_TICKET : "raises tickets"
+
+    PM_CUSTOMER_CONTRACT ||--o{ PM_INVOICE : "billed under"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_MA_RENEWAL : "renewal of"
+    PM_CUSTOMER_CONTRACT |o--o{ PM_MA_RENEWAL : "results in (new_contract_id)"
+    PM_CUSTOMER_CONTRACT ||--o{ PM_MA_TICKET : "covers MA for"
+
+    PM_CUSTOMER_PROJECT ||--o{ PM_INVOICE : "billed for"
+    PM_CUSTOMER_PROJECT ||--o{ PM_MA_RENEWAL : "renews MA for"
+    PM_CUSTOMER_PROJECT ||--o{ PM_MA_TICKET : "raises tickets for"
+
+    PM_DELIVERY |o--o{ PM_INVOICE : "billed via"
+
+    PM_INVOICE ||--o{ PM_INVOICE_ITEM : "line items"
+    PM_INVOICE ||--o{ PM_PAYMENT : "receives payments"
+    PM_INVOICE }o--o| PM_MILESTONE : "tied to"
+    PM_INVOICE }o--|| SU_BUSINESS : "belongs to"
+
+    PM_PAYMENT }o--|| SU_BUSINESS : "belongs to"
+
+    PM_MA_RENEWAL }o--|| SU_BUSINESS : "belongs to"
+
+    PM_MA_TICKET ||--o{ PM_MA_TICKET_ASSIGNEE : "assigned to"
+    PM_MA_TICKET }o--|| SU_BUSINESS : "belongs to"
+
+    PM_MA_TICKET_ASSIGNEE }o--|| SU_BUSINESS : "belongs to"

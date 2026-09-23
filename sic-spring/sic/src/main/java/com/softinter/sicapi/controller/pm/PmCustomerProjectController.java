@@ -74,17 +74,29 @@ public class PmCustomerProjectController {
 
 
     @GetMapping("/combobox")
-    @Operation(summary = "Get project combobox list (ค้นหาได้อิสระ ไม่ต้องมี parent มาก่อน)")
+    @Operation(summary = "Get project combobox list (ค้นหาได้อิสระ หรือกรองตาม customerId)")
     public ResponseEntity<java.util.List<ComboboxResponse>> getComboboxProjects(
+            @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) String keyword) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
-        java.util.List<PmCustomerProject> projects = (keyword != null && !keyword.isBlank())
-                ? projectRepository.findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
-                        businessId, keyword, org.springframework.data.domain.PageRequest.of(0, 50)).getContent()
-                : projectRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        java.util.List<PmCustomerProject> projects;
+        if (customerId != null) {
+            if (keyword != null && !keyword.isBlank()) {
+                projects = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
+                        customerId, businessId, keyword, org.springframework.data.domain.PageRequest.of(0, 50)).getContent();
+            } else {
+                projects = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalse(
+                        customerId, businessId, org.springframework.data.domain.PageRequest.of(0, 100)).getContent();
+            }
+        } else {
+            projects = (keyword != null && !keyword.isBlank())
+                    ? projectRepository.findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
+                            businessId, keyword, org.springframework.data.domain.PageRequest.of(0, 50)).getContent()
+                    : projectRepository.findByBusinessIdAndIsDeleteFalse(businessId);
+        }
         java.util.List<ComboboxResponse> list = projects.stream()
                 .map(p -> new ComboboxResponse(p.getId().toString(), p.getProjectName()))
                 .collect(java.util.stream.Collectors.toList());

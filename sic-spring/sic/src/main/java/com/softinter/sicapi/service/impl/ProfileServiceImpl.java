@@ -12,6 +12,7 @@ import com.softinter.sicapi.dto.request.SaveProfileRequest;
 import com.softinter.sicapi.dto.response.ProfileResponse;
 import com.softinter.sicapi.dto.response.VerifyTokenResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.db.DbCountry;
 import com.softinter.sicapi.entity.enums.FileVisibility;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import com.softinter.sicapi.entity.su.SuProfile;
@@ -183,9 +184,16 @@ public class ProfileServiceImpl implements ProfileService {
             profile.setTitle(null);
         }
         if (request.getCountryId() != null) {
-            profile.setCountry(countryRepository.findById(request.getCountryId()).orElse(null));
+            DbCountry country = countryRepository.findById(request.getCountryId()).orElse(null);
+            profile.setCountry(country);
+            if (country != null) {
+                profile.setSupportLocalAddress(Boolean.TRUE.equals(country.getSupportLocalAddress()));
+            } else {
+                profile.setSupportLocalAddress(Boolean.TRUE.equals(request.getSupportLocalAddress()));
+            }
         } else {
             profile.setCountry(null);
+            profile.setSupportLocalAddress(false);
         }
         if (request.getProvinceId() != null) {
             profile.setProvince(provinceRepository.findById(request.getProvinceId()).orElse(null));
@@ -267,7 +275,17 @@ public class ProfileServiceImpl implements ProfileService {
         response.setMiddleNameLocal(profile.getMiddleNameLocal());
         response.setLastNameLocal(profile.getLastNameLocal());
 
-        response.setSupportLocalAddress(profile.getSupportLocalAddress());
+        Boolean supportLocal = false;
+        if (profile.getCountry() != null && profile.getCountry().getSupportLocalAddress() != null) {
+            supportLocal = profile.getCountry().getSupportLocalAddress();
+        } else if (profile.getCountryId() != null) {
+            supportLocal = countryRepository.findById(profile.getCountryId())
+                    .map(DbCountry::getSupportLocalAddress)
+                    .orElse(false);
+        } else if (Boolean.TRUE.equals(profile.getSupportLocalAddress()) || profile.getProvinceId() != null) {
+            supportLocal = true;
+        }
+        response.setSupportLocalAddress(supportLocal);
         response.setAddressEn(profile.getAddressEn());
         response.setAddressLocal(profile.getAddressLocal());
 

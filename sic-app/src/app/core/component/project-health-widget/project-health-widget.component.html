@@ -6,7 +6,7 @@
         <i class="bi bi-heart-pulse-fill text-base"></i>
       </div>
       <div>
-        <h3 class="font-bold text-base text-[var(--text-active)] tracking-tight">สุขภาพโครงการ</h3>
+        <h3 class="font-bold text-base text-[var(--text-active)] tracking-tight">{{ 'PROJECT_HEALTH_WIDGET_TITLE' | translate }}</h3>
         @if (project(); as proj) {
           <p class="text-xs text-[var(--text-muted)] mt-0.5">
             {{ proj.projectCode }} - {{ proj.projectName }}
@@ -36,7 +36,7 @@
           ' px-3 py-1 rounded-full text-xs font-semibold'
         "
       >
-        {{ getHealthStatusText(projectHealth().status) }} ({{ projectHealth().score }}%)
+        {{ getHealthStatusKey(projectHealth().status) | translate }} ({{ projectHealth().score }}%)
       </span>
     </div>
   </div>
@@ -81,18 +81,22 @@
           </span>
         </div>
       </div>
-      <p class="text-xs font-medium text-[var(--text-muted)] mt-2.5">คะแนนสุขภาพรวม</p>
+      <p class="text-xs font-medium text-[var(--text-muted)] mt-2.5">{{ 'PROJECT_HEALTH_TOTAL_SCORE' | translate }}</p>
     </div>
 
     <!-- Right: 5 Health Breakdown Factor Bars -->
     <div class="md:col-span-8">
       <div class="space-y-3.5">
-        @for (factor of projectHealth().factors; track factor.name) {
+        @for (factor of projectHealth().factors; track (factor.nameKey || factor.name)) {
           <div>
             <div class="flex items-center justify-between text-xs mb-1.5">
-              <span class="text-[var(--text-muted)] font-medium">{{ factor.name }}</span>
+              <span class="text-[var(--text-muted)] font-medium">{{ factor.nameKey ? (factor.nameKey | translate) : factor.name }}</span>
               <span class="text-[var(--text-active)] font-semibold text-xs">
-                {{ factor.detail }}
+                @if (factor.detailKey) {
+                  {{ factor.detailKey | translate: factor.detailParams }}
+                } @else {
+                  {{ factor.detail }}
+                }
               </span>
             </div>
             <div class="w-full h-2 bg-[var(--bg)] rounded-full overflow-hidden border border-[var(--border)]/40">

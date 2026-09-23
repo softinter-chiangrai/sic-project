@@ -71,10 +71,13 @@ export interface RecentTask {
 
 export interface ProjectHealthFactor {
   name: string;
+  nameKey?: string;
   value: number;
   weight: number;
   percent: number;
   detail: string;
+  detailKey?: string;
+  detailParams?: Record<string, any>;
   color?: string;
 }
 

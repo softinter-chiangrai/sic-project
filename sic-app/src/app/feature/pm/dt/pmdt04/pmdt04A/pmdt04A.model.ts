@@ -33,6 +33,7 @@ export interface RequirementModel {
   acceptanceCriteria: string;
   projectId: string;
   projectName?: string;
+  customerId?: string;
   createdBy: string;
   baConfirmStatus: string;
   customerConfirmStatus: string;

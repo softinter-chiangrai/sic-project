@@ -111,11 +111,22 @@
                             </sic-input>
                         </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <sic-combobox
+                                label="ลูกค้า"
+                                formControlName="customerId"
+                                [apiUrl]="service.apiGetComboboxCustomer"
+                                valueField="value"
+                                textField="text"
+                                placeholder="ค้นหาและเลือกลูกค้า"
+                                [clearable]="true"
+                                (selectionChanged)="onCustomerSelected($event)">
+                            </sic-combobox>
                             <sic-combobox
                                 label="โครงการ"
                                 formControlName="projectId"
                                 [apiUrl]="service.apiGetComboboxProject"
+                                [params]="projectParams"
                                 keywordParam="keyword"
                                 valueField="value"
                                 textField="text"
@@ -124,6 +135,9 @@
                                 [required]="true"
                                 (selectionChanged)="onProjectSelected($event)">
                             </sic-combobox>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <sic-combobox
                                 label="ความต้องการ"
                                 formControlName="requirementId"

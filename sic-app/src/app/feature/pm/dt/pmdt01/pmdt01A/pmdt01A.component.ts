@@ -1,5 +1,5 @@
-// src/app/feature/pm/dt/pmdt01/pmdt01A/pmdt01A.component.ts
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -37,6 +37,7 @@ import { SicButtonComponent } from "sic-ng";
 })
 export class Pmdt01AComponent implements OnInit {
   private fb = inject(FormBuilder);
+  private http = inject(HttpClient);
   private phaseService = inject(Pmdt01AService);
   private dialog = inject(DialogService);
   private route = inject(ActivatedRoute);
@@ -51,7 +52,9 @@ export class Pmdt01AComponent implements OnInit {
   data: Pmdt01AModel | null = null;
   userApiUrl = '';
   selectedOwnerNames: Record<string, string> = {};
+  apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
+  projectParams: Record<string, any> = {};
 
   form: FormGroup = Pmdt01AForm.createForm(this.fb);
 
@@ -77,6 +80,7 @@ export class Pmdt01AComponent implements OnInit {
       this.projectId = params['projectId'] || '';
       if (this.projectId) {
         this.form.patchValue({ projectId: this.projectId });
+        this.loadCustomerFromProject(this.projectId);
       }
     });
 
@@ -102,6 +106,7 @@ export class Pmdt01AComponent implements OnInit {
     // ✅ sync this.projectId (ใช้ตอน submit/cancel) ให้ตรงกับ project จริงของ Phase ที่โหลดมาแก้ไข
     if (data.projectId) {
       this.projectId = data.projectId;
+      this.loadCustomerFromProject(data.projectId);
     }
 
     this.form.patchValue({
@@ -119,9 +124,52 @@ export class Pmdt01AComponent implements OnInit {
     this.form.markAsPristine();
   }
 
+  loadCustomerFromProject(projectId: string): void {
+    if (!projectId) return;
+    this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
+      next: (project) => {
+        if (project?.customerId) {
+          this.form.patchValue({ customerId: project.customerId }, { emitEvent: false });
+          this.projectParams = { customerId: project.customerId };
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  onCustomerSelected(item: any): void {
+    const customerId = item?.value ?? item?.id ?? null;
+    if (customerId) {
+      this.projectParams = { customerId };
+    } else {
+      this.projectParams = {};
+    }
+
+    // Two-way check: If the selected project does not belong to this customer, reset it
+    const currentProjectId = this.form.get('projectId')?.value;
+    if (currentProjectId) {
+      this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${currentProjectId}`).subscribe({
+        next: (project) => {
+          if (project?.customerId !== customerId) {
+            this.form.patchValue({ projectId: null });
+            this.projectId = '';
+          }
+        },
+        error: () => {
+          this.form.patchValue({ projectId: null });
+          this.projectId = '';
+        }
+      });
+    }
+  }
+
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
   onProjectSelected(item: any): void {
-    this.projectId = item?.value ?? item?.id ?? '';
+    const selectedProjectId = item?.value ?? item?.id ?? '';
+    this.projectId = selectedProjectId;
+    if (selectedProjectId) {
+      this.loadCustomerFromProject(selectedProjectId);
+    }
   }
 
   onOwnerSelectionChanged(items: any[]) {

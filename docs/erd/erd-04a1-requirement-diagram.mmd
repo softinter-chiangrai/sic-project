@@ -1,0 +1,76 @@
+%% title: ERD 04a1 - Requirement / Diagram
+%% Module: SIC Requirement / Analysis / Design / Diagram (part 1 of 2, see erd-04a2-spec-test-manual.mmd for Specification/Test/User Manual)
+%% NOTE: All entities extend BaseEntity or BaseBusinessEntity (Lombok @Data), which contribute these audit/base
+%%       columns not repeated per-entity below: id (PK, UUID), created_by, created_date, updated_by, updated_date,
+%%       is_delete, delete_by, delete_date, rowVersion (xmin). BaseBusinessEntity additionally adds business_id (UUID).
+%%       Only business-specific columns are listed in each entity box.
+%% NOTE: Relationships marked "(inferred)" come from a plain *_id UUID column that follows FK naming convention but
+%%       has NO @ManyToOne/@JoinColumn mapping in the Java source (no JPA object graph, DB-level FK only/assumed).
+%%       Relationships marked "(mapped)" come from an actual @ManyToOne/@JoinColumn in the entity.
+%% NOTE: PmDiagramSqlHistory (tab_id is varchar, not a real UUID FK) and ExExample (generic demo/scaffold table,
+%%       unrelated to any entity here) have NO relationship to anything in this module - omitted as standalone
+%%       tables to avoid disconnected boxes with no real relationship info.
+
+erDiagram
+    direction LR
+
+%%{init: {"er": {"diagramPadding": 6, "entityPadding": 8, "minEntityWidth": 70, "minEntityHeight": 30, "fontSize": 16}}}%%
+
+    PmRequirement {
+        uuid project_id FK "-> PmCustomerProject (mapped, read-only join)"
+        string requirement_code
+        string title
+        text description
+        string requirement_type
+        string source
+        string priority
+        string business_value
+        text acceptance_criteria
+        string version
+        string status
+        boolean is_active
+        uuid upload_group_id
+    }
+
+    PmDiagramTab {
+        uuid business_id
+        string user_id
+        uuid project_id "(inferred) -> PmCustomerProject"
+        string name
+        string diagram_code
+        string diagram_type
+        text mermaid_script
+        jsonb metadata
+        jsonb graph_data
+        int sort_order
+        boolean is_active
+    }
+
+    PmDiagramVersion {
+        uuid business_id
+        uuid diagram_id FK "-> PmDiagramTab (mapped)"
+        text mermaid_script
+        int version_number
+        text change_comment
+    }
+
+    PmDiagramChat {
+        uuid business_id
+        uuid diagram_id FK "-> PmDiagramTab (mapped)"
+        string user_id
+        string role
+        text content
+        uuid session_id
+        string session_title
+        jsonb context_data
+    }
+
+    %% external entity, defined in another module diagram
+    PmCustomerProject {
+    }
+
+    PmCustomerProject ||--o{ PmRequirement : "owns (project_id, mapped)"
+    PmCustomerProject ||--o{ PmDiagramTab : "owns (project_id, inferred)"
+
+    PmDiagramTab ||--o{ PmDiagramVersion : "has version history"
+    PmDiagramTab ||--o{ PmDiagramChat : "has AI chat log"

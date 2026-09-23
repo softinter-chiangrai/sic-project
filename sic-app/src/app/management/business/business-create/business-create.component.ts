@@ -51,8 +51,16 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   pageDirty = () => this.isSaved ? false : (this.formBusinessData?.isChanged ?? false);
 
   ngOnInit(): void {
-    const form:BusinessFormData = this.route.snapshot.data['form'];
+    const form: BusinessFormData = this.route.snapshot.data['form'];
     this.formBusinessData = form.business;
+    const hasLocal = !!(
+      this.formBusinessData?.formGroup?.get('supportLocalAddress')?.value ||
+      this.formBusinessData?.formGroup?.get('provinceId')?.value ||
+      this.formBusinessData?.value?.provinceId
+    );
+    if (hasLocal) {
+      this.formBusinessData.formGroup.get('supportLocalAddress')?.setValue(true);
+    }
   }
   
 

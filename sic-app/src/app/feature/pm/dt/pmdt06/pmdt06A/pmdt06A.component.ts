@@ -102,8 +102,13 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     showImpactSection = signal(false);
 
     // ===== Form =====
+    apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
+    apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
+    projectParams: Record<string, any> = {};
+
     formData: SicFromData<any> = new SicFromData<any>(this.fb.group({
         id: [null],
+        customerId: [null],
         projectId: [null],
         crCode: [null, Validators.required],
         targetType: ['REQUIREMENT', Validators.required],
@@ -118,6 +123,58 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         approvalFlowId: [null],
         rowVersion: [null],
     }));
+
+    loadCustomerFromProject(projectId: string): void {
+        if (!projectId) return;
+        this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
+            next: (project) => {
+                if (project?.customerId) {
+                    this.form.patchValue({ customerId: project.customerId });
+                    this.projectParams = { customerId: project.customerId };
+                    this.cdr.markForCheck();
+                }
+            },
+            error: () => {},
+        });
+    }
+
+    onCustomerSelected(item: any): void {
+        const customerId = item?.value ?? item?.id ?? null;
+        if (customerId) {
+            this.projectParams = { customerId };
+        } else {
+            this.projectParams = {};
+        }
+
+        const currentProjectId = this.form.get('projectId')?.value;
+        if (currentProjectId) {
+            this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${currentProjectId}`).subscribe({
+                next: (project) => {
+                    if (project?.customerId !== customerId) {
+                        this.form.patchValue({ projectId: null, targetId: null });
+                        this.projectId = null;
+                        this.cdr.markForCheck();
+                    }
+                },
+                error: () => {
+                    this.form.patchValue({ projectId: null, targetId: null });
+                    this.projectId = null;
+                    this.cdr.markForCheck();
+                }
+            });
+        }
+        this.cdr.markForCheck();
+    }
+
+    onProjectSelected(item: any): void {
+        const selectedProjectId = item?.value ?? item?.id ?? '';
+        this.projectId = selectedProjectId || null;
+        this.form.patchValue({ projectId: this.projectId, targetId: null });
+        if (selectedProjectId) {
+            this.loadCustomerFromProject(selectedProjectId);
+        }
+        this.cdr.markForCheck();
+    }
 
     get form(): FormGroup {
         return this.formData.formGroup;

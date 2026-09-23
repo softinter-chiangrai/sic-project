@@ -1,0 +1,80 @@
+%% title: DFD Level 1 - Overview Map (7 processes, 8 data stores)
+%% notation: Gane-Sarson box style. Each process is detailed further in its own file:
+%%   1.0 -> dfd-level1-01-auth-business.mmd
+%%   2.0 -> dfd-level1-02-chat-notification.mmd
+%%   3.0 -> dfd-level1-03-customer-project-finance.mmd
+%%   4.0 -> dfd-level1-04a-requirement-design.mmd + dfd-level1-04b-traceability-review.mmd
+%%   5.0 -> dfd-level1-05-task-approval-bug.mmd
+%%   6.0 -> dfd-level1-06-file-storage.mmd
+%%   7.0 -> dfd-level1-07-search-dashboard-reference.mmd
+%%{init: {'flowchart': {'nodeSpacing': 22, 'rankSpacing': 50, 'curve': 'basis'}}}%%
+flowchart LR
+  classDef entity fill:#FFF2CC,stroke:#D6B656,stroke-width:1.5px,color:#333;
+  classDef process fill:#FFE6CC,stroke:#D79B00,stroke-width:2px,color:#333;
+  classDef store fill:#F5F5F5,stroke:#666666,stroke-width:1px,color:#333;
+
+  user["ผู้ใช้งานภายในระบบ"]
+  customer["ลูกค้า"]
+  keycloak["Keycloak"]
+  ai["AI Provider"]
+  report["Report Service"]
+
+  p1["1.0<br/>Auth / Business / Access"]
+  p2["2.0<br/>Chat / Notification"]
+  p3["3.0<br/>Customer / Project / Finance"]
+  p4["4.0<br/>Requirement / Design / Trace"]
+  p5["5.0<br/>Task / Approval / Bug"]
+  p6["6.0<br/>File Storage / Report"]
+  p7["7.0<br/>Search / Dashboard"]
+
+  d1["D1<br/>Auth/Business"]
+  d2["D2<br/>Chat/Notification"]
+  d3["D3<br/>Customer/Project/Finance"]
+  d4["D4<br/>Requirement/Design"]
+  d5["D5<br/>Task/Approval/Bug"]
+  d6["D6<br/>File Metadata"]
+  d7["D7<br/>Reference/Master"]
+  d8["D8<br/>Object Files"]
+
+  user --> p1 --> user
+  p1 <--> keycloak
+  p1 <--> d1
+
+  user --> p2 --> user
+  p2 <--> d2
+  p1 -.->|identity| p2
+
+  user --> p3 --> user
+  customer --> p3 --> customer
+  p3 <--> d3
+  p3 <-->|approval| p5
+  p3 -->|AI draft| ai
+  p3 -->|export| report
+
+  user --> p4 --> user
+  p4 <--> d4
+  p4 -->|generate| ai
+  p4 <-->|review| p5
+  p3 -.->|project ctx| p4
+
+  user --> p5 --> user
+  p5 <--> d5
+  p5 -->|notify| p2
+
+  user --> p6 --> user
+  p6 <--> d6
+  p6 <--> d8
+  p6 -->|report| report
+  p3 -.->|attach| p6
+  p4 -.->|attach| p6
+
+  user --> p7 --> user
+  p7 <--> d7
+  p7 -.->|read| d1
+  p7 -.->|read| d3
+  p7 -.->|read| d4
+  p7 -.->|read| d5
+
+  class user,customer,keycloak,ai,report entity
+  class p1,p2,p3,p4,p5,p6,p7 process
+  class d1,d2,d3,d4,d5,d6,d7,d8 store
