@@ -1,0 +1,201 @@
+<div class="ai-wizard-backdrop" *ngIf="pipelineSvc.isWizardOpen()" (click)="close()"></div>
+
+<div class="ai-wizard-modal" *ngIf="pipelineSvc.isWizardOpen()">
+  <!-- Header -->
+  <div class="ai-wizard-header">
+    <div class="ai-wizard-title">
+      <div class="ai-wizard-icon-box">
+        <i class="bi bi-stars"></i>
+      </div>
+      <div>
+        <h3 class="ai-wizard-heading">AI Full-Project Generator</h3>
+        <p class="ai-wizard-subheading">สร้างโครงสร้างโปรเจกต์และโมดูลเชื่อมโยงครบวงจรด้วย AI ภายในคลิกเดียว</p>
+      </div>
+    </div>
+    <button type="button" class="ai-wizard-close-btn" (click)="close()">
+      <i class="bi bi-x-lg"></i>
+    </button>
+  </div>
+
+  <!-- Stepper Indicator -->
+  <div class="ai-wizard-stepper">
+    <div class="stepper-item" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
+      <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 1 ? 'bi-check-lg' : 'bi-pencil-fill'"></i></span>
+      <span class="stepper-label">1. บรีฟโครงการ</span>
+    </div>
+    <div class="stepper-line" [class.completed]="currentStep() > 1"></div>
+    <div class="stepper-item" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
+      <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 2 ? 'bi-check-lg' : 'bi-eye-fill'"></i></span>
+      <span class="stepper-label">2. ตรวจสอบโครงสร้าง</span>
+    </div>
+    <div class="stepper-line" [class.completed]="currentStep() > 2"></div>
+    <div class="stepper-item" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3">
+      <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 3 ? 'bi-check-lg' : 'bi-cpu-fill'"></i></span>
+      <span class="stepper-label">3. สร้างข้อมูลทั้งหมด</span>
+    </div>
+    <div class="stepper-line" [class.completed]="currentStep() > 3"></div>
+    <div class="stepper-item" [class.active]="currentStep() === 4">
+      <span class="stepper-circle"><i class="bi bi-flag-fill"></i></span>
+      <span class="stepper-label">4. เริ่มรีวิวโครงการ</span>
+    </div>
+  </div>
+
+  <!-- Step 1: Input -->
+  <div class="ai-wizard-body" *ngIf="currentStep() === 1">
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label class="form-label">ชื่อโครงการ (ถ้ามี)</label>
+        <input type="text" class="form-input" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" placeholder="เช่น โครงการพัฒนาระบบคลังสินค้าและจัดส่งอัจฉริยะ" />
+      </div>
+
+      <div class="form-group full-width">
+        <label class="form-label">รายละเอียด / ความต้องการโครงการ (บรีฟงาน) <span class="text-rose-500">*</span></label>
+        <textarea class="form-textarea" rows="5" [ngModel]="prompt()" (ngModelChange)="prompt.set($event)" placeholder="อธิบายฟังก์ชันที่ต้องการ กลุ่มผู้ใช้งาน เป้าหมายทางธุรกิจ หรือขอบเขตงานที่ต้องการให้ AI ช่วยวางโครงสร้าง..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">ระยะเวลาโครงการโดยประมาณ (สัปดาห์)</label>
+        <input type="number" min="1" max="52" class="form-input" [ngModel]="durationWeeks()" (ngModelChange)="durationWeeks.set($event)" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">AI Engine Model</label>
+        <select class="form-select" [ngModel]="selectedModel()" (ngModelChange)="selectedModel.set($event)">
+          <option *ngFor="let m of availableModels" [value]="m.id">{{ m.name }}</option>
+        </select>
+      </div>
+
+      <div class="form-group full-width">
+        <label class="form-label">เอกสาร TOR หรือไฟล์แนบอ้างอิง</label>
+        <div class="file-attach-bar">
+          <label class="attach-btn">
+            <i class="bi bi-paperclip"></i> แนบไฟล์ TOR / เอกสารบรีฟ
+            <input type="file" multiple hidden (change)="onFilesSelected($event)" />
+          </label>
+          <div class="file-chip" *ngFor="let f of attachedFiles(); let i = index">
+            <i class="bi bi-file-earmark-text"></i>
+            <span>{{ f.name }}</span>
+            <button type="button" (click)="removeFile(i)"><i class="bi bi-x"></i></button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Plan Breakdown Preview -->
+  <div class="ai-wizard-body" *ngIf="currentStep() === 2 && previewData()">
+    <div class="preview-header-card">
+      <h4><i class="bi bi-folder2-open"></i> {{ previewData()?.projectName }}</h4>
+      <div class="preview-desc" [innerHTML]="previewData()?.description"></div>
+      <div class="preview-badge"><i class="bi bi-clock-history"></i> ระยะเวลาโครงการ: {{ previewData()?.estimatedDurationWeeks }} สัปดาห์</div>
+    </div>
+
+    <div class="modules-toggle-box">
+      <label class="section-label"><i class="bi bi-check2-square"></i> เลือกโมดูลที่ต้องการให้ AI สร้างอัตโนมัติ:</label>
+      <div class="toggle-chips-grid">
+        <label class="module-chip"><input type="checkbox" [ngModel]="incReqs()" (ngModelChange)="incReqs.set($event)" /> <span>Requirements ({{ previewData()?.previewRequirements?.length || 0 }} รายการ)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incSpecs()" (ngModelChange)="incSpecs.set($event)" /> <span>System Specifications ({{ previewData()?.previewSpecifications?.length || 0 }} รายการ)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incTasks()" (ngModelChange)="incTasks.set($event)" /> <span>WBS / Tasks Breakdown ({{ previewData()?.previewTasks?.length || 0 }} รายการ)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incGantt()" (ngModelChange)="incGantt.set($event)" /> <span>Gantt Phases & Timeline ({{ previewData()?.previewPhases?.length || 0 }} เฟส)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incDelivery()" (ngModelChange)="incDelivery.set($event)" /> <span>Delivery Milestones ({{ previewData()?.previewDeliveries?.length || 0 }} งวด)</span></label>
+      </div>
+    </div>
+
+    <div class="preview-tabs-container">
+      <div class="preview-block">
+        <h5>📋 รายการ Requirements ตัวอย่าง</h5>
+        <ul>
+          <li *ngFor="let r of previewData()?.previewRequirements">
+            <strong>{{ r.title }}</strong> <span class="badge badge-subtle">{{ r.type || 'FUNCTIONAL' }}</span>
+          </li>
+        </ul>
+      </div>
+
+      <div class="preview-block">
+        <h5>⚙️ รายการ Specifications ตัวอย่าง</h5>
+        <ul>
+          <li *ngFor="let s of previewData()?.previewSpecifications">
+            <strong>{{ s.title }}</strong> <span class="badge badge-subtle">{{ s.specificationType || 'SYSTEM' }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Generating Stepper -->
+  <div class="ai-wizard-body center-content" *ngIf="currentStep() === 3">
+    <div class="generating-spinner-box">
+      <div class="pulsing-glow"></div>
+      <i class="bi bi-cpu generating-icon"></i>
+    </div>
+    <h4 class="generating-title">AI กำลังสร้างโครงสร้างโปรเจกต์และโมดูลเชื่อมโยง...</h4>
+    <p class="generating-desc">กำลังสร้าง Project Charter -> บันทึก Requirements -> ออกแบบ Specs -> วาง Tasks และแผนงาน Gantt Chart</p>
+    
+    <div class="pipeline-live-list">
+      <div class="live-item done"><i class="bi bi-check-circle-fill"></i> วิเคราะห์โครงสร้างและสโคปงานโครงการ</div>
+      <div class="live-item done"><i class="bi bi-check-circle-fill"></i> สร้างและผูกโยง Business Requirements</div>
+      <div class="live-item running"><i class="bi bi-arrow-repeat spin"></i> ออกแบบ Specifications และผูก Tasks ใน Gantt Timeline</div>
+      <div class="live-item pending"><i class="bi bi-circle"></i> กำหนดงวดส่งมอบและบันทึกข้อมูล Traceability</div>
+    </div>
+  </div>
+
+  <!-- Step 4: Success & Review Links -->
+  <div class="ai-wizard-body center-content" *ngIf="currentStep() === 4">
+    <div class="success-icon-box">
+      <i class="bi bi-check-circle-fill"></i>
+    </div>
+    <h3 class="success-title">สร้างโครงการสมบูรณ์เรียบร้อย!</h3>
+    <p class="success-desc">ข้อมูลทั้งหมดถูกบันทึกในสถานะ <span class="badge-draft">Draft (รอรีวิว)</span> พร้อมผูกความสัมพันธ์ Traceability ทุกโมดูล</p>
+
+    <div class="summary-stat-grid">
+      <div class="stat-card" *ngIf="createdCounts()['requirements']">
+        <span class="stat-num">{{ createdCounts()['requirements'] }}</span>
+        <span class="stat-lbl">Requirements</span>
+      </div>
+      <div class="stat-card" *ngIf="createdCounts()['specifications']">
+        <span class="stat-num">{{ createdCounts()['specifications'] }}</span>
+        <span class="stat-lbl">Specifications</span>
+      </div>
+      <div class="stat-card" *ngIf="createdCounts()['tasks']">
+        <span class="stat-num">{{ createdCounts()['tasks'] }}</span>
+        <span class="stat-lbl">WBS Tasks</span>
+      </div>
+      <div class="stat-card" *ngIf="createdCounts()['phases']">
+        <span class="stat-num">{{ createdCounts()['phases'] }}</span>
+        <span class="stat-lbl">Gantt Phases</span>
+      </div>
+      <div class="stat-card" *ngIf="createdCounts()['deliveries']">
+        <span class="stat-num">{{ createdCounts()['deliveries'] }}</span>
+        <span class="stat-lbl">Deliveries</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer Actions -->
+  <div class="ai-wizard-footer">
+    <ng-container *ngIf="currentStep() === 1">
+      <button type="button" class="btn btn-secondary" (click)="close()">ยกเลิก</button>
+      <button type="button" class="btn btn-primary" [disabled]="isProcessing() || (!prompt().trim() && !projectName().trim())" (click)="generatePreview()">
+        <i class="bi bi-magic"></i> วิเคราะห์และดูโครงสร้าง (Preview Plan)
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="currentStep() === 2">
+      <button type="button" class="btn btn-secondary" (click)="currentStep.set(1)">
+        <i class="bi bi-chevron-left"></i> ปรับบรีฟ
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="isProcessing()" (click)="executeFullPipeline()">
+        <i class="bi bi-rocket-takeoff-fill"></i> ยืนยันสร้างโปรเจกต์ทั้งหมดทันที
+      </button>
+    </ng-container>
+
+    <ng-container *ngIf="currentStep() === 4">
+      <button type="button" class="btn btn-secondary" (click)="goToGantt()">
+        <i class="bi bi-bar-chart-steps"></i> ดูใน Gantt Chart
+      </button>
+      <button type="button" class="btn btn-primary" (click)="goToProject()">
+        <i class="bi bi-folder2-open"></i> เปิดรีวิวโปรเจกต์นี้
+      </button>
+    </ng-container>
+  </div>
+</div>

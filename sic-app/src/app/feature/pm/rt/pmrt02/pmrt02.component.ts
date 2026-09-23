@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { AiProjectPipelineService } from '../../../../core/services/ai-project-pipeline.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
@@ -28,6 +29,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   standalone: true,
   imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmrt02.component.html',
+  styleUrl: './pmrt02.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt02Component implements OnInit {
@@ -38,6 +40,11 @@ export class Pmrt02Component implements OnInit {
   private navigation = inject(NavigationService);
   private recentItems = inject(RecentItemsService);
   private translate = inject(TranslateService);
+  private pipelineSvc = inject(AiProjectPipelineService);
+
+  openAiProjectWizard(): void {
+    this.pipelineSvc.openWizard();
+  }
 
   // ===== State =====
   protected searchTerm = signal('');

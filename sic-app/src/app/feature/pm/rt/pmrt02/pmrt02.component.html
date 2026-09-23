@@ -27,6 +27,13 @@
         </button>
       }
       <button
+        (click)="openAiProjectWizard()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white transition-all shadow-sm hover:shadow-md"
+      >
+        <i class="bi bi-stars"></i>
+        <span>สร้างด้วย AI (Full Project)</span>
+      </button>
+      <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
       >

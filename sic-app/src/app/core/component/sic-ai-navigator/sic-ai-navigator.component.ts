@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, AiModelOption } from '../../config/ai-models.config';
 import { AiChatSession, AiNavigatorMessage, AiNavigatorService, AiRouteSuggestion } from '../../services/ai-navigator.service';
+import { AiProjectPipelineService } from '../../services/ai-project-pipeline.service';
 import { filesToAiAttachments } from '../../utils/ai-attachment.util';
 import { DialogService } from '../../services/dialog.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
@@ -18,6 +19,7 @@ import { DateTimeUtil } from '../../utils/datetime.util';
 })
 export class SicAiNavigatorComponent implements OnInit {
   protected readonly navSvc = inject(AiNavigatorService);
+  protected readonly pipelineSvc = inject(AiProjectPipelineService);
   protected readonly translate = inject(TranslateService);
   private readonly dialog = inject(DialogService);
 
@@ -313,6 +315,11 @@ export class SicAiNavigatorComponent implements OnInit {
     if (this.showHistory() && !target.closest('.ai-nav-history-panel') && !target.closest('.ai-nav-header-icon-btn')) {
       this.activePanel.set(null);
     }
+  }
+
+  openProjectWizard(prompt?: string): void {
+    this.navSvc.close();
+    this.pipelineSvc.openWizard(prompt || this.inputText || '');
   }
 
   private scrollToEnd(): void {

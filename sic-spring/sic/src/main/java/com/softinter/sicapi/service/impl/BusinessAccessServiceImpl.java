@@ -81,6 +81,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<BusinessResponseDto> getMyBusinesses() {
         String userId = currentUserService.getUserId();
 
@@ -383,7 +384,9 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         business.setFirstNameLocal(req.getFirstNameLocal());
         business.setMiddleNameLocal(req.getMiddleNameLocal());
         business.setLastNameLocal(req.getLastNameLocal());
-        business.setSupportLocalAddress(req.isSupportLocalAddress());
+        if (req.getSupportLocalAddress() != null) {
+            business.setSupportLocalAddress(req.getSupportLocalAddress());
+        }
         if (req.getCountryId() != null) {
             business.setCountry(countryRepository.findById(req.getCountryId()).orElse(null));
         }
@@ -402,8 +405,8 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
         business.setFax(req.getFax());
         business.setEmail(req.getEmail());
         business.setZipCode(req.getZipCode());
-        if (req.getId() != null) {
-            business.setIsActive(req.isActive());
+        if (req.getIsActive() != null) {
+            business.setIsActive(req.getIsActive());
         }
         if (req.getUploadGroupId() != null) {
             business.setUploadGroupId(req.getUploadGroupId());
@@ -453,8 +456,9 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public BusinessResponse getBusinessInfo(UUID businessId) {
-        SuBusiness business = businessRepository.findByIdWithTitle(businessId).orElse(null);
+        SuBusiness business = businessRepository.findByIdWithDetails(businessId).orElse(null);
         if (business == null) return null;
 
         BusinessResponse dto = new BusinessResponse();

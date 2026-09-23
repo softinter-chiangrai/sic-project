@@ -16,6 +16,15 @@ public interface SuBusinessRepository extends JpaRepository<SuBusiness, UUID>, J
     Optional<SuBusiness> findByBusinessCodeAndIsActiveTrueAndIsDeleteFalse(String businessCode);
     boolean existsByBusinessCodeAndIsActiveTrue(String businessCode);
 
+    @Query("SELECT b FROM SuBusiness b " +
+           "LEFT JOIN FETCH b.title " +
+           "LEFT JOIN FETCH b.country " +
+           "LEFT JOIN FETCH b.province " +
+           "LEFT JOIN FETCH b.district " +
+           "LEFT JOIN FETCH b.subDistrict " +
+           "WHERE b.id = :id AND b.isActive = true AND b.isDelete = false")
+    Optional<SuBusiness> findByIdWithDetails(@Param("id") UUID id);
+
     @Query("SELECT b FROM SuBusiness b LEFT JOIN FETCH b.title WHERE b.id = :id AND b.isActive = true AND b.isDelete = false")
     Optional<SuBusiness> findByIdWithTitle(@Param("id") UUID id);
 }

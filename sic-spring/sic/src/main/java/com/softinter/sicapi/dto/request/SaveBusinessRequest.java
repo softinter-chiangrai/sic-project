@@ -1,5 +1,6 @@
 package com.softinter.sicapi.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.util.List;
@@ -23,7 +24,8 @@ public class SaveBusinessRequest {
     private String middleNameLocal;
     private String lastNameLocal;
     private UUID countryId;
-    private boolean supportLocalAddress;
+    @JsonProperty("supportLocalAddress")
+    private Boolean supportLocalAddress;
     private String addressEn;
     private String addressLocal;
     private UUID provinceId;
@@ -35,7 +37,8 @@ public class SaveBusinessRequest {
     private String fax;
     private Integer state;
     private UUID uploadGroupId;
-    private boolean isActive;
+    @JsonProperty("isActive")
+    private Boolean isActive;
     private Integer rowVersion;
     private List<StorageUploadReference> uploadGroupData;
 }
