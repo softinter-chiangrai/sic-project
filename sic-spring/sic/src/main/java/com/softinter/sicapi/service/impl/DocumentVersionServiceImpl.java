@@ -234,6 +234,20 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public java.util.Map<UUID, String> getLatestVersionMap(String documentType, java.util.Collection<UUID> documentIds) {
+        java.util.Map<UUID, String> result = new java.util.HashMap<>();
+        if (documentIds == null || documentIds.isEmpty()) {
+            return result;
+        }
+        // เรียงใหม่สุดก่อน จึงเก็บเฉพาะแถวแรกของแต่ละเอกสาร
+        for (PmDocumentVersion v : versionRepository.findByDocumentTypeAndDocumentIds(documentType, documentIds)) {
+            result.putIfAbsent(v.getDocumentId(), v.getVersionNo());
+        }
+        return result;
+    }
+
+    @Override
     public String keepVersion(String currentVersion) {
         return (currentVersion == null || currentVersion.isBlank()) ? "v0.1" : currentVersion;
     }

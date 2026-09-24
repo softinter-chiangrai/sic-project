@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
 import { environment } from '../../../environments/environment';
+import { recordServerError } from '../services/server-error-tracker';
 
 export function extractErrorMessage(err: HttpErrorResponse, fallback: string): string {
   const body = err.error;
@@ -26,6 +27,9 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         if (authService.isLoggedIn()) {
           authService.logout();
         }
+      }
+      if (err instanceof HttpErrorResponse && isSicApiRequest) {
+        recordServerError(err.status, err.error);
       }
       return throwError(() => err);
     }),

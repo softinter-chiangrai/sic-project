@@ -160,7 +160,14 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return contractRepository.findAll(spec, pageable).map(this::toResponse);
+        org.springframework.data.domain.Page<PmCustomerContract> page = contractRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "CONTRACT", page.getContent().stream().map(PmCustomerContract::getId).toList());
+        return page.map(e -> {
+            var dto = this.toResponse(e);
+            dto.setVersion(versions.get(e.getId()));
+            return dto;
+        });
     }
 
     @Override
@@ -281,13 +288,13 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 parent.setRenewalStatus("ต่อแล้ว");
                 contractRepository.save(parent);
 
-                // บันทึก Version/Audit Log ให้สัญญาเดิมด้วย
+                // บันทึกประวัติให้สัญญาเดิมด้วย โดยคงเลขเวอร์ชันเดิม (การต่อสัญญาไม่ใช่การแก้เนื้อหาสัญญาเดิม)
                 documentVersionService.createVersion(
                         "CONTRACT",
                         parent.getId(),
                         parent.getProjectId(),
                         parent.getContractNo(),
-                        "v-renewed",
+                        documentVersionService.keepVersion(documentVersionService.getLatestVersionNo("CONTRACT", parent.getId())),
                         "ต่อสัญญาฉบับใหม่: " + request.getContractNo(),
                         null
                 );

@@ -33,4 +33,7 @@ public class PmCustomerProjectResponse {
     private Integer rowVersion;
     private String approvalStatus;
     private Boolean isApproved;
+
+    /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
+    private String version;
 }

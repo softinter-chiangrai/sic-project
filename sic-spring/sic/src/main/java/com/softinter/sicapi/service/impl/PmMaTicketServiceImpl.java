@@ -137,7 +137,14 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        return ticketRepository.findAll(spec, pageable).map(this::toResponse);
+        org.springframework.data.domain.Page<PmMaTicket> page = ticketRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "MA_TICKET", page.getContent().stream().map(PmMaTicket::getId).toList());
+        return page.map(e -> {
+            var dto = this.toResponse(e);
+            dto.setVersion(versions.get(e.getId()));
+            return dto;
+        });
     }
 
     @Override

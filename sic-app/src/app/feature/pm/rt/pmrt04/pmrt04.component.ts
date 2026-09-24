@@ -98,7 +98,7 @@ export class Pmrt04Component implements OnInit {
     const visible = this.visibleColumns();
     return {
       id: 'id',
-      selectable: true,
+      selectable: false,
       showToolbar: false,
       defaultSortField: 'contractNo',
       pageSize: this.pageSize(),
@@ -111,6 +111,7 @@ export class Pmrt04Component implements OnInit {
         { label: this.translate.instant('PMRT04_COL_DURATION'), name: 'startDate', type: 'dateRangeText', hidden: !visible.has('duration'), minWidth: 140 },
         { label: this.translate.instant('PMRT04_COL_STATUS'), name: 'signStatus', type: 'statusBadge', sortable: true, minWidth: 100 },
         { label: this.translate.instant('PMRT04_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), minWidth: 100 },
+        { label: this.translate.instant('PMRT04_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
         { label: this.translate.instant('PMRT04_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 180 },
       ],
     };
@@ -485,7 +486,7 @@ export class Pmrt04Component implements OnInit {
       String(c.contractValue ?? ''),
       c.startDate,
       c.endDate,
-      this.getStatusText(c.signStatus),
+      this.getRowStatusText(c),
     ]);
     const csvLines = [headers, ...rows].map((r) =>
       r.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','),
@@ -628,6 +629,21 @@ export class Pmrt04Component implements OnInit {
       Expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     };
     return map[status] || map['Draft'];
+  }
+
+  // สัญญาที่ถูกยกเลิก (สถานะการต่อสัญญา = "ยกเลิก") ต้องแสดงเป็น "ยกเลิกสัญญา" สีแดง แทนสถานะลงนามเดิม
+  isCancelled(row: { renewalStatus?: string | null }): boolean {
+    return row?.renewalStatus === 'ยกเลิก';
+  }
+
+  getRowStatusClass(row: { signStatus: string; renewalStatus?: string | null }): string {
+    return this.isCancelled(row)
+      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+      : this.getStatusClass(row.signStatus);
+  }
+
+  getRowStatusText(row: { signStatus: string; renewalStatus?: string | null }): string {
+    return this.isCancelled(row) ? this.translate.instant('PMRT04_STATUS_CANCELLED') : this.getStatusText(row.signStatus);
   }
 
   getStatusText(status: string): string {

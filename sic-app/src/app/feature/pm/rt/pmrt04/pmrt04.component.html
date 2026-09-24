@@ -160,8 +160,8 @@
 
       <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
         @let r = $any(row);
-        <span [class]="getStatusClass(r.signStatus) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-          {{ getStatusText(r.signStatus) }}
+        <span [class]="getRowStatusClass(r) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getRowStatusText(r) }}
         </span>
       </ng-template>
 

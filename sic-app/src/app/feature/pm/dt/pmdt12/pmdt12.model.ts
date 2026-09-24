@@ -7,6 +7,7 @@ export interface PmTestCaseModel extends SicBaseStateModel {
   scenarioId?: string;
   scenarioName?: string;
   testCaseCode: string;
+  version?: string;
   title?: string;
   priority?: string;
   testStep: string;

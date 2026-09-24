@@ -32,4 +32,7 @@ public class ChangeRequestResponse {
     private Instant createdDate;
     private List<CrAssigneeResponse> assignees;
     private List<ChangeImpactResponse> impacts;
+
+    /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
+    private String version;
 }

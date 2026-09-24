@@ -126,7 +126,14 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return renewalRepository.findAll(spec, pageable).map(this::toResponse);
+        org.springframework.data.domain.Page<PmMaRenewal> page = renewalRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "MA_RENEWAL", page.getContent().stream().map(PmMaRenewal::getId).toList());
+        return page.map(e -> {
+            var dto = this.toResponse(e);
+            dto.setVersion(versions.get(e.getId()));
+            return dto;
+        });
     }
 
     @Override

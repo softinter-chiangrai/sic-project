@@ -100,6 +100,7 @@ export class Pmdt04AService {
     model?: string;
     attachments?: AiAttachmentPayload[];
   }): Observable<{
+    requirementCode?: string;
     title?: string;
     description?: string;
     acceptanceCriteria?: string;
@@ -356,6 +357,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     smartPatchFormAiDraft(
       this.form,
       {
+        requirementCode: draft.requirementCode,
         title: draft.title,
         description: draft.description,
         acceptanceCriteria: draft.acceptanceCriteria,

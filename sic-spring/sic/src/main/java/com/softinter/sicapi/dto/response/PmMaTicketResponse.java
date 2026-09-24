@@ -46,4 +46,7 @@ public class PmMaTicketResponse {
     private String updatedBy;
     private Instant updatedDate;
     private Integer rowVersion;
+
+    /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
+    private String version;
 }

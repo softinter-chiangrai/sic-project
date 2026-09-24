@@ -397,7 +397,14 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return projectRepository.findAll(spec, pageable).map(this::toResponse);
+        org.springframework.data.domain.Page<PmCustomerProject> page = projectRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "PROJECT", page.getContent().stream().map(PmCustomerProject::getId).toList());
+        return page.map(e -> {
+            var dto = this.toResponse(e);
+            dto.setVersion(versions.get(e.getId()));
+            return dto;
+        });
     }
 
 

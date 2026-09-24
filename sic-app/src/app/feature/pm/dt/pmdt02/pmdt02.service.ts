@@ -27,6 +27,17 @@ export class Pmdt02Service {
     return this.http.put<PhaseResponse>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`, data);
   }
 
+  generateWbsWithAi(
+    phaseId: string,
+    prompt: string,
+    model: string,
+  ): Observable<{ milestones: number; workPackages: number; tasks: number; message: string }> {
+    return this.http.post<{ milestones: number; workPackages: number; tasks: number; message: string }>(
+      `${this.apiBaseUrl}/api/pm/ai/phase-wbs/generate`,
+      { phaseId, prompt, model },
+    );
+  }
+
   deletePhase(phaseId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiBaseUrl}/api/pm/phases/${phaseId}`);
   }

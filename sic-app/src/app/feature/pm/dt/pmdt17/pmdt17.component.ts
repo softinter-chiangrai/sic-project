@@ -67,7 +67,7 @@ export class Pmdt17Component implements OnInit {
     const visible = this.visibleColumns();
     return {
       id: 'id',
-      selectable: true,
+      selectable: false,
       showToolbar: false,
       pageSize: this.pageSize(),
       column: [
@@ -79,6 +79,7 @@ export class Pmdt17Component implements OnInit {
         { label: this.translate.instant('PMDT17_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', width: 120 },
         { label: this.translate.instant('PMDT17_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', width: 130 },
         { label: this.translate.instant('PMDT17_COL_ASSIGNED'), name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), width: 140 },
+        { label: this.translate.instant('PMDT17_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
         { label: this.translate.instant('PMDT17_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 110 },
       ],
     };

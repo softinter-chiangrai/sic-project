@@ -178,6 +178,9 @@
                 <span class="inline-block px-2 py-0.5 rounded text-xs font-mono font-bold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/20">
                   {{ review.reviewCode }}
                 </span>
+                @if (review.version) {
+                  <span class="text-[10px] font-mono text-[var(--text-muted)]" [title]="'PMDT09_VERSION_LABEL' | translate">{{ review.version }}</span>
+                }
                 <span class="text-xs font-medium text-[var(--text-muted)] bg-[var(--bg)] px-2 py-0.5 rounded-md border border-[var(--border)]">
                   {{ review.reviewableType }}
                 </span>
@@ -387,6 +390,9 @@
             <div>
               <div class="flex items-center gap-2 flex-wrap">
                 <span class="font-mono text-xs font-bold text-[var(--crm-primary)]">{{ review.reviewCode }}</span>
+                @if (review.version) {
+                  <span class="text-[10px] font-mono text-[var(--text-muted)]" [title]="'PMDT09_VERSION_LABEL' | translate">{{ review.version }}</span>
+                }
                 <span [class]="getStatusClass(review.status) + ' text-[10px] px-2 py-0.2 rounded-full font-medium'">
                   {{ review.status }}
                 </span>

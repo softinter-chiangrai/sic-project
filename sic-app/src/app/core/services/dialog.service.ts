@@ -3,6 +3,7 @@ import { ApplicationRef, ComponentRef, createComponent, DOCUMENT, EnvironmentInj
 import { firstValueFrom } from 'rxjs';
 import { SicDialogService as SicNgDialogService } from 'sic-ng';
 import { SicDialogComponent } from '../component/sic-dialog/sic-dialog.component';
+import { consumeRecentServerError } from './server-error-tracker';
 
 export type DialogType = 'info' | 'success' | 'warn' | 'confirm' | 'error';
 
@@ -48,7 +49,9 @@ export class DialogService {
   }
 
   async error(title: string, description: string): Promise<boolean> {
-    await firstValueFrom(this.sicDialog.danger(title, description));
+    // ถ้า request ที่เพิ่งล้มเหลวมีเหตุผลจาก backend (เช่น เอกสารถูกล็อก) ให้แสดงเหตุผลนั้น แทนข้อความทั่วไปของแต่ละหน้า
+    const serverMessage = consumeRecentServerError();
+    await firstValueFrom(this.sicDialog.danger(title, serverMessage ?? description));
     return true;
   }
 

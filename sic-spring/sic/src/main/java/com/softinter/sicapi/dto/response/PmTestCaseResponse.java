@@ -31,4 +31,7 @@ public class PmTestCaseResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;
+
+    /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
+    private String version;
 }

@@ -78,7 +78,7 @@ export class Pmdt16Component implements OnInit {
     const visible = this.visibleColumns();
     return {
       id: 'id',
-      selectable: true,
+      selectable: false,
       showToolbar: false,
       lazy: false,
       pageSize: this.pageSize(),
@@ -91,6 +91,7 @@ export class Pmdt16Component implements OnInit {
         { label: this.translate.instant('PMDT16_COL_PAID_AMOUNT'), name: 'paidAmount', type: 'paidAmountText', hidden: !visible.has('paidAmount'), align: 'right', width: 130 },
         { label: this.translate.instant('PMDT16_COL_STATUS'), name: 'paymentStatus', type: 'statusBadge', align: 'center', width: 120 },
         { label: this.translate.instant('PMDT16_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', width: 130 },
+        { label: this.translate.instant('PMDT16_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
         { label: this.translate.instant('PMDT16_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 120 },
       ],
     };

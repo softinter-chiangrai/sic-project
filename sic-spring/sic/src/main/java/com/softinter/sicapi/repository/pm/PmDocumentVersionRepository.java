@@ -12,6 +12,12 @@ import java.util.UUID;
 @Repository
 public interface PmDocumentVersionRepository extends JpaRepository<PmDocumentVersion, UUID> {
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(String documentType, UUID documentId);
+
+    @org.springframework.data.jpa.repository.Query("SELECT v FROM PmDocumentVersion v WHERE v.documentType = :documentType "
+            + "AND v.documentId IN :documentIds ORDER BY v.createdDate DESC")
+    List<PmDocumentVersion> findByDocumentTypeAndDocumentIds(
+            @org.springframework.data.repository.query.Param("documentType") String documentType,
+            @org.springframework.data.repository.query.Param("documentIds") java.util.Collection<UUID> documentIds);
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIdAndIsActiveTrueOrderByCreatedDateDesc(String documentType, UUID documentId);
     java.util.Optional<PmDocumentVersion> findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(String documentType, UUID documentId);
     List<PmDocumentVersion> findByProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID projectId);
@@ -29,4 +35,4 @@ public interface PmDocumentVersionRepository extends JpaRepository<PmDocumentVer
 
     @Query("SELECT v FROM PmDocumentVersion v WHERE (v.isDelete IS NULL OR v.isDelete = false) AND v.documentType = :documentType ORDER BY v.createdDate DESC")
     List<PmDocumentVersion> findByDocumentTypeAndIsDeleteFalseOrderByCreatedDateDesc(@Param("documentType") String documentType);
-}
+}

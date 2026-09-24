@@ -6,6 +6,7 @@ import { Subscription, filter } from 'rxjs';
 import dayjs from '../../../../core/dayjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { AiModelsService } from '../../../../core/services/ai-models.service';
 
 import type { PhaseResponse, CalendarItemDetail, PhasePageData } from './pmdt02.model';
 import type { MilestoneResponse } from './pmdt02A/pmdt02A.model';
@@ -69,6 +70,7 @@ export class Pmdt02Component implements OnInit {
   private dialog = inject(DialogService);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private aiModelsSvc = inject(AiModelsService);
   private routerSub?: Subscription;
 
   // ===== SIGNALS =====
@@ -625,6 +627,54 @@ export class Pmdt02Component implements OnInit {
       count += ms.workPackages?.length || 0;
     });
     return count;
+  }
+
+  // ===== AI: สร้าง Milestone / Work Package / Task ทีเดียว =====
+  showAiWbsModal = signal(false);
+  aiWbsPrompt = signal('');
+  aiWbsModel = signal('');
+  isAiWbsRunning = signal(false);
+  get aiModels() {
+    return this.aiModelsSvc.models();
+  }
+
+  openAiWbs(): void {
+    if (!this.aiWbsModel()) {
+      this.aiWbsModel.set(this.aiModelsSvc.defaultModel());
+    }
+    this.showAiWbsModal.set(true);
+  }
+
+  closeAiWbs(): void {
+    if (this.isAiWbsRunning()) return;
+    this.showAiWbsModal.set(false);
+  }
+
+  runAiWbs(): void {
+    const phaseId = this.currentPhaseId();
+    if (!phaseId || this.isAiWbsRunning()) return;
+
+    this.isAiWbsRunning.set(true);
+    this.phaseService.generateWbsWithAi(phaseId, this.aiWbsPrompt(), this.aiWbsModel()).subscribe({
+      next: (res) => {
+        this.isAiWbsRunning.set(false);
+        if (res.milestones + res.workPackages + res.tasks === 0) {
+          this.dialog.warn(this.translate.instant('PMDT02_AI_WBS_EMPTY_TITLE'), res.message || this.translate.instant('PMDT02_AI_WBS_EMPTY_MSG'));
+          return;
+        }
+        this.showAiWbsModal.set(false);
+        this.aiWbsPrompt.set('');
+        this.dialog.success(this.translate.instant('PMDT02_AI_WBS_SUCCESS_TITLE'), res.message);
+        this.loadPhaseDetail(phaseId, false);
+      },
+      error: (err) => {
+        this.isAiWbsRunning.set(false);
+        this.dialog.error(
+          this.translate.instant('PMDT02_AI_WBS_FAILED_TITLE'),
+          err?.error?.message || this.translate.instant('PMDT02_AI_WBS_FAILED_MSG'),
+        );
+      },
+    });
   }
 
   // ===== CRUD =====

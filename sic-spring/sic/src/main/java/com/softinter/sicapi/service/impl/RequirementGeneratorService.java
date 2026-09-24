@@ -5,6 +5,7 @@ import com.softinter.sicapi.dto.request.GenerateRequirementDraftRequest;
 import com.softinter.sicapi.dto.response.RequirementDraft;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.service.PmAiProviderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,17 +21,23 @@ public class RequirementGeneratorService {
 
     private final PmAiProviderService aiProviderService;
     private final PmCustomerProjectRepository projectRepository;
+    private final PmRequirementRepository requirementRepository;
     private final ObjectMapper objectMapper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
     public RequirementDraft generateDraft(GenerateRequirementDraftRequest request) {
         PmCustomerProject project = null;
+        String defaultCode = null;
         if (request.getProjectId() != null) {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
+            if (project != null) {
+                long count = requirementRepository.countByProjectIdAndIsDeleteFalse(project.getId()) + 1;
+                defaultCode = "REQ-" + String.format("%03d", count);
+            }
         }
 
-        String prompt = buildPrompt(project, request.getTitle(), request.getPrompt(), request.getRequirementType());
+        String prompt = buildPrompt(project, request.getTitle(), request.getPrompt(), request.getRequirementType(), defaultCode);
         String systemPrompt = """
                 You are a Principal Business Analyst and Lead System Analyst with 15+ years of experience in enterprise software development.
                 Your task is to analyze user prompts and project contexts to generate a comprehensive, professional, well-structured Software Requirement in JSON format.
@@ -41,6 +48,7 @@ public class RequirementGeneratorService {
                 3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. requirementType must be one of: FUNCTIONAL | NON_FUNCTIONAL | BUSINESS_RULE | REPORT | INTEGRATION | SECURITY | DATA | UI. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL.
                 4. The JSON structure MUST be:
                 {
+                    "requirementCode": "REQ-001 (or appropriate requirement code)",
                     "title": "Clear, concise, professional requirement title",
                     "description": "Comprehensive HTML description (use <p>, <ul>, <li>, <strong>, <h3> for rich formatting suitable for rich-text editors)",
                     "acceptanceCriteria": "Given-When-Then or clear bulleted criteria formatted in HTML (<p>, <ul>, <li>, <strong>)",
@@ -55,12 +63,16 @@ public class RequirementGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         RequirementDraft draft = parseAiResponse(aiResponse);
 
+        if (draft.getRequirementCode() == null || draft.getRequirementCode().isBlank()) {
+            draft.setRequirementCode(defaultCode != null ? defaultCode : "REQ-001");
+        }
+
         if (request.getRequirementType() != null && !request.getRequirementType().isBlank()) draft.setRequirementType(request.getRequirementType());
 
         return draft;
     }
 
-    private String buildPrompt(PmCustomerProject project, String customTitle, String customPrompt, String requirementType) {
+    private String buildPrompt(PmCustomerProject project, String customTitle, String customPrompt, String requirementType, String suggestedCode) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed, professional Software Requirement.\n\n");
 
@@ -69,6 +81,10 @@ public class RequirementGeneratorService {
               .append("- Project Name: ").append(project.getProjectName() != null ? project.getProjectName() : "").append("\n")
               .append("- Project Code: ").append(project.getProjectCode() != null ? project.getProjectCode() : "").append("\n")
               .append("- Description: ").append(project.getDescription() != null ? project.getDescription() : "").append("\n\n");
+        }
+
+        if (suggestedCode != null && !suggestedCode.isBlank()) {
+            sb.append("- Suggested Requirement Code: ").append(suggestedCode).append("\n");
         }
 
         if (requirementType != null && !requirementType.isBlank()) {

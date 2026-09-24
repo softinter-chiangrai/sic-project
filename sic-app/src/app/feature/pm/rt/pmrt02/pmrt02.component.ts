@@ -78,6 +78,7 @@ export class Pmrt02Component implements OnInit {
       { label: 'Manday', name: 'usedManday', type: 'mandayProgress', minWidth: 150 },
       { label: this.translate.instant('PMRT02_COL_DURATION'), name: 'startDate', type: 'dateRangeText', minWidth: 120 },
       { label: this.translate.instant('PMRT02_COL_PRIORITY'), name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 100 },
+      { label: this.translate.instant('PMRT02_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
       { label: this.translate.instant('PMRT02_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
     ],
   };

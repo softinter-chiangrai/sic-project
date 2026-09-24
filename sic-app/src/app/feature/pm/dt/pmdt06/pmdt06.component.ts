@@ -126,6 +126,7 @@ export class Pmdt06Component implements OnInit {
       { label: this.translate.instant('PMDT06_COL_ASSIGNEES'), name: 'assignees', type: 'assigneeList', minWidth: 150 },
       { label: this.translate.instant('PMDT06_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 100 },
       { label: this.translate.instant('PMDT06_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
+      { label: this.translate.instant('PMDT06_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
       { label: this.translate.instant('PMDT06_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
     ],
   };

@@ -127,7 +127,14 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
 
-        return invoiceRepository.findAll(spec, pageable).map(this::toResponse);
+        org.springframework.data.domain.Page<PmInvoice> page = invoiceRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "INVOICE", page.getContent().stream().map(PmInvoice::getId).toList());
+        return page.map(e -> {
+            var dto = this.toResponse(e);
+            dto.setVersion(versions.get(e.getId()));
+            return dto;
+        });
     }
 
     @Override

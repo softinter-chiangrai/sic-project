@@ -14,6 +14,7 @@ export interface ReviewComment {
 export interface DesignReview extends SicBaseStateModel {
   id: string;
   reviewCode: string;
+  version?: string;
   title: string;
   description: string;
   projectId: string;

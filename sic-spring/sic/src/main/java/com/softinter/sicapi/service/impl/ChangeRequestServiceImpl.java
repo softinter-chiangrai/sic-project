@@ -375,8 +375,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         };
 
         Page<PmChangeRequest> page = changeRequestRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "CHANGE_REQUEST", page.getContent().stream().map(PmChangeRequest::getId).toList());
         List<ChangeRequestResponse> data = page.getContent().stream()
-                .map(this::toResponse)
+                .map(e -> {
+                    ChangeRequestResponse dto = this.toResponse(e);
+                    dto.setVersion(versions.get(e.getId()));
+                    return dto;
+                })
                 .toList();
 
         return PaginationUtil.of(data, page.getNumber(), page.getSize(), page.getTotalElements());

@@ -74,7 +74,14 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        return testCaseRepository.findAll(spec, pageable).map(this::toResponse);
+        org.springframework.data.domain.Page<PmTestCase> page = testCaseRepository.findAll(spec, pageable);
+        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+                "TEST_CASE", page.getContent().stream().map(PmTestCase::getId).toList());
+        return page.map(e -> {
+            var dto = this.toResponse(e);
+            dto.setVersion(versions.get(e.getId()));
+            return dto;
+        });
     }
 
     @Override

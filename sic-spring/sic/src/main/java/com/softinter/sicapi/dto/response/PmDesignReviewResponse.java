@@ -31,4 +31,7 @@ public class PmDesignReviewResponse {
     private Instant createdDate;
     private String createdBy;
     private List<PmReviewCommentResponse> comments = new ArrayList<>();
+
+    /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
+    private String version;
 }

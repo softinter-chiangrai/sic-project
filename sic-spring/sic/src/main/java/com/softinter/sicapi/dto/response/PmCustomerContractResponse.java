@@ -29,4 +29,7 @@ public class PmCustomerContractResponse {
     private Boolean isActive;
     private Integer rowVersion;
     private Instant createdDate;
+
+    /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
+    private String version;
 }

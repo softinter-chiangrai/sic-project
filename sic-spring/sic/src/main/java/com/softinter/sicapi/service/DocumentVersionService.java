@@ -44,6 +44,9 @@ public interface DocumentVersionService {
      */
     String keepVersion(String currentVersion);
 
+    /** เวอร์ชันล่าสุดของเอกสารหลายรายการในคำสั่งเดียว (ใช้แสดงคอลัมน์ Version ในหน้า list) key = documentId */
+    java.util.Map<UUID, String> getLatestVersionMap(String documentType, java.util.Collection<UUID> documentIds);
+
     /**
      * bump เวอร์ชันแบบ semver (X.Y.Z) ตามระดับการเปลี่ยน: PATCH = Z+1, MINOR = Y+1 (Z=0), MAJOR = X+1 (Y=0, Z=0)
      * รองรับเวอร์ชันเก่า 2 ส่วน (เช่น v1.3) โดยถือว่า patch = 0 และคง prefix "v" ตามเดิม

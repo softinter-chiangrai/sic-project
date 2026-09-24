@@ -317,6 +317,7 @@
                   <tr>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[120px]">รหัส Test Case</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[180px]">หัวข้อ</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[80px]">{{ 'PMDT12_COL_VERSION' | translate }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[160px]">Task ที่ผูก</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[200px]">ขั้นตอน & ผลที่คาดหวัง</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[80px] hidden lg:table-cell">Priority</th>
@@ -349,6 +350,11 @@
                       <!-- หัวข้อ -->
                       <td class="px-4 py-3 align-top">
                         <div class="font-medium text-[var(--text-active)]">{{ testCase.title }}</div>
+                      </td>
+
+                      <!-- เวอร์ชันเอกสาร -->
+                      <td class="px-4 py-3 align-top">
+                        <span class="font-mono text-xs text-[var(--text-muted)]">{{ testCase.version || '-' }}</span>
                       </td>
 
                       <!-- Task ที่ผูก & สถานะงานของ Dev -->

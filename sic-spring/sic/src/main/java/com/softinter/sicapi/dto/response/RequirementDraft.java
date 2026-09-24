@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class RequirementDraft {
+    private String requirementCode;
     private String title;
     private String description;
     private String acceptanceCriteria;
