@@ -122,6 +122,15 @@ public class PmCustomerContractController {
         return ResponseEntity.ok(contractService.saveContract(businessId, request));
     }
 
+    // ===== ยกเลิกสัญญา =====
+    @PostMapping("/{id}/cancel")
+    @Operation(summary = "ยกเลิกสัญญา (ไม่ลบ) พร้อมเหตุผล")
+    public ResponseEntity<PmCustomerContractResponse> cancelContract(
+            @PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : null;
+        return ResponseEntity.ok(contractService.cancelContract(id, reason));
+    }
+
     // ===== ลบสัญญา =====
     @DeleteMapping("/{id}")
     @Operation(summary = "ลบสัญญา")

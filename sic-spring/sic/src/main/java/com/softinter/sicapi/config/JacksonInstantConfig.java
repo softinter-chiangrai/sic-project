@@ -64,10 +64,55 @@ public class JacksonInstantConfig {
         }
     }
 
+    public static class FlexibleLocalDateDeserializer extends JsonDeserializer<LocalDate> {
+        @Override
+        public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            String text = p.getText();
+            if (text == null || text.trim().isEmpty()) {
+                return null;
+            }
+            text = text.trim();
+
+            if (text.contains("T")) {
+                try {
+                    return Instant.parse(text).atZone(java.time.ZoneId.of("UTC")).toLocalDate();
+                } catch (DateTimeParseException ignored) {
+                }
+                try {
+                    return java.time.OffsetDateTime.parse(text).toLocalDate();
+                } catch (DateTimeParseException ignored) {
+                }
+                try {
+                    return java.time.LocalDateTime.parse(text).toLocalDate();
+                } catch (DateTimeParseException ignored) {
+                }
+            }
+
+            if (text.contains("/")) {
+                text = text.replace('/', '-');
+            }
+
+            try {
+                return LocalDate.parse(text, DateTimeFormatter.ISO_LOCAL_DATE);
+            } catch (DateTimeParseException ignored) {
+            }
+
+            if (text.length() >= 10) {
+                try {
+                    return LocalDate.parse(text.substring(0, 10), DateTimeFormatter.ISO_LOCAL_DATE);
+                } catch (DateTimeParseException ignored) {
+                }
+            }
+
+            throw new IllegalArgumentException("Cannot deserialize value to java.time.LocalDate: " + text);
+        }
+    }
+
     @Bean
     public SimpleModule instantDeserializerModule() {
         SimpleModule module = new SimpleModule();
         module.addDeserializer(Instant.class, new FlexibleInstantDeserializer());
+        module.addDeserializer(LocalDate.class, new FlexibleLocalDateDeserializer());
         return module;
     }
 }

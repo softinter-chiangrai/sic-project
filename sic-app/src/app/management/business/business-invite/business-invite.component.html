@@ -31,12 +31,15 @@
         [label]="'BUSINESS_INVITE_ROLE_LABEL' | translate"
         formControlName="roleId"
         [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
+        valueField="value"
+        textField="text"
+        [required]="true"
         [paging]="false">
       </sic-combobox>
-      <sic-input [label]="'BUSINESS_INVITE_EMAIL_LABEL' | translate" formControlName="inviteEmail"></sic-input>
+      <sic-input [label]="'BUSINESS_INVITE_EMAIL_LABEL' | translate" formControlName="inviteEmail" [required]="true"></sic-input>
       <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
         <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">{{ 'BUSINESS_INVITE_BACK_BUTTON' | translate }}</sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">{{ 'BUSINESS_INVITE_CREATE_EMAIL_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'button'" variant="solid" color="primary" [disabled]="saving()" (click)="submitEmail()">{{ 'BUSINESS_INVITE_CREATE_EMAIL_BUTTON' | translate }}</sic-button>
       </div>
     </form>
   }
@@ -49,6 +52,9 @@
         [label]="'BUSINESS_INVITE_ROLE_LABEL' | translate"
         formControlName="roleId"
         [apiUrl]="apiBaseUrl + '/api/business/combobox-role'"
+        valueField="value"
+        textField="text"
+        [required]="true"
         [paging]="false">
       </sic-combobox>
       <sic-number
@@ -59,7 +65,7 @@
       </sic-number>
       <div class="flex items-center justify-end gap-3 mt-5 pt-4 border-t border-[var(--border)]">
         <sic-button [type]="'button'" variant="outline" color="primary" (click)="onBack()">{{ 'BUSINESS_INVITE_BACK_BUTTON' | translate }}</sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary" [disabled]="loading()">{{ 'BUSINESS_INVITE_CREATE_TOKEN_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'button'" variant="solid" color="primary" [disabled]="saving()" (click)="submitToken()">{{ 'BUSINESS_INVITE_CREATE_TOKEN_BUTTON' | translate }}</sic-button>
       </div>
     </form>
   }

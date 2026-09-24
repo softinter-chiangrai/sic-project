@@ -38,7 +38,6 @@ public class PmCustomerProjectRequest {
     @Size(max = 20)
     private String priority;
 
-    @Size(max = 2000)
     private String description;
 
     private Boolean isActive;

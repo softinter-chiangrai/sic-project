@@ -49,6 +49,9 @@ public interface PmCustomerContractService {
 
     void deleteContract(UUID id);
 
+    /** ยกเลิกสัญญา (ไม่ลบ): ตั้งสถานะต่อสัญญาเป็น "ยกเลิก" ยกเลิกคำขออนุมัติที่ค้างอยู่ และบันทึกประวัติ */
+    PmCustomerContractResponse cancelContract(UUID id, String reason);
+
     List<ComboboxResponse> getLovContractTypes();
 
     List<ComboboxResponse> getLovSignStatuses();

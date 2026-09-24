@@ -372,6 +372,50 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
+  get isCancelled(): boolean {
+    return this.originalContract?.renewalStatus === 'ยกเลิก';
+  }
+
+  cancelContract(): void {
+    const original = this.originalContract;
+    if (!original?.id || this.isCancelled) return;
+
+    this.dialog
+      .confirm(
+        this.translate.instant('PMRT04B_CONFIRM_CANCEL_TITLE'),
+        this.translate.instant('PMRT04B_CONFIRM_CANCEL_MSG', { contractNo: original.contractNo }),
+      )
+      .then((confirmed) => {
+        if (!confirmed) return;
+        this.isSaving = true;
+        this.service.cancel(original.id as string).subscribe({
+          next: () => {
+            this.ngZone.run(() => {
+              this.isSaving = false;
+              this.isSaved = true;
+              this.cdr.detectChanges();
+            });
+            this.dialog
+              .success(
+                this.translate.instant('PMRT04B_CANCEL_SUCCESS_TITLE'),
+                this.translate.instant('PMRT04B_CANCEL_SUCCESS_MSG', { contractNo: original.contractNo }),
+              )
+              .then(() => this.navigateBack());
+          },
+          error: (error) => {
+            this.ngZone.run(() => {
+              this.isSaving = false;
+              this.cdr.detectChanges();
+            });
+            this.dialog.error(
+              this.translate.instant('PMRT04B_CANCEL_FAILED_TITLE'),
+              error.error?.message || this.translate.instant('PMRT04B_ERROR_OCCURRED_MSG'),
+            );
+          },
+        });
+      });
+  }
+
   formatDate(dateStr: string | Date | undefined): string {
     if (!dateStr) return '-';
     try {

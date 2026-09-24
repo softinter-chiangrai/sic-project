@@ -19,6 +19,10 @@ export class Pmrt04AService {
   private apiUrl = environment.apiBaseUrl + '/api/pm/contracts';
   private baseUrl = `${environment.apiBaseUrl}/api/pm/contract-installments`;
 
+  cancel(id: string, reason?: string): Observable<ContractModel> {
+    return this.http.post<ContractModel>(`${this.apiUrl}/${id}/cancel`, { reason });
+  }
+
   save(contract: ContractModel): Observable<string> {
     return this.http.post<string>(`${this.apiUrl}/save`, contract);
   }

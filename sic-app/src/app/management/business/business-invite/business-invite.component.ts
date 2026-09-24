@@ -4,7 +4,7 @@ import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { BusinessInviteService } from './business-invite.service';
-import { BusinessInviteFormData, InviteEmailModel, InviteTokenModel } from './business-invite.model';
+import { BusinessInviteFormData, InviteEmailModel, InviteResponse, InviteTokenModel } from './business-invite.model';
 import { DialogService } from '../../../core/services/dialog.service';
 import { SicInputComponent, SicButtonComponent, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridLoadRequest, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../core/component/sic-combobox/sic-combobox.component';
@@ -45,13 +45,17 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
 
   activeTab = signal<'email' | 'token'>('email');
   loading = signal(false);
+  saving = signal(false);
 
   emailForm!: FormGroup<ToForm<InviteEmailModel>>;
   tokenForm!: FormGroup<ToForm<InviteTokenModel>>;
 
   pageDirty = () => this.emailForm.dirty || this.tokenForm.dirty;
 
-  get inviteGridConfig(): SicGridPanelConfig {
+  invites = signal<InviteResponse[]>([]);
+  inviteGridConfig!: SicGridPanelConfig;
+
+  private buildGridConfig(): SicGridPanelConfig {
     return {
       id: 'id',
       lazy: false,
@@ -68,27 +72,41 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
     };
   }
 
-  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+  loadInvites(): void {
     this.loading.set(true);
     this.service.getInvites()
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
         next: (list) => {
-          grid.setRows((list || []) as unknown as SicGridRowData[], { totalElements: list?.length || 0 }, request.requestId);
+          const data = list || [];
+          this.invites.set(data);
+          if (this.grid) {
+            this.grid.setRows(data as unknown as SicGridRowData[], { totalElements: data.length });
+          }
         },
         error: (error) => {
           const msg = error.error?.message || error.message || this.translate.instant('BUSINESS_INVITE_LOAD_FAIL_MSG');
-          grid.setRows([], { totalElements: 0 }, request.requestId);
-          grid.setLoadError(msg, request.requestId);
+          this.invites.set([]);
+          if (this.grid) {
+            this.grid.setRows([], { totalElements: 0 });
+            this.grid.setLoadError(msg);
+          }
           this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), msg);
         },
       });
+  }
+
+  handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
+    const list = this.invites();
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
   }
 
   ngOnInit(): void {
     const data: BusinessInviteFormData = this.route.snapshot.data['form'];
     this.emailForm = data.emailForm;
     this.tokenForm = data.tokenForm;
+    this.inviteGridConfig = this.buildGridConfig();
+    this.loadInvites();
   }
 
   setTab(tab: 'email' | 'token'): void {
@@ -96,19 +114,23 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
   }
 
   submitEmail(): void {
-    if (this.emailForm.invalid) { this.emailForm.markAllAsTouched(); return; }
-    this.loading.set(true);
+    if (this.emailForm.invalid) {
+      this.emailForm.markAllAsTouched();
+      return;
+    }
+    this.saving.set(true);
     const v = this.emailForm.value;
     this.service.createInvite({
       roleId: v.roleId ?? '',
       inviteType: 'email',
       inviteEmail: v.inviteEmail ?? '',
     })
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: () => {
           this.emailForm.reset();
-          this.grid?.reload();
+          this.loadInvites();
+          this.dialog.success(this.translate.instant('BUSINESS_INVITE_SUCCESS_TITLE') || 'สำเร็จ', this.translate.instant('BUSINESS_INVITE_CREATE_EMAIL_SUCCESS_MSG') || 'สร้างคำเชิญเรียบร้อยแล้ว');
         },
         error: async (error) => {
           const msg = error.error?.message || error.message || this.translate.instant('BUSINESS_INVITE_CREATE_EMAIL_FAIL_MSG');
@@ -118,19 +140,23 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
   }
 
   submitToken(): void {
-    if (this.tokenForm.invalid) { this.tokenForm.markAllAsTouched(); return; }
-    this.loading.set(true);
+    if (this.tokenForm.invalid) {
+      this.tokenForm.markAllAsTouched();
+      return;
+    }
+    this.saving.set(true);
     const v = this.tokenForm.value;
     this.service.createInvite({
       roleId: v.roleId ?? '',
       inviteType: 'token',
       maxUses: v.maxUses ?? undefined,
     })
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: () => {
           this.tokenForm.reset();
-          this.grid?.reload();
+          this.loadInvites();
+          this.dialog.success(this.translate.instant('BUSINESS_INVITE_SUCCESS_TITLE') || 'สำเร็จ', this.translate.instant('BUSINESS_INVITE_CREATE_TOKEN_SUCCESS_MSG') || 'สร้าง Token สำเร็จ');
         },
         error: async (error) => {
           const msg = error.error?.message || error.message || this.translate.instant('BUSINESS_INVITE_CREATE_TOKEN_FAIL_MSG');
@@ -148,7 +174,7 @@ export class BusinessInviteComponent implements OnInit, CanComponentDeactivate {
       const ok = await this.dialog.confirm(this.translate.instant('BUSINESS_INVITE_CONFIRM_DELETE_TITLE'), this.translate.instant('BUSINESS_INVITE_CONFIRM_DELETE_MSG', { label }));
       if (!ok) return;
       this.service.deleteInvite(row['id'] as string).subscribe({
-        next: () => this.grid?.reload(),
+        next: () => this.loadInvites(),
         error: async () => { await this.dialog.error(this.translate.instant('BUSINESS_INVITE_ERROR_TITLE'), this.translate.instant('BUSINESS_INVITE_DELETE_FAIL_MSG')); },
       });
     }

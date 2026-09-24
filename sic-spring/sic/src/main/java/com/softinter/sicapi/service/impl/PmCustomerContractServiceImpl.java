@@ -379,8 +379,48 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         }
     }
 
+    public static final String RENEWAL_STATUS_CANCELLED = "ยกเลิก";
+
     @Override
-    
+    @Transactional
+    public PmCustomerContractResponse cancelContract(UUID id, String reason) {
+        PmCustomerContract contract = contractRepository.findById(id)
+                .filter(c -> !Boolean.TRUE.equals(c.getIsDelete()))
+                .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));
+
+        if (RENEWAL_STATUS_CANCELLED.equals(contract.getRenewalStatus())) {
+            throw new IllegalStateException("สัญญานี้ถูกยกเลิกไปแล้ว");
+        }
+
+        // คำขออนุมัติที่ค้างอยู่ไม่มีความหมายแล้ว ต้องยกเลิกก่อน (สัญญาที่อนุมัติ/ลงนามแล้วยกเลิกได้ ไม่ถูกล็อกเหมือนการแก้ไข)
+        approvalService.invalidatePendingApproval("CONTRACT", contract.getId(),
+                "ยกเลิกสัญญา" + (reason != null && !reason.isBlank() ? ": " + reason.trim() : ""));
+
+        contract.setRenewalStatus(RENEWAL_STATUS_CANCELLED);
+        contract = contractRepository.save(contract);
+
+        String summary = "ยกเลิกสัญญา " + contract.getContractNo()
+                + (reason != null && !reason.isBlank() ? " เหตุผล: " + reason.trim() : "");
+        try {
+            String latest = documentVersionService.getLatestVersionNo("CONTRACT", contract.getId());
+            documentVersionService.createVersion("CONTRACT", contract.getId(), contract.getProjectId(),
+                    contract.getContractNo(), documentVersionService.keepVersion(latest), summary);
+        } catch (Exception e) {
+            log.error("ผิดพลาดสร้าง document version ตอนยกเลิกสัญญา: {}", e.getMessage(), e);
+        }
+
+        try {
+            auditLogService.log("CANCEL_CONTRACT", "Contract Management", summary,
+                    "CONTRACT", contract.getId(), null, null, "Success", null);
+        } catch (Exception e) {
+            log.error("ผิดพลาด audit log CANCEL_CONTRACT: {}", e.getMessage(), e);
+        }
+
+        return getContract(contract.getId());
+    }
+
+    @Override
+
     public List<ComboboxResponse> getLovContractTypes() {
         return Arrays.asList(
                 new ComboboxResponse("Development Contract", "Development Contract"),

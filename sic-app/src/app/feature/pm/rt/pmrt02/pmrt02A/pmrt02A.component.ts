@@ -276,7 +276,15 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     }
 
     this.isSaving = true;
-    const data = this.form.getRawValue() as ProjectModel;
+    const formRaw = this.form.getRawValue();
+    const data: any = {
+      ...formRaw,
+      customerId: formRaw.customerId || null,
+      contractId: formRaw.contractId || null,
+      actualEndDate: formRaw.actualEndDate || null,
+      budgetManday: formRaw.budgetManday !== null && formRaw.budgetManday !== undefined ? Number(formRaw.budgetManday) : 0,
+      usedManday: formRaw.usedManday !== null && formRaw.usedManday !== undefined ? Number(formRaw.usedManday) : 0,
+    };
 
     // ✅ ตรวจสอบ before call
     let request$;
@@ -334,7 +342,12 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       },
       error: (err) => {
         this.isSaving = false;
-        this.dialog.error(this.translate.instant('PMRT02A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT02A_GENERIC_ERROR_MSG'));
+        let errMsg = err.error?.message;
+        if (err.error?.errors && typeof err.error.errors === 'object') {
+          const detailList = Object.entries(err.error.errors).map(([k, v]) => `${k}: ${v}`).join('\n');
+          errMsg = `${errMsg || 'Validation failed'}:\n${detailList}`;
+        }
+        this.dialog.error(this.translate.instant('PMRT02A_SAVE_ERROR_TITLE'), errMsg || this.translate.instant('PMRT02A_GENERIC_ERROR_MSG'));
       },
     });
   }
