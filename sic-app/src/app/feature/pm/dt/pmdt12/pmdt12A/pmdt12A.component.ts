@@ -173,7 +173,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       const scenarioId = queryParams['scenarioId'];
       if (scenarioId && !this.testCaseId) {
         this.formData.patchValue({ scenarioId } as any);
-        this.updateTestTypeLockState(scenarioId);
+        this.updateDependencyLockState(scenarioId);
       }
 
       // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
@@ -198,11 +198,14 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
           value: s.id,
           text: s.scenarioName,
           testType: s.testType || 'SIT',
+          taskId: s.taskId || null,
+          taskCode: s.taskCode || null,
+          taskName: s.taskName || null,
         }));
         this.scenarioOptions.set(list);
         this.scenarioLoading.set(false);
 
-        // Pre-fill scenarioName and testType if scenarioId was passed via queryParams
+        // Pre-fill scenarioName, testType, taskId if scenarioId was passed via queryParams
         const currentScenarioId = this.formData.form.get('scenarioId')?.value;
         if (currentScenarioId) {
           const found = list.find((s) => s.value === currentScenarioId);
@@ -211,9 +214,12 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
               scenarioName: found.text,
               testType: found.testType || this.formData.form.get('testType')?.value || 'SIT',
             });
+            if (found.taskId && !this.formData.form.get('taskId')?.value) {
+              this.onTaskChange(found.taskId);
+            }
           }
         }
-        this.updateTestTypeLockState(currentScenarioId);
+        this.updateDependencyLockState(currentScenarioId);
       },
       error: () => {
         this.scenarioLoading.set(false);
@@ -221,20 +227,32 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  updateTestTypeLockState(scenarioId?: string | null): void {
+  updateDependencyLockState(scenarioId?: string | null): void {
     const effectiveScenarioId = scenarioId !== undefined ? scenarioId : this.formData.form.get('scenarioId')?.value;
     const testTypeCtrl = this.formData.form.get('testType');
+    const taskCtrl = this.formData.form.get('taskId');
     if (this.isView() || this.isExecution() || !!effectiveScenarioId) {
       testTypeCtrl?.disable({ emitEvent: false });
+      taskCtrl?.disable({ emitEvent: false });
     } else {
       testTypeCtrl?.enable({ emitEvent: false });
+      taskCtrl?.enable({ emitEvent: false });
     }
   }
 
   onScenarioChange(scenarioId: string | null): void {
     if (!scenarioId) {
-      this.formData.form.patchValue({ scenarioId: null, scenarioName: null });
-      this.updateTestTypeLockState(null);
+      this.formData.form.patchValue({
+        scenarioId: null,
+        scenarioName: null,
+        taskId: null,
+        relatedTask: null,
+        taskCode: null,
+        taskName: null,
+        relatedSpec: null,
+        relatedRequirement: null,
+      });
+      this.updateDependencyLockState(null);
       return;
     }
     const found = (this.scenarioOptions() as any[]).find((s) => s.value === scenarioId);
@@ -243,7 +261,19 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       scenarioName: found ? found.text : null,
       testType: found?.testType || this.formData.form.get('testType')?.value || 'SIT',
     });
-    this.updateTestTypeLockState(scenarioId);
+    if (found?.taskId) {
+      this.onTaskChange(found.taskId);
+    } else {
+      this.formData.form.patchValue({
+        taskId: null,
+        relatedTask: null,
+        taskCode: null,
+        taskName: null,
+        relatedSpec: null,
+        relatedRequirement: null,
+      });
+    }
+    this.updateDependencyLockState(scenarioId);
   }
 
   // ===== AI Assistant In-Form =====
@@ -541,7 +571,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       this.testerValues.set([]);
     }
     this.formData.resetModel(this.formData.form.getRawValue() as any);
-    this.updateTestTypeLockState(data.scenarioId);
+    this.updateDependencyLockState(data.scenarioId);
   }
 
   onSubmit(): void {

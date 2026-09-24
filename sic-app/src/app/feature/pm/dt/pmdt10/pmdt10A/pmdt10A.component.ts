@@ -152,6 +152,7 @@ export class Pmdt10AComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isSaving) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.dialog.warn(this.translate.instant('PMDT10_INCOMPLETE_DATA_TITLE'), this.translate.instant('PMDT10_INCOMPLETE_DATA_MSG'));

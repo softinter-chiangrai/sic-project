@@ -233,33 +233,10 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         this.form.get('assigneeId')?.setValue(assignees[0]?.userId || null);
     }
 
-    targetDocumentApiUrl = computed(() => {
-        const type = this.selectedTargetType();
-        if (type === 'PROJECT') {
-            return environment.apiBaseUrl + '/api/pm/requirement/combobox-project';
-        } else if (type === 'REQUIREMENT') {
-            return environment.apiBaseUrl + '/api/pm/requirement/combobox';
-        } else if (type === 'SPECIFICATION') {
-            return environment.apiBaseUrl + '/api/pm/specifications/combobox';
-        } else if (type === 'DIAGRAM') {
-            return environment.apiBaseUrl + '/api/diagram/tabs/combobox';
-        } else if (type === 'CONTRACT') {
-            return environment.apiBaseUrl + '/api/pm/contracts/combobox';
-        } else if (type === 'DESIGN_REVIEW') {
-            return environment.apiBaseUrl + '/api/pm/design-reviews/combobox';
-        } else if (type === 'DELIVERY') {
-            return environment.apiBaseUrl + '/api/pm/delivery/combobox';
-        } else if (type === 'USER_MANUAL') {
-            return environment.apiBaseUrl + '/api/pm/manual/paging';
-        } else if (type === 'INVOICE') {
-            return environment.apiBaseUrl + '/api/pm/invoices/paging';
-        } else if (type === 'MA_TICKET') {
-            return environment.apiBaseUrl + '/api/pm/ma-tickets/paging';
-        } else if (type === 'MA_RENEWAL') {
-            return environment.apiBaseUrl + '/api/pm/ma-renewals/paging';
-        }
-        return '';
-    });
+    // เอกสารเป้าหมายต้องเป็นเอกสารที่อนุมัติแล้วเท่านั้น (ทุกประเภทใช้ endpoint กลางเดียวกัน กรองตามประเภทที่เลือก)
+    targetDocumentApiUrl = computed(() =>
+        this.selectedTargetType() ? environment.apiBaseUrl + '/api/pm/change-requests/target-combobox' : '',
+    );
 
     ngOnInit() {
         const currentUrl = this.router.url;
@@ -503,6 +480,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     // ===== CRUD =====
     save() {
+        if (this.isSaving) return;
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.dialog.warn(this.translate.instant('PMDT06_FORM_INVALID_TITLE'), this.translate.instant('PMDT06_FILL_ALL_FIELDS_MSG'));

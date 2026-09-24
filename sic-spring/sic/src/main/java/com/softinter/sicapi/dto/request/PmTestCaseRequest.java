@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Data
@@ -31,7 +32,15 @@ public class PmTestCaseRequest {
     private String testStatus;
     private String testType;
     private String tester;
-    private Instant testDate;
+    private LocalDate testDate;
+
+    public LocalDate getTestDate() {
+        return this.testDate;
+    }
+
+    public void setTestDate(LocalDate testDate) {
+        this.testDate = testDate;
+    }
     private String relatedRequirement;
     private String relatedSpec;
     private String relatedTask;

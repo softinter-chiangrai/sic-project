@@ -23,6 +23,18 @@ import java.util.UUID;
 public class PmChangeRequestController {
 
     private final ChangeRequestService changeRequestService;
+
+    // ===== ตัวเลือกเอกสารเป้าหมาย (เฉพาะที่อนุมัติแล้ว) =====
+    @GetMapping("/target-combobox")
+    @io.swagger.v3.oas.annotations.Operation(summary = "รายการเอกสารเป้าหมายของ Change Request เฉพาะเอกสารที่อยู่ในสถานะอนุมัติแล้ว")
+    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getTargetCombobox(
+            @RequestParam String targetType,
+            @RequestParam(required = false) java.util.UUID projectId,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) java.util.UUID value) {
+        return ResponseEntity.ok(changeRequestService.getApprovedTargetCombobox(targetType, projectId, keyword, value));
+    }
+
     private final PmChangeRequestExportService changeRequestExportService;
     private final ApprovalService approvalService;
 

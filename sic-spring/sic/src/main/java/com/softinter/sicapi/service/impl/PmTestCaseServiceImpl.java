@@ -266,6 +266,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         }
         entity.setTestType(effectiveTestType != null ? effectiveTestType : "SIT");
         entity.setTester(req.getTester());
+        // Map testDate (LocalDate)
         entity.setTestDate(req.getTestDate());
         entity.setRelatedRequirement(req.getRelatedRequirement());
         entity.setRelatedSpec(req.getRelatedSpec());

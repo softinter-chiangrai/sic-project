@@ -707,6 +707,7 @@ export class LanguageService {
       PMDT12B_DESCRIPTION_PLACEHOLDER: 'Describe the scope and objective of testing for this group...',
       PMDT12B_RICH_TEXT_HINT: 'Rich text formatting supported',
       PMDT12B_STATUS_ACTIVE_LABEL: 'Active',
+      PMDT14_CANCEL_BTN: 'ยกเลิก',
     },
   };
 

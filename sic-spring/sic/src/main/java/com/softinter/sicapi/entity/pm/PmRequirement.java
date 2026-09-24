@@ -38,7 +38,7 @@ public class PmRequirement extends BaseBusinessEntity {
     @Column(name = "priority", length = 20)
     private String priority;
 
-    @Column(name = "business_value", length = 255)
+    @Column(name = "business_value", columnDefinition = "TEXT")
     private String businessValue;
 
     @Column(name = "acceptance_criteria", columnDefinition = "TEXT")

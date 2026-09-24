@@ -236,6 +236,13 @@ public class TaskServiceImpl implements TaskService {
         if (task.getWorkPackage() != null) {
             dto.setWorkPackageId(task.getWorkPackage().getId());
             dto.setWorkPackageName(task.getWorkPackage().getPackageName());
+            var milestone = task.getWorkPackage().getMilestone();
+            var phase = milestone != null ? milestone.getPhase() : null;
+            var project = phase != null ? phase.getProject() : null;
+            if (project != null) {
+                dto.setProjectId(project.getId());
+                dto.setProjectName(project.getProjectName());
+            }
         }
         if (task.getSpecification() != null) {
             dto.setSpecificationId(task.getSpecification().getId());

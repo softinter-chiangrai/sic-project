@@ -43,14 +43,27 @@
         <!-- Form Inputs Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-            <sic-combobox
+          <sic-combobox
+            [label]="'PMDT09_CUSTOMER_LABEL' | translate"
+            formControlName="customerId"
+            [apiUrl]="service.apiGetComboboxCustomer"
+            valueField="value"
+            textField="text"
+            [clearable]="true"
+            [placeholder]="'PMDT09_CUSTOMER_PLACEHOLDER' | translate"
+            (selectionChanged)="onCustomerSelected($event)"
+          ></sic-combobox>
+
+          <sic-combobox
             [label]="'PMDT09_PROJECT_LABEL' | translate"
             formControlName="projectId"
             [apiUrl]="service.apiGetComboboxProject"
+            [params]="projectParams"
             valueField="value"
             textField="text"
             [required]="true"
             [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
+            (selectionChanged)="onProjectSelected($event)"
           ></sic-combobox>
 
           <sic-input
@@ -325,7 +338,7 @@
                 <i class="bi bi-pencil-square"></i> {{ 'PMDT09_REQUEST_CHANGE_BTN' | translate }}
               </sic-button>
             } @else {
-              <sic-button variant="solid" color="primary" (click)="submit()" [loading]="isSaving" [disabled]="isSaving || form.invalid">
+              <sic-button type="submit" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving || form.invalid">
                 <i class="bi bi-check-lg"></i> {{ isEdit ? ('PMDT09_SAVE_BTN' | translate) : ('PMDT09_CREATE_ITEM_BTN' | translate) }}
               </sic-button>
             }

@@ -72,6 +72,16 @@ public class TaskController {
         return ResponseEntity.noContent().build();
     }
 
+    /** Task ทั้งหมดของ business (ใช้กับหน้า Task Board เมื่อยังไม่ได้ระบุโครงการใน URL) */
+    @GetMapping("/business")
+    public ResponseEntity<List<TaskResponse>> getBusinessTasks() {
+        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(taskService.getAllTasksByBusinessId(businessId, null));
+    }
+
     @GetMapping("/search")
     public ResponseEntity<PaginationResponse<TaskResponse>> search(
             @RequestParam UUID projectId,

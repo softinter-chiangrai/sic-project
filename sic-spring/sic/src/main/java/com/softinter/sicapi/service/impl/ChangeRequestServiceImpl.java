@@ -53,6 +53,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final AuditLogService auditLogService;
     private final ImpactAnalysisService impactAnalysisService;
     private final TraceLinkService traceLinkService;
+    private final PmApprovalRepository approvalRepository;
 
     private static final java.util.Map<String, String> CR_STATUS_THAI_MAP = java.util.Map.of(
             "ร่าง", "DRAFT",
@@ -659,6 +660,42 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setImpacts(impacts.stream().map(this::toImpactResponse).collect(Collectors.toList()));
 
         return response;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<com.softinter.sicapi.dto.response.ComboboxResponse> getApprovedTargetCombobox(
+            String targetType, UUID projectId, String keyword, UUID value) {
+        if (targetType == null || targetType.isBlank()) {
+            return List.of();
+        }
+        String type = targetType.trim().toUpperCase();
+
+        // แสดงค่าที่เลือกไว้เดิม (เช่น ตอนแก้ไข CR) แม้เอกสารนั้นถูกปลดล็อกแล้วก็ตาม
+        if (value != null) {
+            return approvalRepository.findAnyByDocument(type, value).stream().findFirst()
+                    .map(a -> List.of(toTargetOption(a)))
+                    .orElse(List.of());
+        }
+
+        UUID businessId = currentUserService.getBusinessId();
+        String kw = keyword == null ? "" : keyword.trim();
+        java.util.Set<UUID> seen = new java.util.HashSet<>();
+        List<com.softinter.sicapi.dto.response.ComboboxResponse> result = new ArrayList<>();
+        for (PmApproval a : approvalRepository.findApprovedTargets(businessId, type, kw, projectId)) {
+            if (a.getDocumentId() == null || !seen.add(a.getDocumentId())) continue;
+            // ตรวจซ้ำด้วยกติกากลางของระบบ (สถานะเอกสารเองต้องเป็นอนุมัติแล้ว ไม่ใช่แค่มีคำขออนุมัติเก่า)
+            if (!approvalService.isApproved(type, a.getDocumentId())) continue;
+            result.add(toTargetOption(a));
+        }
+        return result;
+    }
+
+    private com.softinter.sicapi.dto.response.ComboboxResponse toTargetOption(PmApproval a) {
+        String code = a.getDocumentCode() != null ? a.getDocumentCode() : "";
+        String title = a.getDocumentTitle() != null ? a.getDocumentTitle() : "";
+        String label = code.isBlank() ? title : (title.isBlank() ? code : code + " - " + title);
+        return new com.softinter.sicapi.dto.response.ComboboxResponse(a.getDocumentId().toString(), label);
     }
 
     private String normalizeChangeLevel(String level) {

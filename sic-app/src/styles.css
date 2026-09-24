@@ -1,9 +1,6 @@
-@import 'tailwindcss';
-
 @import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
-
-/* src/styles.css */
 @import 'sic-ng/theme/default-theme.css';
+@import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));
 

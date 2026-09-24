@@ -121,6 +121,34 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         Map<String, Set<UUID>> impacted = traceResult.getImpacted();
 
+        // เป้าหมายระดับโครงการ/สัญญา: ผลกระทบคือเอกสารทั้งหมดของโครงการนั้น (เอกสารผูกกับโครงการผ่าน projectId ไม่ได้ผูกด้วย trace link)
+        UUID scopeProjectId = null;
+        if ("PROJECT".equalsIgnoreCase(targetType) && targetId != null) {
+            scopeProjectId = targetId;
+        } else if ("CONTRACT".equalsIgnoreCase(targetType) && targetId != null) {
+            scopeProjectId = customerContractRepository.findById(targetId).map(c -> c.getProjectId()).orElse(null);
+        }
+        if (scopeProjectId != null) {
+            UUID bizId = currentUserService != null ? currentUserService.getBusinessId() : null;
+            final UUID projectScope = scopeProjectId;
+            if (bizId != null) {
+                requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectScope)
+                        .forEach(r -> impacted.computeIfAbsent("REQUIREMENT", k -> new HashSet<>()).add(r.getId()));
+                specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectScope)
+                        .forEach(sp -> impacted.computeIfAbsent("SPECIFICATION", k -> new HashSet<>()).add(sp.getId()));
+                bugRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectScope,
+                                org.springframework.data.domain.PageRequest.of(0, 1000))
+                        .getContent()
+                        .forEach(bg -> impacted.computeIfAbsent("BUG", k -> new HashSet<>()).add(bg.getId()));
+            }
+            taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectScope)
+                    .forEach(t -> impacted.computeIfAbsent("TASK", k -> new HashSet<>()).add(t.getId()));
+            testCaseRepository.findByProjectIdAndIsDeleteFalse(projectScope)
+                    .forEach(tc -> impacted.computeIfAbsent("TEST_CASE", k -> new HashSet<>()).add(tc.getId()));
+            diagramTabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectScope)
+                    .forEach(d -> impacted.computeIfAbsent("DIAGRAM", k -> new HashSet<>()).add(d.getId()));
+        }
+
         UUID[] reqIds = impacted.getOrDefault("REQUIREMENT", Set.of()).toArray(UUID[]::new);
         UUID[] specIds = impacted.getOrDefault("SPECIFICATION", Set.of()).toArray(UUID[]::new);
         Set<UUID> rawTaskIds = new HashSet<>(impacted.getOrDefault("TASK", Set.of()));

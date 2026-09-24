@@ -101,14 +101,6 @@
       <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
         @let r = $any(row);
         <div class="flex items-center justify-center gap-1">
-          <!-- ปุ่ม View รายละเอียด Trace/Diagram (pmrt05) -->
-          <button
-            (click)="goToView(r.id)"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
-            [title]="'PMDT04_VIEW_TRACE_DIAGRAM_TITLE' | translate"
-          >
-            <i class="bi bi-file-earmark-text"></i>
-          </button>
           <!-- Reusable Table Actions Component -->
           <sic-table-actions
             (onView)="goToViewOnly(r.id)"

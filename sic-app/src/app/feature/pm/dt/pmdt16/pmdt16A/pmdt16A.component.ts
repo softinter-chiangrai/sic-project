@@ -247,13 +247,14 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
     if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {
       const newItems = draft.items.map((it: any, idx: number) => ({
-        id: `ai-item-${Date.now()}-${idx}`,
+        id: undefined,
         itemNo: idx + 1,
         itemName: it.itemDescription || it.itemName || it.name || this.translate.instant('PMDT16A_DEFAULT_ITEM_NAME', { n: idx + 1 }),
         description: it.description || '',
         quantity: it.quantity || 1,
         unitPrice: it.unitPrice || it.amount || 0,
         amount: it.amount || ((it.quantity || 1) * (it.unitPrice || 0)),
+        state: SicEntityState.Added,
       }));
       this.items.set(newItems);
     }
@@ -522,6 +523,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   }
 
   submit() {
+    if (this.isSaving()) return;
     this.formData.form.markAllAsTouched();
     if (this.formData.invalid) {
       this.dialog.warn(this.translate.instant('PMDT16A_VALIDATE_TITLE'), this.translate.instant('PMDT16A_VALIDATE_MSG'));
@@ -530,12 +532,18 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
     this.isSaving.set(true);
     const rawVal = this.formData.form.getRawValue();
-    const targetId = this.id() || rawVal.id;
+    const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    const currentId = this.id();
+    const targetId = (currentId && UUID_REGEX.test(currentId)) ? currentId : (rawVal.id && UUID_REGEX.test(rawVal.id) ? rawVal.id : undefined);
     const isEditMode = !!targetId || this.isEdit();
-    const itemsPayload = this.items().map((item) => ({
-      ...item,
-      state: item.state !== undefined ? item.state : (item.id ? SicEntityState.Modified : SicEntityState.Added),
-    }));
+    const itemsPayload = this.items().map((item) => {
+      const isValidId = item.id && UUID_REGEX.test(item.id);
+      return {
+        ...item,
+        id: isValidId ? item.id : undefined,
+        state: item.state !== undefined ? item.state : (isValidId ? SicEntityState.Modified : SicEntityState.Added),
+      };
+    });
     const formValue = {
       ...rawVal,
       id: targetId || undefined,

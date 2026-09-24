@@ -12,6 +12,9 @@ public class TaskResponse {
     private UUID id;
     private UUID workPackageId;
     private String workPackageName;
+    /** โครงการที่ Task นี้สังกัด (ผ่าน WP -> Milestone -> Phase) ใช้กรองตาม project context ฝั่งหน้าเว็บ */
+    private UUID projectId;
+    private String projectName;
     private String taskCode;
     private String taskName;
     private String description;

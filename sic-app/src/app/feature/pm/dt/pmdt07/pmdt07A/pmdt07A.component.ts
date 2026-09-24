@@ -885,6 +885,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     // ===== Submit =====
     submit() {
+        if (this.isSaving) return;
         if (this.form.invalid) {
             this.form.markAllAsTouched();
             this.dialog.warn(this.translate.instant('PMDT07_FORM_INVALID_TITLE'), this.translate.instant('PMDT07_FILL_ALL_FIELDS_MSG'));

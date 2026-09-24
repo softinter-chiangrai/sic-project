@@ -12,6 +12,7 @@ export class Pmdt09AForm {
       reviewableType: fb.control(null),
       reviewableId: fb.control(null),
       reviewableName: fb.control(null),
+      customerId: fb.control(null),
       projectId: fb.control(null, [Validators.required]),
       projectName: fb.control(null),
       reviewer: fb.control(null),

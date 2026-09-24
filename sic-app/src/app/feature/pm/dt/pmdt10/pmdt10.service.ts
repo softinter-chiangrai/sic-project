@@ -17,6 +17,10 @@ export class Pmdt10Service {
     return this.http.get<TaskResponse[]>(`${this.projectUrl}/${projectId}/tasks`);
   }
 
+  getTasksByBusiness(): Observable<TaskResponse[]> {
+    return this.http.get<TaskResponse[]>(`${this.taskUrl}/business`);
+  }
+
   getTasksByWorkPackageId(wpId: string): Observable<TaskResponse[]> {
     return this.http.get<TaskResponse[]>(`${this.taskUrl}/work-package/${wpId}`);
   }
@@ -75,8 +79,12 @@ export class Pmdt10Service {
   }
 
   // ===== Bugs =====
-  getBugsByProject(projectId: string): Observable<any[]> {
-    const params = new HttpParams().set('projectId', projectId).set('page', '1').set('size', '500');
+  getBugsByProject(projectId?: string | null): Observable<any[]> {
+    // ไม่ระบุโครงการ = Bug ของทุกโครงการใน business (backend รองรับ projectId ว่าง)
+    let params = new HttpParams().set('page', '1').set('size', '500');
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
     return this.http.get<any>(`${environment.apiBaseUrl}/api/pm/bugs/paging`, { params }).pipe(
       map((res) => res?.data || res?.content || (Array.isArray(res) ? res : []))
     );

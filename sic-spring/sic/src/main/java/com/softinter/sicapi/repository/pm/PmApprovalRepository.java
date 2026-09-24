@@ -25,6 +25,21 @@ public interface PmApprovalRepository extends JpaRepository<PmApproval, UUID>, J
     @Query("SELECT a FROM PmApproval a WHERE a.documentType = :documentType AND a.documentId = :documentId AND a.isActive = true ORDER BY a.createdDate DESC")
     List<PmApproval> findByDocument(@Param("documentType") String documentType, @Param("documentId") UUID documentId);
 
+    /** เอกสารที่มีคำขออนุมัติสถานะ APPROVED (ที่ยัง active) ใช้เป็นตัวเลือกเอกสารเป้าหมายของ Change Request */
+    @Query("SELECT a FROM PmApproval a WHERE a.businessId = :businessId AND a.documentType = :documentType "
+            + "AND a.status = com.softinter.sicapi.entity.enums.ApprovalStatus.APPROVED AND a.isActive = true AND a.isDelete = false "
+            + "AND (LOWER(COALESCE(a.documentCode, '')) LIKE LOWER(CONCAT('%', :keyword, '%')) "
+            + "     OR LOWER(COALESCE(a.documentTitle, '')) LIKE LOWER(CONCAT('%', :keyword, '%'))) "
+            + "AND (:projectId IS NULL OR EXISTS (SELECT 1 FROM PmDocumentVersion v WHERE v.documentType = a.documentType "
+            + "     AND v.documentId = a.documentId AND v.projectId = :projectId)) "
+            + "ORDER BY a.documentCode ASC")
+    List<PmApproval> findApprovedTargets(@Param("businessId") java.util.UUID businessId,
+            @Param("documentType") String documentType, @Param("keyword") String keyword,
+            @Param("projectId") java.util.UUID projectId);
+
+    @Query("SELECT a FROM PmApproval a WHERE a.documentType = :documentType AND a.documentId = :documentId ORDER BY a.createdDate DESC")
+    List<PmApproval> findAnyByDocument(@Param("documentType") String documentType, @Param("documentId") java.util.UUID documentId);
+
     @Query("SELECT a FROM PmApproval a WHERE a.documentType = :documentType AND a.documentId = :documentId AND a.status = :status AND a.isActive = true")
     Optional<PmApproval> findByDocumentAndStatus(@Param("documentType") String documentType,
                                                   @Param("documentId") UUID documentId,

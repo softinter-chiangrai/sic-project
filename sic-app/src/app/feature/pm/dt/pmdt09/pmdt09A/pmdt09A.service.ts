@@ -10,7 +10,8 @@ export class Pmdt09AService {
   private readonly http = inject(HttpClient);
   private readonly translate = inject(TranslateService);
 
-  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-project`;
+  apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
+  apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
   apiGetComboboxReviewable = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
   apiGetComboboxSpecification = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
   apiGetComboboxRequirement = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-requirement`;

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.UUID;
 
 @Entity
@@ -55,7 +56,15 @@ public class PmTestCase extends BaseBusinessEntity {
     private String tester;
 
     @Column(name = "test_date")
-    private Instant testDate;
+    private LocalDate testDate;
+
+    public LocalDate getTestDate() {
+        return this.testDate;
+    }
+
+    public void setTestDate(LocalDate testDate) {
+        this.testDate = testDate;
+    }
 
     @Column(name = "related_requirement", columnDefinition = "TEXT")
     private String relatedRequirement;

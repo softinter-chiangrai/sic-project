@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, ViewChild, computed, inject, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, OnInit, ViewChild, computed, effect, inject, signal, untracked, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
@@ -287,6 +287,20 @@ export class Pmdt10Component implements OnInit {
     return this.specifications().find((s) => s.id === id) || null;
   }
 
+  constructor() {
+    // เปลี่ยนโครงการใน context switcher แล้วโหลดใหม่ (เฉพาะโหมดที่ไม่ได้ระบุโครงการใน URL)
+    effect(() => {
+      const key = this.customerState.currentSelectedProjectIds().join(',');
+      untracked(() => {
+        if (this.contextReady && !this.projectId() && key !== this.loadedContextKey) {
+          this.loadProjectData(null);
+        }
+      });
+    });
+  }
+
+  private contextReady = false;
+
   ngOnInit(): void {
     const businessId = this.businessService.getCurrentBusinessId();
     if (businessId) {
@@ -307,6 +321,7 @@ export class Pmdt10Component implements OnInit {
         this.selectedSpecId.set(specId);
       }
       this.loadProjectData(this.projectId());
+      this.contextReady = true;
     });
   }
 
@@ -373,10 +388,41 @@ export class Pmdt10Component implements OnInit {
         },
       });
     } else {
-      this.allTasks.set([]);
-      this.isLoading.set(false);
+      // ไม่ได้ระบุโครงการใน URL (เปิดจากเมนู): โหลด Task ของทุกโครงการ แล้วกรองตามโครงการที่เลือกจาก context switcher บน navbar
+      // (ถ้าไม่ได้เลือกโครงการใด แสดงทั้งหมด) เหมือนหน้า Design Review
+      const selectedIds = this.customerState.currentSelectedProjectIds();
+      this.loadedContextKey = selectedIds.join(',');
+      this.service.getTasksByBusiness().subscribe({
+        next: (tasks) => {
+          const all = tasks || [];
+          this.allTasks.set(
+            selectedIds.length ? all.filter((t) => !!t.projectId && selectedIds.includes(t.projectId)) : all,
+          );
+          this.isLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Load business tasks error:', err);
+          this.allTasks.set([]);
+          this.isLoading.set(false);
+        },
+      });
+
+      this.service.getBugsByProject(null).subscribe({
+        next: (bugs) => {
+          const all = bugs || [];
+          this.allBugs.set(
+            selectedIds.length ? all.filter((b) => !!b.projectId && selectedIds.includes(b.projectId)) : all,
+          );
+        },
+        error: (err) => {
+          console.error('Load business bugs error:', err);
+          this.allBugs.set([]);
+        },
+      });
     }
   }
+
+  private loadedContextKey = '';
 
   // Filter actions
   selectSpecification(specId: string | null): void {

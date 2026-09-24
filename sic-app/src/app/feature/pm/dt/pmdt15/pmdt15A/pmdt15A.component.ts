@@ -592,7 +592,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onSubmit(): void {
-    if (this.isLocked()) return;
+    if (this.isLocked() || this.isSaving()) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       this.dialog.warn(this.translate.instant('PMDT15A_WARNING_TITLE'), this.translate.instant('PMDT15A_REQUIRED_FIELDS_MSG'));

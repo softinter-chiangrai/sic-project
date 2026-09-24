@@ -353,12 +353,15 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
+    const safeTitle = draft.title ? String(draft.title).substring(0, 255) : undefined;
+    const safeReqCode = draft.requirementCode ? String(draft.requirementCode).substring(0, 30) : undefined;
+
     // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
     smartPatchFormAiDraft(
       this.form,
       {
-        requirementCode: draft.requirementCode,
-        title: draft.title,
+        requirementCode: safeReqCode,
+        title: safeTitle,
         description: draft.description,
         acceptanceCriteria: draft.acceptanceCriteria,
         businessValue: draft.businessValue,
@@ -375,6 +378,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       },
       this.http,
     );
+    this.cdr.markForCheck();
   }
 
   deleteAiHistory(id: string, event: Event): void {
@@ -853,6 +857,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   submit(): void {
+    if (this.isSaving) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       this.dialog.warn(this.translate.instant('PMDT04_INVALID_FORM_TITLE'), this.translate.instant('PMDT04_FILL_VALID_FIELDS_MSG'));
@@ -925,7 +930,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       },
       error: (error) => {
         this.isSaving = false;
-        this.dialog.error(this.translate.instant('PMDT04_SAVE_FAIL_TITLE'), error.message || this.translate.instant('PMDT04_GENERIC_ERROR_MSG'));
+        this.dialog.error(this.translate.instant('PMDT04_SAVE_FAIL_TITLE'), error.error?.message || error.message || this.translate.instant('PMDT04_GENERIC_ERROR_MSG'));
       },
     });
   }

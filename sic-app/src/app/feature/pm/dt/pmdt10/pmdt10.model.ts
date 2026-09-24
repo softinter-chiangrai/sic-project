@@ -21,6 +21,8 @@ export interface TaskResponse {
   id: string;
   workPackageId: string;
   workPackageName: string;
+  projectId?: string;
+  projectName?: string;
   taskCode: string;
   taskName: string;
   description?: string;

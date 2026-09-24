@@ -84,6 +84,59 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   isFigmaLoading = false;
   isFullscreen = false;
 
+  // ===== Customer <-> Project sync =====
+  projectParams: Record<string, any> = {};
+
+  private loadCustomerFromProject(projectId: string, silent = false): void {
+    if (!projectId) return;
+    this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
+      next: (project) => {
+        if (project?.customerId) {
+          // ตอนเปิดหน้า (silent) ไม่ให้นับเป็นการแก้ไขของผู้ใช้; ตอนผู้ใช้เลือกโครงการเองให้นับตามปกติ
+          if (silent) {
+            this.formData.patchValue({ customerId: project.customerId } as any);
+          } else {
+            this.form.patchValue({ customerId: project.customerId });
+          }
+          this.projectParams = { customerId: project.customerId };
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  onCustomerSelected(item: any): void {
+    const customerId = item?.value ?? item?.id ?? null;
+    this.projectParams = customerId ? { customerId } : {};
+
+    // ถ้าโครงการที่เลือกอยู่ไม่ใช่ของลูกค้าที่เปลี่ยนไป ให้ล้างโครงการ
+    const currentProjectId = this.form.get('projectId')?.value;
+    if (currentProjectId && customerId) {
+      this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${currentProjectId}`).subscribe({
+        next: (project) => {
+          if (project?.customerId !== customerId) {
+            this.form.patchValue({ projectId: null, projectName: null });
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => {
+          this.form.patchValue({ projectId: null, projectName: null });
+          this.cdr.markForCheck();
+        },
+      });
+    }
+    this.cdr.markForCheck();
+  }
+
+  onProjectSelected(item: any): void {
+    const projectId = item?.value ?? item?.id ?? null;
+    if (projectId) {
+      this.loadCustomerFromProject(projectId);
+    }
+    this.cdr.markForCheck();
+  }
+
   // ===== Options =====
   severityOptions = ['Low', 'Medium', 'High'];
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Closed'];
@@ -100,6 +153,11 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.reviewId = pageData.reviewId;
 
     this.loadFlows();
+
+    const initialProjectId = this.form.get('projectId')?.value;
+    if (initialProjectId) {
+      this.loadCustomerFromProject(initialProjectId, true);
+    }
 
     if (this.isEdit && this.reviewId) {
       const data = this.formData.value;
@@ -272,7 +330,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 
   submit() {
-    if (this.isLocked) return;
+    if (this.isLocked || this.isSaving) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       
@@ -392,4 +450,4 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   }
 }
 
-export default Pmdt09AComponent;
+export default Pmdt09AComponent;

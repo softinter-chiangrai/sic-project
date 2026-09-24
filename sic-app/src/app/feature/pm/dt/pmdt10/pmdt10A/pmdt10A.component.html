@@ -140,7 +140,7 @@
         </div>
 
         <!-- Manday & Priority & Status -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1" [ngClass]="isEdit ? 'md:grid-cols-3' : 'md:grid-cols-2'" gap-4>
           <div>
             <label class="block text-sm font-medium text-[var(--text)] mb-1">
               {{ 'PMDT10_ESTIMATE_MANDAY_LABEL' | translate }} <span class="text-red-500">*</span>
@@ -153,19 +153,21 @@
               class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
             />
           </div>
-          <div>
-            <label class="block text-sm font-medium text-[var(--text)] mb-1">
-              {{ 'PMDT10_ACTUAL_MANDAY_LABEL' | translate }}
-            </label>
-            <input
-              type="number"
-              min="0"
-              step="1"
-              formControlName="actualManday"
-              placeholder="0"
-              class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
-            />
-          </div>
+          @if (isEdit) {
+            <div>
+              <label class="block text-sm font-medium text-[var(--text)] mb-1">
+                {{ 'PMDT10_ACTUAL_MANDAY_LABEL' | translate }}
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                formControlName="actualManday"
+                placeholder="0"
+                class="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all text-sm"
+              />
+            </div>
+          }
           <div>
             <sic-combobox
               [label]="'PMDT10_PRIORITY_FIELD_LABEL' | translate"

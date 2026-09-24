@@ -52,7 +52,7 @@ public class RequirementGeneratorService {
                     "title": "Clear, concise, professional requirement title",
                     "description": "Comprehensive HTML description (use <p>, <ul>, <li>, <strong>, <h3> for rich formatting suitable for rich-text editors)",
                     "acceptanceCriteria": "Given-When-Then or clear bulleted criteria formatted in HTML (<p>, <ul>, <li>, <strong>)",
-                    "businessValue": "Direct business impact, ROI, efficiency, or compliance value formatted in HTML (<p>, <ul>, <li>)",
+                    "businessValue": "Direct business impact, ROI, efficiency, or compliance value formatted in HTML (<p>, <ul>, <li>, <strong>)",
                     "requirementType": "FUNCTIONAL",
                     "priority": "MEDIUM"
                 }
@@ -65,6 +65,12 @@ public class RequirementGeneratorService {
 
         if (draft.getRequirementCode() == null || draft.getRequirementCode().isBlank()) {
             draft.setRequirementCode(defaultCode != null ? defaultCode : "REQ-001");
+        } else if (draft.getRequirementCode().length() > 30) {
+            draft.setRequirementCode(draft.getRequirementCode().substring(0, 30));
+        }
+
+        if (draft.getTitle() != null && draft.getTitle().length() > 255) {
+            draft.setTitle(draft.getTitle().substring(0, 255));
         }
 
         if (request.getRequirementType() != null && !request.getRequirementType().isBlank()) draft.setRequirementType(request.getRequirementType());

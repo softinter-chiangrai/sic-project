@@ -13,6 +13,7 @@ export interface DesignReviewModel {
   reviewCode: string;
   title: string;
   description: string;
+  customerId?: string | null;
   projectId: string;
   projectName?: string;
   reviewableType?: string;
