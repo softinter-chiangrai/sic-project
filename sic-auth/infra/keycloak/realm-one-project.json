@@ -3,9 +3,22 @@
   "enabled": true,
   "displayName": "sic-project",
   "sslRequired": "none",
-  "registrationAllowed": false,
+  "registrationAllowed": true,
+  "resetPasswordAllowed": true,
+  "rememberMe": true,
   "loginWithEmailAllowed": true,
   "duplicateEmailsAllowed": false,
+  "smtpServer": {
+    "host": "smtp.gmail.com",
+    "port": "587",
+    "from": "phurinsukman3@gmail.com",
+    "fromDisplayName": "SIC Project",
+    "auth": "true",
+    "user": "phurinsukman3@gmail.com",
+    "password": "qeivnricakfexxzh",
+    "starttls": "true",
+    "ssl": "false"
+  },
   "loginTheme": "sic-keycloak-theme",
   "clients": [
     {
