@@ -423,33 +423,26 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     private applyDraftToForm(draft: any): void {
         if (!draft) return;
-        // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
+        // Smart Preserve: กรอกเฉพาะช่องที่ยังว่างอยู่ ห้ามเขียนทับค่าที่มีอยู่แล้ว (รวมฟิลด์ความสัมพันธ์/เมทาดาทา)
         smartPatchFormAiDraft(
             this.form,
             {
                 title: draft.title,
                 priority: draft.priority,
+                specificationType: draft.specificationType,
                 estimatedManday: draft.estimatedManday,
                 description: draft.generatedHtmlDescription || draft.description,
+                requirementId: draft.requirementId,
+                generatedFromRequirementId: draft.requirementId,
+                generatedFromDiagramId: draft.diagramIds && draft.diagramIds.length > 0 ? draft.diagramIds.join(',') : undefined,
             },
             ['id'],
+            {
+                priority: this.service.apiGetLovPriority,
+                specificationType: this.specificationTypeOptions,
+            },
+            this.http,
         );
-
-        // ฟิลด์ความสัมพันธ์/เมทาดาทา — AI กำหนดค่าทับได้เสมอ ไม่ใช่ผู้ใช้พิมพ์เอง
-        if (draft.requirementId) {
-            this.form.patchValue({
-                requirementId: draft.requirementId,
-                generatedFromRequirementId: draft.requirementId
-            });
-        }
-        if (draft.diagramIds && draft.diagramIds.length > 0) {
-            this.form.patchValue({
-                generatedFromDiagramId: draft.diagramIds.join(',')
-            });
-        }
-        if (draft.specificationType) {
-            this.form.patchValue({ specificationType: draft.specificationType });
-        }
         this.form.markAsDirty();
     }
 

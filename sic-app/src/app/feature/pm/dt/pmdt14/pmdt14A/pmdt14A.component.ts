@@ -226,6 +226,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         deliverySummary: draft.deliverySummary,
       },
       ['id'],
+      { deliveryType: this.typeOptions },
     );
 
     const rawItems = draft.items || draft.checklists;

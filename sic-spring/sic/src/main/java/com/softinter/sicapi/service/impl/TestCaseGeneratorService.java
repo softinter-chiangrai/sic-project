@@ -69,9 +69,6 @@ public class TestCaseGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         TestCaseDraftResponse draft = parseAiResponse(aiResponse);
 
-        draft.setPriority(null);
-        draft.setTestCaseCode(null);
-
         // Format HTML for testStep if not already HTML
         if (draft.getTestStep() != null && !draft.getTestStep().contains("<")) {
             draft.setTestStep(convertTextToHtmlOrderedList(draft.getTestStep()));
@@ -126,15 +123,15 @@ public class TestCaseGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
-                Leave priority and testCaseCode as null. Do NOT invent priority levels or test case codes - users will specify these themselves.
+                Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL. testCaseCode follows the pattern TC-NNN.
                 Language for test case content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
                 ```json
                 {
                   "title": "หัวข้อ Test Case (ชัดเจนและระบุเป้าหมายการทดสอบ เช่น 'ทดสอบการบันทึกข้อมูลเมื่อกรอกครบถ้วน')",
-                  "priority": null,
-                  "testCaseCode": null,
+                  "priority": "MEDIUM",
+                  "testCaseCode": "TC-001",
                   "testStep": "<ol><li>เปิดหน้าจอ...</li><li>กรอกข้อมูล...</li><li>คลิกปุ่มบันทึก</li></ol>",
                   "expectedResult": "<p>1. ระบบบันทึกข้อมูลสำเร็จและแสดง Alert ยืนยัน</p><p>2. ข้อมูลปรากฏในตารางรายการอย่างถูกต้อง</p>"
                 }
@@ -171,8 +168,6 @@ public class TestCaseGeneratorService {
     private TestCaseDraftResponse createFallbackTestCase() {
         TestCaseDraftResponse fallback = new TestCaseDraftResponse();
         fallback.setTitle("Generated Test Case");
-        fallback.setPriority(null);
-        fallback.setTestCaseCode(null);
         fallback.setTestStep("<ol><li>เปิดหน้าจอการทำงาน</li><li>กรอกข้อมูลเพื่อทดสอบ</li><li>ตรวจสอบผลลัพธ์</li></ol>");
         fallback.setExpectedResult("<p>ระบบทำงานถูกต้องตามเงื่อนไขที่กำหนด</p>");
         return fallback;

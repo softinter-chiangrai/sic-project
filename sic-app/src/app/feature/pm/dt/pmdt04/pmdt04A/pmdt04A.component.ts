@@ -367,6 +367,11 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         requirementType: draft.requirementType || 'FUNCTIONAL',
       },
       ['id'],
+      {
+        requirementType: this.service.apiGetLovRequirementType,
+        priority: this.service.apiGetLovPriority,
+      },
+      this.http,
     );
   }
 

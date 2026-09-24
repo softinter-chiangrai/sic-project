@@ -39,12 +39,12 @@ public class DeliveryGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave deliveryType and deliveryVersion as null unless specifically provided by the user. Do NOT invent delivery types or versions - users will specify these themselves.
+                3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. deliveryType must be one of: FINAL | PARTIAL | MILESTONE. deliveryVersion uses semantic version format such as 1.0.0.
                 4. The JSON structure MUST be:
                 {
                     "deliveryTitle": "Clear, professional delivery title (e.g. เอกสารส่งมอบระบบและงวดงาน Phase 1)",
-                    "deliveryType": null,
-                    "deliveryVersion": null,
+                    "deliveryType": "PARTIAL",
+                    "deliveryVersion": "1.0.0",
                     "deliverySummary": "Comprehensive HTML delivery overview and scope (<p>, <ul>, <li>, <strong>, <h3>)",
                     "releaseNote": "Key features, bug fixes, changes, deployment instructions formatted in HTML (<p>, <ul>, <li>)",
                     "checklists": [
@@ -68,8 +68,7 @@ public class DeliveryGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         DeliveryDraft draft = parseAiResponse(aiResponse);
 
-        draft.setDeliveryType(request.getDeliveryType() != null && !request.getDeliveryType().isBlank() ? request.getDeliveryType() : null);
-        draft.setDeliveryVersion(null);
+        if (request.getDeliveryType() != null && !request.getDeliveryType().isBlank()) draft.setDeliveryType(request.getDeliveryType());
         if (draft.getChecklists() == null) {
             draft.setChecklists(new ArrayList<>());
         }

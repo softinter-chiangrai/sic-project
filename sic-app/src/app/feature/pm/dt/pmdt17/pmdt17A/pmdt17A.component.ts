@@ -256,6 +256,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         resolutionSummary: draft.resolutionSummary || draft.resolution,
       },
       ['id'],
+      { ticketType: this.ticketTypeOptions, severity: this.severityOptions },
     );
   }
 

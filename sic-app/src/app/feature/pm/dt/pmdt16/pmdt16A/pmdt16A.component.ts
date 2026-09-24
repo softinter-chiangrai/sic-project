@@ -242,6 +242,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
           : undefined,
       },
       ['id'],
+      { billingType: this.billingTypeOptions },
     );
 
     if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {

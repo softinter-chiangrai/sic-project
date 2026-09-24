@@ -439,13 +439,15 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
     smartPatchFormAiDraft(
       this.form,
       {
+        projectCode: draft.projectCode,
         projectName: draft.projectName,
         description: draft.description,
         status: draft.status,
         startDate: draft.startDate,
         plannedEndDate: draft.endDate || draft.plannedEndDate,
       },
-      ['id', 'projectCode'],
+      ['id'],
+      { status: this.statusOptions },
     );
   }
 

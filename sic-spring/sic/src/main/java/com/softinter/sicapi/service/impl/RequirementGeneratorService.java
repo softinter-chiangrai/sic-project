@@ -38,15 +38,15 @@ public class RequirementGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave requirementType and priority as null unless specifically provided by the user. Do NOT invent requirement types or priority levels - users will select these themselves.
+                3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. requirementType must be one of: FUNCTIONAL | NON_FUNCTIONAL | BUSINESS_RULE | REPORT | INTEGRATION | SECURITY | DATA | UI. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL.
                 4. The JSON structure MUST be:
                 {
                     "title": "Clear, concise, professional requirement title",
                     "description": "Comprehensive HTML description (use <p>, <ul>, <li>, <strong>, <h3> for rich formatting suitable for rich-text editors)",
                     "acceptanceCriteria": "Given-When-Then or clear bulleted criteria formatted in HTML (<p>, <ul>, <li>, <strong>)",
                     "businessValue": "Direct business impact, ROI, efficiency, or compliance value formatted in HTML (<p>, <ul>, <li>)",
-                    "requirementType": null,
-                    "priority": null
+                    "requirementType": "FUNCTIONAL",
+                    "priority": "MEDIUM"
                 }
                 5. Ensure the output is directly applicable, testable, unambiguous, and professional.
                 6. If user wrote prompt in Thai, respond in Thai (except technical terms/standards). If in English, respond in English.
@@ -55,8 +55,7 @@ public class RequirementGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         RequirementDraft draft = parseAiResponse(aiResponse);
 
-        draft.setRequirementType(request.getRequirementType() != null && !request.getRequirementType().isBlank() ? request.getRequirementType() : null);
-        draft.setPriority(null);
+        if (request.getRequirementType() != null && !request.getRequirementType().isBlank()) draft.setRequirementType(request.getRequirementType());
 
         return draft;
     }
@@ -128,8 +127,6 @@ public class RequirementGeneratorService {
         draft.setDescription("<p>" + (raw != null ? raw.replace("\n", "<br/>") : "") + "</p>");
         draft.setAcceptanceCriteria("<p>- System functions as expected</p>");
         draft.setBusinessValue("<p>- Enhances system usability and operations</p>");
-        draft.setRequirementType(null);
-        draft.setPriority(null);
         return draft;
     }
 }

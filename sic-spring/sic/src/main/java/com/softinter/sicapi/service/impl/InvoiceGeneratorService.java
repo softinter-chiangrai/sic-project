@@ -48,13 +48,13 @@ public class InvoiceGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave billingType and vatRate as null. Do NOT invent billing types or VAT rates - users will specify these themselves.
+                3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. billingType must be one of: FIXED_PRICE | MILESTONE | MONTHLY | MA | CHANGE_REQUEST. vatRate is a percentage number (use 7 for Thai VAT).
                 4. The JSON structure MUST be:
                 {
                     "invoiceTitle": "Clear invoice / billing milestone title (e.g. งวดที่ 1: ส่งมอบ Requirement & System Architecture)",
-                    "billingType": null,
+                    "billingType": "MILESTONE",
                     "remark": "Terms, payment conditions, bank details, or notes formatted in HTML (<p>, <ul>, <li>, <strong>)",
-                    "vatRate": null,
+                    "vatRate": 7,
                     "items": [
                         {
                             "itemDescription": "Description of work/deliverable (e.g. ค่าพัฒนาและออกแบบระบบ Phase 1)",
@@ -70,8 +70,6 @@ public class InvoiceGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         InvoiceDraft draft = parseAiResponse(aiResponse);
 
-        draft.setBillingType(null);
-        draft.setVatRate(null);
         if (draft.getItems() == null) {
             draft.setItems(new ArrayList<>());
         }

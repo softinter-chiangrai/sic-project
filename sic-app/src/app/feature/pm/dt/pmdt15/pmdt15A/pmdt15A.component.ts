@@ -399,6 +399,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
           manualType: draft.manualType,
         },
         ['id'],
+        { manualType: this.typeOptions },
       );
     }
 

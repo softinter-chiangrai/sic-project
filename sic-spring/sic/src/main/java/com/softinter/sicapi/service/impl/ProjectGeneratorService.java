@@ -39,15 +39,15 @@ public class ProjectGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave projectCode, startDate, endDate, and status as null unless specifically provided by the user. Do NOT invent project codes, dates, or status values - users will specify these themselves.
+                3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. status must be one of: Prospect | Contract Drafting | Contract Signed | Requirement Gathering | Requirement Approval | System Analysis | DFD Design | ER Design | Specification Design | Specification Approval | Planning | Development | Internal Testing | UAT | Bug Fixing | Ready for Delivery | Delivered | Invoicing | Closed | MA Active (use Prospect or Planning for a new project). projectCode follows the pattern PRJ-YYYY-NNN.
                 4. The JSON structure MUST be:
                 {
-                    "projectCode": null,
+                    "projectCode": "PRJ-2026-001",
                     "projectName": "Clear and professional project title (e.g. โครงการพัฒนาระบบบริหารจัดการลูกค้าสัมพันธ์อัจฉริยะ)",
                     "description": "Comprehensive project description, business objectives, scope, and key deliverables formatted in HTML using <p>, <ul>, <li>, <strong>, <h3> tags",
-                    "startDate": null,
-                    "endDate": null,
-                    "status": null
+                    "startDate": "2026-01-01",
+                    "endDate": "2026-12-31",
+                    "status": "Planning"
                 }
                 5. Ensure professional phrasing. If prompt in Thai, respond in Thai.
                 """;
@@ -102,10 +102,7 @@ public class ProjectGeneratorService {
             if (draft == null || (draft.getProjectName() == null && draft.getDescription() == null)) {
                 return buildFallback(request, customer);
             }
-            draft.setProjectCode(request.getProjectCode() != null && !request.getProjectCode().isBlank() ? request.getProjectCode() : null);
-            draft.setStartDate(null);
-            draft.setEndDate(null);
-            draft.setStatus(null);
+            if (request.getProjectCode() != null && !request.getProjectCode().isBlank()) draft.setProjectCode(request.getProjectCode());
             return draft;
         } catch (Exception e) {
             log.warn("Failed to parse JSON response for project draft, using fallback. Raw response: {}", rawResponse);

@@ -40,17 +40,17 @@ public class ContractGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave contractNo, contractType, contractValue, startDate, endDate, and signStatus as null unless specifically provided by the user. Do NOT invent dates or contract numbers - users will specify these themselves.
+                3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. contractType must be one of: Development Contract | Maintenance Contract | Support Contract | Change Request Contract | Extension Contract. signStatus must be one of: Draft | Sent | Signed | Expired (use Draft for a new contract). contractNo follows the pattern CT-YYYY-NNN. contractValue is a number.
                 4. The JSON structure MUST be:
                 {
-                    "contractNo": null,
-                    "contractType": null,
-                    "contractValue": null,
+                    "contractNo": "CT-2026-001",
+                    "contractType": "Development Contract",
+                    "contractValue": 1000000,
                     "paymentTerms": "รายละเอียดเงื่อนไขการแบ่งชำระเงินตามงวดงานอย่างชัดเจนและครบถ้วน (เช่น แบ่งชำระเป็น 3 งวด: งวดที่ 1 30% เมื่อลงนามสัญญา, งวดที่ 2 40% เมื่อส่งมอบระบบเวอร์ชันทดสอบ (UAT), งวดที่ 3 30% เมื่อตรวจรับมอบงานเสร็จสมบูรณ์)",
                     "scopeSummary": "<h3>1. วัตถุประสงค์และขอบเขตงาน</h3><p>...</p><h3>2. รายการส่งมอบและขั้นตอนการดำเนินงาน</h3><ul><li>...</li></ul><h3>3. การรับประกันและบริการหลังการขาย</h3><p>...</p><h3>4. ข้อกำหนดการรักษาความลับและทรัพย์สินทางปัญญา</h3><p>...</p>",
-                    "startDate": null,
-                    "endDate": null,
-                    "signStatus": null
+                    "startDate": "2026-01-01",
+                    "endDate": "2026-12-31",
+                    "signStatus": "Draft"
                 }
                 5. Ensure professional, legally sound wording in Thai. Provide rich and detailed HTML tags for scopeSummary.
                 """;
@@ -122,12 +122,10 @@ public class ContractGeneratorService {
                 draft.setPaymentTerms(fallback.getPaymentTerms());
             }
 
-            draft.setContractNo(request.getContractNo() != null && !request.getContractNo().isBlank() ? request.getContractNo() : null);
-            draft.setContractType(request.getContractType() != null && !request.getContractType().isBlank() ? request.getContractType() : null);
-            draft.setContractValue(request.getContractValue());
-            draft.setStartDate(null);
-            draft.setEndDate(null);
-            draft.setSignStatus(null);
+            // ค่าที่ผู้ใช้ระบุมาเองมาก่อน ถ้าว่างใช้ค่าที่ AI เสนอ (frontend จะกรอกเฉพาะช่องที่ยังว่างอยู่)
+            if (request.getContractNo() != null && !request.getContractNo().isBlank()) draft.setContractNo(request.getContractNo());
+            if (request.getContractType() != null && !request.getContractType().isBlank()) draft.setContractType(request.getContractType());
+            if (request.getContractValue() != null) draft.setContractValue(request.getContractValue());
             return draft;
         } catch (Exception e) {
             log.warn("Failed to parse JSON response for contract draft, using fallback. Raw response: {}", rawResponse);

@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 
 // src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
@@ -63,6 +64,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
+  private readonly aiHttp = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   public service = inject(Pmrt04AService);
@@ -611,6 +613,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     smartPatchFormAiDraft(
       this.form,
       {
+        contractNo: draft.contractNo,
         contractType: draft.contractType,
         contractValue: draft.contractValue !== undefined && draft.contractValue !== null ? Number(draft.contractValue) : undefined,
         paymentTerms: draft.paymentTerms,
@@ -619,7 +622,9 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         endDate: draft.endDate,
         signStatus: draft.signStatus,
       },
-      ['id', 'contractNo'],
+      ['id'],
+      { contractType: this.service.getLovContractType() },
+      this.aiHttp,
     );
   }
 

@@ -38,12 +38,12 @@ public class MaTicketGeneratorService {
                 RULES:
                 1. Respond strictly in valid JSON format.
                 2. Do NOT wrap with any text outside the ```json ``` block.
-                3. Leave ticketType and severity as null unless specifically provided by the user. Do NOT invent ticket types or severity levels - users will select these themselves.
+                3. Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. ticketType must be one of: BUG_SUPPORT | DATA_ISSUE | USER_SUPPORT | CHANGE_REQUEST. severity must be one of: LOW | MEDIUM | HIGH | CRITICAL.
                 4. The JSON structure MUST be:
                 {
                     "title": "Clear, professional, concise ticket title (e.g. ปัญหาการเชื่อมต่อระบบ Payment Gateway ขัดข้อง)",
-                    "ticketType": null,
-                    "severity": null,
+                    "ticketType": "BUG_SUPPORT",
+                    "severity": "MEDIUM",
                     "description": "Comprehensive HTML description covering problem symptoms, reproduction steps, expected vs actual behavior, and affected components formatted in HTML (<p>, <ul>, <li>, <strong>, <h3>)",
                     "resolutionSummary": "Root cause analysis, workaround, or proposed technical resolution steps formatted in HTML (<p>, <ul>, <li>, <strong>)"
                 }
@@ -53,8 +53,8 @@ public class MaTicketGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         MaTicketDraft draft = parseAiResponse(aiResponse);
 
-        draft.setTicketType(request.getTicketType() != null && !request.getTicketType().isBlank() ? request.getTicketType() : null);
-        draft.setSeverity(request.getSeverity() != null && !request.getSeverity().isBlank() ? request.getSeverity() : null);
+        if (request.getTicketType() != null && !request.getTicketType().isBlank()) draft.setTicketType(request.getTicketType());
+        if (request.getSeverity() != null && !request.getSeverity().isBlank()) draft.setSeverity(request.getSeverity());
 
         return draft;
     }

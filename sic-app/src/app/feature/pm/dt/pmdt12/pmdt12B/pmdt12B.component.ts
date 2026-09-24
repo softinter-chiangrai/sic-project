@@ -1,3 +1,4 @@
+import { HttpClient } from '@angular/common/http';
 // src/app/feature/pm/dt/pmdt13/pmdt13B/pmdt13B.component.ts
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -47,6 +48,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
+  private readonly aiHttp = inject(HttpClient);
   private fb = inject(FormBuilder);
   private service = inject(Pmdt12BService);
   private customerState = inject(CustomerStateService);
@@ -281,6 +283,8 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
         priority: draft.priority,
       },
       ['id'],
+      { priority: this.priorityApiUrl },
+      this.aiHttp,
     );
 
     if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {

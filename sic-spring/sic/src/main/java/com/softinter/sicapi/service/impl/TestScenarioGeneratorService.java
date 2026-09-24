@@ -59,9 +59,6 @@ public class TestScenarioGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         TestScenarioDraftResponse draft = parseAiResponse(aiResponse);
 
-        draft.setPriority(null);
-        draft.setScenarioCode(null);
-
         return draft;
     }
 
@@ -100,15 +97,15 @@ public class TestScenarioGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
-                Leave scenarioCode and priority as null. Do NOT invent scenario codes or priority levels - users will specify these themselves.
+                Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL. scenarioCode follows the pattern SC-NNN.
                 Language for scenario content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
                 ```json
                 {
-                  "scenarioCode": null,
+                  "scenarioCode": "SC-001",
                   "scenarioName": "ชื่อ Test Scenario (ครอบคลุมชุดการทดสอบ เช่น 'ทดสอบกระบวนการสั่งซื้อสินค้าและการชำระเงิน')",
-                  "priority": null,
+                  "priority": "MEDIUM",
                   "description": "<p><strong>วัตถุประสงค์และขอบเขต:</strong> เพื่อทดสอบการทำงานของระบบในการจัดการ...</p><ul><li>ทดสอบการแสดงผลหน้าจอและ Validation</li><li>ทดสอบความถูกต้องของการคำนวณ</li><li>ทดสอบการบันทึกและส่งแจ้งเตือน</li></ul>"
                 }
                 ```
@@ -143,9 +140,7 @@ public class TestScenarioGeneratorService {
 
     private TestScenarioDraftResponse createFallbackScenario() {
         TestScenarioDraftResponse fallback = new TestScenarioDraftResponse();
-        fallback.setScenarioCode(null);
         fallback.setScenarioName("Generated Test Scenario");
-        fallback.setPriority(null);
         fallback.setDescription("<p>กลุ่มการทดสอบที่สร้างโดย AI เพื่อรองรับการทดสอบระบบ</p>");
         return fallback;
     }
