@@ -3,9 +3,11 @@ package com.softinter.sicapi.entity.pm;
 import java.util.UUID;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
+import com.softinter.sicapi.entity.db.DbCountry;
 import com.softinter.sicapi.entity.db.DbDistrict;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
+import com.softinter.sicapi.entity.db.DbTitle;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -33,11 +35,32 @@ public class PmCustomer extends BaseBusinessEntity {
     @Column(name = "tax_id", length = 30)
     private String taxId;
 
+    @Column(name = "branch_code", length = 30)
+    private String branchCode;
+
     @Column(name = "company_name_en", nullable = false, length = 255)
     private String companyNameEn;
 
     @Column(name = "company_name_local", nullable = false, length = 255)
     private String companyNameLocal;
+
+    @Column(name = "first_name_en", length = 100)
+    private String firstNameEn;
+
+    @Column(name = "middle_name_en", length = 100)
+    private String middleNameEn;
+
+    @Column(name = "last_name_en", length = 100)
+    private String lastNameEn;
+
+    @Column(name = "first_name_local", length = 100)
+    private String firstNameLocal;
+
+    @Column(name = "middle_name_local", length = 100)
+    private String middleNameLocal;
+
+    @Column(name = "last_name_local", length = 100)
+    private String lastNameLocal;
 
     @Column(name = "contact_person", length = 255)
     private String contactPerson;
@@ -50,6 +73,9 @@ public class PmCustomer extends BaseBusinessEntity {
 
     @Column(name = "line_id", length = 100)
     private String lineId;
+
+    @Column(name = "support_local_address")
+    private Boolean supportLocalAddress = false;
 
     @Column(name = "address_en", length = 500)
     private String addressEn;
@@ -71,6 +97,14 @@ public class PmCustomer extends BaseBusinessEntity {
 
     // ===== Relationships =====
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "title_id")
+    private DbTitle title;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private DbCountry country;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "province_id")
     private DbProvince province;
 
@@ -83,6 +117,12 @@ public class PmCustomer extends BaseBusinessEntity {
     private DbSubDistrict subDistrict;
 
     // Foreign key fields (read-only)
+    @Column(name = "title_id", insertable = false, updatable = false)
+    private UUID titleId;
+
+    @Column(name = "country_id", insertable = false, updatable = false)
+    private UUID countryId;
+
     @Column(name = "province_id", insertable = false, updatable = false)
     private UUID provinceId;
 

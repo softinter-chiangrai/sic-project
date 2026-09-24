@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,16 +13,20 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.softinter.sicapi.dto.request.PmCustomerRequest;
 import com.softinter.sicapi.dto.response.PmCustomerResponse;
+import com.softinter.sicapi.entity.db.DbCountry;
 import com.softinter.sicapi.entity.db.DbDistrict;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
+import com.softinter.sicapi.entity.db.DbTitle;
 import com.softinter.sicapi.entity.enums.FileVisibility;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
 import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.entity.su.SuUpload;
+import com.softinter.sicapi.repository.db.DbCountryRepository;
 import com.softinter.sicapi.repository.db.DbDistrictRepository;
 import com.softinter.sicapi.repository.db.DbProvinceRepository;
 import com.softinter.sicapi.repository.db.DbSubDistrictRepository;
+import com.softinter.sicapi.repository.db.DbTitleRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.service.PmCustomerService;
@@ -39,6 +44,8 @@ public class PmCustomerServiceImpl implements PmCustomerService {
     private final DbProvinceRepository provinceRepository;
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
+    private final DbTitleRepository titleRepository;
+    private final DbCountryRepository countryRepository;
     private final SuUploadRepository uploadRepository; 
 
     @Override
@@ -131,6 +138,10 @@ public class PmCustomerServiceImpl implements PmCustomerService {
                 Predicate codePred = cb.like(cb.lower(root.get("customerCode")), pattern);
                 Predicate nameEnPred = cb.like(cb.lower(root.get("companyNameEn")), pattern);
                 Predicate nameLocalPred = cb.like(cb.lower(root.get("companyNameLocal")), pattern);
+                Predicate firstNameEnPred = cb.like(cb.lower(root.get("firstNameEn")), pattern);
+                Predicate lastNameEnPred = cb.like(cb.lower(root.get("lastNameEn")), pattern);
+                Predicate firstNameLocalPred = cb.like(cb.lower(root.get("firstNameLocal")), pattern);
+                Predicate lastNameLocalPred = cb.like(cb.lower(root.get("lastNameLocal")), pattern);
                 Predicate taxIdPred = cb.like(cb.lower(root.get("taxId")), pattern);
                 Predicate contactPred = cb.like(cb.lower(root.get("contactPerson")), pattern);
                 Predicate phonePred = cb.like(cb.lower(root.get("phoneNumber")), pattern);
@@ -142,7 +153,8 @@ public class PmCustomerServiceImpl implements PmCustomerService {
                 Predicate remarkPred = cb.like(cb.lower(root.get("remark")), pattern);
 
                 List<Predicate> orPreds = new ArrayList<>(List.of(
-                        codePred, nameEnPred, nameLocalPred, taxIdPred, contactPred,
+                        codePred, nameEnPred, nameLocalPred, firstNameEnPred, lastNameEnPred,
+                        firstNameLocalPred, lastNameLocalPred, taxIdPred, contactPred,
                         phonePred, emailPred, lineIdPred, addressEnPred, addressLocalPred, zipCodePred, remarkPred
                 ));
 
@@ -185,8 +197,60 @@ public class PmCustomerServiceImpl implements PmCustomerService {
     private void mapRequestToEntity(PmCustomerRequest request, PmCustomer customer) {
         customer.setCustomerCode(request.getCustomerCode());
         customer.setTaxId(request.getTaxId());
-        customer.setCompanyNameEn(request.getCompanyNameEn());
-        customer.setCompanyNameLocal(request.getCompanyNameLocal());
+        customer.setBranchCode(request.getBranchCode());
+        customer.setPersonType(request.getPersonType());
+
+        // Names
+        customer.setFirstNameEn(request.getFirstNameEn());
+        customer.setMiddleNameEn(request.getMiddleNameEn());
+        customer.setLastNameEn(request.getLastNameEn());
+        customer.setFirstNameLocal(request.getFirstNameLocal());
+        customer.setMiddleNameLocal(request.getMiddleNameLocal());
+        customer.setLastNameLocal(request.getLastNameLocal());
+
+        if ("CORPORATE".equalsIgnoreCase(request.getPersonType())) {
+            String nameEn = request.getFirstNameEn() != null && !request.getFirstNameEn().isBlank()
+                    ? request.getFirstNameEn()
+                    : request.getCompanyNameEn();
+            customer.setCompanyNameEn(nameEn != null ? nameEn : "");
+            if (customer.getFirstNameEn() == null || customer.getFirstNameEn().isBlank()) {
+                customer.setFirstNameEn(nameEn);
+            }
+
+            String nameLocal = request.getFirstNameLocal() != null && !request.getFirstNameLocal().isBlank()
+                    ? request.getFirstNameLocal()
+                    : request.getCompanyNameLocal();
+            customer.setCompanyNameLocal(nameLocal != null ? nameLocal : "");
+            if (customer.getFirstNameLocal() == null || customer.getFirstNameLocal().isBlank()) {
+                customer.setFirstNameLocal(nameLocal);
+            }
+        } else {
+            // INDIVIDUAL
+            String nameEn = Stream.of(request.getFirstNameEn(), request.getMiddleNameEn(), request.getLastNameEn())
+                    .filter(s -> s != null && !s.isBlank())
+                    .collect(Collectors.joining(" "));
+            if (nameEn.isBlank() && request.getCompanyNameEn() != null) {
+                nameEn = request.getCompanyNameEn();
+            }
+            customer.setCompanyNameEn(nameEn);
+
+            String nameLocal = Stream.of(request.getFirstNameLocal(), request.getMiddleNameLocal(), request.getLastNameLocal())
+                    .filter(s -> s != null && !s.isBlank())
+                    .collect(Collectors.joining(" "));
+            if (nameLocal.isBlank() && request.getCompanyNameLocal() != null) {
+                nameLocal = request.getCompanyNameLocal();
+            }
+            customer.setCompanyNameLocal(nameLocal);
+        }
+
+        // Title
+        if (request.getTitleId() != null) {
+            DbTitle title = titleRepository.findById(request.getTitleId()).orElse(null);
+            customer.setTitle(title);
+        } else {
+            customer.setTitle(null);
+        }
+
         customer.setContactPerson(request.getContactPerson());
         customer.setPhoneNumber(request.getPhoneNumber());
         customer.setEmail(request.getEmail());
@@ -194,16 +258,27 @@ public class PmCustomerServiceImpl implements PmCustomerService {
         customer.setAddressEn(request.getAddressEn());
         customer.setAddressLocal(request.getAddressLocal());
         customer.setZipCode(request.getZipCode());
-        customer.setPersonType(request.getPersonType());
-        customer.setIsActive(request.getIsActive());
+        customer.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         customer.setRemark(request.getRemark());
         customer.setUploadGroupId(request.getUploadGroupId());
+        customer.setSupportLocalAddress(request.getSupportLocalAddress() != null ? request.getSupportLocalAddress() : false);
+
+        // Country
+        if (request.getCountryId() != null) {
+            DbCountry country = countryRepository.findById(request.getCountryId()).orElse(null);
+            customer.setCountry(country);
+        } else {
+            customer.setCountry(null);
+        }
 
         // Location
         if (request.getProvinceId() != null) {
             DbProvince province = provinceRepository.findById(request.getProvinceId())
                     .orElseThrow(() -> new RuntimeException("ไม่พบจังหวัดรหัส " + request.getProvinceId()));
             customer.setProvince(province);
+            if (customer.getCountry() == null && province.getCountry() != null) {
+                customer.setCountry(province.getCountry());
+            }
         } else {
             customer.setProvince(null);
         }
@@ -231,49 +306,72 @@ public class PmCustomerServiceImpl implements PmCustomerService {
     }
 
     private PmCustomerResponse toResponse(PmCustomer customer) {
-    // สร้าง uploadGroupData
-    List<StorageUploadReference> uploadData = new ArrayList<>();
-    if (customer.getUploadGroupId() != null) {
-        List<SuUpload> uploads = uploadRepository
-                .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(customer.getUploadGroupId());
-        for (SuUpload upload : uploads) {
-            StorageUploadReference ref = new StorageUploadReference();
-            ref.setId(upload.getId());
-            ref.setUploadGroupId(customer.getUploadGroupId());
-            ref.setFileName(upload.getFileName());
-            ref.setContentType(upload.getContentType());
-            ref.setFileSize(upload.getFileSize());
-            ref.setAccessUrl(upload.getAccessUrl());
-            ref.setIsActive(upload.getIsActive());
-            ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
-            ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
-            ref.setState(0);
-            uploadData.add(ref);
+        // สร้าง uploadGroupData
+        List<StorageUploadReference> uploadData = new ArrayList<>();
+        if (customer.getUploadGroupId() != null) {
+            List<SuUpload> uploads = uploadRepository
+                    .findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(customer.getUploadGroupId());
+            for (SuUpload upload : uploads) {
+                StorageUploadReference ref = new StorageUploadReference();
+                ref.setId(upload.getId());
+                ref.setUploadGroupId(customer.getUploadGroupId());
+                ref.setFileName(upload.getFileName());
+                ref.setContentType(upload.getContentType());
+                ref.setFileSize(upload.getFileSize());
+                ref.setAccessUrl(upload.getAccessUrl());
+                ref.setIsActive(upload.getIsActive());
+                ref.setIsStreaming(upload.getIsStreaming() != null ? upload.getIsStreaming() : false);
+                ref.setVisibility(mapVisibilityToString(upload.getVisibility()));
+                ref.setState(0);
+                uploadData.add(ref);
+            }
         }
-    }
+
+        UUID countryId = null;
+        String countryName = null;
+        if (customer.getCountry() != null) {
+            countryId = customer.getCountry().getId();
+            countryName = LocalizationHelper.getCountryName(customer.getCountry());
+        } else if (customer.getProvince() != null && customer.getProvince().getCountry() != null) {
+            countryId = customer.getProvince().getCountry().getId();
+            countryName = LocalizationHelper.getCountryName(customer.getProvince().getCountry());
+        }
+
+        String firstNameEn = customer.getFirstNameEn() != null ? customer.getFirstNameEn() : customer.getCompanyNameEn();
+        String firstNameLocal = customer.getFirstNameLocal() != null ? customer.getFirstNameLocal() : customer.getCompanyNameLocal();
+
+        boolean supportLocal = customer.getSupportLocalAddress() != null
+                ? customer.getSupportLocalAddress()
+                : (customer.getProvince() != null || customer.getProvinceId() != null);
 
         return PmCustomerResponse.builder()
                 .id(customer.getId())
                 .businessId(customer.getBusinessId())
                 .customerCode(customer.getCustomerCode())
                 .taxId(customer.getTaxId())
+                .branchCode(customer.getBranchCode())
+                .titleId(customer.getTitle() != null ? customer.getTitle().getId() : customer.getTitleId())
+                .titleName(customer.getTitle() != null ? LocalizationHelper.getTitleName(customer.getTitle()) : null)
                 .companyNameEn(customer.getCompanyNameEn())
                 .companyNameLocal(customer.getCompanyNameLocal())
+                .firstNameEn(firstNameEn)
+                .middleNameEn(customer.getMiddleNameEn())
+                .lastNameEn(customer.getLastNameEn())
+                .firstNameLocal(firstNameLocal)
+                .middleNameLocal(customer.getMiddleNameLocal())
+                .lastNameLocal(customer.getLastNameLocal())
                 .contactPerson(customer.getContactPerson())
                 .phoneNumber(customer.getPhoneNumber())
                 .email(customer.getEmail())
                 .lineId(customer.getLineId())
                 .addressEn(customer.getAddressEn())
                 .addressLocal(customer.getAddressLocal())
+                .countryId(countryId)
+                .countryName(countryName)
+                .supportLocalAddress(supportLocal)
                 .provinceId(customer.getProvince() != null ? customer.getProvince().getId() : null)
                 .provinceName(customer.getProvince() != null
                         ? LocalizationHelper.getProvinceName(customer.getProvince())
-                        : null)
-                .countryId(customer.getProvince() != null && customer.getProvince().getCountry() != null
-                        ? customer.getProvince().getCountry().getId()
-                        : null)
-                .countryName(customer.getProvince() != null && customer.getProvince().getCountry() != null
-                        ? LocalizationHelper.getCountryName(customer.getProvince().getCountry())
                         : null)
                 .districtId(customer.getDistrict() != null ? customer.getDistrict().getId() : null)
                 .districtName(customer.getDistrict() != null
@@ -284,13 +382,12 @@ public class PmCustomerServiceImpl implements PmCustomerService {
                         ? LocalizationHelper.getSubDistrictName(customer.getSubDistrict())
                         : null)
                 .zipCode(customer.getZipCode())
-                .personType(customer.getPersonType())
+                .personType(customer.getPersonType() != null ? customer.getPersonType() : "CORPORATE")
                 .isActive(customer.getIsActive())
                 .remark(customer.getRemark())
                 .createdDate(customer.getCreatedDate())
                 .updatedDate(customer.getUpdatedDate())
                 .rowVersion(customer.getRowVersion())
-                // ✅ เพิ่มตรงนี้
                 .uploadGroupId(customer.getUploadGroupId())
                 .uploadGroupData(uploadData)
                 .build();

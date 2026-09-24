@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, V
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, AiModelOption } from '../../config/ai-models.config';
+import { AiModelsService } from '../../services/ai-models.service';
 import { AiChatSession, AiNavigatorMessage, AiNavigatorService, AiRouteSuggestion } from '../../services/ai-navigator.service';
 import { AiProjectPipelineService } from '../../services/ai-project-pipeline.service';
 import { filesToAiAttachments } from '../../utils/ai-attachment.util';
@@ -20,6 +21,7 @@ import { DateTimeUtil } from '../../utils/datetime.util';
 export class SicAiNavigatorComponent implements OnInit {
   protected readonly navSvc = inject(AiNavigatorService);
   protected readonly pipelineSvc = inject(AiProjectPipelineService);
+  protected readonly aiModelsSvc = inject(AiModelsService);
   protected readonly translate = inject(TranslateService);
   private readonly dialog = inject(DialogService);
 
@@ -48,7 +50,9 @@ export class SicAiNavigatorComponent implements OnInit {
   readonly showHistory = computed(() => this.activePanel() === 'history');
   readonly showModelSelect = computed(() => this.activePanel() === 'model');
 
-  readonly availableModels: AiModelOption[] = AI_MODEL_OPTIONS;
+  get availableModels(): AiModelOption[] {
+    return this.aiModelsSvc.models();
+  }
 
   ngOnInit(): void {
     try {
@@ -150,7 +154,11 @@ export class SicAiNavigatorComponent implements OnInit {
   }
 
   toggleModelSelect(): void {
-    this.activePanel.update((p) => (p === 'model' ? null : 'model'));
+    const next = this.activePanel() === 'model' ? null : 'model';
+    if (next === 'model') {
+      this.aiModelsSvc.refresh();
+    }
+    this.activePanel.set(next);
   }
 
   selectModel(modelId: string): void {

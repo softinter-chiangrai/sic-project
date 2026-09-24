@@ -23,9 +23,10 @@
         </sic-profile>
         <p class="text-center text-xs text-[var(--text-muted)] mt-2">{{ 'PMRT01A_UPLOAD_PHOTO_HINT' | translate }}</p>
       </div>
+
       <!-- ✅ ประเภทลูกค้า (บุคคลธรรมดา / นิติบุคคล) -->
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
       >
         <sic-radio
           formControlName="personType"
@@ -37,7 +38,7 @@
 
       <!-- Customer Code -->
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
       >
         <sic-input
           [label]="'PMRT01A_CUSTOMER_CODE_LABEL' | translate"
@@ -51,48 +52,105 @@
         ></sic-input>
       </div>
 
-      <!-- Tax ID -->
+      <!-- Tax ID & Branch Code -->
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
       >
-        <sic-input
-          [label]="'PMRT01A_TAX_ID_LABEL' | translate"
-          placeholder="0-0000-00000-00-0"
-          [mask]="'0-0000-00000-00-0'"
-          formControlName="taxId"
-        ></sic-input>
+        <div class="flex-3">
+          <sic-input
+            [label]="'PMRT01A_TAX_ID_LABEL' | translate"
+            placeholder="0-0000-00000-00-0"
+            [mask]="'0-0000-00000-00-0'"
+            formControlName="taxId"
+          ></sic-input>
+        </div>
+        @if (data.formGroup.get('personType')?.value === 'CORPORATE') {
+          <div class="flex-1">
+            <sic-input
+              [label]="'PMRT01A_BRANCH_LABEL' | translate"
+              mask="00000"
+              placeholder="00000"
+              formControlName="branchCode"
+            ></sic-input>
+          </div>
+        }
       </div>
 
-      <!-- Company Name (English) -->
+      <!-- Title Combobox -->
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
       >
-        <sic-input
-          [label]="'PMRT01A_COMPANY_NAME_EN_LABEL' | translate"
-          formControlName="companyNameEn"
-          placeholder="ABC Corporation"
-          [required]="true"
-          [errorMessages]="{
-            required: ('PMRT01A_REQUIRED_COMPANY_NAME_EN' | translate),
-            maxlength: ('PMRT01A_MAXLEN_COMPANY_NAME' | translate),
-          }"
-        ></sic-input>
+        <sic-combobox
+          [label]="'PMRT01A_TITLE_LABEL' | translate"
+          formControlName="titleId"
+          [apiUrl]="service.apiGetComboboxTitle"
+          [params]="{ personType: data.formGroup.get('personType')?.value }"
+        >
+        </sic-combobox>
       </div>
 
-      <!-- Company Name (Local) -->
+      <!-- Name (English) -->
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
       >
-        <sic-input
-          [label]="'PMRT01A_COMPANY_NAME_LOCAL_LABEL' | translate"
-          formControlName="companyNameLocal"
-          [placeholder]="'PMRT01A_COMPANY_NAME_LOCAL_PLACEHOLDER' | translate"
-          [required]="true"
-          [errorMessages]="{
-            required: ('PMRT01A_REQUIRED_COMPANY_NAME_LOCAL' | translate),
-            maxlength: ('PMRT01A_MAXLEN_COMPANY_NAME' | translate),
-          }"
-        ></sic-input>
+        <div class="flex-2">
+          <sic-input
+            [label]="data.formGroup.get('personType')?.value === 'CORPORATE' ? ('PMRT01A_COMPANY_NAME_EN_LABEL' | translate) : ('PMRT01A_FIRSTNAME_EN_LABEL' | translate)"
+            formControlName="firstNameEn"
+            placeholder="ABC Corporation"
+            [required]="true"
+            [errorMessages]="{
+              required: ('PMRT01A_REQUIRED_COMPANY_NAME_EN' | translate),
+              maxlength: ('PMRT01A_MAXLEN_COMPANY_NAME' | translate),
+            }"
+          ></sic-input>
+        </div>
+        @if (data.formGroup.get('personType')?.value === 'INDIVIDUAL') {
+          <div class="flex-1">
+            <sic-input
+              [label]="'PMRT01A_MIDDLENAME_EN_LABEL' | translate"
+              formControlName="middleNameEn"
+            ></sic-input>
+          </div>
+          <div class="flex-2">
+            <sic-input
+              [label]="'PMRT01A_LASTNAME_EN_LABEL' | translate"
+              formControlName="lastNameEn"
+            ></sic-input>
+          </div>
+        }
+      </div>
+
+      <!-- Name (Local) -->
+      <div
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex gap-6"
+      >
+        <div class="flex-2">
+          <sic-input
+            [label]="data.formGroup.get('personType')?.value === 'CORPORATE' ? ('PMRT01A_COMPANY_NAME_LOCAL_LABEL' | translate) : ('PMRT01A_FIRSTNAME_LOCAL_LABEL' | translate)"
+            formControlName="firstNameLocal"
+            [placeholder]="'PMRT01A_COMPANY_NAME_LOCAL_PLACEHOLDER' | translate"
+            [required]="true"
+            [errorMessages]="{
+              required: ('PMRT01A_REQUIRED_COMPANY_NAME_LOCAL' | translate),
+              maxlength: ('PMRT01A_MAXLEN_COMPANY_NAME' | translate),
+            }"
+          ></sic-input>
+        </div>
+        @if (data.formGroup.get('personType')?.value === 'INDIVIDUAL') {
+          <div class="flex-1">
+            <sic-input
+              [label]="'PMRT01A_MIDDLENAME_LOCAL_LABEL' | translate"
+              formControlName="middleNameLocal"
+            ></sic-input>
+          </div>
+          <div class="flex-2">
+            <sic-input
+              [label]="'PMRT01A_LASTNAME_LOCAL_LABEL' | translate"
+              formControlName="lastNameLocal"
+            ></sic-input>
+          </div>
+        }
       </div>
 
       <!-- Contact Person -->
@@ -154,7 +212,7 @@
             formControlName="provinceId"
             [placeholder]="'PMRT01A_PROVINCE_PLACEHOLDER' | translate"
             [apiUrl]="service.apiGetComboboxProvince"
-            [params]="{ countryId: $safeNavigationMigration(data.formGroup.get('countryId')?.value) }"
+            [params]="{ countryId: data.formGroup.get('countryId')?.value }"
             (selectionChanged)="onProvinceChange($event)"
           >
           </sic-combobox>
@@ -167,7 +225,7 @@
             formControlName="districtId"
             [placeholder]="'PMRT01A_DISTRICT_PLACEHOLDER' | translate"
             [apiUrl]="service.apiGetComboboxDistrict"
-            [params]="{ provinceId: $safeNavigationMigration(data.formGroup.get('provinceId')?.value) }"
+            [params]="{ provinceId: data.formGroup.get('provinceId')?.value }"
             (selectionChanged)="onDistrictChange($event)"
           >
           </sic-combobox>
@@ -180,7 +238,7 @@
             formControlName="subDistrictId"
             [placeholder]="'PMRT01A_SUBDISTRICT_PLACEHOLDER' | translate"
             [apiUrl]="service.apiGetComboboxSubDistrict"
-            [params]="{ districtId: $safeNavigationMigration(data.formGroup.get('districtId')?.value) }"
+            [params]="{ districtId: data.formGroup.get('districtId')?.value }"
             (selectionChanged)="onSubDistrictChange($event)"
           >
           </sic-combobox>

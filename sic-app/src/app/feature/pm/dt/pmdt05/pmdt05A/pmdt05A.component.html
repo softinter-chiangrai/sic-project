@@ -386,6 +386,13 @@
                         <i class="bi bi-clipboard"></i> {{ 'PMDT05_COPY_MERMAID_LABEL' | translate }}
                       </button>
                     }
+                    <button
+                      (click)="insertMermaidToDiagram(message.content)"
+                      class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 font-semibold cursor-pointer flex-shrink-0"
+                      [title]="'PMDT05_INSERT_MERMAID_TITLE' | translate"
+                    >
+                      <i class="bi bi-diagram-3"></i> {{ 'PMDT05_INSERT_MERMAID_LABEL' | translate }}
+                    </button>
                   }
                 </div>
               </div>

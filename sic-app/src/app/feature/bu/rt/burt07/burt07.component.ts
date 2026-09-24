@@ -1,14 +1,16 @@
 // src/app/feature/bu/rt/burt07/burt07.component.ts
 import { CommonModule } from '@angular/common';
-import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, computed, inject, OnInit, OnDestroy, signal, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, Subscription } from 'rxjs';
 
 import { SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { AiModelConfig, Burt07PageData } from './burt07.model';
 import { Burt07Service } from './burt07.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+
+import { AiModelsService } from '../../../../core/services/ai-models.service';
 
 @Component({
   selector: 'app-burt07',
@@ -18,12 +20,14 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt07.component.css',
 })
-export class Burt07Component implements OnInit {
+export class Burt07Component implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private service = inject(Burt07Service);
+  private aiModelsSvc = inject(AiModelsService);
   private dialog = inject(DialogService);
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private langSub?: Subscription;
 
   isLoading = signal(false);
   models = signal<AiModelConfig[]>([]);
@@ -57,8 +61,15 @@ export class Burt07Component implements OnInit {
 
   ngOnInit(): void {
     this.gridConfig = this.buildGridConfig();
+    this.langSub = this.translate.onLangChange.subscribe(() => {
+      this.gridConfig = this.buildGridConfig();
+    });
     const page: Burt07PageData = this.route.snapshot.data['form'];
     this.models.set(page.models);
+  }
+
+  ngOnDestroy(): void {
+    this.langSub?.unsubscribe();
   }
 
   reload(grid?: SicGridPanelComponent): void {
@@ -96,6 +107,7 @@ export class Burt07Component implements OnInit {
           .subscribe({
             next: () => {
               this.models.update((list) => list.filter((m) => m.id !== model.id));
+              this.aiModelsSvc.refresh();
               this.dialog.success(this.translate.instant('BURT07_DELETE_SUCCESS_TITLE'), this.translate.instant('BURT07_DELETE_SUCCESS_MSG', { name: model.displayName }));
               grid.reload();
             },

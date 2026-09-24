@@ -37,7 +37,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS ux_db_ai_model_config_model_code
 INSERT INTO su_program (id, parent_program_id, program_code, icon, name_en, name_local, route_path, sort_order, is_active, is_add, is_back, is_print, is_remove, is_save, is_search, created_by, created_date, updated_by, updated_date, is_delete)
 SELECT gen_random_uuid(), '019eb052-e6bc-7d6c-b099-d9b7e8e2625a', 'BURT07', 'bi-robot',
        'AI Model Management', 'จัดการ AI Model', 'bu/ai-model-config', 7, true,
-       true, true, false, true, true, true, 'system', NOW(), 'system', NOW(), false
+       false, false, false, false, false, false, 'system', NOW(), 'system', NOW(), false
 WHERE NOT EXISTS (SELECT 1 FROM su_program WHERE program_code = 'BURT07');
 
 -- ให้สิทธิ์ ADMIN role ทุก business เข้าถึงหน้านี้ได้ (pattern เดียวกับ V20260912172000)
@@ -46,7 +46,7 @@ INSERT INTO su_business_role_program (
     created_by, created_date, updated_by, updated_date
 )
 SELECT
-    gen_random_uuid(), r.id, p.id, true, true, true, true, true, true, true, false,
+    gen_random_uuid(), r.id, p.id, true, false, false, false, false, false, false, false,
     'system', NOW(), 'system', NOW()
 FROM su_business_role r
 CROSS JOIN su_program p
@@ -59,12 +59,12 @@ WHERE r.role_code = 'ADMIN'
 ON CONFLICT (business_role_id, program_id)
 DO UPDATE SET
     is_active = true,
-    is_add = true,
-    is_back = true,
-    is_print = true,
-    is_remove = true,
-    is_save = true,
-    is_search = true,
+    is_add = false,
+    is_back = false,
+    is_print = false,
+    is_remove = false,
+    is_save = false,
+    is_search = false,
     is_delete = false,
     updated_by = 'system',
     updated_date = NOW();

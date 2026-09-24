@@ -302,6 +302,7 @@
     <div class="flex-1 flex flex-col overflow-hidden min-h-0">
       <app-pmdt05a
         [diagramId]="currentTabId"
+        (insertXml)="insertAiXml($event)"
         class="flex-1 flex flex-col h-full overflow-hidden"
       ></app-pmdt05a>
     </div>

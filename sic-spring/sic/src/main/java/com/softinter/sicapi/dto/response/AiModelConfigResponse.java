@@ -3,6 +3,7 @@ package com.softinter.sicapi.dto.response;
 import java.time.Instant;
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -24,13 +25,23 @@ public class AiModelConfigResponse {
     private String apiFormat;
     private String apiUrl;
     private String apiKeyMasked;
+
+    @JsonProperty("hasApiKey")
     private boolean hasApiKey;
+
     private Integer maxTokens;
     private String description;
     private String icon;
+
+    @JsonProperty("isRecommended")
     private boolean isRecommended;
+
+    @JsonProperty("isDefault")
     private boolean isDefault;
+
+    @JsonProperty("isActive")
     private boolean isActive;
+
     private Integer sortOrder;
     private Integer rowVersion;
     private Instant updatedDate;

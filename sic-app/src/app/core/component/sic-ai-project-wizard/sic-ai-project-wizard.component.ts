@@ -1,10 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS } from '../../config/ai-models.config';
+import { AiModelsService } from '../../services/ai-models.service';
 import {
+  AiPipelineJobStep,
   AiProjectPipelinePreviewResponse,
   AiProjectPipelineRequest,
   AiProjectPipelineService,
@@ -20,8 +22,9 @@ import { filesToAiAttachments } from '../../utils/ai-attachment.util';
   styleUrl: './sic-ai-project-wizard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SicAiProjectWizardComponent {
+export class SicAiProjectWizardComponent implements OnDestroy {
   readonly pipelineSvc = inject(AiProjectPipelineService);
+  private readonly aiModelsSvc = inject(AiModelsService);
   private readonly dialog = inject(DialogService);
   private readonly router = inject(Router);
 
@@ -41,6 +44,33 @@ export class SicAiProjectWizardComponent {
   readonly incTasks = signal<boolean>(true);
   readonly incGantt = signal<boolean>(true);
   readonly incDelivery = signal<boolean>(true);
+  readonly incContract = signal<boolean>(true);
+  readonly incTests = signal<boolean>(true);
+  readonly incManuals = signal<boolean>(true);
+  readonly incInvoices = signal<boolean>(true);
+  readonly incDiagrams = signal<boolean>(true);
+  readonly incDesignReviews = signal<boolean>(true);
+  readonly incMa = signal<boolean>(true);
+
+  // Background job progress (step 3)
+  readonly jobSteps = signal<AiPipelineJobStep[]>([]);
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
+
+  readonly countLabels: Record<string, string> = {
+    project: 'Project',
+    contract: 'สัญญา',
+    wbs: 'Phase / Milestone / WP',
+    requirement: 'Requirements',
+    specification: 'Specifications',
+    task: 'Tasks',
+    test: 'Test Scenario / Case',
+    delivery: 'Deliveries',
+    manual: 'คู่มือ',
+    invoice: 'ใบแจ้งหนี้ร่าง',
+    diagram: 'Diagrams',
+    design_review: 'Design Review',
+    ma: 'MA Ticket / ต่ออายุ',
+  };
 
   // Preview Data
   readonly previewData = signal<AiProjectPipelinePreviewResponse | null>(null);
@@ -49,7 +79,9 @@ export class SicAiProjectWizardComponent {
   readonly createdProjectId = signal<string | null>(null);
   readonly createdCounts = signal<Record<string, number>>({});
 
-  readonly availableModels = AI_MODEL_OPTIONS;
+  get availableModels() {
+    return this.aiModelsSvc.models();
+  }
 
   async generatePreview(): Promise<void> {
     if (!this.prompt().trim() && !this.projectName().trim()) return;
@@ -92,6 +124,7 @@ export class SicAiProjectWizardComponent {
 
   async executeFullPipeline(): Promise<void> {
     this.isProcessing.set(true);
+    this.jobSteps.set([]);
     this.currentStep.set(3);
 
     try {
@@ -107,26 +140,70 @@ export class SicAiProjectWizardComponent {
         includeTasks: this.incTasks(),
         includeGanttPhases: this.incGantt(),
         includeDelivery: this.incDelivery(),
+        includeContract: this.incContract(),
+        includeTests: this.incTests(),
+        includeManuals: this.incManuals(),
+        includeInvoices: this.incInvoices(),
+        includeDiagrams: this.incDiagrams(),
+        includeDesignReviews: this.incDesignReviews(),
+        includeMa: this.incMa(),
       };
 
-      this.pipelineSvc.executePipeline(req).subscribe({
-        next: (res) => {
-          this.createdProjectId.set(res.projectId);
-          this.createdCounts.set(res.createdCounts || {});
-          this.currentStep.set(4);
-          this.isProcessing.set(false);
-        },
-        error: (err) => {
-          this.isProcessing.set(false);
-          this.currentStep.set(2);
-          this.dialog.error('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการสร้างโครงการ: ' + (err?.message || 'โปรดลองใหม่'));
-        },
+      // งานทำเบื้องหลังหลายนาที: เริ่มงานแล้ว poll ความคืบหน้าทีละขั้นแทนการรอ request เดียว
+      this.pipelineSvc.startPipelineJob(req).subscribe({
+        next: ({ jobId }) => this.pollJob(jobId),
+        error: (err) => this.failToPreview('เกิดข้อผิดพลาดในการเริ่มสร้างโครงการ: ' + (err?.message || 'โปรดลองใหม่')),
       });
     } catch {
-      this.isProcessing.set(false);
-      this.currentStep.set(2);
-      this.dialog.error('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการประมวลผล');
+      this.failToPreview('เกิดข้อผิดพลาดในการประมวลผลไฟล์แนบ');
     }
+  }
+
+  private pollJob(jobId: string): void {
+    this.stopPolling();
+    const tick = () =>
+      this.pipelineSvc.getPipelineJob(jobId).subscribe({
+        next: (job) => {
+          this.jobSteps.set(job.steps);
+          if (!job.finished) return;
+          this.stopPolling();
+          this.isProcessing.set(false);
+          if (job.status === 'FAILED') {
+            this.failToPreview(job.message || 'สร้างโครงการไม่สำเร็จ');
+            return;
+          }
+          this.createdProjectId.set(job.projectId ?? null);
+          this.createdCounts.set(job.createdCounts || {});
+          this.currentStep.set(4);
+          if (job.status === 'COMPLETED_WITH_ERRORS') {
+            this.dialog.warn('สร้างเสร็จบางส่วน', job.message || 'บางขั้นตอนไม่สำเร็จ');
+          }
+        },
+        error: () => {
+          this.stopPolling();
+          this.failToPreview('ไม่สามารถติดตามความคืบหน้าได้ (งานอาจยังทำงานอยู่เบื้องหลัง ตรวจสอบรายการโครงการอีกครั้ง)');
+        },
+      });
+    tick();
+    this.pollTimer = setInterval(tick, 2000);
+  }
+
+  private stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+    }
+  }
+
+  private failToPreview(message: string): void {
+    this.stopPolling();
+    this.isProcessing.set(false);
+    this.currentStep.set(2);
+    this.dialog.error('ข้อผิดพลาด', message);
+  }
+
+  ngOnDestroy(): void {
+    this.stopPolling();
   }
 
   goToProject(): void {
@@ -158,6 +235,7 @@ export class SicAiProjectWizardComponent {
   }
 
   close(): void {
+    this.stopPolling();
     this.pipelineSvc.closeWizard();
     this.currentStep.set(1);
     this.prompt.set('');

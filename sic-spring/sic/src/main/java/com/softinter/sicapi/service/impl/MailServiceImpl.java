@@ -131,7 +131,16 @@ public void sendTemplatedMail(String to, String templateCode, Object... template
                     }
                 }
 
-                sendMail(to, subject, body, template.getIsHtml());
+                try {
+                    sendMail(to, subject, body, template.getIsHtml());
+                } catch (Exception ex) {
+                    log.warn("⚠️ Direct email send failed for {}, queueing email instead: {}", to, ex.getMessage());
+                    try {
+                        queueMail(to, subject, body, template.getIsHtml());
+                    } catch (Exception qe) {
+                        log.error("❌ Failed to queue email to {}: {}", to, qe.getMessage());
+                    }
+                }
             });
 }
 

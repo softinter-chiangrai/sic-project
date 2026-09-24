@@ -108,6 +108,16 @@ export class DrawioConnectorService {
     this.postMessage(msg);
   }
 
+  /** เติมเนื้อหา XML เข้าแผนภาพที่เปิดอยู่ด้วยคำสั่ง merge (คำสั่งมาตรฐานของ draw.io embed) โดยไม่ลบของเดิม */
+  mergeXml(xml: string): void {
+    const msg = { action: 'merge', xml };
+    if (!this.drawioReady) {
+      this.pendingMessages.push(msg);
+      return;
+    }
+    this.postMessage(msg);
+  }
+
   handleMessage(event: MessageEvent): void {
     if (!event.origin.includes('diagrams.net')) return;
 

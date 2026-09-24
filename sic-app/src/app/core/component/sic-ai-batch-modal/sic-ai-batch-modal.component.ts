@@ -13,6 +13,7 @@ import {
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../config/ai-models.config';
+import { AiModelsService } from '../../services/ai-models.service';
 import { AiBatchGenerateService } from '../../services/ai-batch-generate.service';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../utils/ai-attachment.util';
 
@@ -43,6 +44,7 @@ interface BatchRow {
 })
 export class SicAiBatchModalComponent implements OnChanges {
   private batchService = inject(AiBatchGenerateService);
+  private aiModelsSvc = inject(AiModelsService);
   private translate = inject(TranslateService);
 
   @Input({ required: true }) moduleType!: string;
@@ -65,7 +67,9 @@ export class SicAiBatchModalComponent implements OnChanges {
   readonly errorMessage = signal<string | null>(null);
   readonly rows = signal<BatchRow[]>([]);
 
-  readonly aiModels = AI_MODEL_OPTIONS;
+  get aiModels() {
+    return this.aiModelsSvc.models();
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['visible'] && this.visible) {

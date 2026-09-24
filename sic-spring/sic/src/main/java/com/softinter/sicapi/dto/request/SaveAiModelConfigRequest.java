@@ -1,7 +1,7 @@
 package com.softinter.sicapi.dto.request;
 
 import java.util.UUID;
-
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 @Data
@@ -17,9 +17,16 @@ public class SaveAiModelConfigRequest {
     private Integer maxTokens;
     private String description;
     private String icon;
+
+    @JsonProperty("isRecommended")
     private Boolean isRecommended;
+
+    @JsonProperty("isDefault")
     private Boolean isDefault;
+
+    @JsonProperty("isActive")
     private Boolean isActive;
+
     private Integer sortOrder;
     private Integer rowVersion;
 }

@@ -17,9 +17,9 @@ export class Burt07AForm {
       maxTokens: [model?.maxTokens ?? 4096, [Validators.required, Validators.min(1)]],
       description: [model?.description || ''],
       icon: [model?.icon || 'bi-robot'],
-      isRecommended: [model?.isRecommended || false],
-      isDefault: [model?.isDefault || false],
-      isActive: [model?.isActive !== false],
+      isRecommended: [model?.isRecommended ?? (model as any)?.recommended ?? false],
+      isDefault: [model?.isDefault ?? (model as any)?.default ?? false],
+      isActive: [(model?.isActive ?? (model as any)?.active) !== false],
       rowVersion: [model?.rowVersion || null],
     });
   }

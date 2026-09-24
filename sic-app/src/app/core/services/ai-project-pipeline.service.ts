@@ -17,6 +17,13 @@ export interface AiProjectPipelineRequest {
   includeTasks?: boolean;
   includeGanttPhases?: boolean;
   includeDelivery?: boolean;
+  includeContract?: boolean;
+  includeTests?: boolean;
+  includeManuals?: boolean;
+  includeInvoices?: boolean;
+  includeDiagrams?: boolean;
+  includeDesignReviews?: boolean;
+  includeMa?: boolean;
 }
 
 export interface PreviewRequirementItem {
@@ -79,6 +86,26 @@ export interface AiProjectPipelineExecuteResponse {
   success: boolean;
 }
 
+export interface AiPipelineJobStep {
+  key: string;
+  label: string;
+  status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'SKIPPED';
+  count: number;
+  message?: string | null;
+}
+
+export interface AiPipelineJob {
+  jobId: string;
+  status: 'RUNNING' | 'COMPLETED' | 'COMPLETED_WITH_ERRORS' | 'FAILED';
+  finished: boolean;
+  projectId?: string | null;
+  projectCode?: string | null;
+  projectName?: string | null;
+  steps: AiPipelineJobStep[];
+  createdCounts: Record<string, number>;
+  message?: string | null;
+}
+
 @Injectable({ providedIn: 'root' })
 export class AiProjectPipelineService {
   private http = inject(HttpClient);
@@ -98,6 +125,14 @@ export class AiProjectPipelineService {
 
   generatePreview(request: AiProjectPipelineRequest): Observable<AiProjectPipelinePreviewResponse> {
     return this.http.post<AiProjectPipelinePreviewResponse>(`${this.apiBase}/api/pm/ai/pipeline/preview`, request);
+  }
+
+  startPipelineJob(request: AiProjectPipelineRequest): Observable<{ jobId: string }> {
+    return this.http.post<{ jobId: string }>(`${this.apiBase}/api/pm/ai/pipeline/execute-async`, request);
+  }
+
+  getPipelineJob(jobId: string): Observable<AiPipelineJob> {
+    return this.http.get<AiPipelineJob>(`${this.apiBase}/api/pm/ai/pipeline/jobs/${jobId}`);
   }
 
   executePipeline(request: AiProjectPipelineRequest): Observable<AiProjectPipelineExecuteResponse> {

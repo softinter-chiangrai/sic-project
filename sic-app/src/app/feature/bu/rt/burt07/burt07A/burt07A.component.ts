@@ -14,6 +14,8 @@ import { Burt07Service } from '../burt07.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
+
 @Component({
   selector: 'app-burt07a',
   standalone: true,
@@ -37,6 +39,7 @@ export class Burt07AComponent implements OnInit, CanComponentDeactivate {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private service = inject(Burt07Service);
+  private aiModelsSvc = inject(AiModelsService);
   private dialog = inject(DialogService);
   private translate = inject(TranslateService);
 
@@ -90,6 +93,7 @@ export class Burt07AComponent implements OnInit, CanComponentDeactivate {
         next: () => {
           this.isSaved = true;
           this.form.markAsPristine();
+          this.aiModelsSvc.refresh();
           this.dialog.success(this.translate.instant('BURT07A_SAVE_SUCCESS_TITLE'), this.translate.instant('BURT07A_SAVE_SUCCESS_MSG', { name: raw.displayName }));
           this.router.navigate(['/feature/bu/ai-model-config']);
         },

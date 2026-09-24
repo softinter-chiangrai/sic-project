@@ -52,6 +52,9 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     @Transactional(readOnly = true)
     public List<InviteResponse> getInvites() {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return List.of();
+        }
         String userId = currentUserService.getUserId();
 
         boolean isMember = userBusinessRepository.existsByUserIdAndBusinessId(userId, businessId);
@@ -59,7 +62,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
             return List.of();
         }
 
-        return businessInviteRepository.findBySuBusinessRole_BusinessIdAndIsDeleteFalse(businessId)
+        return businessInviteRepository.findAllByBusinessIdWithFetch(businessId)
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -69,6 +72,9 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
     @Transactional
     public UUID createInvite(CreateInviteRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            throw new IllegalArgumentException("No active business selected.");
+        }
         String userId = currentUserService.getUserId();
 
         // ตรวจสอบว่า user เป็นสมาชิกของธุรกิจนี้หรือไม่
@@ -89,7 +95,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
         // สร้าง Invite
         SuBusinessInvite invite = new SuBusinessInvite();
         invite.setSuBusinessRole(role);
-        invite.setBusinessId(role.getBusinessId()); // ✅ แก้ไข: ตั้งค่า business_id เพื่อป้องกัน NOT NULL constraint
+        invite.setBusinessId(role.getBusinessId());
         invite.setInviteType(request.getInviteType());
         invite.setInviteEmail(request.getInviteEmail());
         invite.setInviteToken(token);
@@ -104,14 +110,18 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
 
         businessInviteRepository.save(invite);
 
-        // ✅ ถ้าเป็น Email Invite -> ส่งอีเมล
+        // ✅ ถ้าเป็น Email Invite -> ส่งอีเมลอย่างปลอดภัย
         if ("email".equalsIgnoreCase(request.getInviteType()) && request.getInviteEmail() != null) {
-            mailService.sendTemplatedMail(
-                request.getInviteEmail(),
-                "BUSINESS_INVITE",     
-                token                 
-            );
-            log.info("✅ Invite email sent to: {}", request.getInviteEmail());
+            try {
+                mailService.sendTemplatedMail(
+                    request.getInviteEmail(),
+                    "BUSINESS_INVITE",     
+                    token                 
+                );
+                log.info("✅ Invite email sent to: {}", request.getInviteEmail());
+            } catch (Exception ex) {
+                log.warn("⚠️ Failed to send invite email directly to {}: {}", request.getInviteEmail(), ex.getMessage());
+            }
         }
 
         try {

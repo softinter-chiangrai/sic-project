@@ -206,6 +206,10 @@ export class DiagramService {
     return this.http.put<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/sessions/${sessionId}/title`, { title });
   }
 
+  mermaidToDrawio(mermaid: string): Observable<{ type: string; xml: string }> {
+    return this.http.post<{ type: string; xml: string }>(`${this.apiUrl}/api/ai/mermaid-to-drawio`, { mermaid });
+  }
+
   clearChatHistory(tabId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/api/diagram/chat/${tabId}/history`);
   }

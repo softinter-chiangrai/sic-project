@@ -16,6 +16,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../auth/auth.service';
 import { DialogService } from '../../services/dialog.service';
@@ -40,7 +41,7 @@ interface SicUploadSessionState {
 @Component({
   selector: 'sic-profile',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-profile.component.html',
   styleUrl: './sic-profile.component.css',
   host: {
@@ -64,6 +65,7 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
   private readonly authService = inject(AuthService);
   private readonly injector = inject(Injector);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly translate = inject(TranslateService);
 
   @Input() src: string | null = 'images/profile.png';
   @Input() size: number | string | null = null;
@@ -155,7 +157,7 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
     }
 
     if (!file.type.startsWith('image/')) {
-      this.fileError = 'Please choose an image file.';
+      this.fileError = this.translate.instant('PROFILE_ERROR_CHOOSE_IMAGE');
       this.resetFileInput();
       this.cdr.markForCheck();
       return;
@@ -170,7 +172,7 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
       this.preview = typeof loadEvent.target?.result === 'string' ? loadEvent.target.result : null;
 
       if (!this.preview) {
-        this.fileError = 'Unable to read the selected image.';
+        this.fileError = this.translate.instant('PROFILE_ERROR_READ_IMAGE');
         this.isLoading = false;
         this.resetFileInput();
         this.cdr.markForCheck();
@@ -182,7 +184,7 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
     };
 
     reader.onerror = () => {
-      this.fileError = 'Unable to read the selected image.';
+      this.fileError = this.translate.instant('PROFILE_ERROR_READ_IMAGE');
       this.isLoading = false;
       this.resetFileInput();
       this.cdr.markForCheck();
@@ -212,7 +214,7 @@ export class SicProfileComponent implements ControlValueAccessor, OnInit, OnDest
       this.revokeLocalObjectUrl();
       this.localObjectUrl = URL.createObjectURL(blob);
     } catch {
-      this.fileError = 'Unable to upload the selected image.';
+      this.fileError = this.translate.instant('PROFILE_ERROR_UPLOAD_IMAGE');
     } finally {
       this.isLoading = false;
       this.resetFileInput();

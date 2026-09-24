@@ -2,6 +2,7 @@ package com.softinter.sicapi.dto.request;
 
 import java.util.UUID;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -22,13 +23,34 @@ public class PmCustomerRequest {
     @Size(max = 30)
     private String taxId;
 
-    @NotBlank(message = "กรุณาระบุชื่อบริษัท (อังกฤษ)")
+    @Size(max = 30)
+    private String branchCode;
+
+    private UUID titleId;
+
     @Size(max = 255)
     private String companyNameEn;
 
-    @NotBlank(message = "กรุณาระบุชื่อบริษัท (ไทย)")
     @Size(max = 255)
     private String companyNameLocal;
+
+    @Size(max = 100)
+    private String firstNameEn;
+
+    @Size(max = 100)
+    private String middleNameEn;
+
+    @Size(max = 100)
+    private String lastNameEn;
+
+    @Size(max = 100)
+    private String firstNameLocal;
+
+    @Size(max = 100)
+    private String middleNameLocal;
+
+    @Size(max = 100)
+    private String lastNameLocal;
 
     @Size(max = 255)
     private String contactPerson;
@@ -41,6 +63,11 @@ public class PmCustomerRequest {
 
     @Size(max = 100)
     private String lineId;
+
+    private UUID countryId;
+
+    @JsonProperty("supportLocalAddress")
+    private Boolean supportLocalAddress;
 
     @Size(max = 500)
     private String addressEn;
@@ -58,6 +85,7 @@ public class PmCustomerRequest {
     @Size(max = 50)
     private String personType;
 
+    @JsonProperty("isActive")
     private Boolean isActive = true;
 
     private String remark;

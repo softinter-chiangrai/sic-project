@@ -22,4 +22,11 @@ public class AiProjectPipelineRequest {
     private Boolean includeTasks = true;
     private Boolean includeGanttPhases = true;
     private Boolean includeDelivery = true;
+    private Boolean includeContract = true;
+    private Boolean includeTests = true;
+    private Boolean includeManuals = true;
+    private Boolean includeInvoices = true;
+    private Boolean includeDiagrams = true;
+    private Boolean includeDesignReviews = true;
+    private Boolean includeMa = true;
 }

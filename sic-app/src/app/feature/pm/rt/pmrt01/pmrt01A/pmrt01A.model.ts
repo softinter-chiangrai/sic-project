@@ -8,8 +8,17 @@ export interface CustomerModel {
   customerCode: string;
   personType?: string;
   taxId?: string;
-  companyNameEn: string;
-  companyNameLocal: string;
+  branchCode?: string;
+  titleId?: string;
+  titleName?: string;
+  companyNameEn?: string;
+  companyNameLocal?: string;
+  firstNameEn?: string;
+  middleNameEn?: string;
+  lastNameEn?: string;
+  firstNameLocal?: string;
+  middleNameLocal?: string;
+  lastNameLocal?: string;
   contactPerson?: string;
   phoneNumber?: string;
   email?: string;
@@ -41,7 +50,3 @@ export interface CustomerModel {
 export interface CustomerFormData {
   customer: SicFromData<CustomerModel>;
 }
-
-
-
-

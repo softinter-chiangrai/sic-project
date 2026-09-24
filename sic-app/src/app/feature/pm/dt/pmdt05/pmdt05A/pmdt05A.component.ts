@@ -6,6 +6,8 @@ import {
   Component,
   ElementRef,
   Input,
+  Output,
+  EventEmitter,
   OnInit,
   OnDestroy,
   inject,
@@ -49,6 +51,8 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
   get diagramId(): string | null {
     return this._diagramId;
   }
+
+  @Output() insertXml = new EventEmitter<string>();
 
   private diagramService = inject(DiagramService);
   private dialogService = inject(DialogService);
@@ -479,6 +483,27 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
   getMermaidCode(content: string): string | null {
     const match = content.match(/```mermaid\s*([\s\S]*?)```/);
     return match ? match[1].trim() : null;
+  }
+
+  // แปลง Mermaid เป็น XML ของ draw.io แล้วส่งให้หน้าแผนภาพ merge เข้าไปตรงๆ (ไม่ต้องคัดลอกไป insert เอง)
+  insertMermaidToDiagram(content: string): void {
+    const code = this.getMermaidCode(content);
+    if (!code) return;
+    this.diagramService.mermaidToDrawio(code).subscribe({
+      next: (res) => {
+        this.insertXml.emit(res.xml);
+        this.dialogService.success(
+          this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_TITLE'),
+          this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_MSG'),
+        );
+      },
+      error: (err) => {
+        this.dialogService.warn(
+          this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_TITLE'),
+          err?.error?.message || this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_MSG'),
+        );
+      },
+    });
   }
 
   // ฟังก์ชันคัดลอก Mermaid code

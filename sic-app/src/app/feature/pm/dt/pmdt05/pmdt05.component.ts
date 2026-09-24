@@ -84,6 +84,17 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     return !!(tab?.isApproved || tab?.approvalStatus === 'APPROVED');
   }
 
+  insertAiXml(xml: string): void {
+    if (this.currentTabLocked) {
+      this.dialogService.warn(
+        this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_TITLE'),
+        this.translate.instant('PMDT05_LOCKED_MSG'),
+      );
+      return;
+    }
+    this.drawioService.mergeXml(xml);
+  }
+
   private isLoadingDiagram = false;
   private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
 

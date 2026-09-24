@@ -98,6 +98,13 @@
         <label class="module-chip"><input type="checkbox" [ngModel]="incTasks()" (ngModelChange)="incTasks.set($event)" /> <span>WBS / Tasks Breakdown ({{ previewData()?.previewTasks?.length || 0 }} รายการ)</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incGantt()" (ngModelChange)="incGantt.set($event)" /> <span>Gantt Phases & Timeline ({{ previewData()?.previewPhases?.length || 0 }} เฟส)</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incDelivery()" (ngModelChange)="incDelivery.set($event)" /> <span>Delivery Milestones ({{ previewData()?.previewDeliveries?.length || 0 }} งวด)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incContract()" (ngModelChange)="incContract.set($event)" /> <span>สัญญา (Contract)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incTests()" (ngModelChange)="incTests.set($event)" /> <span>Test Scenario &amp; Test Case</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incManuals()" (ngModelChange)="incManuals.set($event)" /> <span>คู่มือการใช้งาน (User Manual)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incInvoices()" (ngModelChange)="incInvoices.set($event)" /> <span>ใบแจ้งหนี้ร่างจากงวดส่งมอบ</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incDiagrams()" (ngModelChange)="incDiagrams.set($event)" /> <span>Diagram (DFD / ER / Flowchart / Use Case)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incDesignReviews()" (ngModelChange)="incDesignReviews.set($event)" /> <span>Design Review</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incMa()" (ngModelChange)="incMa.set($event)" /> <span>MA Ticket &amp; ข้อเสนอต่ออายุ MA</span></label>
       </div>
     </div>
 
@@ -128,14 +135,23 @@
       <div class="pulsing-glow"></div>
       <i class="bi bi-cpu generating-icon"></i>
     </div>
-    <h4 class="generating-title">AI กำลังสร้างโครงสร้างโปรเจกต์และโมดูลเชื่อมโยง...</h4>
-    <p class="generating-desc">กำลังสร้าง Project Charter -> บันทึก Requirements -> ออกแบบ Specs -> วาง Tasks และแผนงาน Gantt Chart</p>
-    
+    <h4 class="generating-title">AI กำลังสร้างโครงการและโมดูลตามลำดับ SDLC...</h4>
+    <p class="generating-desc">งานทำงานเบื้องหลัง ใช้เวลาประมาณ 2-5 นาที กรุณารอจนเสร็จ</p>
+
     <div class="pipeline-live-list">
-      <div class="live-item done"><i class="bi bi-check-circle-fill"></i> วิเคราะห์โครงสร้างและสโคปงานโครงการ</div>
-      <div class="live-item done"><i class="bi bi-check-circle-fill"></i> สร้างและผูกโยง Business Requirements</div>
-      <div class="live-item running"><i class="bi bi-arrow-repeat spin"></i> ออกแบบ Specifications และผูก Tasks ใน Gantt Timeline</div>
-      <div class="live-item pending"><i class="bi bi-circle"></i> กำหนดงวดส่งมอบและบันทึกข้อมูล Traceability</div>
+      <div class="live-item" *ngFor="let st of jobSteps()"
+           [class.done]="st.status === 'DONE'" [class.running]="st.status === 'RUNNING'"
+           [class.pending]="st.status === 'PENDING' || st.status === 'SKIPPED'" [class.failed]="st.status === 'FAILED'">
+        <i class="bi" [ngClass]="{
+          'bi-check-circle-fill': st.status === 'DONE',
+          'bi-arrow-repeat spin': st.status === 'RUNNING',
+          'bi-circle': st.status === 'PENDING' || st.status === 'SKIPPED',
+          'bi-x-circle-fill': st.status === 'FAILED'
+        }"></i>
+        {{ st.label }}
+        <span *ngIf="st.status === 'DONE' && st.count"> ({{ st.count }})</span>
+        <small *ngIf="st.message" class="live-item-msg"> — {{ st.message }}</small>
+      </div>
     </div>
   </div>
 
@@ -148,26 +164,12 @@
     <p class="success-desc">ข้อมูลทั้งหมดถูกบันทึกในสถานะ <span class="badge-draft">Draft (รอรีวิว)</span> พร้อมผูกความสัมพันธ์ Traceability ทุกโมดูล</p>
 
     <div class="summary-stat-grid">
-      <div class="stat-card" *ngIf="createdCounts()['requirements']">
-        <span class="stat-num">{{ createdCounts()['requirements'] }}</span>
-        <span class="stat-lbl">Requirements</span>
-      </div>
-      <div class="stat-card" *ngIf="createdCounts()['specifications']">
-        <span class="stat-num">{{ createdCounts()['specifications'] }}</span>
-        <span class="stat-lbl">Specifications</span>
-      </div>
-      <div class="stat-card" *ngIf="createdCounts()['tasks']">
-        <span class="stat-num">{{ createdCounts()['tasks'] }}</span>
-        <span class="stat-lbl">WBS Tasks</span>
-      </div>
-      <div class="stat-card" *ngIf="createdCounts()['phases']">
-        <span class="stat-num">{{ createdCounts()['phases'] }}</span>
-        <span class="stat-lbl">Gantt Phases</span>
-      </div>
-      <div class="stat-card" *ngIf="createdCounts()['deliveries']">
-        <span class="stat-num">{{ createdCounts()['deliveries'] }}</span>
-        <span class="stat-lbl">Deliveries</span>
-      </div>
+      <ng-container *ngFor="let entry of createdCounts() | keyvalue">
+        <div class="stat-card" *ngIf="entry.value">
+          <span class="stat-num">{{ entry.value }}</span>
+          <span class="stat-lbl">{{ countLabels[entry.key] || entry.key }}</span>
+        </div>
+      </ng-container>
     </div>
   </div>
 

@@ -70,20 +70,25 @@
 
     <ng-template sicGridPanelTemplate="defaultBadge" section="cell" let-row>
       @let r = $any(row);
+      @let isDef = r.isDefault ?? r.default ?? false;
       <div class="w-full flex items-center justify-center">
-        @if (r.isDefault) {
-          <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+        @if (isDef) {
+          <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+            <i class="bi bi-check-circle-fill text-[0.65rem]"></i>
             {{ 'BURT07_DEFAULT_BADGE' | translate }}
           </span>
+        } @else {
+          <span class="text-xs text-[var(--text-muted)]">-</span>
         }
       </div>
     </ng-template>
 
     <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
       @let r = $any(row);
+      @let isAct = r.isActive ?? r.active ?? false;
       <div class="w-full flex items-center justify-center">
-        <span [class]="getStatusClass(r.isActive) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-          {{ getStatusText(r.isActive) }}
+        <span [class]="getStatusClass(isAct) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ getStatusText(isAct) }}
         </span>
       </div>
     </ng-template>

@@ -435,6 +435,16 @@
   color: var(--text-muted, #94a3b8);
 }
 
+.live-item.failed {
+  color: var(--crm-danger, #ef4444);
+  background: color-mix(in srgb, var(--crm-danger, #ef4444) 8%, var(--bg, #ffffff));
+}
+
+.live-item-msg {
+  font-weight: 400;
+  opacity: 0.85;
+}
+
 .spin {
   animation: spin 1s infinite linear;
 }

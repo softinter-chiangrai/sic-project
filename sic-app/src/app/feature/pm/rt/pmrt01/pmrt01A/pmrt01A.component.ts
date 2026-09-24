@@ -91,13 +91,26 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     const data = this.route.snapshot.data['form'];
     if (data && data.customer) {
       this.formCustomerData = data.customer;
+      const fg = this.formCustomerData.formGroup;
+
+      if (!fg.get('personType')?.value) {
+        fg.get('personType')?.setValue('CORPORATE');
+      }
+
+      if (!fg.get('firstNameEn')?.value && fg.get('companyNameEn')?.value) {
+        fg.get('firstNameEn')?.setValue(fg.get('companyNameEn')?.value);
+      }
+      if (!fg.get('firstNameLocal')?.value && fg.get('companyNameLocal')?.value) {
+        fg.get('firstNameLocal')?.setValue(fg.get('companyNameLocal')?.value);
+      }
+
       const hasLocalAddress = !!(
-        this.formCustomerData.formGroup.get('supportLocalAddress')?.value ||
-        this.formCustomerData.formGroup.get('provinceId')?.value ||
+        fg.get('supportLocalAddress')?.value ||
+        fg.get('provinceId')?.value ||
         this.formCustomerData.value?.provinceId
       );
-      this.formCustomerData.formGroup.get('supportLocalAddress')?.setValue(hasLocalAddress);
-      this.formCustomerData.formGroup.updateValueAndValidity();
+      fg.get('supportLocalAddress')?.setValue(hasLocalAddress);
+      fg.updateValueAndValidity();
     } else {
       const form = Pmrt01AForm.createForm(this.fb);
       this.formCustomerData = new SicFromData<CustomerModel>(form);
@@ -158,6 +171,30 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
           uploadGroupId: firstUpload.uploadGroupId,
         });
       }
+    }
+
+    // Sync companyName from firstName / lastName
+    const fg = this.formCustomerData.formGroup;
+    const personType = fg.get('personType')?.value;
+    const fnEn = fg.get('firstNameEn')?.value || '';
+    const mnEn = fg.get('middleNameEn')?.value || '';
+    const lnEn = fg.get('lastNameEn')?.value || '';
+    const fnLocal = fg.get('firstNameLocal')?.value || '';
+    const mnLocal = fg.get('middleNameLocal')?.value || '';
+    const lnLocal = fg.get('lastNameLocal')?.value || '';
+
+    if (personType === 'CORPORATE') {
+      fg.patchValue({
+        companyNameEn: fnEn,
+        companyNameLocal: fnLocal,
+      });
+    } else {
+      const fullEn = [fnEn, mnEn, lnEn].filter(Boolean).join(' ');
+      const fullLocal = [fnLocal, mnLocal, lnLocal].filter(Boolean).join(' ');
+      fg.patchValue({
+        companyNameEn: fullEn || fnEn,
+        companyNameLocal: fullLocal || fnLocal,
+      });
     }
 
     const data = this.formCustomerData.value as CustomerModel;

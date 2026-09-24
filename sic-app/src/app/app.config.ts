@@ -7,6 +7,7 @@ import { routes } from './app.routes';
 import { provideHttpClient, withFetch, withInterceptors } from '@angular/common/http';
 import { AuthService } from './core/auth/auth.service';
 import { LanguageService } from './core/services/language.service';
+import { AiModelsService } from './core/services/ai-models.service';
 import { provideAnimations } from '@angular/platform-browser/animations';
 import {
   APP_TRANSLATE_MODULE_CODE,
@@ -45,6 +46,7 @@ export const appConfig: ApplicationConfig = {
     provideAteEditor(),
     provideAppInitializer(() => inject(AuthService).initializeAuth()),
     provideAppInitializer(() => inject(LanguageService).initLanguage()),
+    provideAppInitializer(() => inject(AiModelsService).refresh()),
     { provide: APP_TRANSLATE_MODULE_CODE, useValue: 'COMMON' },
     { provide: APP_TRANSLATE_PROGRAM_CODE, useValue: 'ALL' },
     AppTranslateLoader,
