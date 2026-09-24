@@ -156,7 +156,7 @@ export class Pmdt03AComponent implements OnInit, CanComponentDeactivate {
       delivery: '/feature/pm/delivery',
       invoice: '/feature/pm/invoice',
       change_request: '/feature/pm/change-request',
-      ma_renewal: '/feature/pm/renewal',
+      ma_renewal: '/feature/pm/contract',
       contract: '/feature/pm/contract',
       dfd: '/feature/pm/diagram',
       er: '/feature/pm/diagram',

@@ -9,6 +9,8 @@ import com.softinter.sicapi.entity.pm.PmComment;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.repository.pm.PmCommentRepository;
 import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.service.DiscussionService;
 import com.softinter.sicapi.service.AuditLogService;
 import com.softinter.sicapi.util.LocalizationHelper;
@@ -33,6 +35,7 @@ public class DiscussionServiceImpl implements DiscussionService {
     private final SuProfileRepository profileRepository;
     private final com.softinter.sicapi.service.FileStorageService fileStorageService;
     private final AuditLogService auditLogService;
+    private final CurrentUserService currentUserService;
 
     @Override
     @Transactional(readOnly = true)
@@ -40,6 +43,19 @@ public class DiscussionServiceImpl implements DiscussionService {
         Page<PmComment> posts = commentRepository.findByTargetTypeAndTargetIdAndParentCommentIsNullAndIsDeleteFalse(
                 targetType, targetId, pageable
         );
+        return posts.map(this::toPostResponse);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PostResponse> getBusinessPosts(UUID businessId, Pageable pageable) {
+        if (businessId == null) {
+            businessId = currentUserService.getBusinessId();
+            if (businessId == null) {
+                businessId = BusinessContextHolder.getBusinessId();
+            }
+        }
+        Page<PmComment> posts = commentRepository.findAllByBusinessId(businessId, pageable);
         return posts.map(this::toPostResponse);
     }
 
@@ -53,9 +69,22 @@ public class DiscussionServiceImpl implements DiscussionService {
     @Override
     @Transactional
     public PostResponse createPost(PostRequest request, String userId, String userName) {
+        UUID businessId = currentUserService.getBusinessId();
+        if (businessId == null) {
+            businessId = BusinessContextHolder.getBusinessId();
+        }
+
         PmComment post = new PmComment();
-        post.setTargetType("PROJECT"); // ตามที่กำหนดให้เป็น PROJECT
-        post.setTargetId(request.getTargetId());
+        post.setBusinessId(businessId);
+
+        UUID targetId = request.getTargetId();
+        if (targetId == null) {
+            targetId = businessId != null ? businessId : UUID.randomUUID();
+            post.setTargetType("BUSINESS");
+        } else {
+            post.setTargetType("PROJECT");
+        }
+        post.setTargetId(targetId);
         post.setSubject(request.getSubject());
         post.setContent(request.getContent());
         post.setAttachmentGroupId(request.getAttachmentGroupId());
@@ -93,7 +122,13 @@ public class DiscussionServiceImpl implements DiscussionService {
         PmComment parent = commentRepository.findById(request.getPostId())
                 .orElseThrow(() -> new ResourceNotFoundException("Post not found"));
 
+        UUID businessId = currentUserService.getBusinessId();
+        if (businessId == null) {
+            businessId = BusinessContextHolder.getBusinessId();
+        }
+
         PmComment reply = new PmComment();
+        reply.setBusinessId(parent.getBusinessId() != null ? parent.getBusinessId() : businessId);
         reply.setTargetType(parent.getTargetType());
         reply.setTargetId(parent.getTargetId());
         reply.setParentComment(parent);

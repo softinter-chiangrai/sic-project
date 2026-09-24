@@ -35,7 +35,7 @@ export class Pmdt08AComponent implements OnInit {
   private translate = inject(TranslateService);
 
   // ✅ Input properties - ต้องเป็น public (หรือไม่ใส่ modifier)
-  @Input() projectId!: string;
+  @Input() projectId?: string | null = null;
   @Input() postToEdit: Post | null = null;   // ✅ ไม่ต้องมี private
   @Input() currentUserAvatar: string | null = null;
   @Input() currentUserName: string = 'User';
@@ -111,18 +111,15 @@ export class Pmdt08AComponent implements OnInit {
         });
     } else {
       // สร้างโพสต์ใหม่
-      if (!this.projectId) {
-        this.isSubmitting = false;
-        this.dialog.warn(this.translate.instant('PMDT08A_PROJECT_ID_NOT_FOUND_TITLE'), this.translate.instant('PMDT08A_PROJECT_ID_NOT_FOUND_MSG'));
-        return;
-      }
-
-      const request = {
-        targetId: this.projectId,
+      const request: any = {
         subject: formValue.subject,
         content: formValue.content,
         attachmentGroupId: attachmentGroupId,
       };
+
+      if (this.projectId) {
+        request.targetId = this.projectId;
+      }
 
       this.service
         .createPost(request)

@@ -44,6 +44,30 @@ export interface DiagramEditData {
       </div>
 
       <div class="space-y-4 px-5 py-4 max-h-[75vh] overflow-y-auto">
+        <!-- Requirement (แสดงเฉพาะตอนสร้างใหม่) -->
+        @if (requirementTitle && !editData) {
+          <div class="p-3 rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5">
+            <div class="flex items-center gap-2 text-sm">
+              <i class="bi bi-check-circle-fill text-[var(--crm-success)]"></i>
+              <span class="font-medium text-[var(--text-active)]">{{ 'PMDT05_REQ_SOURCE_LABEL' | translate }}</span>
+              <span>{{ requirementTitle }}</span>
+            </div>
+          </div>
+        } @else if (!editData) {
+          <div>
+            <sic-combobox
+              [label]="'PMDT05_REQUIREMENT_LABEL' | translate"
+              [apiUrl]="requirementComboboxUrl"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT05_REQUIREMENT_PLACEHOLDER' | translate"
+              [clearable]="true"
+              [(ngModel)]="selectedRequirementId"
+              (selectionChanged)="selectedRequirementId = $event?.value || $event?.id || ''"
+            ></sic-combobox>
+          </div>
+        }
+
         <!-- รหัส Diagram -->
         <sic-input
           [label]="'PMDT05_DIAGRAM_CODE_LABEL' | translate"
@@ -74,30 +98,6 @@ export interface DiagramEditData {
             [clearable]="false"
           ></sic-combobox>
         </div>
-
-        <!-- Requirement ต้นทาง (แสดงเฉพาะตอนสร้างใหม่และมี requirementTitle ส่งมาจาก URL) -->
-        @if (requirementTitle && !editData) {
-          <div class="p-3 rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5">
-            <div class="flex items-center gap-2 text-sm">
-              <i class="bi bi-check-circle-fill text-[var(--crm-success)]"></i>
-              <span class="font-medium text-[var(--text-active)]">{{ 'PMDT05_REQ_SOURCE_LABEL' | translate }}</span>
-              <span>{{ requirementTitle }}</span>
-            </div>
-          </div>
-        } @else if (!editData) {
-          <div>
-            <sic-combobox
-              label="ความต้องการ (Requirement)"
-              [apiUrl]="requirementComboboxUrl"
-              valueField="value"
-              textField="text"
-              placeholder="เลือกความต้องการที่เกี่ยวข้อง (ไม่บังคับ)"
-              [clearable]="true"
-              [(ngModel)]="selectedRequirementId"
-              (selectionChanged)="selectedRequirementId = $event?.value || $event?.id || ''"
-            ></sic-combobox>
-          </div>
-        }
 
         <!-- Approval Flow Selection (แสดงเฉพาะในโหมดแก้ไข) -->
         @if (editData) {

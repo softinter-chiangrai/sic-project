@@ -19,6 +19,10 @@ public interface PmCommentRepository extends JpaRepository<PmComment, UUID>, Jpa
     Page<PmComment> findByTargetTypeAndTargetIdAndParentCommentIsNullAndIsDeleteFalse(
             String targetType, UUID targetId, Pageable pageable);
 
+    // ดึงโพสต์หลักทั้งหมดใน business
+    @Query("SELECT c FROM PmComment c WHERE (:businessId IS NULL OR c.businessId = :businessId) AND c.parentComment IS NULL AND c.isDelete = false ORDER BY c.pinned DESC, c.createdDate DESC")
+    Page<PmComment> findAllByBusinessId(@Param("businessId") UUID businessId, Pageable pageable);
+
     // ดึงการตอบกลับของโพสต์
     List<PmComment> findByParentCommentIdAndIsDeleteFalseOrderByCreatedDateAsc(UUID parentCommentId);
 

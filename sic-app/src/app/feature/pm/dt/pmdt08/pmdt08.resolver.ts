@@ -22,11 +22,7 @@ export const pmdt08Resolver: ResolveFn<Pmdt08PageData> = async (route) => {
   const form = Pmdt08Form.createForm(fb);
   const discussionData = new SicFromData<Pmdt08Model>(form);
 
-  const projectId = route.queryParamMap.get('projectId') || route.queryParamMap.get('id') || route.paramMap.get('projectId') || route.paramMap.get('id');
-
-  if (!projectId) {
-    return { discussionData, projectId: null, posts: [], totalElements: 0, totalPages: 0 };
-  }
+  const projectId = route.queryParamMap.get('projectId') || route.queryParamMap.get('id') || route.paramMap.get('projectId') || route.paramMap.get('id') || null;
 
   try {
     const response = await lastValueFrom(discussionService.getPosts(projectId, 0, 10));

@@ -7,7 +7,7 @@ SELECT gen_random_uuid(), 'COMMON', 'ALL', 'PMDT01_CREATE_PHASE_TITLE', 'Create 
 WHERE NOT EXISTS (SELECT 1 FROM su_message WHERE message_code = 'PMDT01_CREATE_PHASE_TITLE');
 
 UPDATE su_message SET message_en = 'Edit Phase', message_local = 'แก้ไข Phase', updated_by = 'system', updated_date = NOW() WHERE message_code = 'PMDT01_EDIT_PHASE_TITLE';
-INSERT INTO su_message (id, module_code, program_code, message_code, message_code, message_en, message_local, created_by, created_date, updated_by, updated_date, is_delete)
+INSERT INTO su_message (id, module_code, program_code, message_code, message_en, message_local, created_by, created_date, updated_by, updated_date, is_delete)
 SELECT gen_random_uuid(), 'COMMON', 'ALL', 'PMDT01_EDIT_PHASE_TITLE', 'Edit Phase', 'แก้ไข Phase', 'system', NOW(), 'system', NOW(), false
 WHERE NOT EXISTS (SELECT 1 FROM su_message WHERE message_code = 'PMDT01_EDIT_PHASE_TITLE');
 

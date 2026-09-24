@@ -8,7 +8,6 @@ import java.util.UUID;
 
 @Data
 public class PostRequest {
-    @NotNull(message = "Target ID is required")
     private UUID targetId;
 
     @NotBlank(message = "Subject is required")

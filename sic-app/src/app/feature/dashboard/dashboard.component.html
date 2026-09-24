@@ -48,21 +48,68 @@
       </div>
     </div>
 
-    <!-- Quick Actions Bar & Refresh Button -->
+    <!-- Live Mini KPI Chips & Refresh Button -->
     <div class="flex flex-wrap items-center gap-2">
-      @for (act of quickActions; track act.labelKey) {
-        <a
-          [routerLink]="act.route"
-          class="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] text-[var(--text-active)] transition-all cursor-pointer shadow-xs"
-        >
-          <i class="bi {{ act.icon }} text-[var(--crm-primary)]"></i>
-          <span>{{ act.labelKey | translate }}</span>
-        </a>
-      }
+      <!-- 1. Active Projects -->
+      <a
+        routerLink="/feature/pm/rt/pmrt02"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-[var(--crm-primary)] text-[var(--text-active)] transition-all cursor-pointer shadow-xs group"
+        [title]="'DASHBOARD_CHIP_ACTIVE_PROJECTS' | translate"
+      >
+        <span class="w-2 h-2 rounded-full bg-[var(--crm-primary)]"></span>
+        <i class="bi bi-briefcase text-[var(--crm-primary)] text-sm"></i>
+        <span>{{ 'DASHBOARD_CHIP_ACTIVE_PROJECTS' | translate }}</span>
+        <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+          {{ orgSummary()?.activeProjects ?? realProjects().length }}
+        </span>
+      </a>
 
+      <!-- 2. Pending Approvals -->
+      <a
+        routerLink="/feature/pm/dt/pmdt03"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-amber-500/60 text-[var(--text-active)] transition-all cursor-pointer shadow-xs group"
+        [title]="'DASHBOARD_CHIP_PENDING_APPROVALS' | translate"
+      >
+        @if (approvalSummaryTotal() > 0 || myPendingApprovals().length > 0) {
+          <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+        }
+        <i class="bi bi-shield-check text-amber-500 text-sm"></i>
+        <span>{{ 'DASHBOARD_CHIP_PENDING_APPROVALS' | translate }}</span>
+        <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-amber-500/15 text-amber-600 dark:text-amber-400">
+          {{ approvalSummaryTotal() || myPendingApprovals().length }}
+        </span>
+      </a>
+
+      <!-- 3. Open Bugs -->
+      <a
+        routerLink="/feature/pm/dt/pmdt06"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-rose-500/60 text-[var(--text-active)] transition-all cursor-pointer shadow-xs group"
+        [title]="'DASHBOARD_CHIP_OPEN_BUGS' | translate"
+      >
+        <i class="bi bi-bug text-rose-500 text-sm"></i>
+        <span>{{ 'DASHBOARD_CHIP_OPEN_BUGS' | translate }}</span>
+        <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-rose-500/15 text-rose-600 dark:text-rose-400">
+          {{ orgSummary()?.openBugs ?? 0 }}
+        </span>
+      </a>
+
+      <!-- 4. Expiring Contracts -->
+      <a
+        routerLink="/feature/pm/contract"
+        class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-indigo-500/60 text-[var(--text-active)] transition-all cursor-pointer shadow-xs group"
+        [title]="'DASHBOARD_CHIP_EXPIRING_CONTRACTS' | translate"
+      >
+        <i class="bi bi-file-earmark-text text-indigo-500 text-sm"></i>
+        <span>{{ 'DASHBOARD_CHIP_EXPIRING_CONTRACTS' | translate }}</span>
+        <span class="px-2 py-0.5 rounded-lg text-xs font-bold bg-indigo-500/15 text-indigo-600 dark:text-indigo-400">
+          {{ orgSummary()?.contractsNearExpiry ?? 0 }}
+        </span>
+      </a>
+
+      <!-- Refresh Button -->
       <button
         (click)="loadAllRealData()"
-        class="inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--crm-primary)] text-white hover:bg-[var(--crm-primary)]/90 transition-all cursor-pointer shadow-xs"
+        class="inline-flex items-center justify-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-medium border border-[var(--border)] bg-[var(--crm-primary)] text-white hover:bg-[var(--crm-primary)]/90 transition-all cursor-pointer shadow-xs"
         [title]="'DASHBOARD_REFRESH_TITLE' | translate"
       >
         <i class="bi bi-arrow-repeat text-sm" [class.animate-spin]="isLoading()"></i>

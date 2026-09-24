@@ -42,6 +42,17 @@
       <div class="bg-[var(--sidebar)] p-6 rounded-xl border border-[var(--border)] shadow-sm space-y-5">
         <!-- Form Inputs Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+
+            <sic-combobox
+            [label]="'PMDT09_PROJECT_LABEL' | translate"
+            formControlName="projectId"
+            [apiUrl]="service.apiGetComboboxProject"
+            valueField="value"
+            textField="text"
+            [required]="true"
+            [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
+          ></sic-combobox>
+
           <sic-input
             [label]="'PMDT09_REVIEW_CODE_LABEL' | translate"
             formControlName="reviewCode"
@@ -55,16 +66,6 @@
             [required]="true"
             [placeholder]="'PMDT09_TITLE_PLACEHOLDER' | translate"
           ></sic-input>
-
-          <sic-combobox
-            [label]="'PMDT09_PROJECT_LABEL' | translate"
-            formControlName="projectId"
-            [apiUrl]="service.apiGetComboboxProject"
-            valueField="value"
-            textField="text"
-            [required]="true"
-            [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
-          ></sic-combobox>
 
           <sic-combobox
             [label]="'PMDT09_SEVERITY_FIELD_LABEL' | translate"

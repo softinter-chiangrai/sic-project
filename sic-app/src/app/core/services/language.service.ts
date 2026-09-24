@@ -20,6 +20,10 @@ export class LanguageService {
 
   private readonly defaultTranslations: Record<'th' | 'en', Record<string, string>> = {
     th: {
+      DASHBOARD_CHIP_ACTIVE_PROJECTS: 'โครงการดำเนินงาน',
+      DASHBOARD_CHIP_PENDING_APPROVALS: 'รออนุมัติ',
+      DASHBOARD_CHIP_OPEN_BUGS: 'บั๊กค้าง',
+      DASHBOARD_CHIP_EXPIRING_CONTRACTS: 'สัญญาใกล้หมดอายุ',
       CONTEXT_SWITCHER_TITLE: 'ตัวกรองและสลับโปรเจกต์',
       CONTEXT_SWITCHER_POPOVER_TITLE: 'ค้นหา & สลับโปรเจกต์',
       CONTEXT_SWITCHER_POPOVER_SUBTITLE: 'คัดกรองและเลือกโปรเจกต์การทำงาน',
@@ -263,7 +267,10 @@ export class LanguageService {
       PMDT03_ITEMS_UNIT: 'รายการ',
       PMDT03_NO_USER_TITLE: 'ไม่พบข้อมูลผู้ใช้',
       PMDT03_RELOGIN_MSG: 'กรุณาเข้าสู่ระบบใหม่',
-      PMDT07_REQUIREMENT_LABEL: 'ความต้องการ (Requirement)',
+      PMDT05_REQUIREMENT_LABEL: 'ความต้องการ',
+      PMDT05_REQUIREMENT_PLACEHOLDER: 'เลือกความต้องการที่เกี่ยวข้อง (ไม่บังคับ)',
+      PMDT05_REQ_SOURCE_LABEL: 'ความต้องการต้นทาง:',
+      PMDT07_REQUIREMENT_LABEL: 'ความต้องการ',
       PMDT07_REQUIREMENT_PLACEHOLDER: 'เลือก Requirement',
       PMDT07_SPEC_CODE_LABEL: 'รหัส Specification',
       PMDT07_SPEC_CODE_PLACEHOLDER: 'เช่น SPEC-001',
@@ -337,6 +344,10 @@ export class LanguageService {
       PMDT12B_STATUS_ACTIVE_LABEL: 'เปิดใช้งาน',
     },
     en: {
+      DASHBOARD_CHIP_ACTIVE_PROJECTS: 'Active Projects',
+      DASHBOARD_CHIP_PENDING_APPROVALS: 'Pending Approvals',
+      DASHBOARD_CHIP_OPEN_BUGS: 'Open Bugs',
+      DASHBOARD_CHIP_EXPIRING_CONTRACTS: 'Expiring Contracts',
       CONTEXT_SWITCHER_TITLE: 'Filter & Switch Project',
       CONTEXT_SWITCHER_POPOVER_TITLE: 'Find & Switch Project',
       CONTEXT_SWITCHER_POPOVER_SUBTITLE: 'Filter and select projects',
@@ -580,6 +591,9 @@ export class LanguageService {
       PMDT03_ITEMS_UNIT: 'items',
       PMDT03_NO_USER_TITLE: 'User Info Not Found',
       PMDT03_RELOGIN_MSG: 'Please sign in again',
+      PMDT05_REQUIREMENT_LABEL: 'Requirement',
+      PMDT05_REQUIREMENT_PLACEHOLDER: 'Select related requirement (optional)',
+      PMDT05_REQ_SOURCE_LABEL: 'Source Requirement:',
       PMDT07_REQUIREMENT_LABEL: 'Requirement',
       PMDT07_REQUIREMENT_PLACEHOLDER: 'Select Requirement',
       PMDT07_SPEC_CODE_LABEL: 'Specification Code',

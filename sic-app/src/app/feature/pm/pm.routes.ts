@@ -35,8 +35,6 @@ import { pmdt16Resolver } from './dt/pmdt16/pmdt16.resolver';
 import { pmdt16AResolver } from './dt/pmdt16/pmdt16A/pmdt16A.resolver';
 import { pmdt17Resolver } from './dt/pmdt17/pmdt17.resolver';
 import { pmdt17AResolver } from './dt/pmdt17/pmdt17A/pmdt17A.resolver';
-import { pmdt18Resolver } from './dt/pmdt18/pmdt18.resolver';
-import { pmdt18AResolver } from './dt/pmdt18/pmdt18A/pmdt18A.resolver';
 import { pmdt19Resolver } from './dt/pmdt19/pmdt19.resolver';
 import { pmdt19AResolver } from './dt/pmdt19/pmdt19A/pmdt19A.resolver';
 import { pmdt20Resolver } from './dt/pmdt20/pmdt20.resolver';
@@ -545,28 +543,20 @@ export const PM_ROUTES: Routes = [
   },
 
   // ============================================================
-  // ===== PMDT18: RENEWAL MANAGEMENT =====
+  // ===== PMDT18: RENEWAL MANAGEMENT (REDIRECT TO CONTRACT) =====
   // ============================================================
   {
     path: 'renewal',
-    loadComponent: () => import('./dt/pmdt18/pmdt18.component').then((m) => m.Pmdt18Component),
-    resolve: { pageData: pmdt18Resolver },
-  },
-  {
-    path: 'renewal/new',
-    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
-    canDeactivate: [CanDeactivateGuard],
-    resolve: { pageData: pmdt18AResolver },
+    redirectTo: 'contract',
+    pathMatch: 'full',
   },
   {
     path: 'renewal/:id',
-    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
-    resolve: { pageData: pmdt18AResolver },
+    redirectTo: 'contract',
   },
   {
     path: 'renewal/:id/view',
-    loadComponent: () => import('./dt/pmdt18/pmdt18A/pmdt18A.component').then((m) => m.Pmdt18AComponent),
-    resolve: { pageData: pmdt18AResolver },
+    redirectTo: 'contract',
   },
 
   // ============================================================

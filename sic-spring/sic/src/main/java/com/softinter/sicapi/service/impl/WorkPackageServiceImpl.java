@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.WorkPackageRequest;
 import com.softinter.sicapi.dto.response.WorkPackageResponse;
 import com.softinter.sicapi.entity.pm.PmMilestone;
@@ -57,12 +58,12 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setEndDate(request.getEndDate());
         wp.setStatus("Not Started");
         wp.setColor(request.getColor());
-        UUID bId = ms.getBusinessId();
-        if (bId == null && ms.getPhase() != null && ms.getPhase().getProject() != null) {
+        UUID bId = null;
+        if (ms.getPhase() != null && ms.getPhase().getProject() != null) {
             bId = ms.getPhase().getProject().getBusinessId();
         }
         if (bId == null) {
-            bId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+            bId = BusinessContextHolder.getBusinessId();
         }
         wp.setBusinessId(bId);
 

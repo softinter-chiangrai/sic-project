@@ -15,6 +15,8 @@ public interface DiscussionService {
 
     Page<PostResponse> getPosts(UUID targetId, String targetType, Pageable pageable);
 
+    Page<PostResponse> getBusinessPosts(UUID businessId, Pageable pageable);
+
     List<ReplyResponse> getReplies(UUID postId);
 
     PostResponse createPost(PostRequest request, String userId, String userName);

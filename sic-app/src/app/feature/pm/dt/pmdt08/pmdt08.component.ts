@@ -120,8 +120,8 @@ export class Pmdt08Component implements OnInit {
     // Seed initial state from the resolver (preloaded first page of posts) instead of
     // fetching again here.
     const pageData: Pmdt08PageData = this.route.snapshot.data['pageData'];
-    if (pageData?.projectId) {
-      this.projectId.set(pageData.projectId);
+    if (pageData) {
+      this.projectId.set(pageData.projectId || null);
       this.posts.set(pageData.posts || []);
       this.totalElements.set(pageData.totalElements || 0);
       this.totalPages.set(pageData.totalPages || 0);
@@ -136,20 +136,18 @@ export class Pmdt08Component implements OnInit {
     // ดึง projectId จาก queryParams (รองรับกรณีเปลี่ยน projectId โดยไม่ reload route)
     this.route.queryParams.subscribe((params) => {
       const pId = params['projectId'] || params['id'] || null;
-      if (pId && pId === this.projectId() && this.hasConsumedResolverData) {
+      if (this.hasConsumedResolverData) {
         // first emission already satisfied by the resolver, skip duplicate fetch
         this.hasConsumedResolverData = false;
         return;
       }
-      if (pId) {
-        this.projectId.set(pId);
-        this.currentPage.set(0);
-        this.loadPosts();
-      }
+      this.projectId.set(pId);
+      this.currentPage.set(0);
+      this.loadPosts();
     });
 
     this.route.params.subscribe((params) => {
-      const pId = params['projectId'] || params['id'];
+      const pId = params['projectId'] || params['id'] || null;
       if (pId && !this.projectId()) {
         this.projectId.set(pId);
         this.loadPosts();
@@ -159,7 +157,6 @@ export class Pmdt08Component implements OnInit {
 
   loadPosts(): void {
     const projectId = this.projectId();
-    if (!projectId) return;
     this.isLoading.set(true);
     this.service
       .getPosts(projectId, this.currentPage(), this.pageSize())

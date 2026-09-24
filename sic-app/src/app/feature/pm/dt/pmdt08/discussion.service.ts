@@ -12,9 +12,12 @@ export class DiscussionService {
   private http = inject(HttpClient);
   private baseUrl = environment.apiBaseUrl + '/api/discussion';
 
-  getPosts(projectId: string, page = 0, size = 10): Observable<PaginationResponse<Post>> {
-    const params = new HttpParams().set('page', page).set('size', size);
-    return this.http.get<PaginationResponse<Post>>(`${this.baseUrl}/project/${projectId}`, { params });
+  getPosts(projectId?: string | null, page = 0, size = 10): Observable<PaginationResponse<Post>> {
+    let params = new HttpParams().set('page', page).set('size', size);
+    if (projectId) {
+      params = params.set('projectId', projectId);
+    }
+    return this.http.get<PaginationResponse<Post>>(this.baseUrl, { params });
   }
 
   getReplies(postId: string): Observable<Reply[]> {

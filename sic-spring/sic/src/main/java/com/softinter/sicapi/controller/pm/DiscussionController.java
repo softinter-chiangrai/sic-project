@@ -37,9 +37,23 @@ public class DiscussionController {
     private final DiscussionService discussionService;
     private final CurrentUserService currentUserService;
 
+    @GetMapping
+    @Operation(summary = "Get discussion posts (all in business, or filtered by projectId)")
+    public ResponseEntity<PaginationResponse<PostResponse>> getPosts(
+            @RequestParam(required = false) UUID projectId,
+            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
+        Page<PostResponse> posts;
+        if (projectId != null) {
+            posts = discussionService.getPosts(projectId, "PROJECT", pageable);
+        } else {
+            posts = discussionService.getBusinessPosts(null, pageable);
+        }
+        return ResponseEntity.ok(PaginationUtil.of(posts));
+    }
+
     @GetMapping("/project/{projectId}")
     @Operation(summary = "Get project discussion posts")
-    public ResponseEntity<PaginationResponse<PostResponse>> getPosts(
+    public ResponseEntity<PaginationResponse<PostResponse>> getProjectPosts(
             @PathVariable UUID projectId,
             @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
         Page<PostResponse> posts = discussionService.getPosts(projectId, "PROJECT", pageable);
