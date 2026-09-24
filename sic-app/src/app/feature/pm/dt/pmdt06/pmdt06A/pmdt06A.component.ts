@@ -117,6 +117,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         description: [null],
         changeReason: [null],
         priority: ['MEDIUM', Validators.required],
+        changeLevel: ['MINOR', Validators.required],
         targetVersion: [null],
         assigneeId: [null],
         assigneeIds: [[]],
@@ -178,6 +179,14 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     get form(): FormGroup {
         return this.formData.formGroup;
+    }
+
+    get changeLevelOptions() {
+        return [
+            { value: 'PATCH', text: this.translate.instant('PMDT06_CHANGE_LEVEL_PATCH') },
+            { value: 'MINOR', text: this.translate.instant('PMDT06_CHANGE_LEVEL_MINOR') },
+            { value: 'MAJOR', text: this.translate.instant('PMDT06_CHANGE_LEVEL_MAJOR') },
+        ];
     }
 
     selectedTargetType = signal('REQUIREMENT');

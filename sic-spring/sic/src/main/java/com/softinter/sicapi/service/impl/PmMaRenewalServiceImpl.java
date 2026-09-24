@@ -211,7 +211,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             try {
                 String currentVer = documentVersionService.getVersions("MA_RENEWAL", entity.getId())
                         .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
-                String nextVer = documentVersionService.incrementVersion(currentVer);
+                String nextVer = documentVersionService.keepVersion(currentVer);
                 String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไขรายการต่อสัญญา: " + entity.getRenewalNo());
                 documentVersionService.createVersion(
                         "MA_RENEWAL",

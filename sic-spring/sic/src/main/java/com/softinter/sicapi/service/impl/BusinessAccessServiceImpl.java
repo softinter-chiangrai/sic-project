@@ -363,6 +363,9 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             step.setStepOrder(1);
             step.setStepName("Approve");
             step.setApproverUserId(userId);
+            // ตั้ง approverRole ควบคู่กับ approverUserId เพื่อให้ยังหา approver เจอผ่านสิทธิ์ ADMIN ของ business
+            // ได้เสมอ แม้ approverUserId จะถูกล้างค่าในภายหลัง (เช่น เมื่อผู้ใช้คนนั้นออกจาก business)
+            step.setApproverRole("ADMIN");
             step.setIsRequired(true);
             step.setTimeoutAction("NONE");
             step.setCanSkip(false);

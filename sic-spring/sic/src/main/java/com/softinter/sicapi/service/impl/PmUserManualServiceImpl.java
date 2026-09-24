@@ -191,7 +191,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setUpdatedDate(Instant.now());
 
             String currentVer = entity.getVersion() != null ? entity.getVersion() : "0.1";
-            String newVer = documentVersionService.incrementVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
+            String newVer = documentVersionService.keepVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
             String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
             entity.setVersion(cleanVer);
 

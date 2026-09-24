@@ -123,7 +123,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setPriority(request.getPriority() != null && !request.getPriority().isBlank() ? request.getPriority() : "MEDIUM");
         cr.setRequesterId(currentUserService.getUserId());
         cr.setStatus("DRAFT");
-        cr.setTargetVersion(resolveTargetVersion(request.getTargetType(), request.getTargetId(), request.getTargetVersion()));
+        cr.setChangeLevel(normalizeChangeLevel(request.getChangeLevel()));
+        cr.setTargetVersion(resolveTargetVersion(request.getTargetType(), request.getTargetId(), request.getTargetVersion(), cr.getChangeLevel()));
         cr.setAssigneeId(request.getAssigneeId());
         cr.setCreatedBy(currentUserService.getUserId());
         cr.setCreatedDate(Instant.now());
@@ -197,6 +198,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", cr.getDescription(), request.getDescription());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "สาเหตุ (Reason)", cr.getChangeReason(), request.getChangeReason());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", cr.getPriority(), request.getPriority());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ระดับการเปลี่ยนแปลง (Change Level)", cr.getChangeLevel(), request.getChangeLevel());
         com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
         String diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
 
@@ -241,7 +243,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 cr.setProjectId(projId);
             }
         }
-        cr.setTargetVersion(resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), request.getTargetVersion()));
+        if (request.getChangeLevel() != null && !request.getChangeLevel().isBlank()) {
+            cr.setChangeLevel(normalizeChangeLevel(request.getChangeLevel()));
+        }
+        cr.setTargetVersion(resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), request.getTargetVersion(), cr.getChangeLevel()));
         cr.setAssigneeId(request.getAssigneeId());
         cr.setUpdatedBy(currentUserService.getUserId());
         cr.setUpdatedDate(Instant.now());
@@ -249,10 +254,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(cr));
 
-        // ✅ Dynamic version calculation
+        // บันทึกแถวประวัติใหม่ทุกครั้ง แต่ไม่ขยับเลขเวอร์ชัน (bump เฉพาะตอน implement ตามระดับที่เลือก)
         String currentVersion = documentVersionService.getVersions("CHANGE_REQUEST", cr.getId())
                 .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
-        String nextVersion = documentVersionService.incrementVersion(currentVersion);
+        String nextVersion = documentVersionService.keepVersion(currentVersion);
 
         // ✅ Create document version
         documentVersionService.createVersion(
@@ -435,9 +440,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setUpdatedDate(Instant.now());
         cr = changeRequestRepository.save(cr);
 
-        // ปลดล็อคเอกสารเป้าหมาย (ปัดเวอร์ชันขึ้นเป็นเลขเต็มถัดไป + ตั้งสถานะกลับเป็นแก้ไขได้)
+        // ปลดล็อคเอกสารเป้าหมายให้แก้ไขได้ (ไม่ขยับเลขเวอร์ชัน — bump ตอน implement)
         approvalService.unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(),
-                "Change Request " + cr.getCrCode() + " approved", true);
+                "Change Request " + cr.getCrCode() + " approved");
 
         return toResponse(cr);
     }
@@ -479,11 +484,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         String unlockReason = "Change Request " + cr.getCrCode() + " implemented";
         List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());
         for (PmCrAssignee assignee : assignees) {
-            approvalService.unlockDocumentAfterChange(assignee.getTargetType(), assignee.getTargetId(), unlockReason);
+            if ("COMPLETED".equals(assignee.getStatus())) {
+                continue; // markAssigneeComplete bump เวอร์ชันของ target นี้ไปแล้ว
+            }
+            approvalService.unlockDocumentAfterChange(assignee.getTargetType(), assignee.getTargetId(), unlockReason, cr.getChangeLevel());
         }
 
-        // สำหรับ target หลักของ CR เอง
-        approvalService.unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), unlockReason);
+        // สำหรับ target หลักของ CR เอง (bump เวอร์ชันครั้งเดียวตามระดับที่เลือก)
+        approvalService.unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), unlockReason, cr.getChangeLevel());
 
         try {
             auditLogService.log(
@@ -511,9 +519,11 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         assignee.setCompletedAt(Instant.now());
         pmCrAssigneeRepository.save(assignee);
 
-        // ปลดล็อคเอกสารของ Assignee คนนี้ (bump เวอร์ชัน + ตั้งสถานะกลับเป็นแก้ไขได้)
+        // ปลดล็อคเอกสารของ Assignee คนนี้ (bump เวอร์ชันตามระดับของ CR + ตั้งสถานะกลับเป็นแก้ไขได้)
+        PmChangeRequest crForLevel = changeRequestRepository.findById(changeRequestId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
         approvalService.unlockDocumentAfterChange(assignee.getTargetType(), assignee.getTargetId(),
-                "Change Request assignee completed their part");
+                "Change Request assignee completed their part", crForLevel.getChangeLevel());
 
         // ตรวจสอบว่าทุกคนทำเสร็จครบหรือยัง หากครบแล้วให้ปรับสถานะ CR เป็น IMPLEMENTED อัตโนมัติ
         List<PmCrAssignee> pending = pmCrAssigneeRepository.findByChangeRequestIdAndStatusAndIsDeleteFalse(changeRequestId, "PENDING");
@@ -624,10 +634,11 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setAssigneeId(cr.getAssigneeId());
         response.setAssigneeName(getUserName(cr.getAssigneeId()));
         response.setStatus(cr.getStatus());
+        response.setChangeLevel(cr.getChangeLevel() != null ? cr.getChangeLevel() : "MINOR");
         response.setIsLocked(approvalService.isApproved("CHANGE_REQUEST", cr.getId()));
         String targetVer = cr.getTargetVersion();
         if (targetVer == null || targetVer.isBlank()) {
-            targetVer = resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), null);
+            targetVer = resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), null, cr.getChangeLevel());
         }
         response.setTargetVersion(targetVer != null ? targetVer : "-");
         response.setApprovedBy(cr.getApprovedBy());
@@ -644,7 +655,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         return response;
     }
 
-    private String resolveTargetVersion(String targetType, UUID targetId, String requestedVersion) {
+    private String normalizeChangeLevel(String level) {
+        if (level == null) return "MINOR";
+        String v = level.trim().toUpperCase();
+        return (v.equals("PATCH") || v.equals("MAJOR")) ? v : "MINOR";
+    }
+
+    // เวอร์ชันเป้าหมายที่คาดว่าจะได้หลัง implement (ตัวอย่างจากระดับที่เลือก) — ไม่ใช่การ bump จริง
+    private String resolveTargetVersion(String targetType, UUID targetId, String requestedVersion, String changeLevel) {
         if (requestedVersion != null && !requestedVersion.isBlank()) {
             return requestedVersion;
         }
@@ -654,23 +672,23 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         switch (targetType.toUpperCase()) {
             case "REQUIREMENT":
                 return requirementRepository.findById(targetId)
-                        .map(r -> documentVersionService.incrementVersion(r.getVersion()))
-                        .orElse("v1.1");
+                        .map(r -> documentVersionService.bumpVersion(r.getVersion(), changeLevel))
+                        .orElse("v1.1.0");
             case "SPECIFICATION":
                 return specificationRepository.findById(targetId)
-                        .map(s -> documentVersionService.incrementVersion(s.getVersion()))
-                        .orElse("v1.1");
+                        .map(s -> documentVersionService.bumpVersion(s.getVersion(), changeLevel))
+                        .orElse("v1.1.0");
             case "DELIVERY":
                 return deliveryRepository.findById(targetId)
-                        .map(d -> documentVersionService.incrementVersion(d.getDeliveryVersion()))
-                        .orElse("0.2");
+                        .map(d -> documentVersionService.bumpVersion(d.getDeliveryVersion(), changeLevel))
+                        .orElse("0.2.0");
             case "USER_MANUAL":
                 return userManualRepository.findById(targetId)
-                        .map(m -> documentVersionService.incrementVersion(m.getVersion()))
-                        .orElse("0.2");
+                        .map(m -> documentVersionService.bumpVersion(m.getVersion(), changeLevel))
+                        .orElse("0.2.0");
             case "DIAGRAM":
             default:
-                return "v1.1";
+                return "v1.1.0";
         }
     }
 

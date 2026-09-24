@@ -50,12 +50,8 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbTitle> titlePage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            if (personType != null && !personType.isEmpty()) {
-                titlePage = titleRepository.findByIsActiveTrueAndPersonTypeAndPrefixNameEnContainingIgnoreCase(
-                        personType, keyword, pageable);
-            } else {
-                titlePage = titleRepository.findByIsActiveTrueAndPrefixNameEnContainingIgnoreCase(keyword, pageable);
-            }
+            titlePage = titleRepository.searchByKeyword(
+                    (personType != null && !personType.isEmpty()) ? personType : null, keyword, pageable);
         } else {
             if (personType != null && !personType.isEmpty()) {
                 titlePage = titleRepository.findByIsActiveTrueAndPersonType(personType, pageable);
@@ -77,7 +73,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbCountry> countryPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            countryPage = countryRepository.findByIsActiveTrueAndCountryNameEnContainingIgnoreCase(keyword, pageable);
+            countryPage = countryRepository.searchByKeyword(keyword, pageable);
         } else {
             countryPage = countryRepository.findByIsActiveTrue(pageable);
         }
@@ -95,12 +91,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbProvince> provincePage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            if (countryId != null) {
-                provincePage = provinceRepository.findByCountryIdAndIsActiveTrueAndProvinceNameEnContainingIgnoreCase(
-                        countryId, keyword, pageable);
-            } else {
-                provincePage = provinceRepository.findByIsActiveTrueAndProvinceNameEnContainingIgnoreCase(keyword, pageable);
-            }
+            provincePage = provinceRepository.searchByKeyword(countryId, keyword, pageable);
         } else {
             if (countryId != null) {
                 provincePage = provinceRepository.findByCountryIdAndIsActiveTrue(countryId, pageable);
@@ -122,12 +113,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbDistrict> districtPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            if (provinceId != null) {
-                districtPage = districtRepository.findByProvinceIdAndIsActiveTrueAndDistrictNameEnContainingIgnoreCase(
-                        provinceId, keyword, pageable);
-            } else {
-                districtPage = districtRepository.findByIsActiveTrueAndDistrictNameEnContainingIgnoreCase(keyword, pageable);
-            }
+            districtPage = districtRepository.searchByKeyword(provinceId, keyword, pageable);
         } else {
             if (provinceId != null) {
                 districtPage = districtRepository.findByProvinceIdAndIsActiveTrue(provinceId, pageable);
@@ -149,12 +135,7 @@ public class ComboboxServiceImpl implements ComboboxService {
         Page<DbSubDistrict> subDistrictPage;
 
         if (keyword != null && !keyword.isEmpty()) {
-            if (districtId != null) {
-                subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(
-                        districtId, keyword, pageable);
-            } else {
-                subDistrictPage = subDistrictRepository.findByIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(keyword, pageable);
-            }
+            subDistrictPage = subDistrictRepository.searchByKeyword(districtId, keyword, pageable);
         } else {
             if (districtId != null) {
                 subDistrictPage = subDistrictRepository.findByDistrictIdAndIsActiveTrue(districtId, pageable);

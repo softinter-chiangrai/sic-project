@@ -292,7 +292,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             String snapshotJson = JsonSnapshotHelper.toJson(toResponse(saved));
 
             // ✅ Create document version
-            String newVersion = documentVersionService.incrementVersion(oldVersion);
+            String newVersion = documentVersionService.keepVersion(oldVersion);
             documentVersionService.createVersion(
                     "DIAGRAM",
                     saved.getId(),

@@ -125,6 +125,21 @@
           ></sic-combobox>
         </div>
 
+        <!-- Change Level (semver: PATCH / MINOR / MAJOR) -->
+        <div>
+          <sic-combobox
+            [label]="'PMDT06_CHANGE_LEVEL_LABEL' | translate"
+            formControlName="changeLevel"
+            [items]="changeLevelOptions"
+            valueField="value"
+            textField="text"
+            [placeholder]="'PMDT06_CHANGE_LEVEL_PLACEHOLDER' | translate"
+            [required]="true"
+            [errorMessages]="{ required: ('PMDT06_CHANGE_LEVEL_REQUIRED_MSG' | translate) }"
+          ></sic-combobox>
+          <p class="text-xs text-[var(--text-muted)] mt-1.5">{{ 'PMDT06_CHANGE_LEVEL_HINT' | translate }}</p>
+        </div>
+
         <!-- Assignee (Multiple) -->
         <div>
           <sic-combobox

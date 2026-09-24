@@ -17,8 +17,13 @@ import com.softinter.sicapi.entity.db.DbProvince;
 public interface DbProvinceRepository extends JpaRepository<DbProvince, UUID>, JpaSpecificationExecutor<DbProvince> {
     Page<DbProvince> findByIsActiveTrue(Pageable pageable);
     Page<DbProvince> findByCountryIdAndIsActiveTrue(UUID countryId, Pageable pageable);
-    Page<DbProvince> findByIsActiveTrueAndProvinceNameEnContainingIgnoreCase(String keyword, Pageable pageable);
-    Page<DbProvince> findByCountryIdAndIsActiveTrueAndProvinceNameEnContainingIgnoreCase(UUID countryId, String keyword, Pageable pageable);
+
+    // ค้นหาจาก provinceNameEn หรือ provinceNameLocal (รองรับพิมพ์ค้นหาเป็นภาษาไทย)
+    @Query("SELECT p FROM DbProvince p WHERE p.isActive = true " +
+           "AND (:countryId IS NULL OR p.country.id = :countryId) " +
+           "AND (LOWER(p.provinceNameEn) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "     OR LOWER(p.provinceNameLocal) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<DbProvince> searchByKeyword(@Param("countryId") UUID countryId, @Param("keyword") String keyword, Pageable pageable);
 
      @Query("SELECT p FROM DbProvince p " +
            "WHERE (:countryId IS NULL OR p.country.id = :countryId) " +

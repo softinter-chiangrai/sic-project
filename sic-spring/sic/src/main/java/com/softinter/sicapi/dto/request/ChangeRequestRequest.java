@@ -24,5 +24,6 @@ public class ChangeRequestRequest {
     private String assigneeId;
     private List<CrAssigneeRequest> assignees;
     private String targetVersion;
+    private String changeLevel; // PATCH | MINOR | MAJOR
     private String status;
 }

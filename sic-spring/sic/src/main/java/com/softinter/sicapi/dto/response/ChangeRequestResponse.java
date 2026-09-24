@@ -25,6 +25,7 @@ public class ChangeRequestResponse {
     private String status;
     private Boolean isLocked;
     private String targetVersion;
+    private String changeLevel;
     private String approvedBy;
     private Instant approvedAt;
     private Instant implementedAt;

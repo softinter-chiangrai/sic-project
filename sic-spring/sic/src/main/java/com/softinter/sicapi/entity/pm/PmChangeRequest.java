@@ -46,6 +46,10 @@ public class PmChangeRequest extends BaseEntity {
     @Column(name = "priority", length = 20)
     private String priority = "MEDIUM";
 
+    // ระดับการเปลี่ยนแปลงสำหรับ bump เวอร์ชันแบบ semver: PATCH, MINOR, MAJOR
+    @Column(name = "change_level", nullable = false, length = 10)
+    private String changeLevel = "MINOR";
+
     @Column(name = "target_version", length = 20)
     private String targetVersion;
 

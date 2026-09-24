@@ -67,11 +67,10 @@ public interface ApprovalService {
     void unlockDocumentAfterChange(String documentType, UUID documentId, String reason);
 
     /**
-     * เหมือน unlockDocumentAfterChange แต่เพิ่มพารามิเตอร์ promoteMajorVersion:
-     * true = ปัดเวอร์ชันขึ้นเป็นเลขเต็มถัดไป (เช่น v1.4 -> v2.0) สำหรับเหตุการณ์ "อนุมัติ" จริง ๆ
-     * false = bump ทีละ 0.1 เหมือนเดิม สำหรับเหตุการณ์ "ปลดล็อคให้แก้ไขต่อ" (implement/assignee complete)
+     * เหมือน unlockDocumentAfterChange แต่ระบุระดับการเปลี่ยนแปลงเพื่อ bump เวอร์ชันแบบ semver (X.Y.Z):
+     * changeLevel = PATCH | MINOR | MAJOR -> bump ตามระดับ, null = ไม่ขยับเลขเวอร์ชัน (แค่บันทึกแถวประวัติใหม่)
      */
-    void unlockDocumentAfterChange(String documentType, UUID documentId, String reason, boolean promoteMajorVersion);
+    void unlockDocumentAfterChange(String documentType, UUID documentId, String reason, String changeLevel);
 
     /**
      * สร้าง Revision ใหม่จากเอกสารที่ APPROVED แล้วโดยตรง (ไม่ผ่าน Change Request):

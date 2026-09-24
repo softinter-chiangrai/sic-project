@@ -150,7 +150,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         try {
             String currentVer = documentVersionService.getVersions("PROJECT", project.getId())
                     .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
-            String nextVer = documentVersionService.incrementVersion(currentVer);
+            String nextVer = documentVersionService.keepVersion(currentVer);
             String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไขโปรเจกต์: " + project.getProjectName());
             documentVersionService.createVersion(
                     "PROJECT",

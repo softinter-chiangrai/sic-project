@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.softinter.sicapi.dto.request.AiAttachmentDto;
 import com.softinter.sicapi.dto.response.AiModelResponse;
+import com.softinter.sicapi.entity.db.DbAiModelConfig;
+import com.softinter.sicapi.repository.db.DbAiModelConfigRepository;
 import com.softinter.sicapi.service.PmAiProviderService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -26,7 +29,10 @@ import jakarta.annotation.PostConstruct;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class PmAiProviderServiceImpl implements PmAiProviderService {
+
+    private final DbAiModelConfigRepository aiModelConfigRepository;
 
     @Value("${app.ai.default-model:gemini-2.5-flash-lite}")
     private String defaultModel;
@@ -75,6 +81,25 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     @Override
     public List<AiModelResponse> getAvailableModels() {
+        List<DbAiModelConfig> configured = aiModelConfigRepository.findByIsDeleteFalseAndIsActiveTrueOrderBySortOrderAsc();
+        if (!configured.isEmpty()) {
+            return configured.stream()
+                    .map(c -> AiModelResponse.builder()
+                            .id(c.getModelCode())
+                            .name(c.getDisplayName())
+                            .provider(c.getProviderLabel())
+                            .description(c.getDescription())
+                            .icon(c.getIcon())
+                            .recommended(Boolean.TRUE.equals(c.getIsRecommended()))
+                            .build())
+                    .collect(java.util.stream.Collectors.toList());
+        }
+
+        // Fallback: ตาราง db_ai_model_config ยังว่างอยู่ (ก่อน seed หรือ admin ลบหมด) — ใช้รายการ hardcode เดิม
+        return getLegacyHardcodedModels();
+    }
+
+    private List<AiModelResponse> getLegacyHardcodedModels() {
         List<AiModelResponse> models = new ArrayList<>();
 
         models.add(AiModelResponse.builder()
@@ -144,6 +169,42 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     private ModelConfig resolveModelConfig(String modelId) {
         String effectiveModel = (modelId != null && !modelId.isBlank()) ? modelId.trim() : defaultModel;
+
+        ModelConfig fromDb = resolveFromDbConfig(effectiveModel);
+        if (fromDb != null) {
+            return fromDb;
+        }
+
+        return resolveLegacyModelConfig(effectiveModel);
+    }
+
+    /**
+     * หา config จากตาราง db_ai_model_config ก่อน (จัดการผ่านหน้า BURT07) ถ้าไม่มี modelId ระบุมา
+     * ใช้ตัวที่ isDefault=true แทน ถ้าไม่เจอทั้งคู่ใน DB จะ return null ให้ fallback ไปใช้ legacy config
+     */
+    private ModelConfig resolveFromDbConfig(String effectiveModel) {
+        DbAiModelConfig row = aiModelConfigRepository.findByModelCodeAndIsDeleteFalse(effectiveModel)
+                .filter(DbAiModelConfig::getIsActive)
+                .orElseGet(() -> aiModelConfigRepository.findByIsDeleteFalseAndIsActiveTrueAndIsDefaultTrue().orElse(null));
+
+        if (row == null || row.getApiKey() == null || row.getApiKey().isBlank()) {
+            return null;
+        }
+
+        ModelConfig config = new ModelConfig();
+        config.provider = "CLAUDE".equalsIgnoreCase(row.getApiFormat()) ? "claude" : "openai";
+        config.apiUrl = row.getApiUrl();
+        config.apiKey = row.getApiKey();
+        config.maxTokens = row.getMaxTokens() != null && row.getMaxTokens() > 0 ? row.getMaxTokens() : 4096;
+        config.targetModel = row.getModelCode();
+        return config;
+    }
+
+    /**
+     * พฤติกรรมเดิมก่อนมี db_ai_model_config — คงไว้เป็น fallback เผื่อ modelId ที่ยังไม่ถูกย้ายเข้าตาราง
+     * หรือใช้ key จาก application.yml/env var แบบเดิม
+     */
+    private ModelConfig resolveLegacyModelConfig(String effectiveModel) {
         ModelConfig config = new ModelConfig();
 
         if (effectiveModel.startsWith("claude-3") && claudeApiKey != null && !claudeApiKey.isBlank()) {

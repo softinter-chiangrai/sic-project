@@ -229,7 +229,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         } else {
             String currentVer = documentVersionService.getVersions("INVOICE", entity.getId())
                     .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
-            targetVersion = documentVersionService.incrementVersion(currentVer);
+            targetVersion = documentVersionService.keepVersion(currentVer);
         }
 
         // ✅ Create document version

@@ -35,11 +35,6 @@
 
     <div class="sic-gridpanel__table">
       <div class="sic-gridpanel__header" [style.gridTemplateColumns]="gridTemplateColumns">
-        <div class="sic-gridpanel__header-cell sic-gridpanel__header-cell--selection">
-          <sic-checkbox
-            [label]="''"
-            [formControl]="selectAllControl"></sic-checkbox>
-        </div>
         @for (column of visibleColumns; track trackColumn($index, column)) {
           <div class="sic-gridpanel__header-cell">
             @if (getHeaderTemplate(column); as headerTemplate) {
@@ -85,21 +80,6 @@
       } @else {
         @for (row of rows; track trackRow($index, row)) {
           <div class="sic-gridpanel__row" [class.sic-gridpanel__row--new]="getRowState(row) === 'new'" [class.sic-gridpanel__row--updated]="getRowState(row) === 'updated'" [class.sic-gridpanel__row--deleted]="isRowDeleted(row)" [class.sic-gridpanel__row--disabled]="isRowDisabled(row)" [style.gridTemplateColumns]="gridTemplateColumns">
-            <div class="sic-gridpanel__cell sic-gridpanel__cell--selection">
-              @if (canResetRow(row)) {
-                <button
-                  type="button"
-                  class="sic-gridpanel__reset-row-button"
-                  (click)="resetRow(row)"
-                  [attr.aria-label]="'GRIDPANEL_RESET_ROW_LABEL' | translate">
-                  <i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i>
-                </button>
-              } @else {
-                <sic-checkbox
-                  [label]="''"
-                  [formControl]="getSelectionControl(row)"></sic-checkbox>
-              }
-            </div>
             @for (column of visibleColumns; track trackColumn($index, column)) {
               <div class="sic-gridpanel__cell" [class.sic-gridpanel__cell--number]="column.type === 'number'" [class.sic-gridpanel__cell--checkbox]="column.type === 'checkbox'" [class.sic-gridpanel__cell--radio]="column.type === 'radio'" [class.sic-gridpanel__cell--upload]="column.type === 'upload'">
                 @if (getCellTemplate(column); as cellTemplate) {
@@ -358,7 +338,6 @@
 
       @if (hasFooter) {
         <div class="sic-gridpanel__footer" [style.gridTemplateColumns]="gridTemplateColumns">
-          <div class="sic-gridpanel__footer-cell sic-gridpanel__footer-cell--selection"></div>
           @for (column of visibleColumns; track trackColumn($index, column)) {
             <div class="sic-gridpanel__footer-cell">
               @if (getFooterTemplate(column); as footerTemplate) {

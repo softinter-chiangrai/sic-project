@@ -9,6 +9,8 @@ import { burt05Resolver } from './rt/burt05/burt05.resolver';
 import { burt05AResolver } from './rt/burt05/burt05A/burt05A.resolver';
 import { burt06Resolver } from './rt/burt06/burt06.resolver';
 import { burt06AResolver } from './rt/burt06/burt06A/burt06A.resolver';
+import { burt07Resolver } from './rt/burt07/burt07.resolver';
+import { burt07AResolver } from './rt/burt07/burt07A/burt07A.resolver';
 import { burp01Resolver } from './rp/burp01/burp01.resolver';
 import { CanDeactivateGuard } from '../../core/guard/can-deactivate.guard';
 
@@ -101,6 +103,25 @@ export const routes: Routes = [
     path: 'approval-flow/:id/edit',
     loadComponent: () => import('./rt/burt06/burt06A/burt06A.component').then((m) => m.Burt06AComponent),
     resolve: { form: burt06AResolver },
+    canDeactivate: [CanDeactivateGuard],
+  },
+
+  // ===== BURT07 - AI Model Management =====
+  {
+    path: 'ai-model-config',
+    loadComponent: () => import('./rt/burt07/burt07.component').then((m) => m.Burt07Component),
+    resolve: { form: burt07Resolver },
+  },
+  {
+    path: 'ai-model-config/new',
+    loadComponent: () => import('./rt/burt07/burt07A/burt07A.component').then((m) => m.Burt07AComponent),
+    resolve: { form: burt07AResolver },
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'ai-model-config/:id/edit',
+    loadComponent: () => import('./rt/burt07/burt07A/burt07A.component').then((m) => m.Burt07AComponent),
+    resolve: { form: burt07AResolver },
     canDeactivate: [CanDeactivateGuard],
   },
 

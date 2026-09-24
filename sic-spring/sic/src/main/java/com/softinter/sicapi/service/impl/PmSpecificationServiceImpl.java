@@ -328,7 +328,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             }
 
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
-            String newVersion = documentVersionService.incrementVersion(oldVersion);
+            String newVersion = documentVersionService.keepVersion(oldVersion);
             spec.setVersion(newVersion);
 
             // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่

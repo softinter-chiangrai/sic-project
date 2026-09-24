@@ -241,7 +241,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         } else {
             String currentVer = documentVersionService.getVersions("MA_TICKET", entity.getId())
                     .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
-            targetVersion = documentVersionService.incrementVersion(currentVer);
+            targetVersion = documentVersionService.keepVersion(currentVer);
         }
 
         // ✅ Create document version

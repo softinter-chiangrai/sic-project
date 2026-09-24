@@ -17,9 +17,14 @@ import com.softinter.sicapi.entity.db.DbSubDistrict;
 public interface DbSubDistrictRepository extends JpaRepository<DbSubDistrict, UUID>, JpaSpecificationExecutor<DbSubDistrict> {
     Page<DbSubDistrict> findByIsActiveTrue(Pageable pageable);
     Page<DbSubDistrict> findByDistrictIdAndIsActiveTrue(UUID districtId, Pageable pageable);
-    Page<DbSubDistrict> findByIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(String keyword, Pageable pageable);
-    Page<DbSubDistrict> findByDistrictIdAndIsActiveTrueAndSubDistrictNameEnContainingIgnoreCase(UUID districtId, String keyword, Pageable pageable);
-    
+
+    // ค้นหาจาก subDistrictNameEn หรือ subDistrictNameLocal (รองรับพิมพ์ค้นหาเป็นภาษาไทย)
+    @Query("SELECT s FROM DbSubDistrict s WHERE s.isActive = true " +
+           "AND (:districtId IS NULL OR s.district.id = :districtId) " +
+           "AND (LOWER(s.subDistrictNameEn) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "     OR LOWER(s.subDistrictNameLocal) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<DbSubDistrict> searchByKeyword(@Param("districtId") UUID districtId, @Param("keyword") String keyword, Pageable pageable);
+
     @Query("SELECT s FROM DbSubDistrict s " +
            "WHERE (:districtId IS NULL OR s.district.id = :districtId) " +
            "AND s.isActive = true " +

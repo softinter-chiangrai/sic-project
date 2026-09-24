@@ -1,0 +1,135 @@
+<!-- src/app/feature/bu/rt/burt07/burt07A/burt07A.component.html -->
+<div class="space-y-5 p-0.5">
+  <div class="flex flex-wrap items-center justify-between gap-4">
+    <h1 class="text-2xl font-semibold text-[var(--text-active)]">
+      {{ isEdit ? ('BURT07A_EDIT_TITLE' | translate) : ('BURT07A_CREATE_TITLE' | translate) }}
+    </h1>
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-6">
+    <!-- === ข้อมูลทั่วไป === -->
+    <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
+      <div class="flex items-center gap-2 pb-3 border-b border-[var(--border)]">
+        <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center font-semibold">
+          <i class="bi bi-info-circle"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-[var(--text-active)]">{{ 'BURT07A_BASIC_INFO_TITLE' | translate }}</h3>
+          <p class="text-xs text-[var(--text-muted)]">{{ 'BURT07A_BASIC_INFO_DESC' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <sic-input
+          [label]="'BURT07A_DISPLAYNAME_LABEL' | translate"
+          formControlName="displayName"
+          [required]="true"
+          [placeholder]="'BURT07A_DISPLAYNAME_PLACEHOLDER' | translate"
+        ></sic-input>
+        <sic-input
+          [label]="'BURT07A_MODELCODE_LABEL' | translate"
+          formControlName="modelCode"
+          [required]="true"
+          [placeholder]="'BURT07A_MODELCODE_PLACEHOLDER' | translate"
+          [errorMessages]="{ required: ('BURT07A_REQUIRED_MODELCODE' | translate) }"
+        ></sic-input>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <sic-input
+          [label]="'BURT07A_PROVIDERLABEL_LABEL' | translate"
+          formControlName="providerLabel"
+          [required]="true"
+          [placeholder]="'BURT07A_PROVIDERLABEL_PLACEHOLDER' | translate"
+        ></sic-input>
+        <sic-combobox
+          [label]="'BURT07A_APIFORMAT_LABEL' | translate"
+          formControlName="apiFormat"
+          [items]="apiFormatOptions()"
+          valueField="value"
+          textField="text"
+          [required]="true"
+          [placeholder]="'BURT07A_APIFORMAT_PLACEHOLDER' | translate"
+        ></sic-combobox>
+      </div>
+
+      <sic-input
+        [label]="'BURT07A_DESC_LABEL' | translate"
+        formControlName="description"
+        [placeholder]="'BURT07A_DESC_PLACEHOLDER' | translate"
+      ></sic-input>
+
+      <div class="pt-2 flex flex-wrap items-center gap-6">
+        <sic-checkbox [label]="'BURT07A_ISACTIVE_LABEL' | translate" formControlName="isActive"></sic-checkbox>
+        <sic-checkbox [label]="'BURT07A_ISDEFAULT_LABEL' | translate" formControlName="isDefault"></sic-checkbox>
+        <sic-checkbox [label]="'BURT07A_ISRECOMMENDED_LABEL' | translate" formControlName="isRecommended"></sic-checkbox>
+      </div>
+    </div>
+
+    <!-- === การเชื่อมต่อ API === -->
+    <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
+      <div class="flex items-center gap-2 pb-3 border-b border-[var(--border)]">
+        <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center font-semibold">
+          <i class="bi bi-plug"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-semibold text-[var(--text-active)]">{{ 'BURT07A_CONNECTION_TITLE' | translate }}</h3>
+          <p class="text-xs text-[var(--text-muted)]">{{ 'BURT07A_CONNECTION_DESC' | translate }}</p>
+        </div>
+      </div>
+
+      <sic-input
+        [label]="'BURT07A_APIURL_LABEL' | translate"
+        formControlName="apiUrl"
+        [required]="true"
+        placeholder="https://api.example.com/v1/messages"
+      ></sic-input>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <div>
+          <sic-input
+            [label]="'BURT07A_APIKEY_LABEL' | translate"
+            type="password"
+            formControlName="apiKey"
+            [required]="!isEdit"
+            [placeholder]="isEdit ? ('BURT07A_APIKEY_KEEP_PLACEHOLDER' | translate) : ('BURT07A_APIKEY_PLACEHOLDER' | translate)"
+            [errorMessages]="{ required: ('BURT07A_REQUIRED_APIKEY' | translate) }"
+          ></sic-input>
+          @if (isEdit) {
+            <p class="text-xs text-[var(--text-muted)] mt-1.5 flex items-center gap-1.5">
+              <i class="bi bi-info-circle"></i>
+              {{ 'BURT07A_APIKEY_KEEP_HINT' | translate }}
+            </p>
+          }
+        </div>
+        <sic-input
+          [label]="'BURT07A_MAXTOKENS_LABEL' | translate"
+          type="text"
+          inputMode="numeric"
+          formControlName="maxTokens"
+          [required]="true"
+          placeholder="4096"
+        ></sic-input>
+      </div>
+    </div>
+
+    <!-- === Action Buttons === -->
+    <div class="flex justify-end gap-3 pt-2">
+      <sic-button type="button" variant="outline" color="primary" [block]="false" (click)="cancel()">
+        <i class="bi bi-x-lg"></i> {{ 'BURT07A_CANCEL_BTN' | translate }}
+      </sic-button>
+      <sic-button
+        type="submit"
+        variant="solid" color="primary"
+        [block]="false"
+        [disabled]="form.invalid || isSaving()"
+      >
+        @if (isSaving()) {
+          <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'BURT07A_SAVING_BTN' | translate }}
+        } @else {
+          <i class="bi bi-floppy"></i> {{ isEdit ? ('BURT07A_SAVE_EDIT_BTN' | translate) : ('BURT07A_CREATE_BTN' | translate) }}
+        }
+      </sic-button>
+    </div>
+  </form>
+</div>

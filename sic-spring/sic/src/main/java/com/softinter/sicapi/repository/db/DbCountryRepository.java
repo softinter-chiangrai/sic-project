@@ -15,8 +15,13 @@ import java.util.UUID;
 @Repository
 public interface DbCountryRepository extends JpaRepository<DbCountry, UUID>, JpaSpecificationExecutor<DbCountry> {
     Page<DbCountry> findByIsActiveTrue(Pageable pageable);
-    Page<DbCountry> findByIsActiveTrueAndCountryNameEnContainingIgnoreCase(String keyword, Pageable pageable);
     @Query("SELECT c FROM DbCountry c WHERE c.isActive = true ORDER BY " +
            "CASE WHEN :useEnglish = true THEN c.countryNameEn ELSE c.countryNameLocal END")
     List<DbCountry> findByIsActiveTrueOrderByName(@Param("useEnglish") boolean useEnglish);
+
+    // ค้นหาจาก countryNameEn หรือ countryNameLocal (รองรับพิมพ์ค้นหาเป็นภาษาไทย)
+    @Query("SELECT c FROM DbCountry c WHERE c.isActive = true " +
+           "AND (LOWER(c.countryNameEn) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "     OR LOWER(c.countryNameLocal) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<DbCountry> searchByKeyword(@Param("keyword") String keyword, Pageable pageable);
 }

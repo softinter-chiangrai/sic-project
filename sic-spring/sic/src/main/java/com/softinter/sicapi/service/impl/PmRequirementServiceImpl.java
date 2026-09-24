@@ -250,7 +250,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             }
 
             // Version increment logic
-            String newVersion = documentVersionService.incrementVersion(oldVersion);
+            String newVersion = documentVersionService.keepVersion(oldVersion);
             requirement.setVersion(newVersion);
             requirement.setUploadGroupId(finalUploadGroupId);
 

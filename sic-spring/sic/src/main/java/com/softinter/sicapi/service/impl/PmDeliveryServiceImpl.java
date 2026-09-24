@@ -275,7 +275,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setUpdatedDate(Instant.now());
 
             String currentVer = entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "0.1";
-            String newVer = documentVersionService.incrementVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
+            String newVer = documentVersionService.keepVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
             String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
             entity.setDeliveryVersion(cleanVer);
 

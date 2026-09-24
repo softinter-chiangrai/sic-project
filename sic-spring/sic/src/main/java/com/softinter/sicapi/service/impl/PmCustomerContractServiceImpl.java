@@ -304,7 +304,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         } else {
             String currentVer = documentVersionService.getVersions("CONTRACT", contract.getId())
                     .stream().findFirst().map(com.softinter.sicapi.dto.response.DocumentVersionResponse::getVersionNo).orElse("v0.1");
-            targetVersion = documentVersionService.incrementVersion(currentVer);
+            targetVersion = documentVersionService.keepVersion(currentVer);
         }
 
         // ✅ Create document version

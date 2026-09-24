@@ -234,6 +234,37 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     }
 
     @Override
+    public String keepVersion(String currentVersion) {
+        return (currentVersion == null || currentVersion.isBlank()) ? "v0.1" : currentVersion;
+    }
+
+    @Override
+    public String bumpVersion(String currentVersion, String changeLevel) {
+        if (currentVersion == null || currentVersion.isBlank()) {
+            return "v0.1.0";
+        }
+        String level = changeLevel == null ? "MINOR" : changeLevel.trim().toUpperCase();
+        try {
+            boolean hasPrefix = currentVersion.startsWith("v") || currentVersion.startsWith("V");
+            String numPart = hasPrefix ? currentVersion.substring(1).trim() : currentVersion.trim();
+            String[] parts = numPart.split("\\.");
+            long major = parts.length > 0 ? Long.parseLong(parts[0]) : 0;
+            long minor = parts.length > 1 ? Long.parseLong(parts[1]) : 0;
+            long patch = parts.length > 2 ? Long.parseLong(parts[2]) : 0;
+
+            switch (level) {
+                case "PATCH" -> patch += 1;
+                case "MAJOR" -> { major += 1; minor = 0; patch = 0; }
+                default -> { minor += 1; patch = 0; }
+            }
+            return (hasPrefix ? "v" : "") + major + "." + minor + "." + patch;
+        } catch (Exception e) {
+            log.warn("Could not bump version: {}, keeping as is", currentVersion);
+            return currentVersion;
+        }
+    }
+
+    @Override
     public String promoteToMajorVersion(String currentVersion) {
         if (currentVersion == null || currentVersion.isBlank()) {
             return "v1.0";

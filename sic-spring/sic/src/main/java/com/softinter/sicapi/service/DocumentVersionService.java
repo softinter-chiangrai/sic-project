@@ -39,6 +39,17 @@ public interface DocumentVersionService {
 
     String promoteToMajorVersion(String currentVersion);
 
+    /**
+     * คืนค่าเวอร์ชันเดิมโดยไม่ขยับเลข (ใช้ตอนบันทึก/อนุมัติเอกสาร) ถ้ายังไม่มีเวอร์ชันให้เริ่มที่ v0.1
+     */
+    String keepVersion(String currentVersion);
+
+    /**
+     * bump เวอร์ชันแบบ semver (X.Y.Z) ตามระดับการเปลี่ยน: PATCH = Z+1, MINOR = Y+1 (Z=0), MAJOR = X+1 (Y=0, Z=0)
+     * รองรับเวอร์ชันเก่า 2 ส่วน (เช่น v1.3) โดยถือว่า patch = 0 และคง prefix "v" ตามเดิม
+     */
+    String bumpVersion(String currentVersion, String changeLevel);
+
     boolean isVersionExists(String documentType, UUID documentId);
 
     /**

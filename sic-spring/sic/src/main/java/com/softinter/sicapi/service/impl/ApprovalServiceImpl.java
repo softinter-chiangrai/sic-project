@@ -943,17 +943,17 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional
     public void unlockDocumentAfterChange(String documentType, UUID documentId, String reason) {
-        unlockDocumentAfterChange(documentType, documentId, reason, false);
+        unlockDocumentAfterChange(documentType, documentId, reason, null);
     }
 
-    private String nextVersionAfterChange(String documentType, UUID documentId, boolean promoteMajorVersion) {
+    private String nextVersionAfterChange(String documentType, UUID documentId, String changeLevel) {
         String curVer = versionService.getLatestVersionNo(documentType, documentId);
-        return promoteMajorVersion ? versionService.promoteToMajorVersion(curVer) : versionService.incrementVersion(curVer);
+        return changeLevel == null ? versionService.keepVersion(curVer) : versionService.bumpVersion(curVer, changeLevel);
     }
 
     @Override
     @Transactional
-    public void unlockDocumentAfterChange(String documentType, UUID documentId, String reason, boolean promoteMajorVersion) {
+    public void unlockDocumentAfterChange(String documentType, UUID documentId, String reason, String changeLevel) {
         if (documentType == null || documentId == null) {
             return;
         }
@@ -962,7 +962,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "REQUIREMENT":
                 requirementRepository.findById(documentId).ifPresent(req -> {
                     req.setStatus("Changed");
-                    String newVersion = nextVersionAfterChange("REQUIREMENT", req.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("REQUIREMENT", req.getId(), changeLevel);
                     req.setVersion(newVersion);
                     requirementRepository.save(req);
                     versionService.createVersion("REQUIREMENT", req.getId(), req.getProjectId(),
@@ -972,7 +972,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "SPECIFICATION":
                 specificationRepository.findById(documentId).ifPresent(spec -> {
                     spec.setStatus("Changed");
-                    String newVersion = nextVersionAfterChange("SPECIFICATION", spec.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("SPECIFICATION", spec.getId(), changeLevel);
                     spec.setVersion(newVersion);
                     specificationRepository.save(spec);
                     UUID specProjectId = spec.getProject() != null ? spec.getProject().getId() : null;
@@ -984,7 +984,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 designReviewRepository.findById(documentId).ifPresent(dr -> {
                     dr.setStatus("Changed");
                     designReviewRepository.save(dr);
-                    String newVersion = nextVersionAfterChange("DESIGN_REVIEW", dr.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("DESIGN_REVIEW", dr.getId(), changeLevel);
                     versionService.createVersion("DESIGN_REVIEW", dr.getId(), dr.getProject() != null ? dr.getProject().getId() : null,
                             dr.getReviewCode(), newVersion, reason);
                 });
@@ -993,7 +993,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerContractRepository.findById(documentId).ifPresent(contract -> {
                     contract.setSignStatus("Changed");
                     customerContractRepository.save(contract);
-                    String newVersion = nextVersionAfterChange("CONTRACT", contract.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("CONTRACT", contract.getId(), changeLevel);
                     versionService.createVersion("CONTRACT", contract.getId(), contract.getProjectId(),
                             contract.getContractNo(), newVersion, reason);
                 });
@@ -1004,9 +1004,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                     del.setIsLocked(false);
                     del.setPmApprovedBy(null);
                     del.setPmApprovedDate(null);
-                    String newVersion = promoteMajorVersion
-                            ? versionService.promoteToMajorVersion(del.getDeliveryVersion())
-                            : versionService.incrementVersion(del.getDeliveryVersion());
+                    String newVersion = changeLevel == null
+                            ? versionService.keepVersion(del.getDeliveryVersion())
+                            : versionService.bumpVersion(del.getDeliveryVersion(), changeLevel);
                     del.setDeliveryVersion(newVersion);
                     deliveryRepository.save(del);
                     versionService.createVersion("DELIVERY", del.getId(), del.getProjectId(),
@@ -1017,7 +1017,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 invoiceRepository.findById(documentId).ifPresent(inv -> {
                     inv.setApprovalStatus("CHANGED");
                     invoiceRepository.save(inv);
-                    String newVersion = nextVersionAfterChange("INVOICE", inv.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("INVOICE", inv.getId(), changeLevel);
                     versionService.createVersion("INVOICE", inv.getId(), inv.getProjectId(),
                             inv.getInvoiceNo(), newVersion, reason);
                 });
@@ -1027,7 +1027,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                     ticket.setStatus(MaTicketStatus.CHANGED);
                     ticket.setResolvedDate(null);
                     maTicketRepository.save(ticket);
-                    String newVersion = nextVersionAfterChange("MA_TICKET", ticket.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("MA_TICKET", ticket.getId(), changeLevel);
                     versionService.createVersion("MA_TICKET", ticket.getId(), ticket.getProjectId(),
                             ticket.getTicketNo(), newVersion, reason);
                 });
@@ -1036,7 +1036,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 maRenewalRepository.findById(documentId).ifPresent(ren -> {
                     ren.setStatus(MaRenewalStatus.DRAFT);
                     maRenewalRepository.save(ren);
-                    String newVersion = nextVersionAfterChange("MA_RENEWAL", ren.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("MA_RENEWAL", ren.getId(), changeLevel);
                     versionService.createVersion("MA_RENEWAL", ren.getId(), ren.getProjectId(),
                             ren.getRenewalNo(), newVersion, reason);
                 });
@@ -1045,9 +1045,9 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "MANUAL":
                 userManualRepository.findById(documentId).ifPresent(man -> {
                     man.setStatus("CHANGED");
-                    String newVersion = promoteMajorVersion
-                            ? versionService.promoteToMajorVersion(man.getVersion())
-                            : versionService.incrementVersion(man.getVersion());
+                    String newVersion = changeLevel == null
+                            ? versionService.keepVersion(man.getVersion())
+                            : versionService.bumpVersion(man.getVersion(), changeLevel);
                     man.setVersion(newVersion);
                     userManualRepository.save(man);
                     versionService.createVersion("USER_MANUAL", man.getId(), man.getProjectId(),
@@ -1058,7 +1058,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerProjectRepository.findById(documentId).ifPresent(prj -> {
                     prj.setStatus("Planning");
                     customerProjectRepository.save(prj);
-                    String newVersion = nextVersionAfterChange("PROJECT", prj.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("PROJECT", prj.getId(), changeLevel);
                     versionService.createVersion("PROJECT", prj.getId(), prj.getId(),
                             prj.getProjectCode(), newVersion, reason);
                 });
@@ -1067,7 +1067,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "DFD":
             case "ER":
                 diagramTabRepository.findById(documentId).ifPresent(tab -> {
-                    String newVersion = nextVersionAfterChange("DIAGRAM", tab.getId(), promoteMajorVersion);
+                    String newVersion = nextVersionAfterChange("DIAGRAM", tab.getId(), changeLevel);
                     versionService.createVersion("DIAGRAM", tab.getId(), tab.getProjectId(),
                             tab.getName(), newVersion, reason);
                 });
@@ -1256,20 +1256,20 @@ public class ApprovalServiceImpl implements ApprovalService {
         if (currentVer == null || currentVer.isBlank()) {
             currentVer = versionService.getLatestVersionNo(docType, docId);
         }
-        final String majorVersion = versionService.promoteToMajorVersion(currentVer);
+        final String approvedVersion = versionService.keepVersion(currentVer);
 
         switch (docType.toUpperCase()) {
             case "REQUIREMENT":
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Approved");
-                    req.setVersion(majorVersion);
+                    req.setVersion(approvedVersion);
                     requirementRepository.save(req);
                 });
                 break;
             case "SPECIFICATION":
                 specificationRepository.findById(docId).ifPresent(spec -> {
                     spec.setStatus("Approved");
-                    spec.setVersion(majorVersion);
+                    spec.setVersion(approvedVersion);
                     specificationRepository.save(spec);
                 });
                 break;
@@ -1282,7 +1282,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
                     // ปรับสถานะเอกสารเป้าหมาย และปลดล็อคผ่าน unlockDocumentAfterChange ทันทีที่ CR ผ่านการอนุมัติ
                     if (cr.getTargetType() != null && cr.getTargetId() != null) {
-                        unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), "Change Request " + (cr.getCrCode() != null ? cr.getCrCode() : cr.getId()) + " approved", true);
+                        unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), "Change Request " + (cr.getCrCode() != null ? cr.getCrCode() : cr.getId()) + " approved");
                     }
                 });
                 break;
@@ -1302,7 +1302,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                 deliveryRepository.findById(docId).ifPresent(del -> {
                     del.setStatus("CONFIRMED");
                     del.setIsLocked(true);
-                    del.setDeliveryVersion(majorVersion);
+                    del.setDeliveryVersion(approvedVersion);
                     del.setPmApprovedBy(approval.getFinalApprover());
                     del.setPmApprovedDate(Instant.now());
                     deliveryRepository.save(del);
@@ -1325,7 +1325,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "MANUAL":
                 userManualRepository.findById(docId).ifPresent(man -> {
                     man.setStatus("APPROVED");
-                    man.setVersion(majorVersion);
+                    man.setVersion(approvedVersion);
                     userManualRepository.save(man);
                 });
                 break;
@@ -1369,14 +1369,14 @@ public class ApprovalServiceImpl implements ApprovalService {
             versionReq.setDocumentType(docType);
             versionReq.setDocumentId(docId);
             versionReq.setDocumentCode(approval.getDocumentCode());
-            versionReq.setVersionNo(majorVersion);
+            versionReq.setVersionNo(approvedVersion);
             versionReq.setChangeSummary("Automatic version generated upon approval");
             versionReq.setApprovalStatus("APPROVED");
             versionReq.setApprovedBy(approval.getFinalApprover());
             versionReq.setApprovedDate(Instant.now());
             versionReq.setIsActive(true);
             versionService.saveVersion(versionReq);
-            log.info("Auto document version created for {} - {} with major version {}", docType, docId, majorVersion);
+            log.info("Auto document version created for {} - {} with version {}", docType, docId, approvedVersion);
         } catch (Exception e) {
             log.error("Error generating auto version on approval: {}", e.getMessage(), e);
         }

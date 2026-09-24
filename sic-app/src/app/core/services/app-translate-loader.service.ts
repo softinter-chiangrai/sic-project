@@ -35,7 +35,7 @@ export class AppTranslateLoader implements TranslateLoader {
 
   getTranslation(lang: string): Observable<TranslationObject> {
     const languageCode = this.normalizeOrDefault(lang, 'en').toLowerCase();
-    return this.http.get<TranslationObject>(`/assets/i18n/${languageCode}.json`).pipe(
+    return this.http.get<TranslationObject>(`/i18n/${languageCode}.json`).pipe(
       catchError(() => {
         // Prevent SSR process from crashing if the JSON file is missing
         return of({});

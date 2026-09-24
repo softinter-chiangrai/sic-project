@@ -1227,28 +1227,26 @@ export class SicGridPanelComponent implements OnChanges, AfterContentInit, After
   }
 
   private updateGridTemplateColumns(): void {
-    const selectionColumnWidth = 72;
     const columns = this.visibleColumns;
     if (columns.length === 0) {
-      this.gridTemplateColumns = `${selectionColumnWidth}px`;
+      this.gridTemplateColumns = '100%';
       return;
     }
 
     const widths = columns.map((column) => this.resolveColumnWidth(column));
     const totalWidth = widths.reduce((sum, width) => sum + width, 0);
     const hostWidth = this.surfaceRef?.nativeElement.clientWidth || this.getFallbackHostWidth();
-    const totalGridWidth = totalWidth + selectionColumnWidth;
+    const totalGridWidth = totalWidth;
 
     if (hostWidth > 0 && totalGridWidth <= hostWidth) {
-      const remainingWidth = `calc(100% - ${selectionColumnWidth}px)`;
       const proportionalColumns = widths
-        .map((width) => 'minmax(0, calc(' + remainingWidth + ' * ' + (width / totalWidth).toFixed(6) + '))')
+        .map((width) => 'minmax(0, calc(100% * ' + (width / totalWidth).toFixed(6) + '))')
         .join(' ');
-      this.gridTemplateColumns = `${selectionColumnWidth}px ${proportionalColumns}`;
+      this.gridTemplateColumns = proportionalColumns;
       return;
     }
 
-    this.gridTemplateColumns = `${selectionColumnWidth}px ${widths.map((width) => width.toString() + 'px').join(' ')}`;
+    this.gridTemplateColumns = `${widths.map((width) => width.toString() + 'px').join(' ')}`;
   }
 
   private getFallbackHostWidth(): number {

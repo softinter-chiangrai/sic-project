@@ -237,7 +237,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
             } else {
                 String currentVer = documentVersionService.getVersions("DESIGN_REVIEW", saved.getId())
                         .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
-                String nextVer = documentVersionService.incrementVersion(currentVer);
+                String nextVer = documentVersionService.keepVersion(currentVer);
                 String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไข Design Review: " + saved.getTitle());
                 documentVersionService.createVersion(
                         "DESIGN_REVIEW",

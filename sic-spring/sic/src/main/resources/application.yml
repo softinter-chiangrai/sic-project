@@ -99,6 +99,8 @@ app:
 
   ai:
     default-model: ${AI_DEFAULT_MODEL:gemini-2.5-flash-lite}
+    # ใช้เข้ารหัส api_key ในตาราง db_ai_model_config (AiApiKeyConverter) ตั้งค่าจริงผ่าน env var นี้ใน production
+    config-encryption-key: ${AI_MODEL_CONFIG_ENCRYPTION_KEY:sic-ai-model-config-dev-only-key}
     claude:
       api-key: ${CLAUDE_API_KEY:}
       model: ${CLAUDE_MODEL:claude-3-5-sonnet-20241022}
