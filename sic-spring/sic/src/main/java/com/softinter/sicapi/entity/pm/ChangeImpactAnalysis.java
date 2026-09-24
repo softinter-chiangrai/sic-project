@@ -74,6 +74,14 @@ public class ChangeImpactAnalysis extends BaseEntity {
     @Column(name = "impacted_table_names", columnDefinition = "TEXT[]")
     private String[] impactedTableNames;
 
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_project_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedProjectIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_customer_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedCustomerIds;
+
     @Column(name = "analysis_status", length = 20)
     private String analysisStatus = "MANUAL";
 

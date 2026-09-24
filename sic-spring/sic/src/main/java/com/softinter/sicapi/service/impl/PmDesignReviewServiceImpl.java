@@ -269,7 +269,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     @Transactional
     public void delete(UUID id, UUID businessId, String userId) {
         PmDesignReview entity = designReviewRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Design review not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลรายการตรวจแบบ (Design Review)"));
 
         approvalService.assertNotApproved("DESIGN_REVIEW", entity.getId());
 

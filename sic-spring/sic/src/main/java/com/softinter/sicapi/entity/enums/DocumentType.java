@@ -5,6 +5,8 @@ public enum DocumentType {
     SPECIFICATION("Specification"),
     DFD("DFD"),
     ER("ER Diagram"),
+    DIAGRAM("Diagram"),
+    DESIGN_REVIEW("Design Review"),
     DELIVERY("Delivery"),
     INVOICE("Invoice"),
     MA_RENEWAL("MA Renewal"),
@@ -13,7 +15,9 @@ public enum DocumentType {
     TEST_PLAN("Test Plan"),
     UAT("UAT"),
     MA_TICKET("MA Ticket"),
-    USER_MANUAL("User Manual");
+    USER_MANUAL("User Manual"),
+    TASK("Task"),
+    PROJECT("Project");
 
     private final String displayName;
 

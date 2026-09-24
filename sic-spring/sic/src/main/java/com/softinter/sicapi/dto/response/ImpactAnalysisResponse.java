@@ -27,6 +27,13 @@ public class ImpactAnalysisResponse {
     private UUID[] impactedBugIds;
     private java.util.List<ImpactItem> impactedBugs;
 
+    // Upstream Traceability (Project & Customer)
+    private UUID[] impactedProjectIds;
+    private java.util.List<ProjectImpactItem> impactedProjects;
+
+    private UUID[] impactedCustomerIds;
+    private java.util.List<CustomerImpactItem> impactedCustomers;
+
     // ฟิลด์ที่ Frontend ใช้แสดงผล (metadata + ประมาณการ)
     private Integer mandayImpact;
     private Integer timelineImpact;
@@ -36,6 +43,23 @@ public class ImpactAnalysisResponse {
 
     @Data
     public static class ImpactItem {
+        private UUID id;
+        private String code;
+        private String name;
+    }
+
+    @Data
+    public static class ProjectImpactItem {
+        private UUID id;
+        private String code;
+        private String name;
+        private String status;
+        private UUID customerId;
+        private String customerName;
+    }
+
+    @Data
+    public static class CustomerImpactItem {
         private UUID id;
         private String code;
         private String name;

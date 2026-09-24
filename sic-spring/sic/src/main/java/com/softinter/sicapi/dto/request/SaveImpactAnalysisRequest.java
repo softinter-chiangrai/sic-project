@@ -29,4 +29,6 @@ public class SaveImpactAnalysisRequest {
     private UUID[] impactedBugIds;
     private UUID[] impactedDiagramIds;
     private String[] impactedTableNames;
+    private UUID[] impactedProjectIds;
+    private UUID[] impactedCustomerIds;
 }

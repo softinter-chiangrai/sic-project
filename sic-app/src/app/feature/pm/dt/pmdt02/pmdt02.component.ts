@@ -28,12 +28,6 @@ import {
   SicCalendarView,
   SicDatepickerComponent,
 } from 'sic-ng';
-import {
-  SicKanbanComponent,
-  KanbanStatusChangeEvent,
-  KanbanWpStatusChangeEvent,
-  KanbanMilestoneStatusChangeEvent,
-} from '../../../../core/component/sic-kanban/sic-kanban.component';
 import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from './pmdt02.utils';
 
 import { FormsModule } from '@angular/forms';
@@ -53,7 +47,6 @@ export type { CalendarItemDetail };
     SicCalendarComponent,
     SicCalendarTimelineComponent,
     SicDatepickerComponent,
-    SicKanbanComponent,
     SicStripHtmlPipe,
     TranslateModule,
   ],
@@ -86,7 +79,7 @@ export class Pmdt02Component implements OnInit {
   expandedMilestoneIds = signal<Set<string>>(new Set());
   expandedWorkPackageIds = signal<Set<string>>(new Set());
 
-  rightTab = signal<'list' | 'calendar' | 'gantt' | 'kanban'>('list');
+  rightTab = signal<'list' | 'calendar' | 'gantt'>('list');
   calendarEra = signal<SicCalendarEra>('BE');
   calendarView = signal<SicCalendarView>('grid');
   timelineViewMode = signal<SicCalendarTimelineViewMode>('week');
@@ -108,7 +101,7 @@ export class Pmdt02Component implements OnInit {
     color: '#8b5cf6',
   };
 
-  switchTab(tab: 'list' | 'calendar' | 'gantt' | 'kanban'): void {
+  switchTab(tab: 'list' | 'calendar' | 'gantt'): void {
     this.rightTab.set(tab);
   }
 
@@ -123,7 +116,7 @@ export class Pmdt02Component implements OnInit {
   isTaskCompleted(status?: string): boolean {
     if (!status) return false;
     const s = status.trim().toLowerCase();
-    return ['done', 'complete', 'completed'].includes(s);
+    return ['done', 'complete', 'completed', 'approved', 'อนุมัติแล้ว', 'เสร็จสิ้น'].includes(s);
   }
 
   // ===== KANBAN DATA (ALL TASKS & WORKPACKAGES IN THIS PHASE) =====
@@ -765,244 +758,6 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== KANBAN ACTIONS =====
-  onKanbanTaskStatusChange(event: KanbanStatusChangeEvent): void {
-    const payload = {
-      workPackageId: event.task.workPackageId,
-      taskCode: event.task.taskCode,
-      taskName: event.task.taskName,
-      description: event.task.description,
-      assignedTo: event.task.assignedTo,
-      startDate: event.task.startDate,
-      endDate: event.task.endDate,
-      estimateManday: event.task.estimateManday,
-      priority: event.task.priority,
-      status: event.newStatus,
-      assigneeIds: event.task.assigneeIds,
-    };
-
-    this.taskService.updateTask(event.taskId, payload).subscribe({
-      next: () => {
-        // If a Bug Task is moved to complete/done, check if all bugs in the work package/parent task are resolved
-        const isComplete = ['complete', 'done', 'completed'].includes((event.newStatus || '').toLowerCase());
-        const isBug = (event.task.taskCode || '').toUpperCase().startsWith('BUG') || (event.task.taskName || '').toUpperCase().startsWith('[BUG]');
-
-        if (isComplete && isBug && event.task.workPackageId) {
-          this.checkAndAutoMoveParentTaskToTesting(event.task);
-        }
-
-        // Re-load phase to refresh task status, completed count, and progress bar
-        this.reloadCurrentPhase();
-      },
-      error: (err) => {
-        this.dialog.error(this.translate.instant('PMDT02_UPDATE_STATUS_FAIL_TITLE'), err.message);
-        this.reloadCurrentPhase();
-      },
-    });
-  }
-
-  private reloadCurrentPhase(): void {
-    const currentPhaseId = this.currentPhaseId();
-    if (currentPhaseId) {
-      this.loadPhaseDetail(currentPhaseId, false);
-    }
-  }
-
-  private checkAndAutoMoveParentTaskToTesting(completedBugTask: TaskResponse): void {
-    if (!completedBugTask.workPackageId) return;
-
-    this.taskService.getTasksByWorkPackageId(completedBugTask.workPackageId).subscribe({
-      next: (allWpTasks) => {
-        const tasks = allWpTasks || [];
-        // Find tasks that are currently in 'bugfix'
-        const bugfixTasks = tasks.filter((t) => (t.status || '').toLowerCase() === 'bugfix');
-
-        bugfixTasks.forEach((parentTask) => {
-          // Check if there are any remaining unresolved bugs in this work package (excluding completed ones)
-          const hasUnresolvedBugs = tasks.some((t) => {
-            if (t.id === completedBugTask.id) return false; // This one was just completed
-            const isTaskBug = (t.taskCode || '').toUpperCase().startsWith('BUG') || (t.taskName || '').toUpperCase().startsWith('[BUG]');
-            const isTaskDone = ['complete', 'done', 'completed'].includes((t.status || '').toLowerCase());
-            return isTaskBug && !isTaskDone;
-          });
-
-          // If all bugs are now resolved, auto-move the parent task back to 'Testing'
-          if (!hasUnresolvedBugs) {
-            const updatedParent = {
-              ...parentTask,
-              status: 'Testing',
-            };
-            this.taskService.updateTask(parentTask.id, updatedParent).subscribe({
-              next: () => {
-                console.log(`Parent task ${parentTask.taskCode} auto-moved back to Testing because all bugs are resolved.`);
-                this.reloadCurrentPhase();
-              },
-              error: (err) => console.error('Failed to auto-move parent task to Testing:', err),
-            });
-          }
-        });
-      },
-    });
-  }
-
-  onKanbanTaskClick(task: TaskResponse): void {
-    this.router.navigate(['/feature/pm/task', task.id, 'edit'], {
-      queryParams: {
-        workPackageId: task.workPackageId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  onKanbanTaskDelete(task: TaskResponse): void {
-    this.deleteTask(task, new Event('click'));
-  }
-
-  onKanbanTaskCreate(event: { status: string; workPackageId?: string }): void {
-    const wps = this.allWorkPackages();
-    const wpId = event.workPackageId || (wps.length > 0 ? wps[0].id : undefined);
-    if (!wpId) {
-      this.dialog.error(this.translate.instant('PMDT02_NO_WP_FOUND_TITLE'), this.translate.instant('PMDT02_CREATE_WP_BEFORE_TASK_MSG'));
-      return;
-    }
-    this.router.navigate(['/feature/pm/task/new'], {
-      queryParams: {
-        workPackageId: wpId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  // ===== KANBAN WORK PACKAGE ACTIONS =====
-  onKanbanWpStatusChange(event: KanbanWpStatusChangeEvent): void {
-    const payload = {
-      milestoneId: event.workPackage.milestoneId,
-      packageName: event.workPackage.packageName,
-      description: event.workPackage.description,
-      startDate: event.workPackage.startDate,
-      endDate: event.workPackage.endDate,
-      color: event.workPackage.color,
-      status: event.newStatus,
-    };
-
-    // Update local state immediately
-    const current = this.phase();
-    if (current?.milestones) {
-      current.milestones.forEach((ms) => {
-        const wp = ms.workPackages?.find((w) => w.id === event.workPackageId);
-        if (wp) wp.status = event.newStatus;
-      });
-      this.phase.set({ ...current });
-    }
-
-    this.wpService.updateWorkPackage(event.workPackageId, payload).subscribe({
-      next: () => {
-        const currentPhaseId = this.currentPhaseId();
-        if (currentPhaseId) {
-          this.loadMilestones(currentPhaseId);
-        }
-      },
-      error: (err) => {
-        this.dialog.error(this.translate.instant('PMDT02_UPDATE_STATUS_FAIL_TITLE'), err.message);
-        const currentPhaseId = this.currentPhaseId();
-        if (currentPhaseId) {
-          this.loadMilestones(currentPhaseId);
-        }
-      },
-    });
-  }
-
-  onKanbanWpClick(wp: WorkPackageResponse): void {
-    this.router.navigate(['/feature/pm/work-package', wp.id, 'edit'], {
-      queryParams: {
-        milestoneId: wp.milestoneId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  onKanbanWpDelete(wp: WorkPackageResponse): void {
-    this.deleteWorkPackage(wp, new Event('click'));
-  }
-
-  onKanbanWpCreate(event: { status: string; milestoneId?: string }): void {
-    const msList = this.phase()?.milestones || [];
-    const msId = event.milestoneId || (msList.length > 0 ? msList[0].id : undefined);
-    if (!msId) {
-      this.dialog.error(this.translate.instant('PMDT02_NO_MS_FOUND_TITLE'), this.translate.instant('PMDT02_CREATE_MS_BEFORE_WP_MSG'));
-      return;
-    }
-    this.router.navigate(['/feature/pm/work-package/new'], {
-      queryParams: {
-        milestoneId: msId,
-        projectId: this.projectId(),
-        phaseId: this.currentPhaseId(),
-      },
-    });
-  }
-
-  // ===== KANBAN MILESTONE ACTIONS =====
-  onKanbanMilestoneStatusChange(event: KanbanMilestoneStatusChangeEvent): void {
-    const payload = {
-      phaseId: event.milestone.phaseId,
-      milestoneName: event.milestone.milestoneName,
-      description: event.milestone.description,
-      dueDate: event.milestone.dueDate,
-      color: event.milestone.color,
-      status: event.newStatus,
-    };
-
-    // Update local state immediately
-    const current = this.phase();
-    if (current?.milestones) {
-      const ms = current.milestones.find((m) => m.id === event.milestoneId);
-      if (ms) ms.status = event.newStatus;
-      this.phase.set({ ...current });
-    }
-
-    this.milestoneService.updateMilestone(event.milestoneId, payload).subscribe({
-      next: () => {
-        const currentPhaseId = this.currentPhaseId();
-        if (currentPhaseId) {
-          this.loadMilestones(currentPhaseId);
-        }
-      },
-      error: (err) => {
-        this.dialog.error(this.translate.instant('PMDT02_UPDATE_STATUS_FAIL_TITLE'), err.message);
-        const currentPhaseId = this.currentPhaseId();
-        if (currentPhaseId) {
-          this.loadMilestones(currentPhaseId);
-        }
-      },
-    });
-  }
-
-  onKanbanMilestoneClick(ms: MilestoneResponse): void {
-    this.router.navigate(['/feature/pm/milestone', ms.id, 'edit'], {
-      queryParams: {
-        projectId: this.projectId(),
-      },
-    });
-  }
-
-  onKanbanMilestoneDelete(ms: MilestoneResponse): void {
-    this.deleteMilestone(ms, new Event('click'));
-  }
-
-  onKanbanMilestoneCreate(event: { status: string }): void {
-    const phaseId = this.currentPhaseId();
-    if (!phaseId) return;
-    this.router.navigate(['/feature/pm/milestone/new'], {
-      queryParams: {
-        phaseId,
-        projectId: this.projectId(),
-      },
-    });
-  }
-
   // ===== NAVIGATION TO FULLSCREEN GANTT =====
   goToGanttFullscreen() {
     const phaseId = this.currentPhaseId();
@@ -1364,17 +1119,16 @@ export class Pmdt02Component implements OnInit {
   getStatusText(status?: string): string {
     if (!status) return '-';
     const s = status.trim().toLowerCase();
-    if (['approved', 'อนุมัติแล้ว'].includes(s)) return this.translate.instant('PMDT02_STATUS_APPROVED');
+    if (['done', 'complete', 'completed', 'approved', 'อนุมัติแล้ว', 'เสร็จสิ้น'].includes(s)) return this.translate.instant('PMDT02_STATUS_DONE');
     if (['changed', 'เปลี่ยนแปลง'].includes(s)) return this.translate.instant('PMDT02_STATUS_CHANGED');
-    if (['not started', 'not_started'].includes(s)) return this.translate.instant('PMDT02_STATUS_NOT_STARTED');
-    if (['in progress', 'in_progress', 'doing'].includes(s)) return this.translate.instant('PMDT02_STATUS_IN_PROGRESS');
-    if (['done', 'complete', 'completed'].includes(s)) return this.translate.instant('PMDT02_STATUS_DONE');
-    if (['delayed'].includes(s)) return this.translate.instant('PMDT02_STATUS_DELAYED');
+    if (['not started', 'not_started', 'ยังไม่เริ่ม'].includes(s)) return this.translate.instant('PMDT02_STATUS_NOT_STARTED');
+    if (['in progress', 'in_progress', 'doing', 'กำลังดำเนินการ'].includes(s)) return this.translate.instant('PMDT02_STATUS_IN_PROGRESS');
+    if (['delayed', 'ล่าช้า'].includes(s)) return this.translate.instant('PMDT02_STATUS_DELAYED');
     if (['todo'].includes(s)) return this.translate.instant('PMDT02_STATUS_TODO');
-    if (['waiting review', 'waiting_review', 'review', 'in review'].includes(s)) return this.translate.instant('PMDT02_STATUS_REVIEWING');
-    if (['waiting fix', 'waiting_fix'].includes(s)) return this.translate.instant('PMDT02_STATUS_WAITING_FIX');
-    if (['blocked'].includes(s)) return this.translate.instant('PMDT02_STATUS_BLOCKED');
-    if (['cancelled'].includes(s)) return this.translate.instant('PMDT02_STATUS_CANCELLED');
+    if (['waiting review', 'waiting_review', 'review', 'in review', 'รอตรวจสอบ', 'อยู่ระหว่างตรวจสอบ'].includes(s)) return this.translate.instant('PMDT02_STATUS_REVIEWING');
+    if (['waiting fix', 'waiting_fix', 'รอแก้ไข'].includes(s)) return this.translate.instant('PMDT02_STATUS_WAITING_FIX');
+    if (['blocked', 'ติดปัญหา'].includes(s)) return this.translate.instant('PMDT02_STATUS_BLOCKED');
+    if (['cancelled', 'ยกเลิก'].includes(s)) return this.translate.instant('PMDT02_STATUS_CANCELLED');
     return status;
   }
 

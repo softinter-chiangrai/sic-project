@@ -16,6 +16,25 @@ export interface ImpactNamedItem {
     name?: string;
 }
 
+export interface ImpactProjectItem {
+    id: string;
+    code?: string;
+    name?: string;
+    projectCode?: string;
+    projectName?: string;
+    status?: string;
+    customerId?: string;
+    customerName?: string;
+}
+
+export interface ImpactCustomerItem {
+    id: string;
+    code?: string;
+    name?: string;
+    customerCode?: string;
+    customerName?: string;
+}
+
 export interface ImpactAnalysis {
     id?: string;
     changeRequestId: string;
@@ -27,6 +46,10 @@ export interface ImpactAnalysis {
     mandayImpact?: number;
     timelineImpact?: number;
     costImpact?: string;
+    impactedProjectIds?: string[];
+    impactedProjects?: ImpactProjectItem[];
+    impactedCustomerIds?: string[];
+    impactedCustomers?: ImpactCustomerItem[];
     impactedRequirementIds?: string[];
     impactedRequirements?: ImpactNamedItem[];
     impactedSpecIds?: string[];

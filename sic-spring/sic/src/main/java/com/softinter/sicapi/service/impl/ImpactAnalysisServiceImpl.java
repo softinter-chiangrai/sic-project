@@ -19,6 +19,9 @@ import com.softinter.sicapi.entity.pm.PmTestCase;
 import com.softinter.sicapi.repository.pm.ChangeImpactAnalysisRepository;
 import com.softinter.sicapi.repository.pm.PmBugRepository;
 import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
@@ -44,6 +47,9 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     private final PmTaskRepository taskRepository;
     private final PmTestCaseRepository testCaseRepository;
     private final PmBugRepository bugRepository;
+    private final PmCustomerProjectRepository customerProjectRepository;
+    private final PmCustomerRepository customerRepository;
+    private final PmCustomerContractRepository customerContractRepository;
     private final CurrentUserService currentUserService;
     private final TraceLinkService traceLinkService;
 
@@ -83,6 +89,8 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedBugIds(request.getImpactedBugIds());
         analysis.setImpactedDiagramIds(request.getImpactedDiagramIds());
         analysis.setImpactedTableNames(request.getImpactedTableNames());
+        analysis.setImpactedProjectIds(request.getImpactedProjectIds());
+        analysis.setImpactedCustomerIds(request.getImpactedCustomerIds());
 
         if (analysis.getAnalysisStatus() == null) {
             analysis.setAnalysisStatus("MANUAL");
@@ -283,6 +291,84 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedDiagramIds(diagramIds);
         analysis.setImpactedTableNames(new String[0]);
 
+        // ✅ Upstream Resolution (Project & Customer)
+        Set<UUID> impactedProjectIds = new HashSet<>();
+        Set<UUID> impactedCustomerIds = new HashSet<>();
+
+        // 1. Direct from target
+        if ("PROJECT".equalsIgnoreCase(targetType) && targetId != null) {
+            impactedProjectIds.add(targetId);
+        } else if ("CUSTOMER".equalsIgnoreCase(targetType) && targetId != null) {
+            impactedCustomerIds.add(targetId);
+        } else if ("CONTRACT".equalsIgnoreCase(targetType) && targetId != null) {
+            customerContractRepository.findById(targetId).ifPresent(c -> {
+                if (c.getCustomerId() != null) impactedCustomerIds.add(c.getCustomerId());
+                if (c.getProjectId() != null) impactedProjectIds.add(c.getProjectId());
+            });
+        } else if ("REQUIREMENT".equalsIgnoreCase(targetType) && targetId != null) {
+            requirementRepository.findById(targetId).ifPresent(r -> {
+                if (r.getProjectId() != null) impactedProjectIds.add(r.getProjectId());
+            });
+        } else if ("SPECIFICATION".equalsIgnoreCase(targetType) && targetId != null) {
+            specificationRepository.findById(targetId).ifPresent(s -> {
+                if (s.getRequirement() != null && s.getRequirement().getProjectId() != null) {
+                    impactedProjectIds.add(s.getRequirement().getProjectId());
+                }
+            });
+        } else if ("TASK".equalsIgnoreCase(targetType) && targetId != null) {
+            taskRepository.findById(targetId).ifPresent(t -> {
+                if (t.getSpecification() != null && t.getSpecification().getRequirement() != null && t.getSpecification().getRequirement().getProjectId() != null) {
+                    impactedProjectIds.add(t.getSpecification().getRequirement().getProjectId());
+                }
+            });
+        } else if (("DIAGRAM".equalsIgnoreCase(targetType) || "DFD".equalsIgnoreCase(targetType) || "ER".equalsIgnoreCase(targetType)) && targetId != null) {
+            diagramTabRepository.findById(targetId).ifPresent(d -> {
+                if (d.getProjectId() != null) {
+                    impactedProjectIds.add(d.getProjectId());
+                }
+            });
+        }
+
+        // 2. From all active downstream items
+        for (UUID rId : activeReqIds) {
+            requirementRepository.findById(rId).ifPresent(r -> {
+                if (r.getProjectId() != null) impactedProjectIds.add(r.getProjectId());
+            });
+        }
+        for (UUID sId : activeSpecIds) {
+            specificationRepository.findById(sId).ifPresent(s -> {
+                if (s.getRequirement() != null && s.getRequirement().getProjectId() != null) {
+                    impactedProjectIds.add(s.getRequirement().getProjectId());
+                }
+            });
+        }
+        for (UUID tId : normalTaskIds) {
+            taskRepository.findById(tId).ifPresent(t -> {
+                if (t.getSpecification() != null && t.getSpecification().getRequirement() != null && t.getSpecification().getRequirement().getProjectId() != null) {
+                    impactedProjectIds.add(t.getSpecification().getRequirement().getProjectId());
+                }
+            });
+        }
+        for (UUID dId : diagramSet) {
+            diagramTabRepository.findById(dId).ifPresent(d -> {
+                if (d.getProjectId() != null) {
+                    impactedProjectIds.add(d.getProjectId());
+                }
+            });
+        }
+
+        // 3. For all resolved projects, resolve customer
+        for (UUID pId : impactedProjectIds) {
+            customerProjectRepository.findById(pId).ifPresent(p -> {
+                if (p.getCustomerId() != null) {
+                    impactedCustomerIds.add(p.getCustomerId());
+                }
+            });
+        }
+
+        analysis.setImpactedProjectIds(impactedProjectIds.toArray(UUID[]::new));
+        analysis.setImpactedCustomerIds(impactedCustomerIds.toArray(UUID[]::new));
+
         // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
         int calculatedManday = Math.max(1, (filteredSpecIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5));
         analysis.setMandayImpact(calculatedManday);
@@ -337,6 +423,8 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedBugIds(computed.getImpactedBugIds());
         analysis.setImpactedDiagramIds(computed.getImpactedDiagramIds());
         analysis.setImpactedTableNames(computed.getImpactedTableNames());
+        analysis.setImpactedProjectIds(computed.getImpactedProjectIds());
+        analysis.setImpactedCustomerIds(computed.getImpactedCustomerIds());
         analysis.setMandayImpact(computed.getMandayImpact());
         analysis.setTimelineImpact(computed.getTimelineImpact());
         analysis.setAnalysisStatus(computed.getAnalysisStatus());
@@ -475,6 +563,49 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 });
             }
             dto.setImpactedBugs(items);
+        }
+
+        dto.setImpactedProjectIds(entity.getImpactedProjectIds());
+        if (entity.getImpactedProjectIds() != null && entity.getImpactedProjectIds().length > 0) {
+            java.util.List<ImpactAnalysisResponse.ProjectImpactItem> projectItems = new java.util.ArrayList<>();
+            for (UUID pId : entity.getImpactedProjectIds()) {
+                customerProjectRepository.findById(pId).ifPresent(p -> {
+                    if (!Boolean.TRUE.equals(p.getIsDelete())) {
+                        ImpactAnalysisResponse.ProjectImpactItem item = new ImpactAnalysisResponse.ProjectImpactItem();
+                        item.setId(p.getId());
+                        item.setCode(p.getProjectCode());
+                        item.setName(p.getProjectName());
+                        item.setStatus(p.getStatus());
+                        item.setCustomerId(p.getCustomerId());
+                        if (p.getCustomer() != null) {
+                            item.setCustomerName(p.getCustomer().getCompanyNameLocal() != null ? p.getCustomer().getCompanyNameLocal() : p.getCustomer().getCompanyNameEn());
+                        } else if (p.getCustomerId() != null) {
+                            customerRepository.findById(p.getCustomerId()).ifPresent(c -> {
+                                item.setCustomerName(c.getCompanyNameLocal() != null ? c.getCompanyNameLocal() : c.getCompanyNameEn());
+                            });
+                        }
+                        projectItems.add(item);
+                    }
+                });
+            }
+            dto.setImpactedProjects(projectItems);
+        }
+
+        dto.setImpactedCustomerIds(entity.getImpactedCustomerIds());
+        if (entity.getImpactedCustomerIds() != null && entity.getImpactedCustomerIds().length > 0) {
+            java.util.List<ImpactAnalysisResponse.CustomerImpactItem> customerItems = new java.util.ArrayList<>();
+            for (UUID cId : entity.getImpactedCustomerIds()) {
+                customerRepository.findById(cId).ifPresent(c -> {
+                    if (!Boolean.TRUE.equals(c.getIsDelete())) {
+                        ImpactAnalysisResponse.CustomerImpactItem item = new ImpactAnalysisResponse.CustomerImpactItem();
+                        item.setId(c.getId());
+                        item.setCode(c.getCustomerCode());
+                        item.setName(c.getCompanyNameLocal() != null ? c.getCompanyNameLocal() : c.getCompanyNameEn());
+                        customerItems.add(item);
+                    }
+                });
+            }
+            dto.setImpactedCustomers(customerItems);
         }
         
         dto.setMandayImpact(entity.getMandayImpact());

@@ -115,24 +115,24 @@ public class ApprovalServiceImpl implements ApprovalService {
         boolean hasPending = approvalRepository.existsByDocumentTypeAndDocumentIdAndStatusAndIsActiveTrue(
                 request.getDocumentType(), request.getDocumentId(), ApprovalStatus.PENDING);
         if (hasPending) {
-            throw new IllegalStateException("This document already has a pending approval.");
+            throw new IllegalStateException("เอกสารนี้มีรายการที่กำลังรอการอนุมัติอยู่แล้ว (Pending Approval)");
         }
 
         PmApprovalFlow flow;
         if (request.getFlowId() != null) {
             flow = flowRepository.findById(request.getFlowId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("ไม่พบกระบวนการอนุมัติ (Approval Flow)"));
         } else {
             flow = flowRepository.findByBusinessIdAndDocumentTypeAndIsActiveTrue(
                             currentUserService.getBusinessId(), request.getDocumentType())
                     .orElseThrow(() -> new ResourceNotFoundException(
-                            "No approval flow defined for " + request.getDocumentType()));
+                            "ไม่พบกระบวนการอนุมัติสำหรับเอกสารประเภท " + request.getDocumentType()));
         }
 
         List<PmApprovalFlowStep> steps = stepRepository.findByFlowIdAndIsDeleteFalseOrderByStepOrderAsc(flow.getId());
 
         if (steps.isEmpty()) {
-            throw new IllegalStateException("Approval flow has no steps defined.");
+            throw new IllegalStateException("กระบวนการอนุมัติยังไม่ได้กำหนดขั้นตอนการอนุมัติ (No Steps Defined)");
         }
 
         String version = request.getVersion();
@@ -471,23 +471,23 @@ public class ApprovalServiceImpl implements ApprovalService {
         String userName = currentUserService.getUsername();
 
         PmApproval approval = approvalRepository.findById(approvalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("ไม่พบข้อมูลการอนุมัติ"));
 
         if (!canApprove(approvalId, userId)) {
-            throw new IllegalStateException("You don't have permission to approve this document.");
+            throw new IllegalStateException("คุณไม่มีสิทธิ์ในการอนุมัติเอกสารนี้");
         }
 
         if (approval.getStatus().isFinal()) {
-            throw new IllegalStateException("This approval is already " + approval.getStatus());
+            throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
         PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
                 .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No pending step found for this approval"));
+                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
 
         if (!userId.equals(pendingStep.getApprover())) {
-            throw new IllegalStateException("You are not assigned to the current step.");
+            throw new IllegalStateException("คุณไม่ได้เป็นผู้อนุมัติในขั้นตอนปัจจุบัน");
         }
 
         pendingStep.setStatus(ApprovalStatus.APPROVED);
@@ -546,20 +546,20 @@ public class ApprovalServiceImpl implements ApprovalService {
         String userName = currentUserService.getUsername();
 
         PmApproval approval = approvalRepository.findById(approvalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("ไม่พบข้อมูลการอนุมัติ"));
 
         if (!canApprove(approvalId, userId)) {
-            throw new IllegalStateException("You don't have permission to reject this document.");
+            throw new IllegalStateException("คุณไม่มีสิทธิ์ในการปฏิเสธเอกสารนี้");
         }
 
         if (approval.getStatus().isFinal()) {
-            throw new IllegalStateException("This approval is already " + approval.getStatus());
+            throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
         PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
                 .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No pending step found for this approval"));
+                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
 
         pendingStep.setStatus(ApprovalStatus.REJECTED);
         pendingStep.setIsCompleted(true);
@@ -605,20 +605,20 @@ public class ApprovalServiceImpl implements ApprovalService {
         String userName = currentUserService.getUsername();
 
         PmApproval approval = approvalRepository.findById(approvalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("ไม่พบข้อมูลการอนุมัติ"));
 
         if (!canApprove(approvalId, userId)) {
-            throw new IllegalStateException("You don't have permission to request revision.");
+            throw new IllegalStateException("คุณไม่มีสิทธิ์ในการขอแก้ไขเอกสารนี้");
         }
 
         if (approval.getStatus().isFinal()) {
-            throw new IllegalStateException("This approval is already " + approval.getStatus());
+            throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
         PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
                 .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No pending step found for this approval"));
+                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
 
         pendingStep.setStatus(ApprovalStatus.NEED_REVISION);
         pendingStep.setIsCompleted(true);
@@ -661,14 +661,14 @@ public class ApprovalServiceImpl implements ApprovalService {
         String userName = currentUserService.getUsername();
 
         PmApproval approval = approvalRepository.findById(approvalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("ไม่พบข้อมูลการอนุมัติ"));
 
         if (!userId.equals(approval.getRequestedBy()) && !canApprove(approvalId, userId)) {
-            throw new IllegalStateException("Only requester or approver can cancel this approval.");
+            throw new IllegalStateException("เฉพาะผู้ขออนุมัติหรือผู้อนุมัติเท่านั้นที่สามารถยกเลิกคำขอนี้ได้");
         }
 
         if (approval.getStatus().isFinal()) {
-            throw new IllegalStateException("This approval is already " + approval.getStatus());
+            throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
         approval.setStatus(ApprovalStatus.CANCELLED);
@@ -799,20 +799,20 @@ public class ApprovalServiceImpl implements ApprovalService {
         String userName = currentUserService.getUsername();
 
         PmApproval approval = approvalRepository.findById(approvalId)
-                .orElseThrow(() -> new ResourceNotFoundException("Approval not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("ไม่พบข้อมูลการอนุมัติ"));
 
         if (!canApprove(approvalId, userId)) {
-            throw new IllegalStateException("You don't have permission to delegate this approval.");
+            throw new IllegalStateException("คุณไม่มีสิทธิ์ในการมอบหมายการอนุมัติเอกสารนี้");
         }
 
         if (approval.getStatus().isFinal()) {
-            throw new IllegalStateException("This approval is already " + approval.getStatus());
+            throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
         PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
                 .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
                 .findFirst()
-                .orElseThrow(() -> new IllegalStateException("No pending step found for this approval"));
+                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
 
         pendingStep.setApprover(delegateToUserId);
         pendingStep.setApproverName(getUserName(delegateToUserId));

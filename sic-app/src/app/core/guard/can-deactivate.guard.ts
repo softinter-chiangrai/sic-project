@@ -2,6 +2,7 @@ import { ActivatedRouteSnapshot, CanDeactivateFn, RouterStateSnapshot } from '@a
 import { DialogService } from '../services/dialog.service';
 import { inject, isSignal, Signal } from '@angular/core';
 import { FormGroup } from '@angular/forms';
+import { TranslateService } from '@ngx-translate/core';
 
 export interface CanComponentDeactivate {
   pageDirty?: () => boolean;
@@ -24,6 +25,7 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
   nextState: RouterStateSnapshot
 ) => {
   const dialogService = inject(DialogService);
+  const translate = inject(TranslateService);
 
   const resolveBoolean = (val: any): boolean => {
     if (typeof val === 'boolean') return val;
@@ -76,9 +78,28 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
     return true;
   }
 
+  const currentLang = (typeof window !== 'undefined' && localStorage.getItem('app-lang') === 'en')
+    ? 'en'
+    : (translate.currentLang === 'en' ? 'en' : 'th');
+
+  const defaultTitle = currentLang === 'en' ? 'Unsaved Changes' : 'มีการเปลี่ยนแปลงที่ยังไม่บันทึก';
+  const defaultMsg = currentLang === 'en'
+    ? 'You have unsaved changes. Leave this page anyway?'
+    : 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก ต้องการออกจากหน้านี้หรือไม่?';
+
+  const translatedTitle = translate.instant('COMMON_UNSAVED_CHANGES_TITLE');
+  const title = (translatedTitle && translatedTitle !== 'COMMON_UNSAVED_CHANGES_TITLE')
+    ? translatedTitle
+    : defaultTitle;
+
+  const translatedMsg = translate.instant('COMMON_UNSAVED_CHANGES_MSG');
+  const message = (translatedMsg && translatedMsg !== 'COMMON_UNSAVED_CHANGES_MSG')
+    ? translatedMsg
+    : defaultMsg;
+
   return dialogService.confirm(
-    'มีการเปลี่ยนแปลงอยู่',
-    'คุณต้องการออกจากหน้านี้หรือไม่?'
+    title,
+    message
   ).then((confirmed) => {
     if (!confirmed) {
       window.history.pushState(null, '', state.url);

@@ -383,7 +383,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           },
           error: (err) => {
             console.error('Error deleting design review:', err);
-            this.dialog.error(this.translate.instant('PMDT09_DELETE_ERROR_TITLE'), this.translate.instant('PMDT09_DELETE_ERROR_MSG'));
+            this.dialog.error(this.translate.instant('PMDT09_DELETE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMDT09_DELETE_ERROR_MSG'));
             this.isLoading = false;
           }
         });

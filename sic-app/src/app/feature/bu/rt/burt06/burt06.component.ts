@@ -43,8 +43,10 @@ export class Burt06Component implements OnInit {
   documentTypeMap: Record<string, string> = {
     REQUIREMENT: 'Requirement',
     SPECIFICATION: 'Specification',
+    DIAGRAM: 'Diagram',
     DFD: 'DFD',
     ER: 'ER Diagram',
+    DESIGN_REVIEW: 'Design Review',
     DELIVERY: 'Delivery',
     INVOICE: 'Invoice',
     MA_RENEWAL: 'MA Renewal',
@@ -52,7 +54,10 @@ export class Burt06Component implements OnInit {
     CHANGE_REQUEST: 'Change Request',
     TEST_PLAN: 'Test Plan',
     UAT: 'UAT',
+    MA_TICKET: 'MA Ticket',
     USER_MANUAL: 'User Manual',
+    TASK: 'Task',
+    PROJECT: 'Project',
   };
 
   statusSelectOptions: { value: string; text: string }[] = [];

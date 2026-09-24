@@ -72,7 +72,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         // ตรวจสอบสถานะเอกสารเป้าหมาย ห้ามเป็น DRAFT
         String docStatus = getDocumentStatus(request.getTargetType(), request.getTargetId());
         if ("DRAFT".equalsIgnoreCase(docStatus)) {
-            throw new IllegalStateException("Draft documents can be edited directly without a Change Request.");
+            throw new IllegalStateException("เอกสารสถานะฉบับร่าง (Draft) สามารถแก้ไขได้โดยตรงโดยไม่ต้องสร้าง Change Request");
         }
 
         PmChangeRequest cr = new PmChangeRequest();
@@ -184,10 +184,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
 
         if (!"DRAFT".equals(cr.getStatus()) && !"SUBMITTED".equals(cr.getStatus())) {
-            throw new IllegalStateException("Cannot update Change Request in status: " + cr.getStatus());
+            throw new IllegalStateException("ไม่สามารถแก้ไข Change Request ในสถานะ " + cr.getStatus() + " ได้");
         }
 
         // ✅ Auto Diff Detection
@@ -303,7 +303,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional(readOnly = true)
     public ChangeRequestResponse getChangeRequest(UUID id) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
         return toResponse(cr);
     }
 
@@ -381,7 +381,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public void deleteChangeRequest(UUID id) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
         approvalService.assertNotApproved("CHANGE_REQUEST", cr.getId());
         cr.setIsDelete(true);
         cr.setDeleteBy(currentUserService.getUserId());
@@ -398,10 +398,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public ChangeRequestResponse submitForApproval(UUID id) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
 
         if (!"DRAFT".equals(cr.getStatus())) {
-            throw new IllegalStateException("Only DRAFT Change Request can be submitted.");
+            throw new IllegalStateException("สามารถส่งขออนุมัติได้เฉพาะ Change Request ที่อยู่ในสถานะฉบับร่าง (Draft) เท่านั้น");
         }
 
         // ค้นหาหรือระบุ flow สำหรับอนุมัติ Change Request (สมมติว่าใช้ flow ตัวแรกที่ผูกกับ Change Request หรือกำหนดดีฟอลต์)
@@ -409,7 +409,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         // เราทำการเรียก submitForApproval ไปที่ ApprovalService
         String docCode = cr.getCrCode() != null && !cr.getCrCode().isBlank()
                 ? cr.getCrCode()
-                : "CR-" + cr.getId().toString().substring(0, 8).toUpperCase();
+        : "CR-" + cr.getId().toString().substring(0, 8).toUpperCase();
         com.softinter.sicapi.dto.request.ApprovalSubmitRequest submitReq = new com.softinter.sicapi.dto.request.ApprovalSubmitRequest();
         submitReq.setDocumentType("CHANGE_REQUEST");
         submitReq.setDocumentId(cr.getId());
@@ -426,7 +426,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public ChangeRequestResponse approve(UUID id, String approvedBy) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
 
         cr.setStatus("APPROVED");
         cr.setApprovedBy(approvedBy);
@@ -446,7 +446,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public ChangeRequestResponse reject(UUID id, String reason) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
 
         cr.setStatus("REJECTED");
         cr.setUpdatedBy(currentUserService.getUserId());
@@ -462,10 +462,10 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public ChangeRequestResponse implement(UUID id) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
 
         if (!"APPROVED".equals(cr.getStatus())) {
-            throw new IllegalStateException("Only APPROVED Change Request can be implemented.");
+            throw new IllegalStateException("สามารถดำเนินการได้เฉพาะ Change Request ที่ได้รับการอนุมัติแล้วเท่านั้น");
         }
 
         cr.setStatus("IMPLEMENTED");
@@ -505,7 +505,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     @Transactional
     public ChangeRequestResponse markAssigneeComplete(UUID changeRequestId, String userId, UUID targetId) {
         PmCrAssignee assignee = pmCrAssigneeRepository.findByUserIdAndChangeRequestIdAndIsDeleteFalse(userId, changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Assignee not found for this user in the Change Request"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบผู้รับผิดชอบนี้ใน Change Request"));
 
         assignee.setStatus("COMPLETED");
         assignee.setCompletedAt(Instant.now());
@@ -518,7 +518,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         // ตรวจสอบว่าทุกคนทำเสร็จครบหรือยัง หากครบแล้วให้ปรับสถานะ CR เป็น IMPLEMENTED อัตโนมัติ
         List<PmCrAssignee> pending = pmCrAssigneeRepository.findByChangeRequestIdAndStatusAndIsDeleteFalse(changeRequestId, "PENDING");
         PmChangeRequest cr = changeRequestRepository.findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
         if (pending.isEmpty()) {
             cr.setStatus("IMPLEMENTED");
             cr.setImplementedAt(Instant.now());
@@ -563,27 +563,27 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     private void validateTargetExists(String targetType, UUID targetId) {
         if (targetType == null || targetId == null) {
-            throw new IllegalArgumentException("Target type and ID must not be null");
+            throw new IllegalArgumentException("ต้องระบุประเภทเอกสารและรหัสเอกสารเป้าหมาย");
         }
         switch (targetType.toUpperCase()) {
             case "REQUIREMENT":
                 if (!requirementRepository.existsById(targetId)) {
-                    throw new RuntimeException("Requirement not found: " + targetId);
+                    throw new RuntimeException("ไม่พบ Requirement ที่ระบุ: " + targetId);
                 }
                 break;
             case "SPECIFICATION":
                 if (!specificationRepository.existsById(targetId)) {
-                    throw new RuntimeException("Specification not found: " + targetId);
+                    throw new RuntimeException("ไม่พบ Specification ที่ระบุ: " + targetId);
                 }
                 break;
             case "TASK":
                 if (!taskRepository.existsById(targetId)) {
-                    throw new RuntimeException("Task not found: " + targetId);
+                    throw new RuntimeException("ไม่พบ Task ที่ระบุ: " + targetId);
                 }
                 break;
             case "DIAGRAM":
                 if (!diagramTabRepository.existsById(targetId)) {
-                    throw new RuntimeException("Diagram not found: " + targetId);
+                    throw new RuntimeException("ไม่พบ Diagram ที่ระบุ: " + targetId);
                 }
                 break;
             case "CONTRACT":

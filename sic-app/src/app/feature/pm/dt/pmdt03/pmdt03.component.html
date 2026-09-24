@@ -13,37 +13,6 @@
         {{ totalItems() }} {{ 'PMDT03_ITEMS_UNIT' | translate }}
       </span>
     </div>
-    <div class="flex gap-2">
-      <button
-        (click)="exportCsv()"
-        class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        [title]="'PMDT03_EXPORT_CSV_TITLE' | translate"
-      >
-        <i class="bi bi-download"></i>
-        {{ 'PMDT03_EXPORT_CSV_BTN' | translate }}
-      </button>
-
-      <div class="relative">
-        <button
-          (click)="showColumnMenu.set(!showColumnMenu())"
-          class="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all"
-        >
-          <i class="bi bi-layout-three-columns"></i>
-          {{ 'PMDT03_COLUMNS_BTN' | translate }}
-        </button>
-        @if (showColumnMenu()) {
-          <button type="button" class="fixed inset-0 z-[999] cursor-default" (click)="showColumnMenu.set(false)" [attr.aria-label]="'PMDT03_CLOSE_COLUMN_MENU_ARIA' | translate"></button>
-          <div class="absolute right-0 top-[calc(100%+0.4rem)] z-[1000] w-52 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-2 shadow-lg">
-            @for (col of allColumns; track col.key) {
-              <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm text-[var(--text)] hover:bg-[var(--sidebar-hover)] cursor-pointer">
-                <input type="checkbox" [checked]="isColumnVisible(col.key)" (change)="toggleColumn(col.key)" />
-                {{ col.label }}
-              </label>
-            }
-          </div>
-        }
-      </div>
-    </div>
   </div>
 
   <!-- ===== TAB SWITCHER ===== -->

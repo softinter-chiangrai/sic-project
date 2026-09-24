@@ -119,7 +119,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         priority: ['MEDIUM', Validators.required],
         targetVersion: [null],
         assigneeId: [null],
-        assigneeIds: [[], Validators.required],
+        assigneeIds: [[]],
         approvalFlowId: [null],
         rowVersion: [null],
     }));
@@ -655,13 +655,19 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         return this.isEdit ? this.translate.instant('PMDT06_SAVE_BTN') : this.translate.instant('PMDT06_CREATE_BTN');
     }
 
-    openItemDetail(type: 'REQ' | 'SPEC' | 'DIAGRAM' | 'TASK' | 'TC' | 'BUG', id?: string) {
+    openItemDetail(type: 'PROJECT' | 'CUSTOMER' | 'REQ' | 'SPEC' | 'DIAGRAM' | 'TASK' | 'TC' | 'BUG', id?: string) {
         if (!id) return;
         let url = '';
         const base = '/feature/pm';
         const projId = this.projectId || this.form.get('projectId')?.value || '';
 
         switch (type) {
+            case 'PROJECT':
+                url = `${base}/project/${id}/edit`;
+                break;
+            case 'CUSTOMER':
+                url = `${base}/customer/${id}/edit`;
+                break;
             case 'REQ':
                 url = `${base}/requirement/${id}/edit`;
                 break;
