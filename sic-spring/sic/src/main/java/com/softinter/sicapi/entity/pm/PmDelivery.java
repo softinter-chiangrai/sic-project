@@ -37,7 +37,7 @@ public class PmDelivery extends BaseBusinessEntity {
     private LocalDate deliveryDate;
 
     @Column(name = "delivery_version", length = 20)
-    private String deliveryVersion = "1.0";
+    private String deliveryVersion = "1.0.0";
 
     @Column(name = "release_note", columnDefinition = "TEXT")
     private String releaseNote;

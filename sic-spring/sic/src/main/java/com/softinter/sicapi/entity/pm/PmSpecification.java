@@ -23,7 +23,7 @@ public class PmSpecification extends BaseBusinessEntity {
     private String title;
 
     @Column(name = "version", length = 20)
-    private String version = "1.0";
+    private String version = "v1.0.0";
 
     @Column(name = "status", length = 20)
     private String status = "Draft";

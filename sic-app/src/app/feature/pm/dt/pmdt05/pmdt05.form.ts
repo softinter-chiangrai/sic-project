@@ -12,7 +12,7 @@ export class Pmdt05Form {
       diagramName: fb.control(null, [Validators.required]),
       diagramType: fb.control('ARCHITECTURE'),
       contentData: fb.control(null),
-      version: fb.control('1.0'),
+      version: fb.control('v1.0.0'),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

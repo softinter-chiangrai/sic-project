@@ -11,7 +11,7 @@ export class Pmdt07Form {
             specificationType: [null],
             title: [null, [Validators.required, Validators.maxLength(255)]],
             module: [null, [Validators.maxLength(100)]],
-            version: [{ value: '1.0', disabled: true }],
+            version: [{ value: 'v1.0.0', disabled: true }],
             status: ['Draft'],
             priority: ['Medium'],
             owner: [null, [Validators.maxLength(100)]],

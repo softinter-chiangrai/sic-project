@@ -715,7 +715,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       source: value.source || '',
       businessValue: value.businessValue || '',
       createdBy: value.createdBy || this.translate.instant('PMDT04_DEFAULT_USER_LABEL'),
-      version: value.version || 'v1.0',
+      version: value.version || 'v1.0.0',
       status: value.status || 'Draft',
       projectName: value.projectName || this.translate.instant('PMDT04_LOADING_ELLIPSIS'),
       createdAt: new Date().toISOString(),

@@ -10,7 +10,7 @@ export class Pmdt15AForm {
       manualCode: fb.control(data?.manualCode ?? null, [Validators.required, Validators.maxLength(50)]),
       manualTitle: fb.control(data?.manualTitle ?? null, [Validators.required, Validators.maxLength(255)]),
       manualType: fb.control(data?.manualType ?? 'USER'),
-      version: fb.control(data?.version ?? '1.0'),
+      version: fb.control(data?.version ?? '1.0.0'),
       relatedSpecId: fb.control(data?.relatedSpecId ?? null),
       deliveryId: fb.control(data?.deliveryId ?? null),
       status: fb.control(data?.status ?? 'DRAFT'),

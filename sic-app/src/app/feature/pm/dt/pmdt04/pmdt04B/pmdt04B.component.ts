@@ -127,7 +127,7 @@ export class Pmdt04BComponent implements OnInit {
       createdBy: [null],
       baConfirmStatus: ['Pending'],
       customerConfirmStatus: ['Pending'],
-      version: [{ value: 'v1.0', disabled: true }],
+      version: [{ value: 'v1.0.0', disabled: true }],
       // ✅ ไม่มี status แล้ว
       isActive: [true],
       state: [null],
@@ -167,7 +167,7 @@ export class Pmdt04BComponent implements OnInit {
           }
 
           if (!data.version) {
-            this.form.patchValue({ version: 'v1.0' });
+            this.form.patchValue({ version: 'v1.0.0' });
           }
 
           this.loadApprovalFlowForRequirement(id);

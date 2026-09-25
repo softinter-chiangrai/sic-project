@@ -218,7 +218,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec.setCreatedBy(userId);
             spec.setCreatedDate(Instant.now());
             spec.setIsDelete(false);
-            spec.setVersion("v0.1");
+            spec.setVersion("v1.0.0");
             spec.setStatus("Draft");
             spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -245,7 +245,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         saved.getId(),
                         projIdForVersion,
                         saved.getSpecificationCode(),
-                        saved.getVersion() != null ? saved.getVersion() : "v0.1",
+                        saved.getVersion() != null ? saved.getVersion() : "v1.0.0",
                         "สร้าง Specification เริ่มต้น (Initial specification)",
                         JsonSnapshotHelper.toJson(toResponse(saved)),
                         saved.getUploadGroupId(),
@@ -294,7 +294,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");
             }
 
-            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v0.1";
+            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v1.0.0";
             String oldStatus = spec.getStatus();
 
             // ✅ Auto Diff Detection

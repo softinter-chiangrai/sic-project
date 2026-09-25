@@ -245,7 +245,7 @@ export class Pmdt07PreviewComponent implements OnChanges {
     }
 
     formatVersion(version?: string): string {
-        if (!version) return 'v1.0';
+        if (!version) return 'v1.0.0';
         return version.startsWith('v') || version.startsWith('V') ? version : `v${version}`;
     }
 

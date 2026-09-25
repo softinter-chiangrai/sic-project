@@ -21,7 +21,7 @@ public class PmUserManualRequest {
     private String manualTitle;
 
     private String manualType = "USER";
-    private String version = "1.0";
+    private String version = "1.0.0";
     private UUID relatedSpecId;
     private UUID deliveryId;
     private String status = "DRAFT";

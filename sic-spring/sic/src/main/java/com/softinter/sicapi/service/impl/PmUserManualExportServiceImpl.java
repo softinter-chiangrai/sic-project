@@ -72,7 +72,7 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
         parameters.put("manualTitle", manual.getManualTitle() != null ? manual.getManualTitle() : "-");
         parameters.put("projectName", projectName);
         parameters.put("manualType", getManualTypeLabel(manual.getManualType()));
-        parameters.put("version", manual.getVersion() != null ? manual.getVersion() : "1.0");
+        parameters.put("version", manual.getVersion() != null ? manual.getVersion() : "1.0.0");
         parameters.put("status", manual.getStatus() != null ? manual.getStatus() : "-");
         parameters.put("deliveryCode", deliveryCode);
         parameters.put("lang", normalizedLang);

@@ -428,7 +428,7 @@ public class AiProjectPipelineJobService {
             rq.setPriority(pick(txt(n, "priority"), PRIORITIES, "MEDIUM"));
             rq.setBusinessValue(txt(n, "businessValue"));
             rq.setAcceptanceCriteria(txt(n, "acceptanceCriteria"));
-            rq.setVersion("v0.1");
+            rq.setVersion("v1.0.0");
             rq.setStatus("DRAFT");
             rq.setIsActive(true);
             rq.setState(STATE_ADDED);
@@ -459,7 +459,7 @@ public class AiProjectPipelineJobService {
             sq.setPriority(pick(txt(n, "priority"), PRIORITIES, "MEDIUM"));
             sq.setEstimatedManday(n.path("estimatedManday").asInt(3));
             sq.setDescription(firstNonBlank(txt(n, "description"), "<p>" + sq.getTitle() + "</p>"));
-            sq.setVersion("v0.1");
+            sq.setVersion("v1.0.0");
             sq.setStatus("DRAFT");
             sq.setIsActive(true);
             sq.setState(STATE_ADDED);
@@ -579,7 +579,7 @@ public class AiProjectPipelineJobService {
             Ref ms = refAt(c.milestones, d.path("milestoneRef").asInt(0), -1);
             if (ms != null) dq.setMilestoneId(ms.id());
             dq.setDeliveryDate(c.startDate.plusWeeks(Math.max(1, (long) c.weeks * idx / n)));
-            dq.setDeliveryVersion(idx == n ? "1.0" : "0." + idx);
+            dq.setDeliveryVersion("1.0." + (idx - 1));
             dq.setDeliverySummary(txt(d, "deliverySummary"));
             dq.setReleaseNote(txt(d, "releaseNote"));
             dq.setStatus("DRAFT");

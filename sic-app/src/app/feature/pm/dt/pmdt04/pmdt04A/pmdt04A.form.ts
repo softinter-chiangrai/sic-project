@@ -22,7 +22,7 @@ export class Pmdt04AForm {
       createdBy: fb.control(null, [Validators.maxLength(100)]),
       baConfirmStatus: fb.control('Pending'),
       customerConfirmStatus: fb.control('Pending'),
-      version: fb.control('v1.0'),
+      version: fb.control('v1.0.0'),
       status: fb.control('Draft'),
       isActive: fb.control(true),
       state: fb.control(null),

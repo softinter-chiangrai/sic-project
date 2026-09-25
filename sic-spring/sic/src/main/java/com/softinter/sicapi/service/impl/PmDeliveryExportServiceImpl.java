@@ -72,7 +72,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("projectName", projectName);
         parameters.put("contractNo", contractNo);
         parameters.put("deliveryType", delivery.getDeliveryType() != null ? delivery.getDeliveryType() : "FINAL");
-        parameters.put("deliveryVersion", delivery.getDeliveryVersion() != null ? delivery.getDeliveryVersion() : "1.0");
+        parameters.put("deliveryVersion", delivery.getDeliveryVersion() != null ? delivery.getDeliveryVersion() : "1.0.0");
         parameters.put("deliveryDate", deliveryDateStr);
         parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
         parameters.put("deliverySummary", stripHtml(delivery.getDeliverySummary()));

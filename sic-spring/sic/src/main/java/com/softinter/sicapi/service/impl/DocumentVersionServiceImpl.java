@@ -210,7 +210,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     public String incrementVersion(String currentVersion) {
         if (currentVersion == null || currentVersion.isBlank()) {
-            return "v1.0";
+            return "v1.0.0";
         }
         try {
             boolean hasPrefix = currentVersion.startsWith("v") || currentVersion.startsWith("V");
@@ -229,7 +229,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             }
         } catch (Exception e) {
             log.warn("Could not increment version: {}, returning v1.0", currentVersion);
-            return "v1.0";
+            return "v1.0.0";
         }
     }
 
@@ -249,13 +249,13 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     @Override
     public String keepVersion(String currentVersion) {
-        return (currentVersion == null || currentVersion.isBlank()) ? "v0.1" : currentVersion;
+        return (currentVersion == null || currentVersion.isBlank()) ? "v1.0.0" : currentVersion;
     }
 
     @Override
     public String bumpVersion(String currentVersion, String changeLevel) {
         if (currentVersion == null || currentVersion.isBlank()) {
-            return "v0.1.0";
+            return "v1.0.0";
         }
         String level = changeLevel == null ? "MINOR" : changeLevel.trim().toUpperCase();
         try {
@@ -281,7 +281,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     public String promoteToMajorVersion(String currentVersion) {
         if (currentVersion == null || currentVersion.isBlank()) {
-            return "v1.0";
+            return "v1.0.0";
         }
         try {
             boolean hasPrefix = currentVersion.startsWith("v") || currentVersion.startsWith("V");
@@ -304,7 +304,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             }
         } catch (Exception e) {
             log.warn("Could not promote to major version: {}, returning v1.0", currentVersion);
-            return "v1.0";
+            return "v1.0.0";
         }
     }
 
@@ -319,11 +319,11 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     public String getLatestVersionNo(String documentType, UUID documentId) {
         // ใช้ path เดียวกับ getVersions() (ไม่กรอง isDelete) เพื่อให้ผลตรงกับที่ UI แสดงเสมอ
         // การกรอง isDeleteFalse ที่ query level เคยทำให้ผลไม่ตรงกัน เพราะแถวเก่าบางแถวมี is_delete เป็น NULL
-        // ซึ่งไม่ match เงื่อนไข = false ใน SQL ทำให้ fallback ไปที่ "v1.0" ทั้งที่มีเวอร์ชันล่าสุดอยู่จริง
+        // ซึ่งไม่ match เงื่อนไข = false ใน SQL ทำให้ fallback ไปที่ "v1.0.0" ทั้งที่มีเวอร์ชันล่าสุดอยู่จริง
         return getVersions(documentType, documentId).stream()
                 .findFirst()
                 .map(DocumentVersionResponse::getVersionNo)
-                .orElse("v1.0");
+                .orElse("v1.0.0");
     }
 
     private DocumentVersionResponse toResponse(PmDocumentVersion version) {

@@ -196,7 +196,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setCreatedDate(Instant.now());
             entity.setIsDelete(false);
             entity.setIsLocked(false);
-            entity.setDeliveryVersion("0.1");
+            entity.setDeliveryVersion("1.0.0");
             if (request.getDeliveryCode() == null || request.getDeliveryCode().isBlank()) {
                 long count = deliveryRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
                 request.setDeliveryCode("DEL-" + String.format("%03d", count));
@@ -274,7 +274,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
 
-            String currentVer = entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "0.1";
+            String currentVer = entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "1.0.0";
             String newVer = documentVersionService.keepVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
             String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
             entity.setDeliveryVersion(cleanVer);
@@ -604,7 +604,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         entity.setContractId(req.getContractId());
         entity.setMilestoneId(req.getMilestoneId());
         entity.setDeliveryDate(req.getDeliveryDate());
-        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "0.1");
+        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "1.0.0");
         entity.setReleaseNote(req.getReleaseNote());
         entity.setDeliverySummary(req.getDeliverySummary());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");

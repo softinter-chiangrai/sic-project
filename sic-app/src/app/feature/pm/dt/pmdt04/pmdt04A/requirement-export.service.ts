@@ -94,7 +94,7 @@ export class RequirementExportService {
 <body>
   <div class="badge badge-code">${data.requirementCode || 'N/A'}</div>
   <span class="badge badge-status">${data.status || 'Draft'}</span>
-  <span class="badge badge-version">${data.version ? (data.version.startsWith('v') || data.version.startsWith('V') ? data.version : 'v' + data.version) : 'v1.0'}</span>
+  <span class="badge badge-version">${data.version ? (data.version.startsWith('v') || data.version.startsWith('V') ? data.version : 'v' + data.version) : 'v1.0.0'}</span>
   
   <h1>${data.title || 'Untitled Requirement'}</h1>
   

@@ -143,7 +143,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 cr.getId(),
                 cr.getProjectId(),
                 cr.getTitle(),
-                "v0.1",
+                "v1.0.0",
                 "สร้างคำขอเปลี่ยนแปลง (Initial change request)",
                 snapshotJson
         );
@@ -257,7 +257,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         // บันทึกแถวประวัติใหม่ทุกครั้ง แต่ไม่ขยับเลขเวอร์ชัน (bump เฉพาะตอน implement ตามระดับที่เลือก)
         String currentVersion = documentVersionService.getVersions("CHANGE_REQUEST", cr.getId())
-                .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
         String nextVersion = documentVersionService.keepVersion(currentVersion);
 
         // ✅ Create document version

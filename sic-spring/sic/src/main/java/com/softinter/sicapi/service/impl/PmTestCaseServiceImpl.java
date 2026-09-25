@@ -155,7 +155,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
                 entity.getId(),
                 entity.getProjectId(),
                 entity.getTestCaseCode(),
-                "v0.1",
+                "v1.0.0",
                 diffSummary,
                 snapshotJson
         );

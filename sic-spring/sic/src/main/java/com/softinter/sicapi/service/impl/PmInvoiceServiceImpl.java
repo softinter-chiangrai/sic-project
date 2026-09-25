@@ -232,10 +232,10 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         // ✅ Dynamic version calculation
         String targetVersion;
         if (isNew) {
-            targetVersion = "v0.1";
+            targetVersion = "v1.0.0";
         } else {
             String currentVer = documentVersionService.getVersions("INVOICE", entity.getId())
-                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
             targetVersion = documentVersionService.keepVersion(currentVer);
         }
 

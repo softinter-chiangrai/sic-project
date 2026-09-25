@@ -176,7 +176,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getId(),
                 saved.getProjectId(),
                 saved.getName(),
-                "v0.1",
+                "v1.0.0",
                 "Initial version",
                 JsonSnapshotHelper.toJson(toResponse(saved)));
 
@@ -419,7 +419,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 saved.getId(),
                 saved.getProjectId(),
                 saved.getName(),
-                "v0.1",
+                "v1.0.0",
                 "Duplicated from " + original.getName(),
                 JsonSnapshotHelper.toJson(toResponse(saved)));
 
@@ -549,11 +549,11 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     private String getCurrentVersion(PmDiagramTab tab) {
         if (tab.getId() == null)
-            return "v1.0";
+            return "v1.0.0";
         return documentVersionService.getVersions("DIAGRAM", tab.getId()).stream()
                 .findFirst()
                 .map(DocumentVersionResponse::getVersionNo)
-                .orElse("v1.0");
+                .orElse("v1.0.0");
     }
 
     private PmDiagramTabResponse toResponse(PmDiagramTab tab) {
@@ -607,7 +607,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                 dto.setIsApproved(false);
             }
         } else {
-            dto.setVersion("v1.0");
+            dto.setVersion("v1.0.0");
             dto.setVersionCount(0);
             dto.setApprovalStatus("DRAFT");
             dto.setIsApproved(false);

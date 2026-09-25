@@ -461,7 +461,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
                     documentId: res.id,
                     documentCode: res.diagramCode || ('DIAG-' + res.id.substring(0, 8).toUpperCase()),
                     documentTitle: res.name || 'Diagram Document',
-                    version: res.version || tab.version || 'v1.0',
+                    version: res.version || tab.version || 'v1.0.0',
                     flowId: flowId,
                     comment: this.translate.instant('PMDT05_SUBMIT_APPROVAL_COMMENT'),
                   })

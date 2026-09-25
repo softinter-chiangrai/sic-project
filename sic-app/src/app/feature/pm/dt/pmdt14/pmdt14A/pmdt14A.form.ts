@@ -11,7 +11,7 @@ export class Pmdt14AForm {
       deliveryCode: fb.control(null, [Validators.required, Validators.maxLength(50)]),
       deliveryTitle: fb.control(null, [Validators.required, Validators.maxLength(200)]),
       deliveryType: fb.control('FINAL', [Validators.required]),
-      deliveryVersion: fb.control('1.0', [Validators.required, Validators.maxLength(20)]),
+      deliveryVersion: fb.control('1.0.0', [Validators.required, Validators.maxLength(20)]),
       deliveryDate: fb.control(null, [Validators.required]),
       status: fb.control('DRAFT', [Validators.required]),
       releaseNote: fb.control(null),

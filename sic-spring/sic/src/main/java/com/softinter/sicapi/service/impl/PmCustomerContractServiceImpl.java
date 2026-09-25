@@ -307,10 +307,10 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         // ✅ Dynamic version calculation
         String targetVersion;
         if (isNew) {
-            targetVersion = "v0.1";
+            targetVersion = "v1.0.0";
         } else {
             String currentVer = documentVersionService.getVersions("CONTRACT", contract.getId())
-                    .stream().findFirst().map(com.softinter.sicapi.dto.response.DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                    .stream().findFirst().map(com.softinter.sicapi.dto.response.DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
             targetVersion = documentVersionService.keepVersion(currentVer);
         }
 

@@ -236,13 +236,13 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
                         saved.getId(),
                         projId,
                         saved.getReviewCode(),
-                        "v0.1",
+                        "v1.0.0",
                         "สร้าง Design Review เริ่มต้น",
                         snapshotJson
                 );
             } else {
                 String currentVer = documentVersionService.getVersions("DESIGN_REVIEW", saved.getId())
-                        .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                        .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
                 String nextVer = documentVersionService.keepVersion(currentVer);
                 String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไข Design Review: " + saved.getTitle());
                 documentVersionService.createVersion(

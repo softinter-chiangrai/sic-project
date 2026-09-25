@@ -177,7 +177,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
                         entity.getId(),
                         entity.getProjectId(),
                         entity.getRenewalNo(),
-                        "v0.1",
+                        "v1.0.0",
                         "สร้างรายการต่อสัญญา MA เริ่มต้น",
                         JsonSnapshotHelper.toJson(toResponse(entity))
                 );
@@ -217,7 +217,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             // ✅ Dynamic Increment Version
             try {
                 String currentVer = documentVersionService.getVersions("MA_RENEWAL", entity.getId())
-                        .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                        .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
                 String nextVer = documentVersionService.keepVersion(currentVer);
                 String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไขรายการต่อสัญญา: " + entity.getRenewalNo());
                 documentVersionService.createVersion(

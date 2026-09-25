@@ -190,7 +190,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
 
-            String currentVer = entity.getVersion() != null ? entity.getVersion() : "0.1";
+            String currentVer = entity.getVersion() != null ? entity.getVersion() : "1.0.0";
             String newVer = documentVersionService.keepVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
             String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
             entity.setVersion(cleanVer);
@@ -209,7 +209,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
-        String targetVer = entity.getVersion() != null ? (entity.getVersion().startsWith("v") ? entity.getVersion() : "v" + entity.getVersion()) : "v0.1";
+        String targetVer = entity.getVersion() != null ? (entity.getVersion().startsWith("v") ? entity.getVersion() : "v" + entity.getVersion()) : "v1.0.0";
 
         // ✅ Create document version
         documentVersionService.createVersion(
@@ -299,7 +299,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         entity.setManualCode(req.getManualCode());
         entity.setManualTitle(req.getManualTitle());
         entity.setManualType(req.getManualType() != null ? req.getManualType() : "USER");
-        entity.setVersion(req.getVersion() != null ? req.getVersion() : "0.1");
+        entity.setVersion(req.getVersion() != null ? req.getVersion() : "1.0.0");
         entity.setRelatedSpecId(req.getRelatedSpecId());
         entity.setDeliveryId(req.getDeliveryId());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");

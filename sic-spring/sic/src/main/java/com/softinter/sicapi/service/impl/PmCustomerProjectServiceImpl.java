@@ -90,7 +90,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
                     project.getId(),
                     project.getId(),
                     project.getProjectCode(),
-                    "v0.1",
+                    "v1.0.0",
                     "สร้างโปรเจกต์เริ่มต้น (Initial project)",
                     JsonSnapshotHelper.toJson(response)
             );
@@ -149,7 +149,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         // ✅ Dynamic Increment Version
         try {
             String currentVer = documentVersionService.getVersions("PROJECT", project.getId())
-                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v0.1");
+                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
             String nextVer = documentVersionService.keepVersion(currentVer);
             String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "แก้ไขโปรเจกต์: " + project.getProjectName());
             documentVersionService.createVersion(
