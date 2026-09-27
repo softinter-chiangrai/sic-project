@@ -46,6 +46,7 @@ public class PmInvoiceRequest {
     private String approvalStatus = "DRAFT";
     private String receiptFileRef;
     private String remark;
+    private UUID attachmentGroupId;
 
     private Integer state;
     private Integer rowVersion;

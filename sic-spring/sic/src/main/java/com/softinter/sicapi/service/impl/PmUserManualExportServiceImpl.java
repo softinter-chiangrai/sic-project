@@ -6,6 +6,8 @@ import com.softinter.sicapi.entity.pm.PmUserManual;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmUserManualRepository;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.service.PmUserManualExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.ReportHelper;
@@ -25,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -34,6 +37,7 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
     private final PmUserManualRepository userManualRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmDeliveryRepository deliveryRepository;
+    private final SuUploadRepository uploadRepository;
     private final DataSource dataSource;
     private final ReportServiceClient reportServiceClient;
 
@@ -75,6 +79,11 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
         parameters.put("version", manual.getVersion() != null ? manual.getVersion() : "1.0.0");
         parameters.put("status", manual.getStatus() != null ? manual.getStatus() : "-");
         parameters.put("deliveryCode", deliveryCode);
+        String attachmentNames = manual.getAttachmentGroupId() != null
+                ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(manual.getAttachmentGroupId())
+                        .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
+                : "";
+        parameters.put("attachmentNames", attachmentNames);
         parameters.put("lang", normalizedLang);
         parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

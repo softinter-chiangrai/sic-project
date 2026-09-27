@@ -41,6 +41,7 @@ public class PmCustomerProjectRequest {
     private String description;
 
     private Boolean isActive;
+    private UUID attachmentGroupId;
 
     private Integer rowVersion;
 }

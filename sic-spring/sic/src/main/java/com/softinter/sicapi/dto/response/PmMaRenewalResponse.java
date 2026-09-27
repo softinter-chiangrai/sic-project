@@ -27,6 +27,7 @@ public class PmMaRenewalResponse {
     private Boolean isLocked;
     private UUID newContractId;
     private String remark;
+    private UUID attachmentGroupId;
 
     private String createdBy;
     private Instant createdDate;

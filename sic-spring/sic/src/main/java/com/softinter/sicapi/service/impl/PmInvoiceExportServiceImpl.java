@@ -25,9 +25,12 @@ import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.service.PmInvoiceExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.ReportHelper;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +49,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
     private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
+    private final SuUploadRepository uploadRepository;
     private final DataSource dataSource;
     private final ReportServiceClient reportServiceClient;
 
@@ -103,6 +107,11 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
         parameters.put("remark", (invoice.getRemark() != null && !invoice.getRemark().isBlank())
                 ? invoice.getRemark()
                 : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน");
+        String attachmentNames = invoice.getAttachmentGroupId() != null
+                ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(invoice.getAttachmentGroupId())
+                        .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
+                : "";
+        parameters.put("attachmentNames", attachmentNames);
         parameters.put("lang", normalizedLang);
         parameters.put(net.sf.jasperreports.engine.JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

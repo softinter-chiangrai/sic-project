@@ -73,4 +73,7 @@ public class PmCustomerContract extends BaseBusinessEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", insertable = false, updatable = false)
     private PmCustomerProject project;
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 }

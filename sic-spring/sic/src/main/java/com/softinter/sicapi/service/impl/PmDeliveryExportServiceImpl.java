@@ -6,6 +6,8 @@ import com.softinter.sicapi.entity.pm.PmDelivery;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
+import com.softinter.sicapi.repository.su.SuUploadRepository;
+import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.service.PmDeliveryExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import lombok.RequiredArgsConstructor;
@@ -24,6 +26,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -33,6 +36,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
     private final PmDeliveryRepository deliveryRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
+    private final SuUploadRepository uploadRepository;
     private final DataSource dataSource;
     private final ReportServiceClient reportServiceClient;
 
@@ -75,7 +79,12 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("deliveryVersion", delivery.getDeliveryVersion() != null ? delivery.getDeliveryVersion() : "1.0.0");
         parameters.put("deliveryDate", deliveryDateStr);
         parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
-        parameters.put("deliverySummary", stripHtml(delivery.getDeliverySummary()));
+        parameters.put("deliverySummary", delivery.getDeliverySummary());
+        String attachmentNames = delivery.getAttachmentGroupId() != null
+                ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(delivery.getAttachmentGroupId())
+                        .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
+                : "";
+        parameters.put("attachmentNames", attachmentNames);
         parameters.put("lang", normalizedLang);
         parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 
@@ -108,17 +117,6 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
             log.error("Failed to generate Delivery PDF locally: {}", e.getMessage(), e);
             throw new RuntimeException("Error generating Delivery PDF: " + e.getMessage(), e);
         }
-    }
-
-    private String stripHtml(String html) {
-        if (html == null || html.isBlank()) return "-";
-        return html.replaceAll("<[^>]*>", " ")
-                   .replaceAll("&nbsp;", " ")
-                   .replaceAll("&amp;", "&")
-                   .replaceAll("&lt;", "<")
-                   .replaceAll("&gt;", ">")
-                   .replaceAll(" +", " ")
-                   .trim();
     }
 }
 

@@ -38,6 +38,7 @@ public class PmMaRenewalRequest {
     private MaRenewalStatus status = MaRenewalStatus.DRAFT;
     private UUID newContractId;
     private String remark;
+    private UUID attachmentGroupId;
 
     private Integer state;
     private Integer rowVersion;

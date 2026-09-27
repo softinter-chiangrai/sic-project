@@ -28,6 +28,7 @@ public class PmCustomerProjectResponse {
     private String priority;
     private String description;
     private Boolean isActive;
+    private UUID attachmentGroupId;
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;

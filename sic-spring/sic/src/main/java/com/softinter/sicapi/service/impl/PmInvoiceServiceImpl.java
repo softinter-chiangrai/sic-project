@@ -391,6 +391,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         }
         entity.setReceiptFileRef(req.getReceiptFileRef());
         entity.setRemark(req.getRemark());
+        entity.setAttachmentGroupId(req.getAttachmentGroupId());
     }
 
     private PmInvoiceResponse toResponse(PmInvoice entity) {
@@ -416,6 +417,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         res.setIsLocked(approvalService.isApproved("INVOICE", entity.getId()));
         res.setReceiptFileRef(entity.getReceiptFileRef());
         res.setRemark(entity.getRemark());
+        res.setAttachmentGroupId(entity.getAttachmentGroupId());
 
         if (entity.getCustomerId() != null) {
             customerRepository.findById(entity.getCustomerId())

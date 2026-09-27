@@ -127,6 +127,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setChangeLevel(normalizeChangeLevel(request.getChangeLevel()));
         cr.setTargetVersion(resolveTargetVersion(request.getTargetType(), request.getTargetId(), request.getTargetVersion(), cr.getChangeLevel()));
         cr.setAssigneeId(request.getAssigneeId());
+        cr.setAttachmentGroupId(request.getAttachmentGroupId());
         cr.setCreatedBy(currentUserService.getUserId());
         cr.setCreatedDate(Instant.now());
 
@@ -249,6 +250,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
         cr.setTargetVersion(resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), request.getTargetVersion(), cr.getChangeLevel()));
         cr.setAssigneeId(request.getAssigneeId());
+        cr.setAttachmentGroupId(request.getAttachmentGroupId());
         cr.setUpdatedBy(currentUserService.getUserId());
         cr.setUpdatedDate(Instant.now());
 
@@ -651,6 +653,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         response.setApprovedBy(cr.getApprovedBy());
         response.setApprovedAt(cr.getApprovedAt());
         response.setImplementedAt(cr.getImplementedAt());
+        response.setAttachmentGroupId(cr.getAttachmentGroupId());
         response.setCreatedDate(cr.getCreatedDate());
 
         List<PmCrAssignee> assignees = pmCrAssigneeRepository.findByChangeRequestIdAndIsDeleteFalse(cr.getId());

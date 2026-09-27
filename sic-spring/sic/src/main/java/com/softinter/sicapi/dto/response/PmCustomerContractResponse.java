@@ -27,6 +27,7 @@ public class PmCustomerContractResponse {
     private UUID parentContractId;
     private String parentContractNo;
     private Boolean isActive;
+    private UUID attachmentGroupId;
     private Integer rowVersion;
     private Instant createdDate;
 

@@ -62,6 +62,9 @@ public class PmChangeRequest extends BaseEntity {
     @Column(name = "implemented_at")
     private Instant implementedAt;
 
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
+
     @OneToMany(mappedBy = "changeRequest", cascade = CascadeType.ALL, orphanRemoval = true)
     private java.util.List<PmCrAssignee> assignees = new java.util.ArrayList<>();
 

@@ -74,4 +74,7 @@ public class PmCustomerProject extends BaseBusinessEntity {
 
     @Column(name = "is_active")
     private Boolean isActive = true;
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 }

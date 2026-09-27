@@ -46,6 +46,7 @@ public class PmMaTicketRequest {
     private LocalDate endDate;
     private String endTime;
     private String resolutionSummary;
+    private UUID attachmentGroupId;
 
     private Integer state;
     private Integer rowVersion;

@@ -33,7 +33,9 @@
                 COALESCE(ct.sign_status, '-')                AS "signStatus",
                 COALESCE(ct.renewal_status, 'NONE')          AS "renewalStatus",
                 COALESCE(ct.payment_terms, '-')              AS "paymentTerms",
-                COALESCE(ct.scope_summary, 'ไม่มีรายละเอียดขอบเขตงาน') AS "scopeSummary"
+                COALESCE(ct.scope_summary, 'ไม่มีรายละเอียดขอบเขตงาน') AS "scopeSummary",
+                (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
+                    WHERE su.upload_group_id = ct.attachment_group_id AND su.is_active = true) AS "attachmentNames"
             FROM pm_customer_contract ct
             LEFT JOIN pm_customer c ON ct.customer_id = c.id
             LEFT JOIN pm_customer_project p ON ct.id = p.contract_id
@@ -81,8 +83,24 @@
 			<expression><![CDATA[($F{contractNo} != null ? $F{contractNo} : "-") + " (" + ($F{contractType} != null ? $F{contractType} : "General") + ")"]]></expression>
 		</element>
 	</title>
+	<field name="attachmentNames" class="java.lang.String"/>
+	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
+	<dataset name="TableRowsDataset" uuid="d3a10008-d001-d001-d001-a1b2c3d4e5f6">
+		<field name="c1" class="java.lang.String"/>
+		<field name="c2" class="java.lang.String"/>
+		<field name="c3" class="java.lang.String"/>
+		<field name="c4" class="java.lang.String"/>
+		<field name="c5" class="java.lang.String"/>
+		<field name="c6" class="java.lang.String"/>
+	</dataset>
+
+	<!-- Sub-dataset ให้ List component ของรูป (base64 ที่ฝังใน rich text field) วนแบบไม่จำกัดจำนวน -->
+	<dataset name="ImageRowsDataset" uuid="d3a10008-d002-d002-d002-a1b2c3d4e5f6">
+		<field name="imageData" class="java.io.InputStream"/>
+	</dataset>
+
 	<detail>
-		<band height="320" splitType="Stretch">
+		<band height="500" splitType="Stretch">
 			<element kind="textField" uuid="9413b70e-f2c1-446e-acc7-ecd866286a1c" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "1. General Contract Information" : "1. ข้อมูลทั่วไปของสัญญา (Contract Information)")]]></expression>
 			</element>
@@ -161,10 +179,79 @@
 			<element kind="line" uuid="4bb9b92b-7e78-487a-9a8c-935796031f02" positionType="Float" x="0" y="236" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="textField" uuid="7adbba18-fdef-40ff-b62c-65499ef80b66" positionType="Float" x="0" y="244" width="515" height="26" markup="html" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+			<element kind="textField" uuid="7adbba18-fdef-40ff-b62c-65499ef80b66" positionType="Float" x="0" y="244" width="515" height="26" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
 				<paragraph lineSpacing="1_1_2" style="ContentText"/>
-				<expression><![CDATA[$F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : ($P{lang}.equals("en") ? "No additional scope details provided" : "ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม")]]></expression>
+				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.plainTextWithoutTables($F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : ($P{lang}.equals("en") ? "No additional scope details provided" : "ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม"))]]></expression>
 			</element>
+
+						<!-- Table grid extracted from any HTML <table> in this field (real List component, unlimited rows) -->
+						<element kind="component" uuid="d3a10008-1004-1004-1004-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="274" width="515" height="16">
+							<component kind="list">
+								<datasetRun uuid="d3a10008-1005-1005-1005-a1b2c3d4e5f6" subDataset="TableRowsDataset">
+									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractTableRows($F{scopeSummary}))]]></dataSourceExpression>
+								</datasetRun>
+								<contents height="16" width="515">
+								<element kind="textField" uuid="d3a10008-c000-c000-c000-a1b2c3d4e5f6" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+									<box padding="2">
+										<pen lineWidth="0.4" lineColor="#94A3B8"/>
+									</box>
+									<expression><![CDATA[$F{c1}]]></expression>
+								</element>
+								<element kind="textField" uuid="d3a10008-c010-c010-c010-a1b2c3d4e5f6" x="85" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+									<box padding="2">
+										<pen lineWidth="0.4" lineColor="#94A3B8"/>
+									</box>
+									<expression><![CDATA[$F{c2}]]></expression>
+								</element>
+								<element kind="textField" uuid="d3a10008-c020-c020-c020-a1b2c3d4e5f6" x="170" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+									<box padding="2">
+										<pen lineWidth="0.4" lineColor="#94A3B8"/>
+									</box>
+									<expression><![CDATA[$F{c3}]]></expression>
+								</element>
+								<element kind="textField" uuid="d3a10008-c030-c030-c030-a1b2c3d4e5f6" x="255" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+									<box padding="2">
+										<pen lineWidth="0.4" lineColor="#94A3B8"/>
+									</box>
+									<expression><![CDATA[$F{c4}]]></expression>
+								</element>
+								<element kind="textField" uuid="d3a10008-c040-c040-c040-a1b2c3d4e5f6" x="340" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+									<box padding="2">
+										<pen lineWidth="0.4" lineColor="#94A3B8"/>
+									</box>
+									<expression><![CDATA[$F{c5}]]></expression>
+								</element>
+								<element kind="textField" uuid="d3a10008-c050-c050-c050-a1b2c3d4e5f6" x="425" y="0" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+									<box padding="2">
+										<pen lineWidth="0.4" lineColor="#94A3B8"/>
+									</box>
+									<expression><![CDATA[$F{c6}]]></expression>
+								</element>
+								</contents>
+							</component>
+						</element>
+
+						<!-- Inline images embedded (base64) in this field, real List component, unlimited count -->
+						<element kind="component" uuid="d3a10008-2004-2004-2004-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="294" width="160" height="100">
+							<component kind="list">
+								<datasetRun uuid="d3a10008-2005-2005-2005-a1b2c3d4e5f6" subDataset="ImageRowsDataset">
+									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractInlineImageRows($F{scopeSummary}))]]></dataSourceExpression>
+								</datasetRun>
+								<contents height="100" width="160">
+									<element kind="image" uuid="d3a10008-2006-2006-2006-a1b2c3d4e5f6" x="0" y="0" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank">
+										<box padding="1">
+											<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+										</box>
+										<expression><![CDATA[$F{imageData}]]></expression>
+									</element>
+								</contents>
+							</component>
+						</element>
+
+						<!-- Uploaded evidence files (attachmentGroupId/uploadGroupId) -->
+						<element kind="textField" uuid="d3a10008-3007-3007-3007-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="FooterText">
+							<expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression>
+						</element>
 		</band>
 	</detail>
 	<pageFooter height="30">

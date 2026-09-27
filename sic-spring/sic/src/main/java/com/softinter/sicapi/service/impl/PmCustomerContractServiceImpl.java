@@ -269,6 +269,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setRenewalStatus(request.getRenewalStatus());
         contract.setParentContractId(request.getParentContractId());
         contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        contract.setAttachmentGroupId(request.getAttachmentGroupId());
 
         // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติ/ลงนามแล้ว หรือกำลังรออนุมัติอยู่
         // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
@@ -523,6 +524,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                     .ifPresent(p -> dto.setParentContractNo(p.getContractNo()));
         }
         dto.setIsActive(contract.getIsActive());
+        dto.setAttachmentGroupId(contract.getAttachmentGroupId());
         dto.setRowVersion(contract.getRowVersion());
         dto.setCreatedDate(contract.getCreatedDate());
 

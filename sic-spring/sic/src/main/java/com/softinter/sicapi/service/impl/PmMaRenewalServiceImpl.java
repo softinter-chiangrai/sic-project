@@ -304,6 +304,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         entity.setStatus(req.getStatus() != null ? req.getStatus() : MaRenewalStatus.DRAFT);
         entity.setNewContractId(req.getNewContractId());
         entity.setRemark(req.getRemark());
+        entity.setAttachmentGroupId(req.getAttachmentGroupId());
     }
 
     private PmMaRenewalResponse toResponse(PmMaRenewal entity) {
@@ -322,6 +323,7 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
         res.setIsLocked(approvalService.isApproved("MA_RENEWAL", entity.getId()));
         res.setNewContractId(entity.getNewContractId());
         res.setRemark(entity.getRemark());
+        res.setAttachmentGroupId(entity.getAttachmentGroupId());
 
         if (entity.getContractId() != null) {
             contractRepository.findById(entity.getContractId())

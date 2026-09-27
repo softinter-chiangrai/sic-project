@@ -46,4 +46,5 @@ public class PmCustomerContractRequest {
     private String renewalStatus;
     private UUID parentContractId;
     private Boolean isActive;
+    private UUID attachmentGroupId;
 }

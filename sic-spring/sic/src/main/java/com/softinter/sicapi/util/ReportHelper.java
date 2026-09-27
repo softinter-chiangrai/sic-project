@@ -134,6 +134,15 @@ public class ReportHelper {
     }
 
     /**
+     * ใช้แทนการส่ง HTML ดิบเข้า markup="html" ตรงๆ (ซึ่งไม่รู้จัก table/img/ul/ol และตัดทิ้งเงียบๆ)
+     * สำหรับ field ที่ไม่มีหัวข้อ section แยก (ต่างจาก formatSection ที่ผูกหัวข้อไว้ด้วย) —
+     * ใช้คู่กับ List component ต่างหากสำหรับตาราง/รูปที่ดึงออกจาก html เดียวกัน
+     */
+    public static String plainTextWithoutTables(String rawHtml) {
+        return htmlToPlainText(stripTables(rawHtml));
+    }
+
+    /**
      * ตัด &lt;table&gt;...&lt;/table&gt; ออกจาก HTML เพื่อไม่ให้เนื้อหาตารางถูกดึงไปแสดงปนกับ
      * ข้อความธรรมดา (ตารางจะถูกแยกไปเรนเดอร์เป็นกริดจริงต่างหากผ่าน {@link #extractTableRows(String)})
      */
@@ -189,30 +198,28 @@ public class ReportHelper {
     }
 
     /**
-     * ใช้คู่กับ printWhenExpression ใน jrxml: บอกว่าตารางใน html มีแถวที่ rowIndex อยู่จริงไหม
-     * (ช่องกริดที่ตั้งไว้ล่วงหน้าเกินจำนวนแถวจริงจะถูกซ่อนไปเลย ไม่ใช่โชว์ว่างๆ)
+     * แปลงรูปฝัง (base64) ทั้งหมดใน html เป็น bean ให้ JasperReports bind เป็น datasource ของ
+     * List component ได้ (แถวไม่จำกัดจำนวน ต่างจาก imageStreamAt/hasImageAt แบบเดิมที่จำกัดที่ 4 ช่อง)
      */
-    public static boolean hasTableRow(String html, int rowIndex) {
-        return rowIndex < extractTableRows(html).size();
+    public static List<ImageRow> extractInlineImageRows(String html) {
+        List<ImageRow> rows = new ArrayList<>();
+        for (byte[] data : extractInlineImages(html)) {
+            rows.add(new ImageRow(data));
+        }
+        return rows;
     }
 
-    /** ข้อความในเซลล์ (rowIndex, colIndex) ของตารางแรกใน html คืนค่าว่างถ้าไม่มีจริง (colIndex 0-5) */
-    public static String tableCell(String html, int rowIndex, int colIndex) {
-        List<TableRow> rows = extractTableRows(html);
-        if (rowIndex < 0 || rowIndex >= rows.size()) return "";
-        return rows.get(rowIndex).cellAt(colIndex);
-    }
+    /** Bean รูปภาพหนึ่งรูป ให้ JasperReports bind เป็น datasource ของ List component ได้ */
+    public static class ImageRow {
+        private final byte[] data;
 
-    /** ใช้คู่กับ printWhenExpression: บอกว่ามีรูปฝัง (base64) ลำดับที่ index ใน html ไหม */
-    public static boolean hasImageAt(String html, int index) {
-        return index < extractInlineImages(html).size();
-    }
+        public ImageRow(byte[] data) {
+            this.data = data;
+        }
 
-    /** InputStream ของรูปฝังลำดับที่ index (สำหรับ element kind="image" ใน jrxml) หรือ null ถ้าไม่มี */
-    public static java.io.InputStream imageStreamAt(String html, int index) {
-        List<byte[]> images = extractInlineImages(html);
-        if (index < 0 || index >= images.size()) return null;
-        return new java.io.ByteArrayInputStream(images.get(index));
+        public java.io.InputStream getImageData() {
+            return new java.io.ByteArrayInputStream(data);
+        }
     }
 
     /** Bean แถวตาราง (สูงสุด 6 คอลัมน์) ให้ JasperReports bind เป็น datasource ของ List component ได้ */

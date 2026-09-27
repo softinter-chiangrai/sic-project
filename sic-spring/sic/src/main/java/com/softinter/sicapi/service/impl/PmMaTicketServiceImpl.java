@@ -344,6 +344,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         entity.setEndDate(req.getEndDate());
         entity.setEndTime(req.getEndTime());
         entity.setResolutionSummary(req.getResolutionSummary());
+        entity.setAttachmentGroupId(req.getAttachmentGroupId());
     }
 
     private void saveAssignees(PmMaTicket ticket, List<String> assigneeIds) {
@@ -393,6 +394,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         res.setEndDate(entity.getEndDate());
         res.setEndTime(entity.getEndTime());
         res.setResolutionSummary(entity.getResolutionSummary());
+        res.setAttachmentGroupId(entity.getAttachmentGroupId());
 
         if (entity.getCustomerId() != null) {
             customerRepository.findById(entity.getCustomerId())

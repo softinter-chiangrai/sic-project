@@ -49,4 +49,7 @@ public class PmMaRenewal extends BaseBusinessEntity {
 
     @Column(name = "remark", columnDefinition = "TEXT")
     private String remark;
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 }

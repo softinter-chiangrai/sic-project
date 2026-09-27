@@ -29,6 +29,7 @@ public class ChangeRequestResponse {
     private String approvedBy;
     private Instant approvedAt;
     private Instant implementedAt;
+    private UUID attachmentGroupId;
     private Instant createdDate;
     private List<CrAssigneeResponse> assignees;
     private List<ChangeImpactResponse> impacts;

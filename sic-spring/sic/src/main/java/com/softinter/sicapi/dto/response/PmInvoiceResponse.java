@@ -37,6 +37,7 @@ public class PmInvoiceResponse {
     private Boolean isLocked;
     private String receiptFileRef;
     private String remark;
+    private UUID attachmentGroupId;
 
     private List<PmInvoiceItemResponse> items;
 

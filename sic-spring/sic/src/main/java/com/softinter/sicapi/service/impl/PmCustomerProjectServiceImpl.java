@@ -78,6 +78,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         project.setPriority(request.getPriority() != null ? request.getPriority() : "Medium");
         project.setDescription(request.getDescription());
         project.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
+        project.setAttachmentGroupId(request.getAttachmentGroupId());
 
         project = projectRepository.saveAndFlush(project);
 
@@ -143,6 +144,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         if (request.getIsActive() != null) {
             project.setIsActive(request.getIsActive());
         }
+        project.setAttachmentGroupId(request.getAttachmentGroupId());
 
         project = projectRepository.save(project);
 
@@ -448,6 +450,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         response.setPriority(project.getPriority());
         response.setDescription(project.getDescription());
         response.setIsActive(project.getIsActive());
+        response.setAttachmentGroupId(project.getAttachmentGroupId());
         response.setCreatedDate(project.getCreatedDate());
         response.setUpdatedDate(project.getUpdatedDate());
         response.setRowVersion(project.getRowVersion());

@@ -26,4 +26,5 @@ public class ChangeRequestRequest {
     private String targetVersion;
     private String changeLevel; // PATCH | MINOR | MAJOR
     private String status;
+    private UUID attachmentGroupId;
 }

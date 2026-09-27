@@ -40,6 +40,7 @@ public class PmMaTicketResponse {
     private LocalDate endDate;
     private String endTime;
     private String resolutionSummary;
+    private UUID attachmentGroupId;
 
     private String createdBy;
     private Instant createdDate;

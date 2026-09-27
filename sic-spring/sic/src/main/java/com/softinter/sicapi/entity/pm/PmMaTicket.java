@@ -83,4 +83,7 @@ public class PmMaTicket extends BaseBusinessEntity {
 
     @Column(name = "resolution_summary", columnDefinition = "TEXT")
     private String resolutionSummary;
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 }

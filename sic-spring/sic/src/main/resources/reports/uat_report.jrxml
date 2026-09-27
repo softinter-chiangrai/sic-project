@@ -91,6 +91,21 @@
 	<field name="tester" class="java.lang.String"/>
 	<field name="attachmentNames" class="java.lang.String"/>
 
+	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML &lt;table&gt; ใน actualResult) วนแบบไม่จำกัดแถว -->
+	<dataset name="TableRowsDataset" uuid="d1a2b3c4-0001-0001-0001-a1b2c3d4e5f6">
+		<field name="c1" class="java.lang.String"/>
+		<field name="c2" class="java.lang.String"/>
+		<field name="c3" class="java.lang.String"/>
+		<field name="c4" class="java.lang.String"/>
+		<field name="c5" class="java.lang.String"/>
+		<field name="c6" class="java.lang.String"/>
+	</dataset>
+
+	<!-- Sub-dataset ให้ List component ของรูป (base64 ที่ฝังใน actualResult) วนแบบไม่จำกัดจำนวน -->
+	<dataset name="ImageRowsDataset" uuid="d1a2b3c4-0002-0002-0002-a1b2c3d4e5f6">
+		<field name="imageData" class="java.io.InputStream"/>
+	</dataset>
+
 	<!-- ========================================================
          GROUP: Scenario Header
          ======================================================== -->
@@ -258,320 +273,68 @@
 				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.formatSection($P{lang}.equals("en") ? "Actual Result:" : "ผลลัพธ์ที่ได้จริง (Actual Result):", $F{actualResult})]]></expression>
 			</element>
 
-			<!-- 4b. Table grid extracted from any HTML <table> pasted into Actual Result (real bordered grid, up to 8 rows x 6 cols) -->
-			<element kind="textField" uuid="ce110000-0000-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="108" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 0))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 0, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0000-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="108" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 0))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 0, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0000-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="108" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 0))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 0, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0000-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="108" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 0))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 0, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0000-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="108" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 0))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 0, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0000-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="108" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 0))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 0, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0001-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="124" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 1))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 1, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0001-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="124" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 1))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 1, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0001-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="124" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 1))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 1, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0001-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="124" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 1))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 1, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0001-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="124" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 1))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 1, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0001-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="124" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 1))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 1, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0002-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="140" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 2))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 2, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0002-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="140" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 2))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 2, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0002-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="140" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 2))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 2, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0002-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="140" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 2))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 2, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0002-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="140" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 2))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 2, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0002-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="140" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 2))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 2, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0003-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="156" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 3))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 3, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0003-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="156" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 3))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 3, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0003-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="156" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 3))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 3, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0003-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="156" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 3))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 3, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0003-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="156" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 3))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 3, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0003-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="156" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 3))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 3, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0004-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="172" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 4))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 4, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0004-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="172" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 4))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 4, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0004-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="172" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 4))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 4, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0004-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="172" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 4))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 4, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0004-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="172" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 4))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 4, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0004-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="172" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 4))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 4, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0005-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="188" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 5))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 5, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0005-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="188" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 5))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 5, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0005-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="188" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 5))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 5, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0005-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="188" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 5))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 5, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0005-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="188" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 5))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 5, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0005-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="188" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 5))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 5, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0006-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="204" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 6))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 6, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0006-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="204" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 6))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 6, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0006-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="204" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 6))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 6, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0006-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="204" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 6))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 6, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0006-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="204" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 6))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 6, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0006-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="204" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 6))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 6, 5)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0007-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="220" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 7))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 7, 0)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0007-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="89" y="220" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 7))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 7, 1)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0007-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="174" y="220" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 7))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 7, 2)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0007-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="259" y="220" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 7))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 7, 3)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0007-0004-a1b2-c3d4e5f6a7b8" positionType="Float" x="344" y="220" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 7))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 7, 4)]]></expression>
-			</element>
-			<element kind="textField" uuid="ce110000-0007-0005-a1b2-c3d4e5f6a7b8" positionType="Float" x="429" y="220" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasTableRow($F{actualResult}, 7))">
-				<box padding="2">
-					<pen lineWidth="0.4" lineColor="#94A3B8"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.tableCell($F{actualResult}, 7, 5)]]></expression>
+			<!-- 4b. Table grid extracted from any HTML <table> pasted into Actual Result (real List component, unlimited rows) -->
+			<element kind="component" uuid="d1a2b3c4-1004-1004-1004-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="4" y="108" width="507" height="16">
+				<component kind="list">
+					<datasetRun uuid="d1a2b3c4-1005-1005-1005-a1b2c3d4e5f6" subDataset="TableRowsDataset">
+						<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractTableRows($F{actualResult}))]]></dataSourceExpression>
+					</datasetRun>
+					<contents height="16" width="507">
+						<element kind="textField" uuid="d1a2b3c4-1000-1003-1003-a1b2c3d4e5f6" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+						</element>
+						<element kind="textField" uuid="d1a2b3c4-1001-1003-1003-a1b2c3d4e5f6" x="85" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c2}]]></expression>
+						</element>
+						<element kind="textField" uuid="d1a2b3c4-1002-1003-1003-a1b2c3d4e5f6" x="170" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c3}]]></expression>
+						</element>
+						<element kind="textField" uuid="d1a2b3c4-1003-1003-1003-a1b2c3d4e5f6" x="255" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c4}]]></expression>
+						</element>
+						<element kind="textField" uuid="d1a2b3c4-1004-1003-1003-a1b2c3d4e5f6" x="340" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c5}]]></expression>
+						</element>
+						<element kind="textField" uuid="d1a2b3c4-1005-1003-1003-a1b2c3d4e5f6" x="425" y="0" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c6}]]></expression>
+						</element>
+					</contents>
+				</component>
 			</element>
 
-			<!-- 4c. Inline images pasted directly into Actual Result (base64 in tiptap), stacked vertically, up to 4 -->
-			<element kind="image" uuid="ce220000-0000-0000-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="245" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasImageAt($F{actualResult}, 0))">
-				<box padding="1">
-					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.imageStreamAt($F{actualResult}, 0)]]></expression>
-			</element>
-			<element kind="image" uuid="ce220000-0000-0001-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="351" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasImageAt($F{actualResult}, 1))">
-				<box padding="1">
-					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.imageStreamAt($F{actualResult}, 1)]]></expression>
-			</element>
-			<element kind="image" uuid="ce220000-0000-0002-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="457" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasImageAt($F{actualResult}, 2))">
-				<box padding="1">
-					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.imageStreamAt($F{actualResult}, 2)]]></expression>
-			</element>
-			<element kind="image" uuid="ce220000-0000-0003-a1b2-c3d4e5f6a7b8" positionType="Float" x="4" y="563" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank" printWhenExpression="java.lang.Boolean.valueOf(com.softinter.sicapi.util.ReportHelper.hasImageAt($F{actualResult}, 3))">
-				<box padding="1">
-					<pen lineWidth="0.5" lineColor="#CBD5E1"/>
-				</box>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.imageStreamAt($F{actualResult}, 3)]]></expression>
+			<!-- 4c. Inline images pasted directly into Actual Result (base64 in tiptap), real List component, unlimited count -->
+			<element kind="component" uuid="d1a2b3c4-2004-2004-2004-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="4" y="130" width="160" height="100">
+				<component kind="list">
+					<datasetRun uuid="d1a2b3c4-2005-2005-2005-a1b2c3d4e5f6" subDataset="ImageRowsDataset">
+						<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractInlineImageRows($F{actualResult}))]]></dataSourceExpression>
+					</datasetRun>
+					<contents height="100" width="160">
+						<element kind="image" uuid="d1a2b3c4-2006-2006-2006-a1b2c3d4e5f6" x="0" y="0" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank">
+							<box padding="1">
+								<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+							</box>
+							<expression><![CDATA[$F{imageData}]]></expression>
+						</element>
+					</contents>
+				</component>
 			</element>
 
 			<!-- 4d. Uploaded evidence files (attachmentGroupId) -->
