@@ -210,6 +210,23 @@
             ></sic-tiptap-editor>
           </div>
         }
+
+        <!-- หลักฐานผลการทดสอบ (ภาพหน้าจอ, log, เอกสารแนบ) -->
+        @if (isExecution() || isView()) {
+          <div>
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-sm font-medium text-[var(--text-active)]">
+                {{ 'PMDT12A_TEST_EVIDENCE_LABEL' | translate }}
+              </span>
+            </div>
+            <sic-upload
+              formControlName="attachmentGroupId"
+              [uploadGroupId]="formData.form.controls['attachmentGroupId']?.value || null"
+              [disabled]="isView() || (isExecution() && !isTaskReadyForTest())"
+              [maxFiles]="10">
+            </sic-upload>
+          </div>
+        }
       </div>
 
       <!-- Section 4: สถานะและผู้ทดสอบ (แสดงเฉพาะตอน Test Execution หรือ View) -->

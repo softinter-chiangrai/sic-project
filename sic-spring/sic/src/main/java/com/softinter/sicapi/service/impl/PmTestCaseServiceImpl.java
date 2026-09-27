@@ -271,6 +271,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         entity.setRelatedRequirement(req.getRelatedRequirement());
         entity.setRelatedSpec(req.getRelatedSpec());
         entity.setRelatedTask(req.getRelatedTask());
+        entity.setAttachmentGroupId(req.getAttachmentGroupId());
     }
 
     private PmTestCaseResponse toResponse(PmTestCase entity) {
@@ -297,6 +298,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         res.setRelatedRequirement(entity.getRelatedRequirement());
         res.setRelatedSpec(entity.getRelatedSpec());
         res.setRelatedTask(entity.getRelatedTask());
+        res.setAttachmentGroupId(entity.getAttachmentGroupId());
         res.setTaskId(entity.getTaskId());
         if (entity.getTaskId() != null) {
             taskRepository.findById(entity.getTaskId()).ifPresent(task -> {

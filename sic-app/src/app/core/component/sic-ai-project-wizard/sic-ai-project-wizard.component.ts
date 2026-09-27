@@ -1,11 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS } from '../../config/ai-models.config';
 import { AiModelsService } from '../../services/ai-models.service';
 import {
+  AiPipelineJob,
   AiPipelineJobStep,
   AiProjectPipelinePreviewResponse,
   AiProjectPipelineRequest,
@@ -56,6 +57,22 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   readonly jobSteps = signal<AiPipelineJobStep[]>([]);
   private pollTimer: ReturnType<typeof setInterval> | null = null;
 
+  // Label ของโมดูลที่ AI กำลังทำอยู่ตอนนี้ (แสดงใต้ step "3. สร้างข้อมูลทั้งหมด")
+  readonly currentModuleLabel = computed<string | null>(() => {
+    const steps = this.jobSteps();
+    if (!steps.length) return 'กำลังเริ่มต้น...';
+    const running = steps.find((s) => s.status === 'RUNNING');
+    if (running) return `กำลังสร้าง: ${running.label}`;
+    const doneCount = steps.filter((s) => s.status === 'DONE').length;
+    const failedCount = steps.filter((s) => s.status === 'FAILED').length;
+    return `เสร็จแล้ว ${doneCount}/${steps.length} ขั้นตอน${failedCount ? ` (พลาด ${failedCount})` : ''}`;
+  });
+
+  // รายการ step ที่ล้มเหลว/ถูกข้าม พร้อมเหตุผล ใช้แสดงในหน้าสรุปผล (step 4) เพื่อให้รู้ว่าโมดูลไหนไม่ถูกสร้างและเพราะอะไร
+  readonly failedSteps = computed(() =>
+    this.jobSteps().filter((s) => s.status === 'FAILED' || s.status === 'SKIPPED'),
+  );
+
   readonly countLabels: Record<string, string> = {
     project: 'Project',
     contract: 'สัญญา',
@@ -78,6 +95,24 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   // Execution result
   readonly createdProjectId = signal<string | null>(null);
   readonly createdCounts = signal<Record<string, number>>({});
+
+  // ประวัติการสร้างโปรเจกต์ด้วย AI (แสดงจากปุ่มนาฬิกาบน header)
+  readonly showHistory = signal<boolean>(false);
+  readonly historyLoading = signal<boolean>(false);
+  readonly historyItems = signal<AiPipelineJob[]>([]);
+  readonly historyTotalPages = signal<number>(0);
+  readonly historyPage = signal<number>(0);
+  readonly selectedHistoryJob = signal<AiPipelineJob | null>(null);
+  readonly selectedHistoryFailedSteps = computed(() =>
+    (this.selectedHistoryJob()?.steps || []).filter((s) => s.status === 'FAILED' || s.status === 'SKIPPED'),
+  );
+
+  readonly statusLabels: Record<string, string> = {
+    RUNNING: 'กำลังทำงาน',
+    COMPLETED: 'สำเร็จทั้งหมด',
+    COMPLETED_WITH_ERRORS: 'สำเร็จบางส่วน',
+    FAILED: 'ไม่สำเร็จ',
+  };
 
   get availableModels() {
     return this.aiModelsSvc.models();
@@ -242,5 +277,48 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     this.projectName.set('');
     this.attachedFiles.set([]);
     this.previewData.set(null);
+    this.showHistory.set(false);
+    this.selectedHistoryJob.set(null);
+  }
+
+  openHistory(): void {
+    this.showHistory.set(true);
+    this.selectedHistoryJob.set(null);
+    this.loadHistory(0);
+  }
+
+  closeHistory(): void {
+    this.showHistory.set(false);
+    this.selectedHistoryJob.set(null);
+  }
+
+  loadHistory(page: number): void {
+    this.historyLoading.set(true);
+    this.historyPage.set(page);
+    this.pipelineSvc.listJobHistory(page, 10).subscribe({
+      next: (res) => {
+        this.historyItems.set(res.content || []);
+        this.historyTotalPages.set(res.totalPages || 0);
+        this.historyLoading.set(false);
+      },
+      error: () => {
+        this.historyLoading.set(false);
+        this.dialog.error('ข้อผิดพลาด', 'ไม่สามารถโหลดประวัติการสร้างโครงการได้');
+      },
+    });
+  }
+
+  viewHistoryDetail(job: AiPipelineJob): void {
+    this.selectedHistoryJob.set(job);
+  }
+
+  backToHistoryList(): void {
+    this.selectedHistoryJob.set(null);
+  }
+
+  goToHistoryProject(job: AiPipelineJob): void {
+    if (!job.projectId) return;
+    this.close();
+    this.router.navigate(['/pm/dt/pmdt01A'], { queryParams: { id: job.projectId } });
   }
 }

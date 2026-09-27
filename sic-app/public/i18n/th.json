@@ -2365,6 +2365,7 @@
   "PMDT12A_ACTUAL_RESULT_FOUND_LABEL": "ผลการทดสอบจริงที่พบ",
   "PMDT12A_ACTUAL_RESULT_LABEL": "ผลลัพธ์ที่ได้จริง",
   "PMDT12A_ACTUAL_RESULT_PLACEHOLDER": "ผลลัพธ์ที่ได้จริง",
+  "PMDT12A_TEST_EVIDENCE_LABEL": "หลักฐานผลการทดสอบ (ภาพหน้าจอ, log, เอกสารแนบ)",
   "PMDT12A_ADD_NEW_TEST_CASE": "เพิ่ม Test Case",
   "PMDT12A_AI_ANALYZING": "กำลังวิเคราะห์และร่างขั้นตอนการทดสอบ",
   "PMDT12A_AI_CONNECTION_ERROR_MSG": "ไม่สามารถเชื่อมต่อกับบริการ AI Test Assistant ได้",

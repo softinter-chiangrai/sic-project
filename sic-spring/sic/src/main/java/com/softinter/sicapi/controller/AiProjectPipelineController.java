@@ -2,10 +2,12 @@ package com.softinter.sicapi.controller;
 
 import java.util.UUID;
 
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.softinter.sicapi.dto.request.AiProjectPipelineRequest;
@@ -64,5 +66,14 @@ public class AiProjectPipelineController {
     public ResponseEntity<AiPipelineJobResponse> getJob(@PathVariable UUID jobId) {
         AiPipelineJobResponse job = jobService.get(jobId);
         return job == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(job);
+    }
+
+    @GetMapping("/jobs")
+    @Operation(summary = "ดูประวัติการสร้างโครงการด้วย AI Full-Project Generator ทั้งหมด (ล่าสุดก่อน)")
+    public ResponseEntity<Page<AiPipelineJobResponse>> listJobs(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        UUID businessId = currentUserService.getBusinessId();
+        return ResponseEntity.ok(jobService.list(businessId, page, size));
     }
 }

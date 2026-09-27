@@ -16,6 +16,9 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.concurrent.DelegatingSecurityContextExecutorService;
 import org.springframework.stereotype.Service;
 
@@ -53,7 +56,9 @@ import com.softinter.sicapi.entity.enums.MaTicketSeverity;
 import com.softinter.sicapi.entity.enums.MaTicketType;
 import com.softinter.sicapi.util.DrawioXmlBuilder;
 import com.softinter.sicapi.entity.enums.EntityState;
+import com.softinter.sicapi.entity.pm.AiPipelineJob;
 import com.softinter.sicapi.entity.pm.PmCustomer;
+import com.softinter.sicapi.repository.pm.AiPipelineJobRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.service.MilestoneService;
 import com.softinter.sicapi.service.PhaseService;
@@ -106,6 +111,7 @@ public class AiProjectPipelineJobService {
     private final PmMaTicketService maTicketService;
     private final PmMaRenewalService maRenewalService;
     private final TraceLinkService traceLinkService;
+    private final AiPipelineJobRepository jobRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<UUID, Job> jobs = new ConcurrentHashMap<>();
@@ -142,6 +148,7 @@ public class AiProjectPipelineJobService {
     private static class Job {
         final UUID id = UUID.randomUUID();
         final long createdAt = System.currentTimeMillis();
+        final java.time.Instant createdDate = java.time.Instant.now();
         final List<StepState> steps = new ArrayList<>();
         final Map<String, Integer> counts = new ConcurrentHashMap<>();
         volatile String status = "RUNNING";
@@ -149,6 +156,9 @@ public class AiProjectPipelineJobService {
         volatile String projectCode;
         volatile String projectName;
         volatile String message;
+        volatile String prompt;
+        volatile Integer durationWeeks;
+        volatile String aiModel;
     }
 
     private record Ref(UUID id, String name) {
@@ -182,6 +192,10 @@ public class AiProjectPipelineJobService {
     public UUID start(AiProjectPipelineRequest request, UUID businessId, String userId) {
         purgeOldJobs();
         Job job = new Job();
+        job.prompt = request.getPrompt();
+        job.durationWeeks = request.getDurationWeeks();
+        job.aiModel = request.getModel();
+        job.projectName = request.getProjectName();
         job.steps.add(new StepState("PROJECT", "สร้างโครงการ"));
         if (on(request.getIncludeContract())) job.steps.add(new StepState("CONTRACT", "สัญญา"));
         if (on(request.getIncludeGanttPhases())) job.steps.add(new StepState("WBS", "Phase / Milestone / Work Package"));
@@ -196,6 +210,7 @@ public class AiProjectPipelineJobService {
         if (on(request.getIncludeInvoices())) job.steps.add(new StepState("INVOICE", "ใบแจ้งหนี้ (ร่าง)"));
         if (on(request.getIncludeMa())) job.steps.add(new StepState("MA", "MA Ticket / ต่ออายุ MA"));
         jobs.put(job.id, job);
+        persistJob(job, businessId, userId, request);
 
         executor.submit(() -> run(job, request, businessId, userId));
         return job.id;
@@ -203,7 +218,31 @@ public class AiProjectPipelineJobService {
 
     public AiPipelineJobResponse get(UUID jobId) {
         Job job = jobs.get(jobId);
-        if (job == null) return null;
+        if (job != null) return toResponse(job);
+        return jobRepository.findById(jobId).map(this::toResponse).orElse(null);
+    }
+
+    /** ประวัติการสร้างโครงการด้วย AI ทั้งหมดของ business นี้ (ล่าสุดก่อน) ใช้แสดงในหน้าประวัติของ wizard */
+    public Page<AiPipelineJobResponse> list(UUID businessId, int page, int size) {
+        Pageable pageable = PageRequest.of(Math.max(page, 0), Math.min(Math.max(size, 1), 100));
+        return jobRepository.findByBusinessIdAndIsDeleteFalseOrderByCreatedDateDesc(businessId, pageable)
+                .map(this::toResponse);
+    }
+
+    /** ถ้า backend ถูก restart กลางคัน job ที่ค้างสถานะ RUNNING ใน DB จะไม่มีวัน finish อีก มาร์คเป็น FAILED ให้ผู้ใช้เห็นว่าโดนขัดจังหวะ */
+    @jakarta.annotation.PostConstruct
+    void markInterruptedJobsAsFailed() {
+        List<AiPipelineJob> stale = jobRepository.findByStatusAndIsDeleteFalse("RUNNING");
+        if (stale.isEmpty()) return;
+        for (AiPipelineJob e : stale) {
+            e.setStatus("FAILED");
+            e.setFinished(true);
+            e.setMessage("การสร้างโครงการถูกขัดจังหวะเนื่องจากระบบรีสตาร์ทระหว่างดำเนินการ กรุณาลองสร้างใหม่อีกครั้ง");
+        }
+        jobRepository.saveAll(stale);
+    }
+
+    private AiPipelineJobResponse toResponse(Job job) {
         List<AiPipelineJobResponse.Step> steps = new ArrayList<>();
         for (StepState s : job.steps) {
             steps.add(AiPipelineJobResponse.Step.builder().key(s.key).label(s.label).status(s.status).count(s.count).message(s.message).build());
@@ -212,7 +251,65 @@ public class AiProjectPipelineJobService {
                 .jobId(job.id).status(job.status).finished(!"RUNNING".equals(job.status))
                 .projectId(job.projectId).projectCode(job.projectCode).projectName(job.projectName)
                 .steps(steps).createdCounts(new LinkedHashMap<>(job.counts)).message(job.message)
+                .prompt(job.prompt).durationWeeks(job.durationWeeks).aiModel(job.aiModel).createdDate(job.createdDate)
                 .build();
+    }
+
+    private AiPipelineJobResponse toResponse(AiPipelineJob entity) {
+        List<AiPipelineJobResponse.Step> steps = new ArrayList<>();
+        if (entity.getSteps() != null) {
+            for (Map<String, Object> m : entity.getSteps()) {
+                steps.add(AiPipelineJobResponse.Step.builder()
+                        .key(String.valueOf(m.get("key")))
+                        .label(String.valueOf(m.get("label")))
+                        .status(String.valueOf(m.get("status")))
+                        .count(m.get("count") == null ? 0 : ((Number) m.get("count")).intValue())
+                        .message(m.get("message") == null ? null : String.valueOf(m.get("message")))
+                        .build());
+            }
+        }
+        return AiPipelineJobResponse.builder()
+                .jobId(entity.getId()).status(entity.getStatus()).finished(Boolean.TRUE.equals(entity.getFinished()))
+                .projectId(entity.getProjectId()).projectCode(entity.getProjectCode()).projectName(entity.getProjectName())
+                .steps(steps).createdCounts(entity.getCounts() == null ? new LinkedHashMap<>() : entity.getCounts())
+                .message(entity.getMessage())
+                .prompt(entity.getPrompt()).durationWeeks(entity.getDurationWeeks()).aiModel(entity.getAiModel())
+                .createdDate(entity.getCreatedDate())
+                .build();
+    }
+
+    private void persistJob(Job job, UUID businessId, String userId, AiProjectPipelineRequest request) {
+        try {
+            AiPipelineJob entity = jobRepository.findById(job.id).orElseGet(AiPipelineJob::new);
+            entity.setId(job.id);
+            entity.setBusinessId(businessId);
+            entity.setCreatedByUserId(userId);
+            entity.setProjectName(job.projectName != null ? job.projectName : request.getProjectName());
+            entity.setPrompt(request.getPrompt());
+            entity.setDurationWeeks(request.getDurationWeeks());
+            entity.setAiModel(request.getModel());
+            entity.setStatus(job.status);
+            entity.setMessage(job.message);
+            entity.setProjectId(job.projectId);
+            entity.setProjectCode(job.projectCode);
+            entity.setFinished(!"RUNNING".equals(job.status));
+
+            List<Map<String, Object>> stepsJson = new ArrayList<>();
+            for (StepState s : job.steps) {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("key", s.key);
+                m.put("label", s.label);
+                m.put("status", s.status);
+                m.put("count", s.count);
+                m.put("message", s.message);
+                stepsJson.add(m);
+            }
+            entity.setSteps(stepsJson);
+            entity.setCounts(new LinkedHashMap<>(job.counts));
+            jobRepository.save(entity);
+        } catch (Exception e) {
+            log.error("Failed to persist AI pipeline job history {}", job.id, e);
+        }
     }
 
     // ===================== orchestration =====================
@@ -259,12 +356,15 @@ public class AiProjectPipelineJobService {
                         markRemainingSkipped(job);
                         job.status = "FAILED";
                         job.message = "สร้างโครงการไม่สำเร็จ: " + e.getMessage();
+                        persistJob(job, businessId, userId, request);
                         return;
                     }
                 }
+                persistJob(job, businessId, userId, request);
             }
             job.status = anyFailed ? "COMPLETED_WITH_ERRORS" : "COMPLETED";
             job.message = anyFailed ? "สร้างเสร็จบางส่วน มีบางขั้นตอนไม่สำเร็จ ตรวจสอบรายละเอียดในแต่ละขั้น" : "สร้างโครงการและโมดูลทั้งหมดสำเร็จ พร้อมให้ตรวจสอบ";
+            persistJob(job, businessId, userId, request);
         } finally {
             BusinessContextHolder.clear();
         }

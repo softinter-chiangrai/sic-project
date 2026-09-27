@@ -104,6 +104,18 @@ export interface AiPipelineJob {
   steps: AiPipelineJobStep[];
   createdCounts: Record<string, number>;
   message?: string | null;
+  prompt?: string | null;
+  durationWeeks?: number | null;
+  aiModel?: string | null;
+  createdDate?: string | null;
+}
+
+export interface AiPipelineJobPage {
+  content: AiPipelineJob[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -137,5 +149,9 @@ export class AiProjectPipelineService {
 
   executePipeline(request: AiProjectPipelineRequest): Observable<AiProjectPipelineExecuteResponse> {
     return this.http.post<AiProjectPipelineExecuteResponse>(`${this.apiBase}/api/pm/ai/pipeline/execute`, request);
+  }
+
+  listJobHistory(page = 0, size = 20): Observable<AiPipelineJobPage> {
+    return this.http.get<AiPipelineJobPage>(`${this.apiBase}/api/pm/ai/pipeline/jobs`, { params: { page, size } });
   }
 }

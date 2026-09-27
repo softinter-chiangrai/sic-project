@@ -25,6 +25,7 @@ public class PmTestCaseResponse {
     private String relatedRequirement;
     private String relatedSpec;
     private String relatedTask;
+    private UUID attachmentGroupId;
     private UUID taskId;
     private String taskCode;
     private String taskName;

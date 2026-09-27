@@ -44,6 +44,7 @@ public class PmTestCaseRequest {
     private String relatedRequirement;
     private String relatedSpec;
     private String relatedTask;
+    private UUID attachmentGroupId;
 
     // ===== Traceability =====
     private UUID taskId;   // เชื่อมกับ Task

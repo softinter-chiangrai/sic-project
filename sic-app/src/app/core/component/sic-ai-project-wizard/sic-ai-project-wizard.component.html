@@ -12,9 +12,86 @@
         <p class="ai-wizard-subheading">สร้างโครงสร้างโปรเจกต์และโมดูลเชื่อมโยงครบวงจรด้วย AI ภายในคลิกเดียว</p>
       </div>
     </div>
-    <button type="button" class="ai-wizard-close-btn" (click)="close()">
-      <i class="bi bi-x-lg"></i>
-    </button>
+    <div class="ai-wizard-header-actions">
+      <button type="button" class="ai-wizard-history-btn" title="ประวัติการสร้างโครงการ" (click)="openHistory()">
+        <i class="bi bi-clock-history"></i> ประวัติ
+      </button>
+      <button type="button" class="ai-wizard-close-btn" (click)="close()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- History Panel (overlay) -->
+  <div class="history-panel" *ngIf="showHistory()">
+    <ng-container *ngIf="!selectedHistoryJob()">
+      <div class="history-panel-header">
+        <h4><i class="bi bi-clock-history"></i> ประวัติการสร้างโครงการด้วย AI</h4>
+        <button type="button" class="ai-wizard-close-btn" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="history-list" *ngIf="!historyLoading(); else historyLoadingTpl">
+        <p class="history-empty" *ngIf="!historyItems().length">ยังไม่มีประวัติการสร้างโครงการ</p>
+        <button type="button" class="history-item" *ngFor="let job of historyItems()" (click)="viewHistoryDetail(job)">
+          <div class="history-item-top">
+            <strong>{{ job.projectName || '(ไม่มีชื่อโครงการ)' }}</strong>
+            <span class="history-status-badge" [ngClass]="job.status.toLowerCase()">{{ statusLabels[job.status] || job.status }}</span>
+          </div>
+          <p class="history-item-prompt">{{ job.prompt }}</p>
+          <small class="history-item-date">{{ job.createdDate | date: 'd MMM y, HH:mm' }}</small>
+        </button>
+      </div>
+      <ng-template #historyLoadingTpl>
+        <div class="history-loading"><i class="bi bi-arrow-repeat spin"></i> กำลังโหลดประวัติ...</div>
+      </ng-template>
+      <div class="history-pagination" *ngIf="historyTotalPages() > 1">
+        <button type="button" class="btn btn-secondary" [disabled]="historyPage() === 0" (click)="loadHistory(historyPage() - 1)">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <span>หน้า {{ historyPage() + 1 }} / {{ historyTotalPages() }}</span>
+        <button type="button" class="btn btn-secondary" [disabled]="historyPage() + 1 >= historyTotalPages()" (click)="loadHistory(historyPage() + 1)">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+    </ng-container>
+
+    <ng-container *ngIf="selectedHistoryJob() as job">
+      <div class="history-panel-header">
+        <button type="button" class="ai-wizard-close-btn" (click)="backToHistoryList()"><i class="bi bi-chevron-left"></i></button>
+        <h4>{{ job.projectName || '(ไม่มีชื่อโครงการ)' }}</h4>
+        <button type="button" class="ai-wizard-close-btn" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="history-detail-body">
+        <div class="history-detail-meta">
+          <span class="history-status-badge" [ngClass]="job.status.toLowerCase()">{{ statusLabels[job.status] || job.status }}</span>
+          <small>{{ job.createdDate | date: 'd MMM y, HH:mm' }}</small>
+          <small *ngIf="job.aiModel"> · {{ job.aiModel }}</small>
+          <small *ngIf="job.durationWeeks"> · {{ job.durationWeeks }} สัปดาห์</small>
+        </div>
+        <p class="history-detail-prompt">{{ job.prompt }}</p>
+
+        <div class="summary-stat-grid">
+          <ng-container *ngFor="let entry of job.createdCounts | keyvalue">
+            <div class="stat-card" *ngIf="entry.value">
+              <span class="stat-num">{{ entry.value }}</span>
+              <span class="stat-lbl">{{ countLabels[entry.key] || entry.key }}</span>
+            </div>
+          </ng-container>
+        </div>
+
+        <div class="failed-steps-box" *ngIf="selectedHistoryFailedSteps().length">
+          <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> โมดูลที่ไม่ถูกสร้าง</div>
+          <div class="failed-step-row" *ngFor="let st of selectedHistoryFailedSteps()">
+            <strong>{{ st.label }}</strong>
+            <span *ngIf="st.message"> — {{ st.message }}</span>
+            <span *ngIf="!st.message"> — ถูกข้ามเนื่องจากขั้นตอนก่อนหน้าไม่สำเร็จ</span>
+          </div>
+        </div>
+
+        <button type="button" class="btn btn-primary" *ngIf="job.projectId" (click)="goToHistoryProject(job)">
+          <i class="bi bi-box-arrow-up-right"></i> ไปที่โครงการนี้
+        </button>
+      </div>
+    </ng-container>
   </div>
 
   <!-- Stepper Indicator -->
@@ -31,7 +108,10 @@
     <div class="stepper-line" [class.completed]="currentStep() > 2"></div>
     <div class="stepper-item" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3">
       <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 3 ? 'bi-check-lg' : 'bi-cpu-fill'"></i></span>
-      <span class="stepper-label">3. สร้างข้อมูลทั้งหมด</span>
+      <span class="stepper-label-group">
+        <span class="stepper-label">3. สร้างข้อมูลทั้งหมด</span>
+        <small class="stepper-sublabel" *ngIf="currentStep() === 3 && currentModuleLabel()">{{ currentModuleLabel() }}</small>
+      </span>
     </div>
     <div class="stepper-line" [class.completed]="currentStep() > 3"></div>
     <div class="stepper-item" [class.active]="currentStep() === 4">
@@ -42,7 +122,11 @@
 
   <!-- Step 1: Input -->
   <div class="ai-wizard-body" *ngIf="currentStep() === 1">
-    <div class="form-grid">
+    <div class="analyzing-banner" *ngIf="isProcessing()">
+      <i class="bi bi-arrow-repeat spin"></i>
+      AI กำลังวิเคราะห์บรีฟและวางโครงสร้างโครงการ กรุณารอสักครู่...
+    </div>
+    <div class="form-grid" [class.form-disabled]="isProcessing()">
       <div class="form-group full-width">
         <label class="form-label">ชื่อโครงการ (ถ้ามี)</label>
         <input type="text" class="form-input" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" placeholder="เช่น โครงการพัฒนาระบบคลังสินค้าและจัดส่งอัจฉริยะ" />
@@ -171,14 +255,24 @@
         </div>
       </ng-container>
     </div>
+
+    <div class="failed-steps-box" *ngIf="failedSteps().length">
+      <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> โมดูลที่ไม่ถูกสร้าง</div>
+      <div class="failed-step-row" *ngFor="let st of failedSteps()">
+        <strong>{{ st.label }}</strong>
+        <span *ngIf="st.message"> — {{ st.message }}</span>
+        <span *ngIf="!st.message"> — ถูกข้ามเนื่องจากขั้นตอนก่อนหน้าไม่สำเร็จ</span>
+      </div>
+    </div>
   </div>
 
   <!-- Footer Actions -->
   <div class="ai-wizard-footer">
     <ng-container *ngIf="currentStep() === 1">
-      <button type="button" class="btn btn-secondary" (click)="close()">ยกเลิก</button>
+      <button type="button" class="btn btn-secondary" [disabled]="isProcessing()" (click)="close()">ยกเลิก</button>
       <button type="button" class="btn btn-primary" [disabled]="isProcessing() || (!prompt().trim() && !projectName().trim())" (click)="generatePreview()">
-        <i class="bi bi-magic"></i> วิเคราะห์และดูโครงสร้าง (Preview Plan)
+        <i class="bi" [ngClass]="isProcessing() ? 'bi-arrow-repeat spin' : 'bi-magic'"></i>
+        {{ isProcessing() ? 'AI กำลังวิเคราะห์บรีฟ...' : 'วิเคราะห์และดูโครงสร้าง (Preview Plan)' }}
       </button>
     </ng-container>
 

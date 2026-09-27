@@ -1,5 +1,6 @@
 package com.softinter.sicapi.dto.response;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -9,7 +10,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-/** สถานะงาน AI Full-Project Generator ที่ทำงานเบื้องหลัง (ใช้ poll แสดงความคืบหน้าทีละขั้น) */
+/** สถานะงาน AI Full-Project Generator ที่ทำงานเบื้องหลัง (ใช้ poll แสดงความคืบหน้าทีละขั้น และแสดงในประวัติย้อนหลัง) */
 @Data
 @Builder
 @NoArgsConstructor
@@ -25,6 +26,10 @@ public class AiPipelineJobResponse {
     private List<Step> steps;
     private Map<String, Integer> createdCounts;
     private String message;
+    private String prompt;
+    private Integer durationWeeks;
+    private String aiModel;
+    private Instant createdDate;
 
     @Data
     @Builder

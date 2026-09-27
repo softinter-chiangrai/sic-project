@@ -27,6 +27,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
 @Component({
   selector: 'app-pmdt12a',
@@ -44,6 +45,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicTraceLinkPanelComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
+    SicUploadComponent,
   ],
   templateUrl: './pmdt12A.component.html',
   styleUrls: ['./pmdt12A.component.css'],
@@ -574,6 +576,20 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.updateDependencyLockState(data.scenarioId);
   }
 
+  private extractUploadGroupId(rawGroupId: any): string | null {
+    if (!rawGroupId) return null;
+    if (typeof rawGroupId === 'string') return rawGroupId.trim() || null;
+    if (Array.isArray(rawGroupId) && rawGroupId.length > 0) {
+      const firstFile = rawGroupId[0];
+      if (typeof firstFile === 'string') return firstFile;
+      return firstFile?.uploadGroupId || firstFile?.id || firstFile?.uploadId || null;
+    }
+    if (typeof rawGroupId === 'object') {
+      return rawGroupId.uploadGroupId || rawGroupId.id || rawGroupId.uploadId || null;
+    }
+    return null;
+  }
+
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
@@ -606,6 +622,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     const data = {
       ...rawVal,
       id: targetId || undefined,
+      attachmentGroupId: this.extractUploadGroupId((rawVal as any).attachmentGroupId) || undefined,
       state: isEditMode ? 3 : 4,
     };
     this.saveExecution(data);

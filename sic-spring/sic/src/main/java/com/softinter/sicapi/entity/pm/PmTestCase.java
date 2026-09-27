@@ -75,6 +75,9 @@ public class PmTestCase extends BaseBusinessEntity {
     @Column(name = "related_task", columnDefinition = "TEXT")
     private String relatedTask;
 
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
+
     // ===== Relationships =====
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", insertable = false, updatable = false)
