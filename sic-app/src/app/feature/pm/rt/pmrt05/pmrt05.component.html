@@ -102,7 +102,7 @@
         class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
       >
         <i class="bi bi-diagram-3 text-xl text-[var(--crm-primary)]"></i>
-        <span>Diagram</span>
+        <span>{{ 'PMRT05_QA_DIAGRAM' | translate }}</span>
       </button>
       <!-- ปุ่มอื่น ๆ ตามเดิม -->
       <button
@@ -110,7 +110,7 @@
         class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
       >
         <i class="bi bi-file-text text-xl text-[var(--crm-primary)]"></i>
-        <span>Specification</span>
+        <span>{{ 'PMRT05_QA_SPECIFICATION' | translate }}</span>
       </button>
 
       <button
@@ -118,21 +118,21 @@
         class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
       >
         <i class="bi bi-check2-square text-xl text-[var(--crm-primary)]"></i>
-        <span>Design Review</span>
+        <span>{{ 'PMRT05_QA_DESIGN_REVIEW' | translate }}</span>
       </button>
       <button
         (click)="createTask()"
         class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
       >
         <i class="bi bi-list-task text-xl text-[var(--crm-primary)]"></i>
-        <span>Task</span>
+        <span>{{ 'PMRT05_QA_TASK' | translate }}</span>
       </button>
       <button
         (click)="createTest()"
         class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
       >
         <i class="bi bi-clipboard-data text-xl text-[var(--crm-primary)]"></i>
-        <span>Test Case</span>
+        <span>{{ 'PMRT05_QA_TEST_CASE' | translate }}</span>
       </button>
     </div>
   </div>

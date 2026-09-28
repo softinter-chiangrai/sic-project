@@ -108,7 +108,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     const cards: EntitySummaryCard[] = [
       {
         icon: 'bi-flag',
-        label: 'Milestone',
+        label: this.translate.instant('PMRT04A_STAT_MILESTONE'),
         value: `${s.milestones.completed}/${s.milestones.total}`,
         sublabel: this.translate.instant('PMRT04A_SUMMARY_COMPLETED_OF_TOTAL'),
         actionLabel: this.translate.instant('PMRT04A_SUMMARY_VIEW_PHASE'),
@@ -125,7 +125,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       },
       {
         icon: 'bi-ticket-perforated',
-        label: 'MA Ticket',
+        label: this.translate.instant('PMRT04A_STAT_MA_TICKET'),
         value: String(s.maTickets.total),
         sublabel: s.maTickets.open > 0 ? this.translate.instant('PMRT04A_SUMMARY_MA_TICKET_OPEN', { count: s.maTickets.open }) : this.translate.instant('PMRT04A_SUMMARY_MA_TICKET_NONE_OPEN'),
         variant: s.maTickets.open > 0 ? 'warning' : 'default',

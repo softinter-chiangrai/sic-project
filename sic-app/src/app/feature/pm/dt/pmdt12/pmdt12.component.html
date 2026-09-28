@@ -181,7 +181,7 @@
       (click)="setQuickFilterReady()"
       class="px-3 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
       [class]="filterTaskStatus() === 'ready' || filterTaskStatus() === 'Testing' ? 'bg-amber-500 text-white font-semibold shadow-amber-500/20' : 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800 hover:bg-amber-100'"
-      title="กรองเฉพาะเคสที่ Task อยู่ในสถานะ Testing"
+      [title]="'PMDT12_QUICK_FILTER_TESTING_TT' | translate"
     >
       <i class="bi bi-hourglass-split"></i>
       <span>Testing ({{ readyToTestCount() }})</span>
@@ -192,7 +192,7 @@
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-16 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล Scenario & Test Case...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT12_LOADING_DATA' | translate }}</p>
     </div>
   }
 
@@ -264,17 +264,17 @@
                 <button
                   (click)="goToAddTestCase(group.scenario.id, $event)"
                   class="px-2.5 py-1 rounded-md text-xs font-medium text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-colors cursor-pointer flex items-center gap-1"
-                  title="เพิ่ม Test Case ใน Scenario นี้"
+                  [title]="'PMDT12_ADD_TC_IN_SCENARIO_TT' | translate"
                 >
                   <i class="bi bi-plus-circle"></i>
-                  <span>เพิ่ม Test Case</span>
+                  <span>{{ 'PMDT12_ADD_TC_BTN' | translate }}</span>
                 </button>
 
                 <!-- View Scenario -->
                 <button
                   (click)="goToViewScenario(group.scenario.id!, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-colors cursor-pointer"
-                  title="ดูรายละเอียด Test Scenario"
+                  [title]="'PMDT12_VIEW_SCENARIO_TT' | translate"
                 >
                   <i class="bi bi-eye"></i>
                 </button>
@@ -283,7 +283,7 @@
                 <button
                   (click)="goToEditScenario(group.scenario.id!, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors cursor-pointer"
-                  title="แก้ไข Test Scenario"
+                  [title]="'PMDT12_EDIT_SCENARIO_TT' | translate"
                 >
                   <i class="bi bi-pencil"></i>
                 </button>
@@ -292,7 +292,7 @@
                 <button
                   (click)="exportScenarioReport(group.scenario, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors cursor-pointer"
-                  title="พิมพ์ / ออกรายงานผลการทดสอบเฉพาะ Scenario นี้ (PDF)"
+                  [title]="'PMDT12_PRINT_SCENARIO_REPORT_TT' | translate"
                 >
                   <i class="bi bi-printer"></i>
                 </button>
@@ -301,7 +301,7 @@
                 <button
                   (click)="deleteScenario(group.scenario.id!, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
-                  title="ลบ Test Scenario"
+                  [title]="'PMDT12_DELETE_SCENARIO_TT' | translate"
                 >
                   <i class="bi bi-trash"></i>
                 </button>
@@ -315,16 +315,16 @@
               <table class="w-full text-sm">
                 <thead class="bg-[var(--bg)]/50 text-[var(--text-muted)] border-b border-[var(--border)] text-xs uppercase tracking-wider">
                   <tr>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[120px]">รหัส Test Case</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[180px]">หัวข้อ</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[120px]">{{ 'PMDT12_COL_TESTCASE_ID' | translate }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[180px]">{{ 'PMDT12_COL_TOPIC' | translate }}</th>
                     <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[80px]">{{ 'PMDT12_COL_VERSION' | translate }}</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[160px]">Task ที่ผูก</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[200px]">ขั้นตอน & ผลที่คาดหวัง</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[80px] hidden lg:table-cell">Priority</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">สถานะ Test</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">ผู้ทดสอบ</th>
-                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">วันที่ทดสอบ</th>
-                    <th class="px-4 py-2.5 text-center font-semibold whitespace-nowrap min-w-[150px]">จัดการ</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[160px]">{{ 'PMDT12_COL_LINKED_TASK' | translate }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[200px]">{{ 'PMDT12_COL_STEPS_EXPECTED' | translate }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[80px] hidden lg:table-cell">{{ 'PMDT12_COL_PRIORITY' | translate }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">{{ 'PMDT12_COL_TEST_STATUS' | translate }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">{{ 'PMDT12_COL_TESTER' | translate }}</th>
+                    <th class="px-4 py-2.5 text-left font-semibold whitespace-nowrap min-w-[100px]">{{ 'PMDT12_COL_TEST_DATE' | translate }}</th>
+                    <th class="px-4 py-2.5 text-center font-semibold whitespace-nowrap min-w-[150px]">{{ 'PMDT12_COL_ACTIONS' | translate }}</th>
                   </tr>
                 </thead>
                 <tbody class="divide-y divide-[var(--border)]">
@@ -380,19 +380,19 @@
                       <td class="px-4 py-3 align-top space-y-1.5">
                         @if (testCase.testStep) {
                           <div class="text-xs">
-                            <span class="font-medium text-[var(--text-muted)] block mb-0.5">Step:</span>
+                            <span class="font-medium text-[var(--text-muted)] block mb-0.5">{{ 'PMDT12_STEP_LABEL' | translate }}</span>
                             <div class="text-[var(--text)] rich-text-content prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.testStep"></div>
                           </div>
                         }
                         @if (testCase.expectedResult) {
                           <div class="text-xs">
-                            <span class="font-medium text-[var(--text-muted)] block mb-0.5">Expected:</span>
+                            <span class="font-medium text-[var(--text-muted)] block mb-0.5">{{ 'PMDT12_EXPECTED_LABEL' | translate }}</span>
                             <div class="text-[var(--text-muted)] rich-text-content prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.expectedResult"></div>
                           </div>
                         }
                         @if (testCase.actualResult) {
                           <div class="text-xs">
-                            <span class="font-medium text-blue-600 dark:text-blue-400 block mb-0.5">Actual:</span>
+                            <span class="font-medium text-blue-600 dark:text-blue-400 block mb-0.5">{{ 'PMDT12_ACTUAL_LABEL' | translate }}</span>
                             <div class="text-blue-600 dark:text-blue-400 rich-text-content prose-xs dark:prose-invert leading-relaxed break-words [&_p]:mb-1 [&_p:last-child]:mb-0 [&_strong]:font-semibold" [innerHTML]="testCase.actualResult"></div>
                           </div>
                         }
@@ -433,7 +433,7 @@
                             <button
                               (click)="goToExecute(testCase.id!)"
                               class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
-                              title="บันทึกผลการทดสอบ"
+                              [title]="'PMDT12_SAVE_TEST_RESULT_TT' | translate"
                             >
                               <i class="bi bi-play-circle-fill"></i> ทดสอบ
                             </button>
@@ -462,7 +462,7 @@
                               <button
                                 (click)="openBugModal(testCase, $event)"
                                 class="px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer shadow-xs"
-                                title="เปิดรายงาน Bug ใหม่ไปยัง Task Board"
+                                [title]="'PMDT12_OPEN_BUG_TASKBOARD_TT' | translate"
                               >
                                 <i class="bi bi-bug-fill text-xs"></i> เปิด Bug
                               </button>
@@ -472,7 +472,7 @@
                           <button
                             (click)="goToView(testCase.id!)"
                             class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all cursor-pointer"
-                            title="ดูข้อมูล"
+                            [title]="'PMDT12_VIEW_TT' | translate"
                           >
                             <i class="bi bi-eye"></i>
                           </button>
@@ -480,7 +480,7 @@
                           <button
                             (click)="goToEdit(testCase.id!)"
                             class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all cursor-pointer"
-                            title="แก้ไข"
+                            [title]="'PMDT12_EDIT_TT' | translate"
                           >
                             <i class="bi bi-pencil text-xs"></i>
                           </button>
@@ -488,7 +488,7 @@
                           <button
                             (click)="deleteTestCase(testCase.id!)"
                             class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all cursor-pointer"
-                            title="ลบ"
+                            [title]="'PMDT12_DELETE_TT' | translate"
                           >
                             <i class="bi bi-trash text-xs"></i>
                           </button>
@@ -516,7 +516,7 @@
                       [disabled]="getScenarioPage(group.scenario?.id) <= 1"
                       (click)="setScenarioPage(group.scenario?.id, getScenarioPage(group.scenario?.id) - 1, $event)"
                       class="px-2 py-1 rounded border border-[var(--border)] hover:bg-[var(--sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                      title="หน้าก่อนหน้า"
+                      [title]="'PMDT12_PREV_PAGE_TT' | translate"
                     >
                       <i class="bi bi-chevron-left"></i>
                     </button>
@@ -527,7 +527,7 @@
                       [disabled]="getScenarioPage(group.scenario?.id) >= getScenarioTotalPages(group.testCases.length)"
                       (click)="setScenarioPage(group.scenario?.id, getScenarioPage(group.scenario?.id) + 1, $event)"
                       class="px-2 py-1 rounded border border-[var(--border)] hover:bg-[var(--sidebar-hover)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                      title="หน้าถัดไป"
+                      [title]="'PMDT12_NEXT_PAGE_TT' | translate"
                     >
                       <i class="bi bi-chevron-right"></i>
                     </button>
@@ -541,8 +541,8 @@
       } @empty {
         <div class="flex flex-col items-center justify-center py-16 px-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] text-center gap-3">
           <i class="bi bi-folder-x text-5xl text-[var(--text-muted)] opacity-30"></i>
-          <p class="text-lg font-medium text-[var(--text-active)]">ไม่พบข้อมูล Test Scenario</p>
-          <p class="text-sm text-[var(--text-muted)]">เริ่มต้นสร้าง Test Scenario เพื่อจัดกลุ่มชุดการทดสอบของคุณ</p>
+          <p class="text-lg font-medium text-[var(--text-active)]">{{ 'PMDT12_EMPTY_SCENARIO_TITLE' | translate }}</p>
+          <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT12_EMPTY_SCENARIO_DESC' | translate }}</p>
           <div class="flex items-center gap-2 mt-2">
             <button
               (click)="goToAddScenario()"
@@ -762,10 +762,10 @@
         >
           @if (isSubmittingBug()) {
             <i class="bi bi-arrow-repeat animate-spin"></i>
-            <span>กำลังเปิด Bug...</span>
+            <span>{{ 'PMDT12_OPENING_BUG' | translate }}</span>
           } @else {
             <i class="bi bi-bug-fill"></i>
-            <span>บันทึกและสร้าง Bug Task</span>
+            <span>{{ 'PMDT12_SAVE_CREATE_BUG_BTN' | translate }}</span>
           }
         </button>
       </div>

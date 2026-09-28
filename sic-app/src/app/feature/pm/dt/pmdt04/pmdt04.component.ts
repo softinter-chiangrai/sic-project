@@ -107,7 +107,7 @@ export class Pmdt04Component implements OnInit {
       { label: this.translate.instant('PMDT04_COL_CODE'), name: 'requirementCode', type: 'code', sortable: true, minWidth: 100 },
       { label: this.translate.instant('PMDT04_COL_NAME'), name: 'title', type: 'text', sortable: true, minWidth: 150 },
       { label: this.translate.instant('PMDT04_COL_PROJECT'), name: 'projectName', type: 'text', sortable: true, minWidth: 120 },
-      { label: 'Priority', name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 80 },
+      { label: this.translate.instant('PMDT04_COL_PRIORITY'), name: 'priority', type: 'priorityBadge', sortable: true, minWidth: 80 },
       { label: this.translate.instant('PMDT04_COL_STATUS'), name: 'status', type: 'statusBadge', sortable: true, minWidth: 100 },
       { label: this.translate.instant('PMDT04_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', minWidth: 100 },
       { label: this.translate.instant('PMDT04_COL_VERSION'), name: 'version', type: 'text', minWidth: 100 },

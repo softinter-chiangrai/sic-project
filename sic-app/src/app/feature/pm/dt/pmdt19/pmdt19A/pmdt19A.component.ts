@@ -52,20 +52,22 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   isEdit = signal(false);
   isSaving = signal(false);
 
-  docTypeOptions = [
-    { label: 'Requirement', value: 'REQUIREMENT' },
-    { label: 'Specification', value: 'SPECIFICATION' },
-    { label: 'Diagram', value: 'DIAGRAM' },
-    { label: 'Design Review', value: 'DESIGN_REVIEW' },
-    { label: 'Change Request', value: 'CHANGE_REQUEST' },
-    { label: 'Delivery Document', value: 'DELIVERY' },
-    { label: 'Contract', value: 'CONTRACT' },
-    { label: 'Invoice', value: 'INVOICE' },
-    { label: 'MA Ticket', value: 'MA_TICKET' },
-    { label: 'MA Renewal', value: 'MA_RENEWAL' },
-    { label: 'User Manual', value: 'USER_MANUAL' },
-    { label: 'Project', value: 'PROJECT' },
-  ];
+  get docTypeOptions() {
+    return [
+      { label: this.translate.instant('PMDT19A_DOCTYPE_REQUIREMENT'), value: 'REQUIREMENT' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_SPECIFICATION'), value: 'SPECIFICATION' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_DIAGRAM'), value: 'DIAGRAM' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_DESIGN_REVIEW'), value: 'DESIGN_REVIEW' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_CHANGE_REQUEST'), value: 'CHANGE_REQUEST' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_DELIVERY'), value: 'DELIVERY' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_CONTRACT'), value: 'CONTRACT' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_INVOICE'), value: 'INVOICE' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_MA_TICKET'), value: 'MA_TICKET' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_MA_RENEWAL'), value: 'MA_RENEWAL' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_USER_MANUAL'), value: 'USER_MANUAL' },
+      { label: this.translate.instant('PMDT19A_DOCTYPE_PROJECT'), value: 'PROJECT' },
+    ];
+  }
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);

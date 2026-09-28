@@ -96,11 +96,11 @@ export class Pmdt12Component implements OnInit {
   protected aiBatchInitialPrompt = signal('');
   protected aiBatchAutoGenerate = signal(false);
   protected readonly aiBatchFields: AiBatchFieldDef[] = [
-    { key: 'title', label: 'ชื่อ Test Case', type: 'text' },
-    { key: 'testStep', label: 'ขั้นตอนการทดสอบ', type: 'textarea' },
-    { key: 'expectedResult', label: 'ผลลัพธ์ที่คาดหวัง', type: 'textarea' },
-    { key: 'priority', label: 'ความสำคัญ', type: 'text' },
-    { key: 'testType', label: 'ประเภท (SIT/UAT)', type: 'text' },
+    { key: 'title', label: this.translate.instant('PMDT12_AI_FIELD_TITLE'), type: 'text' },
+    { key: 'testStep', label: this.translate.instant('PMDT12_AI_FIELD_TEST_STEP'), type: 'textarea' },
+    { key: 'expectedResult', label: this.translate.instant('PMDT12_AI_FIELD_EXPECTED_RESULT'), type: 'textarea' },
+    { key: 'priority', label: this.translate.instant('PMDT12_AI_FIELD_PRIORITY'), type: 'text' },
+    { key: 'testType', label: this.translate.instant('PMDT12_AI_FIELD_TEST_TYPE'), type: 'text' },
   ];
 
   // ===== Bug Modal State =====

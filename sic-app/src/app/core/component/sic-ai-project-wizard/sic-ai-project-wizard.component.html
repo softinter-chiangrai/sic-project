@@ -8,8 +8,8 @@
         <i class="bi bi-stars"></i>
       </div>
       <div>
-        <h3 class="ai-wizard-heading">AI Full-Project Generator</h3>
-        <p class="ai-wizard-subheading">สร้างโครงสร้างโปรเจกต์และโมดูลเชื่อมโยงครบวงจรด้วย AI ภายในคลิกเดียว</p>
+        <h3 class="ai-wizard-heading">{{ 'AIWIZARD_HEADING' | translate }}</h3>
+        <p class="ai-wizard-subheading">{{ 'AIWIZARD_SUBHEADING' | translate }}</p>
       </div>
     </div>
     <div class="ai-wizard-header-actions">
@@ -26,11 +26,11 @@
   <div class="history-panel" *ngIf="showHistory()">
     <ng-container *ngIf="!selectedHistoryJob()">
       <div class="history-panel-header">
-        <h4><i class="bi bi-clock-history"></i> ประวัติการสร้างโครงการด้วย AI</h4>
+        <h4><i class="bi bi-clock-history"></i> {{ 'AIWIZARD_HISTORY_TITLE' | translate }}</h4>
         <button type="button" class="ai-wizard-close-btn" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="history-list" *ngIf="!historyLoading(); else historyLoadingTpl">
-        <p class="history-empty" *ngIf="!historyItems().length">ยังไม่มีประวัติการสร้างโครงการ</p>
+        <p class="history-empty" *ngIf="!historyItems().length">{{ 'AIWIZARD_HISTORY_EMPTY' | translate }}</p>
         <button type="button" class="history-item" *ngFor="let job of historyItems()" (click)="viewHistoryDetail(job)">
           <div class="history-item-top">
             <strong>{{ job.projectName || '(ไม่มีชื่อโครงการ)' }}</strong>
@@ -41,7 +41,7 @@
         </button>
       </div>
       <ng-template #historyLoadingTpl>
-        <div class="history-loading"><i class="bi bi-arrow-repeat spin"></i> กำลังโหลดประวัติ...</div>
+        <div class="history-loading"><i class="bi bi-arrow-repeat spin"></i> {{ 'AIWIZARD_HISTORY_LOADING' | translate }}</div>
       </ng-template>
       <div class="history-pagination" *ngIf="historyTotalPages() > 1">
         <button type="button" class="btn btn-secondary" [disabled]="historyPage() === 0" (click)="loadHistory(historyPage() - 1)">
@@ -79,11 +79,11 @@
         </div>
 
         <div class="failed-steps-box" *ngIf="selectedHistoryFailedSteps().length">
-          <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> โมดูลที่ไม่ถูกสร้าง</div>
+          <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> {{ 'AIWIZARD_FAILED_MODULES_TITLE' | translate }}</div>
           <div class="failed-step-row" *ngFor="let st of selectedHistoryFailedSteps()">
             <strong>{{ st.label }}</strong>
             <span *ngIf="st.message"> — {{ st.message }}</span>
-            <span *ngIf="!st.message"> — ถูกข้ามเนื่องจากขั้นตอนก่อนหน้าไม่สำเร็จ</span>
+            <span *ngIf="!st.message"> — {{ 'AIWIZARD_SKIPPED_STEP_MSG' | translate }}</span>
           </div>
         </div>
 
@@ -98,25 +98,25 @@
   <div class="ai-wizard-stepper">
     <div class="stepper-item" [class.active]="currentStep() === 1" [class.completed]="currentStep() > 1">
       <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 1 ? 'bi-check-lg' : 'bi-pencil-fill'"></i></span>
-      <span class="stepper-label">1. บรีฟโครงการ</span>
+      <span class="stepper-label">{{ 'AIWIZARD_STEP1_LABEL' | translate }}</span>
     </div>
     <div class="stepper-line" [class.completed]="currentStep() > 1"></div>
     <div class="stepper-item" [class.active]="currentStep() === 2" [class.completed]="currentStep() > 2">
       <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 2 ? 'bi-check-lg' : 'bi-eye-fill'"></i></span>
-      <span class="stepper-label">2. ตรวจสอบโครงสร้าง</span>
+      <span class="stepper-label">{{ 'AIWIZARD_STEP2_LABEL' | translate }}</span>
     </div>
     <div class="stepper-line" [class.completed]="currentStep() > 2"></div>
     <div class="stepper-item" [class.active]="currentStep() === 3" [class.completed]="currentStep() > 3">
       <span class="stepper-circle"><i class="bi" [ngClass]="currentStep() > 3 ? 'bi-check-lg' : 'bi-cpu-fill'"></i></span>
       <span class="stepper-label-group">
-        <span class="stepper-label">3. สร้างข้อมูลทั้งหมด</span>
+        <span class="stepper-label">{{ 'AIWIZARD_STEP3_LABEL' | translate }}</span>
         <small class="stepper-sublabel" *ngIf="currentStep() === 3 && currentModuleLabel()">{{ currentModuleLabel() }}</small>
       </span>
     </div>
     <div class="stepper-line" [class.completed]="currentStep() > 3"></div>
     <div class="stepper-item" [class.active]="currentStep() === 4">
       <span class="stepper-circle"><i class="bi bi-flag-fill"></i></span>
-      <span class="stepper-label">4. เริ่มรีวิวโครงการ</span>
+      <span class="stepper-label">{{ 'AIWIZARD_STEP4_LABEL' | translate }}</span>
     </div>
   </div>
 
@@ -128,29 +128,29 @@
     </div>
     <div class="form-grid" [class.form-disabled]="isProcessing()">
       <div class="form-group full-width">
-        <label class="form-label">ชื่อโครงการ (ถ้ามี)</label>
+        <label class="form-label">{{ 'AIWIZARD_PROJECT_NAME_LABEL' | translate }}</label>
         <input type="text" class="form-input" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" placeholder="เช่น โครงการพัฒนาระบบคลังสินค้าและจัดส่งอัจฉริยะ" />
       </div>
 
       <div class="form-group full-width">
-        <label class="form-label">รายละเอียด / ความต้องการโครงการ (บรีฟงาน) <span class="text-rose-500">*</span></label>
+        <label class="form-label">{{ 'AIWIZARD_BRIEF_LABEL' | translate }} <span class="text-rose-500">*</span></label>
         <textarea class="form-textarea" rows="5" [ngModel]="prompt()" (ngModelChange)="prompt.set($event)" placeholder="อธิบายฟังก์ชันที่ต้องการ กลุ่มผู้ใช้งาน เป้าหมายทางธุรกิจ หรือขอบเขตงานที่ต้องการให้ AI ช่วยวางโครงสร้าง..."></textarea>
       </div>
 
       <div class="form-group">
-        <label class="form-label">ระยะเวลาโครงการโดยประมาณ (สัปดาห์)</label>
+        <label class="form-label">{{ 'AIWIZARD_DURATION_LABEL' | translate }}</label>
         <input type="number" min="1" max="52" class="form-input" [ngModel]="durationWeeks()" (ngModelChange)="durationWeeks.set($event)" />
       </div>
 
       <div class="form-group">
-        <label class="form-label">AI Engine Model</label>
+        <label class="form-label">{{ 'AIWIZARD_MODEL_LABEL' | translate }}</label>
         <select class="form-select" [ngModel]="selectedModel()" (ngModelChange)="selectedModel.set($event)">
           <option *ngFor="let m of availableModels" [value]="m.id">{{ m.name }}</option>
         </select>
       </div>
 
       <div class="form-group full-width">
-        <label class="form-label">เอกสาร TOR หรือไฟล์แนบอ้างอิง</label>
+        <label class="form-label">{{ 'AIWIZARD_TOR_LABEL' | translate }}</label>
         <div class="file-attach-bar">
           <label class="attach-btn">
             <i class="bi bi-paperclip"></i> แนบไฟล์ TOR / เอกสารบรีฟ
@@ -182,19 +182,19 @@
         <label class="module-chip"><input type="checkbox" [ngModel]="incTasks()" (ngModelChange)="incTasks.set($event)" /> <span>WBS / Tasks Breakdown ({{ previewData()?.previewTasks?.length || 0 }} รายการ)</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incGantt()" (ngModelChange)="incGantt.set($event)" /> <span>Gantt Phases & Timeline ({{ previewData()?.previewPhases?.length || 0 }} เฟส)</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incDelivery()" (ngModelChange)="incDelivery.set($event)" /> <span>Delivery Milestones ({{ previewData()?.previewDeliveries?.length || 0 }} งวด)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incContract()" (ngModelChange)="incContract.set($event)" /> <span>สัญญา (Contract)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incTests()" (ngModelChange)="incTests.set($event)" /> <span>Test Scenario &amp; Test Case</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incManuals()" (ngModelChange)="incManuals.set($event)" /> <span>คู่มือการใช้งาน (User Manual)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incInvoices()" (ngModelChange)="incInvoices.set($event)" /> <span>ใบแจ้งหนี้ร่างจากงวดส่งมอบ</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incDiagrams()" (ngModelChange)="incDiagrams.set($event)" /> <span>Diagram (DFD / ER / Flowchart / Use Case)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incDesignReviews()" (ngModelChange)="incDesignReviews.set($event)" /> <span>Design Review</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incMa()" (ngModelChange)="incMa.set($event)" /> <span>MA Ticket &amp; ข้อเสนอต่ออายุ MA</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incContract()" (ngModelChange)="incContract.set($event)" /> <span>{{ 'AIWIZARD_MODULE_CONTRACT' | translate }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incTests()" (ngModelChange)="incTests.set($event)" /> <span>{{ 'AIWIZARD_MODULE_TEST' | translate }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incManuals()" (ngModelChange)="incManuals.set($event)" /> <span>{{ 'AIWIZARD_MODULE_MANUAL' | translate }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incInvoices()" (ngModelChange)="incInvoices.set($event)" /> <span>{{ 'AIWIZARD_MODULE_INVOICE' | translate }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incDiagrams()" (ngModelChange)="incDiagrams.set($event)" /> <span>{{ 'AIWIZARD_MODULE_DIAGRAM' | translate }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incDesignReviews()" (ngModelChange)="incDesignReviews.set($event)" /> <span>{{ 'AIWIZARD_MODULE_DESIGN_REVIEW' | translate }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incMa()" (ngModelChange)="incMa.set($event)" /> <span>{{ 'AIWIZARD_MODULE_MA' | translate }}</span></label>
       </div>
     </div>
 
     <div class="preview-tabs-container">
       <div class="preview-block">
-        <h5>📋 รายการ Requirements ตัวอย่าง</h5>
+        <h5>📋 {{ 'AIWIZARD_SAMPLE_REQUIREMENTS' | translate }}</h5>
         <ul>
           <li *ngFor="let r of previewData()?.previewRequirements">
             <strong>{{ r.title }}</strong> <span class="badge badge-subtle">{{ r.type || 'FUNCTIONAL' }}</span>
@@ -203,7 +203,7 @@
       </div>
 
       <div class="preview-block">
-        <h5>⚙️ รายการ Specifications ตัวอย่าง</h5>
+        <h5>⚙️ {{ 'AIWIZARD_SAMPLE_SPECIFICATIONS' | translate }}</h5>
         <ul>
           <li *ngFor="let s of previewData()?.previewSpecifications">
             <strong>{{ s.title }}</strong> <span class="badge badge-subtle">{{ s.specificationType || 'SYSTEM' }}</span>
@@ -219,8 +219,8 @@
       <div class="pulsing-glow"></div>
       <i class="bi bi-cpu generating-icon"></i>
     </div>
-    <h4 class="generating-title">AI กำลังสร้างโครงการและโมดูลตามลำดับ SDLC...</h4>
-    <p class="generating-desc">งานทำงานเบื้องหลัง ใช้เวลาประมาณ 2-5 นาที กรุณารอจนเสร็จ</p>
+    <h4 class="generating-title">{{ 'AIWIZARD_GENERATING_TITLE' | translate }}</h4>
+    <p class="generating-desc">{{ 'AIWIZARD_GENERATING_DESC' | translate }}</p>
 
     <div class="pipeline-live-list">
       <div class="live-item" *ngFor="let st of jobSteps()"
@@ -244,8 +244,8 @@
     <div class="success-icon-box">
       <i class="bi bi-check-circle-fill"></i>
     </div>
-    <h3 class="success-title">สร้างโครงการสมบูรณ์เรียบร้อย!</h3>
-    <p class="success-desc">ข้อมูลทั้งหมดถูกบันทึกในสถานะ <span class="badge-draft">Draft (รอรีวิว)</span> พร้อมผูกความสัมพันธ์ Traceability ทุกโมดูล</p>
+    <h3 class="success-title">{{ 'AIWIZARD_SUCCESS_TITLE' | translate }}</h3>
+    <p class="success-desc">ข้อมูลทั้งหมดถูกบันทึกในสถานะ <span class="badge-draft">{{ 'AIWIZARD_DRAFT_BADGE' | translate }}</span> พร้อมผูกความสัมพันธ์ Traceability ทุกโมดูล</p>
 
     <div class="summary-stat-grid">
       <ng-container *ngFor="let entry of createdCounts() | keyvalue">
@@ -257,11 +257,11 @@
     </div>
 
     <div class="failed-steps-box" *ngIf="failedSteps().length">
-      <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> โมดูลที่ไม่ถูกสร้าง</div>
+      <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> {{ 'AIWIZARD_FAILED_MODULES_TITLE' | translate }}</div>
       <div class="failed-step-row" *ngFor="let st of failedSteps()">
         <strong>{{ st.label }}</strong>
         <span *ngIf="st.message"> — {{ st.message }}</span>
-        <span *ngIf="!st.message"> — ถูกข้ามเนื่องจากขั้นตอนก่อนหน้าไม่สำเร็จ</span>
+        <span *ngIf="!st.message"> — {{ 'AIWIZARD_SKIPPED_STEP_MSG' | translate }}</span>
       </div>
     </div>
   </div>
@@ -269,7 +269,7 @@
   <!-- Footer Actions -->
   <div class="ai-wizard-footer">
     <ng-container *ngIf="currentStep() === 1">
-      <button type="button" class="btn btn-secondary" [disabled]="isProcessing()" (click)="close()">ยกเลิก</button>
+      <button type="button" class="btn btn-secondary" [disabled]="isProcessing()" (click)="close()">{{ 'COMMON_CANCEL_BTN' | translate }}</button>
       <button type="button" class="btn btn-primary" [disabled]="isProcessing() || (!prompt().trim() && !projectName().trim())" (click)="generatePreview()">
         <i class="bi" [ngClass]="isProcessing() ? 'bi-arrow-repeat spin' : 'bi-magic'"></i>
         {{ isProcessing() ? 'AI กำลังวิเคราะห์บรีฟ...' : 'วิเคราะห์และดูโครงสร้าง (Preview Plan)' }}

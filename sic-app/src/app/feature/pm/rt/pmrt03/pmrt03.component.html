@@ -31,8 +31,8 @@
     <div class="w-16 h-16 rounded-2xl bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center text-3xl mb-2">
       <i class="bi bi-kanban"></i>
     </div>
-    <h2 class="text-xl font-bold text-[var(--text-active)]">ยังไม่มีข้อมูลโครงการ</h2>
-    <p class="text-sm text-[var(--text-muted)] max-w-md">ยังไม่มีโครงการในระบบ หรือยังไม่ได้เลือกโครงการ กรุณาสร้างโครงการใหม่เพื่อเริ่มใช้งาน</p>
+    <h2 class="text-xl font-bold text-[var(--text-active)]">{{ 'PMRT03_EMPTY_PROJECT_TITLE' | translate }}</h2>
+    <p class="text-sm text-[var(--text-muted)] max-w-md">{{ 'PMRT03_EMPTY_PROJECT_DESC' | translate }}</p>
     <a
       routerLink="/feature/pm/project/new"
       class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all shadow-sm cursor-pointer mt-2"
@@ -112,29 +112,29 @@
     <!-- ===== STATS CARDS ===== -->
     <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Phase</p>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT03_STAT_PHASE' | translate }}</p>
         <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.phaseCount }}</p>
       </div>
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Tasks</p>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT03_STAT_TASKS' | translate }}</p>
         <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.taskCount }}</p>
         <p class="text-xs text-[var(--text-muted)]">
           เสร็จ {{ p.taskCompletedCount }} / {{ p.taskCount }}
         </p>
       </div>
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Requirements</p>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT03_STAT_REQUIREMENTS' | translate }}</p>
         <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.requirementCount }}</p>
       </div>
       <div class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm">
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Bugs</p>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT03_STAT_BUGS' | translate }}</p>
         <p class="text-2xl font-bold text-[var(--text-active)]">{{ p.bugCount }}</p>
         <p class="text-xs text-[var(--text-muted)]">เปิด {{ p.bugOpenCount }} / {{ p.bugCount }}</p>
       </div>
       <div
         class="bg-[var(--sidebar)] rounded-xl border border-[var(--border)] p-4 shadow-sm col-span-2"
       >
-        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">Manday</p>
+        <p class="text-xs text-[var(--text-muted)] uppercase tracking-wider">{{ 'PMRT03_STAT_MANDAY' | translate }}</p>
         <div class="flex items-center gap-3">
           <span class="text-2xl font-bold text-[var(--text-active)]">{{ p.usedManday }}</span>
           <span class="text-sm text-[var(--text-muted)]">/ {{ p.budgetManday }}</span>
@@ -262,7 +262,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-layers text-xl text-[var(--crm-primary)]"></i>
-          <span>Phase</span>
+          <span>{{ 'PMRT03_QA_PHASE' | translate }}</span>
         </button>
         <!-- Requirement -->
         <button
@@ -270,7 +270,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-clipboard-check text-xl text-[var(--crm-primary)]"></i>
-          <span>Requirement</span>
+          <span>{{ 'PMRT03_QA_REQUIREMENT' | translate }}</span>
         </button>
         <!-- Discussion -->
         <button
@@ -278,7 +278,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-chat-dots text-xl text-[var(--crm-primary)]"></i>
-          <span>Discussion</span>
+          <span>{{ 'PMRT03_QA_DISCUSSION' | translate }}</span>
         </button>
         <!-- Contract -->
         <button
@@ -286,7 +286,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-file-earmark-text text-xl text-[var(--crm-primary)]"></i>
-          <span>Contract</span>
+          <span>{{ 'PMRT03_QA_CONTRACT' | translate }}</span>
         </button>
         <!-- Delivery (PMDT18) -->
         <button
@@ -294,7 +294,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-box-seam text-xl text-[var(--crm-primary)]"></i>
-          <span>Delivery</span>
+          <span>{{ 'PMRT03_QA_DELIVERY' | translate }}</span>
         </button>
         <!-- Manual (PMDT15) -->
         <button
@@ -302,7 +302,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-book text-xl text-[var(--crm-primary)]"></i>
-          <span>Manual</span>
+          <span>{{ 'PMRT03_QA_MANUAL' | translate }}</span>
         </button>
         <!-- Invoice (PMDT20) -->
         <button
@@ -310,7 +310,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-receipt text-xl text-[var(--crm-primary)]"></i>
-          <span>Invoice</span>
+          <span>{{ 'PMRT03_QA_INVOICE' | translate }}</span>
         </button>
         <!-- MA Ticket -->
         <button
@@ -318,7 +318,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-headset text-xl text-[var(--crm-primary)]"></i>
-          <span>MA Ticket</span>
+          <span>{{ 'PMRT03_QA_MA_TICKET' | translate }}</span>
         </button>
         <!-- Approval -->
         <button
@@ -326,7 +326,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-check-circle text-xl text-[var(--crm-success)]"></i>
-          <span>Approval</span>
+          <span>{{ 'PMRT03_QA_APPROVAL' | translate }}</span>
         </button>
         <!-- Version Control -->
         <button
@@ -334,7 +334,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-tags text-xl text-[var(--crm-primary)]"></i>
-          <span>Document Version</span>
+          <span>{{ 'PMRT03_QA_DOCUMENT_VERSION' | translate }}</span>
         </button>
 
         <!-- Change Request -->
@@ -343,7 +343,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-arrow-left-right text-xl text-[var(--crm-primary)]"></i>
-          <span>Change Request</span>
+          <span>{{ 'PMRT03_QA_CHANGE_REQUEST' | translate }}</span>
         </button>
         <!-- Audit Log -->
         <button
@@ -351,7 +351,7 @@
           class="flex flex-col items-center justify-center gap-1 px-3 py-3 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] hover:bg-[var(--sidebar-hover)] transition-all text-sm text-[var(--text)]"
         >
           <i class="bi bi-clock-history text-xl text-[var(--crm-primary)]"></i>
-          <span>Audit Log</span>
+          <span>{{ 'PMRT03_QA_AUDIT_LOG' | translate }}</span>
         </button>
       </div>
     </div>

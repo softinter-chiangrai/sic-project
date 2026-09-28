@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS } from '../../config/ai-models.config';
 import { AiModelsService } from '../../services/ai-models.service';
 import {
@@ -28,6 +28,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   private readonly aiModelsSvc = inject(AiModelsService);
   private readonly dialog = inject(DialogService);
   private readonly router = inject(Router);
+  private readonly translate = inject(TranslateService);
 
   // Steps: 1 = Input/Prompt, 2 = Plan Preview, 3 = Generating/Executing, 4 = Success
   readonly currentStep = signal<number>(1);
@@ -60,12 +61,14 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   // Label ของโมดูลที่ AI กำลังทำอยู่ตอนนี้ (แสดงใต้ step "3. สร้างข้อมูลทั้งหมด")
   readonly currentModuleLabel = computed<string | null>(() => {
     const steps = this.jobSteps();
-    if (!steps.length) return 'กำลังเริ่มต้น...';
+    if (!steps.length) return this.translate.instant('AIWIZARD_STARTING');
     const running = steps.find((s) => s.status === 'RUNNING');
-    if (running) return `กำลังสร้าง: ${running.label}`;
+    if (running) return this.translate.instant('AIWIZARD_CREATING_LABEL', { label: running.label });
     const doneCount = steps.filter((s) => s.status === 'DONE').length;
     const failedCount = steps.filter((s) => s.status === 'FAILED').length;
-    return `เสร็จแล้ว ${doneCount}/${steps.length} ขั้นตอน${failedCount ? ` (พลาด ${failedCount})` : ''}`;
+    const doneMsg = this.translate.instant('AIWIZARD_PROGRESS_DONE', { done: doneCount, total: steps.length });
+    const failedMsg = failedCount ? this.translate.instant('AIWIZARD_PROGRESS_FAILED_SUFFIX', { failed: failedCount }) : '';
+    return doneMsg + failedMsg;
   });
 
   // รายการ step ที่ล้มเหลว/ถูกข้าม พร้อมเหตุผล ใช้แสดงในหน้าสรุปผล (step 4) เพื่อให้รู้ว่าโมดูลไหนไม่ถูกสร้างและเพราะอะไร
@@ -73,21 +76,23 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     this.jobSteps().filter((s) => s.status === 'FAILED' || s.status === 'SKIPPED'),
   );
 
-  readonly countLabels: Record<string, string> = {
-    project: 'Project',
-    contract: 'สัญญา',
-    wbs: 'Phase / Milestone / WP',
-    requirement: 'Requirements',
-    specification: 'Specifications',
-    task: 'Tasks',
-    test: 'Test Scenario / Case',
-    delivery: 'Deliveries',
-    manual: 'คู่มือ',
-    invoice: 'ใบแจ้งหนี้ร่าง',
-    diagram: 'Diagrams',
-    design_review: 'Design Review',
-    ma: 'MA Ticket / ต่ออายุ',
-  };
+  get countLabels(): Record<string, string> {
+    return {
+      project: this.translate.instant('AIWIZARD_COUNT_PROJECT'),
+      contract: this.translate.instant('AIWIZARD_COUNT_CONTRACT'),
+      wbs: this.translate.instant('AIWIZARD_COUNT_WBS'),
+      requirement: this.translate.instant('AIWIZARD_COUNT_REQUIREMENT'),
+      specification: this.translate.instant('AIWIZARD_COUNT_SPECIFICATION'),
+      task: this.translate.instant('AIWIZARD_COUNT_TASK'),
+      test: this.translate.instant('AIWIZARD_COUNT_TEST'),
+      delivery: this.translate.instant('AIWIZARD_COUNT_DELIVERY'),
+      manual: this.translate.instant('AIWIZARD_COUNT_MANUAL'),
+      invoice: this.translate.instant('AIWIZARD_COUNT_INVOICE'),
+      diagram: this.translate.instant('AIWIZARD_COUNT_DIAGRAM'),
+      design_review: this.translate.instant('AIWIZARD_COUNT_DESIGN_REVIEW'),
+      ma: this.translate.instant('AIWIZARD_COUNT_MA'),
+    };
+  }
 
   // Preview Data
   readonly previewData = signal<AiProjectPipelinePreviewResponse | null>(null);
@@ -107,12 +112,14 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     (this.selectedHistoryJob()?.steps || []).filter((s) => s.status === 'FAILED' || s.status === 'SKIPPED'),
   );
 
-  readonly statusLabels: Record<string, string> = {
-    RUNNING: 'กำลังทำงาน',
-    COMPLETED: 'สำเร็จทั้งหมด',
-    COMPLETED_WITH_ERRORS: 'สำเร็จบางส่วน',
-    FAILED: 'ไม่สำเร็จ',
-  };
+  get statusLabels(): Record<string, string> {
+    return {
+      RUNNING: this.translate.instant('AIWIZARD_STATUS_RUNNING'),
+      COMPLETED: this.translate.instant('AIWIZARD_STATUS_COMPLETED'),
+      COMPLETED_WITH_ERRORS: this.translate.instant('AIWIZARD_STATUS_COMPLETED_WITH_ERRORS'),
+      FAILED: this.translate.instant('AIWIZARD_STATUS_FAILED'),
+    };
+  }
 
   get availableModels() {
     return this.aiModelsSvc.models();
@@ -148,12 +155,15 @@ export class SicAiProjectWizardComponent implements OnDestroy {
         },
         error: (err) => {
           this.isProcessing.set(false);
-          this.dialog.error('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการวิเคราะห์โครงการ: ' + (err?.message || 'โปรดลองใหม่'));
+          this.dialog.error(
+            this.translate.instant('AIWIZARD_ERROR_TITLE'),
+            this.translate.instant('AIWIZARD_ANALYZE_ERROR_MSG', { msg: err?.message || this.translate.instant('AIWIZARD_TRY_AGAIN') }),
+          );
         },
       });
     } catch (err: any) {
       this.isProcessing.set(false);
-      this.dialog.error('ข้อผิดพลาด', 'เกิดข้อผิดพลาดในการประมวลผลไฟล์แนบ');
+      this.dialog.error(this.translate.instant('AIWIZARD_ERROR_TITLE'), this.translate.instant('AIWIZARD_ATTACHMENT_ERROR_MSG'));
     }
   }
 
@@ -187,10 +197,13 @@ export class SicAiProjectWizardComponent implements OnDestroy {
       // งานทำเบื้องหลังหลายนาที: เริ่มงานแล้ว poll ความคืบหน้าทีละขั้นแทนการรอ request เดียว
       this.pipelineSvc.startPipelineJob(req).subscribe({
         next: ({ jobId }) => this.pollJob(jobId),
-        error: (err) => this.failToPreview('เกิดข้อผิดพลาดในการเริ่มสร้างโครงการ: ' + (err?.message || 'โปรดลองใหม่')),
+        error: (err) =>
+          this.failToPreview(
+            this.translate.instant('AIWIZARD_START_PIPELINE_ERROR_MSG', { msg: err?.message || this.translate.instant('AIWIZARD_TRY_AGAIN') }),
+          ),
       });
     } catch {
-      this.failToPreview('เกิดข้อผิดพลาดในการประมวลผลไฟล์แนบ');
+      this.failToPreview(this.translate.instant('AIWIZARD_ATTACHMENT_ERROR_MSG'));
     }
   }
 
@@ -204,19 +217,22 @@ export class SicAiProjectWizardComponent implements OnDestroy {
           this.stopPolling();
           this.isProcessing.set(false);
           if (job.status === 'FAILED') {
-            this.failToPreview(job.message || 'สร้างโครงการไม่สำเร็จ');
+            this.failToPreview(job.message || this.translate.instant('AIWIZARD_CREATE_PROJECT_FAILED_MSG'));
             return;
           }
           this.createdProjectId.set(job.projectId ?? null);
           this.createdCounts.set(job.createdCounts || {});
           this.currentStep.set(4);
           if (job.status === 'COMPLETED_WITH_ERRORS') {
-            this.dialog.warn('สร้างเสร็จบางส่วน', job.message || 'บางขั้นตอนไม่สำเร็จ');
+            this.dialog.warn(
+              this.translate.instant('AIWIZARD_PARTIAL_SUCCESS_TITLE'),
+              job.message || this.translate.instant('AIWIZARD_SOME_STEPS_FAILED_MSG'),
+            );
           }
         },
         error: () => {
           this.stopPolling();
-          this.failToPreview('ไม่สามารถติดตามความคืบหน้าได้ (งานอาจยังทำงานอยู่เบื้องหลัง ตรวจสอบรายการโครงการอีกครั้ง)');
+          this.failToPreview(this.translate.instant('AIWIZARD_POLL_ERROR_MSG'));
         },
       });
     tick();
@@ -234,7 +250,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     this.stopPolling();
     this.isProcessing.set(false);
     this.currentStep.set(2);
-    this.dialog.error('ข้อผิดพลาด', message);
+    this.dialog.error(this.translate.instant('AIWIZARD_ERROR_TITLE'), message);
   }
 
   ngOnDestroy(): void {
@@ -303,7 +319,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
       },
       error: () => {
         this.historyLoading.set(false);
-        this.dialog.error('ข้อผิดพลาด', 'ไม่สามารถโหลดประวัติการสร้างโครงการได้');
+        this.dialog.error(this.translate.instant('AIWIZARD_ERROR_TITLE'), this.translate.instant('AIWIZARD_LOAD_HISTORY_ERROR_MSG'));
       },
     });
   }

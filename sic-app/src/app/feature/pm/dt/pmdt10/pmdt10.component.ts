@@ -480,8 +480,8 @@ export class Pmdt10Component implements OnInit {
     column: [
       { label: this.translate.instant('PMDT10_COL_TASK_CODE'), name: 'taskCode', type: 'taskCode', minWidth: 100 },
       { label: this.translate.instant('PMDT10_COL_TASK_NAME'), name: 'taskName', type: 'taskName', minWidth: 150 },
-      { label: 'Specification (Trace)', name: 'specificationCode', type: 'specTrace', minWidth: 160 },
-      { label: 'Work Package', name: 'workPackageName', type: 'wpName', minWidth: 120 },
+      { label: this.translate.instant('PMDT10_COL_SPEC_TRACE'), name: 'specificationCode', type: 'specTrace', minWidth: 160 },
+      { label: this.translate.instant('PMDT10_COL_WORK_PACKAGE'), name: 'workPackageName', type: 'wpName', minWidth: 120 },
       { label: this.translate.instant('PMDT10_COL_ASSIGNEE'), name: 'assignees', type: 'assigneeList', minWidth: 160 },
       { label: this.translate.instant('PMDT10_COL_MANDAY'), name: 'actualManday', type: 'mandayText', minWidth: 120 },
       { label: this.translate.instant('PMDT10_COL_STATUS'), name: 'status', type: 'statusBadge', minWidth: 100 },
