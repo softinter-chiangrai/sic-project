@@ -25,6 +25,8 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
 
     List<PmTask> findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(UUID projectId);
 
+    boolean existsByWorkPackageMilestonePhaseProjectIdAndTaskCodeAndIsDeleteFalse(UUID projectId, String taskCode);
+
     @Query("SELECT COALESCE(SUM(t.actualManday), 0) FROM PmTask t " +
            "JOIN t.workPackage wp JOIN wp.milestone m JOIN m.phase ph " +
            "WHERE ph.project.id = :projectId AND t.isDelete = false")

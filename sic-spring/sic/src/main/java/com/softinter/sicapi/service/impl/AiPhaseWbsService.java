@@ -99,7 +99,13 @@ public class AiPhaseWbsService {
                     if (tName == null) continue;
                     TaskRequest tq = new TaskRequest();
                     tq.setWorkPackageId(workPackage.getId());
-                    tq.setTaskCode(String.format("TSK-%03d", taskBase + taskCount + 1));
+                    String taskCode;
+                    long taskCandidate = taskBase + taskCount + 1;
+                    do {
+                        taskCode = String.format("TSK-%03d", taskCandidate++);
+                    } while (taskRepository.existsByWorkPackageMilestonePhaseProjectIdAndTaskCodeAndIsDeleteFalse(
+                            phase.getProjectId(), taskCode));
+                    tq.setTaskCode(taskCode);
                     tq.setTaskName(cut(tName, 255));
                     tq.setDescription(text(t, "description"));
                     LocalDate start = clamp(date(t, "startDate", wq.getStartDate()), phaseStart, phaseEnd);

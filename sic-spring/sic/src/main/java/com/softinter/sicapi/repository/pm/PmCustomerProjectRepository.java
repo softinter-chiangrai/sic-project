@@ -49,4 +49,6 @@ Page<PmCustomerProject> findByCustomerIdAndBusinessIdWithCustomer(@Param("custom
     Page<PmCustomerProject> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 
     Page<PmCustomerProject> findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(UUID businessId, String keyword, Pageable pageable);
+
+    boolean existsByProjectCode(String projectCode);
 }

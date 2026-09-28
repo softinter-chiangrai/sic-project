@@ -199,7 +199,12 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setDeliveryVersion("1.0.0");
             if (request.getDeliveryCode() == null || request.getDeliveryCode().isBlank()) {
                 long count = deliveryRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-                request.setDeliveryCode("DEL-" + String.format("%03d", count));
+                String code;
+                do {
+                    code = "DEL-" + String.format("%03d", count++);
+                } while (deliveryRepository.existsByBusinessIdAndProjectIdAndDeliveryCodeAndIsDeleteFalse(
+                        businessId, request.getProjectId(), code));
+                request.setDeliveryCode(code);
             } else if (deliveryRepository.existsByBusinessIdAndProjectIdAndDeliveryCodeAndIsDeleteFalse(
                     businessId, request.getProjectId(), request.getDeliveryCode())) {
                 throw new RuntimeException("รหัสเอกสารส่งมอบนี้มีอยู่แล้วในโครงการนี้: " + request.getDeliveryCode());

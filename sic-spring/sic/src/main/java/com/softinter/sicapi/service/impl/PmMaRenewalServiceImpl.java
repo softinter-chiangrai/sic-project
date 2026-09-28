@@ -163,7 +163,12 @@ public class PmMaRenewalServiceImpl implements PmMaRenewalService {
             mapRequestToEntity(request, entity);
             if (entity.getRenewalNo() == null || entity.getRenewalNo().isBlank()) {
                 long count = renewalRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
-                entity.setRenewalNo("MAR-" + String.format("%03d", count));
+                String renewalNo;
+                do {
+                    renewalNo = "MAR-" + String.format("%03d", count++);
+                } while (renewalRepository.existsByBusinessIdAndProjectIdAndRenewalNoAndIsDeleteFalse(
+                        businessId, entity.getProjectId(), renewalNo));
+                entity.setRenewalNo(renewalNo);
             } else if (renewalRepository.existsByBusinessIdAndProjectIdAndRenewalNoAndIsDeleteFalse(
                     businessId, entity.getProjectId(), entity.getRenewalNo())) {
                 throw new RuntimeException("รหัสข้อเสนอต่อสัญญานี้มีอยู่แล้วในโครงการนี้: " + entity.getRenewalNo());

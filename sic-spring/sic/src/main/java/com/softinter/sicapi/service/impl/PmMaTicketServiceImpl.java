@@ -174,7 +174,12 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             mapRequestToEntity(request, entity);
             if (entity.getTicketNo() == null || entity.getTicketNo().isBlank()) {
                 long count = ticketRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
-                entity.setTicketNo("TK-" + String.format("%03d", count));
+                String ticketNo;
+                do {
+                    ticketNo = "TK-" + String.format("%03d", count++);
+                } while (ticketRepository.existsByBusinessIdAndProjectIdAndTicketNoAndIsDeleteFalse(
+                        businessId, entity.getProjectId(), ticketNo));
+                entity.setTicketNo(ticketNo);
             } else if (ticketRepository.existsByBusinessIdAndProjectIdAndTicketNoAndIsDeleteFalse(
                     businessId, entity.getProjectId(), entity.getTicketNo())) {
                 throw new RuntimeException("รหัสตั๋ว MA นี้มีอยู่แล้วในโครงการนี้: " + entity.getTicketNo());

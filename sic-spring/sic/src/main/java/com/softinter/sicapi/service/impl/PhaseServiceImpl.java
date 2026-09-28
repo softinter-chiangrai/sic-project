@@ -89,8 +89,12 @@ public class PhaseServiceImpl implements PhaseService {
 
         String phaseCode = request.getPhaseCode();
         if (phaseCode == null || phaseCode.trim().isEmpty()) {
-            long count = phaseRepository.countByProjectId(request.getProjectId());
-            phaseCode = String.format("PH-%03d", count + 1);
+            long count = phaseRepository.countByProjectId(request.getProjectId()) + 1;
+            do {
+                phaseCode = String.format("PH-%03d", count++);
+            } while (phaseRepository.existsByProjectIdAndPhaseCode(request.getProjectId(), phaseCode));
+        } else if (phaseRepository.existsByProjectIdAndPhaseCode(request.getProjectId(), phaseCode.trim())) {
+            throw new RuntimeException("รหัส Phase นี้มีอยู่แล้วในโครงการนี้: " + phaseCode.trim());
         }
         phase.setPhaseCode(phaseCode);
 

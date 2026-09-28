@@ -204,11 +204,13 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             if (request.getSpecificationCode() == null || request.getSpecificationCode().isBlank()) {
                 long count = specificationRepository.countByProjectIdAndIsDeleteFalse(effectiveProjectId) + 1;
-                request.setSpecificationCode("SPEC-" + String.format("%03d", count));
-            }
-
-            // ตรวจสอบรหัสซ้ำ (ในโครงการเดียวกัน)
-            if (specificationRepository.existsByBusinessIdAndProjectIdAndSpecificationCodeAndIsDeleteFalse(
+                String code;
+                do {
+                    code = "SPEC-" + String.format("%03d", count++);
+                } while (specificationRepository.existsByBusinessIdAndProjectIdAndSpecificationCodeAndIsDeleteFalse(
+                        businessId, effectiveProjectId, code));
+                request.setSpecificationCode(code);
+            } else if (specificationRepository.existsByBusinessIdAndProjectIdAndSpecificationCodeAndIsDeleteFalse(
                     businessId, effectiveProjectId, request.getSpecificationCode())) {
                 throw new RuntimeException("รหัส Specification นี้มีอยู่แล้วในโครงการนี้: " + request.getSpecificationCode());
             }

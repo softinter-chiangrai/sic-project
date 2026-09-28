@@ -182,7 +182,12 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             mapRequestToEntity(request, entity);
             if (entity.getInvoiceNo() == null || entity.getInvoiceNo().isBlank()) {
                 long count = invoiceRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
-                entity.setInvoiceNo("INV-" + String.format("%03d", count));
+                String invoiceNo;
+                do {
+                    invoiceNo = "INV-" + String.format("%03d", count++);
+                } while (invoiceRepository.existsByBusinessIdAndProjectIdAndInvoiceNoAndIsDeleteFalse(
+                        businessId, entity.getProjectId(), invoiceNo));
+                entity.setInvoiceNo(invoiceNo);
             } else if (invoiceRepository.existsByBusinessIdAndProjectIdAndInvoiceNoAndIsDeleteFalse(
                     businessId, entity.getProjectId(), entity.getInvoiceNo())) {
                 throw new RuntimeException("เลขที่ใบแจ้งหนี้นี้มีอยู่แล้วในโครงการนี้: " + entity.getInvoiceNo());

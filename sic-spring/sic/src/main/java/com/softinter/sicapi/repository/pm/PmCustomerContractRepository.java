@@ -29,4 +29,6 @@ public interface PmCustomerContractRepository
 
     boolean existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
             UUID businessId, UUID projectId, String contractNo);
+
+    boolean existsByContractNo(String contractNo);
 }

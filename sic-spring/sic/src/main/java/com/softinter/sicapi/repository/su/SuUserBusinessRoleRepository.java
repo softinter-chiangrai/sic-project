@@ -30,13 +30,13 @@ public interface SuUserBusinessRoleRepository extends JpaRepository<SuUserBusine
            "AND ubr.businessRole.isActive = true AND rp.isActive = true AND p.isActive = true")
     List<String> findAccessibleProgramCodes(@Param("userId") String userId, @Param("businessId") UUID businessId);
 
-    boolean existsByUserBusinessIdAndBusinessRoleId(UUID userBusinessId, UUID businessRoleId);
+    boolean existsByUserBusinessIdAndBusinessRoleIdAndIsDeleteFalse(UUID userBusinessId, UUID businessRoleId);
 
     @Query("SELECT r FROM SuUserBusinessRole r WHERE r.userBusinessId = :userBusinessId AND r.isActive = true")
     Optional<SuUserBusinessRole> findFirstByUserBusinessIdAndIsActiveTrue(@Param("userBusinessId") UUID userBusinessId);
 
     @Modifying
-    @Query("DELETE FROM SuUserBusinessRole r WHERE r.userBusinessId = :userBusinessId")
+    @Query("UPDATE SuUserBusinessRole r SET r.isDelete = true, r.isActive = false WHERE r.userBusinessId = :userBusinessId AND r.isDelete = false")
     void deleteByUserBusinessId(@Param("userBusinessId") UUID userBusinessId);
 
     @Query("SELECT ubr FROM SuUserBusinessRole ubr " +

@@ -118,7 +118,7 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
             SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, businessId)
                     .orElseThrow(() -> new IllegalArgumentException("Role not found in this business."));
 
-            boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
+            boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleIdAndIsDeleteFalse(
                     userBusiness.getId(), roleId);
             if (!hasRole) {
                 SuUserBusinessRole userRole = new SuUserBusinessRole();

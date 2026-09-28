@@ -8,11 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.util.UUID;
 
+// unique(user_business_id, business_role_id) บังคับด้วย partial index ux_user_business_role_active
+// (WHERE is_delete = false) ใน DB โดยตรง ไม่ประกาศผ่าน @Index เพราะ JPA @Index ไม่รองรับ partial index
 @Entity
-@Table(name = "su_user_business_role",
-       indexes = {
-           @Index(name = "idx_user_business_role", columnList = "user_business_id, business_role_id", unique = true)
-       })
+@Table(name = "su_user_business_role")
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor

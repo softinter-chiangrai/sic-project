@@ -166,7 +166,7 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
         }
 
         // 3. Create Project
-        String projectCode = "PRJ-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + String.format("%03d", (int)(Math.random() * 1000));
+        String projectCode = generateUniqueProjectCode();
         PmCustomerProject project = new PmCustomerProject();
         project.setBusinessId(businessId);
         project.setCustomerId(customerId);
@@ -327,6 +327,16 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
         } catch (Exception e) {
             return fallback;
         }
+    }
+
+    /** สุ่ม project code แล้วเช็คชนกับที่มีอยู่ในระบบ วนจนกว่าจะไม่ซ้ำ */
+    private String generateUniqueProjectCode() {
+        String datePart = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        for (int attempt = 0; attempt < 50; attempt++) {
+            String code = "PRJ-" + datePart + "-" + String.format("%03d", (int) (Math.random() * 1000));
+            if (!projectRepository.existsByProjectCode(code)) return code;
+        }
+        return "PRJ-" + datePart + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 
     private AiProjectPipelinePreviewResponse buildFallbackPreview(AiProjectPipelineRequest req) {

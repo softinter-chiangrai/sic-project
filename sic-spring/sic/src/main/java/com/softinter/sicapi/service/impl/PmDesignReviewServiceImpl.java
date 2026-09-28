@@ -186,7 +186,14 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         entity.setProject(project);
         if (request.getReviewCode() == null || request.getReviewCode().isBlank()) {
             long count = designReviewRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-            entity.setReviewCode("DR-" + String.format("%03d", count));
+            String reviewCode;
+            do {
+                reviewCode = "DR-" + String.format("%03d", count++);
+            } while (designReviewRepository.existsByProjectIdAndReviewCodeAndIsDeleteFalse(request.getProjectId(), reviewCode));
+            entity.setReviewCode(reviewCode);
+        } else if (!request.getReviewCode().trim().equals(entity.getReviewCode())
+                && designReviewRepository.existsByProjectIdAndReviewCodeAndIsDeleteFalse(request.getProjectId(), request.getReviewCode())) {
+            throw new RuntimeException("รหัส Design Review นี้มีอยู่แล้วในโครงการนี้: " + request.getReviewCode());
         } else {
             entity.setReviewCode(request.getReviewCode());
         }

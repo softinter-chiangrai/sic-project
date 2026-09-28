@@ -59,6 +59,8 @@ import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.AiPipelineJob;
 import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.repository.pm.AiPipelineJobRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.service.MilestoneService;
 import com.softinter.sicapi.service.PhaseService;
@@ -112,6 +114,8 @@ public class AiProjectPipelineJobService {
     private final PmMaRenewalService maRenewalService;
     private final TraceLinkService traceLinkService;
     private final AiPipelineJobRepository jobRepository;
+    private final PmCustomerProjectRepository projectRepository;
+    private final PmCustomerContractRepository contractRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<UUID, Job> jobs = new ConcurrentHashMap<>();
@@ -159,6 +163,7 @@ public class AiProjectPipelineJobService {
         volatile String prompt;
         volatile Integer durationWeeks;
         volatile String aiModel;
+        volatile UUID businessId;
     }
 
     private record Ref(UUID id, String name) {
@@ -191,7 +196,9 @@ public class AiProjectPipelineJobService {
 
     public UUID start(AiProjectPipelineRequest request, UUID businessId, String userId) {
         purgeOldJobs();
+        rejectIfDuplicateRunning(businessId, request.getPrompt());
         Job job = new Job();
+        job.businessId = businessId;
         job.prompt = request.getPrompt();
         job.durationWeeks = request.getDurationWeeks();
         job.aiModel = request.getModel();
@@ -407,7 +414,7 @@ public class AiProjectPipelineJobService {
 
         PmCustomerProjectRequest pr = new PmCustomerProjectRequest();
         pr.setCustomerId(customerId);
-        pr.setProjectCode("PRJ-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + String.format("%03d", ThreadLocalRandom.current().nextInt(1000)));
+        pr.setProjectCode(generateUniqueProjectCode());
         pr.setProjectName(cut(name, 255));
         pr.setDescription(desc);
         pr.setStartDate(c.startDate);
@@ -438,7 +445,7 @@ public class AiProjectPipelineJobService {
                 """, projectContext(c), false);
 
         PmCustomerContractRequest cr = new PmCustomerContractRequest();
-        cr.setContractNo("CT-" + LocalDate.now().getYear() + "-" + String.format("%03d", ThreadLocalRandom.current().nextInt(1000)));
+        cr.setContractNo(generateUniqueContractNo());
         String type = txt(root, "contractType");
         cr.setContractType(CONTRACT_TYPES.contains(type) ? type : "Development Contract");
         cr.setCustomerId(c.customerId);
@@ -751,27 +758,34 @@ public class AiProjectPipelineJobService {
 
 
     private void stepDiagrams(Ctx c, StepState step) {
+        int reqCount = c.requirements.size();
+        int maxDiagrams = reqCount == 0 ? 4 : Math.min(reqCount + 2, 15);
         JsonNode root = ask(c, """
-                You are a System Analyst. Design the analysis/design diagrams of the project (max 4): one DFD, one ER, one Flowchart of the main business process, optionally one Use Case.
-                Each diagram is linked to one requirement by number. Keep every diagram small (max 12 nodes / 8 entities). Fill EVERY field.
+                You are a System Analyst. Design the analysis/design diagrams of the project: create ONE diagram for EACH requirement listed below
+                (choose the type that best represents that requirement: DFD for data-flow-heavy features, Flowchart for procedural/business-process features,
+                or Use Case for actor/interaction-heavy features), PLUS exactly ONE additional "ER" diagram covering the overall data model of the whole system
+                (not tied to a single requirement — cover every major entity across all requirements).
+                Each non-ER diagram is linked to its requirement by number via requirementRef; the ER diagram may omit requirementRef.
+                Keep every diagram small (max 12 nodes / 10 entities). Fill EVERY field. Do not exceed %d diagrams in total.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "diagrams": [
                   { "name": "...", "type": "DFD", "requirementRef": 1,
                     "nodes": [ { "id": "n1", "label": "...", "kind": "EXTERNAL | PROCESS | STORE" } ],
                     "edges": [ { "from": "n1", "to": "n2", "label": "data flow" } ] },
-                  { "name": "...", "type": "ER", "requirementRef": 1,
+                  { "name": "...", "type": "ER",
                     "entities": [ { "name": "Customer", "attributes": [ "id (PK)", "name", "email" ] } ],
                     "relations": [ { "from": "Customer", "to": "Order", "label": "places", "cardinality": "1:N" } ] },
-                  { "name": "...", "type": "Flowchart", "requirementRef": 1,
+                  { "name": "...", "type": "Flowchart", "requirementRef": 2,
                     "nodes": [ { "id": "n1", "label": "...", "kind": "START | TASK | DECISION | END" } ],
                     "edges": [ { "from": "n1", "to": "n2", "label": "" } ] },
-                  { "name": "...", "type": "Use Case", "requirementRef": 1,
+                  { "name": "...", "type": "Use Case", "requirementRef": 3,
                     "nodes": [ { "id": "n1", "label": "...", "kind": "ACTOR | USECASE" } ],
                     "edges": [ { "from": "n1", "to": "n2", "label": "" } ] } ] }
-                """, projectContext(c) + "\n\nRequirements:\n" + numbered(c.requirements), false);
+                """.formatted(maxDiagrams), projectContext(c) + "\n\nRequirements:\n" + numbered(c.requirements), false);
 
         int made = 0;
         for (JsonNode d : arr(root, "diagrams")) {
+            if (made >= maxDiagrams) break;
             String type = normalizeDiagramType(txt(d, "type"));
             String xml;
             if ("ER".equals(type)) {
@@ -1009,5 +1023,37 @@ public class AiProjectPipelineJobService {
     private void purgeOldJobs() {
         long now = System.currentTimeMillis();
         jobs.values().removeIf(j -> now - j.createdAt > JOB_TTL_MS && !"RUNNING".equals(j.status));
+    }
+
+    /** ป้องกันการกด "สร้างโครงการ" ซ้ำ (เช่น ดับเบิลคลิก/เปิดหลายแท็บ) ระหว่างที่ prompt เดียวกันของ business เดียวกันยังรันอยู่ */
+    private void rejectIfDuplicateRunning(UUID businessId, String prompt) {
+        String normalized = prompt == null ? "" : prompt.trim();
+        boolean duplicate = jobs.values().stream().anyMatch(j ->
+                "RUNNING".equals(j.status)
+                        && businessId.equals(j.businessId)
+                        && normalized.equalsIgnoreCase(j.prompt == null ? "" : j.prompt.trim()));
+        if (duplicate) {
+            throw new IllegalStateException("มีการสร้างโครงการด้วยข้อความเดียวกันนี้กำลังทำงานอยู่แล้ว กรุณารอให้เสร็จก่อนสร้างซ้ำ");
+        }
+    }
+
+    /** สุ่ม project code แล้วเช็คชนกับที่มีอยู่ในระบบ วนจนกว่าจะไม่ซ้ำ (กันกรณีสุ่มเลขชนกันแม้จะไม่น่าเกิดบ่อย) */
+    private String generateUniqueProjectCode() {
+        String datePart = LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE);
+        for (int attempt = 0; attempt < 50; attempt++) {
+            String code = "PRJ-" + datePart + "-" + String.format("%03d", ThreadLocalRandom.current().nextInt(1000));
+            if (!projectRepository.existsByProjectCode(code)) return code;
+        }
+        return "PRJ-" + datePart + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+    }
+
+    /** เช่นเดียวกับ generateUniqueProjectCode แต่สำหรับเลขที่สัญญา */
+    private String generateUniqueContractNo() {
+        String yearPart = String.valueOf(LocalDate.now().getYear());
+        for (int attempt = 0; attempt < 50; attempt++) {
+            String code = "CT-" + yearPart + "-" + String.format("%03d", ThreadLocalRandom.current().nextInt(1000));
+            if (!contractRepository.existsByContractNo(code)) return code;
+        }
+        return "CT-" + yearPart + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }

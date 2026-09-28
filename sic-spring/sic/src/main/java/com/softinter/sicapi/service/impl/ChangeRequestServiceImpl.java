@@ -113,8 +113,12 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             }
             cr.setCrCode(code);
         } else {
-            long count = projId != null ? changeRequestRepository.countByProjectIdAndIsDeleteFalse(projId) + 1 : 1;
-            cr.setCrCode("CR-" + String.format("%03d", count));
+            long count = (projId != null ? changeRequestRepository.countByProjectIdAndIsDeleteFalse(projId) : 0) + 1;
+            String code;
+            do {
+                code = "CR-" + String.format("%03d", count++);
+            } while (projId != null && changeRequestRepository.existsByProjectIdAndCrCodeAndIsDeleteFalse(projId, code));
+            cr.setCrCode(code);
         }
         cr.setTargetType(request.getTargetType());
         cr.setTargetId(request.getTargetId());

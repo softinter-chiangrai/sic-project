@@ -246,7 +246,7 @@ public JoinBusinessResponse joinBusiness(String token) {
 
     // 6. กำหนด Role (ถ้ายังไม่มี)
     UUID userBusinessId = userBusiness.getId();
-    boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleId(
+    boolean hasRole = userBusinessRoleRepository.existsByUserBusinessIdAndBusinessRoleIdAndIsDeleteFalse(
             userBusinessId, role.getId());
     if (!hasRole) {
         SuUserBusinessRole userRole = new SuUserBusinessRole();

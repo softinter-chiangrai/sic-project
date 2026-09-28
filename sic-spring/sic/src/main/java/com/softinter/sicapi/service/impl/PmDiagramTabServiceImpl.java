@@ -82,7 +82,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setName(request.getName());
         if (request.getDiagramCode() == null || request.getDiagramCode().isBlank()) {
             long count = tabRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-            tab.setDiagramCode("DIAG-" + String.format("%03d", count));
+            String code;
+            do {
+                code = "DIAG-" + String.format("%03d", count++);
+            } while (tabRepository.existsByBusinessIdAndProjectIdAndDiagramCodeAndIsDeleteFalse(
+                    businessId, request.getProjectId(), code));
+            tab.setDiagramCode(code);
         } else if (tabRepository.existsByBusinessIdAndProjectIdAndDiagramCodeAndIsDeleteFalse(
                 businessId, request.getProjectId(), request.getDiagramCode())) {
             throw new RuntimeException("รหัส Diagram นี้มีอยู่แล้วในโครงการนี้: " + request.getDiagramCode());

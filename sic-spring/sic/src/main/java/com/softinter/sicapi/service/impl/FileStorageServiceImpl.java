@@ -697,7 +697,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         if (upload == null) return;
         deletePhysicalFile(upload.getBucketName(), upload.getObjectKey());
         try {
-            uploadRepository.delete(upload);
+            uploadRepository.softDelete(uploadId, currentUserService.getUsername(), Instant.now());
         } catch (Exception e) {
             log.error("Failed to delete upload record {}", uploadId, e);
         }

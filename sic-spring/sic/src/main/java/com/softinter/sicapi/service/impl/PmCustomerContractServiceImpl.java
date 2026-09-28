@@ -247,7 +247,12 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
 
             if (request.getContractNo() == null || request.getContractNo().isBlank()) {
                 long count = contractRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-                request.setContractNo("CTR-" + String.format("%03d", count));
+                String code;
+                do {
+                    code = "CTR-" + String.format("%03d", count++);
+                } while (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+                        businessId, request.getProjectId(), code));
+                request.setContractNo(code);
             } else if (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
                     businessId, request.getProjectId(), request.getContractNo())) {
                 throw new RuntimeException("เลขที่สัญญานี้มีอยู่แล้วในโครงการนี้: " + request.getContractNo());

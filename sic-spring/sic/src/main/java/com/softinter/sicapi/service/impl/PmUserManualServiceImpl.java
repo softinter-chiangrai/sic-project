@@ -143,7 +143,12 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setCreatedDate(Instant.now());
             if (request.getManualCode() == null || request.getManualCode().isBlank()) {
                 long count = manualRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-                request.setManualCode("MAN-" + String.format("%03d", count));
+                String code;
+                do {
+                    code = "MAN-" + String.format("%03d", count++);
+                } while (manualRepository.existsByBusinessIdAndProjectIdAndManualCodeAndIsDeleteFalse(
+                        businessId, request.getProjectId(), code));
+                request.setManualCode(code);
             } else if (manualRepository.existsByBusinessIdAndProjectIdAndManualCodeAndIsDeleteFalse(
                     businessId, request.getProjectId(), request.getManualCode())) {
                 throw new RuntimeException("รหัสคู่มือนี้มีอยู่แล้วในโครงการนี้: " + request.getManualCode());

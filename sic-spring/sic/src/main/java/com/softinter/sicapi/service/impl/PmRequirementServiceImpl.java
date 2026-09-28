@@ -170,7 +170,12 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setVersion("v1.0.0");
             if (request.getRequirementCode() == null || request.getRequirementCode().isBlank()) {
                 long count = requirementRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-                request.setRequirementCode("REQ-" + String.format("%03d", count));
+                String code;
+                do {
+                    code = "REQ-" + String.format("%03d", count++);
+                } while (requirementRepository.existsByBusinessIdAndProjectIdAndRequirementCodeAndIsDeleteFalse(
+                        businessId, request.getProjectId(), code));
+                request.setRequirementCode(code);
             } else if (requirementRepository.existsByBusinessIdAndProjectIdAndRequirementCodeAndIsDeleteFalse(
                     businessId, request.getProjectId(), request.getRequirementCode())) {
                 throw new RuntimeException("รหัส Requirement นี้มีอยู่แล้วในโครงการนี้: " + request.getRequirementCode());

@@ -57,10 +57,21 @@ public class TaskServiceImpl implements TaskService {
         PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
                 .orElseThrow(() -> new RuntimeException("Work Package not found"));
 
+        UUID taskProjectId = wp.getMilestone().getPhase().getProject().getId();
+        String taskCode = request.getTaskCode();
+        if (taskCode == null || taskCode.isBlank()) {
+            long count = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(taskProjectId).size() + 1;
+            do {
+                taskCode = "TSK-" + String.format("%03d", count++);
+            } while (taskRepository.existsByWorkPackageMilestonePhaseProjectIdAndTaskCodeAndIsDeleteFalse(taskProjectId, taskCode));
+        } else if (taskRepository.existsByWorkPackageMilestonePhaseProjectIdAndTaskCodeAndIsDeleteFalse(taskProjectId, taskCode)) {
+            throw new RuntimeException("รหัส Task นี้มีอยู่แล้วในโครงการนี้: " + taskCode);
+        }
+
         PmTask task = new PmTask();
         task.setWorkPackage(wp);
         task.setBusinessId(wp.getBusinessId());
-        task.setTaskCode(request.getTaskCode());
+        task.setTaskCode(taskCode);
         task.setTaskName(request.getTaskName());
         task.setDescription(request.getDescription());
         task.setAssignedTo(request.getAssignedTo());

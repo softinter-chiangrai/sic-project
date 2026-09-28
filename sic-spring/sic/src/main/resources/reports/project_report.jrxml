@@ -43,7 +43,24 @@
                 COALESCE(p.description, CASE WHEN $P{lang} = 'en' THEN 'No additional details' ELSE 'ไม่มีรายละเอียดเพิ่มเติม' END) AS "description",
                 TO_CHAR(p.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
                 (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
-                    WHERE su.upload_group_id = p.attachment_group_id AND su.is_active = true) AS "attachmentNames"
+                    WHERE su.upload_group_id = p.attachment_group_id AND su.is_active = true) AS "attachmentNames",
+                CAST((SELECT COUNT(*) FROM pm_requirement r WHERE r.project_id = p.id AND r.is_delete = false) AS VARCHAR) AS "totalRequirements",
+                CAST((SELECT COUNT(*) FROM pm_specification s WHERE s.project_id = p.id AND s.is_delete = false) AS VARCHAR) AS "totalSpecifications",
+                CAST((SELECT COUNT(*) FROM pm_phase ph WHERE ph.project_id = p.id AND ph.is_delete = false) AS VARCHAR) AS "totalPhases",
+                CAST((SELECT COUNT(*) FROM pm_customer_contract cc WHERE cc.project_id = p.id AND cc.is_delete = false) AS VARCHAR) AS "totalContracts",
+                CAST((SELECT COUNT(*) FROM pm_delivery d WHERE d.project_id = p.id AND d.is_delete = false) AS VARCHAR) AS "totalDeliveries",
+                CAST((SELECT COUNT(*) FROM pm_invoice inv WHERE inv.project_id = p.id AND inv.is_delete = false) AS VARCHAR) AS "totalInvoices",
+                CAST((SELECT COUNT(*) FROM pm_change_request cr WHERE cr.project_id = p.id AND cr.is_delete = false) AS VARCHAR) AS "totalChangeRequests",
+                CAST((SELECT COUNT(*) FROM pm_ma_ticket mt WHERE mt.project_id = p.id AND mt.is_delete = false) AS VARCHAR) AS "totalMaTickets",
+                CAST((SELECT COUNT(*) FROM pm_ma_renewal mr WHERE mr.project_id = p.id AND mr.is_delete = false) AS VARCHAR) AS "totalMaRenewals",
+                CAST((SELECT COUNT(*) FROM pm_user_manual um WHERE um.project_id = p.id AND um.is_delete = false) AS VARCHAR) AS "totalUserManuals",
+                CAST((SELECT COUNT(*) FROM pm_design_review dr WHERE dr.project_id = p.id AND dr.is_delete = false) AS VARCHAR) AS "totalDesignReviews",
+                CAST((SELECT COUNT(*) FROM pm_diagram dg WHERE dg.project_id = p.id AND dg.is_delete = false) AS VARCHAR) AS "totalDiagrams",
+                CAST((SELECT COUNT(*) FROM pm_bug bg WHERE bg.project_id = p.id AND bg.is_delete = false) AS VARCHAR) AS "totalBugs",
+                CAST((SELECT COUNT(*) FROM pm_test_scenario ts WHERE ts.project_id = p.id AND ts.is_delete = false) AS VARCHAR) AS "totalTestScenarios",
+                CAST((SELECT COUNT(*) FROM pm_test_case tc WHERE tc.project_id = p.id AND tc.is_delete = false) AS VARCHAR) AS "totalTestCases",
+                CAST((SELECT COUNT(*) FROM pm_test_case tc WHERE tc.project_id = p.id AND tc.is_delete = false AND tc.test_status ILIKE 'pass%') AS VARCHAR) AS "passedTestCases",
+                CAST((SELECT COUNT(*) FROM pm_test_case tc WHERE tc.project_id = p.id AND tc.is_delete = false AND tc.test_status ILIKE 'fail%') AS VARCHAR) AS "failedTestCases"
             FROM pm_customer_project p
             LEFT JOIN pm_customer c ON p.customer_id = c.id
             WHERE p.is_delete = false
@@ -65,6 +82,23 @@
 	<field name="description" class="java.lang.String"/>
 	<field name="createdDate" class="java.lang.String"/>
 	<field name="attachmentNames" class="java.lang.String"/>
+	<field name="totalMaTickets" class="java.lang.String"/>
+	<field name="totalMaRenewals" class="java.lang.String"/>
+	<field name="totalUserManuals" class="java.lang.String"/>
+	<field name="totalDesignReviews" class="java.lang.String"/>
+	<field name="totalDiagrams" class="java.lang.String"/>
+	<field name="totalBugs" class="java.lang.String"/>
+	<field name="totalRequirements" class="java.lang.String"/>
+	<field name="totalSpecifications" class="java.lang.String"/>
+	<field name="totalPhases" class="java.lang.String"/>
+	<field name="totalContracts" class="java.lang.String"/>
+	<field name="totalDeliveries" class="java.lang.String"/>
+	<field name="totalInvoices" class="java.lang.String"/>
+	<field name="totalChangeRequests" class="java.lang.String"/>
+	<field name="totalTestScenarios" class="java.lang.String"/>
+	<field name="totalTestCases" class="java.lang.String"/>
+	<field name="passedTestCases" class="java.lang.String"/>
+	<field name="failedTestCases" class="java.lang.String"/>
 
 	<!-- ========================================================
          TITLE BAND — Clean Minimal Header
@@ -117,8 +151,241 @@
 		<field name="imageData" class="java.io.InputStream"/>
 	</dataset>
 
+	<!-- ========================================================
+	     SUB-DATASETS: แต่ละ module ของโครงการ ดึงข้อมูลด้วย SQL ของตัวเอง
+	     ผ่าน connection เดียวกับ report หลัก (connectionExpression = $P{REPORT_CONNECTION})
+	     กรองด้วย projectId ที่ส่งต่อมาจาก report หลัก
+	     ======================================================== -->
+	<dataset name="ContractsDataset" uuid="e00c0001-0001-0001-0001-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                contract_no                                                       AS "contractNo",
+                COALESCE(contract_type, '-')                                      AS "contractType",
+                COALESCE(TO_CHAR(contract_value, 'FM999,999,990.00'), '0.00')     AS "contractValue",
+                COALESCE(sign_status, '-')                                        AS "signStatus",
+                COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') || ' - ' || COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-') AS "period"
+            FROM pm_customer_contract
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="contractNo" class="java.lang.String"/>
+		<field name="contractType" class="java.lang.String"/>
+		<field name="contractValue" class="java.lang.String"/>
+		<field name="signStatus" class="java.lang.String"/>
+		<field name="period" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="RequirementsDataset" uuid="e00c0002-0002-0002-0002-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                requirement_code                    AS "code",
+                title                                AS "title",
+                COALESCE(requirement_type, '-')      AS "type",
+                COALESCE(priority, '-')               AS "priority",
+                COALESCE(status, '-')                 AS "status"
+            FROM pm_requirement
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY requirement_code ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="type" class="java.lang.String"/>
+		<field name="priority" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="SpecificationsDataset" uuid="e00c0003-0003-0003-0003-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                specification_code                   AS "code",
+                title                                 AS "title",
+                COALESCE(specification_type, '-')     AS "type",
+                COALESCE(priority, '-')                AS "priority",
+                COALESCE(status, '-')                  AS "status"
+            FROM pm_specification
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY specification_code ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="type" class="java.lang.String"/>
+		<field name="priority" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="PhasesDataset" uuid="e00c0004-0004-0004-0004-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(phase_code, '-')            AS "code",
+                phase_name                            AS "name",
+                COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') || ' - ' || COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-') AS "period",
+                COALESCE(status, '-')                 AS "status",
+                CONCAT(COALESCE(progress, 0), '%')    AS "progress"
+            FROM pm_phase
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY start_date ASC NULLS LAST]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="name" class="java.lang.String"/>
+		<field name="period" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+		<field name="progress" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="DeliveriesDataset" uuid="e00c0005-0005-0005-0005-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(delivery_code, '-')          AS "code",
+                COALESCE(delivery_title, '-')          AS "title",
+                COALESCE(delivery_type, '-')            AS "type",
+                COALESCE(TO_CHAR(delivery_date, 'DD/MM/YYYY'), '-') AS "date",
+                COALESCE(status, '-')                    AS "status"
+            FROM pm_delivery
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY delivery_date ASC NULLS LAST]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="type" class="java.lang.String"/>
+		<field name="date" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="InvoicesDataset" uuid="e00c0006-0006-0006-0006-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                invoice_no                                                    AS "invoiceNo",
+                COALESCE(TO_CHAR(COALESCE(issue_date, invoice_date), 'DD/MM/YYYY'), '-') AS "issueDate",
+                COALESCE(TO_CHAR(total_amount, 'FM999,999,990.00'), '0.00')   AS "totalAmount",
+                COALESCE(payment_status, '-')                                  AS "paymentStatus",
+                COALESCE(TO_CHAR(due_date, 'DD/MM/YYYY'), '-')                AS "dueDate"
+            FROM pm_invoice
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY COALESCE(issue_date, invoice_date) ASC NULLS LAST]]></query>
+		<field name="invoiceNo" class="java.lang.String"/>
+		<field name="issueDate" class="java.lang.String"/>
+		<field name="totalAmount" class="java.lang.String"/>
+		<field name="paymentStatus" class="java.lang.String"/>
+		<field name="dueDate" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="ChangeRequestsDataset" uuid="e00c0007-0007-0007-0007-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(cr_code, '-')     AS "code",
+                title                       AS "title",
+                COALESCE(priority, '-')      AS "priority",
+                COALESCE(status, '-')         AS "status",
+                COALESCE(change_level, '-')    AS "level"
+            FROM pm_change_request
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="priority" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+		<field name="level" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="MaTicketsDataset" uuid="e00c0008-0008-0008-0008-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                ticket_no               AS "ticketNo",
+                title                    AS "title",
+                COALESCE(ticket_type, '-') AS "type",
+                COALESCE(severity, '-')     AS "severity",
+                COALESCE(status, '-')        AS "status"
+            FROM pm_ma_ticket
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="ticketNo" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="type" class="java.lang.String"/>
+		<field name="severity" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="MaRenewalsDataset" uuid="e00c0009-0009-0009-0009-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(renewal_no, '-') AS "renewalNo",
+                COALESCE(TO_CHAR(current_end_date, 'DD/MM/YYYY'), '-') || ' -> ' || COALESCE(TO_CHAR(new_end_date, 'DD/MM/YYYY'), '-') AS "period",
+                COALESCE(TO_CHAR(proposed_amount, 'FM999,999,990.00'), '0.00') AS "amount",
+                COALESCE(status, '-') AS "status"
+            FROM pm_ma_renewal
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="renewalNo" class="java.lang.String"/>
+		<field name="period" class="java.lang.String"/>
+		<field name="amount" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="UserManualsDataset" uuid="e00c0010-0010-0010-0010-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(manual_code, '-')  AS "code",
+                COALESCE(manual_title, '-')  AS "title",
+                COALESCE(manual_type, '-')    AS "type",
+                COALESCE(version, '-')         AS "version",
+                COALESCE(status, '-')           AS "status"
+            FROM pm_user_manual
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="type" class="java.lang.String"/>
+		<field name="version" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="DesignReviewsDataset" uuid="e00c0011-0011-0011-0011-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(review_code, '-')      AS "code",
+                COALESCE(title, '-')              AS "title",
+                COALESCE(review_item_type, '-')    AS "targetType",
+                COALESCE(severity, '-')             AS "severity",
+                COALESCE(status, '-')                AS "status"
+            FROM pm_design_review
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="targetType" class="java.lang.String"/>
+		<field name="severity" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="DiagramsDataset" uuid="e00c0012-0012-0012-0012-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(diagram_code, '-') AS "code",
+                name                          AS "name",
+                COALESCE(diagram_type, '-')    AS "type"
+            FROM pm_diagram
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY sort_order ASC, created_date ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="name" class="java.lang.String"/>
+		<field name="type" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="BugsDataset" uuid="e00c0013-0013-0013-0013-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                bug_code                    AS "code",
+                title                        AS "title",
+                COALESCE(severity, '-')       AS "severity",
+                COALESCE(priority, '-')        AS "priority",
+                COALESCE(status, '-')           AS "status"
+            FROM pm_bug
+            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+            ORDER BY created_date ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="severity" class="java.lang.String"/>
+		<field name="priority" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+	</dataset>
+
 	<detail>
-		<band height="500" splitType="Stretch">
+		<band height="460" splitType="Stretch">
 			<!-- SECTION 1: ข้อมูลทั่วไป (General Information) -->
 			<element kind="textField" uuid="62d1a3c7-9b2f-48ca-91b5-827a4192b0c5" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "1. General Information" : "1. ข้อมูลทั่วไป (General Information)")]]></expression>
@@ -299,6 +566,835 @@
 						<element kind="textField" uuid="d3a1000c-3007-3007-3007-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="FooterText">
 							<expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression>
 						</element>
+
+		</band>
+
+		<!-- ==================== SECTION 4: Project Statistics Overview (own band) ==================== -->
+		<band height="154" splitType="Stretch">
+			<element kind="textField" uuid="e00d0001-1000-1000-1000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "4. Project Statistics Overview" : "4. ภาพรวมสถิติโครงการ (Statistics Overview)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0001-1001-1001-1001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="rectangle" uuid="e00d0001-1002-1002-1002-a1b2c3d4e5f6" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="118" backcolor="#F8FAFC" radius="3">
+				<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+			</element>
+			<!-- Row 1 -->
+			<element kind="textField" uuid="e00d0001-1010-1010-1010-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Requirements:" : "Requirement:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1011-1011-1011-a1b2c3d4e5f6" positionType="Float" x="105" y="38" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalRequirements}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1012-1012-1012-a1b2c3d4e5f6" positionType="Float" x="175" y="38" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Specifications:" : "Specification:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1013-1013-1013-a1b2c3d4e5f6" positionType="Float" x="270" y="38" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalSpecifications}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1014-1014-1014-a1b2c3d4e5f6" positionType="Float" x="340" y="38" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Phases:" : "Phase:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1015-1015-1015-a1b2c3d4e5f6" positionType="Float" x="435" y="38" width="70" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalPhases}]]></expression>
+			</element>
+			<!-- Row 2 -->
+			<element kind="textField" uuid="e00d0001-1020-1020-1020-a1b2c3d4e5f6" positionType="Float" x="10" y="56" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Contracts:" : "สัญญา:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1021-1021-1021-a1b2c3d4e5f6" positionType="Float" x="105" y="56" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalContracts}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1022-1022-1022-a1b2c3d4e5f6" positionType="Float" x="175" y="56" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Deliveries:" : "การส่งมอบ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1023-1023-1023-a1b2c3d4e5f6" positionType="Float" x="270" y="56" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalDeliveries}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1024-1024-1024-a1b2c3d4e5f6" positionType="Float" x="340" y="56" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Invoices:" : "ใบแจ้งหนี้:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1025-1025-1025-a1b2c3d4e5f6" positionType="Float" x="435" y="56" width="70" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalInvoices}]]></expression>
+			</element>
+			<!-- Row 3 -->
+			<element kind="textField" uuid="e00d0001-1030-1030-1030-a1b2c3d4e5f6" positionType="Float" x="10" y="74" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Change Requests:" : "Change Request:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1031-1031-1031-a1b2c3d4e5f6" positionType="Float" x="105" y="74" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalChangeRequests}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1032-1032-1032-a1b2c3d4e5f6" positionType="Float" x="175" y="74" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Test (Scenario/Case):" : "Test (Scenario/Case):")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1033-1033-1033-a1b2c3d4e5f6" positionType="Float" x="270" y="74" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalTestScenarios} + " / " + $F{totalTestCases}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1034-1034-1034-a1b2c3d4e5f6" positionType="Float" x="340" y="74" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Pass / Fail:" : "ผ่าน / ไม่ผ่าน:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1035-1035-1035-a1b2c3d4e5f6" positionType="Float" x="435" y="74" width="70" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{passedTestCases} + " / " + $F{failedTestCases}]]></expression>
+			</element>
+			<!-- Row 4 -->
+			<element kind="textField" uuid="e00d0001-1040-1040-1040-a1b2c3d4e5f6" positionType="Float" x="10" y="92" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "MA Tickets:" : "ตั๋วแจ้งปัญหา MA:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1041-1041-1041-a1b2c3d4e5f6" positionType="Float" x="105" y="92" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalMaTickets}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1042-1042-1042-a1b2c3d4e5f6" positionType="Float" x="175" y="92" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "MA Renewals:" : "ต่ออายุ MA:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1043-1043-1043-a1b2c3d4e5f6" positionType="Float" x="270" y="92" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalMaRenewals}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1044-1044-1044-a1b2c3d4e5f6" positionType="Float" x="340" y="92" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Design Reviews:" : "Design Review:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1045-1045-1045-a1b2c3d4e5f6" positionType="Float" x="435" y="92" width="70" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalDesignReviews}]]></expression>
+			</element>
+			<!-- Row 5 -->
+			<element kind="textField" uuid="e00d0001-1050-1050-1050-a1b2c3d4e5f6" positionType="Float" x="10" y="110" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "User Manuals:" : "คู่มือการใช้งาน:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1051-1051-1051-a1b2c3d4e5f6" positionType="Float" x="105" y="110" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalUserManuals}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1052-1052-1052-a1b2c3d4e5f6" positionType="Float" x="175" y="110" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Diagrams:" : "แผนภาพ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1053-1053-1053-a1b2c3d4e5f6" positionType="Float" x="270" y="110" width="60" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalDiagrams}]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1054-1054-1054-a1b2c3d4e5f6" positionType="Float" x="340" y="110" width="95" height="16" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Bugs:" : "บั๊ก:")]]></expression>
+			</element>
+			<element kind="textField" uuid="e00d0001-1055-1055-1055-a1b2c3d4e5f6" positionType="Float" x="435" y="110" width="70" height="16" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{totalBugs}]]></expression>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 5: สัญญา (Contracts) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0002-2000-2000-2000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "5. Contracts" : "5. สัญญา (Contracts)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0002-2001-2001-2001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0002-2002-2002-2002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="95" height="16" style="Label">
+				<text><![CDATA[Contract No.]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0002-2003-2003-2003-a1b2c3d4e5f6" positionType="Float" x="95" y="34" width="110" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0002-2004-2004-2004-a1b2c3d4e5f6" positionType="Float" x="205" y="34" width="100" height="16" style="Label">
+				<text><![CDATA[Value]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0002-2005-2005-2005-a1b2c3d4e5f6" positionType="Float" x="305" y="34" width="90" height="16" style="Label">
+				<text><![CDATA[Sign Status]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0002-2006-2006-2006-a1b2c3d4e5f6" positionType="Float" x="395" y="34" width="120" height="16" style="Label">
+				<text><![CDATA[Period]]></text>
+			</element>
+			<element kind="component" uuid="e00d0002-2007-2007-2007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0002-2008-2008-2008-a1b2c3d4e5f6" subDataset="ContractsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0002-2009-2009-2009-a1b2c3d4e5f6" x="0" y="0" width="95" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{contractNo}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0002-2010-2010-2010-a1b2c3d4e5f6" x="95" y="0" width="110" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{contractType}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0002-2011-2011-2011-a1b2c3d4e5f6" x="205" y="0" width="100" height="16" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Right" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{contractValue}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0002-2012-2012-2012-a1b2c3d4e5f6" x="305" y="0" width="90" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{signStatus}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0002-2013-2013-2013-a1b2c3d4e5f6" x="395" y="0" width="120" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{period}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 6: Requirement (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0003-3000-3000-3000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "6. Requirements" : "6. ความต้องการ (Requirements)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0003-3001-3001-3001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0003-3002-3002-3002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="70" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0003-3003-3003-3003-a1b2c3d4e5f6" positionType="Float" x="70" y="34" width="220" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0003-3004-3004-3004-a1b2c3d4e5f6" positionType="Float" x="290" y="34" width="115" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0003-3005-3005-3005-a1b2c3d4e5f6" positionType="Float" x="405" y="34" width="55" height="16" style="Label">
+				<text><![CDATA[Priority]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0003-3006-3006-3006-a1b2c3d4e5f6" positionType="Float" x="460" y="34" width="55" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0003-3007-3007-3007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0003-3008-3008-3008-a1b2c3d4e5f6" subDataset="RequirementsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0003-3009-3009-3009-a1b2c3d4e5f6" x="0" y="0" width="70" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0003-3010-3010-3010-a1b2c3d4e5f6" x="70" y="0" width="220" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0003-3011-3011-3011-a1b2c3d4e5f6" x="290" y="0" width="115" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{type}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0003-3012-3012-3012-a1b2c3d4e5f6" x="405" y="0" width="55" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{priority}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0003-3013-3013-3013-a1b2c3d4e5f6" x="460" y="0" width="55" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 7: Specification (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0004-4000-4000-4000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "7. Specifications" : "7. ข้อกำหนดเชิงเทคนิค (Specifications)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0004-4001-4001-4001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0004-4002-4002-4002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0004-4003-4003-4003-a1b2c3d4e5f6" positionType="Float" x="75" y="34" width="215" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0004-4004-4004-4004-a1b2c3d4e5f6" positionType="Float" x="290" y="34" width="120" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0004-4005-4005-4005-a1b2c3d4e5f6" positionType="Float" x="410" y="34" width="50" height="16" style="Label">
+				<text><![CDATA[Priority]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0004-4006-4006-4006-a1b2c3d4e5f6" positionType="Float" x="460" y="34" width="55" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0004-4007-4007-4007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0004-4008-4008-4008-a1b2c3d4e5f6" subDataset="SpecificationsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0004-4009-4009-4009-a1b2c3d4e5f6" x="0" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0004-4010-4010-4010-a1b2c3d4e5f6" x="75" y="0" width="215" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0004-4011-4011-4011-a1b2c3d4e5f6" x="290" y="0" width="120" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{type}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0004-4012-4012-4012-a1b2c3d4e5f6" x="410" y="0" width="50" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{priority}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0004-4013-4013-4013-a1b2c3d4e5f6" x="460" y="0" width="55" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 8: WBS / Phase (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0005-5000-5000-5000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "8. WBS / Phases" : "8. โครงสร้างงาน (WBS / Phase)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0005-5001-5001-5001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0005-5002-5002-5002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="65" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0005-5003-5003-5003-a1b2c3d4e5f6" positionType="Float" x="65" y="34" width="175" height="16" style="Label">
+				<text><![CDATA[Phase Name]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0005-5004-5004-5004-a1b2c3d4e5f6" positionType="Float" x="240" y="34" width="130" height="16" style="Label">
+				<text><![CDATA[Period]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0005-5005-5005-5005-a1b2c3d4e5f6" positionType="Float" x="370" y="34" width="85" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0005-5006-5006-5006-a1b2c3d4e5f6" positionType="Float" x="455" y="34" width="60" height="16" style="Label">
+				<text><![CDATA[Progress]]></text>
+			</element>
+			<element kind="component" uuid="e00d0005-5007-5007-5007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0005-5008-5008-5008-a1b2c3d4e5f6" subDataset="PhasesDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0005-5009-5009-5009-a1b2c3d4e5f6" x="0" y="0" width="65" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0005-5010-5010-5010-a1b2c3d4e5f6" x="65" y="0" width="175" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{name}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0005-5011-5011-5011-a1b2c3d4e5f6" x="240" y="0" width="130" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{period}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0005-5012-5012-5012-a1b2c3d4e5f6" x="370" y="0" width="85" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0005-5013-5013-5013-a1b2c3d4e5f6" x="455" y="0" width="60" height="16" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Right" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{progress}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 9: การส่งมอบ (Deliveries) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0006-6000-6000-6000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "9. Deliveries" : "9. การส่งมอบ (Deliveries)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0006-6001-6001-6001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0006-6002-6002-6002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="70" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0006-6003-6003-6003-a1b2c3d4e5f6" positionType="Float" x="70" y="34" width="195" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0006-6004-6004-6004-a1b2c3d4e5f6" positionType="Float" x="265" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0006-6005-6005-6005-a1b2c3d4e5f6" positionType="Float" x="340" y="34" width="85" height="16" style="Label">
+				<text><![CDATA[Date]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0006-6006-6006-6006-a1b2c3d4e5f6" positionType="Float" x="425" y="34" width="90" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0006-6007-6007-6007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0006-6008-6008-6008-a1b2c3d4e5f6" subDataset="DeliveriesDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0006-6009-6009-6009-a1b2c3d4e5f6" x="0" y="0" width="70" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0006-6010-6010-6010-a1b2c3d4e5f6" x="70" y="0" width="195" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0006-6011-6011-6011-a1b2c3d4e5f6" x="265" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{type}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0006-6012-6012-6012-a1b2c3d4e5f6" x="340" y="0" width="85" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{date}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0006-6013-6013-6013-a1b2c3d4e5f6" x="425" y="0" width="90" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 10: ใบแจ้งหนี้ (Invoices) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0007-7000-7000-7000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "10. Invoices" : "10. ใบแจ้งหนี้ (Invoices)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0007-7001-7001-7001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0007-7002-7002-7002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="95" height="16" style="Label">
+				<text><![CDATA[Invoice No.]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0007-7003-7003-7003-a1b2c3d4e5f6" positionType="Float" x="95" y="34" width="80" height="16" style="Label">
+				<text><![CDATA[Date]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0007-7004-7004-7004-a1b2c3d4e5f6" positionType="Float" x="175" y="34" width="110" height="16" style="Label">
+				<text><![CDATA[Total Amount]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0007-7005-7005-7005-a1b2c3d4e5f6" positionType="Float" x="285" y="34" width="115" height="16" style="Label">
+				<text><![CDATA[Payment Status]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0007-7006-7006-7006-a1b2c3d4e5f6" positionType="Float" x="400" y="34" width="115" height="16" style="Label">
+				<text><![CDATA[Due Date]]></text>
+			</element>
+			<element kind="component" uuid="e00d0007-7007-7007-7007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0007-7008-7008-7008-a1b2c3d4e5f6" subDataset="InvoicesDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0007-7009-7009-7009-a1b2c3d4e5f6" x="0" y="0" width="95" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{invoiceNo}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0007-7010-7010-7010-a1b2c3d4e5f6" x="95" y="0" width="80" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{issueDate}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0007-7011-7011-7011-a1b2c3d4e5f6" x="175" y="0" width="110" height="16" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Right" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{totalAmount}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0007-7012-7012-7012-a1b2c3d4e5f6" x="285" y="0" width="115" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{paymentStatus}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0007-7013-7013-7013-a1b2c3d4e5f6" x="400" y="0" width="115" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{dueDate}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 11: คำขอเปลี่ยนแปลง (Change Requests) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0008-8000-8000-8000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "11. Change Requests" : "11. คำขอเปลี่ยนแปลง (Change Requests)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0008-8001-8001-8001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0008-8002-8002-8002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0008-8003-8003-8003-a1b2c3d4e5f6" positionType="Float" x="75" y="34" width="225" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0008-8004-8004-8004-a1b2c3d4e5f6" positionType="Float" x="300" y="34" width="65" height="16" style="Label">
+				<text><![CDATA[Priority]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0008-8005-8005-8005-a1b2c3d4e5f6" positionType="Float" x="365" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0008-8006-8006-8006-a1b2c3d4e5f6" positionType="Float" x="440" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Level]]></text>
+			</element>
+			<element kind="component" uuid="e00d0008-8007-8007-8007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0008-8008-8008-8008-a1b2c3d4e5f6" subDataset="ChangeRequestsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0008-8009-8009-8009-a1b2c3d4e5f6" x="0" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0008-8010-8010-8010-a1b2c3d4e5f6" x="75" y="0" width="225" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0008-8011-8011-8011-a1b2c3d4e5f6" x="300" y="0" width="65" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{priority}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0008-8012-8012-8012-a1b2c3d4e5f6" x="365" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0008-8013-8013-8013-a1b2c3d4e5f6" x="440" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{level}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 13: ตั๋วแจ้งปัญหา MA (MA Tickets) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0009-9000-9000-9000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "12. MA Tickets" : "12. ตั๋วแจ้งปัญหา MA (MA Tickets)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0009-9001-9001-9001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0009-9002-9002-9002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="90" height="16" style="Label">
+				<text><![CDATA[Ticket No.]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0009-9003-9003-9003-a1b2c3d4e5f6" positionType="Float" x="90" y="34" width="205" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0009-9004-9004-9004-a1b2c3d4e5f6" positionType="Float" x="295" y="34" width="85" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0009-9005-9005-9005-a1b2c3d4e5f6" positionType="Float" x="380" y="34" width="65" height="16" style="Label">
+				<text><![CDATA[Severity]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0009-9006-9006-9006-a1b2c3d4e5f6" positionType="Float" x="445" y="34" width="70" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0009-9007-9007-9007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0009-9008-9008-9008-a1b2c3d4e5f6" subDataset="MaTicketsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0009-9009-9009-9009-a1b2c3d4e5f6" x="0" y="0" width="90" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{ticketNo}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0009-9010-9010-9010-a1b2c3d4e5f6" x="90" y="0" width="205" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0009-9011-9011-9011-a1b2c3d4e5f6" x="295" y="0" width="85" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{type}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0009-9012-9012-9012-a1b2c3d4e5f6" x="380" y="0" width="65" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{severity}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0009-9013-9013-9013-a1b2c3d4e5f6" x="445" y="0" width="70" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 13: ต่ออายุ MA (MA Renewals) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0010-a000-a000-a000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "13. MA Renewals" : "13. ต่ออายุ MA (MA Renewals)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0010-a001-a001-a001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0010-a002-a002-a002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="100" height="16" style="Label">
+				<text><![CDATA[Renewal No.]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0010-a003-a003-a003-a1b2c3d4e5f6" positionType="Float" x="100" y="34" width="180" height="16" style="Label">
+				<text><![CDATA[Period (Current -> New)]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0010-a004-a004-a004-a1b2c3d4e5f6" positionType="Float" x="280" y="34" width="115" height="16" style="Label">
+				<text><![CDATA[Proposed Amount]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0010-a005-a005-a005-a1b2c3d4e5f6" positionType="Float" x="395" y="34" width="120" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0010-a006-a006-a006-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0010-a007-a007-a007-a1b2c3d4e5f6" subDataset="MaRenewalsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0010-a008-a008-a008-a1b2c3d4e5f6" x="0" y="0" width="100" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{renewalNo}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0010-a009-a009-a009-a1b2c3d4e5f6" x="100" y="0" width="180" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{period}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0010-a010-a010-a010-a1b2c3d4e5f6" x="280" y="0" width="115" height="16" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Right" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{amount}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0010-a011-a011-a011-a1b2c3d4e5f6" x="395" y="0" width="120" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 14: คู่มือการใช้งาน (User Manuals) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0011-b000-b000-b000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "14. User Manuals" : "14. คู่มือการใช้งาน (User Manuals)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0011-b001-b001-b001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0011-b002-b002-b002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="70" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0011-b003-b003-b003-a1b2c3d4e5f6" positionType="Float" x="70" y="34" width="215" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0011-b004-b004-b004-a1b2c3d4e5f6" positionType="Float" x="285" y="34" width="90" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0011-b005-b005-b005-a1b2c3d4e5f6" positionType="Float" x="375" y="34" width="65" height="16" style="Label">
+				<text><![CDATA[Version]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0011-b006-b006-b006-a1b2c3d4e5f6" positionType="Float" x="440" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0011-b007-b007-b007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0011-b008-b008-b008-a1b2c3d4e5f6" subDataset="UserManualsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0011-b009-b009-b009-a1b2c3d4e5f6" x="0" y="0" width="70" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0011-b010-b010-b010-a1b2c3d4e5f6" x="70" y="0" width="215" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0011-b011-b011-b011-a1b2c3d4e5f6" x="285" y="0" width="90" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{type}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0011-b012-b012-b012-a1b2c3d4e5f6" x="375" y="0" width="65" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{version}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0011-b013-b013-b013-a1b2c3d4e5f6" x="440" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 15: Design Review (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0012-c000-c000-c000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "15. Design Reviews" : "15. การตรวจทานแบบ (Design Reviews)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0012-c001-c001-c001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0012-c002-c002-c002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0012-c003-c003-c003-a1b2c3d4e5f6" positionType="Float" x="75" y="34" width="225" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0012-c004-c004-c004-a1b2c3d4e5f6" positionType="Float" x="300" y="34" width="90" height="16" style="Label">
+				<text><![CDATA[Target Type]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0012-c005-c005-c005-a1b2c3d4e5f6" positionType="Float" x="390" y="34" width="60" height="16" style="Label">
+				<text><![CDATA[Severity]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0012-c006-c006-c006-a1b2c3d4e5f6" positionType="Float" x="450" y="34" width="65" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0012-c007-c007-c007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0012-c008-c008-c008-a1b2c3d4e5f6" subDataset="DesignReviewsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0012-c009-c009-c009-a1b2c3d4e5f6" x="0" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0012-c010-c010-c010-a1b2c3d4e5f6" x="75" y="0" width="225" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0012-c011-c011-c011-a1b2c3d4e5f6" x="300" y="0" width="90" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{targetType}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0012-c012-c012-c012-a1b2c3d4e5f6" x="390" y="0" width="60" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{severity}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0012-c013-c013-c013-a1b2c3d4e5f6" x="450" y="0" width="65" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 16: แผนภาพ (Diagrams) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0013-d000-d000-d000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "16. Diagrams" : "16. แผนภาพ (Diagrams)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0013-d001-d001-d001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0013-d002-d002-d002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="90" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0013-d003-d003-d003-a1b2c3d4e5f6" positionType="Float" x="90" y="34" width="300" height="16" style="Label">
+				<text><![CDATA[Name]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0013-d004-d004-d004-a1b2c3d4e5f6" positionType="Float" x="390" y="34" width="125" height="16" style="Label">
+				<text><![CDATA[Type]]></text>
+			</element>
+			<element kind="component" uuid="e00d0013-d005-d005-d005-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0013-d006-d006-d006-a1b2c3d4e5f6" subDataset="DiagramsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0013-d007-d007-d007-a1b2c3d4e5f6" x="0" y="0" width="90" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0013-d008-d008-d008-a1b2c3d4e5f6" x="90" y="0" width="300" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{name}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0013-d009-d009-d009-a1b2c3d4e5f6" x="390" y="0" width="125" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{type}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+
+		<!-- ==================== SECTION 17: บั๊ก (Bugs) (own band) ==================== -->
+		<band height="100" splitType="Stretch">
+			<element kind="textField" uuid="e00d0014-e000-e000-e000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "17. Bugs" : "17. บั๊ก (Bugs)")]]></expression>
+			</element>
+			<element kind="line" uuid="e00d0014-e001-e001-e001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="staticText" uuid="e00d0014-e002-e002-e002-a1b2c3d4e5f6" positionType="Float" x="0" y="34" width="75" height="16" style="Label">
+				<text><![CDATA[Code]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0014-e003-e003-e003-a1b2c3d4e5f6" positionType="Float" x="75" y="34" width="215" height="16" style="Label">
+				<text><![CDATA[Title]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0014-e004-e004-e004-a1b2c3d4e5f6" positionType="Float" x="290" y="34" width="70" height="16" style="Label">
+				<text><![CDATA[Severity]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0014-e005-e005-e005-a1b2c3d4e5f6" positionType="Float" x="360" y="34" width="70" height="16" style="Label">
+				<text><![CDATA[Priority]]></text>
+			</element>
+			<element kind="staticText" uuid="e00d0014-e006-e006-e006-a1b2c3d4e5f6" positionType="Float" x="430" y="34" width="85" height="16" style="Label">
+				<text><![CDATA[Status]]></text>
+			</element>
+			<element kind="component" uuid="e00d0014-e007-e007-e007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="52" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="e00d0014-e008-e008-e008-a1b2c3d4e5f6" subDataset="BugsDataset">
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+					<contents height="16" width="515">
+						<element kind="textField" uuid="e00d0014-e009-e009-e009-a1b2c3d4e5f6" x="0" y="0" width="75" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{code}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0014-e010-e010-e010-a1b2c3d4e5f6" x="75" y="0" width="215" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{title}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0014-e011-e011-e011-a1b2c3d4e5f6" x="290" y="0" width="70" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{severity}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0014-e012-e012-e012-a1b2c3d4e5f6" x="360" y="0" width="70" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{priority}]]></expression>
+						</element>
+						<element kind="textField" uuid="e00d0014-e013-e013-e013-a1b2c3d4e5f6" x="430" y="0" width="85" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+							<box padding="2"><pen lineWidth="0.4" lineColor="#94A3B8"/></box>
+							<expression><![CDATA[$F{status}]]></expression>
+						</element>
+					</contents>
+				</component>
+			</element>
 		</band>
 	</detail>
 
@@ -323,7 +1419,7 @@
 	<summary height="190" splitType="Prevent">
 		<!-- SECTION 4: การลงนามรับรอง (Sign-off) -->
 		<element kind="textField" uuid="8ea6f8e7-5e6d-47b2-913b-2a567c82a4c9" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-			<expression><![CDATA[($P{lang}.equals("en") ? "4. Sign-off & Approvals" : "4. การลงนามอนุมัติและรับรอง (Sign-off & Approvals)")]]></expression>
+			<expression><![CDATA[($P{lang}.equals("en") ? "18. Sign-off & Approvals" : "18. การลงนามอนุมัติและรับรอง (Sign-off & Approvals)")]]></expression>
 		</element>
 		<element kind="line" uuid="4b2a5c1a-5e6d-4b92-bca8-e5659858df34" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
 			<pen lineWidth="0.6"/>

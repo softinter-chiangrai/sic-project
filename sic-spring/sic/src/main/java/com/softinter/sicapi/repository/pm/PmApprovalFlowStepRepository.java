@@ -26,6 +26,6 @@ public interface PmApprovalFlowStepRepository extends JpaRepository<PmApprovalFl
     List<PmApprovalFlowStep> findByFlowIdAndIsRequiredFalseOrderByStepOrderAsc(UUID flowId);
 
     @Modifying
-    @Query("DELETE FROM PmApprovalFlowStep s WHERE s.flow.id = :flowId")
+    @Query("UPDATE PmApprovalFlowStep s SET s.isDelete = true WHERE s.flow.id = :flowId AND s.isDelete = false")
     void deleteByFlowId(@Param("flowId") UUID flowId);
 }

@@ -39,4 +39,12 @@ public interface SuUploadRepository extends JpaRepository<SuUpload, UUID> {
                                 @Param("deleteBy") String deleteBy,
                                 @Param("deleteDate") Instant deleteDate,
                                 @Param("now") Instant now);
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE SuUpload u SET u.isDelete = true, u.isActive = false, u.deleteBy = :deleteBy, u.deleteDate = :deleteDate " +
+           "WHERE u.id = :id AND u.isDelete = false")
+    int softDelete(@Param("id") UUID id,
+                   @Param("deleteBy") String deleteBy,
+                   @Param("deleteDate") Instant deleteDate);
 }
