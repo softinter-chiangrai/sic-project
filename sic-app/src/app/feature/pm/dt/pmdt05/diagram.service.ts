@@ -92,9 +92,17 @@ export class DiagramService {
     );
   }
 
-  getTabs(projectId: string): Observable<DiagramModel[]> {
+  // projectId is optional: the backend (`GET /api/diagram/tabs`) accepts an optional
+  // `projectId` query param. When omitted, it returns all diagrams owned by the current
+  // user across every project — used to show "everything" when no project is selected
+  // via the navbar, matching the show-all-then-filter convention used elsewhere
+  // (pmdt16/pmdt19/sic-gantt).
+  getTabs(projectId?: string | null): Observable<DiagramModel[]> {
+    const url = projectId
+      ? `${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`
+      : `${this.apiUrl}/api/diagram/tabs`;
     return this.http
-      .get<DiagramModel[]>(`${this.apiUrl}/api/diagram/tabs?projectId=${projectId}`)
+      .get<DiagramModel[]>(url)
       .pipe(tap((tabs) => this.tabsSubject.next(tabs)));
   }
 

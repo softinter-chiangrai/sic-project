@@ -117,7 +117,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
             </div>
           } @else {
             <app-portfolio-gantt-widget
-              [projects]="allProjects()"
+              [projects]="filteredProjects()"
               [maxHeight]="'calc(100vh - 280px)'">
             </app-portfolio-gantt-widget>
           }
@@ -154,6 +154,18 @@ export class SicGanttComponent implements OnInit {
   endDate = signal('');
   viewMode = signal<'day' | 'week' | 'month'>('week');
   allProjects = signal<PmCustomerProject[]>([]);
+
+  // Navbar context filter (client-side) — same pattern as pmdt16/pmdt19: empty selection
+  // shows everything, otherwise restrict to the selected project id(s).
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+
+  filteredProjects = computed<PmCustomerProject[]>(() => {
+    const all = this.allProjects();
+    const ids = this.selectedProjectIds();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((p) => idSet.has(p.id));
+  });
 
   toggleTimelineRow(rowId: string, event?: Event): void {
     if (event) event.stopPropagation();

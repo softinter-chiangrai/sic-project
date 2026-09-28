@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
 import { finalize } from 'rxjs';
@@ -9,6 +9,7 @@ import { Pmdt17PageData } from './pmdt17.model';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { ApprovalService } from '../pmdt03/approval.service';
+import { CustomerStateService } from '../../../../core/services/customer-state.service';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
@@ -46,6 +47,7 @@ export class Pmdt17Component implements OnInit {
   private languageService = inject(LanguageService);
   private approvalService = inject(ApprovalService);
   private recentItems = inject(RecentItemsService);
+  private customerState = inject(CustomerStateService);
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});
@@ -55,11 +57,23 @@ export class Pmdt17Component implements OnInit {
   searchTerm = signal('');
   filterStatus = signal('all');
 
+  // ===== Navbar context filter (client-side) =====
+  // Backend has no project-scope filter param for ma-tickets, so — matching the pattern used
+  // by sibling PM list pages (pmdt16, pmdt14, pmdt19, pmdt09, ...) — we fetch the full
+  // keyword/status-matching dataset once and let the navbar's selected project(s) filter it
+  // further, client-side, without another server round-trip per selection change.
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+
   // ===== Grid data (lazily loaded via handleGridLoad; seeded once from the resolver's preload) =====
+  /** Raw fetched tickets matching only keyword/status — unfiltered by project. */
   rows = signal<any[]>([]);
-  totalItems = signal(0);
-  /** Holds the resolver's preloaded page until the grid's first handleGridLoad call consumes it, avoiding a duplicate fetch. */
-  private pendingPreload: { tickets: any[]; total: number; page: number } | null = null;
+  totalItems = computed(() => this.filteredTickets().length);
+  /** Holds the resolver's preloaded dataset until the grid's first handleGridLoad call consumes it, avoiding a duplicate fetch. */
+  private pendingPreload: { tickets: any[] } | null = null;
+  /** Set once the grid emits its first loadData event; used by the effects below to push re-rendered rows without going through another loadData cycle. */
+  private gridInstance = signal<SicGridPanelComponent | null>(null);
+  /** Guards the constructor's keyword/status effect so it doesn't refetch on its own first run (initial data comes from the resolver's preload instead). */
+  private filtersInitialized = false;
 
   @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
@@ -69,6 +83,9 @@ export class Pmdt17Component implements OnInit {
       id: 'id',
       selectable: false,
       showToolbar: false,
+      // Fetch-all-then-filter-client-side (see `selectedProjectIds` above) requires the grid
+      // to paginate the already-loaded, client-filtered dataset locally.
+      lazy: false,
       pageSize: this.pageSize(),
       column: [
         { label: this.translate.instant('PMDT17_COL_TICKET_NO'), name: 'ticketNo', type: 'code', width: 150 },
@@ -96,34 +113,59 @@ export class Pmdt17Component implements OnInit {
   visibleColumns = signal<Set<string>>(this.loadVisibleColumns());
   showColumnMenu = signal(false);
 
+  constructor() {
+    // Refetch from the server whenever the keyword/status filter changes (skips its own
+    // first run — the resolver already preloaded the initial keyword/status-matching set).
+    effect(() => {
+      this.searchTerm();
+      this.filterStatus();
+      if (!this.filtersInitialized) {
+        this.filtersInitialized = true;
+        return;
+      }
+      this.fetchTickets();
+    });
+
+    // Re-render whenever the fetched dataset or the navbar's selected project(s) change —
+    // `filteredTickets` depends on both, so reading it here covers both cases without
+    // another HTTP request for a project-selection change.
+    effect(() => {
+      const grid = this.gridInstance();
+      if (!grid) return;
+      const list = this.filteredTickets();
+      this.loadApprovalStatuses(list);
+      grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length });
+    });
+  }
+
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.currentPage.set(request.pageNumber);
     this.syncFiltersToUrl();
+    this.gridInstance.set(grid);
 
-    // Consume the resolver's preload on the very first grid load instead of firing a duplicate request.
-    if (this.pendingPreload && request.pageNumber === this.pendingPreload.page) {
-      const { tickets, total } = this.pendingPreload;
+    // Consume the resolver's preload on the very first grid load instead of firing a
+    // duplicate request. Any later loadData emission (e.g. from grid.reload()) just
+    // re-renders whatever is already loaded — the effect above refetches from the server
+    // on keyword/status changes, decoupled from the grid's own load cycle.
+    if (this.pendingPreload) {
+      const { tickets } = this.pendingPreload;
       this.pendingPreload = null;
       this.rows.set(tickets);
-      this.totalItems.set(total);
-      this.loadApprovalStatuses(tickets);
-      grid.setRows(tickets as unknown as SicGridRowData[], { totalElements: total }, request.requestId);
       return;
     }
-    this.pendingPreload = null;
 
+    const list = this.filteredTickets();
+    grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
+  }
+
+  private fetchTickets(): void {
     this.isLoading.set(true);
     this.service
-      .getTickets(request.pageNumber, request.pageSize, this.searchTerm().trim() || undefined, this.filterStatus())
+      .getTickets(1, 10000, this.searchTerm().trim() || undefined, this.filterStatus())
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
-          const items = res?.data ?? [];
-          const total = res?.pageable?.totalElements ?? items.length;
-          this.rows.set(items);
-          this.totalItems.set(total);
-          this.loadApprovalStatuses(items);
-          grid.setRows(items as unknown as SicGridRowData[], { totalElements: total }, request.requestId);
+          this.rows.set(res?.data ?? []);
         },
         error: (err) => {
           console.error('Load MA tickets error', err);
@@ -131,8 +173,10 @@ export class Pmdt17Component implements OnInit {
             this.translate.instant('PMDT17_ERROR_TITLE'),
             this.translate.instant('PMDT17_LOAD_TICKET_FAILED_MSG') || 'Failed to load MA tickets',
           );
-          grid.setRows([], { totalElements: 0 }, request.requestId);
-          grid.setLoadError(this.translate.instant('PMDT17_ERROR_TITLE'), request.requestId);
+          this.rows.set([]);
+          const grid = this.gridInstance();
+          grid?.setRows([], { totalElements: 0 });
+          grid?.setLoadError(this.translate.instant('PMDT17_ERROR_TITLE'));
         },
       });
   }
@@ -151,8 +195,15 @@ export class Pmdt17Component implements OnInit {
     });
   }
 
-  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว เพื่อให้ pagination/export ถูกต้องตามชุดข้อมูลที่กรองจริง
-  filteredTickets = computed(() => this.rows());
+  // การกรอง keyword/สถานะ ทำที่ Backend แล้ว; การกรองตามโปรเจกต์ที่เลือกใน navbar ทำที่ client-side
+  // ตรงนี้ เพื่อให้เห็นข้อมูลทุกโปรเจกต์เป็นค่าเริ่มต้น และกรองได้ทันทีโดยไม่ยิง request ใหม่
+  filteredTickets = computed(() => {
+    const all = this.rows();
+    const ids = this.selectedProjectIds();
+    if (!ids || ids.length === 0) return all;
+    const idSet = new Set(ids);
+    return all.filter((t) => t.projectId && idSet.has(t.projectId));
+  });
 
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
@@ -162,13 +213,7 @@ export class Pmdt17Component implements OnInit {
 
     const pageData: Pmdt17PageData = this.route.snapshot.data['pageData'];
     if (pageData) {
-      this.rows.set(pageData.initialTickets ?? []);
-      this.totalItems.set(pageData.initialTotal ?? 0);
-      this.pendingPreload = {
-        tickets: pageData.initialTickets ?? [],
-        total: pageData.initialTotal ?? 0,
-        page: pageData.initialPage ?? 1,
-      };
+      this.pendingPreload = { tickets: pageData.initialTickets ?? [] };
     }
   }
 
@@ -190,11 +235,13 @@ export class Pmdt17Component implements OnInit {
     const input = event.target as HTMLInputElement;
     this.searchTerm.set(input.value);
     this.syncFiltersToUrl();
+    this.resetGridToFirstPage();
   }
 
   clearSearch() {
     this.searchTerm.set('');
     this.syncFiltersToUrl();
+    this.resetGridToFirstPage();
   }
 
   readonly statusOptions = [
@@ -210,17 +257,21 @@ export class Pmdt17Component implements OnInit {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
     this.filterStatus.set(val || 'all');
     this.syncFiltersToUrl();
+    this.resetGridToFirstPage();
   }
 
   // ===== Preset Tabs (reuse filterStatus โดยตรง) =====
   setPreset(status: string): void {
     this.filterStatus.set(status);
     this.syncFiltersToUrl();
-    // รีเซ็ต grid กลับหน้า 1 — goToPage(1) เป็น no-op เงียบๆ ถ้าอยู่หน้า 1 อยู่แล้ว ต้อง reload() เอง
-    if (this.gridRef?.currentPage === 1) {
-      this.gridRef?.reload();
-    } else {
-      this.gridRef?.goToPage(1);
+    this.resetGridToFirstPage();
+  }
+
+  // รีเซ็ต grid กลับหน้า 1 — การ fetch ใหม่จริงๆ เกิดจาก effect ที่ watch searchTerm/filterStatus
+  // ใน constructor (ไม่ผูกกับ grid.reload()), เมธอดนี้แค่รีเซ็ตตัวชี้หน้าของ grid ให้ตรงกับข้อมูลใหม่
+  private resetGridToFirstPage(): void {
+    if (this.gridRef && this.gridRef.currentPage !== 1) {
+      this.gridRef.goToPage(1);
     }
   }
 
@@ -297,7 +348,14 @@ export class Pmdt17Component implements OnInit {
       .get<any>(`${apiBaseUrl}/api/pm/ma-tickets/paging`, { params })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (res) => this.downloadCsv(res.data || []),
+        next: (res) => {
+          const all = (res.data || []) as any[];
+          const ids = this.selectedProjectIds();
+          const filtered = !ids || ids.length === 0
+            ? all
+            : all.filter((t) => t.projectId && ids.includes(t.projectId));
+          this.downloadCsv(filtered);
+        },
         error: () => this.dialog.error(
           this.translate.instant('PMDT17_EXPORT_FAILED_TITLE'),
           this.translate.instant('PMDT17_EXPORT_LIST_FAILED_MSG'),
@@ -400,7 +458,9 @@ export class Pmdt17Component implements OnInit {
         this.service.delete(id).subscribe({
           next: () => {
             this.dialog.success(this.translate.instant('PMDT17_SUCCESS_TITLE'), this.translate.instant('PMDT17_DELETE_SUCCESS_MSG'));
-            this.gridRef?.reload();
+            // Refetch from the server (not just grid.reload()) so the deleted ticket
+            // actually drops out of the now-locally-cached `rows` dataset.
+            this.fetchTickets();
           },
           error: (err) => {
             this.dialog.error(this.translate.instant('PMDT17_ERROR_TITLE'), err.message || this.translate.instant('PMDT17_DELETE_FAILED_MSG'));

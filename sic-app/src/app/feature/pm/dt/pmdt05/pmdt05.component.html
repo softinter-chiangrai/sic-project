@@ -17,17 +17,7 @@
     <div class="flex items-center gap-3">
       <div class="flex items-center gap-2">
         <i class="bi bi-kanban text-[var(--crm-primary,#1a73e8)] text-lg"></i>
-        @if (projects().length > 1) {
-          <select
-            [ngModel]="projectId"
-            (ngModelChange)="onProjectSelect($event)"
-            class="text-sm font-bold px-3 py-1.5 rounded-xl border border-[var(--border,#d0d7de)] bg-[var(--sidebar,#f6f8fa)] text-[var(--text-active,#1e293b)] focus:outline-none focus:border-[var(--crm-primary,#1a73e8)] cursor-pointer shadow-xs max-w-[280px]"
-          >
-            @for (p of projects(); track p.id) {
-              <option [value]="p.id">{{ p.projectCode }} - {{ p.projectName }}</option>
-            }
-          </select>
-        } @else if (projectName) {
+        @if (projectName) {
           <span
             class="text-xl font-bold text-[var(--text-active,#1e293b)] tracking-wide whitespace-nowrap overflow-hidden text-ellipsis max-w-[300px]"
           >

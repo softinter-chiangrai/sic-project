@@ -11,7 +11,7 @@ import {
   signal,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subject, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
 
@@ -50,6 +50,7 @@ export class SicContextSwitcherComponent implements OnInit {
   private readonly businessService = inject(BusinessService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
   private readonly elementRef = inject(ElementRef);
 
   // Global Context State
@@ -224,6 +225,15 @@ export class SicContextSwitcherComponent implements OnInit {
     // Register fallback translations immediately to prevent raw keys
     this.translate.setTranslation('th', this.DEFAULT_I18N_TH, true);
     this.translate.setTranslation('en', this.DEFAULT_I18N_EN, true);
+
+    // ===== URL -> CustomerStateService hydration =====
+    // This component lives in the root shell/layout (always mounted), and query params are
+    // shared across the whole route tree, so `route.queryParams` emits both on first load
+    // (direct URL / pasted link with ?projectId=/&customerId=/&projectIds=) and on every
+    // subsequent navigation whose query string changes — covering in-shell navigations too,
+    // not just the initial mount. This only reads the URL INTO the service; it never writes
+    // back here (that direction is `syncContextToUrl()` below, triggered by user actions).
+    this.route.queryParams.subscribe((params) => this.hydrateContextFromUrl(params));
 
     this.search$
       .pipe(
@@ -439,6 +449,47 @@ export class SicContextSwitcherComponent implements OnInit {
     this.triggerSearch();
     this.clearAllUrlContext();
     this.close();
+  }
+
+  /**
+   * Seeds CustomerStateService's signals from the current URL's `projectId`/`customerId`/
+   * `projectIds` query params, so pages that client-side filter via
+   * `customerState.currentSelectedProjectIds` (pmdt16, pmdt19, pmdt06, pmdt09, pmdt14,
+   * pmrt04, pmrt02, pmdt01, ...) start filtered immediately on a direct URL load, instead of
+   * requiring the user to reopen this switcher manually. Only ever ADDS state from the URL —
+   * it never clears an existing in-session selection just because a param is momentarily
+   * absent from the URL (e.g. navigating to a route that doesn't carry query params forward).
+   */
+  private hydrateContextFromUrl(params: Params): void {
+    const projectIdsParam = params['projectIds'] as string | undefined;
+    const projectIdParam = params['projectId'] as string | undefined;
+    const customerIdParam = params['customerId'] as string | undefined;
+
+    if (projectIdsParam) {
+      const ids = projectIdsParam.split(',').map((id) => id.trim()).filter(Boolean);
+      if (ids.length) {
+        const current = this.customerState.getSelectedProjectIds();
+        const sameSet = current.length === ids.length && ids.every((id) => current.includes(id));
+        if (!sameSet) {
+          this.customerState.setProjects(
+            ids.map((id) => ({ id, projectName: id, customerId: customerIdParam })),
+          );
+        }
+        return;
+      }
+    }
+
+    if (projectIdParam) {
+      const current = this.customerState.getSelectedProjectIds();
+      if (!(current.length === 1 && current[0] === projectIdParam)) {
+        this.customerState.setProjects([{ id: projectIdParam, projectName: projectIdParam, customerId: customerIdParam }]);
+      }
+      return;
+    }
+
+    if (customerIdParam && !this.customerState.getCustomerId()) {
+      this.customerState.setCustomer(customerIdParam);
+    }
   }
 
   private syncContextToUrl(): void {

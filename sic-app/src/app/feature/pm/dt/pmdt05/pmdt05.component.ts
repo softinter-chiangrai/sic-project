@@ -4,15 +4,17 @@ import { HttpClient } from '@angular/common/http';
 import {
   AfterViewInit,
   Component,
+  computed,
+  effect,
   ElementRef,
   HostListener,
   inject,
+  Injector,
   OnDestroy,
   signal,
   ViewChild,
   ChangeDetectionStrategy
 } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Subject, take, takeUntil, interval } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -34,7 +36,7 @@ import { PmCustomerProject } from '../../rt/pmrt02/pmrt02.model';
 @Component({
   selector: 'app-pmdt05',
   standalone: true,
-  imports: [CommonModule, FormsModule, Pmdt05AComponent, TranslateModule],
+  imports: [CommonModule, Pmdt05AComponent, TranslateModule],
   templateUrl: './pmdt05.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt05.component.css'],
@@ -54,7 +56,16 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private traceLinkService = inject(TraceLinkService);
   private pmrt02Service = inject(Pmrt02Service);
   private translate = inject(TranslateService);
+  private injector = inject(Injector);
   private isCreateDialogOpened = false;
+
+  // ===== Global project context (navbar sic-context-switcher) =====
+  // The page-local project dropdown was removed; the "active" project is now sourced from the
+  // same CustomerStateService context that pmdt16/pmdt19/sic-gantt already read. This page edits
+  // a single diagram set at a time, so we take the first selected id (matches
+  // CustomerStateService.currentProjectId's own convention of "first of the selection").
+  readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
+  readonly activeProjectId = computed(() => this.selectedProjectIds()[0] ?? null);
 
   // ===== State =====
   isLoading = false;
@@ -106,6 +117,16 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private requirementId: string | null = null;
   private requirementTitle: string = '';
 
+  // A tabId requested via URL that couldn't be applied immediately (tabs for the
+  // active project context aren't loaded yet) — consumed once by loadTabs() as its
+  // preferredTabId the next time tabs are (re)loaded for whichever project the
+  // effect() below settles on. This is the ONLY place that reads `projectId` out of
+  // the URL to drive page state; actual project switching is always driven by
+  // CustomerStateService/activeProjectId (see the effect() in ngAfterViewInit) so
+  // there is a single source of truth for "which project is active" and no race
+  // between this component's own URL parsing and the navbar context-switcher.
+  private pendingTabIdFromUrl: string | null = null;
+
   // ===== Auto‑Save =====
   private lastSavedXml: string | null = null;
   autoSaveStatus = '';
@@ -139,13 +160,28 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       }
     }, 5000);
 
-    // โหลดรายชื่อโครงการทั้งหมดเพื่อให้เลือกสลับได้อิสระ
+    // โหลดรายชื่อโครงการทั้งหมด (ใช้แสดงชื่อโครงการ / ตรวจสอบว่ามีโครงการในระบบหรือไม่)
     this.loadProjectsList();
 
+    // ===== Global project context (navbar) =====
+    // Reacts to the user switching the active project via the navbar's sic-context-switcher
+    // (CustomerStateService.currentSelectedProjectIds), the same source pmdt16/pmdt19/sic-gantt
+    // use. This replaces the removed page-local project dropdown while preserving its behavior
+    // of switching tabs/diagrams whenever the active project changes.
+    effect(() => {
+      const pid = this.activeProjectId();
+      this.handleNavbarProjectChange(pid);
+    }, { injector: this.injector });
+
     // รับ query params
+    // IMPORTANT: this subscription must NOT drive project switching — that is the
+    // effect() above's job (single source of truth: CustomerStateService). This
+    // handler only deals with: which diagram tab the URL wants open, and the
+    // create-from-requirement flow. Mixing the two used to cause two independent
+    // state machines racing each other (the "โครงการไม่ตรงกัน" / project-mismatch
+    // dialog firing spuriously, and the navbar's project checkboxes appearing stuck).
     this.route.queryParams.pipe(takeUntil(this.destroy$)).subscribe((params) => {
       const tabIdFromUrl = params['tabId'] || params['diagramId'] || null;
-      let projectIdFromUrl = params['projectId'] || null;
       const shouldOpenCreate = params['openCreate'] === 'true';
       const reqIdFromUrl = params['requirementId'] || null;
       const reqTitleFromUrl = params['requirementTitle'] || '';
@@ -160,19 +196,30 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         this.requirementTitle = this.customerState.getRequirementTitle();
       }
 
-      if (!projectIdFromUrl) {
-        projectIdFromUrl = this.customerState.getProjectId();
+      if (shouldOpenCreate && this.requirementId) {
+        this.pendingCreate = { requirementId: this.requirementId, requirementTitle: this.requirementTitle };
       }
 
-      if (!projectIdFromUrl && tabIdFromUrl) {
+      // เคลียร์ query params ที่ยาวเทอะทะออกจาก URL เพื่อให้ path สะอาด
+      // (ไม่รวม projectId/projectIds/customerId ซึ่งเป็นของ context-switcher)
+      const hasLongParams = !!(params['requirementTitle'] || params['requirementId'] || params['openCreate']);
+      if (hasLongParams) {
+        this.cleanUpUrl(tabIdFromUrl || this.currentTabId);
+      }
+
+      if (!tabIdFromUrl) return;
+
+      // Deep link to a specific diagram with NO project context established anywhere
+      // yet (fresh load, nothing selected in the navbar): resolve which project the
+      // diagram belongs to, then seed CustomerStateService with it. The effect()
+      // above reacts to that and calls loadTabs(), which will pick up
+      // pendingTabIdFromUrl (set below) as its preferred tab once tabs are loaded.
+      if (!this.projectId && this.selectedProjectIds().length === 0) {
+        this.pendingTabIdFromUrl = tabIdFromUrl;
         this.diagramService.getDiagram(tabIdFromUrl).subscribe({
           next: (diagram) => {
-            if (diagram && diagram.projectId) {
-              this.projectId = diagram.projectId;
+            if (diagram?.projectId) {
               this.customerState.setProject(diagram.projectId);
-              this.currentTabId = tabIdFromUrl;
-              this.loadProjectName();
-              this.loadTabs(tabIdFromUrl, shouldOpenCreate);
             }
           },
           error: () => {
@@ -182,41 +229,20 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         return;
       }
 
-      if (!projectIdFromUrl) {
-        // ให้ loadProjectsList() ดึงโครงการแรกมาให้อัตโนมัติ ไม่ต้อง redirect หนี
-        return;
-      }
+      if (tabIdFromUrl === this.currentTabId) return;
 
-      const isNewProject = projectIdFromUrl !== this.projectId;
-      this.projectId = projectIdFromUrl;
-      this.customerState.setProject(projectIdFromUrl);
-
-      // เคลียร์ query params ที่ยาวเทอะทะออกจาก URL เพื่อให้ path สะอาด
-      const hasLongParams = !!(params['requirementTitle'] || params['requirementId'] || params['openCreate'] || (params['projectId'] && tabIdFromUrl));
-      if (hasLongParams) {
-        this.cleanUpUrl(tabIdFromUrl || this.currentTabId);
-      }
-
-      if (shouldOpenCreate && this.requirementId) {
-        this.pendingCreate = { requirementId: this.requirementId, requirementTitle: this.requirementTitle };
-      }
-
-      if (isNewProject) {
+      if (this.tabs().some((t) => t.id === tabIdFromUrl)) {
+        // Tab already loaded under the current project context — just switch to it.
         this.currentTabId = tabIdFromUrl;
         this.currentDiagram = null;
         this.loadedDiagramTabId = null;
-        this.loadProjectName();
-        this.loadTabs(tabIdFromUrl, shouldOpenCreate);
-        return;
-      }
-
-      if (tabIdFromUrl && tabIdFromUrl !== this.currentTabId) {
-        this.currentTabId = tabIdFromUrl;
-        this.currentDiagram = null;
-        this.loadedDiagramTabId = null;
-        this.loadExistingDiagram();
-      } else if (!this.currentTabId && this.tabs().length > 0) {
-        this.switchTab(this.tabs()[0].id);
+        this.cleanUpUrl(tabIdFromUrl);
+        if (this.drawioReady) this.loadExistingDiagram();
+      } else {
+        // Tabs for the active project context may still be loading (e.g. right after
+        // the effect() above kicked off loadTabs()) — remember the request so
+        // applyLoadedTabs() applies it as soon as tabs arrive.
+        this.pendingTabIdFromUrl = tabIdFromUrl;
       }
     });
 
@@ -267,10 +293,18 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
   // ===== URL Cleanup Helper =====
   private cleanUpUrl(tabId: string | null): void {
+    // Preserve the navbar context-switcher's own query params (projectId/projectIds/
+    // customerId) — this method only strips the legacy long-form deep-link params
+    // (requirementId/requirementTitle/openCreate), it must not fight the global
+    // project/customer selection managed by sic-context-switcher.component.ts.
+    const current = this.route.snapshot.queryParams;
     const queryParams: Record<string, any> = {};
     if (tabId) {
       queryParams['tabId'] = tabId;
     }
+    if (current['projectId']) queryParams['projectId'] = current['projectId'];
+    if (current['projectIds']) queryParams['projectIds'] = current['projectIds'];
+    if (current['customerId']) queryParams['customerId'] = current['customerId'];
     this.router.navigate([], {
       relativeTo: this.route,
       queryParams,
@@ -279,9 +313,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   }
 
   // ===== Tabs Management =====
+  // projectId may be null here on purpose: when no project is selected via the navbar,
+  // diagramService.getTabs(null) fetches every diagram across all projects (show-all,
+  // then-filter convention), instead of blocking on a required selection.
   loadTabs(preferredTabId?: string | null, openCreateAfterLoad: boolean = false): void {
-    if (!this.projectId) return;
-
     if (this.resolvedTabs && this.resolvedTabsProjectId === this.projectId) {
       const tabs = this.resolvedTabs;
       this.resolvedTabs = null;
@@ -437,7 +472,9 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
-        projectId: this.projectId,
+        // Fall back to the tab's own projectId when showing "all" diagrams (no navbar
+        // project selected), since this.projectId may be null in that state.
+        projectId: this.projectId || tab.projectId,
         editData: editData,
         selectedRequirementId: tab.requirementId || '',
         requirementTitle: tab.requirementTitle || '',
@@ -547,7 +584,9 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
     this.router.navigate(['/feature/pm/change-request/new'], {
       queryParams: {
-        projectId: this.projectId,
+        // Fall back to the tab's own projectId when showing "all" diagrams (no navbar
+        // project selected), since this.projectId may be null in that state.
+        projectId: this.projectId || tab.projectId,
         targetType: 'DIAGRAM',
         targetId: tab.id,
         targetTitle: title,
@@ -633,18 +672,23 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     this.diagramService.getDiagram(tabIdToLoad).subscribe({
       next: (diagram) => {
         console.log('[Diagram] Loaded diagram data:', diagram);
+        // Discard stale responses first: if the user already switched tabs/projects
+        // while this request was in flight, currentTabId no longer matches the tab
+        // this response is for. Checking this BEFORE the project-mismatch check below
+        // prevents a spurious "Project mismatch" dialog from firing for a diagram that
+        // was legitimately requested under the previously-selected project.
+        if (this.currentTabId !== tabIdToLoad) {
+          this.isLoading = false;
+          this.isLoadingDiagram = false;
+          return;
+        }
+
         if (this.projectId && diagram.projectId !== this.projectId) {
           console.warn('[Diagram] Project mismatch');
           this.dialogService.warn(this.translate.instant('PMDT05_PROJECT_MISMATCH_TITLE'), this.translate.instant('PMDT05_PROJECT_MISMATCH_MSG'));
           this.isLoading = false;
           this.isLoadingDiagram = false;
           this.drawioService.loadXml('');
-          return;
-        }
-
-        if (this.currentTabId !== tabIdToLoad) {
-          this.isLoading = false;
-          this.isLoadingDiagram = false;
           return;
         }
 
@@ -856,11 +900,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         }
         this.noProjectsAvailable.set(false);
 
-        // ถ้ายังไม่มีโปรเจกต์ที่เลือก ให้เลือกโปรเจกต์แรกมาใช้งานอัตโนมัติ
-        if (!this.projectId) {
-          const first = list[0];
-          this.onProjectSelect(first.id);
-        } else {
+        // อัปเดตชื่อโครงการปัจจุบัน (ถ้ามีโครงการที่ active อยู่แล้ว จาก URL หรือ navbar)
+        if (this.projectId) {
           const curr = list.find((p) => p.id === this.projectId);
           if (curr) {
             this.projectName = curr.projectName;
@@ -873,18 +914,35 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  onProjectSelect(newProjectId: string): void {
-    if (!newProjectId) return;
+  // Called whenever the navbar's active project (CustomerStateService.currentSelectedProjectIds)
+  // changes — replaces the removed local project dropdown's (ngModelChange) handler.
+  // newProjectId may be null (nothing selected in the navbar): in that case we show ALL
+  // diagrams across all projects instead of an empty "please select a project" prompt,
+  // and only narrow down once a specific project is chosen — same show-all-then-filter
+  // convention as pmdt16/pmdt19/sic-gantt.
+  private navProjectInitialized = false;
+
+  private handleNavbarProjectChange(newProjectId: string | null): void {
+    if (this.navProjectInitialized && newProjectId === this.projectId) return;
+    this.navProjectInitialized = true;
+
     this.projectId = newProjectId;
-    const proj = this.projects().find((p) => p.id === newProjectId);
-    if (proj) {
-      this.projectName = proj.projectName;
-      this.customerState.setProject(proj.id, proj.projectName);
+    if (newProjectId) {
+      const proj = this.projects().find((p) => p.id === newProjectId);
+      if (proj) {
+        this.projectName = proj.projectName;
+      } else {
+        this.loadProjectName();
+      }
+    } else {
+      this.projectName = '';
     }
     this.currentTabId = null;
     this.currentDiagram = null;
     this.loadedDiagramTabId = null;
     this.tabs.set([]);
-    this.loadTabs(null, false);
+    const preferredTabId = this.pendingTabIdFromUrl;
+    this.pendingTabIdFromUrl = null;
+    this.loadTabs(preferredTabId, false);
   }
 }

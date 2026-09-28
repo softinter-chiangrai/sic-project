@@ -13,7 +13,7 @@ export interface Pmdt17PageData {
   formData?: SicFromData<Pmdt17Model>;
   detail?: any;
   items?: any[];
-  /** Initial page-1 (or requested page) ticket rows preloaded by the resolver. */
+  /** Full keyword/status-matching ticket rows preloaded by the resolver (unfiltered by project — filtered client-side by the component). */
   initialTickets: any[];
   initialTotal: number;
   initialPage: number;
