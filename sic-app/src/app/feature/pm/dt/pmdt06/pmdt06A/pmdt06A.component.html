@@ -129,6 +129,21 @@
           ></sic-combobox>
         </div>
 
+        <!-- Attachments (Full Width) -->
+        <div class="md:col-span-2">
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+            {{ 'PMDT06_ATTACHMENTS_LABEL' | translate }}
+          </label>
+          <sic-upload
+            formControlName="attachmentGroupId"
+            [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+            [multiple]="true"
+            category="all"
+            [disabled]="isView"
+          ></sic-upload>
+        </div>
+
         <!-- Hidden projectId -->
         <input type="hidden" formControlName="projectId" />
       </div>

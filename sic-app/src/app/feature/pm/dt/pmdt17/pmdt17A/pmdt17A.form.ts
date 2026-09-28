@@ -21,6 +21,7 @@ export class Pmdt17AForm {
       endDate: fb.control(null),
       endTime: fb.control(null),
       resolutionSummary: fb.control(null),
+      attachmentGroupId: fb.control(null),
       isActive: fb.control(true),
       state: fb.control(null),
       rowVersion: fb.control(null),

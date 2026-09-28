@@ -55,9 +55,23 @@
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
         <div class="md:col-span-3">
           <sic-combobox
+            formControlName="customerId"
+            [label]="'PMDT15_CUSTOMER_LABEL' | translate"
+            [apiUrl]="apiGetComboboxCustomer"
+            valueField="value"
+            textField="text"
+            [placeholder]="'PMDT15_CUSTOMER_PLACEHOLDER' | translate"
+            [clearable]="true"
+            (selectionChanged)="onCustomerSelected($event)">
+          </sic-combobox>
+        </div>
+
+        <div class="md:col-span-3">
+          <sic-combobox
             formControlName="projectId"
             [label]="isProjectDerived() ? ('PMDT15_PROJECT_DERIVED_LABEL' | translate) : ('PMDT15_PROJECT_LABEL' | translate)"
             [apiUrl]="apiGetComboboxProject"
+            [params]="projectParams"
             valueField="value"
             textField="text"
             [placeholder]="'PMDT15_PROJECT_PLACEHOLDER' | translate"
@@ -77,14 +91,6 @@
         </div>
 
         <div class="md:col-span-3">
-          <sic-input
-            formControlName="manualTitle"
-            [label]="'PMDT15_TITLE_FIELD_LABEL' | translate"
-            [placeholder]="'PMDT15_TITLE_PLACEHOLDER' | translate">
-          </sic-input>
-        </div>
-
-        <div class="md:col-span-3">
           <sic-combobox
             formControlName="manualType"
             [label]="'PMDT15_TYPE_FIELD_LABEL' | translate"
@@ -94,7 +100,15 @@
           </sic-combobox>
         </div>
 
-        <div class="md:col-span-3">
+        <div class="md:col-span-6">
+          <sic-input
+            formControlName="manualTitle"
+            [label]="'PMDT15_TITLE_FIELD_LABEL' | translate"
+            [placeholder]="'PMDT15_TITLE_PLACEHOLDER' | translate">
+          </sic-input>
+        </div>
+
+        <div class="md:col-span-6">
           <sic-combobox
             formControlName="deliveryId"
             [label]="'PMDT15_DELIVERY_LABEL' | translate"
@@ -105,6 +119,21 @@
             valueField="value"
             displayField="text">
           </sic-combobox>
+        </div>
+
+        <!-- Attachments -->
+        <div class="md:col-span-12">
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+            {{ 'PMDT15_ATTACHMENTS_LABEL' | translate }}
+          </label>
+          <sic-upload
+            formControlName="attachmentGroupId"
+            [uploadGroupId]="formData?.form?.controls?.['attachmentGroupId']?.value || null"
+            [multiple]="true"
+            category="all"
+            [disabled]="isLocked()"
+          ></sic-upload>
         </div>
       </div>
     </div>

@@ -23,6 +23,7 @@ export class Pmdt02CForm {
       color: fb.control(null),
       assigneeIds: fb.control([]),
       assigneeNames: fb.control(null),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

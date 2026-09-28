@@ -9,6 +9,7 @@ export class Pmdt11Form {
       code: fb.control(null),
       name: fb.control(null, [Validators.required]),
       description: fb.control(null),
+      attachmentGroupId: fb.control(null),
       isActive: fb.control(true),
       state: fb.control(null),
       rowVersion: fb.control(null),

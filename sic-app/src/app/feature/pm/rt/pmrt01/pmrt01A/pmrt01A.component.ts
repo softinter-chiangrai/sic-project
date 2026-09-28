@@ -23,6 +23,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { Pmrt01AForm } from './pmrt01A.form';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -40,6 +41,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicInputAreaComponent,
     SicInputPhoneComponent,
     SicTiptapEditorComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -163,14 +165,12 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
     }
 
     // ✅ sync uploadGroupId
-    const uploadData = this.formCustomerData.formGroup.get('uploadGroupData')?.value;
-    if (uploadData && Array.isArray(uploadData) && uploadData.length > 0) {
-      const firstUpload = uploadData[0];
-      if (firstUpload?.uploadGroupId) {
-        this.formCustomerData.formGroup.patchValue({
-          uploadGroupId: firstUpload.uploadGroupId,
-        });
-      }
+    const rawUpload = this.formCustomerData.formGroup.get('uploadGroupId')?.value || this.formCustomerData.formGroup.get('uploadGroupData')?.value;
+    const finalGroupId = this.extractUploadGroupId(rawUpload);
+    if (finalGroupId) {
+      this.formCustomerData.formGroup.patchValue({
+        uploadGroupId: finalGroupId,
+      });
     }
 
     // Sync companyName from firstName / lastName
@@ -217,5 +217,17 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
         this.dialog.error(this.translate.instant('PMRT01A_SAVE_ERROR_TITLE'), err.error?.message || this.translate.instant('PMRT01A_GENERIC_ERROR_MSG'));
       },
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) {
+      return val[0]?.uploadGroupId || val[0]?.id || null;
+    }
+    if (typeof val === 'object') {
+      return val.uploadGroupId || val.id || null;
+    }
+    return null;
   }
 }

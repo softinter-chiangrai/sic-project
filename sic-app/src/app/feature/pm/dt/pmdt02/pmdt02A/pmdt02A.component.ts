@@ -17,6 +17,8 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicButtonComponent } from "sic-ng";
 import { environment } from '../../../../../../environments/environment';
 
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+
 @Component({
   selector: 'app-pmdt02A',
   standalone: true,
@@ -29,6 +31,7 @@ import { environment } from '../../../../../../environments/environment';
     SicColorpickerComponent,
     SicComboboxComponent,
     SicTiptapEditorComponent,
+    SicUploadComponent,
     SicButtonComponent,
     TranslateModule
 ],
@@ -201,6 +204,7 @@ export class Pmdt02AComponent implements OnInit {
       description: raw.description || undefined,
       dueDate: this.buildISOString(raw.dueDate, raw.dueTime!),
       color: raw.color || undefined, // ✅ ส่งค่าสี
+      attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
     };
 
     const request = this.isEdit && this.milestoneId
@@ -231,5 +235,13 @@ export class Pmdt02AComponent implements OnInit {
     } else {
       window.history.back();
     }
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

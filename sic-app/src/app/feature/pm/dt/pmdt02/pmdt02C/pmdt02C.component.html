@@ -131,6 +131,20 @@
       ></sic-colorpicker>
     </div>
 
+    <!-- Attachments -->
+    <div>
+      <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+        <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+        {{ 'PMDT02_ATTACHMENTS_LABEL' | translate }}
+      </label>
+      <sic-upload
+        formControlName="attachmentGroupId"
+        [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+        [multiple]="true"
+        category="all"
+      ></sic-upload>
+    </div>
+
     <!-- ✅ Section: ผลการทดสอบ (Test Cases & Bug Details) เมื่ออยู่ในโหมดแก้ไข -->
     @if (isEdit) {
       <div class="pt-4 border-t border-[var(--border)] space-y-3">

@@ -30,6 +30,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
 @Component({
   selector: 'app-pmdt17a',
@@ -46,6 +47,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicDatepickerComponent,
     SicTimepickerComponent,
     SicTiptapEditorComponent,
+    SicUploadComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
   ],
@@ -458,6 +460,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     const formValue = {
       ...rawVal,
       id: targetId || undefined,
+      attachmentGroupId: this.extractUploadGroupId(rawVal.attachmentGroupId),
       state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
     };
     this.service.save(formValue).subscribe({
@@ -504,5 +507,13 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
 
   onBack() {
     this.router.navigate(['/feature/pm/ma-ticket']);
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

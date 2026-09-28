@@ -16,6 +16,7 @@ export class Pmdt02BForm {
       endTime: fb.control(null, [Validators.required]),
       status: fb.control(null),
       color: fb.control(null),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

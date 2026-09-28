@@ -10,6 +10,7 @@ export interface WorkPackageRequest {
   startDate: string;
   endDate: string;
   color?: string;
+  attachmentGroupId?: string;
 }
 
 export interface WorkPackageResponse {
@@ -22,6 +23,7 @@ export interface WorkPackageResponse {
   endDate: string;
   status: string;
   color?: string;
+  attachmentGroupId?: string;
   tasks?: TaskResponse[];
 }
 
@@ -36,6 +38,7 @@ export interface WorkPackageModel extends SicBaseStateModel {
   endTime?: string;
   status?: string;
   color?: string;
+  attachmentGroupId?: string;
 }
 
 export interface WorkPackagePageData {

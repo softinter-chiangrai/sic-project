@@ -22,6 +22,7 @@ export class Pmrt02AForm {
       status: fb.control(model?.status ?? 'Prospect', [Validators.required]),
       priority: fb.control(model?.priority ?? 'Medium', [Validators.required]),
       description: fb.control(model?.description ?? null),
+      attachmentGroupId: fb.control(model?.attachmentGroupId ?? null),
       isActive: fb.control(model?.isActive ?? true),
       approvalFlowId: fb.control(model?.approvalFlowId ?? null),
       approvalStatus: fb.control(model?.approvalStatus ?? null),

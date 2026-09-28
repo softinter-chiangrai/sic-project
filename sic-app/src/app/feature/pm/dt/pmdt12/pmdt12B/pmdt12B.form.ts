@@ -18,6 +18,7 @@ export class Pmdt12BForm {
       testType: fb.control('SIT'),
       description: fb.control(null),
       status: fb.control('Active'),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
       createdDate: fb.control(null),

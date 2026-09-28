@@ -32,6 +32,7 @@ export interface PmUserManualSectionModel {
 
 export interface PmUserManualModel extends SicBaseStateModel {
   id: string;
+  customerId?: string;
   projectId: string;
   manualCode: string;
   manualTitle: string;

@@ -18,6 +18,7 @@ import { SicInputComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicCheckboxComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { environment } from '../../../../../../environments/environment';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 import { Pmdt12BPageData } from './pmdt12B.resolver';
@@ -40,6 +41,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicComboboxComponent,
     SicCheckboxComponent,
     SicTiptapEditorComponent,
+    SicUploadComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
   ],
@@ -361,6 +363,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       ...formVal,
       id: targetId || undefined,
       status: formVal.status || 'Active',
+      attachmentGroupId: this.extractUploadGroupId(formVal.attachmentGroupId),
       state: isEditMode ? 3 : 4,
     };
 
@@ -382,6 +385,14 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   onBack(): void {
     this.router.navigate(['/feature/pm/test-management']);
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }
 

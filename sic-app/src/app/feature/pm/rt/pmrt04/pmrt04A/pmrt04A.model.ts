@@ -36,6 +36,7 @@ export interface ContractModel {
   renewalStatus: string;
   parentContractId?: string;
   parentContractNo?: string;
+  attachmentGroupId?: string | null;
   isActive: boolean;
   state?: number;
   rowVersion?: number;

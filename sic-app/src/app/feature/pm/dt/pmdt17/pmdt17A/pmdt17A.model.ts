@@ -19,6 +19,7 @@ export interface PmMaTicketModel {
   endDate?: string | null;
   endTime?: string | null;
   resolutionSummary?: string;
+  attachmentGroupId?: string;
   isActive?: boolean;
   state?: SicEntityState | null;
   rowVersion?: number | null;

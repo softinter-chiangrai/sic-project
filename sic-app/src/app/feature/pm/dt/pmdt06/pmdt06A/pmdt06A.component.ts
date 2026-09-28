@@ -34,6 +34,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { ChangeRequestFormModel, Pmdt06APageData } from './pmdt06A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -54,6 +55,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         SicDatePipe,
         SicTiptapEditorComponent,
         SicTraceLinkPanelComponent,
+        SicUploadComponent,
         TranslateModule,
     ],
     changeDetection: ChangeDetectionStrategy.Eager,
@@ -122,6 +124,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         assigneeId: [null],
         assigneeIds: [[]],
         approvalFlowId: [null],
+        attachmentGroupId: [null],
         rowVersion: [null],
     }));
 
@@ -494,6 +497,8 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             data.projectId = this.projectId;
         }
 
+        data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
+
         data.assignees = this.selectedAssignees().map(a => ({
             userId: a.userId,
             targetType: data.targetType,
@@ -687,5 +692,13 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
     getImpactStatusText(status?: string): string {
         return status === 'AUTO' ? this.translate.instant('PMDT06_IMPACT_STATUS_AUTO') : this.translate.instant('PMDT06_IMPACT_STATUS_MANUAL');
+    }
+
+    private extractUploadGroupId(val: any): string | null {
+        if (!val) return null;
+        if (typeof val === 'string') return val;
+        if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+        if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+        return null;
     }
 }

@@ -17,6 +17,7 @@ export interface Pmdt01AModel extends SicBaseStateModel {
   color?: string;
   status?: string;
   progress?: number;
+  attachmentGroupId?: string;
 }
 
 export interface Pmdt01APageData {

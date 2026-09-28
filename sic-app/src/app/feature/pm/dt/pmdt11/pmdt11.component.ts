@@ -10,6 +10,7 @@ import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputAreaComponent } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
+import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 import type { CanComponentDeactivate } from '../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { SicFromData } from '../../../../core/model/sic-from-data';
@@ -31,6 +32,7 @@ export interface TaskScheduleModel {
   dependency?: string;
   dependencyName?: string;
   comment?: string;
+  attachmentGroupId?: string | null;
   state?: number;
   rowVersion?: number;
 }
@@ -52,6 +54,7 @@ class Pmdt11Form {
       dependency: fb.control(null),
       dependencyName: fb.control(null),
       comment: fb.control(null, [Validators.maxLength(500)]),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });
@@ -101,6 +104,7 @@ export class Pmdt11Service {
     SicButtonComponent,
     SicInputComponent,
     SicInputAreaComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt11.component.html',
@@ -178,6 +182,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
     }
 
     const data = this.formData.value;
+    data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
     data.state = SicEntityState.Modified;
 
     this.service.updateSchedule(data).subscribe({
@@ -210,6 +215,14 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
 
   onDependencyChange(event: any) {
     // TODO: เมื่อเปลี่ยน dependency ให้โหลดชื่อ dependency
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }
 

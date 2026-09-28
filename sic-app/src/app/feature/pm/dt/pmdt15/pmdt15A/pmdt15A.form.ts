@@ -6,6 +6,7 @@ export class Pmdt15AForm {
   static createForm(fb: FormBuilder, data?: Partial<PmUserManualModel> | null): FormGroup<ToForm<PmUserManualModel>> {
     return fb.group<ToForm<PmUserManualModel>>({
       id: fb.control(data?.id ?? null),
+      customerId: fb.control(data?.customerId ?? null),
       projectId: fb.control(data?.projectId ?? null, [Validators.required]),
       manualCode: fb.control(data?.manualCode ?? null, [Validators.required, Validators.maxLength(50)]),
       manualTitle: fb.control(data?.manualTitle ?? null, [Validators.required, Validators.maxLength(255)]),

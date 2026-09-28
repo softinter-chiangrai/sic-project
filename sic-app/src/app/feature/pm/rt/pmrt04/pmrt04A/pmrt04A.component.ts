@@ -41,6 +41,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
 @Component({
   selector: 'app-pmrt04a',
@@ -57,6 +58,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicTiptapEditorComponent,
     SicDatepickerComponent,
     SicEntitySummaryComponent,
+    SicUploadComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
   ],
@@ -425,6 +427,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
     data.customerId = this.form.get('customerId')?.value || this.customerId;
     data.projectId = this.form.get('projectId')?.value || this.projectId;
+    data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
 
     if (!data.customerId) {
       this.dialog.warn(this.translate.instant('PMRT04A_NO_CUSTOMER_DATA_TITLE') || 'ข้อมูลไม่ครบถ้วน', this.translate.instant('PMRT04A_SELECT_CUSTOMER_FIRST_MSG') || 'กรุณาเลือกลูกค้า');
@@ -655,6 +658,14 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       }, 2000);
       this.cdr.detectChanges();
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }
 

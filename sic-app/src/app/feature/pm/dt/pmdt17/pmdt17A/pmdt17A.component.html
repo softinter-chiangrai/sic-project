@@ -180,6 +180,21 @@
       ></sic-tiptap-editor>
     </div>
 
+    <!-- Section 5: Attachments -->
+    <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+      <h2 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+        <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+        {{ 'PMDT17_ATTACHMENTS_LABEL' | translate }}
+      </h2>
+      <sic-upload
+        formControlName="attachmentGroupId"
+        [uploadGroupId]="formData.form.get('attachmentGroupId')?.value || null"
+        [multiple]="true"
+        category="all"
+        [disabled]="isLocked() || isView()"
+      ></sic-upload>
+    </div>
+
     <!-- Approval Flow Selection Card (New / Edit) -->
     @if (!isView()) {
       <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">

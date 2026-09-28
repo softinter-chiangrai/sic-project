@@ -21,6 +21,7 @@ import { SicEntityState } from '../../../../../core/model/sic-base-model';
 import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import { ApprovalFlow } from '../../pmdt03/approval.model';
+import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 
 import { Pmdt15AForm } from './pmdt15A.form';
 import { Pmdt15AService } from './pmdt15A.service';
@@ -65,6 +66,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private readonly languageService = inject(LanguageService);
   private readonly aiHistoryService = inject(AiHistoryService);
   private readonly translate = inject(TranslateService);
+  private readonly customerState = inject(CustomerStateService);
 
   formData!: SicFromData<PmUserManualModel>;
   id = signal<string | null>(null);
@@ -111,7 +113,9 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   ];
 
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
+  apiGetComboboxCustomer = `${apiBaseUrl}/api/pm/customers/combobox`;
   apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
+  projectParams: Record<string, any> = {};
   isProjectDerived = signal(false);
 
   // AI Generator Modal State
@@ -146,9 +150,15 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.loadApprovalFlows();
 
     this.route.queryParams.subscribe((qParams) => {
-      const queryProj = qParams['projectId'];
+      const queryCust = qParams['customerId'] || this.customerState.getCustomerId();
+      if (queryCust) {
+        this.formData.patchValue({ customerId: queryCust } as any);
+        this.projectParams = { customerId: queryCust };
+      }
+      const queryProj = qParams['projectId'] || (!this.id() ? this.customerState.getProjectId() : null);
       if (queryProj) {
         this.formData.patchValue({ projectId: queryProj } as any);
+        this.loadCustomerFromProject(queryProj, true);
         this.loadDeliveryOptions(queryProj);
         this.loadAiComboboxOptions(queryProj);
         this.cdr.markForCheck();
@@ -184,9 +194,52 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.cdr.markForCheck();
   }
 
+  onCustomerSelected(item: any): void {
+    const customerId = item?.value ?? item?.id ?? null;
+    this.projectParams = customerId ? { customerId } : {};
+
+    const currentProjectId = (this.formData?.form?.value as any)?.projectId;
+    if (currentProjectId && customerId) {
+      this.http.get<any>(`${apiBaseUrl}/api/pm/customer-projects/${currentProjectId}`).subscribe({
+        next: (project) => {
+          if (project?.customerId !== customerId) {
+            this.formData.patchValue({ projectId: null, deliveryId: null } as any);
+            this.loadDeliveryOptions(undefined);
+            this.loadAiComboboxOptions(undefined);
+            this.cdr.markForCheck();
+          }
+        },
+        error: () => {
+          this.formData.patchValue({ projectId: null, deliveryId: null } as any);
+          this.loadDeliveryOptions(undefined);
+          this.loadAiComboboxOptions(undefined);
+          this.cdr.markForCheck();
+        },
+      });
+    }
+    this.cdr.markForCheck();
+  }
+
+  private loadCustomerFromProject(projectId: string, silent = false): void {
+    if (!projectId) return;
+    this.http.get<any>(`${apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
+      next: (project) => {
+        if (project?.customerId) {
+          this.formData.patchValue({ customerId: project.customerId } as any);
+          this.projectParams = { customerId: project.customerId };
+          this.cdr.markForCheck();
+        }
+      },
+      error: () => {},
+    });
+  }
+
   // ผู้ใช้เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน) — โหลด Delivery/AI options ของโครงการที่เลือกใหม่
   onProjectSelected(item: any): void {
     const projId = item?.value ?? item?.id ?? null;
+    if (projId) {
+      this.loadCustomerFromProject(projId);
+    }
     this.loadDeliveryOptions(projId || undefined);
     this.loadAiComboboxOptions(projId || undefined);
     this.cdr.markForCheck();
@@ -207,6 +260,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         if (projId) {
           this.formData.patchValue({ projectId: projId } as any);
           this.isProjectDerived.set(true);
+          this.loadCustomerFromProject(projId);
           this.loadDeliveryOptions(projId);
         }
         this.cdr.markForCheck();
@@ -228,6 +282,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         if (projId) {
           this.formData.patchValue({ projectId: projId } as any);
           this.isProjectDerived.set(true);
+          this.loadCustomerFromProject(projId);
         }
         this.cdr.markForCheck();
       },
@@ -487,6 +542,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   private applyManualData(data: PmUserManualModel): void {
     this.formData.form.patchValue(data);
     if (data.projectId) {
+      this.loadCustomerFromProject(data.projectId, true);
       this.loadDeliveryOptions(data.projectId);
     }
     this.isProjectDerived.set(!!data.deliveryId);
@@ -606,8 +662,10 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       ...s,
       state: s.state !== undefined ? s.state : (s.id ? SicEntityState.Modified : SicEntityState.Added),
     }));
+    const attachmentGroupId = this.extractUploadGroupId(rawVal.attachmentGroupId);
     const payload = {
       ...rawVal,
+      attachmentGroupId: attachmentGroupId || undefined,
       id: targetId || undefined,
       state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
       sections: sectionsPayload,
@@ -717,6 +775,18 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         targetTitle: rawVal.manualTitle,
       },
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) {
+      return val[0]?.uploadGroupId || val[0]?.id || null;
+    }
+    if (typeof val === 'object') {
+      return val.uploadGroupId || val.id || null;
+    }
+    return null;
   }
 }
 

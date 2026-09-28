@@ -15,6 +15,7 @@ export class Pmdt06AForm {
       costImpact: fb.control(null),
       scheduleImpactDays: fb.control(null),
       status: fb.control('DRAFT'),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

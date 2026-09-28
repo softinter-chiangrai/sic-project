@@ -13,6 +13,7 @@ export interface Pmrt04BModel {
   renewalRemark?: string | null;
   renewalStatus: string;
   approvalFlowId?: string | null;
+  attachmentGroupId?: string | null;
 }
 
 export interface Pmrt04BPageData {

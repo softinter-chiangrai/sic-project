@@ -23,6 +23,7 @@ export class Pmrt04AForm {
       renewalStatus: fb.control(model?.renewalStatus ?? null),
       parentContractId: fb.control(model?.parentContractId ?? null),
       parentContractNo: fb.control(model?.parentContractNo ?? null),
+      attachmentGroupId: fb.control(model?.attachmentGroupId ?? null),
       isActive: fb.control(model?.isActive ?? true),
       state: fb.control(null),
       rowVersion: fb.control(model?.rowVersion ?? null),

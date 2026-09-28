@@ -6,6 +6,7 @@ export interface Pmdt11Model extends SicBaseStateModel {
   code?: string;
   name?: string;
   description?: string;
+  attachmentGroupId?: string;
   isActive?: boolean;
 }
 

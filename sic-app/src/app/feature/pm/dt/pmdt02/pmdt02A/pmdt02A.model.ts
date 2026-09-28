@@ -9,6 +9,7 @@ export interface MilestoneRequest {
   description?: string;
   dueDate: string;
   color?: string;
+  attachmentGroupId?: string;
 }
 
 export interface MilestoneResponse {
@@ -20,6 +21,7 @@ export interface MilestoneResponse {
   dueDate: string;
   status: string;
   color?: string;
+  attachmentGroupId?: string;
   workPackages?: WorkPackageResponse[];
 }
 
@@ -33,6 +35,7 @@ export interface MilestoneModel extends SicBaseStateModel {
   dueTime?: string;
   status?: string;
   color?: string;
+  attachmentGroupId?: string;
 }
 
 export interface MilestonePageData {

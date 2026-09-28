@@ -58,6 +58,7 @@ export class Pmrt04BForm {
         renewalRemark: fb.control(null),
         renewalStatus: fb.control('ต่อแล้ว'),
         approvalFlowId: fb.control(null),
+        attachmentGroupId: fb.control(null),
       },
       { validators: Pmrt04BForm.dateRangeValidator() },
     );

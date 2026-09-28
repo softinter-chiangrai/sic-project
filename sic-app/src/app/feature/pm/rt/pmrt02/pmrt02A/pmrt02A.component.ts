@@ -29,6 +29,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
 
 @Component({
@@ -46,6 +47,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicComboboxComponent,
     SicTiptapEditorComponent,
     SicVersionBadgeComponent,
+    SicUploadComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
   ],
@@ -277,8 +279,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
 
     this.isSaving = true;
     const formRaw = this.form.getRawValue();
+    const attachmentGroupId = this.extractUploadGroupId(formRaw.attachmentGroupId);
     const data: any = {
       ...formRaw,
+      attachmentGroupId: attachmentGroupId || undefined,
       customerId: formRaw.customerId || null,
       contractId: formRaw.contractId || null,
       actualEndDate: formRaw.actualEndDate || null,
@@ -486,6 +490,18 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       this.copiedId.set(historyId || 'current');
       setTimeout(() => this.copiedId.set(null), 2000);
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) {
+      return val[0]?.uploadGroupId || val[0]?.id || null;
+    }
+    if (typeof val === 'object') {
+      return val.uploadGroupId || val.id || null;
+    }
+    return null;
   }
 }
 

@@ -172,6 +172,21 @@
         ></sic-tiptap-editor>
       </div>
 
+      <!-- Attachments / Upload Files -->
+      <div class="md:col-span-2">
+        <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+          <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+          {{ 'PMRT02A_ATTACHMENTS_LABEL' | translate }}
+        </label>
+        <sic-upload
+          formControlName="attachmentGroupId"
+          [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+          [multiple]="true"
+          category="all"
+          [disabled]="isViewOnly || isLocked"
+        ></sic-upload>
+      </div>
+
       <!-- Active Status (ล่างสุดก่อนปุ่มบันทึก) -->
       <div class="md:col-span-2">
         <label class="flex items-center gap-2 cursor-pointer text-sm">

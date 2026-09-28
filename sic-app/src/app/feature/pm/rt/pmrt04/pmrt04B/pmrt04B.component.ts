@@ -24,6 +24,7 @@ import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt01AService } from '../../pmrt01/pmrt01A/pmrt01A.service';
 import { ContractModel } from '../pmrt04A/pmrt04A.model';
 import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
@@ -42,6 +43,7 @@ import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
     SicDatepickerComponent,
     SicInputAreaComponent,
     SicTiptapEditorComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -267,6 +269,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       contractValue: formValue.newContractValue,
       signStatus: 'Draft',
       renewalStatus: formValue.renewalStatus,
+      attachmentGroupId: this.extractUploadGroupId(formValue.attachmentGroupId),
       isActive: true,
     };
 
@@ -437,5 +440,13 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       currency: 'THB',
       minimumFractionDigits: 2,
     }).format(value);
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

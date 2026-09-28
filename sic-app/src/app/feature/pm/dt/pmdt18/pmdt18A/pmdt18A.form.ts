@@ -19,6 +19,7 @@ export class Pmdt18AForm {
       proposedAmount: fb.control(0, [Validators.required, Validators.min(0)]),
       status: fb.control('DRAFT', [Validators.required]),
       newContractId: fb.control(null),
+      attachmentGroupId: fb.control(null),
       remark: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),

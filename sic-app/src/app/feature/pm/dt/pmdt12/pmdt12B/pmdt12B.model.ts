@@ -14,6 +14,7 @@ export interface PmTestScenarioModel extends SicBaseStateModel {
   testType?: string;
   description?: string;
   status?: string;
+  attachmentGroupId?: string;
   createdDate?: string;
   updatedDate?: string;
 }

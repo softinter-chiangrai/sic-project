@@ -18,6 +18,7 @@ export interface Pmrt02AModel extends SicBaseStateModel {
   status: string;
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   description?: string;
+  attachmentGroupId?: string;
   isActive: boolean;
   approvalFlowId?: string;
   approvalStatus?: string;

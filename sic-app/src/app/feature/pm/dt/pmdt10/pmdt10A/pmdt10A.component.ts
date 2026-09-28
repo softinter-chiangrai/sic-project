@@ -14,6 +14,7 @@ import { SicTimepickerComponent} from '../../../../../core/component/sic-timepic
 import { SicColorpickerComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
 @Component({
   selector: 'app-pmdt10a',
@@ -27,6 +28,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
     SicColorpickerComponent,
     SicTiptapEditorComponent,
     SicTraceLinkPanelComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt10A.component.html',
@@ -175,6 +177,7 @@ export class Pmdt10AComponent implements OnInit {
       status: raw.status || 'Todo',
       color: raw.color || undefined,
       assigneeIds: raw.assigneeIds || [],
+      attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
     };
 
     this.isSaving = true;
@@ -198,5 +201,13 @@ export class Pmdt10AComponent implements OnInit {
 
   closeModal(): void {
     this.close.emit();
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

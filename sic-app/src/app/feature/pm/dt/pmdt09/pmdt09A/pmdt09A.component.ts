@@ -25,6 +25,8 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { DesignReviewModel, Pmdt09APageData } from './pmdt09A.model';
 import { Pmdt09AService } from './pmdt09A.service';
 
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+
 // ===== Component =====
 @Component({
   selector: 'app-pmdt09a',
@@ -41,6 +43,7 @@ import { Pmdt09AService } from './pmdt09A.service';
     SicInputComponent,
     SicTiptapEditorComponent,
     SicTraceLinkPanelComponent,
+    SicUploadComponent,
   ],
   templateUrl: './pmdt09A.component.html',
   styles: [],
@@ -374,6 +377,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     if (Array.isArray(data.assignedTo)) {
       data.assignedTo = (data.assignedTo as any[]).join(', ');
     }
+    data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
     data.state = isEditMode ? SicEntityState.Modified : SicEntityState.Added;
 
     this.service.save(data).subscribe({
@@ -447,6 +451,14 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         });
       }
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }
 

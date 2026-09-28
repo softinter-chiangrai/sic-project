@@ -21,6 +21,8 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 
 import { Requirement } from './pmdt04B.model';
 
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+
 @Component({
   selector: 'app-pmdt04b',
   standalone: true,
@@ -33,6 +35,7 @@ import { Requirement } from './pmdt04B.model';
     SicInputComponent,
     SicTiptapEditorComponent,
     SicNumberComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -128,6 +131,7 @@ export class Pmdt04BComponent implements OnInit {
       baConfirmStatus: ['Pending'],
       customerConfirmStatus: ['Pending'],
       version: [{ value: 'v1.0.0', disabled: true }],
+      attachmentGroupId: [null],
       // ✅ ไม่มี status แล้ว
       isActive: [true],
       state: [null],
@@ -224,6 +228,7 @@ export class Pmdt04BComponent implements OnInit {
 
     this.isSaving = true;
     const data = this.form.value;
+    data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
 
     if (this.isEdit) {
       data.state = this.ENTITY_STATE.Modified;
@@ -291,5 +296,13 @@ export class Pmdt04BComponent implements OnInit {
 
   onBack() {
     this.navigateBackToRequirementList();
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

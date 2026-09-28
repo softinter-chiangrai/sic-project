@@ -20,6 +20,7 @@ export class Pmdt01AForm {
       color: fb.control(null),
       status: fb.control(null),
       progress: fb.control(null),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

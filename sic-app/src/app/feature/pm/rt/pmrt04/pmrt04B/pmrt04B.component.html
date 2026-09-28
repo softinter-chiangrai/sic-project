@@ -186,6 +186,21 @@
             ></sic-tiptap-editor>
           </div>
 
+          <!-- Attachments -->
+          <div class="mt-4">
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+              {{ 'PMRT04B_ATTACHMENTS_LABEL' | translate }}
+            </label>
+            <sic-upload
+              formControlName="attachmentGroupId"
+              [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+              [multiple]="true"
+              category="all"
+              [disabled]="isSaving || isCancelled"
+            ></sic-upload>
+          </div>
+
           <!-- กระบวนการอนุมัติ -->
           <div class="border-t border-[var(--border)] pt-4 mt-4">
             <div class="text-sm font-semibold text-[var(--text-active)] mb-3 flex items-center gap-2">

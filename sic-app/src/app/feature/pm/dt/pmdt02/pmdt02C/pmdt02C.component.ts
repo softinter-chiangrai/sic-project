@@ -21,6 +21,8 @@ import { BusinessService } from '../../../../../core/services/business.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { SicButtonComponent } from "sic-ng";
 
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+
 @Component({
   selector: 'app-pmdt02C',
   standalone: true,
@@ -33,6 +35,7 @@ import { SicButtonComponent } from "sic-ng";
     SicTimepickerComponent,
     SicColorpickerComponent,
     SicTiptapEditorComponent,
+    SicUploadComponent,
     SicButtonComponent,
     TranslateModule
 ],
@@ -294,6 +297,7 @@ export class Pmdt02CComponent implements OnInit {
       priority: raw.priority || 'Medium',
       color: raw.color || undefined,
       assigneeIds: raw.assigneeIds || [],
+      attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
     };
 
     const request = this.isEdit && this.taskId
@@ -315,5 +319,13 @@ export class Pmdt02CComponent implements OnInit {
     this.router.navigate(['/feature/pm/phase', this.phaseId], {
       queryParams: { projectId: this.projectId },
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

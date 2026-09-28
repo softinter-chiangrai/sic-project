@@ -13,6 +13,7 @@ export interface Pmdt06AModel extends SicBaseStateModel {
   costImpact?: number;
   scheduleImpactDays?: number;
   status?: string;
+  attachmentGroupId?: string;
 }
 
 export interface Pmdt06APageData {
@@ -35,5 +36,6 @@ export interface ChangeRequestFormModel {
   assignees?: { id?: string; userId: string; userName?: string; targetType?: string; targetId?: string; status?: string }[];
   status?: string;
   targetVersion?: string;
+  attachmentGroupId?: string;
   rowVersion?: number;
 }

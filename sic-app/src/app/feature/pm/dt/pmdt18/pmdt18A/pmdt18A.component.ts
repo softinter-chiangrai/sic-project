@@ -10,6 +10,7 @@ import { SicComboboxComponent } from '../../../../../core/component/sic-combobox
 import { SicInputComponent } from 'sic-ng';
 import { SicInputAreaComponent } from 'sic-ng';
 import { SicDatepickerComponent } from 'sic-ng';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
@@ -35,6 +36,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicInputComponent,
     SicInputAreaComponent,
     SicDatepickerComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt18A.component.html',
@@ -169,6 +171,7 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
     const val = {
       ...rawVal,
       id: targetId || undefined,
+      attachmentGroupId: this.extractUploadGroupId(rawVal.attachmentGroupId),
       state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
     };
 
@@ -184,6 +187,14 @@ export class Pmdt18AComponent implements OnInit, CanComponentDeactivate {
       },
       complete: () => this.isSaving.set(false),
     });
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }
 

@@ -144,6 +144,21 @@
           ></sic-tiptap-editor>
         </div>
 
+        <!-- Attachments -->
+        <div class="space-y-1.5">
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+            {{ 'PMDT09_ATTACHMENTS_LABEL' | translate }}
+          </label>
+          <sic-upload
+            formControlName="attachmentGroupId"
+            [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+            [multiple]="true"
+            category="all"
+            [disabled]="isLocked"
+          ></sic-upload>
+        </div>
+
         <!-- Figma Link & Embed Configuration -->
         <div class="space-y-3">
           <sic-input

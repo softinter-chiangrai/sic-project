@@ -28,6 +28,7 @@ export interface DesignReviewModel {
   figmaUrl?: string;
   embedMode?: 'design' | 'prototype';
   approvalFlowId?: string;
+  attachmentGroupId?: string;
   isActive: boolean;
   comments?: ReviewCommentModel[];
   state?: number;

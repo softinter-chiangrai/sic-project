@@ -23,6 +23,7 @@ export class Pmdt09AForm {
       figmaUrl: fb.control(null),
       embedMode: fb.control('design'),
       approvalFlowId: fb.control(null),
+      attachmentGroupId: fb.control(null),
       isActive: fb.control(true),
       comments: fb.control([]),
       state: fb.control(null),

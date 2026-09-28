@@ -15,6 +15,7 @@ export class Pmdt04BForm {
       priority: fb.control('Medium'),
       status: fb.control('DRAFT'),
       assignedTo: fb.control(null),
+      attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
     });

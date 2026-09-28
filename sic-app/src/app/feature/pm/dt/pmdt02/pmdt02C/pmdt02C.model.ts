@@ -16,6 +16,7 @@ export interface TaskRequest {
   status?: string;
   assigneeIds?: string[];
   specificationId?: string;
+  attachmentGroupId?: string;
 }
 
 export interface TaskResponse {
@@ -42,6 +43,7 @@ export interface TaskResponse {
   specificationId?: string;
   specificationCode?: string;
   specificationTitle?: string;
+  attachmentGroupId?: string;
 }
 
 export interface TaskModel extends SicBaseStateModel {
@@ -62,6 +64,7 @@ export interface TaskModel extends SicBaseStateModel {
   color?: string;
   assigneeIds?: string[];
   assigneeNames?: Record<string, string>;
+  attachmentGroupId?: string;
 }
 
 export interface TaskPageData {
