@@ -786,7 +786,7 @@ public class AiProjectPipelineJobService {
 
 
     private static final String DIAGRAM_SCHEMA = """
-            Keep the diagram small (max 12 nodes / 10 entities). Fill EVERY field.
+            Make the diagram detailed and complete (up to 25 nodes / 15 entities). Fill EVERY field.
             Respond ONLY with valid JSON in a ```json block, same language as the project, using this shape (one item per diagram):
             { "diagrams": [
               { "name": "...", "type": "DFD", "requirementRef": 1,
@@ -803,29 +803,21 @@ public class AiProjectPipelineJobService {
                 "edges": [ { "from": "n1", "to": "n2", "label": "" } ] } ] }
             """;
 
-    // One small AI call per diagram: a single big call gets truncated -> unparsable JSON -> no diagrams.
-    private void stepDiagrams(Ctx c, StepState step) {
-        String role = "You are a System Analyst. ";
-        String ctx = projectContext(c) + "
+    // Fixed system-level set, one AI call each (a single big call gets truncated -> unparsable JSON -> no diagrams).
+    private static final String[][] DIAGRAM_SET = {
+            {"DFD", "a DFD Level 0 (context diagram): the system as one process, all external entities and the main data flows in/out. Name it \"DFD Level 0\""},
+            {"DFD", "a DFD Level 1: break the system into its main processes with data stores, external entities and every data flow between them. Name it \"DFD Level 1\""},
+            {"Use Case", "the use case diagram of the whole system: all actors and all main use cases with their relations"},
+            {"Flowchart", "the flowchart of the single most important business process of the system, including decisions and alternative paths"},
+            {"ER", "the ER diagram of the whole system: every entity across all requirements with key attributes and relations with cardinality"}};
 
-Requirements:
-" + numbered(c.requirements);
+    private void stepDiagrams(Ctx c, StepState step) {
+        String ctx = projectContext(c) + "\n\nRequirements:\n" + numbered(c.requirements);
         int made = 0;
-        int reqCount = c.requirements.size();
-        for (int i = 1; i <= reqCount; i++) {
-            made += saveDiagrams(c, ask(c, role + "Create the diagrams needed to properly describe requirement #" + i
-                    + " only. Decide the number and types yourself based on its complexity: one or more of DFD (data-flow-heavy; split into levels if complex),"
-                    + " Flowchart (procedural/business-process), Use Case (actor/interaction-heavy). Do not pad with unnecessary diagrams."
-                    + " Set requirementRef to " + i + " on every diagram. " + DIAGRAM_SCHEMA, ctx, false), Integer.MAX_VALUE, made);
+        for (String[] d : DIAGRAM_SET) {
+            made += saveDiagrams(c, ask(c, "You are a System Analyst. Create exactly ONE diagram of type \"" + d[0] + "\": " + d[1]
+                    + ". It is system-level, so requirementRef may be omitted. " + DIAGRAM_SCHEMA, ctx, false), 1, made);
         }
-        // reqCount == 0: no requirements to hang diagrams on, fall back to a few general ones
-        int extra = reqCount == 0 ? 3 : 0;
-        if (extra > 0) {
-            made += saveDiagrams(c, ask(c, role + "Create " + extra + " diagrams (DFD / Flowchart / Use Case) covering the main features of the project. "
-                    + DIAGRAM_SCHEMA, ctx, false), extra, made);
-        }
-        made += saveDiagrams(c, ask(c, role + "Create exactly ONE \"ER\" diagram covering the overall data model of the whole system"
-                + " (every major entity across all requirements; requirementRef may be omitted). " + DIAGRAM_SCHEMA, ctx, false), 1, made);
         step.count = made;
         if (made == 0) step.message = "AI ไม่สามารถสร้าง Diagram ได้";
     }
@@ -864,6 +856,8 @@ Requirements:
             dq.setDiagramType(type);
             Ref req = refAt(c.requirements, d.path("requirementRef").asInt(0), -1);
             if (req != null) dq.setRequirementId(req.id());
+            // system-level diagram: trace to every requirement so change-request impact analysis finds it
+            else dq.setRelatedRequirementIds(c.requirements.stream().map(Ref::id).toList());
             Map<String, Object> graph = new LinkedHashMap<>();
             graph.put("xml", xml);
             dq.setGraphData(graph);
