@@ -6,6 +6,21 @@
       "sourceType": "github",
       "skillPath": "angular-developer/SKILL.md",
       "computedHash": "0c8b40ca446c0c07a1b1397ff6fb8ad38e64b258c48b9876fff7c0c55672fcbe"
+    },
+    "ponytail": {
+      "source": "DietrichGebert/ponytail",
+      "sourceType": "github",
+      "skillPath": "SKILL.md"
+    },
+    "laconic": {
+      "source": "GabrielBarberini/laconic",
+      "sourceType": "github",
+      "skillPath": "SKILL.md"
+    },
+    "web-research": {
+      "source": "local/skills",
+      "sourceType": "local",
+      "skillPath": "web-research/SKILL.md"
     }
   }
 }
