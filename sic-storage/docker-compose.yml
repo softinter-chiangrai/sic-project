@@ -22,19 +22,23 @@ services:
     restart: unless-stopped
 
   seaweedfs-init:
-    image: minio/mc:latest
-    container_name: sic-storage
+    image: amazon/aws-cli:latest
+    container_name: sic-storage-init
     depends_on:
       - seaweedfs
+    environment:
+      - AWS_ACCESS_KEY_ID=seaweedfs
+      - AWS_SECRET_ACCESS_KEY=seaweedfs-secret
+      - AWS_DEFAULT_REGION=us-east-1
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://seaweedfs:8333 seaweedfs seaweedfs-secret; do
+      until aws --endpoint-url http://seaweedfs:8333 s3 ls; do
         echo 'waiting for seaweedfs s3...';
         sleep 2;
       done;
-      mc mb --ignore-existing local/uploads;
-      mc mb --ignore-existing local/documents;
-      mc mb --ignore-existing local/public-files;
+      aws --endpoint-url http://seaweedfs:8333 s3 mb s3://uploads || true;
+      aws --endpoint-url http://seaweedfs:8333 s3 mb s3://documents || true;
+      aws --endpoint-url http://seaweedfs:8333 s3 mb s3://public-files || true;
       echo 'seaweedfs buckets initialized';
       "
     restart: "no"

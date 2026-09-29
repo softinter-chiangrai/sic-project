@@ -88,19 +88,23 @@ services:
   # 4. Storage Bucket Initialization
   # ============================================================================
   sic-seaweedfs-init:
-    image: minio/mc:latest
+    image: amazon/aws-cli:latest
     container_name: sic-storage
     depends_on:
       - sic-seaweedfs
+    environment:
+      - AWS_ACCESS_KEY_ID=${SEAWEEDFS_ACCESS_KEY:-seaweedfs}
+      - AWS_SECRET_ACCESS_KEY=${SEAWEEDFS_SECRET_KEY:-seaweedfs-secret}
+      - AWS_DEFAULT_REGION=us-east-1
     entrypoint: >
       /bin/sh -c "
-      until mc alias set local http://sic-seaweedfs:8333 ${SEAWEEDFS_ACCESS_KEY:-seaweedfs} ${SEAWEEDFS_SECRET_KEY:-seaweedfs-secret}; do
+      until aws --endpoint-url http://sic-seaweedfs:8333 s3 ls; do
         echo 'Waiting for SeaweedFS S3 to be ready...';
         sleep 2;
       done;
-      mc mb --ignore-existing local/uploads;
-      mc mb --ignore-existing local/documents;
-      mc mb --ignore-existing local/public-files;
+      aws --endpoint-url http://sic-seaweedfs:8333 s3 mb s3://uploads || true;
+      aws --endpoint-url http://sic-seaweedfs:8333 s3 mb s3://documents || true;
+      aws --endpoint-url http://sic-seaweedfs:8333 s3 mb s3://public-files || true;
       echo 'SeaweedFS buckets successfully initialized.';
       "
     restart: "no"
