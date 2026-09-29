@@ -161,7 +161,7 @@ services:
       APP_KEYCLOAK_RESOURCE: ${APP_KEYCLOAK_RESOURCE:-sic-app}
 
       # S3 / SeaweedFS Configuration
-      APP_STORAGE_S3_ENDPOINT: ${APP_STORAGE_S3_ENDPOINT:-http://sic-seaweedfs:8888}
+      APP_STORAGE_S3_ENDPOINT: ${APP_STORAGE_S3_ENDPOINT:-http://sic-seaweedfs:8333}
       APP_STORAGE_S3_ACCESS_KEY: ${SEAWEEDFS_ACCESS_KEY:-seaweedfs}
       APP_STORAGE_S3_SECRET_KEY: ${SEAWEEDFS_SECRET_KEY:-seaweedfs-secret}
       APP_STORAGE_S3_BUCKET: ${APP_STORAGE_S3_BUCKET:-public-files}
