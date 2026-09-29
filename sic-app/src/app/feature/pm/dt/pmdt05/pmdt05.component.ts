@@ -60,12 +60,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private isCreateDialogOpened = false;
 
   // ===== Global project context (navbar sic-context-switcher) =====
-  // The page-local project dropdown was removed; the "active" project is now sourced from the
-  // same CustomerStateService context that pmdt16/pmdt19/sic-gantt already read. This page edits
-  // a single diagram set at a time, so we take the first selected id (matches
-  // CustomerStateService.currentProjectId's own convention of "first of the selection").
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
-  readonly activeProjectId = computed(() => this.selectedProjectIds()[0] ?? null);
+  readonly activeProjectId = computed(() => {
+    const ids = this.selectedProjectIds();
+    return ids.length === 1 ? ids[0] : null;
+  });
 
   // ===== State =====
   isLoading = false;
@@ -107,6 +106,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   }
 
   private isLoadingDiagram = false;
+  private diagramLoadToken = 0;
   private pendingCreate: { requirementId: string; requirementTitle: string } | null = null;
 
   // Preloaded by the resolver for the first getTabs() call only — cleared after use.
@@ -117,14 +117,6 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private requirementId: string | null = null;
   private requirementTitle: string = '';
 
-  // A tabId requested via URL that couldn't be applied immediately (tabs for the
-  // active project context aren't loaded yet) — consumed once by loadTabs() as its
-  // preferredTabId the next time tabs are (re)loaded for whichever project the
-  // effect() below settles on. This is the ONLY place that reads `projectId` out of
-  // the URL to drive page state; actual project switching is always driven by
-  // CustomerStateService/activeProjectId (see the effect() in ngAfterViewInit) so
-  // there is a single source of truth for "which project is active" and no race
-  // between this component's own URL parsing and the navbar context-switcher.
   private pendingTabIdFromUrl: string | null = null;
 
   // ===== Auto‑Save =====
@@ -160,17 +152,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       }
     }, 5000);
 
-    // โหลดรายชื่อโครงการทั้งหมด (ใช้แสดงชื่อโครงการ / ตรวจสอบว่ามีโครงการในระบบหรือไม่)
+    // โหลดรายชื่อโครงการทั้งหมด
     this.loadProjectsList();
 
-    // ===== Global project context (navbar) =====
-    // Reacts to the user switching the active project via the navbar's sic-context-switcher
-    // (CustomerStateService.currentSelectedProjectIds), the same source pmdt16/pmdt19/sic-gantt
-    // use. This replaces the removed page-local project dropdown while preserving its behavior
-    // of switching tabs/diagrams whenever the active project changes.
+    // ===== Global project & customer context (navbar) =====
     effect(() => {
-      const pid = this.activeProjectId();
-      this.handleNavbarProjectChange(pid);
+      const pids = this.selectedProjectIds();
+      const cid = this.customerState.currentCustomerId();
+      this.handleNavbarContextChange(pids, cid);
     }, { injector: this.injector });
 
     // รับ query params
@@ -209,40 +198,21 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
       if (!tabIdFromUrl) return;
 
-      // Deep link to a specific diagram with NO project context established anywhere
-      // yet (fresh load, nothing selected in the navbar): resolve which project the
-      // diagram belongs to, then seed CustomerStateService with it. The effect()
-      // above reacts to that and calls loadTabs(), which will pick up
-      // pendingTabIdFromUrl (set below) as its preferred tab once tabs are loaded.
-      if (!this.projectId && this.selectedProjectIds().length === 0) {
-        this.pendingTabIdFromUrl = tabIdFromUrl;
-        this.diagramService.getDiagram(tabIdFromUrl).subscribe({
-          next: (diagram) => {
-            if (diagram?.projectId) {
-              this.customerState.setProject(diagram.projectId);
-            }
-          },
-          error: () => {
-            this.loadProjectsList();
-          },
-        });
-        return;
-      }
-
       if (tabIdFromUrl === this.currentTabId) return;
 
       if (this.tabs().some((t) => t.id === tabIdFromUrl)) {
-        // Tab already loaded under the current project context — just switch to it.
+        // Tab already loaded — switch to it.
         this.currentTabId = tabIdFromUrl;
         this.currentDiagram = null;
         this.loadedDiagramTabId = null;
         this.cleanUpUrl(tabIdFromUrl);
         if (this.drawioReady) this.loadExistingDiagram();
       } else {
-        // Tabs for the active project context may still be loading (e.g. right after
-        // the effect() above kicked off loadTabs()) — remember the request so
-        // applyLoadedTabs() applies it as soon as tabs arrive.
+        // Tabs may still be loading — remember the requested tabId for applyLoadedTabs.
         this.pendingTabIdFromUrl = tabIdFromUrl;
+        if (!this.isLoadingTabs && this.tabs().length === 0) {
+          this.loadTabs(tabIdFromUrl);
+        }
       }
     });
 
@@ -313,10 +283,10 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   }
 
   // ===== Tabs Management =====
-  // projectId may be null here on purpose: when no project is selected via the navbar,
-  // diagramService.getTabs(null) fetches every diagram across all projects (show-all,
-  // then-filter convention), instead of blocking on a required selection.
+  private tabsLoadToken = 0;
   loadTabs(preferredTabId?: string | null, openCreateAfterLoad: boolean = false): void {
+    const myToken = ++this.tabsLoadToken;
+
     if (this.resolvedTabs && this.resolvedTabsProjectId === this.projectId) {
       const tabs = this.resolvedTabs;
       this.resolvedTabs = null;
@@ -326,14 +296,32 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     this.isLoadingTabs = true;
-    this.diagramService.getTabs(this.projectId).subscribe({
+    const filterPids = this.selectedProjectIds();
+    const custId = this.customerState.getCustomerId();
+    const singleProjectId = filterPids.length === 1 ? filterPids[0] : null;
+
+    this.diagramService.getTabs(singleProjectId).subscribe({
       next: (tabs) => {
+        if (myToken !== this.tabsLoadToken) return; // superseded by a newer request
         this.isLoadingTabs = false;
-        this.applyLoadedTabs(tabs, preferredTabId, openCreateAfterLoad);
+        let list = tabs || [];
+        if (filterPids.length > 1) {
+          list = list.filter((t) => t.projectId && filterPids.includes(t.projectId));
+        } else if (filterPids.length === 0 && custId) {
+          const customerProjectIds = this.projects()
+            .filter((p) => p.customerId === custId)
+            .map((p) => p.id);
+          if (customerProjectIds.length > 0) {
+            list = list.filter((t) => t.projectId && customerProjectIds.includes(t.projectId));
+          }
+        }
+        this.applyLoadedTabs(list, preferredTabId, openCreateAfterLoad);
       },
       error: () => {
+        if (myToken !== this.tabsLoadToken) return;
         this.isLoadingTabs = false;
         this.tabs.set([]);
+        this.applyLoadedTabs([], preferredTabId, openCreateAfterLoad);
       },
     });
   }
@@ -354,19 +342,24 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       }
     } else {
       this.currentTabId = null;
+      this.currentDiagram = null;
+      this.loadedDiagramTabId = null;
+      this.cleanUpUrl(null);
+      if (this.drawioReady) {
+        this.drawioService.loadXml('');
+      }
       if (openCreateAfterLoad || this.pendingCreate) {
         const reqId = this.pendingCreate?.requirementId || this.requirementId || '';
         const reqTitle = this.pendingCreate?.requirementTitle || this.requirementTitle || '';
         this.openCreateDialogWithRequirement(reqId, reqTitle);
         this.pendingCreate = null;
-      } else {
-        this.createDefaultTab();
       }
     }
   }
 
   createDefaultTab(): void {
-    if (!this.projectId) return;
+    const targetProjId = this.projectId || (this.projects().length > 0 ? this.projects()[0].id : null);
+    if (!targetProjId) return;
     const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
     const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
 
@@ -374,12 +367,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
-        projectId: this.projectId,
+        projectId: targetProjId,
         editData: null,
         selectedRequirementId: reqId,
         requirementTitle: reqTitle,
         onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode).subscribe({
+          this.diagramService.createTab(targetProjId, name, type as any, '', reqId, diagramCode).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -395,7 +388,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   }
 
   createNewTab(): void {
-    if (!this.projectId) return;
+    const targetProjId = this.projectId || (this.projects().length > 0 ? this.projects()[0].id : null);
+    if (!targetProjId) {
+      this.dialogService.warn(
+        this.translate.instant('PMDT05_NO_PROJECT_TITLE') || 'แจ้งเตือน',
+        this.translate.instant('PMDT05_NO_PROJECT_DESC') || 'กรุณาสร้างหรือเลือกโครงการก่อนสร้างไดอะแกรม'
+      );
+      return;
+    }
     const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
     const reqTitle = this.requirementTitle || this.route.snapshot.queryParams['requirementTitle'] || '';
 
@@ -403,12 +403,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       type: 'confirm',
       component: NewDiagramDialogComponent,
       componentInputs: {
-        projectId: this.projectId,
+        projectId: targetProjId,
         editData: null,
         selectedRequirementId: reqId,
         requirementTitle: reqTitle,
         onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode).subscribe({
+          this.diagramService.createTab(targetProjId, name, type as any, '', reqId, diagramCode).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -658,12 +658,13 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   loadExistingDiagram(): void {
     if (!this.currentTabId) {
       console.warn('[Diagram] No tabId to load');
+      if (this.drawioReady) {
+        this.drawioService.loadXml('');
+      }
       return;
     }
-    if (this.isLoadingDiagram) {
-      console.warn('[Diagram] Already loading, skip');
-      return;
-    }
+
+    const myToken = ++this.diagramLoadToken;
     this.isLoadingDiagram = true;
     this.isLoading = true;
     const tabIdToLoad = this.currentTabId;
@@ -671,24 +672,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
     this.diagramService.getDiagram(tabIdToLoad).subscribe({
       next: (diagram) => {
-        console.log('[Diagram] Loaded diagram data:', diagram);
-        // Discard stale responses first: if the user already switched tabs/projects
-        // while this request was in flight, currentTabId no longer matches the tab
-        // this response is for. Checking this BEFORE the project-mismatch check below
-        // prevents a spurious "Project mismatch" dialog from firing for a diagram that
-        // was legitimately requested under the previously-selected project.
-        if (this.currentTabId !== tabIdToLoad) {
-          this.isLoading = false;
-          this.isLoadingDiagram = false;
-          return;
-        }
+        if (myToken !== this.diagramLoadToken) return;
+        this.isLoading = false;
+        this.isLoadingDiagram = false;
 
-        if (this.projectId && diagram.projectId !== this.projectId) {
-          console.warn('[Diagram] Project mismatch');
-          this.dialogService.warn(this.translate.instant('PMDT05_PROJECT_MISMATCH_TITLE'), this.translate.instant('PMDT05_PROJECT_MISMATCH_MSG'));
-          this.isLoading = false;
-          this.isLoadingDiagram = false;
-          this.drawioService.loadXml('');
+        if (this.currentTabId !== tabIdToLoad) {
+          if (this.currentTabId && this.loadedDiagramTabId !== this.currentTabId) {
+            this.loadExistingDiagram();
+          }
           return;
         }
 
@@ -697,16 +688,20 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
         xml = this.ensureValidDrawioXml(xml);
         console.log('[Diagram] XML length after validation:', xml.length);
-        // ตั้งค่า lastSavedXml เป็น XML ที่โหลดมา เพื่อป้องกัน auto‑save ซ้ำ
         this.lastSavedXml = xml;
         this.drawioService.loadXml(xml, true);
-        this.isLoading = false;
-        this.isLoadingDiagram = false;
       },
       error: (err) => {
+        if (myToken !== this.diagramLoadToken) return;
         console.error('[Diagram] Failed to load diagram:', err);
         this.isLoading = false;
         this.isLoadingDiagram = false;
+        if (this.currentTabId !== tabIdToLoad) {
+          if (this.currentTabId && this.loadedDiagramTabId !== this.currentTabId) {
+            this.loadExistingDiagram();
+          }
+          return;
+        }
         this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
         this.dialogService.error(this.translate.instant('PMDT05_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR'));
       },
@@ -914,33 +909,45 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  // Called whenever the navbar's active project (CustomerStateService.currentSelectedProjectIds)
-  // changes — replaces the removed local project dropdown's (ngModelChange) handler.
-  // newProjectId may be null (nothing selected in the navbar): in that case we show ALL
-  // diagrams across all projects instead of an empty "please select a project" prompt,
-  // and only narrow down once a specific project is chosen — same show-all-then-filter
-  // convention as pmdt16/pmdt19/sic-gantt.
+  // Called whenever the navbar's selected projects or customer changes.
+  // When no customer or projects are selected: shows ALL diagrams across all projects.
+  // When customer is selected: filters to that customer's projects/diagrams.
+  // When specific projects are selected: filters to those projects.
+  private lastContextKey = '';
   private navProjectInitialized = false;
 
-  private handleNavbarProjectChange(newProjectId: string | null): void {
-    if (this.navProjectInitialized && newProjectId === this.projectId) return;
+  private handleNavbarContextChange(pids: string[], customerId: string | null): void {
+    const currentKey = `${customerId || ''}__${JSON.stringify(pids)}`;
+    if (this.navProjectInitialized && currentKey === this.lastContextKey) return;
     this.navProjectInitialized = true;
+    this.lastContextKey = currentKey;
 
-    this.projectId = newProjectId;
-    if (newProjectId) {
-      const proj = this.projects().find((p) => p.id === newProjectId);
+    const singleProjectId = pids.length === 1 ? pids[0] : null;
+    this.projectId = singleProjectId;
+
+    const custName = this.customerState.getCustomerName();
+
+    if (pids.length === 1) {
+      const proj = this.projects().find((p) => p.id === singleProjectId);
       if (proj) {
         this.projectName = proj.projectName;
       } else {
         this.loadProjectName();
       }
+    } else if (pids.length > 1) {
+      this.projectName = custName ? `${custName} (${pids.length} โครงการ)` : `${pids.length} ${this.translate.instant('PMDT05_PROJECTS_SELECTED') || 'โครงการที่เลือก'}`;
+    } else if (customerId && custName) {
+      this.projectName = `ลูกค้า: ${custName}`;
     } else {
-      this.projectName = '';
+      this.projectName = this.translate.instant('PMDT05_ALL_PROJECTS') || 'ทุกโครงการ (ทั้งหมด)';
     }
+
     this.currentTabId = null;
     this.currentDiagram = null;
     this.loadedDiagramTabId = null;
+    this.isLoadingDiagram = false;
     this.tabs.set([]);
+
     const preferredTabId = this.pendingTabIdFromUrl;
     this.pendingTabIdFromUrl = null;
     this.loadTabs(preferredTabId, false);

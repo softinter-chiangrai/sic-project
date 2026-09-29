@@ -257,9 +257,9 @@
                 <i class="bi bi-folder-fill text-[var(--crm-primary)]"></i>
                 {{ 'CONTEXT_SWITCHER_MATCHING_PROJECTS' | translate }} ({{ matchingProjects().length }})
               </span>
-              @if (selectedProjectCount() > 0) {
+              @if (selectedMatchingProjectCount() > 0) {
                 <span class="rounded-full bg-[var(--crm-primary)]/15 px-2 py-0.2 text-[0.68rem] font-bold text-[var(--crm-primary)]">
-                  {{ selectedProjectCount() }} {{ 'CONTEXT_SWITCHER_PROJECTS_SELECTED' | translate }}
+                  {{ selectedMatchingProjectCount() }} {{ 'CONTEXT_SWITCHER_PROJECTS_SELECTED' | translate }}
                 </span>
               }
             </div>

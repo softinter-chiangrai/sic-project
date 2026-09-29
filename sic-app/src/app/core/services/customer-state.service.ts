@@ -81,6 +81,22 @@ export class CustomerStateService {
     }
   }
 
+  updateProjectDetails(id: string, name: string, customerName?: string, customerId?: string): void {
+    const list = this.selectedProjects();
+    const updated = list.map((p) => {
+      if (p.id === id) {
+        return {
+          ...p,
+          projectName: name || p.projectName,
+          customerName: customerName || p.customerName,
+          customerId: customerId || p.customerId,
+        };
+      }
+      return p;
+    });
+    this.setProjects(updated);
+  }
+
   toggleProject(project: SelectedProjectContext): void {
     const list = this.selectedProjects();
     const exists = list.some((p) => p.id === project.id);

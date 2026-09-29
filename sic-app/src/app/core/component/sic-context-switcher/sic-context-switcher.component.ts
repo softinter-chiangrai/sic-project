@@ -115,6 +115,12 @@ export class SicContextSwitcherComponent implements OnInit {
 
   readonly hasActiveFilters = computed(() => this.activeFilterCount() > 0);
 
+  readonly selectedMatchingProjectCount = computed(() => {
+    const matching = this.matchingProjects();
+    if (matching.length === 0) return 0;
+    return matching.filter((p) => this.customerState.isProjectSelected(p.id)).length;
+  });
+
   readonly filteredCustomers = computed(() => {
     const term = this.customerSearchTerm().trim().toLowerCase();
     const list = this.customers();
@@ -256,6 +262,17 @@ export class SicContextSwitcherComponent implements OnInit {
           this.matchingProjects.set(list);
           this.isLoadingProjects.set(false);
 
+          // Update any project names in state that are currently displaying raw IDs
+          const currentSelected = this.customerState.getSelectedProjects();
+          currentSelected.forEach((sel) => {
+            if (sel.projectName === sel.id) {
+              const found = list.find((p) => p.id === sel.id);
+              if (found) {
+                this.customerState.updateProjectDetails(found.id, found.projectName, found.customerName, found.customerId);
+              }
+            }
+          });
+
           // If a customer was just selected, auto-select all projects by default
           if (this.autoSelectAllOnFetch && list.length > 0) {
             this.autoSelectAllOnFetch = false;
@@ -345,6 +362,7 @@ export class SicContextSwitcherComponent implements OnInit {
     if (customerId) {
       const cust = this.customers().find((c) => c.id === customerId);
       this.customerState.setCustomer(customerId, this.getCustomerDisplayName(cust));
+      this.customerState.clearProject();
       // Auto-select all projects under this customer by default
       this.autoSelectAllOnFetch = true;
     } else {
@@ -474,6 +492,16 @@ export class SicContextSwitcherComponent implements OnInit {
           this.customerState.setProjects(
             ids.map((id) => ({ id, projectName: id, customerId: customerIdParam })),
           );
+          ids.forEach((id) => {
+            this.projectService.getProject(id).subscribe({
+              next: (proj) => {
+                if (proj?.projectName) {
+                  this.customerState.updateProjectDetails(id, proj.projectName, proj.customerName, proj.customerId);
+                }
+              },
+              error: () => {},
+            });
+          });
         }
         return;
       }
@@ -484,6 +512,14 @@ export class SicContextSwitcherComponent implements OnInit {
       if (!(current.length === 1 && current[0] === projectIdParam)) {
         this.customerState.setProjects([{ id: projectIdParam, projectName: projectIdParam, customerId: customerIdParam }]);
       }
+      this.projectService.getProject(projectIdParam).subscribe({
+        next: (proj) => {
+          if (proj?.projectName) {
+            this.customerState.updateProjectDetails(projectIdParam, proj.projectName, proj.customerName, proj.customerId);
+          }
+        },
+        error: () => {},
+      });
       return;
     }
 
@@ -498,6 +534,12 @@ export class SicContextSwitcherComponent implements OnInit {
 
     // Reset pagination to 1
     delete queryParams['page'];
+
+    // Clear stale diagram tabId when switching projects on diagram page
+    if (this.router.url.includes('/feature/pm/diagram')) {
+      delete queryParams['tabId'];
+      delete queryParams['diagramId'];
+    }
 
     const selectedProjects = this.customerState.getSelectedProjects();
     const customerId = this.customerState.getCustomerId() || this.selectedCustomerId();
@@ -538,6 +580,11 @@ export class SicContextSwitcherComponent implements OnInit {
     delete queryParams['projectIds'];
     delete queryParams['customerId'];
     delete queryParams['page'];
+
+    if (this.router.url.includes('/feature/pm/diagram')) {
+      delete queryParams['tabId'];
+      delete queryParams['diagramId'];
+    }
 
     this.router.navigate([], {
       queryParams,
