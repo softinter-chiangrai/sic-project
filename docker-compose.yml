@@ -88,8 +88,8 @@ services:
   # 4. Storage Bucket Initialization
   # ============================================================================
   sic-seaweedfs-init:
-    image: quay.io/minio/mc:latest
-    container_name: sic-seaweedfs-init
+    image: minio/mc:latest
+    container_name: sic-storage
     depends_on:
       - sic-seaweedfs
     entrypoint: >
