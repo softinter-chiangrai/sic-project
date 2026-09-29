@@ -13,10 +13,10 @@
       </div>
     </div>
     <div class="ai-wizard-header-actions">
-      <button type="button" class="ai-wizard-history-btn" title="ประวัติการสร้างโครงการ" (click)="openHistory()">
-        <i class="bi bi-clock-history"></i> ประวัติ
+      <button type="button" class="ai-wizard-history-btn" [title]="'AIWIZARD_BTN_HISTORY_TITLE' | translate" (click)="openHistory()">
+        <i class="bi bi-clock-history"></i> {{ 'AIWIZARD_BTN_HISTORY' | translate }}
       </button>
-      <button type="button" class="ai-wizard-close-btn" (click)="close()">
+      <button type="button" class="ai-wizard-close-btn" [title]="'AIWIZARD_CLOSE_BTN' | translate" (click)="close()">
         <i class="bi bi-x-lg"></i>
       </button>
     </div>
@@ -27,13 +27,13 @@
     <ng-container *ngIf="!selectedHistoryJob()">
       <div class="history-panel-header">
         <h4><i class="bi bi-clock-history"></i> {{ 'AIWIZARD_HISTORY_TITLE' | translate }}</h4>
-        <button type="button" class="ai-wizard-close-btn" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
+        <button type="button" class="ai-wizard-close-btn" [title]="'AIWIZARD_CLOSE_BTN' | translate" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="history-list" *ngIf="!historyLoading(); else historyLoadingTpl">
         <p class="history-empty" *ngIf="!historyItems().length">{{ 'AIWIZARD_HISTORY_EMPTY' | translate }}</p>
         <button type="button" class="history-item" *ngFor="let job of historyItems()" (click)="viewHistoryDetail(job)">
           <div class="history-item-top">
-            <strong>{{ job.projectName || '(ไม่มีชื่อโครงการ)' }}</strong>
+            <strong>{{ job.projectName || ('AIWIZARD_NO_PROJECT_NAME' | translate) }}</strong>
             <span class="history-status-badge" [ngClass]="job.status.toLowerCase()">{{ statusLabels[job.status] || job.status }}</span>
           </div>
           <p class="history-item-prompt">{{ job.prompt }}</p>
@@ -47,7 +47,7 @@
         <button type="button" class="btn btn-secondary" [disabled]="historyPage() === 0" (click)="loadHistory(historyPage() - 1)">
           <i class="bi bi-chevron-left"></i>
         </button>
-        <span>หน้า {{ historyPage() + 1 }} / {{ historyTotalPages() }}</span>
+        <span>{{ 'AIWIZARD_PAGE_INFO' | translate: { page: historyPage() + 1, total: historyTotalPages() } }}</span>
         <button type="button" class="btn btn-secondary" [disabled]="historyPage() + 1 >= historyTotalPages()" (click)="loadHistory(historyPage() + 1)">
           <i class="bi bi-chevron-right"></i>
         </button>
@@ -57,15 +57,15 @@
     <ng-container *ngIf="selectedHistoryJob() as job">
       <div class="history-panel-header">
         <button type="button" class="ai-wizard-close-btn" (click)="backToHistoryList()"><i class="bi bi-chevron-left"></i></button>
-        <h4>{{ job.projectName || '(ไม่มีชื่อโครงการ)' }}</h4>
-        <button type="button" class="ai-wizard-close-btn" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
+        <h4>{{ job.projectName || ('AIWIZARD_NO_PROJECT_NAME' | translate) }}</h4>
+        <button type="button" class="ai-wizard-close-btn" [title]="'AIWIZARD_CLOSE_BTN' | translate" (click)="closeHistory()"><i class="bi bi-x-lg"></i></button>
       </div>
       <div class="history-detail-body">
         <div class="history-detail-meta">
           <span class="history-status-badge" [ngClass]="job.status.toLowerCase()">{{ statusLabels[job.status] || job.status }}</span>
           <small>{{ job.createdDate | date: 'd MMM y, HH:mm' }}</small>
           <small *ngIf="job.aiModel"> · {{ job.aiModel }}</small>
-          <small *ngIf="job.durationWeeks"> · {{ job.durationWeeks }} สัปดาห์</small>
+          <small *ngIf="job.durationWeeks"> · {{ job.durationWeeks }} {{ 'AIWIZARD_UNIT_WEEKS' | translate }}</small>
         </div>
         <p class="history-detail-prompt">{{ job.prompt }}</p>
 
@@ -81,14 +81,14 @@
         <div class="failed-steps-box" *ngIf="selectedHistoryFailedSteps().length">
           <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> {{ 'AIWIZARD_FAILED_MODULES_TITLE' | translate }}</div>
           <div class="failed-step-row" *ngFor="let st of selectedHistoryFailedSteps()">
-            <strong>{{ st.label }}</strong>
+            <strong>{{ getStepLabel(st) }}</strong>
             <span *ngIf="st.message"> — {{ st.message }}</span>
             <span *ngIf="!st.message"> — {{ 'AIWIZARD_SKIPPED_STEP_MSG' | translate }}</span>
           </div>
         </div>
 
         <button type="button" class="btn btn-primary" *ngIf="job.projectId" (click)="goToHistoryProject(job)">
-          <i class="bi bi-box-arrow-up-right"></i> ไปที่โครงการนี้
+          <i class="bi bi-box-arrow-up-right"></i> {{ 'AIWIZARD_GO_TO_PROJECT_BTN' | translate }}
         </button>
       </div>
     </ng-container>
@@ -124,17 +124,25 @@
   <div class="ai-wizard-body" *ngIf="currentStep() === 1">
     <div class="analyzing-banner" *ngIf="isProcessing()">
       <i class="bi bi-arrow-repeat spin"></i>
-      AI กำลังวิเคราะห์บรีฟและวางโครงสร้างโครงการ กรุณารอสักครู่...
+      {{ 'AIWIZARD_ANALYZING_BANNER' | translate }}
     </div>
     <div class="form-grid" [class.form-disabled]="isProcessing()">
       <div class="form-group full-width">
         <label class="form-label">{{ 'AIWIZARD_PROJECT_NAME_LABEL' | translate }}</label>
-        <input type="text" class="form-input" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" placeholder="เช่น โครงการพัฒนาระบบคลังสินค้าและจัดส่งอัจฉริยะ" />
+        <input type="text" class="form-input" [ngModel]="projectName()" (ngModelChange)="projectName.set($event)" [placeholder]="'AIWIZARD_PROJECT_NAME_PLACEHOLDER' | translate" />
       </div>
 
       <div class="form-group full-width">
         <label class="form-label">{{ 'AIWIZARD_BRIEF_LABEL' | translate }} <span class="text-rose-500">*</span></label>
-        <textarea class="form-textarea" rows="5" [ngModel]="prompt()" (ngModelChange)="prompt.set($event)" placeholder="อธิบายฟังก์ชันที่ต้องการ กลุ่มผู้ใช้งาน เป้าหมายทางธุรกิจ หรือขอบเขตงานที่ต้องการให้ AI ช่วยวางโครงสร้าง..."></textarea>
+        <textarea class="form-textarea" rows="5" [ngModel]="prompt()" (ngModelChange)="prompt.set($event)" [placeholder]="'AIWIZARD_BRIEF_PLACEHOLDER' | translate"></textarea>
+      </div>
+
+      <div class="form-group full-width">
+        <label class="form-label">{{ 'AIWIZARD_CUSTOMER_LABEL' | translate }} <small class="text-secondary font-normal">({{ 'AIWIZARD_CUSTOMER_HINT' | translate }})</small></label>
+        <select class="form-select" [ngModel]="selectedCustomerId()" (ngModelChange)="selectedCustomerId.set($event)">
+          <option value="">{{ 'AIWIZARD_CUSTOMER_AUTO_OPTION' | translate }}</option>
+          <option *ngFor="let c of customerOptions()" [value]="c.id">{{ c.label }}</option>
+        </select>
       </div>
 
       <div class="form-group">
@@ -153,7 +161,7 @@
         <label class="form-label">{{ 'AIWIZARD_TOR_LABEL' | translate }}</label>
         <div class="file-attach-bar">
           <label class="attach-btn">
-            <i class="bi bi-paperclip"></i> แนบไฟล์ TOR / เอกสารบรีฟ
+            <i class="bi bi-paperclip"></i> {{ 'AIWIZARD_ATTACH_TOR_BTN' | translate }}
             <input type="file" multiple hidden (change)="onFilesSelected($event)" />
           </label>
           <div class="file-chip" *ngFor="let f of attachedFiles(); let i = index">
@@ -171,17 +179,17 @@
     <div class="preview-header-card">
       <h4><i class="bi bi-folder2-open"></i> {{ previewData()?.projectName }}</h4>
       <div class="preview-desc" [innerHTML]="previewData()?.description"></div>
-      <div class="preview-badge"><i class="bi bi-clock-history"></i> ระยะเวลาโครงการ: {{ previewData()?.estimatedDurationWeeks }} สัปดาห์</div>
+      <div class="preview-badge"><i class="bi bi-clock-history"></i> {{ 'AIWIZARD_ESTIMATED_DURATION' | translate: { weeks: previewData()?.estimatedDurationWeeks } }}</div>
     </div>
 
     <div class="modules-toggle-box">
-      <label class="section-label"><i class="bi bi-check2-square"></i> เลือกโมดูลที่ต้องการให้ AI สร้างอัตโนมัติ:</label>
+      <label class="section-label"><i class="bi bi-check2-square"></i> {{ 'AIWIZARD_SELECT_MODULES_LABEL' | translate }}</label>
       <div class="toggle-chips-grid">
-        <label class="module-chip"><input type="checkbox" [ngModel]="incReqs()" (ngModelChange)="incReqs.set($event)" /> <span>Requirements ({{ previewData()?.previewRequirements?.length || 0 }} รายการ)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incSpecs()" (ngModelChange)="incSpecs.set($event)" /> <span>System Specifications ({{ previewData()?.previewSpecifications?.length || 0 }} รายการ)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incTasks()" (ngModelChange)="incTasks.set($event)" /> <span>WBS / Tasks Breakdown ({{ previewData()?.previewTasks?.length || 0 }} รายการ)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incGantt()" (ngModelChange)="incGantt.set($event)" /> <span>Gantt Phases & Timeline ({{ previewData()?.previewPhases?.length || 0 }} เฟส)</span></label>
-        <label class="module-chip"><input type="checkbox" [ngModel]="incDelivery()" (ngModelChange)="incDelivery.set($event)" /> <span>Delivery Milestones ({{ previewData()?.previewDeliveries?.length || 0 }} งวด)</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incReqs()" (ngModelChange)="incReqs.set($event)" /> <span>{{ 'AIWIZARD_MODULE_REQUIREMENTS_COUNT' | translate: { count: previewData()?.previewRequirements?.length || 0 } }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incSpecs()" (ngModelChange)="incSpecs.set($event)" /> <span>{{ 'AIWIZARD_MODULE_SPECS_COUNT' | translate: { count: previewData()?.previewSpecifications?.length || 0 } }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incTasks()" (ngModelChange)="incTasks.set($event)" /> <span>{{ 'AIWIZARD_MODULE_TASKS_COUNT' | translate: { count: previewData()?.previewTasks?.length || 0 } }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incGantt()" (ngModelChange)="incGantt.set($event)" /> <span>{{ 'AIWIZARD_MODULE_GANTT_COUNT' | translate: { count: previewData()?.previewPhases?.length || 0 } }}</span></label>
+        <label class="module-chip"><input type="checkbox" [ngModel]="incDelivery()" (ngModelChange)="incDelivery.set($event)" /> <span>{{ 'AIWIZARD_MODULE_DELIVERY_COUNT' | translate: { count: previewData()?.previewDeliveries?.length || 0 } }}</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incContract()" (ngModelChange)="incContract.set($event)" /> <span>{{ 'AIWIZARD_MODULE_CONTRACT' | translate }}</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incTests()" (ngModelChange)="incTests.set($event)" /> <span>{{ 'AIWIZARD_MODULE_TEST' | translate }}</span></label>
         <label class="module-chip"><input type="checkbox" [ngModel]="incManuals()" (ngModelChange)="incManuals.set($event)" /> <span>{{ 'AIWIZARD_MODULE_MANUAL' | translate }}</span></label>
@@ -232,7 +240,7 @@
           'bi-circle': st.status === 'PENDING' || st.status === 'SKIPPED',
           'bi-x-circle-fill': st.status === 'FAILED'
         }"></i>
-        {{ st.label }}
+        {{ getStepLabel(st) }}
         <span *ngIf="st.status === 'DONE' && st.count"> ({{ st.count }})</span>
         <small *ngIf="st.message" class="live-item-msg"> — {{ st.message }}</small>
       </div>
@@ -245,7 +253,7 @@
       <i class="bi bi-check-circle-fill"></i>
     </div>
     <h3 class="success-title">{{ 'AIWIZARD_SUCCESS_TITLE' | translate }}</h3>
-    <p class="success-desc">ข้อมูลทั้งหมดถูกบันทึกในสถานะ <span class="badge-draft">{{ 'AIWIZARD_DRAFT_BADGE' | translate }}</span> พร้อมผูกความสัมพันธ์ Traceability ทุกโมดูล</p>
+    <p class="success-desc">{{ 'AIWIZARD_SUCCESS_DESC_PREFIX' | translate }} <span class="badge-draft">{{ 'AIWIZARD_DRAFT_BADGE' | translate }}</span> {{ 'AIWIZARD_SUCCESS_DESC_SUFFIX' | translate }}</p>
 
     <div class="summary-stat-grid">
       <ng-container *ngFor="let entry of createdCounts() | keyvalue">
@@ -259,7 +267,7 @@
     <div class="failed-steps-box" *ngIf="failedSteps().length">
       <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> {{ 'AIWIZARD_FAILED_MODULES_TITLE' | translate }}</div>
       <div class="failed-step-row" *ngFor="let st of failedSteps()">
-        <strong>{{ st.label }}</strong>
+        <strong>{{ getStepLabel(st) }}</strong>
         <span *ngIf="st.message"> — {{ st.message }}</span>
         <span *ngIf="!st.message"> — {{ 'AIWIZARD_SKIPPED_STEP_MSG' | translate }}</span>
       </div>
@@ -272,25 +280,25 @@
       <button type="button" class="btn btn-secondary" [disabled]="isProcessing()" (click)="close()">{{ 'COMMON_CANCEL_BTN' | translate }}</button>
       <button type="button" class="btn btn-primary" [disabled]="isProcessing() || (!prompt().trim() && !projectName().trim())" (click)="generatePreview()">
         <i class="bi" [ngClass]="isProcessing() ? 'bi-arrow-repeat spin' : 'bi-magic'"></i>
-        {{ isProcessing() ? 'AI กำลังวิเคราะห์บรีฟ...' : 'วิเคราะห์และดูโครงสร้าง (Preview Plan)' }}
+        {{ (isProcessing() ? 'AIWIZARD_ANALYZING_BTN' : 'AIWIZARD_PREVIEW_BTN') | translate }}
       </button>
     </ng-container>
 
     <ng-container *ngIf="currentStep() === 2">
       <button type="button" class="btn btn-secondary" (click)="currentStep.set(1)">
-        <i class="bi bi-chevron-left"></i> ปรับบรีฟ
+        <i class="bi bi-chevron-left"></i> {{ 'AIWIZARD_ADJUST_BRIEF_BTN' | translate }}
       </button>
       <button type="button" class="btn btn-primary" [disabled]="isProcessing()" (click)="executeFullPipeline()">
-        <i class="bi bi-rocket-takeoff-fill"></i> ยืนยันสร้างโปรเจกต์ทั้งหมดทันที
+        <i class="bi bi-rocket-takeoff-fill"></i> {{ 'AIWIZARD_CONFIRM_CREATE_BTN' | translate }}
       </button>
     </ng-container>
 
     <ng-container *ngIf="currentStep() === 4">
       <button type="button" class="btn btn-secondary" (click)="goToGantt()">
-        <i class="bi bi-bar-chart-steps"></i> ดูใน Gantt Chart
+        <i class="bi bi-bar-chart-steps"></i> {{ 'AIWIZARD_VIEW_GANTT_BTN' | translate }}
       </button>
       <button type="button" class="btn btn-primary" (click)="goToProject()">
-        <i class="bi bi-folder2-open"></i> เปิดรีวิวโปรเจกต์นี้
+        <i class="bi bi-folder2-open"></i> {{ 'AIWIZARD_REVIEW_PROJECT_BTN' | translate }}
       </button>
     </ng-container>
   </div>

@@ -157,12 +157,20 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
 
         // 2. Resolve or fallback Customer
         UUID customerId = request.getCustomerId();
+        List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(businessId);
+        if (customerId == null && !customers.isEmpty()) {
+            customerId = customers.get(0).getId();
+        }
         if (customerId == null) {
-            // Find first available customer in business or create default
-            List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(businessId);
-            if (!customers.isEmpty()) {
-                customerId = customers.get(0).getId();
-            }
+            PmCustomer autoCust = new PmCustomer();
+            autoCust.setBusinessId(businessId);
+            autoCust.setCustomerCode("CUST-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + String.format("%03d", (int) (Math.random() * 1000)));
+            autoCust.setCompanyNameLocal("ลูกค้าทั่วไป (AI Generated)");
+            autoCust.setCompanyNameEn("General Client (AI Generated)");
+            autoCust.setIsActive(true);
+            autoCust = customerRepository.save(autoCust);
+            customerId = autoCust.getId();
+            log.info("Auto-created new customer '{}' ({}) for synchronous AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
         }
 
         // 3. Create Project

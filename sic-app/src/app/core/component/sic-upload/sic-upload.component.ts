@@ -18,6 +18,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { ControlValueAccessor, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 import { AuthService } from '../../auth/auth.service';
 import { SicValidator } from '../../validator/sic.validator';
@@ -97,7 +98,7 @@ const documentExtensions = new Set(['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 
 @Component({
   selector: 'sic-upload',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-upload.component.html',
   styleUrl: './sic-upload.component.css',
   host: {
@@ -124,8 +125,8 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnChang
   @Input() accept?: string;
   @Input() maxFiles?: number;
   @Input() businessId?: string;
-  @Input() emptyText = 'Drop files here or click to browse';
-  @Input() helperText = 'Multiple files supported';
+  @Input() emptyText?: string;
+  @Input() helperText?: string;
   @Input() errorMessages: Record<string, string> = {};
   readonly emptyTrackSrc = 'data:text/vtt;charset=utf-8,WEBVTT';
 
@@ -146,10 +147,27 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnChang
   private readonly validator = inject(SicValidator);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly http = inject(HttpClient);
+  private readonly translate = inject(TranslateService, { optional: true });
   private ngControl: NgControl | null = null;
   private onChange: (value: StorageUploadReference[]) => void = () => {};
   private onTouched: () => void = () => {};
   private loadedGroupId: string | null = null;
+
+  get resolvedEmptyText(): string {
+    if (this.emptyText && this.emptyText !== 'Drop files here or click to browse') {
+      return this.emptyText;
+    }
+    const translated = this.translate?.instant('UPLOAD_DROPZONE_EMPTY_TEXT');
+    return (translated && translated !== 'UPLOAD_DROPZONE_EMPTY_TEXT') ? translated : 'Drop files here or click to browse';
+  }
+
+  get resolvedHelperText(): string {
+    if (this.helperText && this.helperText !== 'Multiple files supported') {
+      return this.helperText;
+    }
+    const translated = this.translate?.instant('UPLOAD_DROPZONE_HELPER_TEXT');
+    return (translated && translated !== 'UPLOAD_DROPZONE_HELPER_TEXT') ? translated : 'Multiple files supported';
+  }
 
   ngOnInit(): void {
     this.ngControl = this.injector.get(NgControl, null);
@@ -572,6 +590,9 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnChang
   }
 
   statusLabel(item: SicUploadItem): string {
+    const key = `UPLOAD_STATUS_${item.status.toUpperCase()}`;
+    const translated = this.translate?.instant(key);
+    if (translated && translated !== key) return translated;
     switch (item.status) {
       case 'queued':
         return 'Queued';

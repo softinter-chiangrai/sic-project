@@ -7,7 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { catchError, forkJoin, map, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { DialogService } from '../../services/dialog.service';
-import { TRACE_RELATIONSHIP_LABEL, TraceLink, TraceLinkService } from '../../services/trace-link.service';
+import { TRACE_RELATIONSHIP_LABEL, TraceLink, TraceLinkService, TraceRelationshipType } from '../../services/trace-link.service';
 import { SicButtonComponent } from 'sic-ng';
 import { SicTraceLinkPickerComponent } from '../sic-trace-link-picker/sic-trace-link-picker.component';
 
@@ -104,12 +104,11 @@ export class SicTraceLinkPanelComponent implements OnChanges {
         rows.map((row) =>
           this.fetchItemDetails(row.otherType, row.otherId).pipe(
             map((details) => {
-              const label = TRACE_RELATIONSHIP_LABEL[row.link.relationshipType];
               return {
                 linkId: row.link.id,
                 otherType: row.otherType,
                 otherId: row.otherId,
-                relationshipLabel: row.fromSource ? label.fromSource : label.fromTarget,
+                relationshipLabel: this.getRelationshipLabel(row.link.relationshipType, row.fromSource),
                 name: details.name,
                 code: details.code,
                 routerLink: this.buildLink(row.otherType, row.otherId),
@@ -122,6 +121,14 @@ export class SicTraceLinkPanelComponent implements OnChanges {
         this.loading.set(false);
       });
     });
+  }
+
+  private getRelationshipLabel(type: TraceRelationshipType, fromSource: boolean): string {
+    const relKey = `TRACE_REL_${type}_${fromSource ? 'SOURCE' : 'TARGET'}`;
+    const translated = this.translate.instant(relKey);
+    if (translated && translated !== relKey) return translated;
+    const label = (TRACE_RELATIONSHIP_LABEL as Record<string, { fromTarget: string; fromSource: string }>)[type];
+    return label ? (fromSource ? label.fromSource : label.fromTarget) : type;
   }
 
   openPicker(): void {
@@ -150,56 +157,110 @@ export class SicTraceLinkPanelComponent implements OnChanges {
 
   private fetchItemDetails(type: string, id: string) {
     const base = environment.apiBaseUrl;
-    let url = '';
-    switch (type) {
+    const t = (type || '').toUpperCase().trim();
+    switch (t) {
       case 'DFD':
       case 'ER':
-        url = `${base}/api/diagram/tabs/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.diagramCode || id.slice(0, 8), name: data?.name || `${type} Diagram` })),
+      case 'DIAGRAM':
+      case 'FLOWCHART':
+      case 'SEQUENCE':
+      case 'USE_CASE':
+      case 'CLASS':
+        return this.http.get<any>(`${base}/api/diagram/tabs/${id}`).pipe(
+          map((data) => {
+            const code = data?.diagramCode || id.slice(0, 8);
+            const title = data?.name || `${type} Diagram`;
+            return { code, name: data?.diagramCode ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
         );
       case 'REQUIREMENT':
-        url = `${base}/api/pm/requirement/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.requirementCode || 'REQ', name: data?.title || 'Requirement' })),
+      case 'REQ':
+        return this.http.get<any>(`${base}/api/pm/requirement/${id}`).pipe(
+          map((data) => {
+            const code = data?.requirementCode || 'REQ';
+            const title = data?.title || 'Requirement';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Requirement' }))
         );
       case 'SPECIFICATION':
-        url = `${base}/api/pm/specifications/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.specificationCode || 'SPEC', name: data?.title || 'Specification' })),
+      case 'SPEC':
+        return this.http.get<any>(`${base}/api/pm/specifications/${id}`).pipe(
+          map((data) => {
+            const code = data?.specificationCode || 'SPEC';
+            const title = data?.title || 'Specification';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Specification' }))
         );
       case 'TASK':
-        url = `${base}/api/pm/tasks/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.taskCode || 'TASK', name: data?.taskName || 'Task' })),
+        return this.http.get<any>(`${base}/api/pm/tasks/${id}`).pipe(
+          map((data) => {
+            const code = data?.taskCode || 'TASK';
+            const title = data?.taskName || 'Task';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Task' }))
         );
       case 'CHANGE_REQUEST':
-        url = `${base}/api/pm/change-requests/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.crCode || 'CR', name: data?.title || 'Change Request' })),
+      case 'CR':
+        return this.http.get<any>(`${base}/api/pm/change-requests/${id}`).pipe(
+          map((data) => {
+            const code = data?.crCode || 'CR';
+            const title = data?.title || 'Change Request';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Change Request' }))
         );
       case 'TEST_CASE':
-        url = `${base}/api/pm/test-cases/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.testCaseCode || 'TC', name: data?.title || 'Test Case' })),
+      case 'TESTCASE':
+      case 'TC':
+        return this.http.get<any>(`${base}/api/pm/test-cases/${id}`).pipe(
+          map((data) => {
+            const code = data?.testCaseCode || 'TC';
+            const title = data?.title || 'Test Case';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Test Case' }))
         );
       case 'BUG':
-        url = `${base}/api/pm/bugs/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.bugCode || 'BUG', name: data?.title || 'Bug' })),
+        return this.http.get<any>(`${base}/api/pm/bugs/${id}`).pipe(
+          map((data) => {
+            const code = data?.bugCode || 'BUG';
+            const title = data?.title || 'Bug';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Bug' }))
         );
       case 'DESIGN_REVIEW':
-        url = `${base}/api/pm/design-reviews/${id}`;
-        return this.http.get<any>(url).pipe(
-          map((data) => ({ code: data?.reviewCode || 'DR', name: data?.title || 'Design Review' })),
+      case 'DESIGNREVIEW':
+      case 'DR':
+        return this.http.get<any>(`${base}/api/pm/design-reviews/${id}`).pipe(
+          map((data) => {
+            const code = data?.reviewCode || 'DR';
+            const title = data?.title || 'Design Review';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Design Review' }))
+        );
+      case 'CONTRACT':
+        return this.http.get<any>(`${base}/api/pm/contracts/${id}`).pipe(
+          map((data) => {
+            const code = data?.contractCode || 'CONTRACT';
+            const title = data?.contractName || 'Contract';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Contract' }))
+        );
+      case 'DELIVERY':
+        return this.http.get<any>(`${base}/api/pm/delivery/${id}`).pipe(
+          map((data) => {
+            const code = data?.deliveryCode || 'DELIVERY';
+            const title = data?.title || 'Delivery';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Delivery' }))
         );
       default:
         return of({ code: id.slice(0, 8), name: id });
@@ -208,24 +269,41 @@ export class SicTraceLinkPanelComponent implements OnChanges {
 
   private buildLink(type: string, id: string): string {
     const base = '/feature/pm';
-    switch (type) {
+    const t = (type || '').toUpperCase().trim();
+    switch (t) {
       case 'DFD':
       case 'ER':
+      case 'DIAGRAM':
+      case 'FLOWCHART':
+      case 'SEQUENCE':
+      case 'USE_CASE':
+      case 'CLASS':
         return `${base}/diagram?tabId=${id}`;
       case 'REQUIREMENT':
+      case 'REQ':
         return `${base}/requirement/${id}/view`;
       case 'SPECIFICATION':
+      case 'SPEC':
         return `${base}/specification/${id}/edit`;
       case 'TASK':
         return `${base}/task-board?taskId=${id}`;
       case 'TEST_CASE':
+      case 'TESTCASE':
+      case 'TC':
         return `${base}/test-case/${id}/edit`;
       case 'BUG':
         return `${base}/test-case/${id}/edit`;
       case 'CHANGE_REQUEST':
+      case 'CR':
         return `${base}/change-request/${id}/edit`;
       case 'DESIGN_REVIEW':
+      case 'DESIGNREVIEW':
+      case 'DR':
         return `${base}/design-review/${id}/edit`;
+      case 'CONTRACT':
+        return `${base}/contract`;
+      case 'DELIVERY':
+        return `${base}/delivery`;
       default:
         return '#';
     }

@@ -81,7 +81,8 @@
         type="button"
         class="ai-nav-header-icon-btn ai-nav-wizard-btn"
         (click)="openProjectWizard()"
-        title="AI Full-Project Generator"
+        [title]="'AIWIZARD_HEADING' | translate"
+        [attr.aria-label]="'AIWIZARD_HEADING' | translate"
       >
         <i class="bi bi-stars" style="color: var(--crm-primary);"></i>
       </button>

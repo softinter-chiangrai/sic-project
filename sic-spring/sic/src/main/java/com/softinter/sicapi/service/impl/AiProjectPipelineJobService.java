@@ -391,6 +391,7 @@ public class AiProjectPipelineJobService {
                 Create the project charter for the request. Fill EVERY field.
                 Respond ONLY with valid JSON in a ```json block, in the same language as the user's request:
                 { "projectName": "professional title", "description": "plain text charter (objectives, scope, deliverables), max 1500 characters",
+                  "customerName": "organization/client company name if mentioned or implied in the prompt, else realistic company name",
                   "estimatedDurationWeeks": 12, "budgetManday": 120 }
                 """, "รายละเอียดโครงการ: " + firstNonBlank(c.req.getPrompt(), c.req.getProjectName())
                 + (c.req.getProjectName() != null && !c.req.getProjectName().isBlank() ? "\nชื่อโครงการที่ผู้ใช้กำหนด: " + c.req.getProjectName() : "")
@@ -403,12 +404,39 @@ public class AiProjectPipelineJobService {
         c.weeks = weeks;
 
         UUID customerId = c.req.getCustomerId();
+        List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(c.businessId);
+
+        // 1. ถ้าไม่ได้ระบุ customerId มา ให้ลอง Match กับชื่อลูกค้าในระบบจากที่ AI สกัดได้
         if (customerId == null) {
-            List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(c.businessId);
-            if (!customers.isEmpty()) customerId = customers.get(0).getId();
+            String aiCustName = txt(root, "customerName");
+            if (aiCustName != null && !aiCustName.isBlank() && !customers.isEmpty()) {
+                String needle = aiCustName.toLowerCase().trim();
+                for (PmCustomer cust : customers) {
+                    if ((cust.getCompanyNameLocal() != null && cust.getCompanyNameLocal().toLowerCase().contains(needle))
+                            || (cust.getCompanyNameEn() != null && cust.getCompanyNameEn().toLowerCase().contains(needle))) {
+                        customerId = cust.getId();
+                        break;
+                    }
+                }
+            }
+            // 2. ถ้าไม่ตรงกับชื่อไหนเลย แต่ในระบบมีลูกค้าอยู่แล้ว ให้เลือกลูกค้ารายแรก
+            if (customerId == null && !customers.isEmpty()) {
+                customerId = customers.get(0).getId();
+            }
         }
+
+        // 3. ถ้าในระบบยังไม่มีลูกค้าเลยแม้แต่รายเดียว -> ให้ AI สร้างลูกค้าขึ้นมาใหม่อัตโนมัติทันที
         if (customerId == null) {
-            throw new IllegalStateException("ไม่พบลูกค้าในระบบ กรุณาสร้างลูกค้าอย่างน้อย 1 ราย ก่อนใช้ AI Full-Project Generator");
+            String custName = firstNonBlank(txt(root, "customerName"), "ลูกค้าทั่วไป (AI Generated)");
+            PmCustomer autoCust = new PmCustomer();
+            autoCust.setBusinessId(c.businessId);
+            autoCust.setCustomerCode("CUST-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + String.format("%03d", (int) (Math.random() * 1000)));
+            autoCust.setCompanyNameLocal(cut(custName, 255));
+            autoCust.setCompanyNameEn(cut(custName, 255));
+            autoCust.setIsActive(true);
+            autoCust = customerRepository.save(autoCust);
+            customerId = autoCust.getId();
+            log.info("Auto-created new customer '{}' ({}) for AI Project Pipeline", custName, customerId);
         }
         c.customerId = customerId;
 
@@ -757,32 +785,52 @@ public class AiProjectPipelineJobService {
     }
 
 
-    private void stepDiagrams(Ctx c, StepState step) {
-        int reqCount = c.requirements.size();
-        int maxDiagrams = reqCount == 0 ? 4 : Math.min(reqCount + 2, 15);
-        JsonNode root = ask(c, """
-                You are a System Analyst. Design the analysis/design diagrams of the project: create ONE diagram for EACH requirement listed below
-                (choose the type that best represents that requirement: DFD for data-flow-heavy features, Flowchart for procedural/business-process features,
-                or Use Case for actor/interaction-heavy features), PLUS exactly ONE additional "ER" diagram covering the overall data model of the whole system
-                (not tied to a single requirement — cover every major entity across all requirements).
-                Each non-ER diagram is linked to its requirement by number via requirementRef; the ER diagram may omit requirementRef.
-                Keep every diagram small (max 12 nodes / 10 entities). Fill EVERY field. Do not exceed %d diagrams in total.
-                Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "diagrams": [
-                  { "name": "...", "type": "DFD", "requirementRef": 1,
-                    "nodes": [ { "id": "n1", "label": "...", "kind": "EXTERNAL | PROCESS | STORE" } ],
-                    "edges": [ { "from": "n1", "to": "n2", "label": "data flow" } ] },
-                  { "name": "...", "type": "ER",
-                    "entities": [ { "name": "Customer", "attributes": [ "id (PK)", "name", "email" ] } ],
-                    "relations": [ { "from": "Customer", "to": "Order", "label": "places", "cardinality": "1:N" } ] },
-                  { "name": "...", "type": "Flowchart", "requirementRef": 2,
-                    "nodes": [ { "id": "n1", "label": "...", "kind": "START | TASK | DECISION | END" } ],
-                    "edges": [ { "from": "n1", "to": "n2", "label": "" } ] },
-                  { "name": "...", "type": "Use Case", "requirementRef": 3,
-                    "nodes": [ { "id": "n1", "label": "...", "kind": "ACTOR | USECASE" } ],
-                    "edges": [ { "from": "n1", "to": "n2", "label": "" } ] } ] }
-                """.formatted(maxDiagrams), projectContext(c) + "\n\nRequirements:\n" + numbered(c.requirements), false);
+    private static final String DIAGRAM_SCHEMA = """
+            Keep the diagram small (max 12 nodes / 10 entities). Fill EVERY field.
+            Respond ONLY with valid JSON in a ```json block, same language as the project, using this shape (one item per diagram):
+            { "diagrams": [
+              { "name": "...", "type": "DFD", "requirementRef": 1,
+                "nodes": [ { "id": "n1", "label": "...", "kind": "EXTERNAL | PROCESS | STORE" } ],
+                "edges": [ { "from": "n1", "to": "n2", "label": "data flow" } ] },
+              { "name": "...", "type": "ER",
+                "entities": [ { "name": "Customer", "attributes": [ "id (PK)", "name", "email" ] } ],
+                "relations": [ { "from": "Customer", "to": "Order", "label": "places", "cardinality": "1:N" } ] },
+              { "name": "...", "type": "Flowchart", "requirementRef": 2,
+                "nodes": [ { "id": "n1", "label": "...", "kind": "START | TASK | DECISION | END" } ],
+                "edges": [ { "from": "n1", "to": "n2", "label": "" } ] },
+              { "name": "...", "type": "Use Case", "requirementRef": 3,
+                "nodes": [ { "id": "n1", "label": "...", "kind": "ACTOR | USECASE" } ],
+                "edges": [ { "from": "n1", "to": "n2", "label": "" } ] } ] }
+            """;
 
+    // One small AI call per diagram: a single big call gets truncated -> unparsable JSON -> no diagrams.
+    private void stepDiagrams(Ctx c, StepState step) {
+        String role = "You are a System Analyst. ";
+        String ctx = projectContext(c) + "
+
+Requirements:
+" + numbered(c.requirements);
+        int made = 0;
+        int reqCount = c.requirements.size();
+        for (int i = 1; i <= reqCount; i++) {
+            made += saveDiagrams(c, ask(c, role + "Create the diagrams needed to properly describe requirement #" + i
+                    + " only. Decide the number and types yourself based on its complexity: one or more of DFD (data-flow-heavy; split into levels if complex),"
+                    + " Flowchart (procedural/business-process), Use Case (actor/interaction-heavy). Do not pad with unnecessary diagrams."
+                    + " Set requirementRef to " + i + " on every diagram. " + DIAGRAM_SCHEMA, ctx, false), Integer.MAX_VALUE, made);
+        }
+        // reqCount == 0: no requirements to hang diagrams on, fall back to a few general ones
+        int extra = reqCount == 0 ? 3 : 0;
+        if (extra > 0) {
+            made += saveDiagrams(c, ask(c, role + "Create " + extra + " diagrams (DFD / Flowchart / Use Case) covering the main features of the project. "
+                    + DIAGRAM_SCHEMA, ctx, false), extra, made);
+        }
+        made += saveDiagrams(c, ask(c, role + "Create exactly ONE \"ER\" diagram covering the overall data model of the whole system"
+                + " (every major entity across all requirements; requirementRef may be omitted). " + DIAGRAM_SCHEMA, ctx, false), 1, made);
+        step.count = made;
+        if (made == 0) step.message = "AI ไม่สามารถสร้าง Diagram ได้";
+    }
+
+    private int saveDiagrams(Ctx c, JsonNode root, int maxDiagrams, int madeBefore) {
         int made = 0;
         for (JsonNode d : arr(root, "diagrams")) {
             if (made >= maxDiagrams) break;
@@ -812,7 +860,7 @@ public class AiProjectPipelineJobService {
 
             PmDiagramTabRequest dq = new PmDiagramTabRequest();
             dq.setProjectId(c.projectId);
-            dq.setName(cut(firstNonBlank(txt(d, "name"), type + " " + (made + 1)), 255));
+            dq.setName(cut(firstNonBlank(txt(d, "name"), type + " " + (madeBefore + made + 1)), 255));
             dq.setDiagramType(type);
             Ref req = refAt(c.requirements, d.path("requirementRef").asInt(0), -1);
             if (req != null) dq.setRequirementId(req.id());
@@ -829,8 +877,7 @@ public class AiProjectPipelineJobService {
                 log.warn("AI pipeline: cannot create trace links from diagram xml: {}", e.getMessage());
             }
         }
-        step.count = made;
-        if (made == 0) step.message = "AI ไม่สามารถสร้าง Diagram ได้";
+        return made;
     }
 
     private static String normalizeDiagramType(String t) {

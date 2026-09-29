@@ -1,8 +1,10 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, inject, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { environment } from '../../../../environments/environment';
 import { AI_MODEL_OPTIONS } from '../../config/ai-models.config';
 import { AiModelsService } from '../../services/ai-models.service';
 import {
@@ -29,6 +31,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   private readonly dialog = inject(DialogService);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
+  private readonly http = inject(HttpClient);
 
   // Steps: 1 = Input/Prompt, 2 = Plan Preview, 3 = Generating/Executing, 4 = Success
   readonly currentStep = signal<number>(1);
@@ -36,9 +39,32 @@ export class SicAiProjectWizardComponent implements OnDestroy {
 
   readonly prompt = signal<string>('');
   readonly projectName = signal<string>('');
+  readonly selectedCustomerId = signal<string>('');
+  readonly customerOptions = signal<{ id: string; label: string }[]>([]);
   readonly durationWeeks = signal<number>(12);
   readonly selectedModel = signal<string>('gemini-2.5-flash-lite');
   readonly attachedFiles = signal<File[]>([]);
+
+  constructor() {
+    effect(() => {
+      if (this.pipelineSvc.isWizardOpen()) {
+        this.loadCustomers();
+      }
+    });
+  }
+
+  loadCustomers(): void {
+    this.http.get<any[]>(`${environment.apiBaseUrl}/api/pm/customers/combobox`).subscribe({
+      next: (items) => {
+        const mapped = (items || []).map((item) => ({
+          id: item.value ?? item.id ?? '',
+          label: item.text ?? item.label ?? item.value ?? '',
+        }));
+        this.customerOptions.set(mapped);
+      },
+      error: () => this.customerOptions.set([]),
+    });
+  }
 
   // Modules toggles
   readonly incReqs = signal<boolean>(true);
@@ -58,12 +84,24 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   readonly jobSteps = signal<AiPipelineJobStep[]>([]);
   private pollTimer: ReturnType<typeof setInterval> | null = null;
 
+  // Helper สำหรับแปลง label ของ step ให้เป็นภาษาตามระบบ
+  getStepLabel(st: { key?: string; label?: string }): string {
+    if (st?.key) {
+      const i18nKey = `AIWIZARD_STEP_${st.key.toUpperCase()}`;
+      const translated = this.translate.instant(i18nKey);
+      if (translated && translated !== i18nKey) {
+        return translated;
+      }
+    }
+    return st?.label || '';
+  }
+
   // Label ของโมดูลที่ AI กำลังทำอยู่ตอนนี้ (แสดงใต้ step "3. สร้างข้อมูลทั้งหมด")
   readonly currentModuleLabel = computed<string | null>(() => {
     const steps = this.jobSteps();
     if (!steps.length) return this.translate.instant('AIWIZARD_STARTING');
     const running = steps.find((s) => s.status === 'RUNNING');
-    if (running) return this.translate.instant('AIWIZARD_CREATING_LABEL', { label: running.label });
+    if (running) return this.translate.instant('AIWIZARD_CREATING_LABEL', { label: this.getStepLabel(running) });
     const doneCount = steps.filter((s) => s.status === 'DONE').length;
     const failedCount = steps.filter((s) => s.status === 'FAILED').length;
     const doneMsg = this.translate.instant('AIWIZARD_PROGRESS_DONE', { done: doneCount, total: steps.length });
@@ -134,6 +172,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
       const req: AiProjectPipelineRequest = {
         projectName: this.projectName(),
         prompt: this.prompt(),
+        customerId: this.selectedCustomerId() || undefined,
         durationWeeks: this.durationWeeks(),
         model: this.selectedModel(),
         attachments,
@@ -177,6 +216,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
       const req: AiProjectPipelineRequest = {
         projectName: this.projectName(),
         prompt: this.prompt(),
+        customerId: this.selectedCustomerId() || undefined,
         durationWeeks: this.durationWeeks(),
         model: this.selectedModel(),
         attachments,
@@ -291,6 +331,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     this.currentStep.set(1);
     this.prompt.set('');
     this.projectName.set('');
+    this.selectedCustomerId.set('');
     this.attachedFiles.set([]);
     this.previewData.set(null);
     this.showHistory.set(false);
