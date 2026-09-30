@@ -117,7 +117,7 @@ export class Pmdt10Component implements OnInit {
     {
       id: 'col-done',
       name: 'Done',
-      statuses: ['Done', 'Completed'],
+      statuses: ['Done', 'Completed', 'Complete', 'complete'],
       color: '#10B981',
       textColor: 'text-emerald-700 dark:text-emerald-300',
       bgLight: 'bg-emerald-50/50 dark:bg-emerald-900/20',

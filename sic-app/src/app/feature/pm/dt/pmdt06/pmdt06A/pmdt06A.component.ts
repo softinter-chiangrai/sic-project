@@ -117,7 +117,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         targetId: [null, Validators.required],
         title: [null, Validators.required],
         description: [null],
-        changeReason: [null],
+        changeReason: ['CUSTOMER_REQUEST', Validators.required],
         priority: ['MEDIUM', Validators.required],
         changeLevel: ['MINOR', Validators.required],
         targetVersion: [null],

@@ -10,42 +10,43 @@ export interface BreadcrumbItem {
   isCurrent?: boolean;
 }
 
+/** Path segment -> i18n key (labels live in public/i18n/*.json) */
 const COMMON_PATH_LABELS: Record<string, string> = {
-  new: 'เพิ่มข้อมูล',
-  create: 'เพิ่มข้อมูล',
-  edit: 'แก้ไข',
-  view: 'รายละเอียด',
-  detail: 'รายละเอียด',
-  approval: 'อนุมัติ',
-  renew: 'ต่ออายุ',
-  gantt: 'ผังโครงการ',
-  history: 'ประวัติการทำรายการ',
-  options: 'ตัวเลือก',
-  invite: 'คำเชิญ',
-  join: 'เข้าร่วม',
-  profile: 'โปรไฟล์',
-  business: 'ข้อมูลสถานประกอบการ',
-  requirement: 'ข้อกำหนดความต้องการ',
-  diagram: 'แผนภาพระบบ',
-  phase: 'เฟสการทำงาน',
-  milestone: 'ไมล์สโตน',
-  'work-package': 'Work Package',
-  task: 'งาน',
-  'task-list': 'รายการงานทั้งหมด',
-  'task-board': 'บอร์ดงาน',
-  'my-tasks': 'งานของฉัน',
-  manual: 'คู่มือการใช้งาน',
-  invoice: 'ใบแจ้งหนี้',
-  payment: 'การชำระเงิน',
-  bug: 'รายการบั๊ก',
-  delivery: 'การส่งมอบงาน',
-  renewal: 'การต่อสัญญา',
-  audit: 'ประวัติการใช้งาน',
-  version: 'เวอร์ชันเอกสาร',
-  discussion: 'การสนทนา',
-  'design-review': 'ตรวจทานการออกแบบ',
-  'ma-ticket': 'ตั๋วแจ้งปัญหา MA',
-  dashboard: 'แดชบอร์ด',
+  new: 'BREADCRUMB_SEG_NEW',
+  create: 'BREADCRUMB_SEG_CREATE',
+  edit: 'BREADCRUMB_SEG_EDIT',
+  view: 'BREADCRUMB_SEG_VIEW',
+  detail: 'BREADCRUMB_SEG_DETAIL',
+  approval: 'BREADCRUMB_SEG_APPROVAL',
+  renew: 'BREADCRUMB_SEG_RENEW',
+  gantt: 'BREADCRUMB_SEG_GANTT',
+  history: 'BREADCRUMB_SEG_HISTORY',
+  options: 'BREADCRUMB_SEG_OPTIONS',
+  invite: 'BREADCRUMB_SEG_INVITE',
+  join: 'BREADCRUMB_SEG_JOIN',
+  profile: 'BREADCRUMB_SEG_PROFILE',
+  business: 'BREADCRUMB_SEG_BUSINESS',
+  requirement: 'BREADCRUMB_SEG_REQUIREMENT',
+  diagram: 'BREADCRUMB_SEG_DIAGRAM',
+  phase: 'BREADCRUMB_SEG_PHASE',
+  milestone: 'BREADCRUMB_SEG_MILESTONE',
+  'work-package': 'BREADCRUMB_SEG_WORK_PACKAGE',
+  task: 'BREADCRUMB_SEG_TASK',
+  'task-list': 'BREADCRUMB_SEG_TASK_LIST',
+  'task-board': 'BREADCRUMB_SEG_TASK_BOARD',
+  'my-tasks': 'BREADCRUMB_SEG_MY_TASKS',
+  manual: 'BREADCRUMB_SEG_MANUAL',
+  invoice: 'BREADCRUMB_SEG_INVOICE',
+  payment: 'BREADCRUMB_SEG_PAYMENT',
+  bug: 'BREADCRUMB_SEG_BUG',
+  delivery: 'BREADCRUMB_SEG_DELIVERY',
+  renewal: 'BREADCRUMB_SEG_RENEWAL',
+  audit: 'BREADCRUMB_SEG_AUDIT',
+  version: 'BREADCRUMB_SEG_VERSION',
+  discussion: 'BREADCRUMB_SEG_DISCUSSION',
+  'design-review': 'BREADCRUMB_SEG_DESIGN_REVIEW',
+  'ma-ticket': 'BREADCRUMB_SEG_MA_TICKET',
+  dashboard: 'BREADCRUMB_SEG_DASHBOARD',
 };
 
 @Injectable({
@@ -66,7 +67,7 @@ export class BreadcrumbService {
 
   /** Final calculated breadcrumbs signal read by UI */
   readonly breadcrumbs = signal<BreadcrumbItem[]>([
-    { label: 'Home', url: '/feature/dashboard', icon: 'bi-house-door', isCurrent: true },
+    { label: 'BREADCRUMB_HOME', url: '/feature/dashboard', icon: 'bi-house-door', isCurrent: true },
   ]);
 
   constructor() {
@@ -124,7 +125,7 @@ export class BreadcrumbService {
     const currentUrl = this.router.url.split('?')[0];
 
     const home: BreadcrumbItem = {
-      label: 'Home',
+      label: 'BREADCRUMB_HOME',
       url: '/feature/dashboard',
       icon: 'bi-house-door',
     };
@@ -177,10 +178,8 @@ export class BreadcrumbService {
       const remainingPath = currentUrl.substring(matchedMenuPath.length);
       const segments = remainingPath.split('/').filter(Boolean);
 
-      let accumulatedUrl = matchedMenuPath;
       for (let i = 0; i < segments.length; i++) {
         const seg = segments[i];
-        accumulatedUrl += `/${seg}`;
 
         // Skip numeric IDs or UUIDs unless dynamic page title set
         const isId = /^\d+$/.test(seg) || /^[0-9a-fA-F-]{36}$/.test(seg);
@@ -191,27 +190,19 @@ export class BreadcrumbService {
 
         const label = COMMON_PATH_LABELS[seg.toLowerCase()] || this.formatSegmentName(seg);
         if (!items.some((item) => item.label.toLowerCase() === label.toLowerCase())) {
-          items.push({
-            label,
-            url: accumulatedUrl,
-          });
+          items.push({ label, url: null });
         }
       }
     } else if (items.length === 1) {
       // Fallback if no menu matched: parse URL segments after /feature or root
       const cleanSegments = currentUrl.split('/').filter(Boolean);
-      let accUrl = '';
       for (const seg of cleanSegments) {
-        accUrl += `/${seg}`;
         if (seg === 'feature') continue;
         const isId = /^\d+$/.test(seg) || /^[0-9a-fA-F-]{36}$/.test(seg);
         if (isId) continue;
 
         const label = COMMON_PATH_LABELS[seg.toLowerCase()] || this.formatSegmentName(seg);
-        items.push({
-          label,
-          url: accUrl,
-        });
+        items.push({ label, url: null });
       }
     }
 
@@ -228,17 +219,10 @@ export class BreadcrumbService {
     }
 
     // 5. Finalize items: ensure every non-current item has a valid, clickable URL
-    const urlSegments = currentUrl.split('/').filter(Boolean);
     this.breadcrumbs.set(
       items.map((item, index) => {
         const isCurrent = index === items.length - 1;
-        let url = isCurrent ? null : item.url;
-        if (!isCurrent && !url) {
-          // Reconstruct URL from current path segments up to this depth
-          if (index <= urlSegments.length) {
-            url = '/' + urlSegments.slice(0, index).join('/');
-          }
-        }
+        const url = isCurrent ? null : item.url;
         return {
           ...item,
           isCurrent,

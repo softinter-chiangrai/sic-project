@@ -103,8 +103,8 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         List<AiModelResponse> models = new ArrayList<>();
 
         models.add(AiModelResponse.builder()
-                .id("gemini-3.7-flash")
-                .name("Gemini 3.7 Flash")
+                .id("gemini-3.8-flash")
+                .name("Gemini 3.8 Flash")
                 .provider("Google (KKU)")
                 .description("ประมวลผลรวดเร็ว ฉลาด และแม่นยำสูง (แนะนำ)")
                 .icon("bi-stars")
@@ -112,26 +112,17 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                 .build());
 
         models.add(AiModelResponse.builder()
-                .id("gemini-3.5-flash")
-                .name("Gemini 3.5 Flash")
-                .provider("Google (KKU)")
-                .description("เสถียร คุณภาพสูง และออกแบบ Diagram ยอดเยี่ยม")
-                .icon("bi-lightning-charge-fill")
+                .id("claude-sonnet-5")
+                .name("Claude Sonnet 5")
+                .provider("Anthropic (KKU)")
+                .description("คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน")
+                .icon("bi-cpu")
                 .recommended(false)
                 .build());
 
         models.add(AiModelResponse.builder()
-                .id("gemini-2.5-flash-lite")
-                .name("Gemini 2.5 Flash Lite")
-                .provider("Google (KKU)")
-                .description("ประมวลผลรวดเร็วพิเศษ และประหยัด Token")
-                .icon("bi-speedometer2")
-                .recommended(false)
-                .build());
-
-        models.add(AiModelResponse.builder()
-                .id("gpt-5.4-mini")
-                .name("OpenAI GPT-5.4 Mini")
+                .id("gpt-5.4")
+                .name("OpenAI GPT-5.4")
                 .provider("OpenAI (KKU)")
                 .description("โมเดลอัจฉริยะ ความสามารถสูง")
                 .icon("bi-cpu-fill")
@@ -144,15 +135,6 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                 .provider("DeepSeek (KKU)")
                 .description("คิดวิเคราะห์ตรรกะและการเขียนโค้ดดีเยี่ยม")
                 .icon("bi-robot")
-                .recommended(false)
-                .build());
-
-        models.add(AiModelResponse.builder()
-                .id("claude-sonnet-4.6")
-                .name("Claude Sonnet 4.6")
-                .provider("Anthropic (KKU)")
-                .description("คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน")
-                .icon("bi-cpu")
                 .recommended(false)
                 .build());
 
@@ -325,12 +307,23 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         return "";
     }
 
+    private static final Pattern QUOTA_ERROR = Pattern.compile("quota|credit balance|billing|insufficient|out of (tokens|credit)|exhausted", Pattern.CASE_INSENSITIVE);
+    private static final ThreadLocal<String> QUOTA_ERROR_MSG = new ThreadLocal<>();
+
+    /** คืนข้อความ error ถ้าการเรียก AI ล่าสุดของ thread นี้ล้มเพราะโควต้า/เครดิต/โทเคนหมด (อ่านแล้วล้างค่า) ไม่เช่นนั้นคืน null */
+    public static String takeQuotaError() {
+        String m = QUOTA_ERROR_MSG.get();
+        QUOTA_ERROR_MSG.remove();
+        return m;
+    }
+
     private String callAiApi(String userPrompt, String systemPrompt, String modelId) {
         return callAiApi(userPrompt, systemPrompt, modelId, null);
     }
 
     private String callAiApi(String userPrompt, String systemPrompt, String modelId, List<AiAttachmentDto> attachments) {
         ModelConfig config = resolveModelConfig(modelId);
+        QUOTA_ERROR_MSG.remove();
 
         try {
             HttpHeaders headers = new HttpHeaders();
@@ -424,7 +417,11 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
             return null;
 
         } catch (HttpStatusCodeException e) {
-            log.error("AI API HTTP Error [{}] for model {}: {}", e.getStatusCode(), config.targetModel, e.getResponseBodyAsString());
+            String body = e.getResponseBodyAsString();
+            log.error("AI API HTTP Error [{}] for model {}: {}", e.getStatusCode(), config.targetModel, body);
+            if (e.getStatusCode().value() == 402 || QUOTA_ERROR.matcher(body == null ? "" : body).find()) {
+                QUOTA_ERROR_MSG.set("HTTP " + e.getStatusCode().value() + " (" + config.targetModel + ")");
+            }
             return null;
         } catch (Exception e) {
             log.error("AI Service Invocation Error for model {}: {}", config.targetModel, e.getMessage(), e);

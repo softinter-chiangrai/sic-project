@@ -168,8 +168,17 @@ export class SicAiNavigatorComponent implements OnInit {
 
   getCurrentModelLabel(): string {
     const currentId = this.navSvc.selectedModel();
-    const found = this.availableModels.find((m) => m.id === currentId);
-    return found ? found.name.split(' (')[0] : currentId;
+    const models = this.availableModels.length > 0 ? this.availableModels : AI_MODEL_OPTIONS;
+    const found = models.find((m) => m.id === currentId);
+    if (found) {
+      return found.name.split(' (')[0];
+    }
+    const def = models.find((m) => m.recommended) || models[0];
+    if (def) {
+      this.navSvc.setModel(def.id);
+      return def.name.split(' (')[0];
+    }
+    return currentId;
   }
 
   startNewChat(): void {

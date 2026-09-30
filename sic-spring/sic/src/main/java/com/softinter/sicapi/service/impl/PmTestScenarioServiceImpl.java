@@ -79,20 +79,31 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
             entity = scenarioRepository.save(entity);
         }
 
-        // ===== Cascade Sync testType to all child Test Cases =====
-        if (entity.getTestType() != null) {
-            try {
-                List<com.softinter.sicapi.entity.pm.PmTestCase> childCases =
-                        testCaseRepository.findByBusinessIdAndScenarioIdAndIsDeleteFalse(businessId, entity.getId());
-                for (com.softinter.sicapi.entity.pm.PmTestCase tc : childCases) {
-                    if (!entity.getTestType().equalsIgnoreCase(tc.getTestType())) {
-                        tc.setTestType(entity.getTestType());
-                        testCaseRepository.save(tc);
-                    }
+        // ===== Cascade Sync testType, taskId, projectId to all child Test Cases =====
+        try {
+            List<com.softinter.sicapi.entity.pm.PmTestCase> childCases =
+                    testCaseRepository.findByBusinessIdAndScenarioIdAndIsDeleteFalse(businessId, entity.getId());
+            boolean needSave = false;
+            for (com.softinter.sicapi.entity.pm.PmTestCase tc : childCases) {
+                boolean changed = false;
+                if (entity.getTestType() != null && !entity.getTestType().equalsIgnoreCase(tc.getTestType())) {
+                    tc.setTestType(entity.getTestType());
+                    changed = true;
                 }
-            } catch (Exception e) {
-                log.warn("Failed to cascade sync testType to test cases for scenario {}: {}", entity.getId(), e.getMessage());
+                if (entity.getTaskId() != null && (tc.getTaskId() == null || !entity.getTaskId().equals(tc.getTaskId()))) {
+                    tc.setTaskId(entity.getTaskId());
+                    changed = true;
+                }
+                if (entity.getProjectId() != null && (tc.getProjectId() == null || !entity.getProjectId().equals(tc.getProjectId()))) {
+                    tc.setProjectId(entity.getProjectId());
+                    changed = true;
+                }
+                if (changed) {
+                    testCaseRepository.save(tc);
+                }
             }
+        } catch (Exception e) {
+            log.warn("Failed to cascade sync to test cases for scenario {}: {}", entity.getId(), e.getMessage());
         }
 
         // ===== สร้าง Trace Link กับ Task =====

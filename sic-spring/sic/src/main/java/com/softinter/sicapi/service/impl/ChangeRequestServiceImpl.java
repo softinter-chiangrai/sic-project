@@ -124,7 +124,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setTargetId(request.getTargetId());
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
-        cr.setChangeReason(request.getChangeReason());
+        cr.setChangeReason(request.getChangeReason() != null && !request.getChangeReason().isBlank()
+                ? request.getChangeReason()
+                : "CUSTOMER_REQUEST");
         cr.setPriority(request.getPriority() != null && !request.getPriority().isBlank() ? request.getPriority() : "MEDIUM");
         cr.setRequesterId(currentUserService.getUserId());
         cr.setStatus("DRAFT");
@@ -228,7 +230,9 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         }
         cr.setTitle(request.getTitle());
         cr.setDescription(request.getDescription());
-        cr.setChangeReason(request.getChangeReason());
+        cr.setChangeReason(request.getChangeReason() != null && !request.getChangeReason().isBlank()
+                ? request.getChangeReason()
+                : (cr.getChangeReason() != null ? cr.getChangeReason() : "CUSTOMER_REQUEST"));
         if (request.getPriority() != null && !request.getPriority().isBlank()) {
             cr.setPriority(request.getPriority());
         }

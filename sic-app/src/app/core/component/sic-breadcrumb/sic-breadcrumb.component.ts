@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, HostBinding, Input, Output, ChangeDetectionStrategy, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { BreadcrumbService, BreadcrumbItem } from '../../services/breadcrumb.service';
 
 export interface SicBreadcrumbItem {
@@ -14,7 +15,7 @@ export interface SicBreadcrumbItem {
 @Component({
   selector: 'sic-breadcrumb',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, TranslatePipe],
   templateUrl: './sic-breadcrumb.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './sic-breadcrumb.component.css',

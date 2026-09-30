@@ -182,6 +182,7 @@ public class AiProjectPipelineJobService {
         String contractValueText;
         LocalDate startDate;
         int weeks;
+        String quotaError;
         final List<Ref> phases = new ArrayList<>();
         final List<Ref> milestones = new ArrayList<>();
         final List<Ref> workPackages = new ArrayList<>();
@@ -352,6 +353,7 @@ public class AiProjectPipelineJobService {
                         case "MA" -> stepMa(c, step);
                         default -> step.status = "SKIPPED";
                     }
+                    if (c.quotaError != null && step.count == 0) step.message = QUOTA_WARNING;
                     if ("RUNNING".equals(step.status)) step.status = "DONE";
                     job.counts.put(step.key.toLowerCase(), step.count);
                 } catch (Exception e) {
@@ -369,8 +371,9 @@ public class AiProjectPipelineJobService {
                 }
                 persistJob(job, businessId, userId, request);
             }
-            job.status = anyFailed ? "COMPLETED_WITH_ERRORS" : "COMPLETED";
-            job.message = anyFailed ? "สร้างเสร็จบางส่วน มีบางขั้นตอนไม่สำเร็จ ตรวจสอบรายละเอียดในแต่ละขั้น" : "สร้างโครงการและโมดูลทั้งหมดสำเร็จ พร้อมให้ตรวจสอบ";
+            job.status = anyFailed || c.quotaError != null ? "COMPLETED_WITH_ERRORS" : "COMPLETED";
+            job.message = c.quotaError != null ? QUOTA_WARNING + " [" + c.quotaError + "]"
+                    : anyFailed ? "สร้างเสร็จบางส่วน มีบางขั้นตอนไม่สำเร็จ ตรวจสอบรายละเอียดในแต่ละขั้น" : "สร้างโครงการและโมดูลทั้งหมดสำเร็จ พร้อมให้ตรวจสอบ";
             persistJob(job, businessId, userId, request);
         } finally {
             BusinessContextHolder.clear();
@@ -620,7 +623,9 @@ public class AiProjectPipelineJobService {
                 """, projectContext(c) + "\n\nWork Packages:\n" + numbered(c.workPackages) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         int idx = 1;
+        int failed = 0;
         for (JsonNode n : arr(root, "tasks")) {
+            try {
             TaskRequest tq = new TaskRequest();
             Ref wp = refAt(c.workPackages, n.path("workPackageRef").asInt(0), idx - 1);
             tq.setWorkPackageId(wp.id());
@@ -636,9 +641,14 @@ public class AiProjectPipelineJobService {
             tq.setPriority(pickIgnoreCase(txt(n, "priority"), List.of("Critical", "High", "Medium", "Low"), "Medium"));
             TaskResponse saved = taskService.createTask(tq);
             c.tasks.add(new Ref(saved.getId(), tq.getTaskName()));
+            } catch (Exception e) {
+                log.warn("AI pipeline: skip task #{}: {}", idx - 1, e.getMessage());
+                failed++;
+            }
         }
         step.count = c.tasks.size();
         if (c.tasks.isEmpty()) step.message = "AI ไม่สามารถสร้าง Task ได้";
+        else if (failed > 0) step.message = "ข้าม " + failed + " task ที่บันทึกไม่ได้";
     }
 
     private void stepTests(Ctx c, StepState step) {
@@ -656,7 +666,9 @@ public class AiProjectPipelineJobService {
         int sIdx = 1;
         int cIdx = 1;
         int cases = 0;
+        int failed = 0;
         for (JsonNode sn : arr(root, "scenarios")) {
+            try {
             Ref task = refAt(c.tasks, sn.path("taskRef").asInt(0), sIdx - 1);
             String testType = pick(txt(sn, "testType"), Set.of("SIT", "UAT"), "SIT");
             PmTestScenarioRequest sq = new PmTestScenarioRequest();
@@ -684,12 +696,21 @@ public class AiProjectPipelineJobService {
                 cq.setTestStatus("Pending");
                 cq.setTestType(testType);
                 cq.setState(STATE_ADDED);
-                testCaseService.save(cq, c.businessId, c.userId);
-                cases++;
+                try {
+                    testCaseService.save(cq, c.businessId, c.userId);
+                    cases++;
+                } catch (Exception e) {
+                    log.warn("AI pipeline: skip test case {}: {}", cq.getTestCaseCode(), e.getMessage());
+                    failed++;
+                }
+            }
+            } catch (Exception e) {
+                log.warn("AI pipeline: skip scenario #{}: {}", sIdx - 1, e.getMessage());
+                failed++;
             }
         }
         step.count = (sIdx - 1) + cases;
-        step.message = (sIdx - 1) + " scenario, " + cases + " test case";
+        step.message = (sIdx - 1) + " scenario, " + cases + " test case" + (failed > 0 ? " (ข้าม " + failed + " รายการที่บันทึกไม่ได้)" : "");
         if (sIdx == 1) step.message = "AI ไม่สามารถสร้าง Test Scenario ได้";
     }
 
@@ -826,6 +847,7 @@ public class AiProjectPipelineJobService {
         int made = 0;
         for (JsonNode d : arr(root, "diagrams")) {
             if (made >= maxDiagrams) break;
+            try {
             String type = normalizeDiagramType(txt(d, "type"));
             String xml;
             if ("ER".equals(type)) {
@@ -869,6 +891,9 @@ public class AiProjectPipelineJobService {
                 traceLinkService.createLinksFromDiagramXml(c.projectId, tab.getId(), type, xml);
             } catch (Exception e) {
                 log.warn("AI pipeline: cannot create trace links from diagram xml: {}", e.getMessage());
+            }
+            } catch (Exception e) {
+                log.warn("AI pipeline: skip diagram: {}", e.getMessage());
             }
         }
         return made;
@@ -976,10 +1001,40 @@ public class AiProjectPipelineJobService {
         return "โครงการ: " + c.projectName + "\nรายละเอียด: " + c.projectDescription;
     }
 
+    private static final String QUOTA_WARNING = "⚠ โควต้า/เครดิต/โทเคนของ AI หมด ขั้นตอนที่เหลือจึงสร้างไม่ได้ กรุณาเติมเครดิตหรือเปลี่ยนโมเดลแล้วลองใหม่";
+    private static final int AI_MAX_ATTEMPTS = 3;
+    private static final String RETRY_HINT = "\n\nIMPORTANT: your previous answer was empty, truncated or not valid JSON. "
+            + "Answer again with COMPLETE valid JSON only: fewer items, short texts, every bracket closed.";
+
+    /** เรียก AI + parse JSON; ล้มเหลว (API error/429/timeout/JSON ถูกตัด) ลองใหม่สูงสุด 3 ครั้ง โดยบอกให้ตอบสั้นลงในรอบถัดไป */
     private JsonNode ask(Ctx c, String systemPrompt, String userPrompt, boolean withAttachments) {
+        if (c.quotaError != null) return null;
+        for (int attempt = 1; attempt <= AI_MAX_ATTEMPTS; attempt++) {
+            JsonNode root = askOnce(c, attempt == 1 ? systemPrompt : systemPrompt + RETRY_HINT, userPrompt, withAttachments);
+            if (root != null && root.isObject() && !root.isEmpty()) return root;
+            if (c.quotaError != null) break;
+            log.warn("AI pipeline: attempt {}/{} returned no usable JSON", attempt, AI_MAX_ATTEMPTS);
+            if (attempt < AI_MAX_ATTEMPTS) {
+                try {
+                    Thread.sleep(2000L * attempt);
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+        }
+        return null;
+    }
+
+    private JsonNode askOnce(Ctx c, String systemPrompt, String userPrompt, boolean withAttachments) {
         try {
             String raw = aiProvider.generateRawResponse(userPrompt, systemPrompt, c.req.getModel(),
                     withAttachments ? c.req.getAttachments() : null);
+            String quota = PmAiProviderServiceImpl.takeQuotaError();
+            if (quota != null) {
+                c.quotaError = quota;
+                return null;
+            }
             if (raw == null || raw.isBlank() || "{}".equals(raw.trim())) return null;
             Matcher m = JSON_PATTERN.matcher(raw);
             String json;
@@ -1098,3 +1153,5 @@ public class AiProjectPipelineJobService {
         return "CT-" + yearPart + "-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
     }
 }
+
+

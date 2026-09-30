@@ -1,18 +1,23 @@
 <nav class="sic-breadcrumb" aria-label="Breadcrumb">
-  @for (item of displayItems; track item.label + $index; let last = $last) {
-    <span class="sic-breadcrumb__item">
-      @if ((item.link || item.url) && !last) {
-        @if (item.url) {
-          <a class="sic-breadcrumb__link" [routerLink]="item.url" (click)="itemClick.emit(item)">{{ item.label }}</a>
+  <ol class="sic-breadcrumb__list">
+    @for (item of displayItems; track item.label + $index; let last = $last) {
+      <li class="sic-breadcrumb__item">
+        @if ((item.link || item.url) && !last) {
+          @if (item.url) {
+            <a class="sic-breadcrumb__link" [routerLink]="item.url" (click)="itemClick.emit(item)">
+              @if (item.icon) { <i class="bi {{ item.icon }}" aria-hidden="true"></i> }
+              {{ item.label | translate }}
+            </a>
+          } @else {
+            <a class="sic-breadcrumb__link" tabindex="0" (click)="itemClick.emit(item)">{{ item.label | translate }}</a>
+          }
         } @else {
-          <a class="sic-breadcrumb__link" (click)="itemClick.emit(item)">{{ item.label }}</a>
+          <span class="sic-breadcrumb__current" [attr.aria-current]="last ? 'page' : null">{{ item.label | translate }}</span>
         }
-      } @else {
-        <span class="sic-breadcrumb__current">{{ item.label }}</span>
-      }
-    </span>
-    @if (!last) {
-      <span class="sic-breadcrumb__separator">{{ separator }}</span>
+        @if (!last) {
+          <span class="sic-breadcrumb__separator" aria-hidden="true">{{ separator }}</span>
+        }
+      </li>
     }
-  }
+  </ol>
 </nav>

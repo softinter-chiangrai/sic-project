@@ -98,18 +98,18 @@ app:
       path-style-access-enabled: true
 
   ai:
-    default-model: ${AI_DEFAULT_MODEL:gemini-2.5-flash-lite}
+    default-model: ${AI_DEFAULT_MODEL:gemini-3.8-flash}
     # ใช้เข้ารหัส api_key ในตาราง db_ai_model_config (AiApiKeyConverter) ตั้งค่าจริงผ่าน env var นี้ใน production
     config-encryption-key: ${AI_MODEL_CONFIG_ENCRYPTION_KEY:sic-ai-model-config-dev-only-key}
     claude:
       api-key: ${CLAUDE_API_KEY:}
-      model: ${CLAUDE_MODEL:claude-3-5-sonnet-20241022}
-      api-url: ${CLAUDE_API_URL:https://api.anthropic.com/v1/messages}
+      model: ${CLAUDE_MODEL:claude-sonnet-5}
+      api-url: ${CLAUDE_API_URL:https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions}
       max-tokens: 4096
       anthropic-version: 2023-06-01
     gemini:
       api-key: ${GEMINI_API_KEY:}
-      model: ${GEMINI_MODEL:gemini-2.5-flash-lite}
+      model: ${GEMINI_MODEL:gemini-3.8-flash}
       api-url: ${GEMINI_API_URL:https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions}
       max-tokens: 4096
 

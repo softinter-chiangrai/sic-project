@@ -231,13 +231,21 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
   updateDependencyLockState(scenarioId?: string | null): void {
     const effectiveScenarioId = scenarioId !== undefined ? scenarioId : this.formData.form.get('scenarioId')?.value;
+    const foundScenario = effectiveScenarioId
+      ? (this.scenarioOptions() as any[]).find((s) => s.value === effectiveScenarioId)
+      : null;
     const testTypeCtrl = this.formData.form.get('testType');
     const taskCtrl = this.formData.form.get('taskId');
+
     if (this.isView() || this.isExecution() || !!effectiveScenarioId) {
       testTypeCtrl?.disable({ emitEvent: false });
-      taskCtrl?.disable({ emitEvent: false });
     } else {
       testTypeCtrl?.enable({ emitEvent: false });
+    }
+
+    if (this.isView() || this.isExecution() || (foundScenario && !!foundScenario.taskId)) {
+      taskCtrl?.disable({ emitEvent: false });
+    } else {
       taskCtrl?.enable({ emitEvent: false });
     }
   }
@@ -265,15 +273,6 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     });
     if (found?.taskId) {
       this.onTaskChange(found.taskId);
-    } else {
-      this.formData.form.patchValue({
-        taskId: null,
-        relatedTask: null,
-        taskCode: null,
-        taskName: null,
-        relatedSpec: null,
-        relatedRequirement: null,
-      });
     }
     this.updateDependencyLockState(scenarioId);
   }

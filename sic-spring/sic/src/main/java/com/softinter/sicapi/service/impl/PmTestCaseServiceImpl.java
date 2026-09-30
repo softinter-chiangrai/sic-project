@@ -183,12 +183,23 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     }
 
     private void syncLinkedTaskStatus(PmTestCase entity) {
-        if (entity.getTaskId() == null) return;
+        UUID taskId = entity.getTaskId();
+        if (taskId == null && entity.getScenarioId() != null) {
+            PmTestScenario sc = scenarioRepository.findById(entity.getScenarioId()).orElse(null);
+            if (sc != null && sc.getTaskId() != null) {
+                taskId = sc.getTaskId();
+                entity.setTaskId(taskId);
+                testCaseRepository.save(entity);
+            }
+        }
+        if (taskId == null) return;
         try {
-            taskRepository.findById(entity.getTaskId()).ifPresent(task -> {
+            testCaseRepository.flush();
+            final UUID targetTaskId = taskId;
+            taskRepository.findById(targetTaskId).ifPresent(task -> {
                 if (task.getIsDelete() != null && task.getIsDelete()) return;
 
-                List<PmTestCase> allCases = testCaseRepository.findByTaskIdAndIsDeleteFalse(task.getId());
+                List<PmTestCase> allCases = testCaseRepository.findByTaskIdAndIsDeleteFalse(targetTaskId);
                 if (allCases.isEmpty()) return;
 
                 boolean anyFail = allCases.stream()
@@ -236,8 +247,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     }
 
     private void mapRequestToEntity(PmTestCaseRequest req, PmTestCase entity) {
-        // ✅ derive taskId/projectId จาก Test Scenario เสมอถ้ามี scenarioId
-        // ห้าม trust req.getProjectId()/req.getTaskId() แยกต่างหาก (กันกรณีไม่ตรงกับ scenario จริง)
+        // ✅ derive taskId/projectId จาก Test Scenario เสมอถ้า scenario มีค่า ถ้าไม่มีให้ fallback ไปที่ request
         PmTestScenario sc = req.getScenarioId() != null
                 ? scenarioRepository.findById(req.getScenarioId())
                         .orElseThrow(() -> new RuntimeException("ไม่พบ Test Scenario"))
@@ -245,8 +255,8 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         entity.setScenarioId(req.getScenarioId());
         entity.setScenarioName(req.getScenarioName());
         if (sc != null) {
-            entity.setTaskId(sc.getTaskId());
-            entity.setProjectId(sc.getProjectId());
+            entity.setTaskId(sc.getTaskId() != null ? sc.getTaskId() : req.getTaskId());
+            entity.setProjectId(sc.getProjectId() != null ? sc.getProjectId() : req.getProjectId());
         } else {
             entity.setTaskId(req.getTaskId());
             entity.setProjectId(req.getProjectId());

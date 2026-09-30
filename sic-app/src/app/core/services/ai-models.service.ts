@@ -2,7 +2,13 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { catchError, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AI_MODEL_OPTIONS, AiModelOption, DEFAULT_AI_MODEL } from '../config/ai-models.config';
+import {
+  AI_MODEL_OPTIONS,
+  AiModelOption,
+  DEFAULT_AI_MODEL,
+  STORAGE_KEY_CACHED_MODELS,
+  STORAGE_KEY_DEFAULT_MODEL,
+} from '../config/ai-models.config';
 
 @Injectable({ providedIn: 'root' })
 export class AiModelsService {
@@ -25,10 +31,16 @@ export class AiModelsService {
 
           this.models.set([...remoteModels]);
           const rec = remoteModels.find((m) => m.recommended);
-          if (rec) {
-            this.defaultModel.set(rec.id);
-          } else {
-            this.defaultModel.set(remoteModels[0].id);
+          const defId = rec ? rec.id : remoteModels[0].id;
+          this.defaultModel.set(defId);
+
+          try {
+            if (typeof localStorage !== 'undefined') {
+              localStorage.setItem(STORAGE_KEY_CACHED_MODELS, JSON.stringify(remoteModels));
+              localStorage.setItem(STORAGE_KEY_DEFAULT_MODEL, defId);
+            }
+          } catch {
+            // ignore
           }
         }
       }),

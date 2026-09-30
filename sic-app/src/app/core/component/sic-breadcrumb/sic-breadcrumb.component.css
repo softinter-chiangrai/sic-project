@@ -4,11 +4,26 @@
   font-size: var(--sic-font-size-sm);
 }
 
-.sic-breadcrumb {
+.sic-breadcrumb__list {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--sic-space-2);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sic-breadcrumb__item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sic-space-2);
+}
+
+.sic-breadcrumb__link:focus-visible {
+  outline: 2px solid var(--sic-color-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .sic-breadcrumb__link {

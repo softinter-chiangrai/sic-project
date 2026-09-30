@@ -275,6 +275,9 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
 
             grantAllProgramPermissions(adminRole);
 
+            // สร้างบทบาทเริ่มต้นตาม SDLC ให้ Business ใหม่
+            createDefaultRoles(business);
+
             // สร้าง Approve Flow เริ่มต้นให้ทุก Document Type โดยตั้งผู้สมัคร business เป็นผู้อนุมัติทันที
             createDefaultApprovalFlows(business, userId);
 
@@ -445,6 +448,35 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             }
         }
         return null;
+    }
+
+    private void createDefaultRoles(SuBusiness business) {
+        String[][] defaultRoles = {
+            {"PM", "Project Manager", "ผู้จัดการโครงการ", "2", "2", "#3B82F6"},
+            {"TEAM_LEAD", "Team Lead / Head", "หัวหน้าทีม / หัวหน้าสายงาน", "3", "3", "#6366F1"},
+            {"BA", "Business Analyst", "นักวิเคราะห์ธุรกิจ", "4", "4", "#06B6D4"},
+            {"SA", "System Analyst", "นักวิเคราะห์ระบบ", "5", "5", "#0EA5E9"},
+            {"UI_UX", "UI/UX Designer", "ผู้ออกแบบ UI/UX", "6", "6", "#EC4899"},
+            {"DEV", "Developer", "นักพัฒนาระบบ", "7", "7", "#10B981"},
+            {"QA", "Tester / QA", "ผู้ทดสอบระบบ / QA", "8", "8", "#F59E0B"},
+            {"CUSTOMER", "Customer", "ลูกค้า / ผู้ว่าจ้าง", "9", "9", "#8B5CF6"},
+            {"FINANCE", "Finance", "ฝ่ายการเงิน", "10", "10", "#14B8A6"},
+            {"MA_SUPPORT", "MA Support", "เจ้าหน้าที่ดูแลหลังส่งมอบ (MA)", "11", "11", "#F97316"},
+            {"VIEWER", "Viewer", "ผู้ดูข้อมูลอย่างเดียว", "12", "12", "#6B7280"}
+        };
+
+        for (String[] r : defaultRoles) {
+            SuBusinessRole role = new SuBusinessRole();
+            role.setBusiness(business);
+            role.setRoleCode(r[0]);
+            role.setRoleNameEn(r[1]);
+            role.setRoleNameLocal(r[2]);
+            role.setRoleLevel(r[3]);
+            role.setSortOrder(Integer.parseInt(r[4]));
+            role.setColor(r[5]);
+            role.setIsActive(true);
+            businessRoleRepository.save(role);
+        }
     }
 
     private String generateBusinessCode() {

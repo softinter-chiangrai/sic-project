@@ -8,6 +8,7 @@ import com.softinter.sicapi.entity.su.SuProgram;
 import com.softinter.sicapi.repository.su.SuBusinessRoleProgramRepository;
 import com.softinter.sicapi.repository.su.SuBusinessRoleRepository;
 import com.softinter.sicapi.repository.su.SuProgramRepository;
+import com.softinter.sicapi.service.ProgramAccessService;
 import com.softinter.sicapi.util.LocalizationHelper;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.persistence.criteria.Predicate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -36,13 +38,52 @@ public class SuBusinessRoleProgramController {
     private final SuBusinessRoleProgramRepository brpRepository;
     private final SuBusinessRoleRepository businessRoleRepository;
     private final SuProgramRepository programRepository;
+    private final ProgramAccessService programAccessService;
 
-     @GetMapping
+    @GetMapping
     @Operation(summary = "Get all business role programs")
     public ResponseEntity<List<BusinessRoleProgramResponse>> getAll(
             @RequestParam(required = false) UUID businessRoleId) {
-        // ใช้เมธอดใหม่ที่ JOIN FETCH ข้อมูล businessRole และ program
-        List<SuBusinessRoleProgram> list = brpRepository.findAllWithFetch(businessRoleId);
+        if (businessRoleId != null) {
+            SuBusinessRole role = businessRoleRepository.findById(businessRoleId).orElse(null);
+            List<SuBusinessRoleProgram> existingList = brpRepository.findAllWithFetch(businessRoleId);
+            Map<UUID, SuBusinessRoleProgram> permMap = existingList.stream()
+                    .filter(brp -> brp.getProgram() != null)
+                    .collect(Collectors.toMap(brp -> brp.getProgram().getId(), brp -> brp, (a, b) -> a));
+
+            List<SuProgram> allPrograms = programRepository.findAllActive();
+            List<BusinessRoleProgramResponse> response = allPrograms.stream()
+                    .map(prog -> {
+                        SuBusinessRoleProgram brp = permMap.get(prog.getId());
+                        if (brp != null) {
+                            return toResponse(brp);
+                        } else {
+                            BusinessRoleProgramResponse res = new BusinessRoleProgramResponse();
+                            res.setId(null);
+                            res.setBusinessRoleId(businessRoleId);
+                            if (role != null) {
+                                res.setBusinessRoleCode(role.getRoleCode());
+                            }
+                            res.setProgramId(prog.getId());
+                            res.setProgramCode(prog.getProgramCode());
+                            res.setProgramNameEn(prog.getNameEn());
+                            res.setProgramNameLocal(prog.getNameLocal());
+                            res.setProgramName(LocalizationHelper.getProgramName(prog));
+                            res.setActive(false);
+                            res.setAdd(false);
+                            res.setBack(false);
+                            res.setPrint(false);
+                            res.setRemove(false);
+                            res.setSave(false);
+                            res.setSearch(false);
+                            return res;
+                        }
+                    })
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(response);
+        }
+
+        List<SuBusinessRoleProgram> list = brpRepository.findAllWithFetch(null);
         List<BusinessRoleProgramResponse> response = list.stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
@@ -124,6 +165,7 @@ public class SuBusinessRoleProgramController {
             brp.setRowVersion(request.getRowVersion());
         }
         brpRepository.save(brp);
+        programAccessService.removeAllAccessCache();
         return ResponseEntity.ok(brp.getId());
     }
 
@@ -136,31 +178,38 @@ public class SuBusinessRoleProgramController {
                     .orElseThrow(() -> new RuntimeException("Business role not found"));
         }
 
+        UUID bRoleId = role != null ? role.getId() : (request.getRoleId() != null ? request.getRoleId() : null);
+        List<SuBusinessRoleProgram> existing = bRoleId != null 
+                ? brpRepository.findByBusinessRoleIdAndIsDeleteFalse(bRoleId) 
+                : new ArrayList<>();
+        Map<UUID, SuBusinessRoleProgram> existingMap = existing.stream()
+                .filter(x -> x.getProgram() != null)
+                .collect(Collectors.toMap(x -> x.getProgram().getId(), x -> x, (a, b) -> a));
+
         for (SaveBusinessRoleProgramRequest req : request.getModules()) {
-            SuBusinessRoleProgram brp;
+            SuBusinessRoleProgram brp = null;
             if (req.getId() != null) {
                 brp = brpRepository.findById(req.getId())
-                        .orElseThrow(() -> new RuntimeException("Business role program not found"));
-            } else {
-                UUID bRoleId = req.getBusinessRoleId() != null ? req.getBusinessRoleId() : (role != null ? role.getId() : null);
-                if (bRoleId == null) {
+                        .orElse(null);
+            }
+            if (brp == null && req.getProgramId() != null) {
+                brp = existingMap.get(req.getProgramId());
+            }
+            if (brp == null) {
+                UUID targetRoleId = req.getBusinessRoleId() != null ? req.getBusinessRoleId() : bRoleId;
+                if (targetRoleId == null) {
                     throw new RuntimeException("Business role ID must not be null");
                 }
-                List<SuBusinessRoleProgram> existing = brpRepository.findByBusinessRoleIdAndIsDeleteFalse(bRoleId);
-                brp = existing.stream()
-                        .filter(x -> x.getProgram().getId().equals(req.getProgramId()))
-                        .findFirst()
-                        .orElse(null);
-                
-                if (brp == null) {
-                    brp = new SuBusinessRoleProgram();
-                    SuBusinessRole moduleRole = businessRoleRepository.findById(bRoleId)
-                            .orElseThrow(() -> new RuntimeException("Business role not found"));
-                    brp.setBusinessRole(moduleRole);
-                    SuProgram program = programRepository.findById(req.getProgramId())
-                            .orElseThrow(() -> new RuntimeException("Program not found"));
-                    brp.setProgram(program);
-                }
+                brp = new SuBusinessRoleProgram();
+                SuBusinessRole moduleRole = (role != null && role.getId().equals(targetRoleId)) 
+                        ? role 
+                        : businessRoleRepository.findById(targetRoleId)
+                                .orElseThrow(() -> new RuntimeException("Business role not found"));
+                brp.setBusinessRole(moduleRole);
+                SuProgram program = programRepository.findById(req.getProgramId())
+                        .orElseThrow(() -> new RuntimeException("Program not found"));
+                brp.setProgram(program);
+                existingMap.put(req.getProgramId(), brp);
             }
             brp.setIsActive(req.isActive());
             brp.setAdd(req.isAdd());
@@ -174,6 +223,7 @@ public class SuBusinessRoleProgramController {
             }
             brpRepository.save(brp);
         }
+        programAccessService.removeAllAccessCache();
         return ResponseEntity.ok().build();
     }
 
@@ -185,6 +235,7 @@ public class SuBusinessRoleProgramController {
         brp.setIsDelete(true);
         brp.setIsActive(false);
         brpRepository.save(brp);
+        programAccessService.removeAllAccessCache();
         return ResponseEntity.noContent().build();
     }
 
