@@ -138,8 +138,8 @@ export interface DiagramSqlHistoryItem {
             </div>
           </div>
 
-          <!-- Smart Mode Banner -->
-          <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/30 space-y-2">
+          <!-- Smart Mode Selection (Full vs Migration) -->
+          <div class="p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/30 space-y-2.5">
             @if (histories().length === 0) {
               <div class="flex items-center gap-2.5 text-emerald-600 dark:text-emerald-400">
                 <i class="bi bi-stars text-lg"></i>
@@ -151,38 +151,71 @@ export interface DiagramSqlHistoryItem {
                 </div>
               </div>
             } @else {
-              <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2.5 text-[var(--crm-primary)]">
-                  <i class="bi bi-arrow-repeat text-lg"></i>
-                  <div>
-                    <div class="flex items-center gap-2">
-                      <span class="text-sm font-semibold">{{ ('PMDT05_AUTO_MIGRATION_MODE' | translate).replace('{0}', histories()[0].versionNo + 1) }}</span>
-                      <span class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-                        {{ ('PMDT05_MIGRATION_BASED_ON' | translate).replace('{0}', histories()[0].versionNo) }}
-                      </span>
+              <div class="flex items-center justify-between pb-1 border-b border-[var(--border)]/50">
+                <span class="text-xs font-semibold uppercase tracking-wider text-[var(--text-muted)] flex items-center gap-1.5">
+                  <i class="bi bi-sliders text-sm text-[var(--crm-primary)]"></i>
+                  {{ 'PMDT05_GEN_MODE_LABEL' | translate }}
+                </span>
+                <span class="px-2 py-0.5 text-[11px] font-bold rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
+                  {{ ('PMDT05_MIGRATION_BASED_ON' | translate).replace('{0}', histories()[0].versionNo) }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+                <!-- Option 1: Migration Script -->
+                <label
+                  class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-all"
+                  [ngClass]="genMode === 'MIGRATION'
+                    ? 'border-[var(--crm-primary)] bg-[var(--crm-primary)]/10 shadow-sm ring-1 ring-[var(--crm-primary)]/30'
+                    : 'border-[var(--border)] hover:border-[var(--border-hover)] bg-[var(--bg)]'"
+                >
+                  <input
+                    type="radio"
+                    name="genMode"
+                    value="MIGRATION"
+                    [(ngModel)]="genMode"
+                    class="mt-0.5 text-[var(--crm-primary)]"
+                  />
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 font-semibold text-xs text-[var(--text-active)]">
+                      <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>
+                      <span>{{ ('PMDT05_AUTO_MIGRATION_MODE' | translate).replace('{0}', histories()[0].versionNo + 1) }}</span>
                     </div>
-                    <span class="block text-xs text-[var(--text-muted)] mt-0.5">
+                    <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
                       {{ 'PMDT05_MIGRATION_MODE_DESC' | translate }}
-                    </span>
+                    </p>
                   </div>
-                </div>
+                </label>
+
+                <!-- Option 2: Full Schema -->
+                <label
+                  class="flex items-start gap-2.5 p-3 rounded-xl border cursor-pointer transition-all"
+                  [ngClass]="genMode === 'FULL'
+                    ? 'border-emerald-500 bg-emerald-500/10 shadow-sm ring-1 ring-emerald-500/30'
+                    : 'border-[var(--border)] hover:border-[var(--border-hover)] bg-[var(--bg)]'"
+                >
+                  <input
+                    type="radio"
+                    name="genMode"
+                    value="FULL"
+                    [(ngModel)]="genMode"
+                    class="mt-0.5 text-emerald-600"
+                  />
+                  <div class="space-y-1">
+                    <div class="flex items-center gap-1.5 font-semibold text-xs text-[var(--text-active)]">
+                      <i class="bi bi-file-earmark-plus text-emerald-500"></i>
+                      <span>{{ 'PMDT05_FULL_REGEN_MODE' | translate }}</span>
+                    </div>
+                    <p class="text-[11px] text-[var(--text-muted)] leading-relaxed">
+                      {{ 'PMDT05_FULL_REGEN_DESC' | translate }}
+                    </p>
+                  </div>
+                </label>
               </div>
             }
           </div>
 
-          <!-- Engine Selection (Parser vs AI) -->
-          <div class="flex items-center justify-between p-3 rounded-lg border border-[var(--border)]">
-            <div class="flex items-center gap-4">
-              <span class="text-sm font-medium text-[var(--text-active)]">{{ 'PMDT05_ENGINE_LABEL' | translate }}</span>
-              <label class="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="radio" value="ai" [(ngModel)]="engine" />
-                <span><i class="bi bi-stars text-amber-500"></i> {{ 'PMDT05_ENGINE_AI_LABEL' | translate }}</span>
-              </label>
-              <label class="flex items-center gap-2 cursor-pointer text-sm">
-                <input type="radio" value="parser" [(ngModel)]="engine" />
-                <span>{{ 'PMDT05_ENGINE_PARSER_LABEL' | translate }}</span>
-              </label>
-            </div>
+          <div class="flex items-center justify-end p-3 rounded-lg border border-[var(--border)]">
 
             <sic-button
               variant="solid" color="primary"
@@ -377,7 +410,6 @@ export class SqlExportDialogComponent implements OnInit {
   selectedAiModel = DEFAULT_AI_MODEL;
   aiModels = AI_MODEL_OPTIONS;
 
-  engine: 'parser' | 'ai' = 'ai';
   genMode: 'FULL' | 'MIGRATION' = 'FULL';
   selectedBaseVersionId: string | null = null;
 
@@ -492,10 +524,7 @@ export class SqlExportDialogComponent implements OnInit {
 
     this.loading.set(true);
 
-    const endpoint =
-      this.engine === 'ai'
-        ? `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`
-        : `${environment.apiBaseUrl}/api/diagram/generate-sql`;
+    const endpoint = `${environment.apiBaseUrl}/api/ai/generate-sql-from-er`;
 
     const payload = {
       xml: selectedPage.xml,
@@ -503,7 +532,6 @@ export class SqlExportDialogComponent implements OnInit {
       pageName: selectedPage.name,
       tabId: this.tabId,
       mode: this.genMode,
-      engine: this.engine,
       baseVersionId: this.selectedBaseVersionId,
       model: this.selectedAiModel,
     };

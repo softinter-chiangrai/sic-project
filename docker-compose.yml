@@ -208,6 +208,20 @@ services:
     networks:
       - sic-network
 
+  # ============================================================================
+  # 8. draw.io (self-hosted, with Mermaid insert plugin)
+  # ============================================================================
+  sic-drawio:
+    container_name: sic-drawio
+    restart: unless-stopped
+    build:
+      context: ./docker/drawio
+      dockerfile: Dockerfile
+    ports:
+      - "${DRAWIO_PORT:-8089}:8080"
+    networks:
+      - sic-network
+
 # ============================================================================
 # Persistent Volumes (Mapped to existing project volumes)
 # ============================================================================

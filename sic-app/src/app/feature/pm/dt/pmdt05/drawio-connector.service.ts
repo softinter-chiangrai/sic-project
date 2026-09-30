@@ -2,6 +2,15 @@
 
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Subject } from 'rxjs';
+import { environment } from '../../../../../environments/environment';
+
+/** ผลจากปลั๊กอิน sicMermaid ใน draw.io (docker/drawio/sicMermaid.js) */
+export interface MermaidInsertResult {
+  stage: 'inserted' | 'parsed' | 'error';
+  id?: string;
+  xml?: string;
+  message?: string;
+}
 
 @Injectable({ providedIn: 'root' })
 export class DrawioConnectorService {
@@ -18,6 +27,15 @@ export class DrawioConnectorService {
 
   private errorSubject = new Subject<string>();
   error$ = this.errorSubject.asObservable();
+
+  private mermaidSubject = new Subject<MermaidInsertResult>();
+  mermaid$ = this.mermaidSubject.asObservable();
+
+  /** draw.io โหลดแผนภาพ (action load) เสร็จแล้ว */
+  private loadedSubject = new Subject<void>();
+  loaded$ = this.loadedSubject.asObservable();
+
+  private readonly drawioOrigin = new URL(environment.drawioUrl).origin;
 
   init(iframe: HTMLIFrameElement): void {
     this.iframe = iframe;
@@ -94,18 +112,12 @@ export class DrawioConnectorService {
     this.postMessage({ action: 'export', format: 'xml' });
   }
 
-  insertMermaid(mermaidScript: string, pageName?: string): void {
-    const msg = {
-      action: 'mermaid',
-      mermaid: mermaidScript,
-      title: pageName || 'AI Generated Diagram',
-    };
-    if (!this.drawioReady) {
-      console.warn('[Draw.io] Cannot insert Mermaid, Draw.io not ready; queuing...');
-      this.pendingMessages.push(msg);
-      return;
-    }
-    this.postMessage(msg);
+  /**
+   * ให้ draw.io แปลง Mermaid ด้วยตัวแปลงของมันเอง (ผ่านปลั๊กอิน sicMermaid) ผลมาทาง mermaid$
+   * replace = แทนที่แผนภาพที่เปิดอยู่ (stage 'inserted'), merge = คืน XML (stage 'parsed') ให้ผู้เรียกไป mergeXml เอง
+   */
+  insertMermaid(mermaidScript: string, mode: 'replace' | 'merge' = 'replace'): void {
+    this.postMessage({ sicAction: 'mermaid', mermaid: mermaidScript, mode });
   }
 
   /** เติมเนื้อหา XML เข้าแผนภาพที่เปิดอยู่ด้วยคำสั่ง merge (คำสั่งมาตรฐานของ draw.io embed) โดยไม่ลบของเดิม */
@@ -119,7 +131,7 @@ export class DrawioConnectorService {
   }
 
   handleMessage(event: MessageEvent): void {
-    if (!event.origin.includes('diagrams.net')) return;
+    if (event.origin !== this.drawioOrigin) return;
 
     let data: any;
     try {
@@ -183,6 +195,16 @@ export class DrawioConnectorService {
       return;
     }
 
+    if (data.event === 'load') {
+      this.loadedSubject.next();
+      return;
+    }
+
+    if (data.event === 'sicMermaid') {
+      this.mermaidSubject.next(data);
+      return;
+    }
+
     if (data.event === 'error') {
       console.error('[Draw.io] Error event:', data);
       this.errorSubject.next(data.message || 'Unknown Draw.io error');
@@ -196,6 +218,8 @@ export class DrawioConnectorService {
     this.lastLoadedXml = null;
     this.xmlSubject = new Subject<string>();
     this.errorSubject = new Subject<string>();
+    this.mermaidSubject = new Subject<MermaidInsertResult>();
+    this.loadedSubject = new Subject<void>();
     console.log('[Draw.io] Service reset');
   }
 }

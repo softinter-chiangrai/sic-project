@@ -11,7 +11,6 @@ public class AiGenerateSqlRequest {
     private String pageName;
     private String tabId;
     private String mode; // 'FULL' or 'MIGRATION'
-    private String engine; // 'ai' or 'parser'
     private UUID baseVersionId; // Specific version ID to compare against (optional)
     private String model;
 }

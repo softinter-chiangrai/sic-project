@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -54,7 +55,6 @@ import com.softinter.sicapi.dto.response.WorkPackageResponse;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.entity.enums.MaTicketSeverity;
 import com.softinter.sicapi.entity.enums.MaTicketType;
-import com.softinter.sicapi.util.DrawioXmlBuilder;
 import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.AiPipelineJob;
 import com.softinter.sicapi.entity.pm.PmCustomer;
@@ -71,7 +71,6 @@ import com.softinter.sicapi.service.PmDesignReviewService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.PmMaRenewalService;
 import com.softinter.sicapi.service.PmMaTicketService;
-import com.softinter.sicapi.service.TraceLinkService;
 import com.softinter.sicapi.service.PmDeliveryService;
 import com.softinter.sicapi.service.PmRequirementService;
 import com.softinter.sicapi.service.PmSpecificationService;
@@ -112,7 +111,6 @@ public class AiProjectPipelineJobService {
     private final PmDesignReviewService designReviewService;
     private final PmMaTicketService maTicketService;
     private final PmMaRenewalService maRenewalService;
-    private final TraceLinkService traceLinkService;
     private final AiPipelineJobRepository jobRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
@@ -806,108 +804,73 @@ public class AiProjectPipelineJobService {
     }
 
 
-    private static final String DIAGRAM_SCHEMA = """
-            Make the diagram detailed and complete (up to 25 nodes / 15 entities). Fill EVERY field.
-            Respond ONLY with valid JSON in a ```json block, same language as the project, using this shape (one item per diagram):
-            { "diagrams": [
-              { "name": "...", "type": "DFD", "requirementRef": 1,
-                "nodes": [ { "id": "n1", "label": "...", "kind": "EXTERNAL | PROCESS | STORE" } ],
-                "edges": [ { "from": "n1", "to": "n2", "label": "data flow" } ] },
-              { "name": "...", "type": "ER",
-                "entities": [ { "name": "Customer", "attributes": [ "id (PK)", "name", "email" ] } ],
-                "relations": [ { "from": "Customer", "to": "Order", "label": "places", "cardinality": "1:N" } ] },
-              { "name": "...", "type": "Flowchart", "requirementRef": 2,
-                "nodes": [ { "id": "n1", "label": "...", "kind": "START | TASK | DECISION | END" } ],
-                "edges": [ { "from": "n1", "to": "n2", "label": "" } ] },
-              { "name": "...", "type": "Use Case", "requirementRef": 3,
-                "nodes": [ { "id": "n1", "label": "...", "kind": "ACTOR | USECASE" } ],
-                "edges": [ { "from": "n1", "to": "n2", "label": "" } ] } ] }
+    private static final String MERMAID_RULES = """
+            Respond ONLY with valid Mermaid code in a ```mermaid block, no other text. Node/entity labels in the same language as the project. Max 25 nodes / 15 entities.
+            flowchart types (DFD, Use Case, Flowchart): first line `flowchart TD`. Node ids are ASCII letters+digits only (E1, P2). Labels ALWAYS in double quotes.
+            Edges: `A --> B` or `A -->|"label"| B`. Do NOT use subgraph, style, classDef, click, or any other syntax.
+            Shapes: DFD external entity `E1["Name"]`, process `P1(("Name"))`, data store `D1[("Name")]`.
+            Use Case actor `A1(["Actor"])`, use case `U1(("Use case"))`. Flowchart start/end `S1(["Start"])`, step `T1["Step"]`, decision `D1{"Question?"}`.
+            ER: first line `erDiagram`; relation `CUSTOMER ||--o{ ORDER : places`; entity block `CUSTOMER {` + one attribute per line like `string id PK` + `}`. Entity names UPPERCASE, no spaces.
             """;
 
-    // Fixed system-level set, one AI call each (a single big call gets truncated -> unparsable JSON -> no diagrams).
+    // {type, name, instruction}: fixed system-level set, one AI call each (a single big call gets truncated).
     private static final String[][] DIAGRAM_SET = {
-            {"DFD", "a DFD Level 0 (context diagram): the system as one process, all external entities and the main data flows in/out. Name it \"DFD Level 0\""},
-            {"DFD", "a DFD Level 1: break the system into its main processes with data stores, external entities and every data flow between them. Name it \"DFD Level 1\""},
-            {"Use Case", "the use case diagram of the whole system: all actors and all main use cases with their relations"},
-            {"Flowchart", "the flowchart of the single most important business process of the system, including decisions and alternative paths"},
-            {"ER", "the ER diagram of the whole system: every entity across all requirements with key attributes and relations with cardinality"}};
+            {"DFD", "DFD Level 0", "a DFD Level 0 (context diagram): the system as one process, all external entities and the main data flows in/out"},
+            {"DFD", "DFD Level 1", "a DFD Level 1: break the system into its main processes with data stores, external entities and every data flow between them"},
+            {"Use Case", "Use Case Diagram", "the use case diagram of the whole system: all actors and all main use cases with their relations"},
+            {"Flowchart", "Main Process Flowchart", "the flowchart of the single most important business process of the system, including decisions and alternative paths"},
+            {"ER", "ER Diagram", "the ER diagram of the whole system: every entity across all requirements with key attributes and relations with cardinality"}};
 
+    /**
+     * ให้ AI ตอบเป็น Mermaid แล้วเก็บเฉพาะ script ไว้ใน diagram tab (ไม่มี XML) ตอนผู้ใช้เปิดหน้า Diagram ครั้งแรก
+     * หน้าเว็บจะให้ draw.io (ปลั๊กอิน sicMermaid) แปลงเป็นแผนภาพและบันทึก XML กลับเอง
+     */
     private void stepDiagrams(Ctx c, StepState step) {
         String ctx = projectContext(c) + "\n\nRequirements:\n" + numbered(c.requirements);
         int made = 0;
         for (String[] d : DIAGRAM_SET) {
-            made += saveDiagrams(c, ask(c, "You are a System Analyst. Create exactly ONE diagram of type \"" + d[0] + "\": " + d[1]
-                    + ". It is system-level, so requirementRef may be omitted. " + DIAGRAM_SCHEMA, ctx, false), 1, made);
+            try {
+                boolean er = "ER".equals(d[0]);
+                String script = askRetry(c, "You are a System Analyst. Create exactly ONE diagram of type \"" + d[0] + "\": " + d[2]
+                        + ". " + MERMAID_RULES, ctx, false, raw -> parseMermaid(raw, er));
+                if (script != null) {
+                    saveDiagram(c, d[0], d[1], script);
+                    made++;
+                }
+            } catch (Exception e) {
+                log.warn("AI pipeline: skip diagram {}: {}", d[1], e.getMessage());
+            }
         }
         step.count = made;
         if (made == 0) step.message = "AI ไม่สามารถสร้าง Diagram ได้";
+        else if (made < DIAGRAM_SET.length) step.message = "สร้างได้ " + made + "/" + DIAGRAM_SET.length + " diagram";
     }
 
-    private int saveDiagrams(Ctx c, JsonNode root, int maxDiagrams, int madeBefore) {
-        int made = 0;
-        for (JsonNode d : arr(root, "diagrams")) {
-            if (made >= maxDiagrams) break;
-            try {
-            String type = normalizeDiagramType(txt(d, "type"));
-            String xml;
-            if ("ER".equals(type)) {
-                List<DrawioXmlBuilder.Entity> entities = new ArrayList<>();
-                for (JsonNode e : arr(d, "entities")) {
-                    List<String> attrs = new ArrayList<>();
-                    for (JsonNode a : arr(e, "attributes")) attrs.add(a.asText(""));
-                    entities.add(new DrawioXmlBuilder.Entity(txt(e, "name"), attrs));
-                }
-                List<DrawioXmlBuilder.Relation> rels = new ArrayList<>();
-                for (JsonNode r : arr(d, "relations")) {
-                    rels.add(new DrawioXmlBuilder.Relation(txt(r, "from"), txt(r, "to"), txt(r, "label"), txt(r, "cardinality")));
-                }
-                if (entities.isEmpty()) continue;
-                xml = DrawioXmlBuilder.er(entities, rels);
-            } else {
-                List<DrawioXmlBuilder.Node> nodes = new ArrayList<>();
-                for (JsonNode n : arr(d, "nodes")) nodes.add(new DrawioXmlBuilder.Node(txt(n, "id"), txt(n, "label"), txt(n, "kind")));
-                List<DrawioXmlBuilder.Edge> edges = new ArrayList<>();
-                for (JsonNode e : arr(d, "edges")) edges.add(new DrawioXmlBuilder.Edge(txt(e, "from"), txt(e, "to"), txt(e, "label")));
-                if (nodes.isEmpty()) continue;
-                xml = DrawioXmlBuilder.graph(nodes, edges);
-            }
-
-            PmDiagramTabRequest dq = new PmDiagramTabRequest();
-            dq.setProjectId(c.projectId);
-            dq.setName(cut(firstNonBlank(txt(d, "name"), type + " " + (madeBefore + made + 1)), 255));
-            dq.setDiagramType(type);
-            Ref req = refAt(c.requirements, d.path("requirementRef").asInt(0), -1);
-            if (req != null) dq.setRequirementId(req.id());
-            // system-level diagram: trace to every requirement so change-request impact analysis finds it
-            else dq.setRelatedRequirementIds(c.requirements.stream().map(Ref::id).toList());
-            Map<String, Object> graph = new LinkedHashMap<>();
-            graph.put("xml", xml);
-            dq.setGraphData(graph);
-            dq.setIsActive(true);
-            PmDiagramTabResponse tab = diagramTabService.createTab(dq);
-            c.diagrams.add(new Ref(tab.getId(), dq.getName()));
-            made++;
-            try {
-                traceLinkService.createLinksFromDiagramXml(c.projectId, tab.getId(), type, xml);
-            } catch (Exception e) {
-                log.warn("AI pipeline: cannot create trace links from diagram xml: {}", e.getMessage());
-            }
-            } catch (Exception e) {
-                log.warn("AI pipeline: skip diagram: {}", e.getMessage());
-            }
+    /** เช็คแค่ว่าเป็น Mermaid ชนิดที่ขอมาจริง (ER ต้องขึ้นต้น erDiagram, ที่เหลือ flowchart/graph) การแปลงจริงทำที่ draw.io ฝั่งหน้าเว็บ */
+    private String parseMermaid(String raw, boolean er) {
+        String code = aiProvider.extractMermaidScript(raw);
+        if (code == null) code = raw.replaceAll("```\\w*", "").trim();
+        String header = code.lines().map(String::strip).filter(l -> !l.isEmpty() && !l.startsWith("%%")).findFirst().orElse("").toLowerCase();
+        boolean isEr = header.startsWith("erdiagram");
+        boolean isFlow = header.startsWith("flowchart") || header.startsWith("graph");
+        if (!(er ? isEr : isFlow) || code.lines().count() < 3) {
+            throw new IllegalArgumentException("Unexpected Mermaid header: " + header);
         }
-        return made;
+        return code;
     }
 
-    private static String normalizeDiagramType(String t) {
-        if (t == null) return "Flowchart";
-        String u = t.trim().toUpperCase().replace(" ", "").replace("_", "");
-        return switch (u) {
-            case "DFD" -> "DFD";
-            case "ER", "ERD" -> "ER";
-            case "USECASE" -> "Use Case";
-            default -> "Flowchart";
-        };
+    private void saveDiagram(Ctx c, String type, String name, String mermaidScript) {
+        PmDiagramTabRequest dq = new PmDiagramTabRequest();
+        dq.setProjectId(c.projectId);
+        dq.setName(name);
+        dq.setDiagramType(type);
+        dq.setMermaidScript(mermaidScript);
+        // system-level diagram: trace to every requirement so change-request impact analysis finds it
+        dq.setRelatedRequirementIds(c.requirements.stream().map(Ref::id).toList());
+        dq.setGraphData(new LinkedHashMap<>());
+        dq.setIsActive(true);
+        PmDiagramTabResponse tab = diagramTabService.createTab(dq);
+        c.diagrams.add(new Ref(tab.getId(), name));
     }
 
     private void stepDesignReviews(Ctx c, StepState step) {
@@ -1003,15 +966,20 @@ public class AiProjectPipelineJobService {
 
     private static final String QUOTA_WARNING = "⚠ โควต้า/เครดิต/โทเคนของ AI หมด ขั้นตอนที่เหลือจึงสร้างไม่ได้ กรุณาเติมเครดิตหรือเปลี่ยนโมเดลแล้วลองใหม่";
     private static final int AI_MAX_ATTEMPTS = 3;
-    private static final String RETRY_HINT = "\n\nIMPORTANT: your previous answer was empty, truncated or not valid JSON. "
-            + "Answer again with COMPLETE valid JSON only: fewer items, short texts, every bracket closed.";
+    private static final String RETRY_HINT = "\n\nIMPORTANT: your previous answer was empty, truncated or in the wrong format. "
+            + "Answer again in the EXACT requested format only (complete and valid): fewer items, short texts, every bracket closed.";
 
     /** เรียก AI + parse JSON; ล้มเหลว (API error/429/timeout/JSON ถูกตัด) ลองใหม่สูงสุด 3 ครั้ง โดยบอกให้ตอบสั้นลงในรอบถัดไป */
     private JsonNode ask(Ctx c, String systemPrompt, String userPrompt, boolean withAttachments) {
+        return askRetry(c, systemPrompt, userPrompt, withAttachments, this::parseJson);
+    }
+
+    /** parser คืน null หรือโยน exception = ใช้ไม่ได้ → ลองใหม่ */
+    private <T> T askRetry(Ctx c, String systemPrompt, String userPrompt, boolean withAttachments, Function<String, T> parser) {
         if (c.quotaError != null) return null;
         for (int attempt = 1; attempt <= AI_MAX_ATTEMPTS; attempt++) {
-            JsonNode root = askOnce(c, attempt == 1 ? systemPrompt : systemPrompt + RETRY_HINT, userPrompt, withAttachments);
-            if (root != null && root.isObject() && !root.isEmpty()) return root;
+            T result = askOnce(c, attempt == 1 ? systemPrompt : systemPrompt + RETRY_HINT, userPrompt, withAttachments, parser);
+            if (result != null) return result;
             if (c.quotaError != null) break;
             log.warn("AI pipeline: attempt {}/{} returned no usable JSON", attempt, AI_MAX_ATTEMPTS);
             if (attempt < AI_MAX_ATTEMPTS) {
@@ -1026,7 +994,7 @@ public class AiProjectPipelineJobService {
         return null;
     }
 
-    private JsonNode askOnce(Ctx c, String systemPrompt, String userPrompt, boolean withAttachments) {
+    private <T> T askOnce(Ctx c, String systemPrompt, String userPrompt, boolean withAttachments, Function<String, T> parser) {
         try {
             String raw = aiProvider.generateRawResponse(userPrompt, systemPrompt, c.req.getModel(),
                     withAttachments ? c.req.getAttachments() : null);
@@ -1036,6 +1004,15 @@ public class AiProjectPipelineJobService {
                 return null;
             }
             if (raw == null || raw.isBlank() || "{}".equals(raw.trim())) return null;
+            return parser.apply(raw);
+        } catch (Exception e) {
+            log.warn("AI pipeline: cannot parse AI response: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    private JsonNode parseJson(String raw) {
+        try {
             Matcher m = JSON_PATTERN.matcher(raw);
             String json;
             if (m.find()) {
@@ -1046,10 +1023,10 @@ public class AiProjectPipelineJobService {
                 int e = json.lastIndexOf('}');
                 if (s >= 0 && e > s) json = json.substring(s, e + 1);
             }
-            return objectMapper.readTree(json);
+            JsonNode root = objectMapper.readTree(json);
+            return root != null && root.isObject() && !root.isEmpty() ? root : null;
         } catch (Exception e) {
-            log.warn("AI pipeline: cannot parse AI response: {}", e.getMessage());
-            return null;
+            throw new IllegalArgumentException(e.getMessage(), e);
         }
     }
 

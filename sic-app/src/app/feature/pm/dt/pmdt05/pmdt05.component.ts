@@ -15,13 +15,15 @@ import {
   ViewChild,
   ChangeDetectionStrategy
 } from '@angular/core';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { Subject, take, takeUntil, interval } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { DiagramService } from './diagram.service';
-import { DrawioConnectorService } from './drawio-connector.service';
+import { DrawioConnectorService, MermaidInsertResult } from './drawio-connector.service';
 import { Pmdt05AComponent } from './pmdt05A/pmdt05A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
 import { NewDiagramDialogComponent, DiagramEditData } from './new-diagram-dialog.component';
@@ -59,6 +61,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private injector = inject(Injector);
   private isCreateDialogOpened = false;
 
+  /** draw.io ที่ host เอง (docker/drawio) พร้อมปลั๊กอิน sicMermaid */
+  readonly drawioSrc: SafeResourceUrl = inject(DomSanitizer).bypassSecurityTrustResourceUrl(
+    `${environment.drawioUrl}/?embed=1&proto=json&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1&p=sicMermaid`,
+  );
+
   // ===== Global project context (navbar sic-context-switcher) =====
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
   readonly activeProjectId = computed(() => {
@@ -94,7 +101,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     return !!(tab?.isApproved || tab?.approvalStatus === 'APPROVED');
   }
 
-  insertAiXml(xml: string): void {
+  /** Mermaid จากแชท AI: ให้ draw.io แปลง (mode merge) แล้วรับ XML กลับมา merge เข้าแผนภาพที่เปิดอยู่ ดู onMermaidResult */
+  insertAiMermaid(code: string): void {
     if (this.currentTabLocked) {
       this.dialogService.warn(
         this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_TITLE'),
@@ -102,7 +110,25 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       );
       return;
     }
-    this.drawioService.mergeXml(xml);
+    this.drawioService.insertMermaid(code, 'merge');
+  }
+
+  private onMermaidResult(res: MermaidInsertResult): void {
+    if (res.stage === 'inserted') {
+      // diagram ที่สร้างจาก Mermaid (เช่น จาก AI pipeline) เพิ่งถูกวาด → ขอ XML ไปให้ auto-save บันทึกกลับ
+      this.drawioService.requestXml();
+    } else if (res.stage === 'parsed' && res.xml) {
+      this.drawioService.mergeXml(res.xml);
+      this.dialogService.success(
+        this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_TITLE'),
+        this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_MSG'),
+      );
+    } else {
+      this.dialogService.warn(
+        this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_TITLE'),
+        res.message || this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_MSG'),
+      );
+    }
   }
 
   private isLoadingDiagram = false;
@@ -133,6 +159,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     this.drawioService.init(this.iframe.nativeElement);
+    this.drawioService.mermaid$.pipe(takeUntil(this.destroy$)).subscribe((res) => this.onMermaidResult(res));
 
     this.drawioService.isReady$.pipe(takeUntil(this.destroy$)).subscribe((ready: any) => {
       this.drawioReady = ready;
@@ -689,6 +716,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         xml = this.ensureValidDrawioXml(xml);
         console.log('[Diagram] XML length after validation:', xml.length);
         this.lastSavedXml = xml;
+        // diagram ที่มีแต่ Mermaid (ยังไม่เคยมี XML เช่น สร้างจาก AI pipeline) → รอ draw.io โหลดหน้าเปล่าเสร็จ แล้วให้มันแปลง Mermaid วาดให้เอง
+        if (!diagram.graphData?.xml && diagram.mermaidScript?.trim()) {
+          this.drawioService.loaded$
+            .pipe(take(1), takeUntil(this.destroy$))
+            .subscribe(() => this.drawioService.insertMermaid(diagram.mermaidScript, 'replace'));
+        }
         this.drawioService.loadXml(xml, true);
       },
       error: (err) => {
@@ -763,8 +796,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       }
     }
 
-    // ถ้ายังไม่มี requirementId ให้แจ้งเตือนและไม่บันทึก
-    if (!requirementId) {
+    // ถ้ายังไม่มี requirementId ให้แจ้งเตือนและไม่บันทึก (ยกเว้น diagram ระดับระบบที่สร้างจาก Mermaid/AI pipeline ซึ่งผูกกับ requirement ผ่าน related ids อยู่แล้ว)
+    if (!requirementId && !this.currentDiagram?.mermaidScript?.trim()) {
       console.warn('[AutoSave] No requirementId found for this diagram, cannot save.');
       if (manual) {
         this.dialogService.warn(this.translate.instant('PMDT05_MISSING_REQ_TITLE'), this.translate.instant('PMDT05_MISSING_REQ_MSG'));
@@ -777,7 +810,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     const updatedTab = {
       ...diagram,
       graphData: { xml },
-      requirementId: requirementId, // ส่ง requirementId ไปด้วย
+      requirementId: requirementId || undefined, // ส่ง requirementId ไปด้วย
       state: 3,
       rowVersion: this.currentDiagram?.rowVersion ?? diagram.rowVersion ?? null
     };

@@ -140,7 +140,6 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
     @Transactional
     public AiGenerateSqlResponse processAndSaveSql(AiGenerateSqlRequest request) {
         String vendor = (request.getVendor() != null && !request.getVendor().isBlank()) ? request.getVendor() : "postgresql";
-        String engine = (request.getEngine() != null && !request.getEngine().isBlank()) ? request.getEngine() : "ai";
         String tabId = request.getTabId();
 
         ErXmlParserServiceImpl.DatabaseModel model = parser.parse(request.getXml());
@@ -158,25 +157,30 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
                 ? historyRepository.findByTabIdOrderByVersionNoDesc(tabId)
                 : List.of();
 
+        // Calculate next version number
+        Integer nextVersion = 1;
         if (!previousHistories.isEmpty()) {
-            // Already has history -> Smart Auto Migration Mode
+            nextVersion = previousHistories.get(0).getVersionNo() + 1;
+        }
+
+        boolean isMigration = "MIGRATION".equalsIgnoreCase(request.getMode());
+        if (request.getMode() == null || request.getMode().isBlank()) {
+            isMigration = !previousHistories.isEmpty();
+        }
+
+        if (isMigration && !previousHistories.isEmpty()) {
+            // Already has history and requested MIGRATION -> Smart Auto Migration Mode
             mode = "MIGRATION";
             PmDiagramSqlHistory latest = previousHistories.get(0);
             log.info("Generating Auto MIGRATION SQL based on {} previous history scripts for tab {}", previousHistories.size(), tabId);
             sqlResult = generateMigrationSqlWithAi(currentStructureJson, previousHistories, vendor, request.getModel());
             summaryNote = "Auto migration script following v" + latest.getVersionNo();
         } else {
-            // No history -> Initial Full Schema Mode
+            // No history or requested FULL -> Full Schema Mode
             mode = "FULL";
-            log.info("Generating Initial FULL DDL SQL for tab {}", tabId);
+            log.info("Generating FULL DDL SQL for tab {}, version {}", tabId, nextVersion);
             sqlResult = generateSqlWithAi(request.getXml(), vendor, request.getModel());
-            summaryNote = "Initial full schema DDL (v1)";
-        }
-
-        // Calculate next version number
-        Integer nextVersion = 1;
-        if (!previousHistories.isEmpty()) {
-            nextVersion = previousHistories.get(0).getVersionNo() + 1;
+            summaryNote = previousHistories.isEmpty() ? "Initial full schema DDL (v1)" : "Full schema regenerated (v" + nextVersion + ")";
         }
 
         String username = null;
@@ -194,7 +198,7 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
                     .versionNo(nextVersion)
                     .generationType(mode)
                     .vendor(vendor)
-                    .engine(engine)
+                    .engine("ai")
                     .summaryNote(summaryNote)
                     .schemaJson(currentStructureJson)
                     .generatedSql(sqlResult)

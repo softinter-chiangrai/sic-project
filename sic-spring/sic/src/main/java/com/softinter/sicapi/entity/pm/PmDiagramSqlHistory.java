@@ -44,7 +44,7 @@ public class PmDiagramSqlHistory {
     private String vendor;
 
     @Column(name = "engine", nullable = false, length = 20)
-    private String engine; // 'ai' or 'parser'
+    private String engine; // always 'ai' (older rows may hold 'parser')
 
     @Column(name = "summary_note", columnDefinition = "TEXT")
     private String summaryNote;

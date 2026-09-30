@@ -245,7 +245,7 @@
     }
     <iframe
       #drawioIframe
-      src="https://embed.diagrams.net/?embed=1&proto=json&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1"
+      [src]="drawioSrc"
       class="block w-full h-full border-none bg-white"
       [class.pointer-events-none]="currentTabLocked"
       frameborder="0"
@@ -292,7 +292,7 @@
     <div class="flex-1 flex flex-col overflow-hidden min-h-0">
       <app-pmdt05a
         [diagramId]="currentTabId"
-        (insertXml)="insertAiXml($event)"
+        (insertMermaid)="insertAiMermaid($event)"
         class="flex-1 flex flex-col h-full overflow-hidden"
       ></app-pmdt05a>
     </div>
