@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, OnDestroy, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -49,7 +49,26 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     effect(() => {
       if (this.pipelineSvc.isWizardOpen()) {
         this.loadCustomers();
+        untracked(() => this.resumeRunningJob());
       }
+    });
+  }
+
+  /** เปิด wizard ใหม่ระหว่างงานยังรันอยู่ -> กลับเข้าหน้า "กำลังสร้าง" แล้ว poll ต่อ */
+  private resumeRunningJob(): void {
+    if (this.isProcessing()) return;
+    this.pipelineSvc.listJobHistory(0, 5).subscribe({
+      next: (res) => {
+        // ponytail: 30 นาที กัน job ที่ค้าง RUNNING จาก backend restart; ถ้าต้องแม่นกว่านี้ให้ backend ปิด job ค้างตอน startup
+        const cutoff = Date.now() - 30 * 60 * 1000;
+        const job = (res.content || []).find((j) => !j.finished && j.createdDate && new Date(j.createdDate).getTime() > cutoff);
+        if (!job || this.isProcessing()) return;
+        this.isProcessing.set(true);
+        this.jobSteps.set(job.steps || []);
+        this.currentStep.set(3);
+        this.pollJob(job.jobId);
+      },
+      error: () => {},
     });
   }
 
@@ -328,6 +347,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   close(): void {
     this.stopPolling();
     this.pipelineSvc.closeWizard();
+    this.isProcessing.set(false);
     this.currentStep.set(1);
     this.prompt.set('');
     this.projectName.set('');

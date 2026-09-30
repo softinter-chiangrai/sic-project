@@ -203,12 +203,24 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['apiUrl'] || changes['params']) {
+    const apiUrlChanged = !!changes['apiUrl'];
+    const paramsChanged = !!changes['params'] && !this.areParamsEqual(changes['params'].previousValue, changes['params'].currentValue);
+
+    if (apiUrlChanged || paramsChanged) {
       if (this.ready && this.apiUrl) {
         this.pageNumber = 1;
         this.loadOptions(true);
       }
     }
+  }
+
+  private areParamsEqual(prev: any, curr: any): boolean {
+    if (prev === curr) return true;
+    if (!prev || !curr || typeof prev !== 'object' || typeof curr !== 'object') return false;
+    const prevKeys = Object.keys(prev);
+    const currKeys = Object.keys(curr);
+    if (prevKeys.length !== currKeys.length) return false;
+    return prevKeys.every((key) => prev[key] === curr[key]);
   }
 
   ngAfterContentInit(): void {

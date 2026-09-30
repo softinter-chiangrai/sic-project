@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild, computed, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, OnInit, ViewChild, computed, effect, inject, signal, untracked } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, AiModelOption } from '../../config/ai-models.config';
@@ -53,6 +53,15 @@ export class SicAiNavigatorComponent implements OnInit {
   get availableModels(): AiModelOption[] {
     return this.aiModelsSvc.models();
   }
+
+  /** Selected model no longer in the list -> fall back to default. Signal write must live outside the template. */
+  private readonly healModel = effect(() => {
+    const models = this.aiModelsSvc.models();
+    const currentId = this.navSvc.selectedModel();
+    if (models.length === 0 || models.some((m) => m.id === currentId)) return;
+    const def = this.defaultModel(models);
+    if (def) untracked(() => this.navSvc.setModel(def.id));
+  });
 
   ngOnInit(): void {
     try {
@@ -173,12 +182,12 @@ export class SicAiNavigatorComponent implements OnInit {
     if (found) {
       return found.name.split(' (')[0];
     }
-    const def = models.find((m) => m.recommended) || models[0];
-    if (def) {
-      this.navSvc.setModel(def.id);
-      return def.name.split(' (')[0];
-    }
-    return currentId;
+    const def = this.defaultModel(models);
+    return def ? def.name.split(' (')[0] : currentId;
+  }
+
+  private defaultModel(models: AiModelOption[]): AiModelOption | undefined {
+    return models.find((m) => m.recommended) || models[0];
   }
 
   startNewChat(): void {

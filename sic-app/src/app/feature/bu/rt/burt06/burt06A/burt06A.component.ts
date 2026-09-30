@@ -57,6 +57,11 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
     params: { group: 'PM', parameterCode: 'APPROVAL_MODE' },
   };
 
+  readonly documentTypeComboboxConfig = {
+    apiUrl: `${environment.apiBaseUrl}/api/db/parameter/lov`,
+    params: { group: 'PM', parameterCode: 'DOCUMENT_TYPE' },
+  };
+
   isEdit = false;
   flowId: string | null = null;
   isLoading = signal(false);

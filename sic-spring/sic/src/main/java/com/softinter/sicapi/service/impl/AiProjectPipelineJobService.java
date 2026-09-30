@@ -148,7 +148,7 @@ public class AiProjectPipelineJobService {
     }
 
     private static class Job {
-        final UUID id = UUID.randomUUID();
+        volatile UUID id; // assigned by the DB entity on first persistJob()
         final long createdAt = System.currentTimeMillis();
         final java.time.Instant createdDate = java.time.Instant.now();
         final List<StepState> steps = new ArrayList<>();
@@ -215,8 +215,8 @@ public class AiProjectPipelineJobService {
         if (on(request.getIncludeManuals())) job.steps.add(new StepState("MANUAL", "คู่มือการใช้งาน"));
         if (on(request.getIncludeInvoices())) job.steps.add(new StepState("INVOICE", "ใบแจ้งหนี้ (ร่าง)"));
         if (on(request.getIncludeMa())) job.steps.add(new StepState("MA", "MA Ticket / ต่ออายุ MA"));
-        jobs.put(job.id, job);
         persistJob(job, businessId, userId, request);
+        jobs.put(job.id, job);
 
         executor.submit(() -> run(job, request, businessId, userId));
         return job.id;
@@ -286,8 +286,8 @@ public class AiProjectPipelineJobService {
 
     private void persistJob(Job job, UUID businessId, String userId, AiProjectPipelineRequest request) {
         try {
-            AiPipelineJob entity = jobRepository.findById(job.id).orElseGet(AiPipelineJob::new);
-            entity.setId(job.id);
+            // New rows must not carry a pre-set id: @GeneratedValue + null @Version makes Hibernate treat it as detached.
+            AiPipelineJob entity = job.id == null ? new AiPipelineJob() : jobRepository.findById(job.id).orElseGet(AiPipelineJob::new);
             entity.setBusinessId(businessId);
             entity.setCreatedByUserId(userId);
             entity.setProjectName(job.projectName != null ? job.projectName : request.getProjectName());
@@ -312,9 +312,11 @@ public class AiProjectPipelineJobService {
             }
             entity.setSteps(stepsJson);
             entity.setCounts(new LinkedHashMap<>(job.counts));
-            jobRepository.save(entity);
+            UUID savedId = jobRepository.save(entity).getId();
+            if (job.id == null) job.id = savedId;
         } catch (Exception e) {
             log.error("Failed to persist AI pipeline job history {}", job.id, e);
+            if (job.id == null) job.id = UUID.randomUUID(); // history lost, but the job can still run and be polled
         }
     }
 
@@ -1003,10 +1005,20 @@ public class AiProjectPipelineJobService {
                 c.quotaError = quota;
                 return null;
             }
-            if (raw == null || raw.isBlank() || "{}".equals(raw.trim())) return null;
-            return parser.apply(raw);
+            if (raw == null || raw.isBlank() || "{}".equals(raw.trim())) {
+                log.warn("AI pipeline: empty response (null/blank/empty object) from model {}; see 'AI API' log above for HTTP/network cause", c.req.getModel());
+                return null;
+            }
+            try {
+                return parser.apply(raw);
+            } catch (Exception e) {
+                String t = raw.trim();
+                log.warn("AI pipeline: cannot parse response ({} chars, ends with '{}'): {}",
+                        t.length(), t.substring(Math.max(0, t.length() - 80)).replace('\n', ' '), e.getMessage());
+                return null;
+            }
         } catch (Exception e) {
-            log.warn("AI pipeline: cannot parse AI response: {}", e.getMessage());
+            log.warn("AI pipeline: AI call failed: {}", e.getMessage());
             return null;
         }
     }

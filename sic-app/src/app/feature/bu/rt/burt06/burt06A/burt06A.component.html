@@ -54,8 +54,8 @@
             <sic-combobox
               [label]="'BURT06A_DOCTYPE_LABEL' | translate"
               formControlName="documentType"
-              [apiUrl]="apiBaseUrl + '/api/db/parameter/lov'"
-              [params]="{ group: 'PM', parameterCode: 'DOCUMENT_TYPE' }"
+              [apiUrl]="documentTypeComboboxConfig.apiUrl"
+              [params]="documentTypeComboboxConfig.params"
               valueField="value"
               textField="text"
               [required]="true"
@@ -120,7 +120,7 @@
             </div>
           }
 
-          <div formArrayName="steps" class="space-y-4" @listAnimation>
+          <div formArrayName="steps" class="space-y-4">
             @for (step of steps.controls; track step; let i = $index) {
               <div
                 [formGroupName]="i"

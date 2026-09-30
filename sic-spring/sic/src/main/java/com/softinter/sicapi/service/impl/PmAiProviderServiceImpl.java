@@ -25,7 +25,6 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import jakarta.annotation.PostConstruct;
 
 @Slf4j
 @Service
@@ -71,13 +70,6 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     private static final Pattern MERMAID_BLOCK_PATTERN = Pattern.compile("```mermaid\\s*([\\s\\S]*?)```");
     private static final Pattern NAME_PATTERN = Pattern.compile("(?:name|title|ชื่อ)\\s*[:：]\\s*(.+?)(?:\\n|$)", Pattern.CASE_INSENSITIVE);
-
-    @PostConstruct
-    public void logConfig() {
-        log.info("AI Default Model: {}", defaultModel);
-        log.info("AI Claude Model: {}, URL: {}", claudeModel, claudeApiUrl);
-        log.info("AI Gemini Model: {}, URL: {}", geminiModel, geminiApiUrl);
-    }
 
     @Override
     public List<AiModelResponse> getAvailableModels() {
@@ -395,6 +387,14 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 JsonNode root = objectMapper.readTree(response.getBody());
+
+                String finishReason = "claude".equalsIgnoreCase(config.provider)
+                        ? root.path("stop_reason").asText("")
+                        : root.path("choices").path(0).path("finish_reason").asText("");
+                if ("length".equals(finishReason) || "max_tokens".equals(finishReason)) {
+                    log.warn("AI response truncated by token limit (finish_reason={}, max_tokens={}) for model {}",
+                            finishReason, config.maxTokens, config.targetModel);
+                }
 
                 if ("claude".equalsIgnoreCase(config.provider)) {
                     JsonNode contentNode = root.path("content");
