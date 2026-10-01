@@ -1,22 +1,68 @@
-/* Ambient glow background for Hero */
-.hero-glow {
+/* Grid background texture */
+.hero-grid-bg {
   position: absolute;
-  top: 10%;
+  inset: 0;
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(16, 185, 129, 0.08) 1px, transparent 0);
+  background-size: 32px 32px;
+  mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:host-context(.dark) .hero-grid-bg {
+  background-image: 
+    radial-gradient(circle at 1px 1px, rgba(255, 255, 255, 0.06) 1px, transparent 0);
+}
+
+/* Ambient glow halos */
+.hero-glow-primary {
+  position: absolute;
+  top: 15%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 600px;
-  height: 380px;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.08) 50%, transparent 70%);
+  width: min(90vw, 800px);
+  height: 420px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.16) 0%, rgba(14, 165, 233, 0.08) 45%, transparent 70%);
+  filter: blur(90px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:host-context(.dark) .hero-glow-primary {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(99, 102, 241, 0.14) 50%, transparent 70%);
+}
+
+.hero-glow-secondary {
+  position: absolute;
+  top: 60%;
+  right: 5%;
+  width: 450px;
+  height: 350px;
+  background: radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
   filter: blur(80px);
   pointer-events: none;
   z-index: 0;
 }
 
-:host-context(.dark) .hero-glow {
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(99, 102, 241, 0.12) 50%, transparent 70%);
+/* Mockup window styling */
+.mockup-window {
+  box-shadow: 
+    0 0 0 1px rgba(0, 0, 0, 0.06),
+    0 24px 60px -12px rgba(0, 0, 0, 0.12),
+    0 12px 24px -8px rgba(16, 185, 129, 0.06);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s ease;
 }
 
-/* Card hover glow */
+:host-context(.dark) .mockup-window {
+  box-shadow: 
+    0 0 0 1px rgba(255, 255, 255, 0.08),
+    0 24px 70px -15px rgba(0, 0, 0, 0.6),
+    0 0 40px -10px rgba(16, 185, 129, 0.15);
+}
+
+/* Bento card styling */
 .bento-card {
   position: relative;
   overflow: hidden;
@@ -24,12 +70,14 @@
 }
 
 .bento-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.08);
+  transform: translateY(-3px);
+  box-shadow: 0 16px 36px -12px rgba(0, 0, 0, 0.09);
+  border-color: rgba(16, 185, 129, 0.35);
 }
 
 :host-context(.dark) .bento-card:hover {
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.55), 0 0 20px -5px rgba(16, 185, 129, 0.12);
+  border-color: rgba(16, 185, 129, 0.4);
 }
 
 /* Shimmer animation for hero pill */
@@ -39,7 +87,22 @@
 }
 
 .shimmer-badge {
-  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.2) 50%, rgba(16, 185, 129, 0.08) 100%);
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.22) 50%, rgba(16, 185, 129, 0.08) 100%);
   background-size: 200% 100%;
   animation: shimmer 4s infinite linear;
+}
+
+/* Smooth step line indicator */
+.workflow-step-btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Reduced motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-badge {
+    animation: none;
+  }
+  .bento-card, .mockup-window {
+    transition: none;
+  }
 }

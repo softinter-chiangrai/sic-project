@@ -1,82 +1,495 @@
-<div class="relative min-h-[calc(100vh-73px)] bg-[var(--bg)] text-[var(--text)] overflow-hidden">
-  <!-- Ambient background glow -->
-  <div class="hero-glow"></div>
+<div class="relative min-h-[calc(100vh-73px)] bg-[var(--bg)] text-[var(--text)] overflow-hidden selection:bg-emerald-500/20 selection:text-emerald-500">
+  
+  <!-- Subtle ambient textures and glow -->
+  <div class="hero-grid-bg"></div>
+  <div class="hero-glow-primary"></div>
+  <div class="hero-glow-secondary"></div>
 
-  <!-- Hero Section -->
-  <section class="relative z-10 mx-auto max-w-6xl px-4 pt-16 pb-20 text-center sm:px-6 lg:px-8">
-    <!-- Pill Badge -->
-    <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 px-4 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 shimmer-badge mb-6 shadow-xs">
+  <!-- ==========================================
+       HERO SECTION
+       ========================================== -->
+  <section class="relative z-10 mx-auto max-w-7xl px-4 pt-16 pb-16 sm:px-6 lg:px-8 text-center">
+    
+    <!-- Top Pill Announcement Badge -->
+    <div class="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/5 px-4 py-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400 shimmer-badge mb-6 shadow-xs backdrop-blur-xs">
       <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
       <span>{{ 'HOME_HERO_BADGE' | translate }}</span>
+      <span class="hidden sm:inline text-emerald-500/40">|</span>
+      <span class="hidden sm:inline text-[11px] font-normal text-[var(--text-muted)]">{{ 'HOME_HERO_RELEASE_TAG' | translate }}</span>
     </div>
 
     <!-- Main Headline -->
-    <h1 class="mx-auto max-w-4xl text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl text-[var(--text-active)] leading-tight sm:leading-tight">
+    <h1 class="mx-auto max-w-5xl text-3xl font-semibold sm:font-bold tracking-tight sm:text-5xl lg:text-6xl text-[var(--text-active)] leading-tight sm:leading-tight">
       {{ 'HOME_HERO_TITLE' | translate }}
     </h1>
 
     <!-- Subtitle -->
-    <p class="mx-auto mt-6 max-w-2xl text-base sm:text-lg text-[var(--text-muted)] leading-relaxed font-light">
+    <p class="mx-auto mt-6 max-w-3xl text-base sm:text-lg text-[var(--text-muted)] leading-relaxed font-normal">
       {{ 'HOME_HERO_SUBTITLE' | translate }}
     </p>
 
-    <!-- CTAs -->
+    <!-- CTAs and Action Strip -->
     <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
-      <sic-button variant="solid" color="primary" (click)="login()" class="px-6 py-2.5 text-base font-medium shadow-md shadow-emerald-500/20 hover:scale-[1.02] transition-transform">
-        <span class="flex items-center gap-2">
-          {{ 'HOME_CTA_START' | translate }}
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
-          </svg>
-        </span>
-      </sic-button>
+      <button
+        type="button"
+        (click)="login()"
+        class="group inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-600 px-7 py-3 text-base font-semibold text-white shadow-lg shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/35 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+        <span>{{ 'HOME_CTA_START' | translate }}</span>
+        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+        </svg>
+      </button>
 
       <button
         type="button"
         (click)="scrollToFeatures()"
-        class="inline-flex items-center gap-2 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] px-5 py-2.5 text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-emerald-500/40 transition-colors cursor-pointer shadow-xs">
-        {{ 'HOME_CTA_EXPLORE' | translate }}
+        class="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--sidebar)] px-6 py-3 text-base font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:border-emerald-500/40 transition-all cursor-pointer shadow-xs">
+        <span>{{ 'HOME_CTA_EXPLORE' | translate }}</span>
         <svg class="w-4 h-4 text-[var(--text-muted)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
         </svg>
       </button>
     </div>
 
-    <!-- Quick Stats Strip -->
-    <div class="mx-auto mt-16 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6 max-w-4xl border-y border-[var(--border)] py-8">
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-bold text-emerald-500">4</div>
-        <div class="text-xs sm:text-sm font-medium text-[var(--text)] mt-1">{{ 'HOME_STAT_MODULES' | translate }}</div>
-        <div class="text-[11px] text-[var(--text-muted)] mt-0.5">{{ 'HOME_STAT_MODULES_DESC' | translate }}</div>
+    <!-- Trust Micro-Badges -->
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-4 sm:gap-6 text-xs text-[var(--text-muted)]">
+      <div class="inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ 'HOME_HERO_TRUST_SSO' | translate }}</span>
       </div>
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-bold text-emerald-500">100%</div>
-        <div class="text-xs sm:text-sm font-medium text-[var(--text)] mt-1">{{ 'HOME_STAT_SECURITY' | translate }}</div>
-        <div class="text-[11px] text-[var(--text-muted)] mt-0.5">{{ 'HOME_STAT_SECURITY_DESC' | translate }}</div>
+      <div class="inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ 'HOME_HERO_TRUST_STORAGE' | translate }}</span>
       </div>
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-bold text-emerald-500">Real-time</div>
-        <div class="text-xs sm:text-sm font-medium text-[var(--text)] mt-1">{{ 'HOME_STAT_REALTIME' | translate }}</div>
-        <div class="text-[11px] text-[var(--text-muted)] mt-0.5">{{ 'HOME_STAT_REALTIME_DESC' | translate }}</div>
+      <div class="inline-flex items-center gap-1.5">
+        <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+        </svg>
+        <span>{{ 'HOME_HERO_TRUST_RBAC' | translate }}</span>
       </div>
-      <div class="text-center">
-        <div class="text-2xl sm:text-3xl font-bold text-emerald-500">99.9%</div>
-        <div class="text-xs sm:text-sm font-medium text-[var(--text)] mt-1">Uptime SLA</div>
-        <div class="text-[11px] text-[var(--text-muted)] mt-0.5">Cloud-ready Architecture</div>
+    </div>
+
+    <!-- ==========================================
+         HERO LIVE INTERACTIVE APP WINDOW (MOCKUP)
+         ========================================== -->
+    <div class="mt-14 mx-auto max-w-5xl text-left">
+      <div class="mockup-window rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] overflow-hidden">
+        
+        <!-- App Window Header Bar -->
+        <div class="flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_60%,transparent)] px-4 py-3">
+          <div class="flex items-center gap-2">
+            <span class="h-3 w-3 rounded-full bg-rose-500/80"></span>
+            <span class="h-3 w-3 rounded-full bg-amber-500/80"></span>
+            <span class="h-3 w-3 rounded-full bg-emerald-500/80"></span>
+            <span class="ml-3 hidden sm:inline text-xs font-mono text-[var(--text-muted)]">sic-app.softinter.co.th/feature/dashboard</span>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+              <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              {{ 'HOME_MOCKUP_SLA' | translate }}
+            </span>
+          </div>
+        </div>
+
+        <!-- Interactive Module Tabs -->
+        <div class="flex border-b border-[var(--border)] bg-[var(--bg)]/50 px-3 pt-2 gap-1 overflow-x-auto">
+          <button
+            type="button"
+            (click)="setHeroTab('pm')"
+            class="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-lg transition-all cursor-pointer"
+            [class.bg-[var(--sidebar)]]="activeHeroTab() === 'pm'"
+            [class.text-emerald-600]="activeHeroTab() === 'pm'"
+            [class.dark:text-emerald-400]="activeHeroTab() === 'pm'"
+            [class.border-t-2]="activeHeroTab() === 'pm'"
+            [class.border-emerald-500]="activeHeroTab() === 'pm'"
+            [class.text-[var(--text-muted)]]="activeHeroTab() !== 'pm'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
+            </svg>
+            {{ 'HOME_TAB_PM' | translate }}
+          </button>
+
+          <button
+            type="button"
+            (click)="setHeroTab('bu')"
+            class="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-lg transition-all cursor-pointer"
+            [class.bg-[var(--sidebar)]]="activeHeroTab() === 'bu'"
+            [class.text-blue-600]="activeHeroTab() === 'bu'"
+            [class.dark:text-blue-400]="activeHeroTab() === 'bu'"
+            [class.border-t-2]="activeHeroTab() === 'bu'"
+            [class.border-blue-500]="activeHeroTab() === 'bu'"
+            [class.text-[var(--text-muted)]]="activeHeroTab() !== 'bu'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+            </svg>
+            {{ 'HOME_TAB_BU' | translate }}
+          </button>
+
+          <button
+            type="button"
+            (click)="setHeroTab('su')"
+            class="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-lg transition-all cursor-pointer"
+            [class.bg-[var(--sidebar)]]="activeHeroTab() === 'su'"
+            [class.text-purple-600]="activeHeroTab() === 'su'"
+            [class.dark:text-purple-400]="activeHeroTab() === 'su'"
+            [class.border-t-2]="activeHeroTab() === 'su'"
+            [class.border-purple-500]="activeHeroTab() === 'su'"
+            [class.text-[var(--text-muted)]]="activeHeroTab() !== 'su'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            {{ 'HOME_TAB_SU' | translate }}
+          </button>
+
+          <button
+            type="button"
+            (click)="setHeroTab('ai')"
+            class="flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-t-lg transition-all cursor-pointer"
+            [class.bg-[var(--sidebar)]]="activeHeroTab() === 'ai'"
+            [class.text-amber-600]="activeHeroTab() === 'ai'"
+            [class.dark:text-amber-400]="activeHeroTab() === 'ai'"
+            [class.border-t-2]="activeHeroTab() === 'ai'"
+            [class.border-amber-500]="activeHeroTab() === 'ai'"
+            [class.text-[var(--text-muted)]]="activeHeroTab() !== 'ai'">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+            </svg>
+            {{ 'HOME_TAB_AI' | translate }}
+          </button>
+        </div>
+
+        <!-- Tab Body Content -->
+        <div class="p-5 sm:p-7">
+          
+          <!-- TAB 1: PM Delivery Matrix -->
+          @if (activeHeroTab() === 'pm') {
+            <div class="space-y-5 animate-fade-in">
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-[var(--border)]">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">PRJ-2026-08</span>
+                    <h3 class="text-base font-bold text-[var(--text-active)]">{{ 'HOME_MOCKUP_PM_TITLE' | translate }}</h3>
+                  </div>
+                  <p class="text-xs text-[var(--text-muted)] mt-1">{{ 'HOME_MOCKUP_PM_SUBTITLE' | translate }}</p>
+                </div>
+                <div class="flex items-center gap-3">
+                  <div class="text-right">
+                    <span class="text-xs text-[var(--text-muted)]">{{ 'HOME_MOCKUP_PM_VELOCITY' | translate }}</span>
+                    <div class="text-sm font-bold text-emerald-500">{{ 'HOME_MOCKUP_PM_VELOCITY_VAL' | translate }}</div>
+                  </div>
+                  <div class="h-10 w-10 rounded-xl bg-emerald-500/10 grid place-items-center text-emerald-500 font-bold text-xs">
+                    84%
+                  </div>
+                </div>
+              </div>
+
+              <!-- Milestone Step Progress Track -->
+              <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs text-[var(--text-muted)]">
+                  <span class="font-medium text-[var(--text)]">{{ 'HOME_MOCKUP_PM_PIPE_TITLE' | translate }}</span>
+                  <span class="font-mono">{{ 'HOME_MOCKUP_PM_PIPE_STAGE' | translate }}</span>
+                </div>
+                <div class="h-2 w-full rounded-full bg-[var(--border)] overflow-hidden">
+                  <div class="h-full rounded-full bg-linear-to-r from-emerald-500 via-teal-400 to-emerald-400 w-[84%] transition-all duration-500"></div>
+                </div>
+              </div>
+
+              <!-- Milestone Cards Grid -->
+              <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+                  <div class="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-semibold mb-1">
+                    <span>M1: Spec & WBS</span>
+                    <span>✓ Done</span>
+                  </div>
+                  <p class="text-[11px] text-[var(--text-muted)]">Scope approved by BU</p>
+                </div>
+                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-3">
+                  <div class="flex items-center justify-between text-emerald-600 dark:text-emerald-400 font-semibold mb-1">
+                    <span>M2: API Core</span>
+                    <span>✓ Done</span>
+                  </div>
+                  <p class="text-[11px] text-[var(--text-muted)]">Spring Boot 3 + OIDC</p>
+                </div>
+                <div class="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3">
+                  <div class="flex items-center justify-between text-amber-600 dark:text-amber-400 font-semibold mb-1">
+                    <span>M3: UAT & SecOps</span>
+                    <span class="animate-pulse">⚡ Active</span>
+                  </div>
+                  <p class="text-[11px] text-[var(--text-muted)]">Security penetration audit</p>
+                </div>
+                <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
+                  <div class="flex items-center justify-between text-[var(--text-muted)] font-semibold mb-1">
+                    <span>M4: Production</span>
+                    <span>○ Pending</span>
+                  </div>
+                  <p class="text-[11px] text-[var(--text-muted)]">Cloud cluster deploy</p>
+                </div>
+              </div>
+
+              <!-- Mini Task Checklist Preview -->
+              <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3.5 space-y-2 text-xs">
+                <div class="flex items-center justify-between text-[var(--text-muted)] text-[11px] font-semibold uppercase tracking-wider">
+                  <span>Work Package Deliverable</span>
+                  <span>Assignee</span>
+                  <span>Status</span>
+                </div>
+                <div class="flex items-center justify-between py-1 border-t border-[var(--border)]">
+                  <div class="flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span class="font-medium text-[var(--text)]">WP-01: Keycloak SSO Realm Configuration</span>
+                  </div>
+                  <span class="text-[var(--text-muted)]">Security Team</span>
+                  <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">Verified</span>
+                </div>
+                <div class="flex items-center justify-between py-1 border-t border-[var(--border)]">
+                  <div class="flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-amber-500"></span>
+                    <span class="font-medium text-[var(--text)]">WP-02: SeaweedFS Asset Bucket Replication</span>
+                  </div>
+                  <span class="text-[var(--text-muted)]">DevOps Lead</span>
+                  <span class="rounded-md bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600 dark:text-amber-400">In Review</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- TAB 2: BU Hierarchy Tree -->
+          @if (activeHeroTab() === 'bu') {
+            <div class="space-y-4 animate-fade-in">
+              <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div>
+                  <h3 class="text-base font-bold text-[var(--text-active)]">{{ 'HOME_MOCKUP_BU_TITLE' | translate }}</h3>
+                  <p class="text-xs text-[var(--text-muted)] mt-0.5">{{ 'HOME_MOCKUP_BU_SUBTITLE' | translate }}</p>
+                </div>
+                <span class="rounded-full bg-blue-500/10 px-3 py-1 text-xs font-medium text-blue-600 dark:text-blue-400">
+                  {{ 'HOME_MOCKUP_BU_BADGE' | translate }}
+                </span>
+              </div>
+
+              <!-- Hierarchy Tree Preview -->
+              <div class="space-y-2 text-xs">
+                <div class="flex items-center justify-between rounded-xl border border-blue-500/30 bg-blue-500/5 p-3">
+                  <div class="flex items-center gap-3">
+                    <div class="h-7 w-7 rounded-lg bg-blue-500/20 text-blue-500 grid place-items-center font-bold text-xs">HQ</div>
+                    <div>
+                      <div class="font-bold text-[var(--text-active)]">Softinter Chiangrai Executive Management</div>
+                      <div class="text-[11px] text-[var(--text-muted)]">Root Business Unit · Full Cross-Project Governance</div>
+                    </div>
+                  </div>
+                  <span class="text-xs font-mono text-emerald-500 font-semibold">Active · Tier 0</span>
+                </div>
+
+                <div class="ml-6 space-y-2">
+                  <div class="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
+                    <div class="flex items-center gap-3">
+                      <div class="h-6 w-6 rounded-md bg-emerald-500/20 text-emerald-500 grid place-items-center font-bold text-[11px]">BU1</div>
+                      <div>
+                        <div class="font-semibold text-[var(--text)]">Digital Solutions & Enterprise Platforms</div>
+                        <div class="text-[10px] text-[var(--text-muted)]">8 Active Teams · 42 Resources Allocated</div>
+                      </div>
+                    </div>
+                    <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">94% Capacity</span>
+                  </div>
+
+                  <div class="flex items-center justify-between rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3">
+                    <div class="flex items-center gap-3">
+                      <div class="h-6 w-6 rounded-md bg-purple-500/20 text-purple-500 grid place-items-center font-bold text-[11px]">BU2</div>
+                      <div>
+                        <div class="font-semibold text-[var(--text)]">Cloud Infrastructure & SecOps Division</div>
+                        <div class="text-[10px] text-[var(--text-muted)]">4 Teams · Zero Trust Network Access</div>
+                      </div>
+                    </div>
+                    <span class="rounded-md bg-purple-500/10 px-2 py-0.5 text-[10px] font-semibold text-purple-600 dark:text-purple-400">Protected</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- TAB 3: SU Vendor & SOW -->
+          @if (activeHeroTab() === 'su') {
+            <div class="space-y-4 animate-fade-in">
+              <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div>
+                  <h3 class="text-base font-bold text-[var(--text-active)]">{{ 'HOME_MOCKUP_SU_TITLE' | translate }}</h3>
+                  <p class="text-xs text-[var(--text-muted)] mt-0.5">{{ 'HOME_MOCKUP_SU_SUBTITLE' | translate }}</p>
+                </div>
+                <span class="rounded-full bg-purple-500/10 px-3 py-1 text-xs font-medium text-purple-600 dark:text-purple-400">
+                  {{ 'HOME_MOCKUP_SU_BADGE' | translate }}
+                </span>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3.5 text-center">
+                  <div class="text-2xl font-bold text-purple-500">18 / 20</div>
+                  <div class="text-xs font-semibold text-[var(--text)] mt-1">{{ 'HOME_MOCKUP_SU_DELIVERABLES' | translate }}</div>
+                  <div class="text-[10px] text-[var(--text-muted)]">SOW Milestones Completed</div>
+                </div>
+                <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3.5 text-center">
+                  <div class="text-2xl font-bold text-emerald-500">100%</div>
+                  <div class="text-xs font-semibold text-[var(--text)] mt-1">{{ 'HOME_MOCKUP_SU_COMPLIANCE' | translate }}</div>
+                  <div class="text-[10px] text-[var(--text-muted)]">Keycloak Encrypted Vault</div>
+                </div>
+                <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3.5 text-center">
+                  <div class="text-2xl font-bold text-blue-500">0.8 Days</div>
+                  <div class="text-xs font-semibold text-[var(--text)] mt-1">{{ 'HOME_MOCKUP_SU_APPROVAL_TIME' | translate }}</div>
+                  <div class="text-[10px] text-[var(--text-muted)]">Automated Review Chain</div>
+                </div>
+              </div>
+
+              <!-- Vendor List -->
+              <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-3 space-y-2 text-xs">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+                    <span class="font-medium text-[var(--text)]">Softinter Cloud Partner Network</span>
+                  </div>
+                  <span class="font-mono text-emerald-500 font-semibold">Tier-1 Certified</span>
+                </div>
+                <div class="flex items-center justify-between text-[11px] text-[var(--text-muted)]">
+                  <span>Scope: Distributed Object Storage & Network Security</span>
+                  <span>Expires Dec 2026</span>
+                </div>
+              </div>
+            </div>
+          }
+
+          <!-- TAB 4: AI Delivery Engine -->
+          @if (activeHeroTab() === 'ai') {
+            <div class="space-y-4 animate-fade-in">
+              <div class="flex items-center justify-between pb-3 border-b border-[var(--border)]">
+                <div>
+                  <div class="flex items-center gap-2">
+                    <span class="rounded-md bg-amber-500/10 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400">AI Engine</span>
+                    <h3 class="text-base font-bold text-[var(--text-active)]">{{ 'HOME_MOCKUP_AI_TITLE' | translate }}</h3>
+                  </div>
+                  <p class="text-xs text-[var(--text-muted)] mt-0.5">{{ 'HOME_MOCKUP_AI_SUBTITLE' | translate }}</p>
+                </div>
+                <span class="rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  {{ 'HOME_MOCKUP_AI_RISK' | translate }}
+                </span>
+              </div>
+
+              <!-- AI Real-Time Insights Cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <div class="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 space-y-2">
+                  <div class="flex items-center gap-2 font-semibold text-emerald-600 dark:text-emerald-400">
+                    <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span>Automated Bottleneck Triage</span>
+                  </div>
+                  <p class="text-[12px] text-[var(--text)] leading-relaxed">
+                    0 critical blockers detected. All sprint dependencies resolved ahead of Milestone 4 cloud deployment.
+                  </p>
+                  <div class="text-[10px] font-mono text-[var(--text-muted)]">Audited 4 minutes ago via Spring Boot Event Stream</div>
+                </div>
+
+                <div class="rounded-xl border border-blue-500/30 bg-blue-500/5 p-4 space-y-2">
+                  <div class="flex items-center gap-2 font-semibold text-blue-600 dark:text-blue-400">
+                    <span class="h-2 w-2 rounded-full bg-blue-500"></span>
+                    <span>Executive Delivery Brief Generated</span>
+                  </div>
+                  <p class="text-[12px] text-[var(--text)] leading-relaxed">
+                    Synthesized 14 deliverable files and budget tracking into an auto-approved executive brief for BU Directors.
+                  </p>
+                  <div class="text-[10px] font-mono text-[var(--text-muted)]">Ready for one-click export</div>
+                </div>
+              </div>
+            </div>
+          }
+
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Bento Grid Showcase Section -->
-  <section id="features" class="relative z-10 mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-    <div class="text-center mb-12">
-      <span class="text-xs font-semibold uppercase tracking-wider text-emerald-500">
+  <!-- ==========================================
+       ENTERPRISE TECHNOLOGY TRUST STRIP
+       ========================================== -->
+  <section class="relative z-10 border-y border-[var(--border)] bg-[color-mix(in_srgb,var(--sidebar)_70%,transparent)] py-8">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <p class="text-center text-xs font-semibold uppercase tracking-widest text-[var(--text-muted)] mb-6">
+        {{ 'HOME_TRUST_STRIP_TITLE' | translate }}
+      </p>
+      
+      <div class="flex flex-wrap items-center justify-center gap-6 sm:gap-12 opacity-80 hover:opacity-100 transition-opacity">
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--text)]">
+          <div class="h-2 w-2 rounded-full bg-emerald-500"></div>
+          Keycloak IAM & SSO
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--text)]">
+          <div class="h-2 w-2 rounded-full bg-blue-500"></div>
+          Spring Boot 3 Core
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--text)]">
+          <div class="h-2 w-2 rounded-full bg-rose-500"></div>
+          Angular 19 Standalone
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--text)]">
+          <div class="h-2 w-2 rounded-full bg-teal-500"></div>
+          SeaweedFS S3 Storage
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--text)]">
+          <div class="h-2 w-2 rounded-full bg-indigo-500"></div>
+          PostgreSQL Database
+        </div>
+        <div class="flex items-center gap-2 text-xs font-semibold tracking-wide text-[var(--text)]">
+          <div class="h-2 w-2 rounded-full bg-amber-500"></div>
+          Docker & Cloud Native
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       KEY METRICS / STATS BENTO STRIP
+       ========================================== -->
+  <section class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+      
+      <div class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 text-center hover:border-emerald-500/40 transition-colors shadow-2xs">
+        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-500">4</div>
+        <div class="text-sm font-semibold text-[var(--text-active)] mt-2">{{ 'HOME_STAT_MODULES' | translate }}</div>
+        <div class="text-xs text-[var(--text-muted)] mt-1">{{ 'HOME_STAT_MODULES_DESC' | translate }}</div>
+      </div>
+
+      <div class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 text-center hover:border-emerald-500/40 transition-colors shadow-2xs">
+        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-500">100%</div>
+        <div class="text-sm font-semibold text-[var(--text-active)] mt-2">{{ 'HOME_STAT_SECURITY' | translate }}</div>
+        <div class="text-xs text-[var(--text-muted)] mt-1">{{ 'HOME_STAT_SECURITY_DESC' | translate }}</div>
+      </div>
+
+      <div class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 text-center hover:border-emerald-500/40 transition-colors shadow-2xs">
+        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-500">&lt; 150ms</div>
+        <div class="text-sm font-semibold text-[var(--text-active)] mt-2">{{ 'HOME_STAT_REALTIME' | translate }}</div>
+        <div class="text-xs text-[var(--text-muted)] mt-1">{{ 'HOME_STAT_REALTIME_DESC' | translate }}</div>
+      </div>
+
+      <div class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 text-center hover:border-emerald-500/40 transition-colors shadow-2xs">
+        <div class="text-3xl sm:text-4xl font-extrabold text-emerald-500">99.9%</div>
+        <div class="text-sm font-semibold text-[var(--text-active)] mt-2">{{ 'HOME_STAT_UPTIME' | translate }}</div>
+        <div class="text-xs text-[var(--text-muted)] mt-1">{{ 'HOME_STAT_UPTIME_DESC' | translate }}</div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ==========================================
+       BENTO GRID SHOWCASE (CORE CAPABILITIES)
+       ========================================== -->
+  <section id="features" class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="text-center mb-14">
+      <span class="text-xs font-bold uppercase tracking-wider text-emerald-500">
         {{ 'HOME_BENTO_TAG' | translate }}
       </span>
-      <h2 class="mt-2 text-2xl font-bold tracking-tight sm:text-4xl text-[var(--text-active)]">
+      <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl text-[var(--text-active)]">
         {{ 'HOME_BENTO_TITLE' | translate }}
       </h2>
-      <p class="mt-3 text-sm sm:text-base text-[var(--text-muted)] max-w-xl mx-auto font-light">
+      <p class="mt-3 text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto font-normal">
         {{ 'HOME_BENTO_SUBTITLE' | translate }}
       </p>
     </div>
@@ -85,19 +498,19 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
 
       <!-- Bento 1: PM & Delivery Tracking (Span 2 cols on Desktop) -->
-      <div class="bento-card md:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between">
+      <div class="bento-card md:col-span-2 rounded-3xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between shadow-2xs">
         <div>
           <div class="flex items-center justify-between gap-4 mb-4">
-            <div class="inline-flex items-center gap-2 rounded-md bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <div class="inline-flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-1.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
               </svg>
               PM Delivery Module
             </div>
-            <span class="text-[11px] font-mono text-[var(--text-muted)]">Core Engine</span>
+            <span class="text-xs font-mono text-[var(--text-muted)]">Core Engine</span>
           </div>
 
-          <h3 class="text-xl sm:text-2xl font-semibold text-[var(--text-active)]">
+          <h3 class="text-xl sm:text-2xl font-bold text-[var(--text-active)]">
             {{ 'HOME_PM_TITLE' | translate }}
           </h3>
           <p class="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
@@ -106,10 +519,10 @@
         </div>
 
         <!-- Visual Mini Demo: Interactive Delivery Pipeline -->
-        <div class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4 sm:p-5">
+        <div class="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 sm:p-5">
           <div class="flex items-center justify-between text-xs mb-3">
             <span class="font-medium text-[var(--text)]">Project Milestone Progression</span>
-            <span class="font-mono text-emerald-500 font-semibold">82% Completed</span>
+            <span class="font-mono text-emerald-500 font-bold">82% Completed</span>
           </div>
           <!-- Progress bar -->
           <div class="h-2 w-full rounded-full bg-[var(--border)] overflow-hidden">
@@ -117,16 +530,16 @@
           </div>
           <!-- Phases -->
           <div class="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2 text-center text-xs">
-            <div class="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2 text-emerald-600 dark:text-emerald-400 font-medium">
+            <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
               ✓ {{ 'HOME_PM_STATUS_PLANNING' | translate }}
             </div>
-            <div class="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2 text-emerald-600 dark:text-emerald-400 font-medium">
+            <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2.5 text-emerald-600 dark:text-emerald-400 font-semibold">
               ✓ {{ 'HOME_PM_STATUS_PROGRESS' | translate }}
             </div>
-            <div class="rounded-lg bg-amber-500/10 border border-amber-500/30 p-2 text-amber-600 dark:text-amber-400 font-medium">
+            <div class="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2.5 text-amber-600 dark:text-amber-400 font-semibold">
               ⚡ {{ 'HOME_PM_STATUS_TESTING' | translate }}
             </div>
-            <div class="rounded-lg bg-[var(--sidebar)] border border-[var(--border)] p-2 text-[var(--text-muted)]">
+            <div class="rounded-xl bg-[var(--sidebar)] border border-[var(--border)] p-2.5 text-[var(--text-muted)] font-medium">
               ○ {{ 'HOME_PM_STATUS_DELIVERED' | translate }}
             </div>
           </div>
@@ -134,19 +547,19 @@
       </div>
 
       <!-- Bento 2: Business Units (BU) -->
-      <div class="bento-card rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between">
+      <div class="bento-card rounded-3xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between shadow-2xs">
         <div>
           <div class="flex items-center justify-between gap-4 mb-4">
-            <div class="inline-flex items-center gap-2 rounded-md bg-blue-500/10 px-3 py-1 text-xs font-semibold text-blue-600 dark:text-blue-400">
+            <div class="inline-flex items-center gap-2 rounded-lg bg-blue-500/10 px-3 py-1.5 text-xs font-semibold text-blue-600 dark:text-blue-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
               </svg>
               BU Structure
             </div>
-            <span class="text-[11px] font-mono text-[var(--text-muted)]">Organization</span>
+            <span class="text-xs font-mono text-[var(--text-muted)]">Organization</span>
           </div>
 
-          <h3 class="text-xl font-semibold text-[var(--text-active)]">
+          <h3 class="text-xl font-bold text-[var(--text-active)]">
             {{ 'HOME_BU_TITLE' | translate }}
           </h3>
           <p class="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
@@ -155,18 +568,18 @@
         </div>
 
         <!-- Visual Mini Demo: Hierarchy Tree Preview -->
-        <div class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-2 text-xs">
-          <div class="flex items-center justify-between p-2 rounded-md bg-[var(--sidebar)] border border-[var(--border)]">
+        <div class="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-2.5 text-xs">
+          <div class="flex items-center justify-between p-2.5 rounded-xl bg-[var(--sidebar)] border border-[var(--border)]">
             <div class="flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-blue-500"></span>
-              <span class="font-medium text-[var(--text)]">HQ Management Unit</span>
+              <span class="font-semibold text-[var(--text)]">HQ Management Unit</span>
             </div>
-            <span class="text-[10px] text-emerald-500 font-mono">Active</span>
+            <span class="text-[10px] text-emerald-500 font-mono font-semibold">Active</span>
           </div>
-          <div class="ml-4 flex items-center justify-between p-2 rounded-md bg-[var(--sidebar)] border border-[var(--border)] border-dashed">
+          <div class="ml-4 flex items-center justify-between p-2.5 rounded-xl bg-[var(--sidebar)] border border-[var(--border)] border-dashed">
             <div class="flex items-center gap-2">
               <span class="h-2 w-2 rounded-full bg-purple-500"></span>
-              <span class="font-medium text-[var(--text)]">Digital Solutions BU</span>
+              <span class="font-semibold text-[var(--text)]">Digital Solutions BU</span>
             </div>
             <span class="text-[10px] text-[var(--text-muted)] font-mono">5 Teams</span>
           </div>
@@ -174,19 +587,19 @@
       </div>
 
       <!-- Bento 3: Supplier & Partner Integration (SU) -->
-      <div class="bento-card rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between">
+      <div class="bento-card rounded-3xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between shadow-2xs">
         <div>
           <div class="flex items-center justify-between gap-4 mb-4">
-            <div class="inline-flex items-center gap-2 rounded-md bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
+            <div class="inline-flex items-center gap-2 rounded-lg bg-purple-500/10 px-3 py-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
               </svg>
               SU Vendor Portal
             </div>
-            <span class="text-[11px] font-mono text-[var(--text-muted)]">Partners</span>
+            <span class="text-xs font-mono text-[var(--text-muted)]">Partners</span>
           </div>
 
-          <h3 class="text-xl font-semibold text-[var(--text-active)]">
+          <h3 class="text-xl font-bold text-[var(--text-active)]">
             {{ 'HOME_SU_TITLE' | translate }}
           </h3>
           <p class="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
@@ -195,32 +608,32 @@
         </div>
 
         <!-- Visual Mini Demo: Vendor SLA Status -->
-        <div class="mt-6 rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-2 text-xs">
+        <div class="mt-6 rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4 space-y-2.5 text-xs">
           <div class="flex items-center justify-between">
             <span class="text-[var(--text-muted)]">Contract Compliance</span>
-            <span class="text-emerald-500 font-semibold font-mono">100% Verified</span>
+            <span class="text-emerald-500 font-bold font-mono">100% Verified</span>
           </div>
           <div class="flex items-center justify-between">
             <span class="text-[var(--text-muted)]">Avg. Delivery Rate</span>
-            <span class="text-purple-400 font-semibold font-mono">98.4% On-time</span>
+            <span class="text-purple-400 font-bold font-mono">98.4% On-time</span>
           </div>
         </div>
       </div>
 
       <!-- Bento 4: AI Project Pipeline & Automation (Span 2 cols on Desktop) -->
-      <div class="bento-card md:col-span-2 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between">
+      <div class="bento-card md:col-span-2 rounded-3xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-8 flex flex-col justify-between shadow-2xs">
         <div>
           <div class="flex items-center justify-between gap-4 mb-4">
-            <div class="inline-flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-1 text-xs font-semibold text-amber-600 dark:text-amber-400">
+            <div class="inline-flex items-center gap-2 rounded-lg bg-amber-500/10 px-3 py-1.5 text-xs font-semibold text-amber-600 dark:text-amber-400">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
               </svg>
               AI Automation
             </div>
-            <span class="text-[11px] font-mono text-amber-500">Intelligent Pipeline</span>
+            <span class="text-xs font-mono text-amber-500 font-semibold">Intelligent Pipeline</span>
           </div>
 
-          <h3 class="text-xl sm:text-2xl font-semibold text-[var(--text-active)]">
+          <h3 class="text-xl sm:text-2xl font-bold text-[var(--text-active)]">
             {{ 'HOME_AI_TITLE' | translate }}
           </h3>
           <p class="mt-2 text-sm text-[var(--text-muted)] leading-relaxed">
@@ -229,23 +642,23 @@
         </div>
 
         <!-- Visual Mini Demo: AI Risk & Synthesis Widget -->
-        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
-            <div class="flex items-center gap-2 text-xs font-medium text-emerald-500 mb-1">
+        <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+          <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
+            <div class="flex items-center gap-2 text-xs font-semibold text-emerald-500 mb-1">
               <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
               Automated Risk Evaluation
             </div>
-            <div class="text-sm font-semibold text-[var(--text)]">0 Critical Bottlenecks</div>
-            <div class="text-[11px] text-[var(--text-muted)] mt-1">Pipeline jobs sync and audit tasks automatically</div>
+            <div class="text-sm font-bold text-[var(--text)]">0 Critical Bottlenecks</div>
+            <div class="text-xs text-[var(--text-muted)] mt-1">Pipeline jobs sync and audit tasks automatically</div>
           </div>
 
-          <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] p-4">
-            <div class="flex items-center gap-2 text-xs font-medium text-blue-500 mb-1">
+          <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-4">
+            <div class="flex items-center gap-2 text-xs font-semibold text-blue-500 mb-1">
               <span class="h-2 w-2 rounded-full bg-blue-500"></span>
               Real-time Synthesis
             </div>
-            <div class="text-sm font-semibold text-[var(--text)]">Weekly Delivery Digest</div>
-            <div class="text-[11px] text-[var(--text-muted)] mt-1">Auto-generated executive briefs from PM data</div>
+            <div class="text-sm font-bold text-[var(--text)]">Weekly Delivery Digest</div>
+            <div class="text-xs text-[var(--text-muted)] mt-1">Auto-generated executive briefs from PM data</div>
           </div>
         </div>
       </div>
@@ -253,56 +666,425 @@
     </div>
   </section>
 
-  <!-- Enterprise Security & Architecture Section -->
-  <section class="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-10">
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 text-center md:text-left">
-        <div>
-          <div class="text-sm font-bold text-emerald-500 uppercase tracking-wider">Authentication & IAM</div>
-          <h4 class="mt-1 text-lg font-semibold text-[var(--text-active)]">Keycloak Security</h4>
-          <p class="mt-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-            Single Sign-On (SSO), OAuth2 / OIDC protocols with granular Role-Based Access Control (RBAC).
-          </p>
-        </div>
-
-        <div>
-          <div class="text-sm font-bold text-emerald-500 uppercase tracking-wider">Distributed Storage</div>
-          <h4 class="mt-1 text-lg font-semibold text-[var(--text-active)]">SeaweedFS S3-Compatible</h4>
-          <p class="mt-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-            Fast, secure, and distributed document & asset storage ensuring enterprise-grade data durability.
-          </p>
-        </div>
-
-        <div>
-          <div class="text-sm font-bold text-emerald-500 uppercase tracking-wider">Design System</div>
-          <h4 class="mt-1 text-lg font-semibold text-[var(--text-active)]">sic-ng Components</h4>
-          <p class="mt-2 text-xs sm:text-sm text-[var(--text-muted)] leading-relaxed">
-            Consistent tokens, seamless Light/Dark mode transitions, and WCAG-compliant accessible interactions.
-          </p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Bottom CTA Banner -->
-  <section class="relative z-10 mx-auto max-w-6xl px-4 py-12 sm:px-6 lg:px-8">
-    <div class="rounded-3xl border border-emerald-500/30 bg-linear-to-b from-emerald-500/10 via-[var(--sidebar)] to-[var(--sidebar)] p-8 sm:p-12 text-center shadow-lg">
-      <h3 class="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text-active)]">
-        {{ 'HOME_CTA_BANNER_TITLE' | translate }}
-      </h3>
-      <p class="mt-3 max-w-xl mx-auto text-sm sm:text-base text-[var(--text-muted)]">
-        {{ 'HOME_CTA_BANNER_DESC' | translate }}
+  <!-- ==========================================
+       ENTERPRISE WORKFLOW WALKTHROUGH
+       ========================================== -->
+  <section id="workflow" class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="text-center mb-12">
+      <span class="text-xs font-bold uppercase tracking-wider text-emerald-500">
+        {{ 'HOME_WORKFLOW_TAG' | translate }}
+      </span>
+      <h2 class="mt-2 text-3xl font-bold tracking-tight sm:text-4xl text-[var(--text-active)]">
+        {{ 'HOME_WORKFLOW_TITLE' | translate }}
+      </h2>
+      <p class="mt-3 text-sm sm:text-base text-[var(--text-muted)] max-w-2xl mx-auto">
+        {{ 'HOME_WORKFLOW_SUBTITLE' | translate }}
       </p>
-      <div class="mt-6 flex justify-center">
-        <sic-button variant="solid" color="primary" (click)="login()" class="px-8 py-3 text-base font-semibold shadow-md shadow-emerald-500/25 hover:scale-[1.02] transition-transform">
-          {{ 'HOME_CTA_BANNER_BUTTON' | translate }}
-        </sic-button>
+    </div>
+
+    <!-- Step Navigation Buttons -->
+    <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mb-8">
+      <button
+        type="button"
+        (click)="setWorkflowStep(1)"
+        class="workflow-step-btn rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-2xs"
+        [class.border-emerald-500]="activeWorkflowStep() === 1"
+        [class.bg-[var(--sidebar)]]="activeWorkflowStep() === 1"
+        [class.border-[var(--border)]]="activeWorkflowStep() !== 1"
+        [class.bg-[var(--bg)]]="activeWorkflowStep() !== 1">
+        <div class="flex items-center justify-between mb-2">
+          <span class="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 grid place-items-center font-bold text-xs">1</span>
+          <span class="text-[10px] font-mono text-[var(--text-muted)]">Setup</span>
+        </div>
+        <div class="font-bold text-xs sm:text-sm text-[var(--text-active)]">{{ 'HOME_WORKFLOW_STEP1_TITLE' | translate }}</div>
+        <div class="text-[11px] text-[var(--text-muted)] mt-1">{{ 'HOME_WORKFLOW_STEP1_DESC' | translate }}</div>
+      </button>
+
+      <button
+        type="button"
+        (click)="setWorkflowStep(2)"
+        class="workflow-step-btn rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-2xs"
+        [class.border-emerald-500]="activeWorkflowStep() === 2"
+        [class.bg-[var(--sidebar)]]="activeWorkflowStep() === 2"
+        [class.border-[var(--border)]]="activeWorkflowStep() !== 2"
+        [class.bg-[var(--bg)]]="activeWorkflowStep() !== 2">
+        <div class="flex items-center justify-between mb-2">
+          <span class="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 grid place-items-center font-bold text-xs">2</span>
+          <span class="text-[10px] font-mono text-[var(--text-muted)]">Planning</span>
+        </div>
+        <div class="font-bold text-xs sm:text-sm text-[var(--text-active)]">{{ 'HOME_WORKFLOW_STEP2_TITLE' | translate }}</div>
+        <div class="text-[11px] text-[var(--text-muted)] mt-1">{{ 'HOME_WORKFLOW_STEP2_DESC' | translate }}</div>
+      </button>
+
+      <button
+        type="button"
+        (click)="setWorkflowStep(3)"
+        class="workflow-step-btn rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-2xs"
+        [class.border-emerald-500]="activeWorkflowStep() === 3"
+        [class.bg-[var(--sidebar)]]="activeWorkflowStep() === 3"
+        [class.border-[var(--border)]]="activeWorkflowStep() !== 3"
+        [class.bg-[var(--bg)]]="activeWorkflowStep() !== 3">
+        <div class="flex items-center justify-between mb-2">
+          <span class="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 grid place-items-center font-bold text-xs">3</span>
+          <span class="text-[10px] font-mono text-[var(--text-muted)]">Execution</span>
+        </div>
+        <div class="font-bold text-xs sm:text-sm text-[var(--text-active)]">{{ 'HOME_WORKFLOW_STEP3_TITLE' | translate }}</div>
+        <div class="text-[11px] text-[var(--text-muted)] mt-1">{{ 'HOME_WORKFLOW_STEP3_DESC' | translate }}</div>
+      </button>
+
+      <button
+        type="button"
+        (click)="setWorkflowStep(4)"
+        class="workflow-step-btn rounded-2xl border p-4 text-left transition-all cursor-pointer shadow-2xs"
+        [class.border-emerald-500]="activeWorkflowStep() === 4"
+        [class.bg-[var(--sidebar)]]="activeWorkflowStep() === 4"
+        [class.border-[var(--border)]]="activeWorkflowStep() !== 4"
+        [class.bg-[var(--bg)]]="activeWorkflowStep() !== 4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="h-6 w-6 rounded-lg bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 grid place-items-center font-bold text-xs">4</span>
+          <span class="text-[10px] font-mono text-[var(--text-muted)]">Insights</span>
+        </div>
+        <div class="font-bold text-xs sm:text-sm text-[var(--text-active)]">{{ 'HOME_WORKFLOW_STEP4_TITLE' | translate }}</div>
+        <div class="text-[11px] text-[var(--text-muted)] mt-1">{{ 'HOME_WORKFLOW_STEP4_DESC' | translate }}</div>
+      </button>
+    </div>
+
+    <!-- Active Step Detail Preview -->
+    <div class="rounded-3xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-10 shadow-sm">
+      @if (activeWorkflowStep() === 1) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fade-in">
+          <div>
+            <span class="text-xs font-mono font-semibold text-emerald-500 uppercase">Phase 1: Architecture Initialization</span>
+            <h3 class="text-2xl font-bold text-[var(--text-active)] mt-1">Business Unit Federation & RBAC</h3>
+            <p class="text-sm text-[var(--text-muted)] mt-3 leading-relaxed">
+              Define organization hierarchies, departmental units, and strict security perimeters. Each BU can operate independently while maintaining synchronized corporate oversight.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-[var(--text)]">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Keycloak OIDC single sign-on with multi-role assignment
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Hierarchical data scoping ensures confidentiality between divisions
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Instant invite tokens and manager onboarding workflows
+              </li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-emerald-500 border-b border-[var(--border)] pb-2">
+              <span>POST /api/v1/bu/departments</span>
+              <span class="text-emerald-600 dark:text-emerald-400">201 CREATED</span>
+            </div>
+            <div class="text-[var(--text-muted)] text-[11px]">
+              &#123;<br>
+              &nbsp;&nbsp;"code": "BU-DIGITAL-SOLUTIONS",<br>
+              &nbsp;&nbsp;"name": "Digital Solutions & Core Tech",<br>
+              &nbsp;&nbsp;"securityZone": "ENTERPRISE_TIER_1",<br>
+              &nbsp;&nbsp;"rbacPolicy": "ROLE_MANAGER_DELEGATED"<br>
+              &#125;
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeWorkflowStep() === 2) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fade-in">
+          <div>
+            <span class="text-xs font-mono font-semibold text-emerald-500 uppercase">Phase 2: Milestone Structuring</span>
+            <h3 class="text-2xl font-bold text-[var(--text-active)] mt-1">WBS Decomposition & SU Association</h3>
+            <p class="text-sm text-[var(--text-muted)] mt-3 leading-relaxed">
+              Break down complex projects into discrete Work Breakdown Structures (WBS). Link individual work packages directly to external contractors and supplier agreements.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-[var(--text)]">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Interactive Gantt and Kanban milestone management
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Direct contractual mapping to Supplier Units (SU)
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Built-in dependency tracking and critical path analysis
+              </li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-2 text-xs">
+            <div class="flex items-center justify-between font-semibold text-[var(--text)] mb-2">
+              <span>WBS Delivery Breakdown</span>
+              <span class="text-emerald-500 font-mono">100% On Schedule</span>
+            </div>
+            <div class="rounded-lg bg-[var(--sidebar)] p-2.5 border border-[var(--border)] flex items-center justify-between">
+              <span>1.0 Requirements & Domain Model</span>
+              <span class="text-emerald-500 font-bold">Done</span>
+            </div>
+            <div class="rounded-lg bg-[var(--sidebar)] p-2.5 border border-[var(--border)] flex items-center justify-between">
+              <span>2.0 Backend Core & Keycloak Sync</span>
+              <span class="text-emerald-500 font-bold">Done</span>
+            </div>
+            <div class="rounded-lg bg-[var(--sidebar)] p-2.5 border border-[var(--border)] flex items-center justify-between">
+              <span>3.0 SU External Vendor API Portal</span>
+              <span class="text-amber-500 font-bold">In QA</span>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeWorkflowStep() === 3) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fade-in">
+          <div>
+            <span class="text-xs font-mono font-semibold text-emerald-500 uppercase">Phase 3: Quality & Compliance</span>
+            <h3 class="text-2xl font-bold text-[var(--text-active)] mt-1">Multi-Tier Approvals & SeaweedFS Storage</h3>
+            <p class="text-sm text-[var(--text-muted)] mt-3 leading-relaxed">
+              Inspect uploaded deliverables, run cryptographic verification on assets, and trigger multi-signature approval chains across PM, BU, and Procurement teams.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-[var(--text)]">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                High-speed distributed file storage via SeaweedFS S3
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Immutable audit trail for every sign-off and rejection
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Real-time email and in-app notification routing
+              </li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-3 text-xs">
+            <div class="flex items-center justify-between pb-2 border-b border-[var(--border)]">
+              <span class="font-bold text-[var(--text)]">Deliverable Document Review</span>
+              <span class="rounded-md bg-emerald-500/10 px-2 py-0.5 text-emerald-600 dark:text-emerald-400 font-semibold text-[10px]">Verified Hash</span>
+            </div>
+            <div class="flex items-center gap-3 p-2 rounded-lg bg-[var(--sidebar)] border border-[var(--border)]">
+              <div class="h-8 w-8 rounded-md bg-rose-500/10 text-rose-500 grid place-items-center font-bold text-xs">PDF</div>
+              <div>
+                <div class="font-medium text-[var(--text)]">Contract_Milestone_3_Acceptance.pdf</div>
+                <div class="text-[10px] text-[var(--text-muted)]">Signed by Project Director · 2.4 MB</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+
+      @if (activeWorkflowStep() === 4) {
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 items-center animate-fade-in">
+          <div>
+            <span class="text-xs font-mono font-semibold text-emerald-500 uppercase">Phase 4: Autonomous Intelligence</span>
+            <h3 class="text-2xl font-bold text-[var(--text-active)] mt-1">AI Risk Synthesis & Executive Briefs</h3>
+            <p class="text-sm text-[var(--text-muted)] mt-3 leading-relaxed">
+              SicApp's intelligence engine constantly evaluates timeline risks, vendor response rates, and deliverable quality, summarizing thousands of data points into actionable executive briefings.
+            </p>
+            <ul class="mt-4 space-y-2 text-xs text-[var(--text)]">
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Predictive bottleneck detection before milestones are missed
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Auto-generated executive briefs in Thai and English
+              </li>
+              <li class="flex items-center gap-2">
+                <span class="text-emerald-500">✓</span>
+                Zero private data leakage with internal model isolation
+              </li>
+            </ul>
+          </div>
+          <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5 space-y-2.5 text-xs">
+            <div class="flex items-center gap-2 text-emerald-500 font-semibold mb-1">
+              <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+              Autonomous Health Analysis
+            </div>
+            <div class="rounded-lg bg-[var(--sidebar)] p-3 border border-[var(--border)] text-xs text-[var(--text-muted)] leading-relaxed">
+              "Overall enterprise project health is rated at 96%. All 4 core modules are operating within budgeted resource constraints. No contractual disputes recorded with external suppliers."
+            </div>
+          </div>
+        </div>
+      }
+    </div>
+  </section>
+
+  <!-- ==========================================
+       ENTERPRISE SECURITY & INFRASTRUCTURE SECTION
+       ========================================== -->
+  <section id="architecture" class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl border border-[var(--border)] bg-[var(--sidebar)] p-6 sm:p-12 shadow-sm">
+      <div class="text-center max-w-2xl mx-auto mb-12">
+        <span class="text-xs font-bold uppercase tracking-wider text-emerald-500">{{ 'HOME_ARCH_TAG' | translate }}</span>
+        <h3 class="mt-2 text-2xl sm:text-3xl font-bold text-[var(--text-active)]">
+          {{ 'HOME_ARCH_TITLE' | translate }}
+        </h3>
+        <p class="mt-2 text-xs sm:text-sm text-[var(--text-muted)]">
+          {{ 'HOME_ARCH_SUBTITLE' | translate }}
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-left">
+        <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5">
+          <div class="h-8 w-8 rounded-xl bg-emerald-500/10 text-emerald-500 grid place-items-center mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </div>
+          <div class="text-xs font-bold text-emerald-500 uppercase tracking-wider">{{ 'HOME_ARCH_IAM_TITLE' | translate }}</div>
+          <h4 class="mt-1 text-base font-bold text-[var(--text-active)]">Keycloak SSO</h4>
+          <p class="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">
+            {{ 'HOME_ARCH_IAM_DESC' | translate }}
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5">
+          <div class="h-8 w-8 rounded-xl bg-blue-500/10 text-blue-500 grid place-items-center mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2 1.5 3 3.5 3h9c2 0 3.5-1 3.5-3V7M4 7c0-2 1.5-3 3.5-3h9c2 0 3.5 1 3.5 3M4 7h16"/>
+            </svg>
+          </div>
+          <div class="text-xs font-bold text-blue-500 uppercase tracking-wider">{{ 'HOME_ARCH_STORAGE_TITLE' | translate }}</div>
+          <h4 class="mt-1 text-base font-bold text-[var(--text-active)]">SeaweedFS S3</h4>
+          <p class="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">
+            {{ 'HOME_ARCH_STORAGE_DESC' | translate }}
+          </p>
+        </div>
+
+        <div class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5">
+          <div class="h-8 w-8 rounded-xl bg-purple-500/10 text-purple-500 grid place-items-center mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01"/>
+            </svg>
+          </div>
+          <div class="text-xs font-bold text-purple-500 uppercase tracking-wider">{{ 'HOME_ARCH_DESIGN_TITLE' | translate }}</div>
+          <h4 class="mt-1 text-base font-bold text-[var(--text-active)]">sic-ng Tokens</h4>
+          <p class="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">
+            {{ 'HOME_ARCH_DESIGN_DESC' | translate }}
+          </p>
+        </div>
+
+        <div id="security" class="rounded-2xl border border-[var(--border)] bg-[var(--bg)] p-5">
+          <div class="h-8 w-8 rounded-xl bg-amber-500/10 text-amber-500 grid place-items-center mb-3">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+          </div>
+          <div class="text-xs font-bold text-amber-500 uppercase tracking-wider">{{ 'HOME_ARCH_GOV_TITLE' | translate }}</div>
+          <h4 class="mt-1 text-base font-bold text-[var(--text-active)]">Audit Logging</h4>
+          <p class="mt-2 text-xs text-[var(--text-muted)] leading-relaxed">
+            {{ 'HOME_ARCH_GOV_DESC' | translate }}
+          </p>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- Micro Footer -->
-  <footer class="relative z-10 border-t border-[var(--border)] py-8 text-center text-xs text-[var(--text-muted)]">
-    <p>© 2026 Softinter Chiangrai Company Limited. All rights reserved.</p>
+  <!-- ==========================================
+       BOTTOM HIGH-CONVERSION CTA BANNER
+       ========================================== -->
+  <section class="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <div class="rounded-3xl border border-emerald-500/30 bg-linear-to-b from-emerald-500/10 via-[var(--sidebar)] to-[var(--sidebar)] p-8 sm:p-14 text-center shadow-lg relative overflow-hidden">
+      <div class="relative z-10 max-w-2xl mx-auto">
+        <h3 class="text-2xl sm:text-4xl font-bold tracking-tight text-[var(--text-active)] leading-tight">
+          {{ 'HOME_CTA_BANNER_TITLE' | translate }}
+        </h3>
+        <p class="mt-4 text-sm sm:text-base text-[var(--text-muted)] font-normal leading-relaxed">
+          {{ 'HOME_CTA_BANNER_DESC' | translate }}
+        </p>
+        <div class="mt-8 flex flex-wrap items-center justify-center gap-4">
+          <button
+            type="button"
+            (click)="login()"
+            class="inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-emerald-500/25 hover:scale-[1.02] hover:shadow-xl hover:shadow-emerald-500/35 transition-all cursor-pointer">
+            <span>{{ 'HOME_CTA_BANNER_BUTTON' | translate }}</span>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ==========================================
+       WORLD-CLASS MULTI-COLUMN FOOTER
+       ========================================== -->
+  <footer class="relative z-10 border-t border-[var(--border)] bg-[var(--sidebar)] pt-14 pb-10">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-8 pb-10 border-b border-[var(--border)]">
+        
+        <!-- Col 1: Brand (Span 2) -->
+        <div class="col-span-2">
+          <div class="flex items-center gap-3">
+            <img
+              src="images/softinter_chiangrai.png"
+              [alt]="'MAIN_INDEX_LOGO_ALT' | translate"
+              class="h-10 sm:h-12 w-auto max-w-[180px] object-contain"
+              [class.brightness-0]="isDark()"
+              [class.invert]="isDark()"
+            />
+            <div class="h-6 w-px bg-[var(--border)]"></div>
+            <span class="text-base font-bold text-[var(--text-active)]">SicApp Enterprise</span>
+          </div>
+          <p class="mt-3 text-xs text-[var(--text-muted)] max-w-sm leading-relaxed">
+            {{ 'FOOTER_DESC' | translate }}
+          </p>
+          <div class="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-500/20 bg-emerald-500/5 px-3 py-1 text-[11px] font-medium text-emerald-600 dark:text-emerald-400">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            {{ 'FOOTER_STATUS' | translate }}
+          </div>
+        </div>
+
+        <!-- Col 2: Modules -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)]">{{ 'FOOTER_MODULES' | translate }}</h4>
+          <ul class="mt-3 space-y-2 text-xs text-[var(--text-muted)]">
+            <li><button type="button" (click)="scrollToFeatures()" class="hover:text-emerald-500 transition-colors cursor-pointer">PM Delivery</button></li>
+            <li><button type="button" (click)="scrollToFeatures()" class="hover:text-emerald-500 transition-colors cursor-pointer">Business Units (BU)</button></li>
+            <li><button type="button" (click)="scrollToFeatures()" class="hover:text-emerald-500 transition-colors cursor-pointer">Supplier Units (SU)</button></li>
+            <li><button type="button" (click)="scrollToFeatures()" class="hover:text-emerald-500 transition-colors cursor-pointer">AI Pipeline Engine</button></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Architecture -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)]">{{ 'FOOTER_ARCHITECTURE' | translate }}</h4>
+          <ul class="mt-3 space-y-2 text-xs text-[var(--text-muted)]">
+            <li><button type="button" (click)="scrollToSection('architecture')" class="hover:text-emerald-500 transition-colors cursor-pointer">Keycloak IAM</button></li>
+            <li><button type="button" (click)="scrollToSection('architecture')" class="hover:text-emerald-500 transition-colors cursor-pointer">SeaweedFS S3</button></li>
+            <li><button type="button" (click)="scrollToSection('architecture')" class="hover:text-emerald-500 transition-colors cursor-pointer">Spring Boot 3 Core</button></li>
+            <li><button type="button" (click)="scrollToSection('architecture')" class="hover:text-emerald-500 transition-colors cursor-pointer">sic-ng Design Tokens</button></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Company -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)]">{{ 'FOOTER_COMPANY' | translate }}</h4>
+          <ul class="mt-3 space-y-2 text-xs text-[var(--text-muted)]">
+            <li><a href="https://softinter.co.th" target="_blank" rel="noopener" class="hover:text-emerald-500 transition-colors">Softinter Chiangrai</a></li>
+            <li><button type="button" (click)="scrollToSection('workflow')" class="hover:text-emerald-500 transition-colors cursor-pointer">Enterprise Workflow</button></li>
+            <li><button type="button" (click)="scrollToSection('security')" class="hover:text-emerald-500 transition-colors cursor-pointer">Security & Compliance</button></li>
+            <li><button type="button" (click)="login()" class="hover:text-emerald-500 transition-colors cursor-pointer">Client Login</button></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[var(--text-muted)]">
+        <p>{{ 'FOOTER_RIGHTS' | translate }}</p>
+        <div class="flex items-center gap-4 text-[11px]">
+          <span>{{ 'FOOTER_PRIVACY' | translate }}</span>
+          <span>•</span>
+          <span>{{ 'FOOTER_TERMS' | translate }}</span>
+          <span>•</span>
+          <span>{{ 'FOOTER_STANDARD' | translate }}</span>
+        </div>
+      </div>
+    </div>
   </footer>
+
 </div>

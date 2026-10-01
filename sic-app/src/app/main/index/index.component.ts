@@ -1,16 +1,14 @@
-import { Component, inject, PLATFORM_ID, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Router, RouterOutlet } from '@angular/router';
 import { ThemeService } from '../../core/services/theme.service';
 import { AppLanguage, LanguageService } from '../../core/services/language.service';
 import { AuthService } from '../../core/auth/auth.service';
 import { TooltipDirective } from "../../core/directive/tooltip/tootop.directive";
-import { SicButtonComponent } from "sic-ng";
 import { TranslateModule } from '@ngx-translate/core';
-
 
 @Component({
   selector: 'app-index',
-  imports: [RouterOutlet, TooltipDirective, SicButtonComponent,TranslateModule],
+  imports: [RouterOutlet, TooltipDirective, TranslateModule],
   templateUrl: './index.component.html',
   styleUrl: './index.component.css',
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -24,6 +22,7 @@ export class Index {
   private readonly authService = inject(AuthService);
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
+  readonly mobileMenuOpen = signal<boolean>(false);
 
   toggleTheme(): void {
     this.themeService.toggleDark();
@@ -33,6 +32,18 @@ export class Index {
     const nextLanguage: AppLanguage = this.currentLanguage() === 'th' ? 'en' : 'th';
     this.languageService.setLanguage(nextLanguage);
     this.currentLanguage.set(nextLanguage);
+  }
+
+  toggleMobileMenu(): void {
+    this.mobileMenuOpen.update(v => !v);
+  }
+
+  scrollToSection(id: string): void {
+    this.mobileMenuOpen.set(false);
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
   }
 
   login(): void {

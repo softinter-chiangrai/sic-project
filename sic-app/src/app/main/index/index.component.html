@@ -1,28 +1,149 @@
 <header
-    class="sticky top-0 z-20 flex items-center justify-between border-b border-[var(--border)] bg-[color-mix(in_srgb,var(--bg)_92%,transparent)] px-4 py-3 backdrop-blur-md">
-    <div class="flex items-center gap-4">
-        <div class="relative">
-            <div class="grid place-items-center">
-                <img src="images/softinter_chiangrai.png" [alt]="'MAIN_INDEX_LOGO_ALT' | translate"
-                    class="h-12 w-full rounded-full object-cover cursor-pointer"
-                    [class.brightness-0]="isDark()"
-                    [class.invert]="isDark()"
-                    />
-            </div>
+  class="sticky top-0 z-50 w-full border-b border-[var(--border)]/80 bg-[color-mix(in_srgb,var(--bg)_85%,transparent)] backdrop-blur-xl transition-colors duration-200">
+  <div class="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 sm:px-6 lg:px-8">
+    
+    <!-- Left: Brand / Logo -->
+    <div class="flex items-center gap-4 sm:gap-6">
+      <a href="/" class="flex items-center gap-3.5 group focus:outline-hidden">
+        <img
+          src="images/softinter_chiangrai.png"
+          [alt]="'MAIN_INDEX_LOGO_ALT' | translate"
+          class="h-10 sm:h-12 w-auto max-w-[170px] sm:max-w-[210px] object-contain transition-transform group-hover:scale-102"
+          [class.brightness-0]="isDark()"
+          [class.invert]="isDark()"
+        />
+        <div class="h-6 w-px bg-[var(--border)] hidden sm:block"></div>
+        <div class="flex items-center gap-2">
+          <span class="text-base sm:text-lg font-bold tracking-tight text-[var(--text-active)] group-hover:text-emerald-500 transition-colors">SicApp</span>
+          <span class="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">Enterprise</span>
         </div>
+      </a>
+
+      <!-- Desktop Nav Links -->
+      <nav class="hidden md:flex items-center gap-1 pl-6 text-sm font-medium text-[var(--text-muted)]">
+        <button
+          type="button"
+          (click)="scrollToSection('features')"
+          class="rounded-lg px-3 py-1.5 hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+          {{ 'NAV_MODULES' | translate }}
+        </button>
+        <button
+          type="button"
+          (click)="scrollToSection('workflow')"
+          class="rounded-lg px-3 py-1.5 hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+          {{ 'NAV_WORKFLOW' | translate }}
+        </button>
+        <button
+          type="button"
+          (click)="scrollToSection('architecture')"
+          class="rounded-lg px-3 py-1.5 hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+          {{ 'NAV_ARCHITECTURE' | translate }}
+        </button>
+        <button
+          type="button"
+          (click)="scrollToSection('security')"
+          class="rounded-lg px-3 py-1.5 hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer">
+          {{ 'NAV_SECURITY' | translate }}
+        </button>
+      </nav>
     </div>
-    <div class="flex items-center gap-3">
-        <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_LANGUAGE' | translate ">
-            <img src="images/language.png" (click)="toggleLanguage()" [alt]="'MAIN_INDEX_ICON_ALT' | translate"
-                class="h-9 w-9 object-contain rounded-full cursor-pointer" />
-        </div>
-        <div class="flex-initial w-9 h-9" [tooltip]=" 'CHANGE_THEME' | translate ">
-            <img src="images/day-and-night.png" (click)="toggleTheme()" [alt]="'MAIN_INDEX_ICON_ALT' | translate"
-                class="h-9 w-9 object-contain cursor-pointer" />
-        </div>
-        <div class="flex-initial" >
-            <sic-button variant="solid" color="primary" (click)="login()" >{{ 'SIGNIN' | translate }}</sic-button>
-        </div>
+
+    <!-- Right: Actions & Tools -->
+    <div class="flex items-center gap-2 sm:gap-3">
+      
+      <!-- Language Switcher Pill -->
+      <button
+        type="button"
+        (click)="toggleLanguage()"
+        class="inline-flex items-center rounded-lg border border-[var(--border)] bg-[var(--sidebar)] p-1 text-xs font-medium text-[var(--text-muted)] hover:border-emerald-500/30 transition-all cursor-pointer shadow-2xs"
+        [tooltip]="'CHANGE_LANGUAGE' | translate">
+        <span
+          class="px-2 py-0.5 rounded-md transition-all"
+          [class.bg-emerald-500]="currentLanguage() === 'th'"
+          [class.text-white]="currentLanguage() === 'th'"
+          [class.font-semibold]="currentLanguage() === 'th'">
+          TH
+        </span>
+        <span
+          class="px-2 py-0.5 rounded-md transition-all"
+          [class.bg-emerald-500]="currentLanguage() === 'en'"
+          [class.text-white]="currentLanguage() === 'en'"
+          [class.font-semibold]="currentLanguage() === 'en'">
+          EN
+        </span>
+      </button>
+
+      <!-- Theme Switcher Button -->
+      <button
+        type="button"
+        (click)="toggleTheme()"
+        class="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text-muted)] hover:text-emerald-500 hover:border-emerald-500/30 transition-all cursor-pointer shadow-2xs"
+        [tooltip]="'CHANGE_THEME' | translate">
+        @if (isDark()) {
+          <!-- Sun Icon -->
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+        } @else {
+          <!-- Moon Icon -->
+          <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+          </svg>
+        }
+      </button>
+
+      <!-- Sign In CTA -->
+      <button
+        type="button"
+        (click)="login()"
+        class="group inline-flex items-center gap-1.5 rounded-xl bg-linear-to-r from-emerald-600 via-teal-600 to-emerald-600 bg-size-200 px-4 py-2 text-xs sm:text-sm font-semibold text-white shadow-sm shadow-emerald-500/20 hover:shadow-md hover:shadow-emerald-500/30 hover:scale-[1.02] active:scale-[0.98] transition-all cursor-pointer">
+        <span>{{ 'SIGNIN' | translate }}</span>
+        <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3"/>
+        </svg>
+      </button>
+
+      <!-- Mobile Hamburger Toggle -->
+      <button
+        type="button"
+        (click)="toggleMobileMenu()"
+        class="inline-flex md:hidden h-9 w-9 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text)] transition-colors cursor-pointer"
+        aria-label="Toggle Navigation">
+        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/>
+        </svg>
+      </button>
     </div>
+  </div>
+
+  <!-- Mobile Drawer / Menu -->
+  @if (mobileMenuOpen()) {
+    <div class="md:hidden border-t border-[var(--border)] bg-[var(--sidebar)] px-4 py-3 space-y-1 text-sm font-medium">
+      <button
+        type="button"
+        (click)="scrollToSection('features')"
+        class="block w-full text-left rounded-lg px-3 py-2 text-[var(--text)] hover:bg-[var(--sidebar-hover)]">
+        {{ 'NAV_MODULES' | translate }}
+      </button>
+      <button
+        type="button"
+        (click)="scrollToSection('workflow')"
+        class="block w-full text-left rounded-lg px-3 py-2 text-[var(--text)] hover:bg-[var(--sidebar-hover)]">
+        {{ 'NAV_WORKFLOW' | translate }}
+      </button>
+      <button
+        type="button"
+        (click)="scrollToSection('architecture')"
+        class="block w-full text-left rounded-lg px-3 py-2 text-[var(--text)] hover:bg-[var(--sidebar-hover)]">
+        {{ 'NAV_ARCHITECTURE' | translate }}
+      </button>
+      <button
+        type="button"
+        (click)="scrollToSection('security')"
+        class="block w-full text-left rounded-lg px-3 py-2 text-[var(--text)] hover:bg-[var(--sidebar-hover)]">
+        {{ 'NAV_SECURITY' | translate }}
+      </button>
+    </div>
+  }
 </header>
 <router-outlet></router-outlet>
