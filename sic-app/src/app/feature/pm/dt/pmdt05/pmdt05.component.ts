@@ -559,13 +559,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   exportPdf(): void {
     const id = this.currentTabId;
     if (!id) return;
-    // ขอรูป PNG จาก draw.io ก่อน (รอสูงสุด 8 วิ ถ้าไม่ตอบก็ export แบบไม่มีรูป)
-    let sent = false;
-    const send = (image: string | null) => {
-      if (sent) return;
-      sent = true;
-      sub.unsubscribe();
-      clearTimeout(timer);
+    // ขอรูป PNG จาก draw.io ก่อน (ไม่ตอบ = ส่ง null แล้ว backend ใช้รูปที่บันทึกไว้ล่าสุด)
+    this.capturePng(2, (image) => {
       this.diagramService.exportPdf(id, image).subscribe({
         next: (blob) => {
           const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
@@ -579,10 +574,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         error: () =>
           this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR')),
       });
-    };
-    const sub = this.drawioService.png$.pipe(take(1)).subscribe((png) => send(png));
-    const timer = setTimeout(() => send(null), 8000);
-    this.drawioService.requestPng();
+    });
   }
 
   switchTab(tabId: string): void {
@@ -837,10 +829,29 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     this.saving = true;
+    // เก็บ PNG ของแผนภาพไว้ใน graphData ด้วย เพื่อให้รายงาน Jasper (เช่น รายงานโครงการ) แสดงเป็นรูปได้
+    this.capturePng(1, (png) => this.persistDiagram(diagram, xml, png, requirementId, manual));
+  }
 
+  /** ขอ PNG จาก draw.io (รอสูงสุด 3 วิ ไม่ตอบ = null) */
+  private capturePng(scale: number, cb: (png: string | null) => void): void {
+    let done = false;
+    const finish = (png: string | null) => {
+      if (done) return;
+      done = true;
+      sub.unsubscribe();
+      clearTimeout(timer);
+      cb(png);
+    };
+    const sub = this.drawioService.png$.pipe(take(1)).subscribe((png) => finish(png));
+    const timer = setTimeout(() => finish(null), 3000);
+    this.drawioService.requestPng(scale);
+  }
+
+  private persistDiagram(diagram: any, xml: string, png: string | null, requirementId: string, manual: boolean): void {
     const updatedTab = {
       ...diagram,
-      graphData: { xml },
+      graphData: { xml, png: png ?? diagram.graphData?.png },
       requirementId: requirementId || undefined, // ส่ง requirementId ไปด้วย
       state: 3,
       rowVersion: this.currentDiagram?.rowVersion ?? diagram.rowVersion ?? null

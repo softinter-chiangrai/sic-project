@@ -25,7 +25,6 @@ import { NotificationService, AppNotification } from '../../services/notificatio
 import { ChatService } from '../../services/chat.service';
 import { SicNotificationPanelComponent } from '../sic-notification-panel/sic-notification-panel.component';
 import { SicContextSwitcherComponent } from '../sic-context-switcher/sic-context-switcher.component';
-import { RecentItemsService } from '../../services/recent-items.service';
 import {
   BusinessInfoModel,
   MenuItemModel,
@@ -68,7 +67,6 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   public readonly router = inject(Router);
   public readonly notificationSvc = inject(NotificationService);
   public readonly chatSvc = inject(ChatService);
-  public readonly recentItems = inject(RecentItemsService);
 
   private readonly ngZone = inject(NgZone);
   private clockTimer?: ReturnType<typeof setInterval>;

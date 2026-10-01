@@ -310,6 +310,32 @@ html, body {
   --ate-button-hover: rgba(255, 255, 255, 0.08);
   --ate-button-active: rgba(255, 255, 255, 0.14);
   --ate-placeholder-color: var(--sic-color-text-muted, #9aa0ab);
+
+  /* ตาราง: ค่า default ของ library เป็นโทนสว่าง (พื้นขาว + ตัวอักษรขาวจากธีมมืด = มองไม่เห็น) */
+  --ate-table-border-color: var(--sic-color-border, #2a2d33);
+  --ate-table-cell-background: var(--sic-color-bg, #101215);
+  --ate-table-header-background: var(--sic-color-surface, #17191d);
+  --ate-table-header-color: var(--sic-color-text-active, #ffffff);
+  --ate-table-row-hover-background: rgba(255, 255, 255, 0.06);
+  --ate-table-cell-selected-background: rgba(16, 185, 129, 0.25);
+  --ate-table-resize-handle-color: var(--crm-primary, #10b981);
+}
+
+/* library ตั้งตัวแปร --ate-table-* ที่ :host ของตัวเอง ทำให้ค่าจาก .dark ข้างบนไม่ถูกใช้ → บังคับที่ element ตรง ๆ */
+.dark .ProseMirror table td,
+.dark .ProseMirror table th {
+  border-color: var(--sic-color-border, #2a2d33) !important;
+  color: var(--sic-color-text, #f2f3f5) !important;
+}
+.dark .ProseMirror table td {
+  background: var(--sic-color-bg, #101215) !important;
+}
+.dark .ProseMirror table th {
+  background: var(--sic-color-surface, #17191d) !important;
+  color: var(--sic-color-text-active, #ffffff) !important;
+}
+.dark .ProseMirror table tbody tr:hover td {
+  background: var(--sic-color-surface, #17191d) !important;
 }
 
 /* ========================================================

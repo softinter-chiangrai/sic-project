@@ -218,49 +218,154 @@
 							<printWhenExpression><![CDATA[$F{imageData} != null && "right".equals($F{align})]]></printWhenExpression>
 							<expression><![CDATA[$F{imageData}]]></expression>
 						</element>
-						<element kind="textField" uuid="23ff06d3-b178-413d-a484-f027bbac585b" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 1]]></printWhenExpression>
+						<element kind="textField" uuid="31ac8856-5567-433b-9deb-14088dd158d8" x="0" y="0" width="507" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 1]]></printWhenExpression>
 							<box padding="2">
 								<pen lineWidth="0.4" lineColor="#94A3B8"/>
 							</box>
 							<expression><![CDATA[$F{c1}]]></expression>
-						</element>
-						<element kind="textField" uuid="2bfc0921-62ba-4e02-b300-109532b767ca" x="85" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 2]]></printWhenExpression>
+</element>
+<element kind="textField" uuid="071978dd-6a32-441b-8103-99e3920849e8" x="0" y="0" width="254" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+</element>
+<element kind="textField" uuid="09607bf8-322d-4f85-8f2a-217814481535" x="254" y="0" width="253" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
 							<box padding="2">
 								<pen lineWidth="0.4" lineColor="#94A3B8"/>
 							</box>
 							<expression><![CDATA[$F{c2}]]></expression>
-						</element>
-						<element kind="textField" uuid="db3dadb5-e296-451a-a5fb-8286c4e9235f" x="170" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 3]]></printWhenExpression>
+</element>
+<element kind="textField" uuid="b054999b-1d75-4e6e-9200-d119a006b8cc" x="0" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+</element>
+<element kind="textField" uuid="aad65bab-4acc-4a61-8d7b-605b8cc7b313" x="169" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c2}]]></expression>
+</element>
+<element kind="textField" uuid="5a8d6fb1-58c7-4028-a9e9-90b0b4ccb715" x="338" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
 							<box padding="2">
 								<pen lineWidth="0.4" lineColor="#94A3B8"/>
 							</box>
 							<expression><![CDATA[$F{c3}]]></expression>
-						</element>
-						<element kind="textField" uuid="77499c24-e115-493c-9451-65a2dd2a389b" x="255" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 4]]></printWhenExpression>
+</element>
+<element kind="textField" uuid="385392c7-179d-465a-9107-0ee5d3979474" x="0" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+</element>
+<element kind="textField" uuid="e36cada9-3c02-42d1-8a50-b9ed7306de14" x="127" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c2}]]></expression>
+</element>
+<element kind="textField" uuid="dcf192ce-c09d-4f96-97e0-fe10c9ea57e3" x="254" y="0" width="126" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c3}]]></expression>
+</element>
+<element kind="textField" uuid="17784b88-a127-4a9d-bfe2-f4ffa33693b9" x="380" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
 							<box padding="2">
 								<pen lineWidth="0.4" lineColor="#94A3B8"/>
 							</box>
 							<expression><![CDATA[$F{c4}]]></expression>
-						</element>
-						<element kind="textField" uuid="33c8b11f-0ada-4793-b0c3-d9775479d785" x="340" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 5]]></printWhenExpression>
+</element>
+<element kind="textField" uuid="ab06b08d-2e77-4df6-9f41-7f56504b7045" x="0" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+</element>
+<element kind="textField" uuid="0f8e30bb-c2f2-4736-aa4b-000123cad553" x="101" y="0" width="102" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c2}]]></expression>
+</element>
+<element kind="textField" uuid="ece0a8a3-7398-41bc-aaef-041887bf0145" x="203" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c3}]]></expression>
+</element>
+<element kind="textField" uuid="0b1b9b1e-bf2e-41ad-a0d0-c6b0d91814cf" x="304" y="0" width="102" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c4}]]></expression>
+</element>
+<element kind="textField" uuid="7fa15501-bec3-4012-be5f-cfd43a7abeef" x="406" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
 							<box padding="2">
 								<pen lineWidth="0.4" lineColor="#94A3B8"/>
 							</box>
 							<expression><![CDATA[$F{c5}]]></expression>
-						</element>
-						<element kind="textField" uuid="8f53fdd2-52ef-4ab5-aa51-4126ef2d6d3c" x="425" y="0" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 6]]></printWhenExpression>
+</element>
+<element kind="textField" uuid="28cec5f8-c8bd-426f-8d6a-7db6d21c5d10" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+</element>
+<element kind="textField" uuid="033bed38-57a8-400b-8243-bff51af791e9" x="85" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c2}]]></expression>
+</element>
+<element kind="textField" uuid="54b00734-9be2-4a4b-96a0-b4b0bdae6884" x="169" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c3}]]></expression>
+</element>
+<element kind="textField" uuid="ac611471-6b3e-46ab-9953-717faccc6108" x="254" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c4}]]></expression>
+</element>
+<element kind="textField" uuid="25adc0d4-2cfd-4033-b2ba-873550f9adc7" x="338" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c5}]]></expression>
+</element>
+<element kind="textField" uuid="b9c4cc34-89ce-4fd5-9c2e-c6dac0a5895a" x="423" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
 							<box padding="2">
 								<pen lineWidth="0.4" lineColor="#94A3B8"/>
 							</box>
 							<expression><![CDATA[$F{c6}]]></expression>
-						</element>
-						</contents>
+</element>
+</contents>
 					</component>
 				</element>
 		</band>

@@ -269,22 +269,6 @@
         <ng-container *ngTemplateOutlet="menuNode; context: { items: mainMenu(), depth: 0 }">
         </ng-container>
 
-        <!-- ── เพิ่งเข้าชม ── -->
-        @if (recentItems.items().length > 0) {
-          <div class="mt-4 border-t border-[var(--border)] pt-3">
-            <p class="mb-1 px-3.5 text-[0.68rem] font-semibold uppercase tracking-wider text-[var(--text-muted)]">
-              เพิ่งเข้าชม
-            </p>
-            @for (item of recentItems.items(); track item.type + item.id) {
-              <a [routerLink]="item.path"
-                [queryParams]="item.queryParams || null"
-                class="flex items-center gap-3 rounded-lg px-3.5 py-2 text-[0.8rem] text-[var(--text)] transition-colors hover:bg-[var(--sidebar-hover)] hover:text-[var(--text-active)] cursor-pointer">
-                <i class="bi text-[0.85rem] text-[var(--text-muted)]" [class]="item.icon"></i>
-                <span class="truncate">{{ item.label }}</span>
-              </a>
-            }
-          </div>
-        }
 
       </nav>
 

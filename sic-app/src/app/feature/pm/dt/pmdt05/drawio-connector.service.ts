@@ -116,8 +116,8 @@ export class DrawioConnectorService {
     this.postMessage({ action: 'export', format: 'xml' });
   }
 
-  requestPng(): void {
-    this.postMessage({ action: 'export', format: 'png', scale: 2, border: 10, background: '#ffffff' });
+  requestPng(scale = 2): void {
+    this.postMessage({ action: 'export', format: 'png', scale, border: 10, background: '#ffffff' });
   }
 
   /**

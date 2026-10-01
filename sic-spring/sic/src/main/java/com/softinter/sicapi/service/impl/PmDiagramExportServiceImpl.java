@@ -56,6 +56,10 @@ public class PmDiagramExportServiceImpl implements PmDiagramExportService {
         parameters.put("requirementTitle", orDash(info.getRequirementTitle()));
         parameters.put("version", orDash(info.getVersion()));
         parameters.put("status", orDash(info.getApprovalStatus()));
+        // ไม่ได้ส่งรูปมา → ใช้ PNG ที่ frontend บันทึกไว้ใน graphData ตอน save
+        if (imageDataUri == null && tab.getGraphData() != null && tab.getGraphData().get("png") instanceof String s) {
+            imageDataUri = s;
+        }
         String image = imageDataUri == null ? "" : imageDataUri.substring(imageDataUri.indexOf(',') + 1).trim();
         parameters.put("diagramImage", image);
         parameters.put("lang", normalizedLang);
