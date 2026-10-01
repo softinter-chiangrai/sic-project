@@ -335,6 +335,8 @@ export class Pmdt12Component implements OnInit {
         expectedResult: row['expectedResult'],
         priority: row['priority'],
         testType: row['testType'],
+        tester: row['tester'],
+        testDate: row['testDate'],
         testStatus: 'Pending',
       }),
     );

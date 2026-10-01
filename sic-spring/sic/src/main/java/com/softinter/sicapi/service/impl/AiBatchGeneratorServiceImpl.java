@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -26,6 +27,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
 
     private final PmAiProviderService aiProviderService;
     private final AiModuleRegistry moduleRegistry;
+    private final AiMemberPicker memberPicker;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Pattern JSON_ARRAY_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -54,6 +56,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
         try {
             String raw = aiProviderService.generateRawResponse(userPrompt, systemPrompt, request.getModel(), request.getAttachments());
             List<Map<String, Object>> items = parseItems(raw);
+            if ("TEST_CASE".equals(def.getModuleType())) fillTestCaseDefaults(items);
             return AiBatchGenerateResponse.builder()
                     .moduleType(def.getModuleType())
                     .items(items)
@@ -66,6 +69,17 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
                     .items(List.of())
                     .message("เกิดข้อผิดพลาดขณะสร้างข้อมูล: " + e.getMessage())
                     .build();
+        }
+    }
+
+    /** Test Case ที่ AI สร้างเป็นชุดไม่มี tester/วันทดสอบ: เติมผู้ทดสอบ (สุ่มสมาชิก) กับวันทดสอบ และ testType เริ่มต้น */
+    private void fillTestCaseDefaults(List<Map<String, Object>> items) {
+        String testDate = LocalDate.now().plusDays(7).toString();
+        for (Map<String, Object> item : items) {
+            AiMemberPicker.Member tester = memberPicker.pick();
+            if (tester != null) item.putIfAbsent("tester", tester.name());
+            item.putIfAbsent("testDate", testDate);
+            item.putIfAbsent("testType", "SIT");
         }
     }
 

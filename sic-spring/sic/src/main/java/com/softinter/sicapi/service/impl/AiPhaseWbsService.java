@@ -47,6 +47,7 @@ public class AiPhaseWbsService {
     private final PmTaskRepository taskRepository;
     private final PmAiProviderService aiProvider;
     private final CurrentUserService currentUserService;
+    private final AiMemberPicker memberPicker;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -114,6 +115,11 @@ public class AiPhaseWbsService {
                     tq.setEstimateManday(Math.max(1, t.path("estimateManday").asInt(2)));
                     tq.setPriority(pick(text(t, "priority"), PRIORITIES, "Medium"));
                     tq.setColor(mq.getColor());
+                    AiMemberPicker.Member assignee = memberPicker.pick();
+                    if (assignee != null) {
+                        tq.setAssigneeIds(List.of(assignee.userId()));
+                        tq.setAssignedTo(assignee.userId());
+                    }
                     taskService.createTask(tq);
                     taskCount++;
                 }
