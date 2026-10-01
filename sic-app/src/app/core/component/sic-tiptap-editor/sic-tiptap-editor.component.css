@@ -211,6 +211,25 @@
   display: list-item !important;
 }
 
+/* รูปใน editor: คงสัดส่วนจริง ไม่ทับข้อความ */
+::ng-deep .ProseMirror .resizable-image-wrapper {
+  display: block;
+  overflow: hidden;
+  clear: both;
+}
+
+::ng-deep .ProseMirror .resizable-image-container {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+
+::ng-deep .ProseMirror img.ate-image {
+  display: block;
+  height: auto;
+  max-width: 100%;
+}
+
 ::ng-deep .ProseMirror blockquote,
 ::ng-deep .ate-editor blockquote {
   border-left: 3px solid var(--border);

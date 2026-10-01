@@ -112,6 +112,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
                         .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
+        parameters.put("attachmentGroupId", invoice.getAttachmentGroupId());
         parameters.put("lang", normalizedLang);
         parameters.put(net.sf.jasperreports.engine.JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

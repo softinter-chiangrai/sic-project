@@ -120,7 +120,7 @@
 
 .sic-upload__preview {
   display: block;
-  object-fit: cover;
+  object-fit: contain;
 }
 
 .sic-upload__preview--video {

@@ -25,10 +25,31 @@ public class PmRequirementExportServiceImpl implements PmRequirementExportServic
 
     private final DataSource dataSource;
     private final ReportServiceClient reportServiceClient;
+    private final com.softinter.sicapi.repository.pm.PmRequirementRepository requirementRepository;
+    private final com.softinter.sicapi.repository.su.SuUploadRepository uploadRepository;
+    private final com.softinter.sicapi.service.FileStorageService fileStorageService;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                              .withZone(ZoneId.of("Asia/Bangkok"));
+
+    /** ดึงไฟล์รูปในเอกสารแนบของ requirement จาก storage เพื่อฝังท้ายรายงาน (ไฟล์ที่ไม่ใช่รูปแสดงเป็นชื่อไฟล์เหมือนเดิม) */
+    private java.util.List<com.softinter.sicapi.util.ReportHelper.ContentBlock> loadAttachmentImages(UUID id) {
+        java.util.List<byte[]> images = new java.util.ArrayList<>();
+        if (id != null) {
+            requirementRepository.findById(id).map(r -> r.getUploadGroupId()).ifPresent(groupId ->
+                uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId).stream()
+                    .filter(u -> u.getContentType() != null && u.getContentType().startsWith("image/"))
+                    .forEach(u -> {
+                        try (InputStream in = fileStorageService.downloadFile(u.getId()).getInputStream()) {
+                            images.add(in.readAllBytes());
+                        } catch (Exception e) {
+                            log.warn("Skip attachment image {} in requirement PDF: {}", u.getId(), e.getMessage());
+                        }
+                    }));
+        }
+        return com.softinter.sicapi.util.ReportHelper.imageBlocks(images);
+    }
 
     @Override
     public byte[] exportRequirementPdf(UUID id, UUID businessId, String lang) {
@@ -62,6 +83,7 @@ public class PmRequirementExportServiceImpl implements PmRequirementExportServic
             JasperReport jasperReport = JasperCompileManager.compileReport(is);
 
             parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
+            parameters.put("attachmentImages", loadAttachmentImages(id));
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
 

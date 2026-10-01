@@ -209,12 +209,184 @@ public class ReportHelper {
         return rows;
     }
 
+    /** ความกว้างสูงสุดที่พอดีหน้ากระดาษ (columnWidth 515 หัก padding) */
+    private static final int MAX_IMAGE_WIDTH = 513;
+
+    /**
+     * ปรับรูปให้กว้าง targetWidth px (0 = ใช้ขนาดจริงของไฟล์) แต่ไม่เกินความกว้างหน้ากระดาษ
+     * Jasper แสดง 1px = 1pt จึงได้ขนาดตรงกับที่ผู้ใช้ตั้งไว้ใน tiptap
+     */
+    static byte[] fitWidth(byte[] src, int targetWidth) {
+        try {
+            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(src));
+            if (img == null) return src;
+            int w = Math.min(targetWidth > 0 ? targetWidth : img.getWidth(), MAX_IMAGE_WIDTH);
+            if (w == img.getWidth()) return src;
+            int h = Math.max(1, Math.round(img.getHeight() * (float) w / img.getWidth()));
+            java.awt.image.BufferedImage out = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+            java.awt.Graphics2D g = out.createGraphics();
+            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            g.drawImage(img, 0, 0, w, h, null);
+            g.dispose();
+            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
+            javax.imageio.ImageIO.write(out, "png", bos);
+            return bos.toByteArray();
+        } catch (Exception e) {
+            return src;
+        }
+    }
+
+    /**
+     * แตก HTML ของ tiptap เป็นบล็อกเรียงตามลำดับจริง: ข้อความ, รูป, ข้อความ, ... เพื่อให้รูปอยู่ตำแหน่งเดิม
+     * และขนาดตาม attr width ที่ตั้งใน editor (ถ้าไม่มี = ขนาดจริงของไฟล์) ไม่มีเนื้อหาเลย → ใช้ fallback
+     */
+    public static List<ContentBlock> extractContentBlocks(String html, String fallback) {
+        return extractContentBlocks(html, fallback, MAX_IMAGE_WIDTH);
+    }
+
+    /** maxWidth = ความกว้าง (pt) ของกล่องเนื้อหาในรายงานนั้น ๆ รูปที่กว้างกว่านี้จะถูกย่อตอนแสดง */
+    public static List<ContentBlock> extractContentBlocks(String html, String fallback, int maxWidth) {
+        List<ContentBlock> blocks = new ArrayList<>();
+        String source = html == null ? "" : html;
+        // รูปและตารางเป็นตัวแบ่งบล็อก ข้อความที่เหลือระหว่างกลางเป็นบล็อกข้อความ
+        Matcher token = Pattern.compile("(?is)<table[^>]*>.*?</table>|<img\\b[^>]*>").matcher(source);
+        int last = 0;
+        while (token.find()) {
+            addTextBlock(blocks, source.substring(last, token.start()));
+            last = token.end();
+            String part = token.group();
+            if (part.regionMatches(true, 0, "<table", 0, 6)) {
+                for (TableRow row : extractTableRows(part)) blocks.add(ContentBlock.table(row));
+                continue;
+            }
+            Matcher src = Pattern.compile("data:image/[^;\"']+;base64,([A-Za-z0-9+/=]+)").matcher(part);
+            if (!src.find()) continue;
+            try {
+                Matcher w = Pattern.compile("(?i)\\swidth=\"(\\d+)\"").matcher(part);
+                int width = w.find() ? Integer.parseInt(w.group(1)) : 0;
+                // tiptap เก็บการจัดตำแหน่งเป็น text-align (style) หรือ data-align
+                Matcher al = Pattern.compile("(?i)(?:text-align:\\s*|data-align=\"?)(left|center|right)").matcher(part);
+                blocks.add(ContentBlock.image(scaled(Base64.getDecoder().decode(src.group(1)), width, maxWidth),
+                        al.find() ? al.group(1).toLowerCase() : "left"));
+            } catch (IllegalArgumentException e) {
+                log.warn("Skipping malformed base64 image in report content: {}", e.getMessage());
+            }
+        }
+        addTextBlock(blocks, source.substring(last));
+        if (blocks.isEmpty() && fallback != null && !fallback.isEmpty()) blocks.add(ContentBlock.text(fallback));
+        return blocks;
+    }
+
+    /** ต่อบล็อกข้อความท้ายรายการ (เช่น ชื่อไฟล์แนบ) — null/ว่าง = ไม่ต่อ */
+    public static List<ContentBlock> appendText(List<ContentBlock> blocks, String text) {
+        if (text != null && !text.isBlank()) blocks.add(ContentBlock.text(text));
+        return blocks;
+    }
+
+    /** ต่อชื่อไฟล์แนบ (ข้อความ) และรูปในเอกสารแนบของ upload group นั้นท้ายรายการ */
+    public static List<ContentBlock> appendAttachments(List<ContentBlock> blocks, String text, Object uploadGroupId) {
+        appendText(blocks, text);
+        return appendImages(blocks, uploadGroupId);
+    }
+
+    /** ต่อรูปในเอกสารแนบของ upload group ท้ายรายการ (ขนาดจริง ย่อเฉพาะที่กว้างเกินหน้า) */
+    public static List<ContentBlock> appendImages(List<ContentBlock> blocks, Object uploadGroupId) {
+        blocks.addAll(imageBlocks(ReportAttachmentImages.load(uploadGroupId)));
+        return blocks;
+    }
+
+    /** แปลงไฟล์รูป (เช่น เอกสารแนบ) เป็นบล็อกรูปเรียงต่อกัน ขนาดจริง ย่อเฉพาะที่กว้างเกินหน้ากระดาษ */
+    public static List<ContentBlock> imageBlocks(List<byte[]> images) {
+        List<ContentBlock> blocks = new ArrayList<>();
+        for (byte[] data : images) blocks.add(ContentBlock.image(scaled(data, 0, MAX_IMAGE_WIDTH), "left"));
+        return blocks;
+    }
+
+    private static void addTextBlock(List<ContentBlock> blocks, String htmlPart) {
+        String text = plainTextWithoutTables(htmlPart);
+        if (!"-".equals(text)) blocks.add(ContentBlock.text(text));
+    }
+
+    /** บล็อกเนื้อหาหนึ่งชิ้น: ข้อความ, รูป หรือแถวตาราง อย่างใดอย่างหนึ่ง */
+    public static class ContentBlock {
+        private final String text;
+        private final net.sf.jasperreports.renderers.Renderable image;
+        private final String align;
+        private final TableRow row;
+
+        private ContentBlock(String text, net.sf.jasperreports.renderers.Renderable image, String align, TableRow row) {
+            this.text = text;
+            this.image = image;
+            this.align = align;
+            this.row = row;
+        }
+
+        static ContentBlock text(String text) { return new ContentBlock(text, null, null, null); }
+        static ContentBlock image(net.sf.jasperreports.renderers.Renderable image, String align) { return new ContentBlock(null, image, align, null); }
+        static ContentBlock table(TableRow row) { return new ContentBlock(null, null, null, row); }
+
+        public String getText() { return text; }
+        public String getAlign() { return align; }
+        public boolean isTableRow() { return row != null; }
+
+        /** จำนวนคอลัมน์ที่ใช้จริงในแถวนี้ (ตัดคอลัมน์ว่างท้ายแถว) */
+        public int getCols() {
+            if (row == null) return 0;
+            for (int i = 5; i > 0; i--) {
+                if (!row.cellAt(i).isEmpty()) return i + 1;
+            }
+            return 1;
+        }
+        public String getC1() { return row == null ? null : row.getC1(); }
+        public String getC2() { return row == null ? null : row.getC2(); }
+        public String getC3() { return row == null ? null : row.getC3(); }
+        public String getC4() { return row == null ? null : row.getC4(); }
+        public String getC5() { return row == null ? null : row.getC5(); }
+        public String getC6() { return row == null ? null : row.getC6(); }
+
+        public net.sf.jasperreports.renderers.Renderable getImageData() {
+            return image;
+        }
+    }
+
+    /**
+     * เก็บ pixel เดิมของรูปไว้ครบ (PDF ฝัง bytes ต้นฉบับ ไม่เบลอ) แต่รายงานขนาดที่ใช้แสดงให้ RealHeight
+     * จึงย่อรูปกว้างเกินหน้ากระดาษตอนแสดงผลได้โดยไม่ลดความละเอียด
+     */
+    static class ScaledImageRenderer extends net.sf.jasperreports.renderers.SimpleDataRenderer
+            implements net.sf.jasperreports.renderers.DimensionRenderable {
+        private final java.awt.geom.Dimension2D size;
+
+        ScaledImageRenderer(byte[] data, int w, int h) {
+            super(data, null);
+            this.size = new java.awt.Dimension(w, h);
+        }
+
+        @Override
+        public java.awt.geom.Dimension2D getDimension(net.sf.jasperreports.engine.JasperReportsContext ctx) {
+            return size;
+        }
+    }
+
+    /** targetWidth px (0 = กว้างตามไฟล์) ไม่เกินความกว้างหน้ากระดาษ — ย่อที่ตอนแสดง ไม่แตะ pixel ต้นฉบับ */
+    static net.sf.jasperreports.renderers.Renderable scaled(byte[] src, int targetWidth, int maxWidth) {
+        try {
+            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(src));
+            if (img == null) return net.sf.jasperreports.renderers.SimpleDataRenderer.getInstance(src);
+            int w = Math.min(targetWidth > 0 ? targetWidth : img.getWidth(), maxWidth);
+            int h = Math.max(1, Math.round(img.getHeight() * (float) w / img.getWidth()));
+            return new ScaledImageRenderer(src, w, h);
+        } catch (Exception e) {
+            return net.sf.jasperreports.renderers.SimpleDataRenderer.getInstance(src);
+        }
+    }
+
     /** Bean รูปภาพหนึ่งรูป ให้ JasperReports bind เป็น datasource ของ List component ได้ */
     public static class ImageRow {
         private final byte[] data;
 
         public ImageRow(byte[] data) {
-            this.data = data;
+            this.data = fitWidth(data, 0);
         }
 
         public java.io.InputStream getImageData() {

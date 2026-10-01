@@ -67,7 +67,8 @@
                 TO_CHAR(cr.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
                 COALESCE(cr.description, CASE WHEN $P{lang} = 'en' THEN 'No additional details' ELSE 'ไม่มีรายละเอียดเพิ่มเติม' END) AS "description",
                 (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
-                    WHERE su.upload_group_id = cr.attachment_group_id AND su.is_active = true) AS "attachmentNames"
+                    WHERE su.upload_group_id = cr.attachment_group_id AND su.is_active = true) AS "attachmentNames",
+                CAST(cr.attachment_group_id AS VARCHAR) AS "attachmentGroupId"
             FROM pm_change_request cr
             LEFT JOIN pm_customer_project p ON cr.project_id = p.id
             LEFT JOIN pm_customer c ON p.customer_id = c.id
@@ -94,6 +95,7 @@
 	<field name="createdDate" class="java.lang.String"/>
 	<field name="description" class="java.lang.String"/>
 	<field name="attachmentNames" class="java.lang.String"/>
+	<field name="attachmentGroupId" class="java.lang.String"/>
 
 	<!-- TITLE BAND -->
 	<title height="105">
@@ -128,7 +130,22 @@
 
 	<!-- DETAIL BAND -->
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
-	<dataset name="TableRowsDataset" uuid="d3a10007-d001-d001-d001-a1b2c3d4e5f6">
+	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
+	<dataset name="ContentBlocksDataset" uuid="d3a10003-d003-d003-d003-a1b2c3d4e5f6">
+		<field name="text" class="java.lang.String"/>
+		<field name="imageData" class="net.sf.jasperreports.renderers.Renderable"/>
+		<field name="align" class="java.lang.String"/>
+		<field name="tableRow" class="java.lang.Boolean"/>
+		<field name="cols" class="java.lang.Integer"/>
+		<field name="c1" class="java.lang.String"/>
+		<field name="c2" class="java.lang.String"/>
+		<field name="c3" class="java.lang.String"/>
+		<field name="c4" class="java.lang.String"/>
+		<field name="c5" class="java.lang.String"/>
+		<field name="c6" class="java.lang.String"/>
+	</dataset>
+
+<dataset name="TableRowsDataset" uuid="d3a10007-d001-d001-d001-a1b2c3d4e5f6">
 		<field name="c1" class="java.lang.String"/>
 		<field name="c2" class="java.lang.String"/>
 		<field name="c3" class="java.lang.String"/>
@@ -232,79 +249,75 @@
 			<element kind="line" uuid="7cf41209-3c4b-489e-913a-7a561bc49a12" positionType="Float" x="0" y="182" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" positionType="Float" x="0" y="190" width="515" height="26" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
-				<paragraph lineSpacing="1_1_2" style="ContentText"/>
-				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.plainTextWithoutTables($F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details" : "ไม่มีรายละเอียดเพิ่มเติม"))]]></expression>
-			</element>
-
-						<!-- Table grid extracted from any HTML <table> in this field (real List component, unlimited rows) -->
-						<element kind="component" uuid="d3a10007-1004-1004-1004-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="220" width="515" height="16">
-							<component kind="list">
-								<datasetRun uuid="d3a10007-1005-1005-1005-a1b2c3d4e5f6" subDataset="TableRowsDataset">
-									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractTableRows($F{description}))]]></dataSourceExpression>
-								</datasetRun>
-								<contents height="16" width="515">
-								<element kind="textField" uuid="d3a10007-c000-c000-c000-a1b2c3d4e5f6" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-									<box padding="2">
-										<pen lineWidth="0.4" lineColor="#94A3B8"/>
-									</box>
-									<expression><![CDATA[$F{c1}]]></expression>
-								</element>
-								<element kind="textField" uuid="d3a10007-c010-c010-c010-a1b2c3d4e5f6" x="85" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-									<box padding="2">
-										<pen lineWidth="0.4" lineColor="#94A3B8"/>
-									</box>
-									<expression><![CDATA[$F{c2}]]></expression>
-								</element>
-								<element kind="textField" uuid="d3a10007-c020-c020-c020-a1b2c3d4e5f6" x="170" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-									<box padding="2">
-										<pen lineWidth="0.4" lineColor="#94A3B8"/>
-									</box>
-									<expression><![CDATA[$F{c3}]]></expression>
-								</element>
-								<element kind="textField" uuid="d3a10007-c030-c030-c030-a1b2c3d4e5f6" x="255" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-									<box padding="2">
-										<pen lineWidth="0.4" lineColor="#94A3B8"/>
-									</box>
-									<expression><![CDATA[$F{c4}]]></expression>
-								</element>
-								<element kind="textField" uuid="d3a10007-c040-c040-c040-a1b2c3d4e5f6" x="340" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-									<box padding="2">
-										<pen lineWidth="0.4" lineColor="#94A3B8"/>
-									</box>
-									<expression><![CDATA[$F{c5}]]></expression>
-								</element>
-								<element kind="textField" uuid="d3a10007-c050-c050-c050-a1b2c3d4e5f6" x="425" y="0" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
-									<box padding="2">
-										<pen lineWidth="0.4" lineColor="#94A3B8"/>
-									</box>
-									<expression><![CDATA[$F{c6}]]></expression>
-								</element>
-								</contents>
-							</component>
+			<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
+				<element kind="component" uuid="aa1740c8-6733-4579-bc1d-f89581158e58" positionType="Float" x="0" y="190" width="515" height="20">
+					<component kind="list">
+						<datasetRun uuid="2995a35a-2a73-460b-bee6-d433c7018ec4" subDataset="ContentBlocksDataset">
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendAttachments(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details" : "ไม่มีรายละเอียดเพิ่มเติม"), "-", 513), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames}), $F{attachmentGroupId}))]]></dataSourceExpression>
+						</datasetRun>
+						<contents height="16" width="515">
+							<element kind="textField" uuid="7455ae41-97f0-4a16-b3b3-5c63cac60185" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+								<printWhenExpression><![CDATA[$F{text} != null]]></printWhenExpression>
+								<paragraph lineSpacing="1_1_2" style="ContentText"/>
+								<expression><![CDATA[$F{text}]]></expression>
+							</element>
+						<element kind="image" uuid="d2eb21ef-3c5c-4ef0-8bac-96b6558b026d" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Left" onErrorType="Blank">
+							<printWhenExpression><![CDATA[$F{imageData} != null && "left".equals($F{align})]]></printWhenExpression>
+							<expression><![CDATA[$F{imageData}]]></expression>
 						</element>
-
-						<!-- Inline images embedded (base64) in this field, real List component, unlimited count -->
-						<element kind="component" uuid="d3a10007-2004-2004-2004-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="240" width="160" height="100">
-							<component kind="list">
-								<datasetRun uuid="d3a10007-2005-2005-2005-a1b2c3d4e5f6" subDataset="ImageRowsDataset">
-									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractInlineImageRows($F{description}))]]></dataSourceExpression>
-								</datasetRun>
-								<contents height="100" width="160">
-									<element kind="image" uuid="d3a10007-2006-2006-2006-a1b2c3d4e5f6" x="0" y="0" width="160" height="100" scaleImage="RetainShape" onErrorType="Blank">
-										<box padding="1">
-											<pen lineWidth="0.5" lineColor="#CBD5E1"/>
-										</box>
-										<expression><![CDATA[$F{imageData}]]></expression>
-									</element>
-								</contents>
-							</component>
+						<element kind="image" uuid="09f9338a-0dbf-4dd1-8d72-f41450c9f6f7" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Center" onErrorType="Blank">
+							<printWhenExpression><![CDATA[$F{imageData} != null && "center".equals($F{align})]]></printWhenExpression>
+							<expression><![CDATA[$F{imageData}]]></expression>
 						</element>
-
-						<!-- Uploaded evidence files (attachmentGroupId/uploadGroupId) -->
-						<element kind="textField" uuid="d3a10007-3007-3007-3007-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="FooterText">
-							<expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression>
+						<element kind="image" uuid="26485675-937c-4826-ba7c-25d5411fb81d" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Right" onErrorType="Blank">
+							<printWhenExpression><![CDATA[$F{imageData} != null && "right".equals($F{align})]]></printWhenExpression>
+							<expression><![CDATA[$F{imageData}]]></expression>
 						</element>
+						<element kind="textField" uuid="6078308c-b6e2-4004-b2e3-e3a25be8c7b6" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 1]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c1}]]></expression>
+						</element>
+						<element kind="textField" uuid="d6e74dab-b6db-4135-9b45-4b1eb6a1b9db" x="85" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 2]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c2}]]></expression>
+						</element>
+						<element kind="textField" uuid="78f57f15-95d9-4db0-8823-06489a6141de" x="170" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 3]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c3}]]></expression>
+						</element>
+						<element kind="textField" uuid="dc5d845b-8105-4523-ba51-15e4c42edf5e" x="255" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 4]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c4}]]></expression>
+						</element>
+						<element kind="textField" uuid="2eaa584c-e9c2-4edc-96c9-8d5a2fc2608b" x="340" y="0" width="85" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 5]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c5}]]></expression>
+						</element>
+						<element kind="textField" uuid="806605b0-0f37-4de0-98a6-9082f1c9bbbc" x="425" y="0" width="82" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="ContentText">
+							<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} >= 6]]></printWhenExpression>
+							<box padding="2">
+								<pen lineWidth="0.4" lineColor="#94A3B8"/>
+							</box>
+							<expression><![CDATA[$F{c6}]]></expression>
+						</element>
+						</contents>
+					</component>
+				</element>
 		</band>
 	</detail>
 

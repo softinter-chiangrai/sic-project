@@ -84,6 +84,7 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
                         .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
+        parameters.put("attachmentGroupId", manual.getAttachmentGroupId());
         parameters.put("lang", normalizedLang);
         parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

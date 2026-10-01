@@ -320,7 +320,7 @@
             @if (crumb.icon) {
             <i class="bi text-[0.95rem]" [class]="crumb.icon"></i>
             }
-            <span>{{ crumb.label }}</span>
+            <span>{{ crumb.label | translate }}</span>
           </a>
           } @else {
           <span class="inline-flex items-center gap-2 px-1 py-0.5 font-semibold"
@@ -328,7 +328,7 @@
             @if (crumb.icon) {
             <i class="bi text-[0.95rem]" [class]="crumb.icon" [class.text-[var(--crm-primary)]]="$index === 0"></i>
             }
-            <span>{{ crumb.label }}</span>
+            <span>{{ crumb.label | translate }}</span>
           </span>
           }
           }
