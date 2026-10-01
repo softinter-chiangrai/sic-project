@@ -6,6 +6,7 @@ import { SicInputComponent } from 'sic-ng';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { DialogService } from '../../../../core/services/dialog.service';
+import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 import { ApprovalService } from '../pmdt03/approval.service';
 import type { ApprovalFlow } from '../pmdt03/approval.model';
 import { environment } from '../../../../../environments/environment';
@@ -16,6 +17,7 @@ export interface DiagramEditData {
   name: string;
   type: string;
   diagramCode?: string;
+  attachmentGroupId?: string | null;
   rowVersion?: number;
   requirementId?: string;
   requirementTitle?: string;
@@ -27,7 +29,7 @@ export interface DiagramEditData {
 @Component({
   selector: 'app-new-diagram-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent, SicUploadComponent, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="w-[min(92vw,30rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
@@ -99,6 +101,21 @@ export interface DiagramEditData {
           ></sic-combobox>
         </div>
 
+        <!-- เอกสารแนบ -->
+        <div>
+          <label class="block text-sm font-medium text-[var(--text-active)] mb-1 flex items-center gap-2">
+            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+            {{ 'PMDT12B_ATTACHMENTS_LABEL' | translate }}
+          </label>
+          <sic-upload
+            [(ngModel)]="attachmentGroupId"
+            [ngModelOptions]="{ standalone: true }"
+            [uploadGroupId]="uploadGroupId"
+            [multiple]="true"
+            category="all"
+          ></sic-upload>
+        </div>
+
         <!-- Approval Flow Selection (แสดงเฉพาะในโหมดแก้ไข) -->
         @if (editData) {
           <div class="border-t border-[var(--border)] pt-4 mt-2">
@@ -143,13 +160,14 @@ export interface DiagramEditData {
   `
 })
 export class NewDiagramDialogComponent implements OnInit {
-  @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string, flowId?: string, diagramCode?: string) => void;
+  @Input() onSave!: (name: string, type: string, editData: DiagramEditData | undefined, requirementId: string, flowId?: string, diagramCode?: string, attachmentGroupId?: string) => void;
   @Input() editData: DiagramEditData | null = null;
   @Input() projectId!: string;
   @Input() selectedRequirementId: string = '';
   @Input() requirementTitle: string = '';
 
   diagramCode = '';
+  attachmentGroupId: any = null;
   name = '';
   type = 'DFD';
   selectedFlowId: string | null = null;
@@ -186,6 +204,7 @@ export class NewDiagramDialogComponent implements OnInit {
       this.diagramCode = this.editData.diagramCode || '';
       this.name = this.editData.name;
       this.type = this.editData.type;
+      this.attachmentGroupId = this.editData.attachmentGroupId || null;
       if (this.editData.requirementId) {
         this.selectedRequirementId = this.editData.requirementId;
       }
@@ -245,6 +264,15 @@ export class NewDiagramDialogComponent implements OnInit {
     return 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400';
   }
 
+  /** sic-upload ส่งค่าเป็น string / object / array — ดึง uploadGroupId ออกมา */
+  get uploadGroupId(): string | null {
+    const v = this.attachmentGroupId;
+    if (!v) return null;
+    if (typeof v === 'string') return v;
+    const o = Array.isArray(v) ? v[0] : v;
+    return o?.uploadGroupId || o?.id || null;
+  }
+
   get canSave(): boolean {
     return this.diagramCode.trim().length > 0 && this.name.trim().length > 0 && this.type.length > 0;
   }
@@ -257,7 +285,8 @@ export class NewDiagramDialogComponent implements OnInit {
       this.editData || undefined,
       this.selectedRequirementId,
       this.selectedFlowId || undefined,
-      this.diagramCode.trim()
+      this.diagramCode.trim(),
+      this.uploadGroupId || undefined
     );
     this.dialogService.close(true);
   }

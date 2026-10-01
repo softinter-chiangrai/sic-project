@@ -1,6 +1,9 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
+import com.softinter.sicapi.service.PmDiagramExportService;
+import com.softinter.sicapi.util.ReportHelper;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
 import com.softinter.sicapi.dto.response.PmDiagramTabResponse;
 import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
@@ -22,6 +25,7 @@ public class PmDiagramTabController {
 
     private final PmDiagramTabService tabService;
     private final ApprovalService approvalService;
+    private final PmDiagramExportService exportService;
 
     @GetMapping
     public ResponseEntity<List<PmDiagramTabResponse>> getTabs(
@@ -51,6 +55,25 @@ public class PmDiagramTabController {
             @PathVariable UUID id,
             @Valid @RequestBody PmDiagramTabRequest request) {
         return ResponseEntity.ok(tabService.updateTab(id, request));
+    }
+
+    /** body.image = PNG data URI ที่ draw.io export จากแผนภาพที่เปิดอยู่ */
+    @PostMapping("/{id}/export-pdf")
+    public ResponseEntity<byte[]> exportPdf(
+            @PathVariable UUID id,
+            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        byte[] pdf = exportService.exportDiagramPdf(id, businessId, ReportHelper.resolveLang(lang, headerLang),
+                body != null ? body.get("image") : null);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"diagram-" + id + ".pdf\"")
+                .body(pdf);
     }
 
     @PostMapping("/{id}/create-revision")

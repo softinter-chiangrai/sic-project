@@ -32,6 +32,7 @@ public class PmDiagramTabRequest {
     private Map<String, Object> graphData;
     private Integer sortOrder;
     private Boolean isActive;
+    private UUID attachmentGroupId;
 
     // ===== Traceability Fields (optional) =====
     private List<UUID> relatedRequirementIds;

@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport name="DiagramReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="a1d10001-0001-4001-8001-d1a9a0000001">
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="12.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
+
+	<parameter name="lang" class="java.lang.String"><defaultValueExpression><![CDATA["th"]]></defaultValueExpression></parameter>
+	<parameter name="exportDate" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="logoStream" class="java.io.InputStream"/>
+	<parameter name="diagramCode" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="diagramName" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="diagramType" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="projectName" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="requirementTitle" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="version" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="status" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="diagramImage" class="java.lang.String"><defaultValueExpression><![CDATA[""]]></defaultValueExpression></parameter>
+
+	<title height="196">
+		<element kind="image" uuid="a1d10001-0001-4001-8001-d1a9a0000002" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="a1d10001-0001-4001-8001-d1a9a0000003" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000004" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Diagram Document" : "เอกสารไดอะแกรม (Diagram)")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000005" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + $P{exportDate}]]></expression>
+		</element>
+		<element kind="line" uuid="a1d10001-0001-4001-8001-d1a9a0000006" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000007" x="0" y="76" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "1. Diagram Overview" : "1. ข้อมูลทั่วไปของไดอะแกรม (Diagram Overview)")]]></expression>
+		</element>
+		<element kind="line" uuid="a1d10001-0001-4001-8001-d1a9a0000008" x="0" y="98" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+
+		<!-- Row 1: Code & Name -->
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000009" x="10" y="104" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Code:" : "รหัสไดอะแกรม:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000000a" x="110" y="104" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<expression><![CDATA[$P{diagramCode}]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000000b" x="270" y="104" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Name:" : "ชื่อ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000000c" x="358" y="104" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<expression><![CDATA[$P{diagramName}]]></expression>
+		</element>
+
+		<!-- Row 2: Type & Project -->
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000000d" x="10" y="126" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภท:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000000e" x="110" y="126" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{diagramType}]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000000f" x="270" y="126" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000010" x="358" y="126" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{projectName}]]></expression>
+		</element>
+
+		<!-- Row 3: Version & Status -->
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000011" x="10" y="148" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000012" x="110" y="148" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{version}]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000013" x="270" y="148" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000014" x="358" y="148" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{status}]]></expression>
+		</element>
+
+		<!-- Row 4: Requirement -->
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000015" x="10" y="170" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Requirement:" : "ความต้องการ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000016" x="110" y="170" width="398" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{requirementTitle}]]></expression>
+		</element>
+	</title>
+
+	<detail>
+		<band height="546">
+			<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a0000018" x="0" y="8" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "2. Diagram" : "2. แผนภาพ (Diagram)")]]></expression>
+			</element>
+			<element kind="line" uuid="a1d10001-0001-4001-8001-d1a9a0000019" x="0" y="30" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<!-- diagramImage = base64 PNG exported from draw.io; blank when not supplied -->
+			<element kind="image" uuid="a1d10001-0001-4001-8001-d1a9a000001a" x="0" y="38" width="515" height="500" scaleImage="RetainShape" hImageAlign="Center" vImageAlign="Top" onErrorType="Blank">
+				<printWhenExpression><![CDATA[$P{diagramImage} != null && !$P{diagramImage}.isEmpty()]]></printWhenExpression>
+				<expression><![CDATA[new java.io.ByteArrayInputStream(java.util.Base64.getDecoder().decode($P{diagramImage}))]]></expression>
+			</element>
+			<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000001e" x="8" y="38" width="499" height="20" blankWhenNull="true" style="FooterText">
+				<printWhenExpression><![CDATA[$P{diagramImage} == null || $P{diagramImage}.isEmpty()]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "No diagram image." : "ไม่มีรูปแผนภาพ")]]></expression>
+			</element>
+		</band>
+	</detail>
+
+	<pageFooter height="30">
+		<element kind="line" uuid="a1d10001-0001-4001-8001-d1a9a000001b" x="0" y="4" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+		<element kind="staticText" uuid="a1d10001-0001-4001-8001-d1a9a000001c" x="0" y="8" width="350" height="18" vTextAlign="Bottom" style="FooterText">
+			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+		</element>
+		<element kind="textField" uuid="a1d10001-0001-4001-8001-d1a9a000001d" x="380" y="8" width="135" height="18" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Page " : "หน้า ") + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

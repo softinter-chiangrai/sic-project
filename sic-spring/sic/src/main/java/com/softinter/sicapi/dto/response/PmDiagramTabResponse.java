@@ -25,6 +25,7 @@ public class PmDiagramTabResponse {
     private UUID requirementId;
     private String requirementTitle;
     private Integer sortOrder;
+    private UUID attachmentGroupId;
     private Boolean isActive;
     private Instant createdDate;
     private Instant updatedDate;

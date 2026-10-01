@@ -25,6 +25,10 @@ export class DrawioConnectorService {
   private xmlSubject = new Subject<string>();
   xml$ = this.xmlSubject.asObservable();
 
+  /** PNG (data URI) ที่ draw.io export จากแผนภาพที่เปิดอยู่ */
+  private pngSubject = new Subject<string>();
+  png$ = this.pngSubject.asObservable();
+
   private errorSubject = new Subject<string>();
   error$ = this.errorSubject.asObservable();
 
@@ -112,6 +116,10 @@ export class DrawioConnectorService {
     this.postMessage({ action: 'export', format: 'xml' });
   }
 
+  requestPng(): void {
+    this.postMessage({ action: 'export', format: 'png', scale: 2, border: 10, background: '#ffffff' });
+  }
+
   /**
    * ให้ draw.io แปลง Mermaid ด้วยตัวแปลงของมันเอง (ผ่านปลั๊กอิน sicMermaid) ผลมาทาง mermaid$
    * replace = แทนที่แผนภาพที่เปิดอยู่ (stage 'inserted'), merge = คืน XML (stage 'parsed') ให้ผู้เรียกไป mergeXml เอง
@@ -186,6 +194,11 @@ export class DrawioConnectorService {
     if (data.event === 'save') {
       console.log('[Draw.io] SAVE event received – requesting XML for auto‑save...');
       this.requestXml();
+      return;
+    }
+
+    if (data.event === 'export' && data.format === 'png' && data.data) {
+      this.pngSubject.next(data.data);
       return;
     }
 

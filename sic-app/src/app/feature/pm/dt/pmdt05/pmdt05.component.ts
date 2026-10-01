@@ -398,8 +398,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: null,
         selectedRequirementId: reqId,
         requirementTitle: reqTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
-          this.diagramService.createTab(targetProjId, name, type as any, '', reqId, diagramCode).subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string, attachmentGroupId?: string) => {
+          this.diagramService.createTab(targetProjId, name, type as any, '', reqId, diagramCode, attachmentGroupId).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -434,8 +434,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: null,
         selectedRequirementId: reqId,
         requirementTitle: reqTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
-          this.diagramService.createTab(targetProjId, name, type as any, '', reqId, diagramCode).subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string, attachmentGroupId?: string) => {
+          this.diagramService.createTab(targetProjId, name, type as any, '', reqId, diagramCode, attachmentGroupId).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -461,8 +461,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: null,
         selectedRequirementId: requirementId,
         requirementTitle: requirementTitle,
-        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
-          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode).subscribe({
+        onSave: (name: string, type: string, editData: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string, attachmentGroupId?: string) => {
+          this.diagramService.createTab(this.projectId!, name, type as any, '', reqId, diagramCode, attachmentGroupId).subscribe({
             next: (newTab) => {
               this.tabs.update((t) => [...t, newTab]);
               this.switchTab(newTab.id);
@@ -489,6 +489,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       name: tab.name,
       type: tab.diagramType,
       diagramCode: tab.diagramCode,
+      attachmentGroupId: tab.attachmentGroupId,
       rowVersion: tab.rowVersion || 0,
       requirementId: tab.requirementId,
       requirementTitle: tab.requirementTitle,
@@ -505,10 +506,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         editData: editData,
         selectedRequirementId: tab.requirementId || '',
         requirementTitle: tab.requirementTitle || '',
-        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string) => {
+        onSave: (name: string, type: string, data: DiagramEditData | undefined, reqId: string, flowId?: string, diagramCode?: string, attachmentGroupId?: string) => {
           if (!data) return;
           const updatedTab = {
             ...tab,
+            attachmentGroupId: attachmentGroupId || tab.attachmentGroupId,
             name: name,
             diagramType: type,
             diagramCode: diagramCode || undefined,
@@ -552,6 +554,35 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         },
       },
     });
+  }
+
+  exportPdf(): void {
+    const id = this.currentTabId;
+    if (!id) return;
+    // ขอรูป PNG จาก draw.io ก่อน (รอสูงสุด 8 วิ ถ้าไม่ตอบก็ export แบบไม่มีรูป)
+    let sent = false;
+    const send = (image: string | null) => {
+      if (sent) return;
+      sent = true;
+      sub.unsubscribe();
+      clearTimeout(timer);
+      this.diagramService.exportPdf(id, image).subscribe({
+        next: (blob) => {
+          const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+          if (!window.open(url, '_blank')) {
+            const a = document.createElement('a');
+            a.href = url;
+            a.target = '_blank';
+            a.click();
+          }
+        },
+        error: () =>
+          this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR')),
+      });
+    };
+    const sub = this.drawioService.png$.pipe(take(1)).subscribe((png) => send(png));
+    const timer = setTimeout(() => send(null), 8000);
+    this.drawioService.requestPng();
   }
 
   switchTab(tabId: string): void {

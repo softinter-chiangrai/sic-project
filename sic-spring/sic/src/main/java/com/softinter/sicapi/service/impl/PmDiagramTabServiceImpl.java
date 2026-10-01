@@ -99,6 +99,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setMetadata(request.getMetadata());
         tab.setGraphData(request.getGraphData());
         tab.setSortOrder(maxSort + 1);
+        tab.setAttachmentGroupId(request.getAttachmentGroupId());
         tab.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
         PmDiagramTab saved = tabRepository.save(tab);
@@ -284,6 +285,9 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             }
             if (request.getIsActive() != null) {
                 tab.setIsActive(request.getIsActive());
+            }
+            if (request.getAttachmentGroupId() != null) {
+                tab.setAttachmentGroupId(request.getAttachmentGroupId());
             }
 
             if (!changes.isEmpty()) {
@@ -578,6 +582,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         }
 
         dto.setSortOrder(tab.getSortOrder());
+        dto.setAttachmentGroupId(tab.getAttachmentGroupId());
         dto.setIsActive(tab.getIsActive());
         dto.setCreatedDate(tab.getCreatedDate());
         dto.setUpdatedDate(tab.getUpdatedDate());

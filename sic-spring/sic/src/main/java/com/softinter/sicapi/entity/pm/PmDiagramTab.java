@@ -54,6 +54,9 @@ public class PmDiagramTab extends BaseEntity {
     @Column(name = "graph_data", columnDefinition = "JSONB")
     private Map<String, Object> graphData;
 
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
+
     @Column(name = "sort_order")
     private Integer sortOrder = 0;
 

@@ -112,7 +112,8 @@ export class DiagramService {
     type: DiagramType,
     script?: string,
     requirementId?: string,
-    diagramCode?: string
+    diagramCode?: string,
+    attachmentGroupId?: string
   ): Observable<DiagramModel> {
     const payload = {
       projectId,
@@ -121,6 +122,7 @@ export class DiagramService {
       mermaidScript: script || '',
       requirementId: requirementId || null,
       diagramCode: diagramCode?.trim() || null,
+      attachmentGroupId: attachmentGroupId || null,
       metadata: {},
       sortOrder: this.tabsSubject.value.length + 1,
     };
@@ -255,6 +257,14 @@ export class DiagramService {
   exportDiagram(id: string, format: 'png' | 'svg' | 'pdf' | 'md' | 'mmd'): Observable<Blob> {
     const lang = this.languageService.getCurrentLanguage();
     return this.http.get(`${this.apiUrl}/api/diagram/tabs/${id}/export?format=${format}`, {
+      params: { lang },
+      responseType: 'blob',
+    });
+  }
+
+  exportPdf(id: string, image: string | null): Observable<Blob> {
+    const lang = this.languageService.getCurrentLanguage();
+    return this.http.post(`${this.apiUrl}/api/diagram/tabs/${id}/export-pdf`, { image }, {
       params: { lang },
       responseType: 'blob',
     });

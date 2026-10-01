@@ -26,6 +26,7 @@ export interface DiagramModel {
   state?: number;
   rowVersion?: number;
   diagramCode?: string;
+  attachmentGroupId?: string | null;
   requirementId?: string;
   requirementTitle?: string;
   approvalStatus?: string;

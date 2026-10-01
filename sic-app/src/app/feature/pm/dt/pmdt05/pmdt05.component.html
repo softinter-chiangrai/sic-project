@@ -64,6 +64,16 @@
       </button>
 
       <button
+        (click)="exportPdf()"
+        [disabled]="!currentTabId"
+        class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] disabled:opacity-50 disabled:cursor-not-allowed"
+        [title]="'PMDT06_PRINT_DOC_BTN' | translate"
+      >
+        <i class="bi bi-file-earmark-pdf-fill text-lg"></i>
+        <span>{{ 'PMDT06_PRINT_DOC_BTN' | translate }}</span>
+      </button>
+
+      <button
         (click)="loadExistingDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
         [title]="'PMDT05_RELOAD_TITLE' | translate"
