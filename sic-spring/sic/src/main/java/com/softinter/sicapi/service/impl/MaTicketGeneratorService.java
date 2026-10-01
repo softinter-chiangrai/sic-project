@@ -21,6 +21,7 @@ public class MaTicketGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final PmCustomerProjectRepository projectRepository;
     private final ObjectMapper objectMapper;
+    private final AiMemberPicker memberPicker;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -45,7 +46,11 @@ public class MaTicketGeneratorService {
                     "ticketType": "BUG_SUPPORT",
                     "severity": "MEDIUM",
                     "description": "Comprehensive HTML description covering problem symptoms, reproduction steps, expected vs actual behavior, and affected components formatted in HTML (<p>, <ul>, <li>, <strong>, <h3>)",
-                    "resolutionSummary": "Root cause analysis, workaround, or proposed technical resolution steps formatted in HTML (<p>, <ul>, <li>, <strong>)"
+                    "resolutionSummary": "Root cause analysis, workaround, or proposed technical resolution steps formatted in HTML (<p>, <ul>, <li>, <strong>)",
+                    "startDate": "yyyy-MM-dd work start date",
+                    "startTime": "HH:mm",
+                    "endDate": "yyyy-MM-dd expected finish date",
+                    "endTime": "HH:mm"
                 }
                 5. If user prompt is in Thai, respond in Thai.
                 """;
@@ -55,6 +60,14 @@ public class MaTicketGeneratorService {
 
         if (request.getTicketType() != null && !request.getTicketType().isBlank()) draft.setTicketType(request.getTicketType());
         if (request.getSeverity() != null && !request.getSeverity().isBlank()) draft.setSeverity(request.getSeverity());
+
+        java.time.LocalDate today = java.time.LocalDate.now();
+        if (draft.getStartDate() == null || draft.getStartDate().isBlank()) draft.setStartDate(today.toString());
+        if (draft.getStartTime() == null || draft.getStartTime().isBlank()) draft.setStartTime("09:00");
+        if (draft.getEndDate() == null || draft.getEndDate().isBlank()) draft.setEndDate(today.plusDays(3).toString());
+        if (draft.getEndTime() == null || draft.getEndTime().isBlank()) draft.setEndTime("17:00");
+        AiMemberPicker.Member assignee = memberPicker.pick();
+        if (assignee != null) draft.setAssignedToIds(java.util.List.of(assignee.userId()));
 
         return draft;
     }

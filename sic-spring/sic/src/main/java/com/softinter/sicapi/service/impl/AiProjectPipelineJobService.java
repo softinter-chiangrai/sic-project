@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,10 @@ import com.softinter.sicapi.dto.request.PmMaTicketRequest;
 import com.softinter.sicapi.dto.request.PhaseRequest;
 import com.softinter.sicapi.dto.request.PmCustomerContractRequest;
 import com.softinter.sicapi.dto.request.PmCustomerProjectRequest;
+import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
+import com.softinter.sicapi.dto.request.PmDeliveryItemRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryRequest;
+import com.softinter.sicapi.dto.request.PmInvoiceItemRequest;
 import com.softinter.sicapi.dto.request.PmRequirementRequest;
 import com.softinter.sicapi.dto.request.PmSpecificationRequest;
 import com.softinter.sicapi.dto.request.PmTestCaseRequest;
@@ -59,6 +63,9 @@ import com.softinter.sicapi.entity.enums.EntityState;
 import com.softinter.sicapi.entity.pm.AiPipelineJob;
 import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.repository.pm.AiPipelineJobRepository;
+import com.softinter.sicapi.repository.su.SuProfileRepository;
+import com.softinter.sicapi.repository.su.SuUserBusinessRepository;
+import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
@@ -114,6 +121,8 @@ public class AiProjectPipelineJobService {
     private final AiPipelineJobRepository jobRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
+    private final SuUserBusinessRepository userBusinessRepository;
+    private final SuProfileRepository profileRepository;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<UUID, Job> jobs = new ConcurrentHashMap<>();
@@ -167,6 +176,9 @@ public class AiProjectPipelineJobService {
     private record Ref(UUID id, String name) {
     }
 
+    private record Member(String userId, String name) {
+    }
+
     private static class Ctx {
         Job job;
         AiProjectPipelineRequest req;
@@ -189,6 +201,8 @@ public class AiProjectPipelineJobService {
         final List<Ref> tasks = new ArrayList<>();
         final List<Ref> deliveries = new ArrayList<>();
         final List<Ref> diagrams = new ArrayList<>();
+        final List<Member> members = new ArrayList<>();
+        final Map<UUID, String> wpColors = new HashMap<>();
     }
 
     // ===================== public API =====================
@@ -334,6 +348,7 @@ public class AiProjectPipelineJobService {
 
         boolean anyFailed = false;
         try {
+            loadMembers(c);
             for (StepState step : job.steps) {
                 step.status = "RUNNING";
                 try {
@@ -380,6 +395,28 @@ public class AiProjectPipelineJobService {
         }
     }
 
+    /** สมาชิกที่ active ของ business ใช้สุ่มเป็นผู้รับผิดชอบ (assignee/owner/reviewer/tester) ให้ทุก field ถูกเติมโดยไม่ต้องกรอกเอง */
+    private void loadMembers(Ctx c) {
+        try {
+            userBusinessRepository.findByBusinessIdAndIsActiveTrue(c.businessId).forEach(ub -> {
+                String name = profileRepository.findByUserId(ub.getUserId())
+                        .map(LocalizationHelper::getFullName).filter(n -> n != null && !n.isBlank()).orElse(ub.getUserId());
+                c.members.add(new Member(ub.getUserId(), name));
+            });
+        } catch (Exception e) {
+            log.warn("AI pipeline: cannot load business members: {}", e.getMessage());
+        }
+    }
+
+    private Member randomMember(Ctx c) {
+        return c.members.isEmpty() ? null : c.members.get(ThreadLocalRandom.current().nextInt(c.members.size()));
+    }
+
+    private String randomName(Ctx c) {
+        Member m = randomMember(c);
+        return m == null ? null : cut(m.name(), 255);
+    }
+
     private void markRemainingSkipped(Job job) {
         for (StepState s : job.steps) {
             if ("PENDING".equals(s.status)) s.status = "SKIPPED";
@@ -395,7 +432,7 @@ public class AiProjectPipelineJobService {
                 Respond ONLY with valid JSON in a ```json block, in the same language as the user's request:
                 { "projectName": "professional title", "description": "plain text charter (objectives, scope, deliverables), max 1500 characters",
                   "customerName": "organization/client company name if mentioned or implied in the prompt, else realistic company name",
-                  "estimatedDurationWeeks": 12, "budgetManday": 120 }
+                  "estimatedDurationWeeks": 12, "budgetManday": 120, "priority": "Low | Medium | High | Critical" }
                 """, "รายละเอียดโครงการ: " + firstNonBlank(c.req.getPrompt(), c.req.getProjectName())
                 + (c.req.getProjectName() != null && !c.req.getProjectName().isBlank() ? "\nชื่อโครงการที่ผู้ใช้กำหนด: " + c.req.getProjectName() : "")
                 + "\nระยะเวลาเป้าหมาย: " + c.weeks + " สัปดาห์", true);
@@ -452,7 +489,7 @@ public class AiProjectPipelineJobService {
         pr.setPlannedEndDate(c.startDate.plusWeeks(c.weeks));
         pr.setBudgetManday(root != null && root.path("budgetManday").asInt(0) > 0 ? root.path("budgetManday").asInt() : c.weeks * 10);
         pr.setStatus("Planning");
-        pr.setPriority("Medium");
+        pr.setPriority(pickIgnoreCase(txt(root, "priority"), List.of("Low", "Medium", "High", "Critical"), "Medium"));
         pr.setIsActive(true);
         PmCustomerProjectResponse saved = projectService.create(c.businessId, pr);
 
@@ -489,6 +526,10 @@ public class AiProjectPipelineJobService {
         cr.setSignStatus("Draft");
         cr.setIsActive(true);
         c.contractId = contractService.saveContract(c.businessId, cr);
+        projectRepository.findById(c.projectId).ifPresent(p -> {
+            p.setContractId(c.contractId);
+            projectRepository.save(p);
+        });
         c.contractValueText = cr.getContractValue() + " บาท, " + cr.getContractType();
         step.count = 1;
     }
@@ -512,6 +553,7 @@ public class AiProjectPipelineJobService {
             pq.setStartDate(weekStart(c, ph.path("weekStart").asInt(1)));
             pq.setEndDate(weekEnd(c, ph.path("weekEnd").asInt(c.weeks)));
             pq.setColor(firstNonBlank(txt(ph, "color"), "#3B82F6"));
+            pq.setOwner(randomName(c));
             PhaseResponse phase = phaseService.createPhase(pq);
             c.phases.add(new Ref(phase.getId(), pq.getPhaseName()));
             total++;
@@ -537,6 +579,7 @@ public class AiProjectPipelineJobService {
                     wq.setColor(pq.getColor());
                     WorkPackageResponse saved = workPackageService.createWorkPackage(wq);
                     c.workPackages.add(new Ref(saved.getId(), wq.getPackageName()));
+                    c.wpColors.put(saved.getId(), wq.getColor());
                     total++;
                 }
             }
@@ -552,6 +595,7 @@ public class AiProjectPipelineJobService {
                 priority is one of: LOW | MEDIUM | HIGH | CRITICAL.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "requirements": [ { "title": "...", "description": "HTML (<p>,<ul>,<li>)", "requirementType": "FUNCTIONAL", "priority": "HIGH",
+                    "source": "who/what the requirement comes from, e.g. stakeholder, regulation, workshop",
                     "businessValue": "HTML", "acceptanceCriteria": "HTML" } ] }
                 """, projectContext(c), true);
 
@@ -564,6 +608,7 @@ public class AiProjectPipelineJobService {
             rq.setDescription(txt(n, "description"));
             rq.setRequirementType(pick(txt(n, "requirementType"), REQ_TYPES, "FUNCTIONAL"));
             rq.setPriority(pick(txt(n, "priority"), PRIORITIES, "MEDIUM"));
+            rq.setSource(cut(txt(n, "source"), 255));
             rq.setBusinessValue(txt(n, "businessValue"));
             rq.setAcceptanceCriteria(txt(n, "acceptanceCriteria"));
             rq.setVersion("v1.0.0");
@@ -584,7 +629,7 @@ public class AiProjectPipelineJobService {
                 priority is one of: LOW | MEDIUM | HIGH | CRITICAL.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "specifications": [ { "requirementRef": 1, "title": "...", "specificationType": "UI Specification", "priority": "HIGH",
-                    "estimatedManday": 5, "description": "HTML (<h3>,<p>,<ul>,<li>)" } ] }
+                    "module": "system module/feature area name", "estimatedManday": 5, "description": "HTML (<h3>,<p>,<ul>,<li>)" } ] }
                 """, projectContext(c) + "\n\nRequirements:\n" + numbered(c.requirements), false);
 
         int idx = 1;
@@ -595,6 +640,9 @@ public class AiProjectPipelineJobService {
             sq.setTitle(cut(txt(n, "title"), 255));
             sq.setSpecificationType(pick(txt(n, "specificationType"), SPEC_TYPES, "UI Specification"));
             sq.setPriority(pick(txt(n, "priority"), PRIORITIES, "MEDIUM"));
+            sq.setModule(cut(txt(n, "module"), 255));
+            Member owner = randomMember(c);
+            if (owner != null) sq.setOwner(owner.userId());
             sq.setEstimatedManday(n.path("estimatedManday").asInt(3));
             sq.setDescription(firstNonBlank(txt(n, "description"), "<p>" + sq.getTitle() + "</p>"));
             sq.setVersion("v1.0.0");
@@ -631,6 +679,12 @@ public class AiProjectPipelineJobService {
             tq.setWorkPackageId(wp.id());
             Ref spec = refAt(c.specs, n.path("specificationRef").asInt(0), -1);
             if (spec != null) tq.setSpecificationId(spec.id());
+            Member assignee = randomMember(c);
+            if (assignee != null) {
+                tq.setAssigneeIds(List.of(assignee.userId()));
+                tq.setAssignedTo(assignee.userId());
+            }
+            tq.setColor(c.wpColors.get(wp.id()));
             tq.setTaskCode(String.format("TSK-%03d", idx++));
             tq.setTaskName(cut(txt(n, "taskName"), 255));
             tq.setDescription(txt(n, "description"));
@@ -659,9 +713,9 @@ public class AiProjectPipelineJobService {
                 You are a Lead QA Engineer. Design test scenarios (max 6), each linked to one task by number, with 2-3 test cases each. Fill EVERY field.
                 priority is one of: LOW | MEDIUM | HIGH | CRITICAL. testType is one of: SIT | UAT.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "scenarios": [ { "taskRef": 1, "scenarioName": "...", "description": "HTML", "priority": "HIGH", "testType": "SIT",
+                { "scenarios": [ { "taskRef": 1, "requirementRef": 1, "specificationRef": 1, "scenarioName": "...", "description": "HTML", "priority": "HIGH", "testType": "SIT",
                     "cases": [ { "title": "...", "testStep": "<ol><li>...</li></ol>", "expectedResult": "<p>...</p>", "priority": "MEDIUM" } ] } ] }
-                """, projectContext(c) + "\n\nTasks:\n" + numbered(c.tasks), false);
+                """, projectContext(c) + "\n\nTasks:\n" + numbered(c.tasks) + "\n\nRequirements:\n" + numbered(c.requirements) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         int sIdx = 1;
         int cIdx = 1;
@@ -671,6 +725,9 @@ public class AiProjectPipelineJobService {
             try {
             Ref task = refAt(c.tasks, sn.path("taskRef").asInt(0), sIdx - 1);
             String testType = pick(txt(sn, "testType"), Set.of("SIT", "UAT"), "SIT");
+            String tester = randomName(c);
+            Ref reqRef = refAt(c.requirements, sn.path("requirementRef").asInt(0), -1);
+            Ref specRef = refAt(c.specs, sn.path("specificationRef").asInt(0), -1);
             PmTestScenarioRequest sq = new PmTestScenarioRequest();
             sq.setProjectId(c.projectId);
             sq.setTaskId(task.id());
@@ -688,11 +745,16 @@ public class AiProjectPipelineJobService {
                 cq.setScenarioId(scenarioId);
                 cq.setScenarioName(sq.getScenarioName());
                 cq.setTaskId(task.id());
+                cq.setRelatedTask(task.name());
+                cq.setTester(tester);
+                cq.setRelatedRequirement(reqRef == null ? null : reqRef.name());
+                cq.setRelatedSpec(specRef == null ? null : specRef.name());
                 cq.setTestCaseCode(String.format("TC-%03d", cIdx++));
                 cq.setTitle(cut(txt(cn, "title"), 255));
                 cq.setPriority(pick(txt(cn, "priority"), PRIORITIES, "MEDIUM"));
                 cq.setTestStep(firstNonBlank(txt(cn, "testStep"), "<p>-</p>"));
                 cq.setExpectedResult(firstNonBlank(txt(cn, "expectedResult"), "<p>-</p>"));
+                cq.setTestDate(c.startDate.plusWeeks(c.weeks));
                 cq.setTestStatus("Pending");
                 cq.setTestType(testType);
                 cq.setState(STATE_ADDED);
@@ -719,7 +781,8 @@ public class AiProjectPipelineJobService {
                 You are a Delivery Manager. Plan the deliveries (2-4, the last one is FINAL), each optionally tied to a milestone by number. Fill EVERY field.
                 deliveryType is one of: FINAL | PARTIAL | MILESTONE.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "deliveries": [ { "milestoneRef": 1, "deliveryTitle": "...", "deliveryType": "PARTIAL", "deliverySummary": "HTML", "releaseNote": "HTML" } ] }
+                { "deliveries": [ { "milestoneRef": 1, "deliveryTitle": "...", "deliveryType": "PARTIAL", "deliverySummary": "HTML", "releaseNote": "HTML",
+                    "checklists": [ { "itemName": "acceptance check item", "itemCategory": "Documentation | Testing | Deployment | Training" } ] } ] }
                 """, projectContext(c) + "\n\nMilestones:\n" + numbered(c.milestones), false);
 
         List<JsonNode> items = arr(root, "deliveries");
@@ -738,6 +801,8 @@ public class AiProjectPipelineJobService {
             dq.setDeliveryVersion("1.0." + (idx - 1));
             dq.setDeliverySummary(txt(d, "deliverySummary"));
             dq.setReleaseNote(txt(d, "releaseNote"));
+            dq.setChecklists(checklists(d));
+            if (idx == n) dq.setItems(deliveryItems(c));
             dq.setStatus("DRAFT");
             dq.setState(STATE_ADDED);
             UUID id = deliveryService.save(dq, c.businessId, c.userId);
@@ -748,12 +813,46 @@ public class AiProjectPipelineJobService {
         if (c.deliveries.isEmpty()) step.message = "AI ไม่สามารถวางแผนการส่งมอบได้";
     }
 
+    private List<PmDeliveryChecklistRequest> checklists(JsonNode d) {
+        List<PmDeliveryChecklistRequest> out = new ArrayList<>();
+        for (JsonNode k : arr(d, "checklists")) {
+            PmDeliveryChecklistRequest cr = new PmDeliveryChecklistRequest();
+            cr.setItemName(cut(txt(k, "itemName"), 255));
+            cr.setItemCategory(cut(txt(k, "itemCategory"), 100));
+            cr.setIsChecked(false);
+            cr.setSortOrder(out.size() + 1);
+            cr.setState(STATE_ADDED);
+            out.add(cr);
+        }
+        return out;
+    }
+
+    /** ส่งมอบครั้งสุดท้ายแนบ Requirement + Specification ทั้งหมดของโครงการ */
+    private List<PmDeliveryItemRequest> deliveryItems(Ctx c) {
+        List<PmDeliveryItemRequest> out = new ArrayList<>();
+        for (int i = 0; i < c.requirements.size(); i++) addItem(out, "REQUIREMENT", String.format("REQ-%03d", i + 1), c.requirements.get(i));
+        for (int i = 0; i < c.specs.size(); i++) addItem(out, "SPECIFICATION", String.format("SPEC-%03d", i + 1), c.specs.get(i));
+        return out;
+    }
+
+    private void addItem(List<PmDeliveryItemRequest> out, String type, String code, Ref ref) {
+        PmDeliveryItemRequest ir = new PmDeliveryItemRequest();
+        ir.setItemType(type);
+        ir.setItemId(ref.id());
+        ir.setItemCode(code);
+        ir.setItemTitle(ref.name());
+        ir.setItemStatus("DRAFT");
+        ir.setSortOrder(out.size() + 1);
+        ir.setState(STATE_ADDED);
+        out.add(ir);
+    }
+
     private void stepManuals(Ctx c, StepState step) {
         JsonNode root = ask(c, """
                 You are a Technical Writer. Write user manuals for the project (max 3), each with 3-4 sections. Fill EVERY field.
                 manualType is one of: USER | ADMIN | INSTALLATION | OPERATION | TROUBLESHOOT.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "manuals": [ { "manualTitle": "...", "manualType": "USER", "sections": [ { "sectionTitle": "...", "content": "HTML" } ] } ] }
+                { "manuals": [ { "manualTitle": "...", "manualType": "USER", "specificationRef": 1, "sections": [ { "sectionTitle": "...", "content": "HTML" } ] } ] }
                 """, projectContext(c) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         UUID lastDelivery = c.deliveries.isEmpty() ? null : c.deliveries.get(c.deliveries.size() - 1).id();
@@ -766,6 +865,9 @@ public class AiProjectPipelineJobService {
             mq.setManualCode(String.format("MAN-%03d", idx++));
             mq.setManualTitle(cut(txt(m, "manualTitle"), 255));
             mq.setManualType(pick(txt(m, "manualType"), MANUAL_TYPES, "USER"));
+            mq.setVersion("v1.0.0");
+            Ref spec = refAt(c.specs, m.path("specificationRef").asInt(0), -1);
+            if (spec != null) mq.setRelatedSpecId(spec.id());
             mq.setStatus("DRAFT");
             mq.setState(STATE_ADDED);
             List<PmUserManualSectionRequest> sections = new ArrayList<>();
@@ -791,18 +893,72 @@ public class AiProjectPipelineJobService {
         if (c.deliveries.isEmpty()) {
             throw new IllegalStateException("ไม่มีการส่งมอบให้สร้างใบแจ้งหนี้ (ขั้น Delivery ไม่สำเร็จหรือถูกปิดไว้)");
         }
+
+        Map<Integer, List<PmInvoiceItemRequest>> itemsByDeliveryRef = new HashMap<>();
+        try {
+            JsonNode root = ask(c, """
+                    You are a Senior Project Financial Controller & Billing Specialist.
+                    Generate realistic invoice line items breakdown for each delivery milestone below.
+                    Total contract value: """ + (c.contractValueText != null ? c.contractValueText : "unspecified") + """
+                    
+                    For each delivery, provide 1 to 3 realistic line items with sensible amounts matching the delivery scope and total contract value.
+                    Fill EVERY field.
+                    Respond ONLY with valid JSON in a ```json block, same language as the project:
+                    {
+                      "invoices": [
+                        {
+                          "deliveryRef": 1,
+                          "items": [
+                            { "itemName": "ชื่อรายการบริการ/ส่งมอบ", "description": "คำอธิบายงานแบบกระชับ", "amount": 100000.0 }
+                          ]
+                        }
+                      ]
+                    }
+                    """, projectContext(c) + "\n\nDeliveries:\n" + numbered(c.deliveries), false);
+
+            if (root != null) {
+                for (JsonNode inv : arr(root, "invoices")) {
+                    int ref = inv.path("deliveryRef").asInt(-1);
+                    List<PmInvoiceItemRequest> list = new ArrayList<>();
+                    int order = 1;
+                    for (JsonNode it : arr(inv, "items")) {
+                        PmInvoiceItemRequest ir = new PmInvoiceItemRequest();
+                        ir.setItemName(cut(txt(it, "itemName"), 255));
+                        ir.setDescription(cut(cleanHtmlText(txt(it, "description")), 255));
+                        ir.setAmount(it.path("amount").isNumber() ? it.path("amount").decimalValue() : BigDecimal.ZERO);
+                        ir.setSortOrder(order++);
+                        ir.setState(STATE_ADDED);
+                        list.add(ir);
+                    }
+                    if (!list.isEmpty()) {
+                        itemsByDeliveryRef.put(ref, list);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            log.warn("AI pipeline: invoice items generation fallback to delivery details: {}", e.getMessage());
+        }
+
         int count = 0;
         StringBuilder errors = new StringBuilder();
+        int dIdx = 1;
         for (Ref d : c.deliveries) {
             try {
-                deliveryService.createInvoiceFromDelivery(d.id(), c.businessId, c.userId);
+                List<PmInvoiceItemRequest> customItems = itemsByDeliveryRef.get(dIdx);
+                deliveryService.createInvoiceFromDelivery(d.id(), c.businessId, c.userId, customItems);
                 count++;
             } catch (Exception e) {
                 errors.append(d.name()).append(": ").append(e.getMessage()).append("; ");
             }
+            dIdx++;
         }
         step.count = count;
         if (errors.length() > 0) step.message = "สร้างบางรายการไม่ได้: " + errors;
+    }
+
+    private static String cleanHtmlText(String text) {
+        if (text == null) return null;
+        return text.replaceAll("<[^>]*>", "").trim();
     }
 
 
@@ -900,6 +1056,9 @@ public class AiProjectPipelineJobService {
             rq.setReviewableType(isDiagram ? "Diagram" : "Specification");
             rq.setReviewableId(target.id());
             rq.setSeverity(pickIgnoreCase(txt(r, "severity"), List.of("Low", "Medium", "High"), "Medium"));
+            rq.setReviewer(randomName(c));
+            rq.setAssignedTo(randomName(c));
+            rq.setDueDate(c.startDate.plusWeeks(c.weeks));
             rq.setStatus("Open");
             rq.setIsActive(true);
             designReviewService.save(rq, c.businessId, c.userId);
@@ -928,6 +1087,13 @@ public class AiProjectPipelineJobService {
             tq.setDescription(firstNonBlank(txt(t, "description"), tq.getTitle()));
             tq.setTicketType(MaTicketType.valueOf(pick(txt(t, "ticketType"), Set.of("BUG_SUPPORT", "DATA_ISSUE", "USER_SUPPORT", "CHANGE_REQUEST"), "USER_SUPPORT")));
             tq.setSeverity(MaTicketSeverity.valueOf(pick(txt(t, "severity"), Set.of("LOW", "MEDIUM", "HIGH", "CRITICAL"), "MEDIUM")));
+            Member assignee = randomMember(c);
+            if (assignee != null) tq.setAssignedToIds(List.of(assignee.userId()));
+            LocalDate goLive = c.startDate.plusWeeks(c.weeks);
+            tq.setStartDate(goLive.plusDays(1));
+            tq.setStartTime("09:00");
+            tq.setEndDate(goLive.plusDays(3));
+            tq.setEndTime("17:00");
             tq.setReportedBy(c.userId);
             tq.setState(STATE_ADDED);
             maTicketService.save(tq, c.businessId, c.userId);
@@ -946,6 +1112,7 @@ public class AiProjectPipelineJobService {
             rq.setNewEndDate(end.plusYears(1));
             rq.setProposedAmount(renewal.path("proposedAmount").isNumber() ? renewal.path("proposedAmount").decimalValue() : BigDecimal.ZERO);
             rq.setRemark(txt(renewal, "remark"));
+            rq.setStatus(com.softinter.sicapi.entity.enums.MaRenewalStatus.DRAFT);
             rq.setState(STATE_ADDED);
             maRenewalService.save(rq, c.businessId, c.userId);
             count++;

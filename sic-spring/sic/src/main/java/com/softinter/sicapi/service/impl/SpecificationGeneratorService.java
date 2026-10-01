@@ -26,6 +26,7 @@ public class SpecificationGeneratorService {
     private final PmRequirementRepository requirementRepository;
     private final PmDiagramTabRepository diagramRepository;
     private final ObjectMapper objectMapper;
+    private final AiMemberPicker memberPicker;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -59,6 +60,9 @@ public class SpecificationGeneratorService {
         SpecificationDraft draft = parseAiResponse(aiResponse);
 
         if (request.getSpecificationType() != null && !request.getSpecificationType().isBlank()) draft.setSpecificationType(request.getSpecificationType());
+
+        AiMemberPicker.Member owner = memberPicker.pick();
+        if (owner != null) draft.setOwner(owner.userId());
 
         // Generate rich HTML for Tiptap editor
         draft.setGeneratedHtmlDescription(buildHtmlDescription(draft));
@@ -114,6 +118,7 @@ public class SpecificationGeneratorService {
                   "description": "คำอธิบายภาพรวมของระบบ",
                   "priority": "MEDIUM",
                   "estimatedManday": 3,
+                  "module": "ชื่อโมดูล/ส่วนงานของระบบที่ Specification นี้อยู่",
                   "screens": [
                     { "screenName": "ชื่อหน้าจอ", "description": "หน้าที่ของหน้าจอ", "navigation": "เส้นทางการเข้าถึงหน้าจอ" }
                   ],

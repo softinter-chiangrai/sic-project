@@ -31,6 +31,7 @@ public class TestCaseGeneratorService {
     private final PmSpecificationRepository specificationRepository;
     private final PmTestScenarioRepository scenarioRepository;
     private final ObjectMapper objectMapper;
+    private final AiMemberPicker memberPicker;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -79,6 +80,14 @@ public class TestCaseGeneratorService {
             draft.setExpectedResult(convertTextToHtml(draft.getExpectedResult()));
         }
 
+        AiMemberPicker.Member tester = memberPicker.pick();
+        if (tester != null) draft.setTester(tester.name());
+        draft.setTestDate(java.time.LocalDate.now().plusDays(7).toString());
+        if (task != null) draft.setRelatedTask(task.getTaskName());
+        if (spec != null) draft.setRelatedSpec(spec.getTitle());
+        if (req != null) draft.setRelatedRequirement(req.getTitle());
+        if (draft.getTestType() == null || !draft.getTestType().matches("SIT|UAT")) draft.setTestType("SIT");
+
         return draft;
     }
 
@@ -123,7 +132,7 @@ public class TestCaseGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
-                Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL. testCaseCode follows the pattern TC-NNN.
+                Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL. testType must be one of: SIT | UAT. testCaseCode follows the pattern TC-NNN.
                 Language for test case content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
@@ -133,7 +142,8 @@ public class TestCaseGeneratorService {
                   "priority": "MEDIUM",
                   "testCaseCode": "TC-001",
                   "testStep": "<ol><li>เปิดหน้าจอ...</li><li>กรอกข้อมูล...</li><li>คลิกปุ่มบันทึก</li></ol>",
-                  "expectedResult": "<p>1. ระบบบันทึกข้อมูลสำเร็จและแสดง Alert ยืนยัน</p><p>2. ข้อมูลปรากฏในตารางรายการอย่างถูกต้อง</p>"
+                  "expectedResult": "<p>1. ระบบบันทึกข้อมูลสำเร็จและแสดง Alert ยืนยัน</p><p>2. ข้อมูลปรากฏในตารางรายการอย่างถูกต้อง</p>",
+                  "testType": "SIT"
                 }
                 ```
                 """);

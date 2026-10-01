@@ -368,11 +368,21 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
         expectedResult: draft.expectedResult,
         actualResult: draft.actualResult,
         testCaseCode: draft.testCaseCode,
+        testDate: draft.testDate,
+        tester: draft.tester,
+        relatedRequirement: draft.relatedRequirement,
+        relatedSpec: draft.relatedSpec,
+        relatedTask: draft.relatedTask,
       },
       ['id'],
       { priority: this.priorityApiUrl },
       this.aiHttp,
     );
+
+    const tester = this.formData.form.get('tester')?.value;
+    if (tester && !this.testerValues().length) {
+      this.testerValues.set(String(tester).split(',').map((x) => x.trim()).filter(Boolean));
+    }
 
     if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {
       this.onTaskChange(draft.taskId);

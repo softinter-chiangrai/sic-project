@@ -9,4 +9,10 @@ public class TestCaseDraftResponse {
     private String testStep;
     private String expectedResult;
     private String testCaseCode;
+    private String testType;
+    private String testDate;
+    private String tester;
+    private String relatedRequirement;
+    private String relatedSpec;
+    private String relatedTask;
 }

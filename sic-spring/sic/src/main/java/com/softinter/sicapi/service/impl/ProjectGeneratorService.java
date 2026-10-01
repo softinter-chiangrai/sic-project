@@ -47,7 +47,9 @@ public class ProjectGeneratorService {
                     "description": "Comprehensive project description, business objectives, scope, and key deliverables formatted in HTML using <p>, <ul>, <li>, <strong>, <h3> tags",
                     "startDate": "2026-01-01",
                     "endDate": "2026-12-31",
-                    "status": "Planning"
+                    "status": "Planning",
+                    "priority": "Low | Medium | High | Critical (choose ONE)",
+                    "budgetManday": 120
                 }
                 5. Ensure professional phrasing. If prompt in Thai, respond in Thai.
                 """;

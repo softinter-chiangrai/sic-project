@@ -462,6 +462,8 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         status: draft.status,
         startDate: draft.startDate,
         plannedEndDate: draft.endDate || draft.plannedEndDate,
+        priority: draft.priority,
+        budgetManday: draft.budgetManday,
       },
       ['id'],
       { status: this.statusOptions },

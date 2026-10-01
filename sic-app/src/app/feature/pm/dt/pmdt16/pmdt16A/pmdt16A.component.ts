@@ -237,6 +237,8 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
           ? Number(draft.vatRate)
           : (draft.taxRate !== undefined && draft.taxRate !== null ? Number(draft.taxRate) : undefined),
         remark: draft.remark || draft.notes,
+        issueDate: draft.issueDate,
+        dueDate: draft.dueDate,
         subtotalAmount: (!draft.items || draft.items.length === 0) && draft.amount !== undefined && draft.amount !== null
           ? Number(draft.amount)
           : undefined,

@@ -1,0 +1,45 @@
+/* Ambient glow background for Hero */
+.hero-glow {
+  position: absolute;
+  top: 10%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 600px;
+  height: 380px;
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.15) 0%, rgba(59, 130, 246, 0.08) 50%, transparent 70%);
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+:host-context(.dark) .hero-glow {
+  background: radial-gradient(circle, rgba(16, 185, 129, 0.22) 0%, rgba(99, 102, 241, 0.12) 50%, transparent 70%);
+}
+
+/* Card hover glow */
+.bento-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.bento-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.08);
+}
+
+:host-context(.dark) .bento-card:hover {
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.45);
+}
+
+/* Shimmer animation for hero pill */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-badge {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.2) 50%, rgba(16, 185, 129, 0.08) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 4s infinite linear;
+}

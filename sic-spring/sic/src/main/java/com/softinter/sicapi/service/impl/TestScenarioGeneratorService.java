@@ -58,6 +58,7 @@ public class TestScenarioGeneratorService {
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         TestScenarioDraftResponse draft = parseAiResponse(aiResponse);
+        if (draft.getTestType() == null || !draft.getTestType().matches("SIT|UAT")) draft.setTestType("SIT");
 
         return draft;
     }
@@ -97,7 +98,7 @@ public class TestScenarioGeneratorService {
         sb.append("""
                 **Output Requirement:**
                 Return a valid JSON object ONLY. Do NOT wrap in conversational text.
-                Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL. scenarioCode follows the pattern SC-NNN.
+                Fill EVERY field of the JSON (including dropdown/code/date/number fields) with a sensible value inferred from the user's prompt and project context. If the user explicitly provided a value, use it exactly. Never leave a field null unless it is truly impossible to infer. For dropdown fields choose ONE value from the allowed list given for that field. Dates use yyyy-MM-dd. priority must be one of: LOW | MEDIUM | HIGH | CRITICAL. testType must be one of: SIT | UAT. scenarioCode follows the pattern SC-NNN.
                 Language for scenario content should be primarily in Thai (with English technical terms where appropriate).
 
                 **JSON Schema:**
@@ -106,6 +107,7 @@ public class TestScenarioGeneratorService {
                   "scenarioCode": "SC-001",
                   "scenarioName": "ชื่อ Test Scenario (ครอบคลุมชุดการทดสอบ เช่น 'ทดสอบกระบวนการสั่งซื้อสินค้าและการชำระเงิน')",
                   "priority": "MEDIUM",
+                  "testType": "SIT",
                   "description": "<p><strong>วัตถุประสงค์และขอบเขต:</strong> เพื่อทดสอบการทำงานของระบบในการจัดการ...</p><ul><li>ทดสอบการแสดงผลหน้าจอและ Validation</li><li>ทดสอบความถูกต้องของการคำนวณ</li><li>ทดสอบการบันทึกและส่งแจ้งเตือน</li></ul>"
                 }
                 ```

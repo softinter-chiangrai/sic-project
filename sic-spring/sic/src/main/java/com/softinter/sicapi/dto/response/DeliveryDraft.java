@@ -17,6 +17,7 @@ public class DeliveryDraft {
     private String deliveryVersion;
     private String deliverySummary;
     private String releaseNote;
+    private String deliveryDate;
     private List<DeliveryChecklistDraftItem> checklists;
     private List<DeliveryItemDraftItem> items;
 

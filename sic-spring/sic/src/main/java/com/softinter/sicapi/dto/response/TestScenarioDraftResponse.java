@@ -8,4 +8,5 @@ public class TestScenarioDraftResponse {
     private String scenarioName;
     private String priority;
     private String description;
+    private String testType;
 }

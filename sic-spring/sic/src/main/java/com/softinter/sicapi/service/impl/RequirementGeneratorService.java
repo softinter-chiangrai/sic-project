@@ -54,7 +54,8 @@ public class RequirementGeneratorService {
                     "acceptanceCriteria": "Given-When-Then or clear bulleted criteria formatted in HTML (<p>, <ul>, <li>, <strong>)",
                     "businessValue": "Direct business impact, ROI, efficiency, or compliance value formatted in HTML (<p>, <ul>, <li>, <strong>)",
                     "requirementType": "FUNCTIONAL",
-                    "priority": "MEDIUM"
+                    "priority": "MEDIUM",
+                    "source": "Where the requirement comes from, e.g. stakeholder interview, regulation, workshop, existing process"
                 }
                 5. Ensure the output is directly applicable, testable, unambiguous, and professional.
                 6. If user wrote prompt in Thai, respond in Thai (except technical terms/standards). If in English, respond in English.

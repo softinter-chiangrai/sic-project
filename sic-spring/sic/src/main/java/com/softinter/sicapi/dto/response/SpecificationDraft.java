@@ -13,6 +13,8 @@ public class SpecificationDraft {
     private String description;
     private String priority;
     private Integer estimatedManday;
+    private String module;
+    private String owner;
     private String generatedHtmlDescription;
     private List<ScreenDto> screens;
     private List<FieldDto> fields;

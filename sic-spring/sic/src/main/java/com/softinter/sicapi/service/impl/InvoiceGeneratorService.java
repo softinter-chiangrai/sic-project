@@ -53,8 +53,9 @@ public class InvoiceGeneratorService {
                 {
                     "invoiceTitle": "Clear invoice / billing milestone title (e.g. งวดที่ 1: ส่งมอบ Requirement & System Architecture)",
                     "billingType": "MILESTONE",
-                    "remark": "Terms, payment conditions, bank details, or notes formatted in HTML (<p>, <ul>, <li>, <strong>)",
                     "vatRate": 7,
+                    "issueDate": "yyyy-MM-dd invoice issue date",
+                    "dueDate": "yyyy-MM-dd payment due date, usually 30 days after issueDate",
                     "items": [
                         {
                             "itemDescription": "Description of work/deliverable (e.g. ค่าพัฒนาและออกแบบระบบ Phase 1)",
@@ -62,16 +63,23 @@ public class InvoiceGeneratorService {
                             "unitPrice": 100000.0,
                             "amount": 100000.0
                         }
-                    ]
+                    ],
+                    "remark": "Short terms/payment conditions in HTML (<p>, <ul>, <li>), keep it concise"
                 }
-                5. Ensure professional tone. If prompt in Thai, respond in Thai.
+                5. "items" MUST contain at least 1 line item with a non-zero amount (split into several lines when the prompt/contract implies it). Never return an empty items array.
+                6. Ensure professional tone. If prompt in Thai, respond in Thai.
                 """;
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         InvoiceDraft draft = parseAiResponse(aiResponse);
 
+        if (draft.getIssueDate() == null || draft.getIssueDate().isBlank()) draft.setIssueDate(java.time.LocalDate.now().toString());
+        if (draft.getDueDate() == null || draft.getDueDate().isBlank()) draft.setDueDate(java.time.LocalDate.parse(draft.getIssueDate()).plusDays(30).toString());
         if (draft.getItems() == null) {
             draft.setItems(new ArrayList<>());
+        }
+        if (draft.getItems().isEmpty()) {
+            log.warn("Invoice AI draft has no items. Raw AI response: {}", aiResponse);
         }
 
         return draft;

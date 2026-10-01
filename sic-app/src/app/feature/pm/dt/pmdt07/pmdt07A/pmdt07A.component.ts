@@ -434,6 +434,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 description: draft.generatedHtmlDescription || draft.description,
                 requirementId: draft.requirementId,
                 generatedFromRequirementId: draft.requirementId,
+                module: draft.module,
+                owner: draft.owner,
                 generatedFromDiagramId: draft.diagramIds && draft.diagramIds.length > 0 ? draft.diagramIds.join(',') : undefined,
             },
             ['id'],

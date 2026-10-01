@@ -365,6 +365,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         description: draft.description,
         acceptanceCriteria: draft.acceptanceCriteria,
         businessValue: draft.businessValue,
+        source: draft.source,
         // requirementType is a required field with no form-level default (starts null) —
         // fall back to FUNCTIONAL when the AI draft omits it, same as the pre-refactor behavior,
         // so a fresh "Generate with AI" doesn't leave a required field empty and block Save.

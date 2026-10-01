@@ -45,6 +45,7 @@ public class DeliveryGeneratorService {
                     "deliveryTitle": "Clear, professional delivery title (e.g. เอกสารส่งมอบระบบและงวดงาน Phase 1)",
                     "deliveryType": "PARTIAL",
                     "deliveryVersion": "1.0.0",
+                    "deliveryDate": "yyyy-MM-dd planned delivery date",
                     "deliverySummary": "Comprehensive HTML delivery overview and scope (<p>, <ul>, <li>, <strong>, <h3>)",
                     "releaseNote": "Key features, bug fixes, changes, deployment instructions formatted in HTML (<p>, <ul>, <li>)",
                     "checklists": [
@@ -69,6 +70,7 @@ public class DeliveryGeneratorService {
         DeliveryDraft draft = parseAiResponse(aiResponse);
 
         if (request.getDeliveryType() != null && !request.getDeliveryType().isBlank()) draft.setDeliveryType(request.getDeliveryType());
+        if (draft.getDeliveryDate() == null || draft.getDeliveryDate().isBlank()) draft.setDeliveryDate(java.time.LocalDate.now().plusDays(30).toString());
         if (draft.getChecklists() == null) {
             draft.setChecklists(new ArrayList<>());
         }

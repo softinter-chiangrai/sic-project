@@ -3,6 +3,7 @@ package com.softinter.sicapi.service.impl;
 import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryItemRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryRequest;
+import com.softinter.sicapi.dto.request.PmInvoiceItemRequest;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
 import com.softinter.sicapi.dto.response.PmDeliveryChecklistResponse;
 import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.criteria.Predicate;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -551,6 +553,12 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     @Override
     @Transactional
     public UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId) {
+        return createInvoiceFromDelivery(deliveryId, businessId, userId, null);
+    }
+
+    @Override
+    @Transactional
+    public UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId, List<PmInvoiceItemRequest> customItems) {
         PmDelivery delivery = deliveryRepository.findByIdAndBusinessIdAndIsDeleteFalse(deliveryId, businessId)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
 
@@ -563,12 +571,54 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             }
         }
 
-        // Look for contract amount or default
+        // Look for contract amount or default, split by number of deliveries if multiple exist
         BigDecimal subtotal = BigDecimal.ZERO;
         if (delivery.getContractId() != null) {
             var contractOpt = contractRepository.findById(delivery.getContractId());
             if (contractOpt.isPresent() && contractOpt.get().getContractValue() != null) {
-                subtotal = contractOpt.get().getContractValue();
+                BigDecimal totalContractValue = contractOpt.get().getContractValue();
+                long deliveryCount = deliveryRepository.countByProjectIdAndIsDeleteFalse(delivery.getProjectId());
+                if (deliveryCount > 1 && totalContractValue.compareTo(BigDecimal.ZERO) > 0) {
+                    subtotal = totalContractValue.divide(BigDecimal.valueOf(deliveryCount), 2, RoundingMode.HALF_UP);
+                } else {
+                    subtotal = totalContractValue;
+                }
+            }
+        }
+
+        List<PmInvoiceItemRequest> invoiceItems = new ArrayList<>();
+        if (customItems != null && !customItems.isEmpty()) {
+            invoiceItems.addAll(customItems);
+        } else {
+            // Check if delivery has delivery items
+            List<PmDeliveryItem> deliveryItems = deliveryItemRepository
+                    .findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(delivery.getId());
+            if (!deliveryItems.isEmpty()) {
+                BigDecimal perItemAmount = subtotal.compareTo(BigDecimal.ZERO) > 0
+                        ? subtotal.divide(BigDecimal.valueOf(deliveryItems.size()), 2, RoundingMode.HALF_UP)
+                        : BigDecimal.ZERO;
+                int order = 1;
+                for (PmDeliveryItem dItem : deliveryItems) {
+                    PmInvoiceItemRequest itemReq = new PmInvoiceItemRequest();
+                    itemReq.setItemName(dItem.getItemTitle() != null ? dItem.getItemTitle() : (dItem.getItemCode() != null ? dItem.getItemCode() : "รายการส่งมอบ " + order));
+                    itemReq.setDescription(dItem.getRemark() != null ? cleanHtml(dItem.getRemark()) : ("ประเภท: " + dItem.getItemType()));
+                    itemReq.setAmount(perItemAmount);
+                    itemReq.setSortOrder(order++);
+                    itemReq.setState(EntityState.ADDED.ordinal());
+                    invoiceItems.add(itemReq);
+                }
+            } else {
+                // Default line item from delivery details
+                PmInvoiceItemRequest itemReq = new PmInvoiceItemRequest();
+                itemReq.setItemName(delivery.getDeliveryTitle() != null && !delivery.getDeliveryTitle().isBlank()
+                        ? delivery.getDeliveryTitle()
+                        : "งวดการส่งมอบงาน (" + delivery.getDeliveryCode() + ")");
+                String summary = delivery.getDeliverySummary();
+                itemReq.setDescription(summary != null && !summary.isBlank() ? cleanHtml(summary) : "ส่งมอบงานตามสัญญา");
+                itemReq.setAmount(subtotal);
+                itemReq.setSortOrder(1);
+                itemReq.setState(EntityState.ADDED.ordinal());
+                invoiceItems.add(itemReq);
             }
         }
 
@@ -586,10 +636,16 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         invReq.setPaymentStatus(PaymentStatus.UNPAID);
         invReq.setRemark("Generated from Delivery Acceptance: " + delivery.getDeliveryTitle() + " (" + delivery.getDeliveryCode() + ")");
         invReq.setState(EntityState.ADDED.ordinal());
+        invReq.setItems(invoiceItems);
 
         UUID invoiceId = invoiceService.save(invReq, businessId, userId);
-        log.info("Successfully generated Invoice {} from Delivery {}", invoiceId, deliveryId);
+        log.info("Successfully generated Invoice {} with {} items from Delivery {}", invoiceId, invoiceItems.size(), deliveryId);
         return invoiceId;
+    }
+
+    private static String cleanHtml(String text) {
+        if (text == null) return "";
+        return text.replaceAll("<[^>]*>", "").trim();
     }
 
     private void mapRequestToEntity(PmDeliveryRequest req, PmDelivery entity) {

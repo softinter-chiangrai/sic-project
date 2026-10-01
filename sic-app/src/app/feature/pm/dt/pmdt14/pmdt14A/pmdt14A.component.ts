@@ -224,6 +224,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
         deliveryVersion: draft.deliveryVersion,
         releaseNote: draft.releaseNote,
         deliverySummary: draft.deliverySummary,
+        deliveryDate: draft.deliveryDate,
       },
       ['id'],
       { deliveryType: this.typeOptions },

@@ -16,4 +16,6 @@ public class ProjectDraft {
     private String startDate;
     private String endDate;
     private String status;
+    private String priority;
+    private Integer budgetManday;
 }

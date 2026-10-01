@@ -13,6 +13,8 @@ public class UserManualDraftResponse {
     private String manualTitle;
     private String manualType;
     private String summary;
+    private String version;
+    private java.util.UUID relatedSpecId;
     private List<SectionDraftDto> sections;
 
     @Data

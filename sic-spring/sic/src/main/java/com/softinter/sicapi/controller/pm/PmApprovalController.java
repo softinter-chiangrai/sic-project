@@ -186,7 +186,7 @@ public class PmApprovalController {
             documentType, documentId, PageRequest.of(0, 1)
         );
         if (result.getData().isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.noContent().build();
         }
         return ResponseEntity.ok(result.getData().get(0));
     }

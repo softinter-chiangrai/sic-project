@@ -451,6 +451,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         this.formData.form,
         {
           manualTitle: draft.manualTitle,
+          version: draft.version,
+          relatedSpecId: draft.relatedSpecId,
           manualType: draft.manualType,
         },
         ['id'],

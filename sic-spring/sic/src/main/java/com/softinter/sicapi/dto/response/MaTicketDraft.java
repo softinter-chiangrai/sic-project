@@ -15,4 +15,9 @@ public class MaTicketDraft {
     private String severity;
     private String description;
     private String resolutionSummary;
+    private String startDate;
+    private String startTime;
+    private String endDate;
+    private String endTime;
+    private java.util.List<String> assignedToIds;
 }

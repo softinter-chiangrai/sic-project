@@ -60,6 +60,10 @@ public class UserManualGeneratorService {
         if (draft.getManualType() == null || draft.getManualType().isBlank()) {
             draft.setManualType(manualType);
         }
+        draft.setVersion("1.0.0");
+        if (request.getSpecificationIds() != null && !request.getSpecificationIds().isEmpty()) {
+            draft.setRelatedSpecId(request.getSpecificationIds().get(0));
+        }
 
         return draft;
     }

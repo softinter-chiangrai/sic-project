@@ -193,7 +193,7 @@
 	</dataset>
 
 	<detail>
-		<band height="200" splitType="Stretch">
+		<band height="56" splitType="Stretch">
 			<!-- Section Title Banner -->
 			<element kind="rectangle" uuid="a2b3c4d5-1a2b-48a5-926f-47b2ae601b2a" positionType="Float" mode="Opaque" x="0" y="4" width="515" height="24" backcolor="#F1F5F9" radius="3">
 				<pen lineWidth="0.5" lineColor="#CBD5E1"/>

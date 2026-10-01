@@ -19,5 +19,6 @@ public interface PmDeliveryService {
     // Phase 4: Sign-off & Invoicing
     PmDeliveryResponse signOff(UUID deliveryId, String signedBy, UUID businessId, String userId);
     UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId);
+    UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId, java.util.List<com.softinter.sicapi.dto.request.PmInvoiceItemRequest> customItems);
 }
 

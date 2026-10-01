@@ -16,6 +16,8 @@ public class InvoiceDraft {
     private String invoiceTitle;
     private String billingType;
     private String remark;
+    private String issueDate;
+    private String dueDate;
     private BigDecimal vatRate;
     private List<InvoiceItemDraftItem> items;
 

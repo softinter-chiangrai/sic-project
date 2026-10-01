@@ -2,7 +2,7 @@
 
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { catchError, Observable, of } from 'rxjs';
+import { catchError, Observable, of, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type { PaginationResponse } from '../../../../core/model/pagination.model';
 import type { Approval, ApprovalFlow, ApprovalSearchParams, ApprovalSummary, SubmitApprovalRequest } from './approval.model';
@@ -156,7 +156,10 @@ export class ApprovalService {
         const params = new HttpParams()
             .set('documentType', documentType)
             .set('documentId', documentId);
-        return this.http.get<Approval>(`${this.baseUrl}/document/status`, { params });
+        // 204 = ยังไม่มีการอนุมัติ → ส่งเป็น error เหมือน 404 เดิม (caller ไม่ต้องแก้)
+        return this.http.get<Approval | null>(`${this.baseUrl}/document/status`, { params }).pipe(
+            switchMap((a) => (a ? of(a) : throwError(() => new Error('No approval')))),
+        );
     }
 
     // ============================================================

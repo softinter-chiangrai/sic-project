@@ -11,4 +11,5 @@ public class RequirementDraft {
     private String businessValue;
     private String requirementType;
     private String priority;
+    private String source;
 }

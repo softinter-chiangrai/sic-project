@@ -125,7 +125,7 @@
 	</dataset>
 
 	<detail>
-		<band height="500" splitType="Stretch">
+		<band height="232" splitType="Stretch">
 			<!-- SECTION 1: ข้อมูลสัญญาเดิมและโครงการ -->
 			<element kind="textField" uuid="09fa417b-5c2a-489e-b12a-3b567a14ce92" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "1. Contract & Project Metadata" : "1. ข้อมูลสัญญาเดิมและโครงการ (Contract & Project Metadata)")]]></expression>
