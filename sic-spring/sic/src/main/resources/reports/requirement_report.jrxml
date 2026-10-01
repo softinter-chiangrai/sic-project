@@ -20,9 +20,6 @@
 	<parameter name="businessName" class="java.lang.String">
 		<defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
 	</parameter>
-	<parameter name="attachmentImages" class="java.util.List">
-		<defaultValueExpression><![CDATA[java.util.Collections.emptyList()]]></defaultValueExpression>
-	</parameter>
 	<parameter name="logoStream" class="java.io.InputStream">
 		<defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
 	</parameter>
@@ -42,7 +39,7 @@
                 TO_CHAR(r.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
                 COALESCE(r.description, 'ไม่มีรายละเอียดเพิ่มเติม')          AS "description",
                 COALESCE(r.acceptance_criteria, 'ไม่มีเงื่อนไขการยอมรับเพิ่มเติม') AS "acceptanceCriteria",
-                (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
+                (SELECT STRING_AGG(su.file_name || ' (' || COALESCE(UPPER(substring(su.file_name from '\.([^.]+)$')) || ', ', '') || pg_size_pretty(su.file_size) || ')', ', ') FROM su_upload su
                     WHERE su.upload_group_id = r.upload_group_id AND su.is_active = true) AS "attachmentNames"
             FROM pm_requirement r
             LEFT JOIN pm_customer_project p ON r.project_id = p.id
@@ -361,20 +358,7 @@
 						<!-- Uploaded evidence files (attachmentGroupId/uploadGroupId) -->
 						<element kind="textField" uuid="d3a10004-3007-3007-3007-a1b2c3d4e5f6" positionType="Float" x="0" y="246" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" style="FooterText">
 							<expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression>
-						</element>
-					<!-- Image files uploaded in the attachment section (embedded from storage) -->
-			<element kind="component" uuid="d3a10004-4001-4001-4001-a1b2c3d4e5f6" positionType="Float" x="0" y="266" width="515" height="20">
-				<component kind="list">
-					<datasetRun uuid="d3a10004-4002-4002-4002-a1b2c3d4e5f6" subDataset="ContentBlocksDataset">
-						<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource($P{attachmentImages})]]></dataSourceExpression>
-					</datasetRun>
-					<contents height="16" width="515">
-						<element kind="image" uuid="d3a10004-4003-4003-4003-a1b2c3d4e5f6" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Left" onErrorType="Blank">
-							<expression><![CDATA[$F{imageData}]]></expression>
-						</element>
-					</contents>
-				</component>
-			</element>	</band>
+						</element>	</band>
 	</detail>
 
 	<!-- ========================================================

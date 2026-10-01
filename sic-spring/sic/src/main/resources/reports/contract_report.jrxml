@@ -34,9 +34,8 @@
                 COALESCE(ct.renewal_status, 'NONE')          AS "renewalStatus",
                 COALESCE(ct.payment_terms, '-')              AS "paymentTerms",
                 COALESCE(ct.scope_summary, 'ไม่มีรายละเอียดขอบเขตงาน') AS "scopeSummary",
-                (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
-                    WHERE su.upload_group_id = ct.attachment_group_id AND su.is_active = true) AS "attachmentNames",
-                CAST(ct.attachment_group_id AS VARCHAR) AS "attachmentGroupId"
+                (SELECT STRING_AGG(su.file_name || ' (' || COALESCE(UPPER(substring(su.file_name from '\.([^.]+)$')) || ', ', '') || pg_size_pretty(su.file_size) || ')', ', ') FROM su_upload su
+                    WHERE su.upload_group_id = ct.attachment_group_id AND su.is_active = true) AS "attachmentNames"
             FROM pm_customer_contract ct
             LEFT JOIN pm_customer c ON ct.customer_id = c.id
             LEFT JOIN pm_customer_project p ON ct.id = p.contract_id
@@ -85,7 +84,6 @@
 		</element>
 	</title>
 	<field name="attachmentNames" class="java.lang.String"/>
-	<field name="attachmentGroupId" class="java.lang.String"/>
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
 	<dataset name="ContentBlocksDataset" uuid="d3a10003-d003-d003-d003-a1b2c3d4e5f6">
@@ -200,7 +198,7 @@
 				<element kind="component" uuid="c5d3c372-853e-4ae7-8bb2-63115ad7433a" positionType="Float" x="0" y="244" width="515" height="20">
 					<component kind="list">
 						<datasetRun uuid="b1d32ebb-169c-47b6-8d99-60a428b787e7" subDataset="ContentBlocksDataset">
-							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendAttachments(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : ($P{lang}.equals("en") ? "No additional scope details provided" : "ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม"), "-", 513), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames}), $F{attachmentGroupId}))]]></dataSourceExpression>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendText(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : ($P{lang}.equals("en") ? "No additional scope details provided" : "ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม"), "-", 513), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})))]]></dataSourceExpression>
 						</datasetRun>
 						<contents height="16" width="515">
 							<element kind="textField" uuid="53c91cf5-4f76-4ab2-8e72-3e9dd5d87336" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">

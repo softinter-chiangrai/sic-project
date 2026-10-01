@@ -66,7 +66,6 @@
 	<parameter name="attachmentNames" class="java.lang.String">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="attachmentGroupId" class="java.lang.Object"/>
 
 	<query language="sql"><![CDATA[SELECT
                 COALESCE(item.item_name, '-')                                     AS "itemName",
@@ -291,7 +290,7 @@
 				<element kind="component" uuid="5395d222-b28d-4440-9d85-93ecb83e6823" positionType="Float" x="0" y="146" width="515" height="20">
 					<component kind="list">
 						<datasetRun uuid="e2f0d26f-c3e3-4b5f-adb4-219c8b2535d9" subDataset="ContentBlocksDataset">
-							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendAttachments(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($P{remark} != null && !$P{remark}.isBlank() ? $P{remark} : ($P{lang}.equals("en") ? "Please transfer payment to Softinter Co., Ltd.'s company account and submit proof of payment to receive a receipt." : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน"), "-", 513), ($P{attachmentNames} == null || $P{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $P{attachmentNames}), $P{attachmentGroupId}))]]></dataSourceExpression>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendText(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($P{remark} != null && !$P{remark}.isBlank() ? $P{remark} : ($P{lang}.equals("en") ? "Please transfer payment to Softinter Co., Ltd.'s company account and submit proof of payment to receive a receipt." : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน"), "-", 513), ($P{attachmentNames} == null || $P{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $P{attachmentNames})))]]></dataSourceExpression>
 						</datasetRun>
 						<contents height="16" width="515">
 							<element kind="textField" uuid="c470d8d2-1faa-4373-835a-a6a275321bad" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">

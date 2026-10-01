@@ -45,7 +45,6 @@
 	<parameter name="attachmentNames" class="java.lang.String">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="attachmentGroupId" class="java.lang.Object"/>
 
 	<query language="sql"><![CDATA[SELECT 
                 COALESCE(sec.section_code, 'SEC')                       AS "sectionCode",
@@ -208,7 +207,7 @@
 				<element kind="component" uuid="3dc8cdc4-e008-4192-ab20-067f3f0bf775" positionType="Float" x="8" y="32" width="498" height="20">
 					<component kind="list">
 						<datasetRun uuid="5055e76b-cd61-4970-913c-742c5bda1b31" subDataset="ContentBlocksDataset">
-							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendImages(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{content} != null && !$F{content}.isBlank() ? $F{content} : ($P{lang}.equals("en") ? "No content provided." : "ไม่มีรายละเอียดเนื้อหา"), "-", 496), $P{attachmentGroupId}))]]></dataSourceExpression>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{content} != null && !$F{content}.isBlank() ? $F{content} : ($P{lang}.equals("en") ? "No content provided." : "ไม่มีรายละเอียดเนื้อหา"), "-", 496))]]></dataSourceExpression>
 						</datasetRun>
 						<contents height="16" width="498">
 							<element kind="textField" uuid="722f032e-7b03-490f-85de-582b9903d866" x="0" y="0" width="498" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">

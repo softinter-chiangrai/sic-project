@@ -109,10 +109,9 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
                 : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน");
         String attachmentNames = invoice.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(invoice.getAttachmentGroupId())
-                        .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
+                        .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
-        parameters.put("attachmentGroupId", invoice.getAttachmentGroupId());
         parameters.put("lang", normalizedLang);
         parameters.put(net.sf.jasperreports.engine.JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

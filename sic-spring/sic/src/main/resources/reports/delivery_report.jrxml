@@ -49,7 +49,6 @@
 	<parameter name="attachmentNames" class="java.lang.String">
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
-	<parameter name="attachmentGroupId" class="java.lang.Object"/>
 
 	<query language="sql"><![CDATA[SELECT 
                 CONCAT('DELIVERABLE (', COALESCE(it.item_type, 'ITEM'), ')') AS "category",
@@ -166,7 +165,7 @@
 				<element kind="component" uuid="1b0bd38e-5444-4f6b-98c8-bf7858623554" positionType="Float" x="110" y="200" width="395" height="20">
 					<component kind="list">
 						<datasetRun uuid="7e97c2b2-cdae-47fd-9040-0d7769b8fa20" subDataset="ContentBlocksDataset">
-							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendAttachments(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($P{deliverySummary} != null && !$P{deliverySummary}.isBlank() ? $P{deliverySummary} : ($P{lang}.equals("en") ? "Delivery completed as per requirements" : "ส่งมอบงานตามข้อกำหนดเรียบร้อย"), "-", 393), ($P{attachmentNames} == null || $P{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $P{attachmentNames}), $P{attachmentGroupId}))]]></dataSourceExpression>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendText(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($P{deliverySummary} != null && !$P{deliverySummary}.isBlank() ? $P{deliverySummary} : ($P{lang}.equals("en") ? "Delivery completed as per requirements" : "ส่งมอบงานตามข้อกำหนดเรียบร้อย"), "-", 393), ($P{attachmentNames} == null || $P{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $P{attachmentNames})))]]></dataSourceExpression>
 						</datasetRun>
 						<contents height="16" width="395">
 							<element kind="textField" uuid="20566eea-f54d-4009-8c84-937421bdc97b" x="0" y="0" width="395" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">

@@ -82,10 +82,9 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("deliverySummary", delivery.getDeliverySummary());
         String attachmentNames = delivery.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(delivery.getAttachmentGroupId())
-                        .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
+                        .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
-        parameters.put("attachmentGroupId", delivery.getAttachmentGroupId());
         parameters.put("lang", normalizedLang);
         parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

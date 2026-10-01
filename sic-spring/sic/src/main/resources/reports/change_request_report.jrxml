@@ -66,9 +66,8 @@
                 TO_CHAR(cr.approved_at, 'DD/MM/YYYY HH24:MI') AS "approvedAt",
                 TO_CHAR(cr.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
                 COALESCE(cr.description, CASE WHEN $P{lang} = 'en' THEN 'No additional details' ELSE 'ไม่มีรายละเอียดเพิ่มเติม' END) AS "description",
-                (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
-                    WHERE su.upload_group_id = cr.attachment_group_id AND su.is_active = true) AS "attachmentNames",
-                CAST(cr.attachment_group_id AS VARCHAR) AS "attachmentGroupId"
+                (SELECT STRING_AGG(su.file_name || ' (' || COALESCE(UPPER(substring(su.file_name from '\.([^.]+)$')) || ', ', '') || pg_size_pretty(su.file_size) || ')', ', ') FROM su_upload su
+                    WHERE su.upload_group_id = cr.attachment_group_id AND su.is_active = true) AS "attachmentNames"
             FROM pm_change_request cr
             LEFT JOIN pm_customer_project p ON cr.project_id = p.id
             LEFT JOIN pm_customer c ON p.customer_id = c.id
@@ -95,7 +94,6 @@
 	<field name="createdDate" class="java.lang.String"/>
 	<field name="description" class="java.lang.String"/>
 	<field name="attachmentNames" class="java.lang.String"/>
-	<field name="attachmentGroupId" class="java.lang.String"/>
 
 	<!-- TITLE BAND -->
 	<title height="105">
@@ -253,7 +251,7 @@
 				<element kind="component" uuid="aa1740c8-6733-4579-bc1d-f89581158e58" positionType="Float" x="0" y="190" width="515" height="20">
 					<component kind="list">
 						<datasetRun uuid="2995a35a-2a73-460b-bee6-d433c7018ec4" subDataset="ContentBlocksDataset">
-							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendAttachments(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details" : "ไม่มีรายละเอียดเพิ่มเติม"), "-", 513), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames}), $F{attachmentGroupId}))]]></dataSourceExpression>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendText(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details" : "ไม่มีรายละเอียดเพิ่มเติม"), "-", 513), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})))]]></dataSourceExpression>
 						</datasetRun>
 						<contents height="16" width="515">
 							<element kind="textField" uuid="7455ae41-97f0-4a16-b3b3-5c63cac60185" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">

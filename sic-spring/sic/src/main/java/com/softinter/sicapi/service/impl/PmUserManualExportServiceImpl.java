@@ -81,10 +81,9 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
         parameters.put("deliveryCode", deliveryCode);
         String attachmentNames = manual.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(manual.getAttachmentGroupId())
-                        .stream().map(SuUpload::getFileName).collect(Collectors.joining(", "))
+                        .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
-        parameters.put("attachmentGroupId", manual.getAttachmentGroupId());
         parameters.put("lang", normalizedLang);
         parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
 

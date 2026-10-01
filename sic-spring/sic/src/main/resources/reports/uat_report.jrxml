@@ -65,9 +65,8 @@
                 COALESCE(tc.actual_result, '-') AS "actualResult",
                 COALESCE(tc.test_status, 'Pending') AS "testStatus",
                 COALESCE(tc.tester, '-') AS "tester",
-                (SELECT STRING_AGG(su.file_name, ', ') FROM su_upload su
-                    WHERE su.upload_group_id = tc.attachment_group_id AND su.is_active = true) AS "attachmentNames",
-                CAST(tc.attachment_group_id AS VARCHAR) AS "attachmentGroupId"
+                (SELECT STRING_AGG(su.file_name || ' (' || COALESCE(UPPER(substring(su.file_name from '\.([^.]+)$')) || ', ', '') || pg_size_pretty(su.file_size) || ')', ', ') FROM su_upload su
+                    WHERE su.upload_group_id = tc.attachment_group_id AND su.is_active = true) AS "attachmentNames"
             FROM pm_test_case tc
             LEFT JOIN pm_test_scenario sc ON sc.id = tc.scenario_id AND sc.is_delete = false
             WHERE tc.is_delete = false
@@ -91,7 +90,6 @@
 	<field name="testStatus" class="java.lang.String"/>
 	<field name="tester" class="java.lang.String"/>
 	<field name="attachmentNames" class="java.lang.String"/>
-	<field name="attachmentGroupId" class="java.lang.String"/>
 
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML &lt;table&gt; ใน actualResult) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
@@ -431,7 +429,7 @@
 				<element kind="component" uuid="9a01e854-703f-462c-a6bb-23ea67d6a0d2" positionType="Float" x="4" y="143" width="507" height="20">
 					<component kind="list">
 						<datasetRun uuid="2f54d7e4-5f52-40f6-921d-22c364af707c" subDataset="ContentBlocksDataset">
-							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendAttachments(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{actualResult}, "-", 505), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames}), $F{attachmentGroupId}))]]></dataSourceExpression>
+							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendText(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{actualResult}, "-", 505), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})))]]></dataSourceExpression>
 						</datasetRun>
 						<contents height="16" width="507">
 							<element kind="textField" uuid="640cc879-5288-4df6-9d96-ec0e0bd37c7b" x="0" y="0" width="507" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">

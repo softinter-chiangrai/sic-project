@@ -283,23 +283,14 @@ public class ReportHelper {
         return blocks;
     }
 
-    /** ต่อชื่อไฟล์แนบ (ข้อความ) และรูปในเอกสารแนบของ upload group นั้นท้ายรายการ */
-    public static List<ContentBlock> appendAttachments(List<ContentBlock> blocks, String text, Object uploadGroupId) {
-        appendText(blocks, text);
-        return appendImages(blocks, uploadGroupId);
-    }
-
-    /** ต่อรูปในเอกสารแนบของ upload group ท้ายรายการ (ขนาดจริง ย่อเฉพาะที่กว้างเกินหน้า) */
-    public static List<ContentBlock> appendImages(List<ContentBlock> blocks, Object uploadGroupId) {
-        blocks.addAll(imageBlocks(ReportAttachmentImages.load(uploadGroupId)));
-        return blocks;
-    }
-
-    /** แปลงไฟล์รูป (เช่น เอกสารแนบ) เป็นบล็อกรูปเรียงต่อกัน ขนาดจริง ย่อเฉพาะที่กว้างเกินหน้ากระดาษ */
-    public static List<ContentBlock> imageBlocks(List<byte[]> images) {
-        List<ContentBlock> blocks = new ArrayList<>();
-        for (byte[] data : images) blocks.add(ContentBlock.image(scaled(data, 0, MAX_IMAGE_WIDTH), "left"));
-        return blocks;
+    /** ข้อความไฟล์แนบ 1 รายการ: ชื่อ (ประเภท, ขนาด) เช่น report.pdf (PDF, 277.1 KB) */
+    public static String attachmentLabel(String fileName, Long sizeBytes) {
+        String name = fileName == null ? "-" : fileName;
+        int dot = name.lastIndexOf('.');
+        String type = dot > 0 && dot < name.length() - 1 ? name.substring(dot + 1).toUpperCase() : null;
+        double kb = sizeBytes == null ? 0 : sizeBytes / 1024.0;
+        String size = kb >= 1024 ? String.format("%.1f MB", kb / 1024) : String.format("%.1f KB", kb);
+        return name + " (" + (type != null ? type + ", " : "") + size + ")";
     }
 
     private static void addTextBlock(List<ContentBlock> blocks, String htmlPart) {
