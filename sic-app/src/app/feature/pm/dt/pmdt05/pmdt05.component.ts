@@ -18,7 +18,7 @@ import {
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
-import { Subject, take, takeUntil, interval } from 'rxjs';
+import { Subject, take, takeUntil, interval, Observable, firstValueFrom } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -556,12 +556,240 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  exportPdf(): void {
+  private parsePagesFromXml(xml: string): { pageIndex: number; pageName: string }[] {
+    if (!xml) return [];
+    try {
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(xml, 'text/xml');
+      const diagramEls = doc.getElementsByTagName('diagram');
+      const pages: { pageIndex: number; pageName: string }[] = [];
+      for (let i = 0; i < diagramEls.length; i++) {
+        const name = diagramEls[i].getAttribute('name') || `Page ${i + 1}`;
+        pages.push({ pageIndex: i, pageName: name });
+      }
+      return pages;
+    } catch {
+      return [];
+    }
+  }
+
+  private async captureAllPages(xml: string, scale = 2): Promise<{ pageIndex: number; pageName: string; png: string }[]> {
+    const pagesInfo = this.parsePagesFromXml(xml);
+    if (pagesInfo.length <= 1) {
+      const png = await this.drawioService.exportPagePng(0, scale, 3500);
+      return [{ pageIndex: 0, pageName: pagesInfo[0]?.pageName || 'Page-1', png: png || '' }];
+    }
+    const results: { pageIndex: number; pageName: string; png: string }[] = [];
+    for (const p of pagesInfo) {
+      const png = await this.drawioService.exportPagePng(p.pageIndex, scale, 3500);
+      results.push({ pageIndex: p.pageIndex, pageName: p.pageName, png: png || '' });
+    }
+    return results;
+  }
+
+  async exportPdf(): Promise<void> {
     const id = this.currentTabId;
     if (!id) return;
-    // ขอรูป PNG จาก draw.io ก่อน (ไม่ตอบ = ส่ง null แล้ว backend ใช้รูปที่บันทึกไว้ล่าสุด)
-    this.capturePng(2, (image) => {
-      this.diagramService.exportPdf(id, image).subscribe({
+    const tab = this.tabs().find((t) => t.id === id);
+    const xml = this.lastSavedXml || tab?.graphData?.xml || '';
+    const pagesInfo = this.parsePagesFromXml(xml);
+
+    let capturedPages: { pageIndex: number; pageName: string; png: string }[] = [];
+    let singleImage: string | null = null;
+
+    if (pagesInfo.length > 1) {
+      capturedPages = await this.captureAllPages(xml, 2);
+      singleImage = capturedPages[0]?.png || null;
+    } else {
+      singleImage = await this.drawioService.exportPagePng(0, 2, 3500);
+    }
+
+    this.diagramService.exportPdf(id, singleImage, capturedPages.length > 1 ? capturedPages : undefined).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        if (!window.open(url, '_blank')) {
+          const a = document.createElement('a');
+          a.href = url;
+          a.target = '_blank';
+          a.click();
+        }
+      },
+      error: () =>
+        this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR')),
+    });
+  }
+
+
+  isRenderingAll = false;
+  renderingProgress = '';
+
+  private waitEvent<T>(obs$: Observable<T>, timeoutMs: number, predicate?: (val: T) => boolean): Promise<T | null> {
+    return new Promise((resolve) => {
+      let resolved = false;
+      const sub = obs$.subscribe({
+        next: (val) => {
+          if (!resolved && (!predicate || predicate(val))) {
+            resolved = true;
+            clearTimeout(timer);
+            sub.unsubscribe();
+            resolve(val);
+          }
+        },
+        error: () => {
+          if (!resolved) {
+            resolved = true;
+            clearTimeout(timer);
+            sub.unsubscribe();
+            resolve(null);
+          }
+        },
+      });
+      const timer = setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          sub.unsubscribe();
+          resolve(null);
+        }
+      }, timeoutMs);
+    });
+  }
+
+  private async renderDiagramTab(
+    tab: DiagramModel
+  ): Promise<{ xml?: string; png?: string; pages?: { pageIndex: number; pageName: string; png: string }[] } | null> {
+    const hasXml = !!(tab.graphData?.xml && tab.graphData.xml.trim().length > 0);
+    const hasMermaid = !!(tab.mermaidScript && tab.mermaidScript.trim().length > 0);
+
+    if (!hasXml && !hasMermaid) {
+      return null;
+    }
+
+    if (hasXml) {
+      const loadedPromise = this.waitEvent(this.drawioService.loaded$, 2500);
+      this.drawioService.loadXml(tab.graphData.xml, true);
+      await loadedPromise;
+    } else if (hasMermaid) {
+      const loadedPromise = this.waitEvent(this.drawioService.loaded$, 2500);
+      this.drawioService.loadXml(this.drawioService.getEmptyDiagramXml(), true);
+      await loadedPromise;
+
+      const mermaidPromise = this.waitEvent(
+        this.drawioService.mermaid$,
+        4000,
+        (res: any) => res?.stage === 'inserted' || res?.stage === 'error'
+      );
+      this.drawioService.insertMermaid(tab.mermaidScript, 'replace');
+      await mermaidPromise;
+    }
+
+    await new Promise((r) => setTimeout(r, 300));
+
+    const xmlContent = (hasXml ? tab.graphData.xml : await this.waitEvent(this.drawioService.xml$, 2500)) || this.drawioService.getEmptyDiagramXml();
+    const pagesInfo = this.parsePagesFromXml(xmlContent);
+    let pagesList: { pageIndex: number; pageName: string; png: string }[] | undefined = undefined;
+    let png: string | null = null;
+    if (pagesInfo.length > 1) {
+      pagesList = await this.captureAllPages(xmlContent, 2);
+      png = pagesList[0]?.png || null;
+    } else {
+      png = await this.drawioService.exportPagePng(0, 2, 3500);
+    }
+
+    if (!png && (!pagesList || pagesList.length === 0)) return null;
+
+    return {
+      xml: xmlContent,
+      png: png || (pagesList ? pagesList[0].png : ''),
+      pages: pagesList,
+    };
+  }
+
+  async exportAllPdf(): Promise<void> {
+    if (this.isRenderingAll) return;
+
+    const projId = this.projectId || this.activeProjectId() || this.currentTab?.projectId;
+    if (!projId) {
+      this.dialogService.warn(
+        this.translate.instant('PMDT06_PRINT_FAIL_TITLE'),
+        this.translate.instant('PMDT05_SELECT_PROJECT_WARNING') || 'กรุณาเลือกโครงการก่อนพิมพ์รายงาน'
+      );
+      return;
+    }
+
+    const allTabs = this.tabs();
+    if (allTabs.length === 0) return;
+
+    const originalTabId = this.currentTabId;
+
+    // หาแท็บอื่นที่ยังไม่มีรูปภาพ PNG ใน DB (ไม่รวมแท็บที่เปิดอยู่ ซึ่ง Draw.io จะ capture สดได้เลย)
+    const missingTabs = allTabs.filter(
+      (t) => (!t.graphData?.png || t.graphData.png.trim().length === 0) && t.id !== originalTabId
+    );
+
+    if (missingTabs.length > 0) {
+      this.isRenderingAll = true;
+      try {
+        for (let i = 0; i < missingTabs.length; i++) {
+          const tab = missingTabs[i];
+          this.renderingProgress =
+            this.translate.instant('PMDT05_RENDERING_DIAGRAM_PROGRESS', {
+              current: i + 1,
+              total: missingTabs.length,
+              name: tab.name,
+            }) || `กำลังเตรียมรูปภาพ (${i + 1}/${missingTabs.length}): ${tab.name}`;
+
+          try {
+            const res = await this.renderDiagramTab(tab);
+            if (res && res.png) {
+              const updatedTab = {
+                ...tab,
+                graphData: { xml: res.xml, png: res.png, ...(res.pages ? { pages: res.pages } : {}) },
+                state: 3,
+                rowVersion: tab.rowVersion ?? null,
+              };
+              const saved = await firstValueFrom(this.diagramService.updateTab(updatedTab as any));
+              this.tabs.update((items) => items.map((item) => (item.id === saved.id ? saved : item)));
+            }
+          } catch (e) {
+            console.warn(`[BatchRender] Error rendering tab ${tab.name}:`, e);
+          }
+        }
+      } finally {
+        this.isRenderingAll = false;
+        this.renderingProgress = '';
+        if (originalTabId) {
+          this.loadedDiagramTabId = null;
+          this.currentTabId = originalTabId;
+          this.loadExistingDiagram();
+        }
+      }
+    }
+
+    const currentTabId = this.currentTabId || undefined;
+    const currentXml = this.lastSavedXml || this.currentDiagram?.graphData?.xml || '';
+    const currentPages = this.parsePagesFromXml(currentXml);
+    const captureCurrent = currentPages.length > 1
+      ? this.captureAllPages(currentXml, 2)
+      : this.drawioService.exportPagePng(0, 2, 3500).then((p) => (p ? [{ pageIndex: 0, pageName: 'Page-1', png: p }] : []));
+
+    captureCurrent.then(async (pagesRes) => {
+      const firstPng = pagesRes[0]?.png || null;
+      if (pagesRes.length > 1 && this.currentDiagram) {
+        try {
+          const updatedCurrent = {
+            ...this.currentDiagram,
+            graphData: { ...this.currentDiagram.graphData, pages: pagesRes, png: firstPng },
+            state: 3,
+            rowVersion: this.currentDiagram.rowVersion ?? null,
+          };
+          const saved = await firstValueFrom(this.diagramService.updateTab(updatedCurrent as any));
+          this.tabs.update((items) => items.map((item) => (item.id === saved.id ? saved : item)));
+        } catch (e) {
+          console.warn('[ExportAll] Could not update current diagram pages:', e);
+        }
+      }
+
+      this.diagramService.exportAllPdf(projId, currentTabId, firstPng).subscribe({
         next: (blob) => {
           const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
           if (!window.open(url, '_blank')) {
@@ -572,10 +800,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
           }
         },
         error: () =>
-          this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR')),
+          this.dialogService.error(
+            this.translate.instant('PMDT06_PRINT_FAIL_TITLE'),
+            this.translate.instant('PMDT05_GENERIC_ERROR')
+          ),
       });
     });
   }
+
 
   switchTab(tabId: string): void {
     if (this.currentTabId === tabId && this.loadedDiagramTabId === tabId) return;
@@ -786,6 +1018,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
   // ===== Auto‑Save (Internal) =====
   private autoSaveDiagram(xml: string, manual: boolean = false): void {
+    if (this.isRenderingAll) return;
     if (this.saving) {
       if (manual) {
         this.dialogService.warn(this.translate.instant('PMDT05_SAVING_TITLE'), this.translate.instant('PMDT05_SAVING_MSG'));
@@ -829,8 +1062,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     this.saving = true;
-    // เก็บ PNG ของแผนภาพไว้ใน graphData ด้วย เพื่อให้รายงาน Jasper (เช่น รายงานโครงการ) แสดงเป็นรูปได้
-    this.capturePng(1, (png) => this.persistDiagram(diagram, xml, png, requirementId, manual));
+    const pagesInfo = this.parsePagesFromXml(xml);
+    if (pagesInfo.length > 1) {
+      this.captureAllPages(xml, 1).then((pages) => {
+        this.persistDiagram(diagram, xml, pages[0]?.png || null, requirementId, manual, pages);
+      });
+    } else {
+      this.capturePng(1, (png) => this.persistDiagram(diagram, xml, png, requirementId, manual));
+    }
   }
 
   /** ขอ PNG จาก draw.io (รอสูงสุด 3 วิ ไม่ตอบ = null) */
@@ -848,14 +1087,21 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     this.drawioService.requestPng(scale);
   }
 
-  private persistDiagram(diagram: any, xml: string, png: string | null, requirementId: string, manual: boolean): void {
+  private persistDiagram(diagram: any, xml: string, png: string | null, requirementId: string, manual: boolean, pages?: any[]): void {
+    const graphData: any = { xml, png: png ?? diagram.graphData?.png };
+    if (pages && pages.length > 0) {
+      graphData.pages = pages;
+    } else if (diagram.graphData?.pages) {
+      graphData.pages = diagram.graphData.pages;
+    }
     const updatedTab = {
       ...diagram,
-      graphData: { xml, png: png ?? diagram.graphData?.png },
+      graphData,
       requirementId: requirementId || undefined, // ส่ง requirementId ไปด้วย
       state: 3,
       rowVersion: this.currentDiagram?.rowVersion ?? diagram.rowVersion ?? null
     };
+
 
     this.diagramService.updateTab(updatedTab as any).subscribe({
       next: (res) => {

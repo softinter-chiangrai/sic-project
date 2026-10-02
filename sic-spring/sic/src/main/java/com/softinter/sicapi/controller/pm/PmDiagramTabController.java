@@ -61,6 +61,40 @@ public class PmDiagramTabController {
     @PostMapping("/{id}/export-pdf")
     public ResponseEntity<byte[]> exportPdf(
             @PathVariable UUID id,
+            @RequestBody(required = false) java.util.Map<String, Object> body,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        String imageDataUri = null;
+        java.util.List<java.util.Map<String, Object>> requestPages = null;
+        if (body != null) {
+            if (body.get("image") instanceof String img) {
+                imageDataUri = img;
+            }
+            if (body.get("pages") instanceof java.util.List<?> list) {
+                requestPages = new java.util.ArrayList<>();
+                for (Object item : list) {
+                    if (item instanceof java.util.Map<?, ?> m) {
+                        requestPages.add((java.util.Map<String, Object>) m);
+                    }
+                }
+            }
+        }
+        byte[] pdf = exportService.exportDiagramPdf(id, businessId, ReportHelper.resolveLang(lang, headerLang),
+                imageDataUri, requestPages);
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"diagram-" + id + ".pdf\"")
+                .body(pdf);
+    }
+
+    /** Export ทุก Diagram ของ Project เป็น PDF ไฟล์เดียว */
+    @PostMapping("/export-all-pdf")
+    public ResponseEntity<byte[]> exportAllPdf(
+            @RequestParam UUID projectId,
             @RequestBody(required = false) java.util.Map<String, String> body,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
@@ -68,11 +102,18 @@ public class PmDiagramTabController {
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
-        byte[] pdf = exportService.exportDiagramPdf(id, businessId, ReportHelper.resolveLang(lang, headerLang),
-                body != null ? body.get("image") : null);
+        UUID currentTabId = null;
+        if (body != null && body.get("currentTabId") != null && !body.get("currentTabId").isBlank()) {
+            try {
+                currentTabId = UUID.fromString(body.get("currentTabId"));
+            } catch (Exception ignored) {}
+        }
+        String currentImage = body != null ? body.get("image") : null;
+        byte[] pdf = exportService.exportAllDiagramsPdf(projectId, currentTabId, businessId,
+                ReportHelper.resolveLang(lang, headerLang), currentImage);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
-                .header("Content-Disposition", "attachment; filename=\"diagram-" + id + ".pdf\"")
+                .header("Content-Disposition", "attachment; filename=\"diagrams-all-" + projectId + ".pdf\"")
                 .body(pdf);
     }
 

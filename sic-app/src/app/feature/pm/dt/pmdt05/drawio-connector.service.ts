@@ -1,8 +1,7 @@
-// src/app/core/component/sic-drawio/drawio-connector.service.ts
-
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subject } from 'rxjs';
+import { BehaviorSubject, Subject, take } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+
 
 /** ผลจากปลั๊กอิน sicMermaid ใน draw.io (docker/drawio/sicMermaid.js) */
 export interface MermaidInsertResult {
@@ -116,9 +115,36 @@ export class DrawioConnectorService {
     this.postMessage({ action: 'export', format: 'xml' });
   }
 
-  requestPng(scale = 2): void {
-    this.postMessage({ action: 'export', format: 'png', scale, border: 10, background: '#ffffff' });
+  requestPng(scale = 2, page?: number): void {
+    const msg: any = { action: 'export', format: 'png', scale, border: 10, background: '#ffffff' };
+    if (page !== undefined) {
+      msg.page = page;
+    }
+    this.postMessage(msg);
   }
+
+  exportPagePng(pageIndex?: number, scale = 2, timeoutMs = 4000): Promise<string | null> {
+    return new Promise((resolve) => {
+      let done = false;
+      const sub = this.png$.pipe(take(1)).subscribe((png: string) => {
+        if (!done) {
+          done = true;
+          clearTimeout(timer);
+          sub.unsubscribe();
+          resolve(png);
+        }
+      });
+      const timer = setTimeout(() => {
+        if (!done) {
+          done = true;
+          sub.unsubscribe();
+          resolve(null);
+        }
+      }, timeoutMs);
+      this.requestPng(scale, pageIndex);
+    });
+  }
+
 
   /**
    * ให้ draw.io แปลง Mermaid ด้วยตัวแปลงของมันเอง (ผ่านปลั๊กอิน sicMermaid) ผลมาทาง mermaid$

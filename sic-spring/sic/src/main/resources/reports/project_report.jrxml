@@ -290,13 +290,29 @@
 		<parameter name="projectId" class="java.lang.String"/>
 		<parameter name="lang" class="java.lang.String"/>
 		<query language="sql"><![CDATA[SELECT
-                COALESCE(diagram_code, '-') AS "code",
-                name                          AS "name",
-                COALESCE(diagram_type, '-')    AS "type",
-                COALESCE(split_part(graph_data->>'png', ',', 2), '') AS "png"
-            FROM pm_diagram
-            WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
-            ORDER BY sort_order ASC, created_date ASC]]></query>
+                COALESCE(d.diagram_code, '-') AS "code",
+                CASE 
+                    WHEN p.page_name IS NOT NULL AND p.page_name != '' THEN COALESCE(d.name, '-') || ' (' || p.page_name || ')'
+                    ELSE COALESCE(d.name, '-')
+                END AS "name",
+                COALESCE(d.diagram_type, '-') AS "type",
+                COALESCE(split_part(p.page_png, ',', 2), split_part(d.graph_data->>'png', ',', 2), '') AS "png"
+            FROM pm_diagram d
+            LEFT JOIN LATERAL (
+                SELECT 
+                    elem->>'pageName' AS page_name,
+                    elem->>'png' AS page_png,
+                    (elem->>'pageIndex')::int AS page_idx
+                FROM jsonb_array_elements(
+                    CASE 
+                        WHEN jsonb_typeof(d.graph_data->'pages') = 'array' AND jsonb_array_length(d.graph_data->'pages') > 0 
+                        THEN d.graph_data->'pages' 
+                        ELSE '[]'::jsonb 
+                    END
+                ) AS elem
+            ) p ON true
+            WHERE d.project_id = CAST($P{projectId} AS uuid) AND d.is_delete = false
+            ORDER BY d.sort_order ASC, d.created_date ASC, COALESCE(p.page_idx, 0) ASC]]></query>
 		<field name="code" class="java.lang.String"/>
 		<field name="name" class="java.lang.String"/>
 		<field name="type" class="java.lang.String"/>

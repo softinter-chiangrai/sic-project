@@ -262,10 +262,23 @@ export class DiagramService {
     });
   }
 
-  exportPdf(id: string, image: string | null): Observable<Blob> {
+  exportPdf(id: string, image: string | null, pages?: { pageIndex: number; pageName: string; png: string }[]): Observable<Blob> {
     const lang = this.languageService.getCurrentLanguage();
-    return this.http.post(`${this.apiUrl}/api/diagram/tabs/${id}/export-pdf`, { image }, {
+    const body: any = { image };
+    if (pages && pages.length > 0) {
+      body.pages = pages;
+    }
+    return this.http.post(`${this.apiUrl}/api/diagram/tabs/${id}/export-pdf`, body, {
       params: { lang },
+      responseType: 'blob',
+    });
+  }
+
+
+  exportAllPdf(projectId: string, currentTabId?: string, image?: string | null): Observable<Blob> {
+    const lang = this.languageService.getCurrentLanguage();
+    return this.http.post(`${this.apiUrl}/api/diagram/tabs/export-all-pdf`, { currentTabId, image }, {
+      params: { projectId, lang },
       responseType: 'blob',
     });
   }
