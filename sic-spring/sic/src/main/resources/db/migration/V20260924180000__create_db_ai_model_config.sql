@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS db_ai_model_config (
     api_format VARCHAR(30) NOT NULL,
     api_url VARCHAR(500) NOT NULL,
     api_key VARCHAR(1000),
-    max_tokens INTEGER DEFAULT 4096,
+    max_tokens INTEGER DEFAULT 10000,
     description VARCHAR(500),
     icon VARCHAR(100),
     is_recommended BOOLEAN DEFAULT FALSE,

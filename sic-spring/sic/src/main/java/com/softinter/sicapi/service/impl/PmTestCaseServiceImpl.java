@@ -202,18 +202,29 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
                 List<PmTestCase> allCases = testCaseRepository.findByTaskIdAndIsDeleteFalse(targetTaskId);
                 if (allCases.isEmpty()) return;
 
+                boolean hasPending = allCases.stream()
+                        .anyMatch(tc -> tc.getTestStatus() == null
+                                || "Pending".equalsIgnoreCase(tc.getTestStatus())
+                                || tc.getTestStatus().isBlank());
                 boolean anyFail = allCases.stream()
                         .anyMatch(tc -> "Fail".equalsIgnoreCase(tc.getTestStatus()) || "Failed".equalsIgnoreCase(tc.getTestStatus()));
                 boolean allPass = allCases.stream()
                         .allMatch(tc -> "Pass".equalsIgnoreCase(tc.getTestStatus()) || "Passed".equalsIgnoreCase(tc.getTestStatus()));
 
-                if (anyFail) {
-                    // If any test case fails, push task to Waiting Fix
+                if (hasPending) {
+                    // หากยังมีเคสค้างรอการทดสอบ (Pending) ให้ Task อยู่ในสถานะ Testing เพื่อให้ Tester รันเคสที่เหลือต่อจนครบชุดได้
+                    if (!"Testing".equalsIgnoreCase(task.getStatus())) {
+                        task.setStatus("Testing");
+                        taskRepository.save(task);
+                        log.info("Kept Task {} in 'Testing' because some test cases are still pending", task.getId());
+                    }
+                } else if (anyFail) {
+                    // ทุกเคสถูกทดสอบครบแล้ว และมีเคสไม่ผ่าน -> เปลี่ยนเป็น Waiting Fix
                     task.setStatus("Waiting Fix");
                     taskRepository.save(task);
-                    log.info("Auto-updated Task {} status to 'Waiting Fix' due to failed test case", task.getId());
+                    log.info("Auto-updated Task {} status to 'Waiting Fix' because all test cases are executed and some failed", task.getId());
                 } else if (allPass) {
-                    // If all test cases pass, complete the task
+                    // ทุกเคสถูกทดสอบครบแล้ว และผ่านทั้งหมด -> เปลี่ยนเป็น Done
                     task.setStatus("Done");
                     if (task.getActualEnd() == null) {
                         task.setActualEnd(LocalDate.now());

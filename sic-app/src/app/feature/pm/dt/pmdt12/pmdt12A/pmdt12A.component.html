@@ -60,8 +60,8 @@
       </div>
     }
 
-    <!-- Warning Banner when linked Task is not in Testing status in Execution Mode -->
-    @if (isExecution() && formData.form.get('taskId')?.value && (linkedTaskStatus() || '').toLowerCase() !== 'testing') {
+    <!-- Warning Banner when linked Task is not in Testing/Waiting Fix status in Execution Mode -->
+    @if (isExecution() && formData.form.get('taskId')?.value && (linkedTaskStatus() || '').toLowerCase() !== 'testing' && (linkedTaskStatus() || '').toLowerCase() !== 'waiting fix') {
       <div class="p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 flex items-start gap-3">
         <i class="bi bi-exclamation-triangle-fill text-xl mt-0.5"></i>
         <div>
@@ -296,7 +296,7 @@
           <sic-button
             variant="solid" color="primary"
             [type]="'submit'"
-            [disabled]="isSaving() || (isExecution() && (!isTaskReadyForTest() || (formData.form.get('taskId')?.value && (linkedTaskStatus() || '').toLowerCase() !== 'testing')))"
+            [disabled]="isSaving() || (isExecution() && (!isTaskReadyForTest() || (formData.form.get('taskId')?.value && (linkedTaskStatus() || '').toLowerCase() !== 'testing' && (linkedTaskStatus() || '').toLowerCase() !== 'waiting fix')))"
           >
             @if (isSaving()) {
               <i class="bi bi-arrow-repeat animate-spin"></i>

@@ -14,7 +14,7 @@ export class Burt07AForm {
       // เว้นว่าง = ไม่เปลี่ยน key เดิม (ใช้ตอนแก้ไขเท่านั้น); สร้างใหม่ต้องกรอก
       apiKey: ['', model?.id ? [] : [Validators.required]],
       hasApiKey: [model?.hasApiKey ?? false],
-      maxTokens: [model?.maxTokens ?? 4096, [Validators.required, Validators.min(1)]],
+      maxTokens: [model?.maxTokens ?? 10000, [Validators.required, Validators.min(1)]],
       description: [model?.description || ''],
       icon: [model?.icon || 'bi-robot'],
       isRecommended: [model?.isRecommended ?? (model as any)?.recommended ?? false],

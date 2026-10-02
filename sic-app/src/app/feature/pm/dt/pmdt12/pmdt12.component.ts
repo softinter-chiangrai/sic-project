@@ -208,7 +208,7 @@ export class Pmdt12Component implements OnInit {
       // Filter taskStatus
       if (taskStatus === 'ready' || taskStatus === 'testing') {
         const ts = (tc.taskStatus || '').toLowerCase();
-        if (ts !== 'testing') return false;
+        if (ts !== 'testing' && ts !== 'ready') return false;
       } else if (taskStatus !== 'all') {
         if ((tc.taskStatus || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
       }
@@ -458,10 +458,10 @@ export class Pmdt12Component implements OnInit {
     if (this.hasActiveBug(testCase)) {
       return false;
     }
-    // If testCase has a linked task, it MUST be in 'Testing' status to be executed
+    // If testCase has a linked task, allow execution if in 'testing' or 'waiting fix'
     if (testCase.taskId) {
       const status = (testCase.taskStatus || '').toLowerCase();
-      return status === 'testing';
+      return status === 'testing' || status === 'waiting fix';
     }
     // If no task is linked, allow execution (general / regression test)
     return true;
@@ -471,7 +471,8 @@ export class Pmdt12Component implements OnInit {
     if (this.hasActiveBug(testCase)) {
       return this.translate.instant('PMDT12_CANNOT_TEST_BUG_MSG');
     }
-    if (testCase.taskId && (testCase.taskStatus || '').toLowerCase() !== 'testing') {
+    const status = (testCase.taskStatus || '').toLowerCase();
+    if (testCase.taskId && status !== 'testing' && status !== 'waiting fix') {
       return this.translate.instant('PMDT12_TASK_NOT_READY_MSG');
     }
     return this.translate.instant('PMDT12_SAVE_TEST_RESULT_TT');
@@ -637,14 +638,9 @@ export class Pmdt12Component implements OnInit {
   }
 
   readyToTestCount = computed(() => {
-    // นับเฉพาะ Task ของโครงการที่อยู่ในสถานะ Testing และไม่ใช่ Bug
-    return this.projectTasks().filter((t: any) => {
-      if (t.isDelete) return false;
-      const status = (t.status || '').toLowerCase();
-      const code = (t.taskCode || '').toUpperCase();
-      const name = (t.taskName || '').toUpperCase();
-      const isBug = code.startsWith('BUG-') || code.startsWith('BUG') || name.startsWith('[BUG]');
-      return (status === 'testing' || status === 'ready') && !isBug;
+    return this.filteredTestCases().filter((tc) => {
+      const ts = (tc.taskStatus || '').toLowerCase();
+      return ts === 'testing' || ts === 'ready';
     }).length;
   });
 

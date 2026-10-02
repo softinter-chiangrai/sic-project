@@ -10,22 +10,22 @@ VALUES
     ('gemini-3.8-flash', 'Gemini 3.8 Flash', 'Google (KKU)', 'OPENAI_COMPATIBLE',
      'https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions',
      'hu9NUMMHnTJ/kDin7CEnGv0epe2ez6YGYaJ6FOQlHQVEDLCGHAqPhYbmWzvUIs3Y0yWxiO942W23dLyVar4netuMqwyJFFCHg/NOE2h+11Uq3KmHSprHh0aGfSbi4CE=',
-     4096, 'ประมวลผลรวดเร็ว ฉลาด และแม่นยำสูง (แนะนำ)', 'bi-stars', true, true, true, 1),
+     10000, 'ประมวลผลรวดเร็ว ฉลาด และแม่นยำสูง (แนะนำ)', 'bi-stars', true, true, true, 1),
 
     ('claude-sonnet-5', 'Claude Sonnet 5', 'Anthropic (KKU)', 'OPENAI_COMPATIBLE',
      'https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions',
      'hu9NUMMHnTJ/kDin7CEnGv0epe2ez6YGYaJ6FOQlHQVEDLCGHAqPhYbmWzvUIs3Y0yWxiO942W23dLyVar4netuMqwyJFFCHg/NOE2h+11Uq3KmHSprHh0aGfSbi4CE=',
-     4096, 'คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน', 'bi-cpu', false, false, true, 2),
+     10000, 'คิดวิเคราะห์ลึก แม่นยำสูง สำหรับสถาปัตยกรรมที่ซับซ้อน', 'bi-cpu', false, false, true, 2),
 
     ('gpt-5.4', 'OpenAI GPT-5.4', 'OpenAI (KKU)', 'OPENAI_COMPATIBLE',
      'https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions',
      'hu9NUMMHnTJ/kDin7CEnGv0epe2ez6YGYaJ6FOQlHQVEDLCGHAqPhYbmWzvUIs3Y0yWxiO942W23dLyVar4netuMqwyJFFCHg/NOE2h+11Uq3KmHSprHh0aGfSbi4CE=',
-     4096, 'โมเดลอัจฉริยะ ความสามารถสูง', 'bi-cpu-fill', false, false, true, 3),
+     10000, 'โมเดลอัจฉริยะ ความสามารถสูง', 'bi-cpu-fill', false, false, true, 3),
 
     ('deepseek-v4-flash', 'DeepSeek V4 Flash', 'DeepSeek (KKU)', 'OPENAI_COMPATIBLE',
      'https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions',
      'hu9NUMMHnTJ/kDin7CEnGv0epe2ez6YGYaJ6FOQlHQVEDLCGHAqPhYbmWzvUIs3Y0yWxiO942W23dLyVar4netuMqwyJFFCHg/NOE2h+11Uq3KmHSprHh0aGfSbi4CE=',
-     4096, 'คิดวิเคราะห์ตรรกะและการเขียนโค้ดดีเยี่ยม', 'bi-robot', false, false, true, 4)
+     10000, 'คิดวิเคราะห์ตรรกะและการเขียนโค้ดดีเยี่ยม', 'bi-robot', false, false, true, 4)
 ON CONFLICT (model_code) WHERE is_delete = false
 DO UPDATE SET
     display_name = EXCLUDED.display_name,

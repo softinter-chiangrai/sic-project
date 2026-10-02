@@ -442,6 +442,16 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     this.openDropdown();
   }
 
+  onFieldContainerClick(event: MouseEvent): void {
+    if (this.disabled || this.readonly) return;
+    const target = event.target as HTMLElement;
+    if (target && target.closest('.sic-combobox__field-actions, .sic-combobox__chip-remove')) {
+      return;
+    }
+    this.fieldInput?.nativeElement?.focus();
+    this.openDropdown();
+  }
+
   onFieldBlur(): void {
     this.markTouched();
   }

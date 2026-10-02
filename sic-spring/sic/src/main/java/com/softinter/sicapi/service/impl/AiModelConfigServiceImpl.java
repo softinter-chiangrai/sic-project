@@ -79,7 +79,7 @@ public class AiModelConfigServiceImpl implements AiModelConfigService {
         entity.setProviderLabel(request.getProviderLabel());
         entity.setApiFormat(request.getApiFormat());
         entity.setApiUrl(request.getApiUrl());
-        entity.setMaxTokens(request.getMaxTokens() != null ? request.getMaxTokens() : 4096);
+        entity.setMaxTokens(request.getMaxTokens() != null ? request.getMaxTokens() : 10000);
         entity.setDescription(request.getDescription());
         entity.setIcon(request.getIcon());
         entity.setIsRecommended(Boolean.TRUE.equals(request.getIsRecommended()));

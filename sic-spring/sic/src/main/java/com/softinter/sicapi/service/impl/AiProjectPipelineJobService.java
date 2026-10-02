@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -709,18 +710,22 @@ public class AiProjectPipelineJobService {
         if (c.tasks.isEmpty()) {
             throw new IllegalStateException("ไม่มี Task ให้ผูก Test Scenario (ขั้น Task ไม่สำเร็จหรือถูกปิดไว้)");
         }
-        JsonNode root = ask(c, """
-                You are a Lead QA Engineer. Design test scenarios (max 6), each linked to one task by number, with 2-3 test cases each. Fill EVERY field.
+        JsonNode root = ask(c, String.format("""
+                You are a Lead QA Engineer. You MUST design at least one test scenario for EVERY task listed (Task 1 to %d).
+                Each scenario must link to its corresponding task by number using "taskRef" (1-based index).
+                For setup, infrastructure, or architecture tasks (such as Task 1), design Smoke Test, Environment Verification, or Setup Verification scenarios.
+                Each scenario must contain 1-3 test cases. Fill EVERY field.
                 priority is one of: LOW | MEDIUM | HIGH | CRITICAL. testType is one of: SIT | UAT.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "scenarios": [ { "taskRef": 1, "requirementRef": 1, "specificationRef": 1, "scenarioName": "...", "description": "HTML", "priority": "HIGH", "testType": "SIT",
                     "cases": [ { "title": "...", "testStep": "<ol><li>...</li></ol>", "expectedResult": "<p>...</p>", "priority": "MEDIUM" } ] } ] }
-                """, projectContext(c) + "\n\nTasks:\n" + numbered(c.tasks) + "\n\nRequirements:\n" + numbered(c.requirements) + "\n\nSpecifications:\n" + numbered(c.specs), false);
+                """, c.tasks.size()), projectContext(c) + "\n\nTasks:\n" + numbered(c.tasks) + "\n\nRequirements:\n" + numbered(c.requirements) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         int sIdx = 1;
         int cIdx = 1;
         int cases = 0;
         int failed = 0;
+        Set<UUID> coveredTaskIds = new HashSet<>();
         for (JsonNode sn : arr(root, "scenarios")) {
             try {
             Ref task = refAt(c.tasks, sn.path("taskRef").asInt(0), sIdx - 1);
@@ -738,6 +743,7 @@ public class AiProjectPipelineJobService {
             sq.setTestType(testType);
             sq.setState(STATE_ADDED);
             UUID scenarioId = scenarioService.save(sq, c.businessId, c.userId);
+            coveredTaskIds.add(task.id());
 
             for (JsonNode cn : arr(sn, "cases")) {
                 PmTestCaseRequest cq = new PmTestCaseRequest();
@@ -771,6 +777,49 @@ public class AiProjectPipelineJobService {
                 failed++;
             }
         }
+
+        // รับประกันว่าทุก Task ต้องมี Test Scenario และ Test Case อย่างน้อย 1 รายการเสมอ
+        for (Ref task : c.tasks) {
+            if (coveredTaskIds.contains(task.id())) continue;
+            try {
+                String testType = "SIT";
+                String tester = randomName(c);
+                PmTestScenarioRequest sq = new PmTestScenarioRequest();
+                sq.setProjectId(c.projectId);
+                sq.setTaskId(task.id());
+                sq.setScenarioCode(String.format("SC-%03d", sIdx++));
+                sq.setScenarioName("ทดสอบ: " + cut(task.name(), 245));
+                sq.setDescription("<p>ชุดทดสอบความถูกต้องและการทำงานของงาน: " + task.name() + "</p>");
+                sq.setPriority("MEDIUM");
+                sq.setTestType(testType);
+                sq.setState(STATE_ADDED);
+                UUID scenarioId = scenarioService.save(sq, c.businessId, c.userId);
+                coveredTaskIds.add(task.id());
+
+                PmTestCaseRequest cq = new PmTestCaseRequest();
+                cq.setProjectId(c.projectId);
+                cq.setScenarioId(scenarioId);
+                cq.setScenarioName(sq.getScenarioName());
+                cq.setTaskId(task.id());
+                cq.setRelatedTask(task.name());
+                cq.setTester(tester);
+                cq.setTestCaseCode(String.format("TC-%03d", cIdx++));
+                cq.setTitle("ตรวจสอบความสมบูรณ์ของงาน " + cut(task.name(), 220));
+                cq.setPriority("MEDIUM");
+                cq.setTestStep("<ol><li>ตรวจสอบผลลัพธ์และเงื่อนไขความสำเร็จของงาน " + task.name() + "</li><li>ตรวจสอบความถูกต้องของการทำงานและข้อผิดพลาด</li></ol>");
+                cq.setExpectedResult("<p>การทำงานของงาน " + task.name() + " เสร็จสมบูรณ์ ถูกต้องตามข้อกำหนด และผ่านเกณฑ์การยอมรับ</p>");
+                cq.setTestDate(c.startDate.plusWeeks(c.weeks));
+                cq.setTestStatus("Pending");
+                cq.setTestType(testType);
+                cq.setState(STATE_ADDED);
+                testCaseService.save(cq, c.businessId, c.userId);
+                cases++;
+            } catch (Exception e) {
+                log.warn("AI pipeline: fallback scenario for task {} failed: {}", task.name(), e.getMessage());
+                failed++;
+            }
+        }
+
         step.count = (sIdx - 1) + cases;
         step.message = (sIdx - 1) + " scenario, " + cases + " test case" + (failed > 0 ? " (ข้าม " + failed + " รายการที่บันทึกไม่ได้)" : "");
         if (sIdx == 1) step.message = "AI ไม่สามารถสร้าง Test Scenario ได้";

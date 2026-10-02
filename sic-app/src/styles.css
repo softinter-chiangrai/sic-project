@@ -466,7 +466,7 @@ html, body {
 
 .sic-input__field,
 .sic-control-field,
-.sic-combobox__field,
+.sic-combobox__field:not(.sic-combobox__field--multiple),
 .sic-datepicker__field,
 .sic-datepicker__trigger,
 .sic-input-number__wrap,
@@ -480,15 +480,32 @@ html, body {
   font-family: var(--font-sans) !important;
 }
 
+/* Combobox multiple: allow height to grow dynamically with chips */
+.sic-combobox__field.sic-combobox__field--multiple {
+  min-height: var(--sic-control-height-md, 3.15rem) !important;
+  height: auto !important;
+  border-radius: var(--sic-radius-md, 0.95rem) !important;
+  box-sizing: border-box !important;
+  font-size: 0.95rem !important;
+  font-family: var(--font-sans) !important;
+}
+
 /* Base text inputs padding */
 .sic-input__field {
   padding: 0.8rem 1rem !important;
 }
 
 /* Combobox and Datepicker wrapper inputs */
-.sic-combobox__field-input,
+.sic-combobox__field:not(.sic-combobox__field--multiple) .sic-combobox__field-input,
 .sic-datepicker__field-input {
   height: calc(var(--sic-control-height-md, 3.15rem) - 2px) !important;
+  font-size: 0.95rem !important;
+  font-family: var(--font-sans) !important;
+}
+
+.sic-combobox__field--multiple .sic-combobox__field-input {
+  height: 1.85rem !important;
+  min-height: 1.85rem !important;
   font-size: 0.95rem !important;
   font-family: var(--font-sans) !important;
 }

@@ -616,7 +616,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
     if (this.isExecution() && this.formData.form.get('taskId')?.value) {
       const taskStatus = (this.linkedTaskStatus() || '').toLowerCase();
-      if (taskStatus && taskStatus !== 'testing') {
+      if (taskStatus && taskStatus !== 'testing' && taskStatus !== 'waiting fix') {
         this.dialog.warn(
           this.translate.instant('PMDT12A_CANNOT_SAVE_TEST_RESULT_TITLE'),
           this.translate.instant('PMDT12A_TASK_NOT_TESTING_MSG')

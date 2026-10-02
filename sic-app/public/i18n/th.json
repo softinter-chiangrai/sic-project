@@ -1674,7 +1674,7 @@
   "PMDT05_REJECTED_TITLE": "เอกสารถูกปฏิเสธการอนุมัติ",
   "PMDT05_PRINT_CURRENT_TITLE": "พิมพ์ไดอะแกรมปัจจุบัน (PDF)",
   "PMDT05_PRINT_ALL_TITLE": "พิมพ์ทุกไดอะแกรมในโครงการ (PDF)",
-  "PMDT05_PRINT_ALL_BTN": "พิมพ์ทั้งหมด (PDF)",
+  "PMDT05_PRINT_ALL_BTN": "พิมพ์ทั้งหมด",
   "PMDT05_SELECT_PROJECT_WARNING": "กรุณาเลือกโครงการก่อนพิมพ์รายงานทั้งหมด",
   "PMDT05_RENDERING_DIAGRAM_PROGRESS": "กำลังเตรียมรูปภาพแผนภาพ ({current}/{total}): {name}",
   "PMDT05_RENDERING_HINT": "ระบบกำลังแปลงและบันทึกรูปภาพแผนภาพทั้งหมดเพื่อพิมพ์เอกสาร...",

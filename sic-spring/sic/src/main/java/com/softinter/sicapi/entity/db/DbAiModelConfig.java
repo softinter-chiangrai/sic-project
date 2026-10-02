@@ -37,7 +37,7 @@ public class DbAiModelConfig extends BaseEntity {
     private String apiKey;
 
     @Column(name = "max_tokens")
-    private Integer maxTokens = 4096;
+    private Integer maxTokens = 10000;
 
     @Column(name = "description", length = 500)
     private String description;
