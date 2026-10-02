@@ -36,6 +36,7 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
     private final PmTaskRepository taskRepository;
     private final PmPhaseRepository phaseRepository;
     private final PmDeliveryRepository deliveryRepository;
+    private final ThaiCustomerGeneratorHelper thaiCustomerGenerator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -160,17 +161,13 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
         List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(businessId);
         if (customerId == null && !customers.isEmpty()) {
             customerId = customers.get(0).getId();
+            customerRepository.findById(customerId).ifPresent(thaiCustomerGenerator::enrichCustomerIfIncomplete);
         }
         if (customerId == null) {
-            PmCustomer autoCust = new PmCustomer();
-            autoCust.setBusinessId(businessId);
-            autoCust.setCustomerCode("CUST-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + String.format("%03d", (int) (Math.random() * 1000)));
-            autoCust.setCompanyNameLocal("ลูกค้าทั่วไป (AI Generated)");
-            autoCust.setCompanyNameEn("General Client (AI Generated)");
-            autoCust.setIsActive(true);
-            autoCust = customerRepository.save(autoCust);
+            PmCustomer autoCust = thaiCustomerGenerator.createAndSaveFullThaiCustomer(
+                    businessId, "ลูกค้าทั่วไป (AI Generated)", "General Client (AI Generated)", null);
             customerId = autoCust.getId();
-            log.info("Auto-created new customer '{}' ({}) for synchronous AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
+            log.info("Auto-created complete Thai customer '{}' ({}) for synchronous AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
         }
 
         // 3. Create Project

@@ -109,6 +109,8 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
     return keys.length > 0 ? msgs[keys[0]] : null;
   });
 
+  private isUserInteracted = false;
+
   // === ControlValueAccessor ===
   private onChange: (value: string) => void = () => {};
   private onTouched: () => void = () => {};
@@ -131,6 +133,10 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
     this.editorConfig.set(this.buildDefaultConfig());
   }
 
+  onUserInteraction(): void {
+    this.isUserInteracted = true;
+  }
+
   // === Events ===
   onContentChange(html: string): void {
     const current = this.content();
@@ -138,7 +144,9 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
       return;
     }
     this.content.set(html);
-    this.onChange(html);
+    if (this.isUserInteracted) {
+      this.onChange(html);
+    }
   }
 
   // เปิด Fullscreen (เรียกจาก template)
@@ -163,6 +171,7 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
   // === ControlValueAccessor Implementation ===
   writeValue(value: any): void {
     this.content.set(value || '');
+    this.isUserInteracted = false;
   }
 
   registerOnChange(fn: (value: string) => void): void {

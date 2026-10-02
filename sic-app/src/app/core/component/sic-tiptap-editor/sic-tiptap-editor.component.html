@@ -22,11 +22,14 @@
       [class.disabled]="disabledState()"
       [style.min-height]="minHeightState()"
       [style.max-height]="maxHeightState()"
+      (pointerdown)="onUserInteraction()"
+      (keydown)="onUserInteraction()"
     >
       <angular-tiptap-editor
         [config]="editorConfig()"
         [content]="content()"
         [editable]="!disabledState()"
+        (editorFocus)="onUserInteraction()"
         (contentChange)="onContentChange($event)"
       ></angular-tiptap-editor>
 
@@ -56,11 +59,16 @@
       </div>
 
       <!-- Editor -->
-      <div class="fullscreen-editor-wrapper">
+      <div
+        class="fullscreen-editor-wrapper"
+        (pointerdown)="onUserInteraction()"
+        (keydown)="onUserInteraction()"
+      >
         <angular-tiptap-editor
           [config]="editorConfig()"
           [content]="content()"
           [editable]="!disabledState()"
+          (editorFocus)="onUserInteraction()"
           (contentChange)="onContentChange($event)"
         ></angular-tiptap-editor>
       </div>

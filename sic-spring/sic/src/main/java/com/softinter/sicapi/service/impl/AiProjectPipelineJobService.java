@@ -124,6 +124,7 @@ public class AiProjectPipelineJobService {
     private final PmCustomerContractRepository contractRepository;
     private final SuUserBusinessRepository userBusinessRepository;
     private final SuProfileRepository profileRepository;
+    private final ThaiCustomerGeneratorHelper thaiCustomerGenerator;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final Map<UUID, Job> jobs = new ConcurrentHashMap<>();
@@ -432,7 +433,9 @@ public class AiProjectPipelineJobService {
                 Create the project charter for the request. Fill EVERY field.
                 Respond ONLY with valid JSON in a ```json block, in the same language as the user's request:
                 { "projectName": "professional title", "description": "plain text charter (objectives, scope, deliverables), max 1500 characters",
-                  "customerName": "organization/client company name if mentioned or implied in the prompt, else realistic company name",
+                  "customerName": "organization/client company name in Thailand if mentioned or implied in the prompt, else realistic Thai company name (e.g. บริษัท สยามนวัตกรรม ดิจิทัล จำกัด)",
+                  "customerNameEn": "company name in English (e.g. Siam Digital Innovation Co., Ltd.)",
+                  "contactPerson": "realistic Thai executive contact name with title (e.g. คุณสมชาย วิจิตรศิลป์)",
                   "estimatedDurationWeeks": 12, "budgetManday": 120, "priority": "Low | Medium | High | Critical" }
                 """, "รายละเอียดโครงการ: " + firstNonBlank(c.req.getPrompt(), c.req.getProjectName())
                 + (c.req.getProjectName() != null && !c.req.getProjectName().isBlank() ? "\nชื่อโครงการที่ผู้ใช้กำหนด: " + c.req.getProjectName() : "")
@@ -447,37 +450,31 @@ public class AiProjectPipelineJobService {
         UUID customerId = c.req.getCustomerId();
         List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(c.businessId);
 
+        String aiCustName = txt(root, "customerName");
+        String aiCustNameEn = txt(root, "customerNameEn");
+        String aiContact = txt(root, "contactPerson");
+
         // 1. ถ้าไม่ได้ระบุ customerId มา ให้ลอง Match กับชื่อลูกค้าในระบบจากที่ AI สกัดได้
-        if (customerId == null) {
-            String aiCustName = txt(root, "customerName");
-            if (aiCustName != null && !aiCustName.isBlank() && !customers.isEmpty()) {
-                String needle = aiCustName.toLowerCase().trim();
-                for (PmCustomer cust : customers) {
-                    if ((cust.getCompanyNameLocal() != null && cust.getCompanyNameLocal().toLowerCase().contains(needle))
-                            || (cust.getCompanyNameEn() != null && cust.getCompanyNameEn().toLowerCase().contains(needle))) {
-                        customerId = cust.getId();
-                        break;
-                    }
+        if (customerId == null && aiCustName != null && !aiCustName.isBlank() && !customers.isEmpty()) {
+            String needle = aiCustName.toLowerCase().trim();
+            for (PmCustomer cust : customers) {
+                if ((cust.getCompanyNameLocal() != null && cust.getCompanyNameLocal().toLowerCase().contains(needle))
+                        || (cust.getCompanyNameEn() != null && cust.getCompanyNameEn().toLowerCase().contains(needle))) {
+                    customerId = cust.getId();
+                    thaiCustomerGenerator.enrichCustomerIfIncomplete(cust);
+                    break;
                 }
-            }
-            // 2. ถ้าไม่ตรงกับชื่อไหนเลย แต่ในระบบมีลูกค้าอยู่แล้ว ให้เลือกลูกค้ารายแรก
-            if (customerId == null && !customers.isEmpty()) {
-                customerId = customers.get(0).getId();
             }
         }
 
-        // 3. ถ้าในระบบยังไม่มีลูกค้าเลยแม้แต่รายเดียว -> ให้ AI สร้างลูกค้าขึ้นมาใหม่อัตโนมัติทันที
+        // 2. ถ้าไม่พบลูกค้าเดิม หรือไม่มีลูกค้าในระบบ -> สร้างลูกค้าสัญชาติไทยรายใหม่ ข้อมูลครบถ้วนทุกฟิลด์ (สถานที่ในไทย, ที่อยู่, เบอร์โทร, เลขภาษี, ผู้ติดต่อ)
         if (customerId == null) {
-            String custName = firstNonBlank(txt(root, "customerName"), "ลูกค้าทั่วไป (AI Generated)");
-            PmCustomer autoCust = new PmCustomer();
-            autoCust.setBusinessId(c.businessId);
-            autoCust.setCustomerCode("CUST-" + LocalDate.now().format(DateTimeFormatter.BASIC_ISO_DATE) + "-" + String.format("%03d", (int) (Math.random() * 1000)));
-            autoCust.setCompanyNameLocal(cut(custName, 255));
-            autoCust.setCompanyNameEn(cut(custName, 255));
-            autoCust.setIsActive(true);
-            autoCust = customerRepository.save(autoCust);
+            PmCustomer autoCust = thaiCustomerGenerator.createAndSaveFullThaiCustomer(
+                    c.businessId, aiCustName, aiCustNameEn, aiContact);
             customerId = autoCust.getId();
-            log.info("Auto-created new customer '{}' ({}) for AI Project Pipeline", custName, customerId);
+            log.info("Auto-created complete Thai customer '{}' ({}) for AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
+        } else {
+            customerRepository.findById(customerId).ifPresent(thaiCustomerGenerator::enrichCustomerIfIncomplete);
         }
         c.customerId = customerId;
 

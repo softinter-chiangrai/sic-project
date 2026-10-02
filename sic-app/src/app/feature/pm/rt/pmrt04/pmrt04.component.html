@@ -137,7 +137,8 @@
         @if (r.projectName) {
           <button
             (click)="goToProject(r.projectId)"
-            class="text-[var(--crm-primary)] hover:underline transition-colors"
+            class="text-[var(--crm-primary)] hover:underline transition-colors truncate max-w-full text-left"
+            [title]="r.projectName"
           >
             {{ r.projectName }}
           </button>

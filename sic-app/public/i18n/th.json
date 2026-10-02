@@ -1752,6 +1752,7 @@
   "PMDT06_COL_STATUS": "สถานะ",
   "PMDT06_COL_TARGET_TYPE": "ประเภทเอกสาร",
   "PMDT06_COL_TITLE": "หัวข้อ / รายละเอียด",
+  "PMDT06_COL_TARGET_VERSION": "เวอร์ชันเป้าหมาย",
   "PMDT06_COL_VERSION": "เวอร์ชัน",
   "PMDT06_CONFIRM_DELETE_MSG": "คุณต้องการลบคำขอเปลี่ยนแปลงนี้ใช่หรือไม่?",
   "PMDT06_CONFIRM_DELETE_TITLE": "ยืนยันการลบ",

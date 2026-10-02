@@ -124,16 +124,16 @@
     >
         <ng-template sicGridPanelTemplate="moduleInfo" section="cell" let-row>
           @let r = $any(row);
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 w-full min-w-0">
             <div
               class="w-2 h-2 rounded-full shrink-0"
               [class.bg-emerald-500]="isChecked(r.moduleId, 'isActive')"
               [class.bg-gray-300]="!isChecked(r.moduleId, 'isActive')"
               [class.dark:bg-gray-700]="!isChecked(r.moduleId, 'isActive')"
             ></div>
-            <div>
-              <div class="font-medium text-[var(--text-active)]">{{ r.moduleName }}</div>
-              <div class="text-xs text-[var(--text-muted)] font-mono">{{ r.moduleCode }}</div>
+            <div class="min-w-0 flex-1 truncate">
+              <div class="font-medium text-[var(--text-active)] truncate" [title]="r.moduleName">{{ r.moduleName }}</div>
+              <div class="text-xs text-[var(--text-muted)] font-mono truncate" [title]="r.moduleCode">{{ r.moduleCode }}</div>
             </div>
           </div>
         </ng-template>

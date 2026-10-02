@@ -10,10 +10,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
 public interface DbCountryRepository extends JpaRepository<DbCountry, UUID>, JpaSpecificationExecutor<DbCountry> {
+    Optional<DbCountry> findByCountryCode(String countryCode);
+    Optional<DbCountry> findByCountryCodeIgnoreCase(String countryCode);
     Page<DbCountry> findByIsActiveTrue(Pageable pageable);
     @Query("SELECT c FROM DbCountry c WHERE c.isActive = true ORDER BY " +
            "CASE WHEN :useEnglish = true THEN c.countryNameEn ELSE c.countryNameLocal END")

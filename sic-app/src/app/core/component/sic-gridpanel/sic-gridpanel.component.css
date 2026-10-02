@@ -167,6 +167,7 @@
 .sic-gridpanel__cell,
 .sic-gridpanel__footer-cell {
   min-width: 0;
+  overflow: hidden;
   padding: var(--sic-gridpanel-cell-padding-block) var(--sic-gridpanel-cell-padding-inline);
   display: flex;
   align-items: center;

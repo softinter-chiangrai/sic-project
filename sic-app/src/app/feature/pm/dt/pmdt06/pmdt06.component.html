@@ -68,9 +68,11 @@
 
       <ng-template sicGridPanelTemplate="titleDesc" section="cell" let-row>
         @let r = $any(row);
-        <div class="font-medium text-[var(--text-active)]">{{ r.title }}</div>
-        <div class="text-xs text-[var(--text-muted)] truncate max-w-xs">
-          {{ r.description | sicStripHtml }}
+        <div class="w-full flex flex-col justify-center min-w-0 text-left py-1">
+          <div class="font-medium text-[var(--text-active)] truncate max-w-full" [title]="r.title">{{ r.title }}</div>
+          <div class="text-xs text-[var(--text-muted)] truncate max-w-full" [title]="r.description | sicStripHtml">
+            {{ r.description | sicStripHtml }}
+          </div>
         </div>
       </ng-template>
 
@@ -105,15 +107,6 @@
                   <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[10px] font-medium">
                     <i class="bi bi-clock-history text-[9px]"></i> {{ 'PMDT06_STATUS_PENDING' | translate }}
                   </span>
-                  @if (r.status === 'APPROVED') {
-                    <button
-                      (click)="completeAssigneeTask(r.id, assignee.userId, assignee.targetId, grid)"
-                      [title]="'PMDT06_CONFIRM_DONE_TITLE' | translate"
-                      class="inline-flex items-center gap-1 px-2 py-0.5 rounded border border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400 text-[10px] hover:bg-blue-500/20 active:scale-95 transition-all"
-                    >
-                      <i class="bi bi-check2"></i> {{ 'PMDT06_MARK_DONE_BTN' | translate }}
-                    </button>
-                  }
                 }
               </div>
             </div>

@@ -1009,8 +1009,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                             : versionService.bumpVersion(del.getDeliveryVersion(), changeLevel);
                     del.setDeliveryVersion(newVersion);
                     deliveryRepository.save(del);
+                    String verNo = newVersion.startsWith("v") || newVersion.startsWith("V") ? newVersion : "v" + newVersion;
                     versionService.createVersion("DELIVERY", del.getId(), del.getProjectId(),
-                            del.getDeliveryCode(), "v" + newVersion, reason);
+                            del.getDeliveryCode(), verNo, reason);
                 });
                 break;
             case "INVOICE":
@@ -1087,7 +1088,7 @@ public class ApprovalServiceImpl implements ApprovalService {
         if (!isApproved(documentType, documentId)) {
             throw new IllegalStateException("เอกสารนี้ยังไม่ได้รับการอนุมัติ ไม่สามารถสร้าง Revision ใหม่ได้");
         }
-        unlockDocumentAfterChange(documentType, documentId, reason);
+        unlockDocumentAfterChange(documentType, documentId, reason, "MINOR");
     }
 
     @Override
@@ -1282,7 +1283,7 @@ public class ApprovalServiceImpl implements ApprovalService {
 
                     // ปรับสถานะเอกสารเป้าหมาย และปลดล็อคผ่าน unlockDocumentAfterChange ทันทีที่ CR ผ่านการอนุมัติ
                     if (cr.getTargetType() != null && cr.getTargetId() != null) {
-                        unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), "Change Request " + (cr.getCrCode() != null ? cr.getCrCode() : cr.getId()) + " approved");
+                        unlockDocumentAfterChange(cr.getTargetType(), cr.getTargetId(), "Change Request " + (cr.getCrCode() != null ? cr.getCrCode() : cr.getId()) + " approved", cr.getChangeLevel());
                     }
                 });
                 break;

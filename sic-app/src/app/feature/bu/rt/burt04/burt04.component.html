@@ -78,16 +78,16 @@
   >
       <ng-template sicGridPanelTemplate="memberName" section="cell" let-row>
         @let r = $any(row);
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 w-full min-w-0">
           <div class="w-8 h-8 rounded-full bg-[var(--crm-primary)]/10 flex items-center justify-center flex-shrink-0">
             <span class="text-xs font-semibold text-[var(--crm-primary)]">
               {{ r.userName.charAt(0) }}
             </span>
           </div>
-          <div>
-            <span class="font-medium text-[var(--text-active)]">{{ r.userName }}</span>
+          <div class="min-w-0 flex-1 truncate" [title]="r.userName">
+            <span class="font-medium text-[var(--text-active)] truncate">{{ r.userName }}</span>
             @if (r.isDefault) {
-              <span class="ml-1 text-xs text-[var(--crm-primary)] font-medium">{{ 'BURT04_DEFAULT_TAG' | translate }}</span>
+              <span class="ml-1 text-xs text-[var(--crm-primary)] font-medium shrink-0">{{ 'BURT04_DEFAULT_TAG' | translate }}</span>
             }
           </div>
         </div>

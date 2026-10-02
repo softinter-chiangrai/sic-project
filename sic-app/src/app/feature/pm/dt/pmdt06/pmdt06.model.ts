@@ -53,4 +53,6 @@ export interface ChangeRequestItem {
   assignees?: CrAssignee[];
   impacts?: ChangeImpact[];
   approvalStatus?: string;
+  version?: string;
+  targetVersion?: string;
 }

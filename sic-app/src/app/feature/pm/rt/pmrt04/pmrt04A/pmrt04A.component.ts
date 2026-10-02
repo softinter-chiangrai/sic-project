@@ -235,7 +235,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     if (this.isView || this.isSaved) {
       return false;
     }
-    return this.formData?.isChanged ?? this.form?.dirty ?? false;
+    return this.formData?.isChanged ?? false;
   };
 
   ngOnInit(): void {

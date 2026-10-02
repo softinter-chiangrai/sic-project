@@ -82,9 +82,9 @@
 
         <ng-template sicGridPanelTemplate="createdByInfo" section="cell" let-row>
           @let r = $any(row);
-          <div class="flex items-center gap-1.5 text-xs text-[var(--text)]">
-            <i class="bi bi-person text-[var(--crm-primary)]"></i>
-            <span>{{ r.createdBy || 'System' }}</span>
+          <div class="flex items-center gap-1.5 text-xs text-[var(--text)] min-w-0 max-w-full">
+            <i class="bi bi-person text-[var(--crm-primary)] shrink-0"></i>
+            <span class="truncate" [title]="r.createdBy || 'System'">{{ r.createdBy || 'System' }}</span>
           </div>
         </ng-template>
 

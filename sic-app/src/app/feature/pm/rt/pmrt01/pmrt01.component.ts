@@ -63,12 +63,12 @@ export class Pmrt01Component implements OnInit {
     defaultSortField: 'customerCode',
     pageSize: this.pageSize(),
     column: [
-      { label: this.translate.instant('PMRT01_COL_CODE'), name: 'customerCode', type: 'code', sortable: true, minWidth: 100 },
-      { label: this.translate.instant('PMRT01_COL_COMPANY'), name: 'companyNameEn', type: 'companyInfo', sortable: true, minWidth: 220 },
-      { label: this.translate.instant('PMRT01_COL_EMAIL'), name: 'email', type: 'emailLink', sortable: true, minWidth: 200 },
+      { label: this.translate.instant('PMRT01_COL_CODE'), name: 'customerCode', type: 'code', sortable: true, minWidth: 130 },
+      { label: this.translate.instant('PMRT01_COL_COMPANY'), name: 'companyNameEn', type: 'companyInfo', sortable: true, minWidth: 260 },
+      { label: this.translate.instant('PMRT01_COL_EMAIL'), name: 'email', type: 'emailLink', sortable: true, minWidth: 180 },
       { label: this.translate.instant('PMRT01_COL_PHONE'), name: 'phoneNumber', type: 'phoneText', minWidth: 120 },
       { label: this.translate.instant('PMRT01_COL_STATUS'), name: 'isActive', type: 'statusBadge', sortable: true, minWidth: 90 },
-      { label: this.translate.instant('PMRT01_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 160 },
+      { label: this.translate.instant('PMRT01_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 140 },
     ],
   };
 

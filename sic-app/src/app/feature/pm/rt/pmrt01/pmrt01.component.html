@@ -71,23 +71,25 @@
 
       <ng-template sicGridPanelTemplate="companyInfo" section="cell" let-row>
         @let r = $any(row);
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 w-full min-w-0 overflow-hidden">
           @if (r.uploadGroupData && r.uploadGroupData.length > 0) {
             <img
               [src]="getImageUrl(r)"
-              alt="{{ r.companyNameEn }}"
-              class="w-9 h-9 rounded-full object-cover border border-[var(--border)] flex-shrink-0"
+              alt="{{ r.companyNameEn || r.companyNameLocal }}"
+              class="w-9 h-9 rounded-full object-cover border border-[var(--border)] shrink-0"
               (error)="onImageError($event)"
             />
           } @else {
-            <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] flex-shrink-0 uppercase">
-              {{ getInitials(r.companyNameEn) }}
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-xs font-semibold text-white bg-[var(--crm-primary)] shrink-0 uppercase">
+              {{ getInitials(r.companyNameEn || r.companyNameLocal) }}
             </div>
           }
-          <div class="min-w-0">
-            <div class="font-medium text-[var(--text-active)] truncate">{{ r.companyNameEn }}</div>
-            @if (r.companyNameLocal) {
-              <div class="text-xs text-[var(--text-muted)] truncate">{{ r.companyNameLocal }}</div>
+          <div class="min-w-0 flex-1 overflow-hidden">
+            <div class="font-medium text-[var(--text-active)] truncate" [title]="r.companyNameEn || r.companyNameLocal">
+              {{ r.companyNameEn || r.companyNameLocal }}
+            </div>
+            @if (r.companyNameLocal && r.companyNameEn && r.companyNameLocal !== r.companyNameEn) {
+              <div class="text-xs text-[var(--text-muted)] truncate" [title]="r.companyNameLocal">{{ r.companyNameLocal }}</div>
             }
           </div>
         </div>
@@ -95,9 +97,13 @@
 
       <ng-template sicGridPanelTemplate="emailLink" section="cell" let-row>
         @let r = $any(row);
-        <a [href]="'mailto:' + r.email" class="text-[var(--crm-primary)] hover:underline transition-colors">
-          {{ r.email }}
-        </a>
+        @if (r.email) {
+          <a [href]="'mailto:' + r.email" class="text-[var(--crm-primary)] hover:underline transition-colors block truncate w-full min-w-0" [title]="r.email">
+            {{ r.email }}
+          </a>
+        } @else {
+          <span class="text-[var(--text-muted)]">-</span>
+        }
       </ng-template>
 
       <ng-template sicGridPanelTemplate="phoneText" section="cell" let-row>

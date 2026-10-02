@@ -241,16 +241,16 @@
 
           <ng-template sicGridPanelTemplate="taskName" section="cell" let-row>
             @let r = $any(row);
-            <span (click)="openEditTask(r)" class="cursor-pointer font-semibold text-[var(--text-active)]">
+            <span (click)="openEditTask(r)" class="cursor-pointer font-semibold text-[var(--text-active)] truncate max-w-full block" [title]="r.taskName">
               {{ r.taskName }}
             </span>
           </ng-template>
 
           <ng-template sicGridPanelTemplate="specTrace" section="cell" let-row>
             @let r = $any(row);
-            <div (click)="openEditTask(r)" class="cursor-pointer text-xs text-[var(--text)]">
+            <div (click)="openEditTask(r)" class="cursor-pointer text-xs text-[var(--text)] truncate max-w-full" [title]="r.specificationCode ? ('[' + r.specificationCode + '] ' + r.specificationTitle) : ''">
               @if (r.specificationCode) {
-                <span class="px-2 py-0.5 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium">
+                <span class="px-2 py-0.5 rounded-md bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-medium truncate inline-block max-w-full">
                   [{{ r.specificationCode }}] {{ r.specificationTitle }}
                 </span>
               } @else {
@@ -261,7 +261,7 @@
 
           <ng-template sicGridPanelTemplate="wpName" section="cell" let-row>
             @let r = $any(row);
-            <span (click)="openEditTask(r)" class="cursor-pointer text-xs text-[var(--text-muted)]">
+            <span (click)="openEditTask(r)" class="cursor-pointer text-xs text-[var(--text-muted)] truncate max-w-full block" [title]="r.workPackageName || ''">
               {{ r.workPackageName || '-' }}
             </span>
           </ng-template>

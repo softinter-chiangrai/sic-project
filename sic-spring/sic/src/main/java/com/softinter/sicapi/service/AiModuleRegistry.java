@@ -45,7 +45,7 @@ public class AiModuleRegistry {
                 .label("ลูกค้า (Customer)")
                 .listRoute("/feature/pm/customer")
                 .createRoute("/feature/pm/customer/new")
-                .schemaDescription("{ \"companyNameLocal\": string, \"companyNameEn\": string, \"taxId\": string|null, \"address\": string|null, \"contactName\": string|null, \"contactPhone\": string|null, \"contactEmail\": string|null }")
+                .schemaDescription("{ \"companyNameLocal\": \"ชื่อบริษัทไทย (เช่น บริษัท สยามนวัตกรรม ดิจิทัล จำกัด)\", \"companyNameEn\": \"Company name in English (e.g. Siam Innovation Digital Co., Ltd.)\", \"taxId\": \"เลขประจำตัวผู้เสียภาษี 13 หลัก ขึ้นต้น 01055xxxxxxxx\", \"branchCode\": \"00000\", \"contactPerson\": \"ชื่อผู้ติดต่อคนไทย เช่น คุณสมชาย วิจิตรศิลป์\", \"phoneNumber\": \"เบอร์โทรศัพท์ไทย เช่น 02-xxx-xxxx หรือ 08x-xxx-xxxx\", \"email\": \"อีเมล เช่น contact@domain.co.th\", \"addressLocal\": \"ที่อยู่ในประเทศไทย เช่น 88/12 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท 21 แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพมหานคร 10110\", \"addressEn\": \"Thai address in English\", \"zipCode\": \"10110\" }")
                 .build());
 
         register(ModuleDef.builder()
