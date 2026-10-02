@@ -61,6 +61,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
     if (hasLocal) {
       this.formBusinessData.formGroup.get('supportLocalAddress')?.setValue(true);
     }
+    this.formBusinessData.markAsPristine();
   }
   
 

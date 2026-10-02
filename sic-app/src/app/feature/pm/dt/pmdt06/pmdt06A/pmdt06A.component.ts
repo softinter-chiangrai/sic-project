@@ -281,6 +281,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             if (qParams['projectId']) {
                 this.projectId = qParams['projectId'];
                 this.form.patchValue({ projectId: this.projectId });
+                this.formData.markAsPristine();
             }
 
             // มาจากปุ่ม "ขอแก้ไข (Open Change Request)" ของเอกสารที่ถูกล็อค — เติมค่า target ให้อัตโนมัติและล็อคไม่ให้แก้ไข
@@ -340,6 +341,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 if (flowId) {
                     this.selectedFlowId = flowId;
                     this.form.patchValue({ approvalFlowId: flowId });
+                    this.formData.markAsPristine();
                 }
                 this.cdr.detectChanges();
             },

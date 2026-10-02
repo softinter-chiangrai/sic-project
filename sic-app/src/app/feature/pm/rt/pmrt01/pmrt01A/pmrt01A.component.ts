@@ -113,9 +113,11 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
       );
       fg.get('supportLocalAddress')?.setValue(hasLocalAddress);
       fg.updateValueAndValidity();
+      this.formCustomerData.markAsPristine();
     } else {
       const form = Pmrt01AForm.createForm(this.fb);
       this.formCustomerData = new SicFromData<CustomerModel>(form);
+      this.formCustomerData.markAsPristine();
     }
     this.cdr.detectChanges(); // ✅ บังคับให้ view อัปเดต
 

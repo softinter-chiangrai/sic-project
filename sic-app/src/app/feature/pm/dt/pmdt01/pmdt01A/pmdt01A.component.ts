@@ -83,6 +83,7 @@ export class Pmdt01AComponent implements OnInit {
       this.projectId = params['projectId'] || '';
       if (this.projectId) {
         this.form.patchValue({ projectId: this.projectId });
+        this.form.markAsPristine();
         this.loadCustomerFromProject(this.projectId);
       }
     });

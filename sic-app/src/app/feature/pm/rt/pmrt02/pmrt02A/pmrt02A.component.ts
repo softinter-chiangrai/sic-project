@@ -167,6 +167,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       const customerName = params['customerName'] || '';
       if (customerId && !this.isEdit) {
         this.formData.formGroup.patchValue({ customerId: customerId });
+        this.formData.markAsPristine();
         if (customerName) {
           this.customerName.set(customerName);
         }
@@ -238,6 +239,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         if (flowId) {
           this.selectedFlowId = flowId;
           this.form.patchValue({ approvalFlowId: flowId });
+          this.formData.markAsPristine();
         }
         this.cdr.detectChanges();
       },

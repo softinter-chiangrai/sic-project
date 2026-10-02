@@ -13,6 +13,7 @@ export interface CanComponentDeactivate {
   formBusinessData?: any;
   isViewOnly?: boolean | Signal<boolean> | (() => boolean) | any;
   isView?: boolean | Signal<boolean> | (() => boolean) | any;
+  isLocked?: boolean | Signal<boolean> | (() => boolean) | any;
   isSaved?: boolean | Signal<boolean> | (() => boolean) | any;
   isSaving?: boolean | Signal<boolean> | (() => boolean) | any;
   isSubmitting?: boolean | Signal<boolean> | (() => boolean) | any;
@@ -34,14 +35,55 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
     return false;
   };
 
+  const currentUrl = state?.url || '';
+  const isViewRoute =
+    currentUrl.includes('/view') ||
+    currentUrl.includes('/preview') ||
+    Boolean(route.routeConfig?.path?.includes('view')) ||
+    Boolean(route.routeConfig?.path?.includes('preview')) ||
+    route.queryParams?.['mode'] === 'view';
+
   // 1. If explicitly in view-only mode, saved successfully, or currently saving/submitting, never block navigation
   if (
+    isViewRoute ||
     resolveBoolean(component.isViewOnly) ||
     resolveBoolean(component.isView) ||
+    resolveBoolean(component.isLocked) ||
     resolveBoolean(component.isSaved) ||
     resolveBoolean(component.isSaving) ||
     resolveBoolean(component.isSubmitting)
   ) {
+    return true;
+  }
+
+  // Helper to extract all FormGroups on the component (regardless of property name)
+  const getAllForms = (): FormGroup[] => {
+    const forms: FormGroup[] = [];
+    const anyComp = component as any;
+    if (component.formData?.formGroup instanceof FormGroup) forms.push(component.formData.formGroup);
+    if (component.formData?.form instanceof FormGroup && !forms.includes(component.formData.form)) forms.push(component.formData.form);
+    if (component.formCustomerData?.formGroup instanceof FormGroup) forms.push(component.formCustomerData.formGroup);
+    if (component.formBusinessData?.formGroup instanceof FormGroup) forms.push(component.formBusinessData.formGroup);
+    if (component.form instanceof FormGroup && !forms.includes(component.form)) forms.push(component.form);
+    if (component.formGroup instanceof FormGroup && !forms.includes(component.formGroup)) forms.push(component.formGroup);
+
+    for (const key of Object.keys(anyComp)) {
+      try {
+        const val = anyComp[key];
+        if (val instanceof FormGroup && !forms.includes(val)) {
+          forms.push(val);
+        } else if (val?.formGroup instanceof FormGroup && !forms.includes(val.formGroup)) {
+          forms.push(val.formGroup);
+        } else if (val?.form instanceof FormGroup && !forms.includes(val.form)) {
+          forms.push(val.form);
+        }
+      } catch {}
+    }
+    return forms;
+  };
+
+  const allForms = getAllForms();
+  if (allForms.length > 0 && allForms.every((f) => f.disabled)) {
     return true;
   }
 
@@ -68,10 +110,21 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
     } else if (typeof component.formBusinessData.dirty === 'boolean') {
       isDirty = component.formBusinessData.dirty;
     }
-  } else if (component.form && component.form instanceof FormGroup) {
-    isDirty = component.form.dirty;
-  } else if (component.formGroup && component.formGroup instanceof FormGroup) {
-    isDirty = component.formGroup.dirty;
+  } else if (allForms.length > 0) {
+    isDirty = allForms.some((f) => f.dirty);
+  }
+
+  // Safety check: If all underlying forms are completely pristine (user never typed/interacted)
+  // and no delete operation occurred, never block navigation.
+  if (isDirty && allForms.length > 0 && allForms.every((f) => f.pristine)) {
+    const isExplicitlyDeleted =
+      component.formData?.state === 2 /* Deleted */ ||
+      component.formCustomerData?.state === 2 ||
+      component.formBusinessData?.state === 2;
+
+    if (!isExplicitlyDeleted) {
+      isDirty = false;
+    }
   }
 
   if (!isDirty) {

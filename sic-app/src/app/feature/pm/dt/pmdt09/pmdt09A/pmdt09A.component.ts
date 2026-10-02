@@ -232,6 +232,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         if (flowId) {
           this.selectedFlowId = flowId;
           this.form.patchValue({ approvalFlowId: flowId });
+          this.formData.markAsPristine();
         }
         this.cdr.markForCheck();
       },

@@ -33,6 +33,11 @@ export class SicFromData<TModel extends object & SicStateModel> {
     if (this.currentState === SicEntityState.Deleted) {
       return true;
     }
+    // If the form has never been touched by the user (pristine) and no explicit markAsDirty occurred:
+    // Any value differences are purely programmatic (defaults, patchValue, resolver, etc.)
+    if (this.sourceFormGroup.pristine) {
+      return false;
+    }
     const currentComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
     return !this.isEqual(this.initialComparableValue, currentComparableValue);
   }
@@ -195,9 +200,30 @@ export class SicFromData<TModel extends object & SicStateModel> {
       return true;
     }
 
-    // Treat null, undefined, and empty string as equivalent in form inputs
-    const isEmptyValue = (v: unknown) => v === null || v === undefined || v === '';
+    // Treat null, undefined, empty string, and empty array as equivalent in form inputs
+    const isEmptyValue = (v: unknown) =>
+      v === null ||
+      v === undefined ||
+      v === '' ||
+      (Array.isArray(v) && v.length === 0);
+
     if (isEmptyValue(left) && isEmptyValue(right)) {
+      return true;
+    }
+
+    // Treat null/undefined and false as equivalent for optional booleans
+    if (
+      (left === false && (right === null || right === undefined)) ||
+      (right === false && (left === null || left === undefined))
+    ) {
+      return true;
+    }
+
+    // Treat null/undefined and 0 as equivalent for numeric fields
+    if (
+      (left === 0 && (right === null || right === undefined || right === '')) ||
+      (right === 0 && (left === null || left === undefined || left === ''))
+    ) {
       return true;
     }
 
@@ -207,10 +233,22 @@ export class SicFromData<TModel extends object & SicStateModel> {
 
     // Date comparison with string ISO
     if (left instanceof Date && typeof right === 'string') {
-      return left.toISOString() === right || left.toISOString().substring(0, 10) === right;
+      return left.toISOString() === right || left.toISOString().substring(0, 10) === right.substring(0, 10);
     }
     if (typeof left === 'string' && right instanceof Date) {
-      return left === right.toISOString() || left === right.toISOString().substring(0, 10);
+      return left === right.toISOString() || left.substring(0, 10) === right.toISOString().substring(0, 10);
+    }
+
+    // String date comparison (e.g. ISO string vs YYYY-MM-DD)
+    if (typeof left === 'string' && typeof right === 'string') {
+      if (left.trim() === right.trim()) return true;
+      const isDateStr = (s: string) => /^\d{4}-\d{2}-\d{2}/.test(s);
+      if (isDateStr(left) && isDateStr(right)) {
+        if (left.substring(0, 10) === right.substring(0, 10)) {
+          return true;
+        }
+      }
+      return false;
     }
 
     if (
