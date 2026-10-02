@@ -556,16 +556,17 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     });
   }
 
-  private parsePagesFromXml(xml: string): { pageIndex: number; pageName: string }[] {
+  private parsePagesFromXml(xml: string): { pageIndex: number; pageId?: string; pageName: string }[] {
     if (!xml) return [];
     try {
       const parser = new DOMParser();
       const doc = parser.parseFromString(xml, 'text/xml');
       const diagramEls = doc.getElementsByTagName('diagram');
-      const pages: { pageIndex: number; pageName: string }[] = [];
+      const pages: { pageIndex: number; pageId?: string; pageName: string }[] = [];
       for (let i = 0; i < diagramEls.length; i++) {
+        const id = diagramEls[i].getAttribute('id') || undefined;
         const name = diagramEls[i].getAttribute('name') || `Page ${i + 1}`;
-        pages.push({ pageIndex: i, pageName: name });
+        pages.push({ pageIndex: i, pageId: id, pageName: name });
       }
       return pages;
     } catch {
@@ -573,16 +574,16 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
   }
 
-  private async captureAllPages(xml: string, scale = 2): Promise<{ pageIndex: number; pageName: string; png: string }[]> {
+  private async captureAllPages(xml: string, scale = 2): Promise<{ pageIndex: number; pageId?: string; pageName: string; png: string }[]> {
     const pagesInfo = this.parsePagesFromXml(xml);
     if (pagesInfo.length <= 1) {
-      const png = await this.drawioService.exportPagePng(0, scale, 3500);
-      return [{ pageIndex: 0, pageName: pagesInfo[0]?.pageName || 'Page-1', png: png || '' }];
+      const png = await this.drawioService.exportPagePng(pagesInfo[0]?.pageId, scale, 3500);
+      return [{ pageIndex: 0, pageId: pagesInfo[0]?.pageId, pageName: pagesInfo[0]?.pageName || 'Page-1', png: png || '' }];
     }
-    const results: { pageIndex: number; pageName: string; png: string }[] = [];
+    const results: { pageIndex: number; pageId?: string; pageName: string; png: string }[] = [];
     for (const p of pagesInfo) {
-      const png = await this.drawioService.exportPagePng(p.pageIndex, scale, 3500);
-      results.push({ pageIndex: p.pageIndex, pageName: p.pageName, png: png || '' });
+      const png = await this.drawioService.exportPagePng(p.pageId, scale, 4000);
+      results.push({ pageIndex: p.pageIndex, pageId: p.pageId, pageName: p.pageName, png: png || '' });
     }
     return results;
   }
@@ -594,14 +595,31 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     const xml = this.lastSavedXml || tab?.graphData?.xml || '';
     const pagesInfo = this.parsePagesFromXml(xml);
 
-    let capturedPages: { pageIndex: number; pageName: string; png: string }[] = [];
+    let capturedPages: { pageIndex: number; pageId?: string; pageName: string; png: string }[] = [];
     let singleImage: string | null = null;
 
     if (pagesInfo.length > 1) {
       capturedPages = await this.captureAllPages(xml, 2);
       singleImage = capturedPages[0]?.png || null;
+      if (tab && capturedPages.length > 0) {
+        try {
+          const updatedTab = {
+            ...tab,
+            graphData: { ...tab.graphData, xml, png: singleImage, pages: capturedPages },
+            state: 3,
+            rowVersion: this.currentDiagram?.rowVersion ?? tab.rowVersion ?? null,
+          };
+          this.diagramService.updateTab(updatedTab as any).subscribe({
+            next: (saved) => {
+              this.tabs.update((items) => items.map((i) => (i.id === saved.id ? saved : i)));
+            },
+          });
+        } catch (e) {
+          console.warn('[ExportPdf] Could not auto-save pages:', e);
+        }
+      }
     } else {
-      singleImage = await this.drawioService.exportPagePng(0, 2, 3500);
+      singleImage = await this.drawioService.exportPagePng(pagesInfo[0]?.pageId, 2, 3500);
     }
 
     this.diagramService.exportPdf(id, singleImage, capturedPages.length > 1 ? capturedPages : undefined).subscribe({
@@ -618,6 +636,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR')),
     });
   }
+
 
 
   isRenderingAll = false;
@@ -692,7 +711,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       pagesList = await this.captureAllPages(xmlContent, 2);
       png = pagesList[0]?.png || null;
     } else {
-      png = await this.drawioService.exportPagePng(0, 2, 3500);
+      png = await this.drawioService.exportPagePng(pagesInfo[0]?.pageId, 2, 3500);
     }
 
     if (!png && (!pagesList || pagesList.length === 0)) return null;
@@ -770,7 +789,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     const currentPages = this.parsePagesFromXml(currentXml);
     const captureCurrent = currentPages.length > 1
       ? this.captureAllPages(currentXml, 2)
-      : this.drawioService.exportPagePng(0, 2, 3500).then((p) => (p ? [{ pageIndex: 0, pageName: 'Page-1', png: p }] : []));
+      : this.drawioService.exportPagePng(currentPages[0]?.pageId, 2, 3500).then((p) => (p ? [{ pageIndex: 0, pageId: currentPages[0]?.pageId, pageName: currentPages[0]?.pageName || 'Page-1', png: p }] : []));
 
     captureCurrent.then(async (pagesRes) => {
       const firstPng = pagesRes[0]?.png || null;

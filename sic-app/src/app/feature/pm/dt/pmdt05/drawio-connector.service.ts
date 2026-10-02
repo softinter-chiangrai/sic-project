@@ -115,15 +115,15 @@ export class DrawioConnectorService {
     this.postMessage({ action: 'export', format: 'xml' });
   }
 
-  requestPng(scale = 2, page?: number): void {
+  requestPng(scale = 2, pageId?: string): void {
     const msg: any = { action: 'export', format: 'png', scale, border: 10, background: '#ffffff' };
-    if (page !== undefined) {
-      msg.page = page;
+    if (pageId) {
+      msg.pageId = pageId;
     }
     this.postMessage(msg);
   }
 
-  exportPagePng(pageIndex?: number, scale = 2, timeoutMs = 4000): Promise<string | null> {
+  exportPagePng(pageId?: string, scale = 2, timeoutMs = 4000): Promise<string | null> {
     return new Promise((resolve) => {
       let done = false;
       const sub = this.png$.pipe(take(1)).subscribe((png: string) => {
@@ -141,9 +141,10 @@ export class DrawioConnectorService {
           resolve(null);
         }
       }, timeoutMs);
-      this.requestPng(scale, pageIndex);
+      this.requestPng(scale, pageId);
     });
   }
+
 
 
   /**
