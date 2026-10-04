@@ -19,7 +19,9 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../../core/services/business.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
+import { HolidayService } from '../../../../../core/services/holiday.service';
 import { SicButtonComponent } from "sic-ng";
+import { computed } from '@angular/core';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
@@ -52,6 +54,7 @@ export class Pmdt02CComponent implements OnInit {
   private businessService = inject(BusinessService);
   private customerState = inject(CustomerStateService);
   private translate = inject(TranslateService);
+  private holidayService = inject(HolidayService);
   workPackageId = '';
   projectId = '';
   phaseId = '';
@@ -63,6 +66,17 @@ export class Pmdt02CComponent implements OnInit {
   linkedTestCases = signal<any[]>([]);
   testCasesLoading = signal(false);
   expandedSteps = signal<Set<string>>(new Set());
+
+  // Holiday & Workday Tracking Signals
+  startDateVal = signal<string>('');
+  endDateVal = signal<string>('');
+  mandayVal = signal<number | null>(null);
+  selectedAssignees = signal<string[]>([]);
+
+  startHolidayInfo = computed(() => this.holidayService.checkHoliday(this.startDateVal(), this.phaseId));
+  endHolidayInfo = computed(() => this.holidayService.checkHoliday(this.endDateVal(), this.phaseId));
+  workdayCalculation = computed(() => this.holidayService.calculateWorkingDays(this.startDateVal(), this.endDateVal(), this.phaseId));
+  leaveConflicts = computed(() => this.holidayService.checkUserLeaveConflicts(this.selectedAssignees(), this.startDateVal(), this.endDateVal()));
 
   priorityOptions = [
     { value: 'Low', text: this.translate.instant('PMDT02_PRIORITY_LOW') },
@@ -137,6 +151,8 @@ export class Pmdt02CComponent implements OnInit {
           endDate: cleanDate,
           endTime: '18:00',
         });
+        this.startDateVal.set(cleanDate);
+        this.endDateVal.set(cleanDate);
       }
       if (this.isEdit && this.taskId && !this.data) {
         this.loadTask(this.taskId);
@@ -144,6 +160,41 @@ export class Pmdt02CComponent implements OnInit {
         this.loadLinkedTestCases(this.taskId, this.data.projectId || this.projectId);
       }
     });
+
+    // Subscribe to date & assignee changes to keep signals reactive
+    this.form.get('startDate')?.valueChanges.subscribe((v) => this.startDateVal.set(v ? String(v).split('T')[0] : ''));
+    this.form.get('endDate')?.valueChanges.subscribe((v) => this.endDateVal.set(v ? String(v).split('T')[0] : ''));
+    this.form.get('estimateManday')?.valueChanges.subscribe((v) => this.mandayVal.set(v != null ? Number(v) : null));
+    this.assigneeIds.valueChanges.subscribe((v) => this.selectedAssignees.set(Array.isArray(v) ? v : []));
+  }
+
+  skipStartDateToNextWorkday(): void {
+    const current = this.startDateVal() || this.form.get('startDate')?.value;
+    if (!current) return;
+    const next = this.holidayService.getNextWorkday(current, this.phaseId);
+    this.form.patchValue({ startDate: next });
+    this.startDateVal.set(next);
+    if (this.mandayVal() && this.mandayVal()! > 0) {
+      this.calculateEndDateFromManday();
+    }
+  }
+
+  skipEndDateToNextWorkday(): void {
+    const current = this.endDateVal() || this.form.get('endDate')?.value;
+    if (!current) return;
+    const next = this.holidayService.getNextWorkday(current, this.phaseId);
+    this.form.patchValue({ endDate: next });
+    this.endDateVal.set(next);
+  }
+
+  calculateEndDateFromManday(): void {
+    const start = this.startDateVal() || this.form.get('startDate')?.value;
+    const manday = this.mandayVal() ?? this.form.get('estimateManday')?.value;
+    if (start && manday && Number(manday) > 0) {
+      const calculatedEnd = this.holidayService.addWorkingDays(start, Number(manday), this.phaseId);
+      this.form.patchValue({ endDate: calculatedEnd });
+      this.endDateVal.set(calculatedEnd);
+    }
   }
 
   loadTask(id: string) {
@@ -241,7 +292,11 @@ export class Pmdt02CComponent implements OnInit {
     // ✅ โหลด assigneeIds และ assigneeNames
     if (data.assigneeIds) {
       this.assigneeIds.setValue(data.assigneeIds);
+      this.selectedAssignees.set(data.assigneeIds);
     }
+    if (startDate) this.startDateVal.set(startDate);
+    if (endDate) this.endDateVal.set(endDate);
+    if (data.estimateManday != null) this.mandayVal.set(Number(data.estimateManday));
     if (data.assigneeNames) {
       this.assigneeNames = data.assigneeNames;
     }

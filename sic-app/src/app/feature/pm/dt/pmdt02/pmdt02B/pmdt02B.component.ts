@@ -19,6 +19,9 @@ import { environment } from '../../../../../../environments/environment';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
+import { HolidayService } from '../../../../../core/services/holiday.service';
+import { signal, computed } from '@angular/core';
+
 @Component({
   selector: 'app-pmdt02B',
   standalone: true,
@@ -45,6 +48,7 @@ export class Pmdt02BComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private holidayService = inject(HolidayService);
 
   milestoneId = '';
   projectId = '';
@@ -53,6 +57,12 @@ export class Pmdt02BComponent implements OnInit {
   isEdit = false;
   data: WorkPackageResponse | null = null;
   apiGetComboboxMilestone = `${environment.apiBaseUrl}/api/pm/milestones/combobox`;
+
+  startDateVal = signal<string>('');
+  endDateVal = signal<string>('');
+  startHolidayInfo = computed(() => this.holidayService.checkHoliday(this.startDateVal(), this.phaseId));
+  endHolidayInfo = computed(() => this.holidayService.checkHoliday(this.endDateVal(), this.phaseId));
+  workdayCalculation = computed(() => this.holidayService.calculateWorkingDays(this.startDateVal(), this.endDateVal(), this.phaseId));
 
   formData: SicFromData<WorkPackageModel> = new SicFromData<WorkPackageModel>(Pmdt02BForm.createForm(this.fb));
 
@@ -92,11 +102,32 @@ export class Pmdt02BComponent implements OnInit {
           endDate: cleanDate,
           endTime: '18:00',
         });
+        this.startDateVal.set(cleanDate);
+        this.endDateVal.set(cleanDate);
       }
       if (this.isEdit && this.wpId && !this.data) {
         this.loadWorkPackage(this.wpId);
       }
     });
+
+    this.form.get('startDate')?.valueChanges.subscribe((v) => this.startDateVal.set(v ? String(v).split('T')[0] : ''));
+    this.form.get('endDate')?.valueChanges.subscribe((v) => this.endDateVal.set(v ? String(v).split('T')[0] : ''));
+  }
+
+  skipStartDateToNextWorkday(): void {
+    const current = this.startDateVal() || this.form.get('startDate')?.value;
+    if (!current) return;
+    const next = this.holidayService.getNextWorkday(current, this.phaseId);
+    this.form.patchValue({ startDate: next });
+    this.startDateVal.set(next);
+  }
+
+  skipEndDateToNextWorkday(): void {
+    const current = this.endDateVal() || this.form.get('endDate')?.value;
+    if (!current) return;
+    const next = this.holidayService.getNextWorkday(current, this.phaseId);
+    this.form.patchValue({ endDate: next });
+    this.endDateVal.set(next);
   }
 
   loadWorkPackage(id: string) {
@@ -127,6 +158,8 @@ export class Pmdt02BComponent implements OnInit {
       endTime: endTime,
       color: data.color || '', // ✅ patch ค่าสี
     });
+    if (startDate) this.startDateVal.set(startDate);
+    if (endDate) this.endDateVal.set(endDate);
   }
 
   // ผู้ใช้เลือกไมล์สโตนเองจาก Combobox (ไม่ต้องเคยเข้าหน้าไมล์สโตนมาก่อน)

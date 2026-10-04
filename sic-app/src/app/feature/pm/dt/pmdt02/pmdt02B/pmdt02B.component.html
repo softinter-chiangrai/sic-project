@@ -45,6 +45,20 @@
         @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_START_DATE_REQUIRED' | translate }}</p>
         }
+        @if (startHolidayInfo().isHoliday) {
+          <div class="mt-1.5 flex items-center justify-between text-xs px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 animate-in fade-in">
+            <span class="flex items-center gap-1 truncate mr-2" [title]="startHolidayInfo().name">
+              <i class="bi bi-calendar-x"></i>
+              ตรงกับ{{ startHolidayInfo().name }}
+            </span>
+            <button
+              type="button"
+              (click)="skipStartDateToNextWorkday()"
+              class="text-[var(--crm-primary)] hover:underline font-medium text-[0.7rem] flex items-center gap-1 flex-shrink-0">
+              <i class="bi bi-arrow-right"></i> เลื่อนเป็นวันทำการถัดไป
+            </button>
+          </div>
+        }
       </div>
       <div>
         <sic-timepicker
@@ -67,6 +81,20 @@
         @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_END_DATE_REQUIRED' | translate }}</p>
         }
+        @if (endHolidayInfo().isHoliday) {
+          <div class="mt-1.5 flex items-center justify-between text-xs px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 animate-in fade-in">
+            <span class="flex items-center gap-1 truncate mr-2" [title]="endHolidayInfo().name">
+              <i class="bi bi-calendar-x"></i>
+              ตรงกับ{{ endHolidayInfo().name }}
+            </span>
+            <button
+              type="button"
+              (click)="skipEndDateToNextWorkday()"
+              class="text-[var(--crm-primary)] hover:underline font-medium text-[0.7rem] flex items-center gap-1 flex-shrink-0">
+              <i class="bi bi-arrow-right"></i> เลื่อนเป็นวันทำการถัดไป
+            </button>
+          </div>
+        }
       </div>
       <div>
         <sic-timepicker
@@ -76,6 +104,24 @@
         ></sic-timepicker>
       </div>
     </div>
+
+    <!-- Working Days Live Calculation Summary -->
+    @if (startDateVal() && endDateVal() && workdayCalculation().totalDays > 0) {
+      <div class="p-3 bg-[var(--bg)]/80 border border-[var(--border)] rounded-xl flex items-center justify-between text-xs text-[var(--text-muted)] flex-wrap gap-2 shadow-sm animate-in fade-in">
+        <span class="font-semibold text-[var(--text-active)] flex items-center gap-1.5">
+          <i class="bi bi-briefcase text-[var(--crm-primary)]"></i>
+          รวม {{ workdayCalculation().workingDays }} วันทำการ
+        </span>
+        @if (workdayCalculation().weekendDays > 0 || workdayCalculation().holidayDays > 0) {
+          <span class="text-[var(--text-muted)]">
+            (ข้ามวันเสาร์-อาทิตย์ {{ workdayCalculation().weekendDays }} วัน
+            @if (workdayCalculation().holidayDays > 0) {
+              , วันหยุดพิเศษ {{ workdayCalculation().holidayDays }} วัน
+            })
+          </span>
+        }
+      </div>
+    }
 
     <!-- ✅ Color Picker -->
     <div>

@@ -16,6 +16,7 @@ import { Pmdt02AService } from './pmdt02A/pmdt02A.service';
 import { Pmdt02Service } from './pmdt02.service';
 import { Pmdt02CService } from './pmdt02C/pmdt02C.service';
 import { Pmdt02BService } from './pmdt02B/pmdt02B.service';
+import { HolidayService, UserLeave } from '../../../../core/services/holiday.service';
 import 'dayjs/locale/th';
 import {
   SicAvatarComponent,
@@ -71,6 +72,7 @@ export class Pmdt02Component implements OnInit {
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
   private aiModelsSvc = inject(AiModelsService);
+  private holidayService = inject(HolidayService);
   private routerSub?: Subscription;
 
   // ===== SIGNALS =====
@@ -96,12 +98,23 @@ export class Pmdt02Component implements OnInit {
   showCustomItemModal = signal<boolean>(false);
   customItemForm = {
     id: '',
+    type: 'holiday' as 'holiday' | 'leave',
     date: dayjs().format('YYYY-MM-DD'),
+    endDate: dayjs().format('YYYY-MM-DD'),
     title: '',
     description: '',
     icon: '📌',
     color: '#8b5cf6',
+    leaveType: 'vacation' as 'vacation' | 'sick' | 'personal' | 'other',
+    userId: '',
+    userName: '',
   };
+
+  phaseHolidaySummary = computed(() => {
+    const p = this.phase();
+    if (!p || !p.startDate || !p.endDate) return null;
+    return this.holidayService.calculateWorkingDays(p.startDate, p.endDate, p.id);
+  });
 
   switchTab(tab: 'list' | 'calendar' | 'gantt'): void {
     this.rightTab.set(tab);
@@ -211,8 +224,27 @@ export class Pmdt02Component implements OnInit {
 
   calendarHolidays = computed<SicCalendarHoliday[]>(() => {
     const p = this.phase();
-    const phaseHolidays = p ? buildCalendarHolidays(p) : [];
-    return [...phaseHolidays, ...this.customHolidays()];
+    const phaseId = p?.id || this.currentPhaseId();
+    const allSystemHolidays = this.holidayService.getAllCalendarHolidays(phaseId);
+
+    // Also include custom holidays and user leaves formatted as holidays
+    const userLeavesAsHolidays: SicCalendarHoliday[] = this.holidayService.getUserLeaves().map((l) => ({
+      id: `leave-${l.id}`,
+      date: l.startDate,
+      title: `🏖️ ลา: ${l.userName}`,
+      source: 'office',
+      color: '#ec4899',
+      icon: '🏖️',
+    }));
+
+    const combined = [...allSystemHolidays, ...this.customHolidays(), ...userLeavesAsHolidays];
+    const seen = new Set<string>();
+    return combined.filter((h) => {
+      const key = `${h.date}_${h.title}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   });
 
   selectedDateItems = computed<CalendarItemDetail[]>(() => {
@@ -312,6 +344,38 @@ export class Pmdt02Component implements OnInit {
           icon: cItem.icon || '📌',
           isCustom: true,
           rawObject: cItem,
+        });
+      }
+    });
+
+    // 6. Public Holidays & User Leaves on selected date
+    const holidayCheck = this.holidayService.checkHoliday(selDate, this.currentPhaseId());
+    if (holidayCheck.isHoliday && holidayCheck.type === 'public') {
+      items.push({
+        id: `pub-hol-${selDate}`,
+        type: 'holiday',
+        title: holidayCheck.name || 'วันหยุดนักขัตฤกษ์',
+        subtitle: 'วันหยุดนักขัตฤกษ์ / ประเพณีไทย',
+        color: '#ef4444',
+        icon: '🎉',
+        isCustom: false,
+      });
+    }
+
+    const leaves = this.holidayService.getUserLeaves();
+    leaves.forEach((l) => {
+      const lStart = l.startDate;
+      const lEnd = l.endDate || l.startDate;
+      if (selDate >= lStart && selDate <= lEnd) {
+        items.push({
+          id: `leave-${l.id}`,
+          type: 'holiday',
+          title: `วันลา: ${l.userName}`,
+          subtitle: `${l.leaveType.toUpperCase()} - ${l.remark || 'ลางาน'} (${l.startDate} ถึง ${l.endDate})`,
+          color: '#ec4899',
+          icon: '🏖️',
+          isCustom: true,
+          rawObject: l,
         });
       }
     });
@@ -960,13 +1024,19 @@ export class Pmdt02Component implements OnInit {
       case 'holiday':
       case 'event':
         if (item.isCustom && item.rawObject) {
+          const isLeave = Boolean(item.rawObject.leaveType || item.id.startsWith('leave_') || item.id.startsWith('leave-'));
           this.customItemForm = {
             id: item.rawObject.id || '',
-            date: item.rawObject.date || this.selectedCalendarDate(),
-            title: item.rawObject.title || '',
-            description: item.rawObject.description || '',
-            icon: item.rawObject.icon || '📌',
-            color: item.rawObject.color || '#8b5cf6',
+            type: isLeave ? 'leave' : 'holiday',
+            date: item.rawObject.startDate || item.rawObject.date || this.selectedCalendarDate(),
+            endDate: item.rawObject.endDate || item.rawObject.date || this.selectedCalendarDate(),
+            title: item.rawObject.title || item.rawObject.userName || '',
+            description: item.rawObject.description || item.rawObject.remark || '',
+            icon: item.rawObject.icon || (isLeave ? '🏖️' : '📌'),
+            color: item.rawObject.color || (isLeave ? '#ec4899' : '#8b5cf6'),
+            leaveType: item.rawObject.leaveType || 'vacation',
+            userId: item.rawObject.userId || '',
+            userName: item.rawObject.userName || item.rawObject.title || '',
           };
           this.showCustomItemModal.set(true);
         }
@@ -978,11 +1048,16 @@ export class Pmdt02Component implements OnInit {
     const targetDate = dateStr || this.selectedCalendarDate() || dayjs().format('YYYY-MM-DD');
     this.customItemForm = {
       id: '',
+      type: 'holiday',
       date: targetDate,
+      endDate: targetDate,
       title: '',
       description: '',
       icon: '📌',
       color: '#8b5cf6',
+      leaveType: 'vacation',
+      userId: '',
+      userName: '',
     };
     this.showCustomItemModal.set(true);
   }
@@ -992,6 +1067,26 @@ export class Pmdt02Component implements OnInit {
   }
 
   saveCustomItem(): void {
+    if (this.customItemForm.type === 'leave') {
+      const uName = (this.customItemForm.userName || this.customItemForm.title).trim();
+      if (!uName) return;
+      const newLeave: UserLeave = {
+        id: this.customItemForm.id || `leave_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        userId: this.customItemForm.userId || `user_${Date.now()}`,
+        userName: uName,
+        startDate: this.customItemForm.date,
+        endDate: this.customItemForm.endDate || this.customItemForm.date,
+        leaveType: this.customItemForm.leaveType,
+        remark: this.customItemForm.description,
+      };
+      this.holidayService.saveUserLeave(newLeave);
+      this.selectedCalendarDate.set(this.customItemForm.date);
+      this.isSidebarOpen.set(true);
+      this.closeCustomItemModal();
+      this.cdr.markForCheck();
+      return;
+    }
+
     if (!this.customItemForm.title.trim()) return;
     const currentItems = this.getRawCustomItems();
     if (this.customItemForm.id) {
@@ -1015,6 +1110,12 @@ export class Pmdt02Component implements OnInit {
     if (event) event.stopPropagation();
     this.dialog.confirm(this.translate.instant('PMDT02_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT02_CONFIRM_DELETE_GENERIC_MSG')).then((confirmed) => {
       if (confirmed) {
+        if (itemId.startsWith('leave_') || itemId.startsWith('leave-')) {
+          const actualId = itemId.replace(/^leave-/, '');
+          this.holidayService.deleteUserLeave(actualId);
+          this.cdr.markForCheck();
+          return;
+        }
         const currentItems = this.getRawCustomItems();
         const updated = currentItems.filter((i) => i.id !== itemId);
         this.saveCustomItems(updated);

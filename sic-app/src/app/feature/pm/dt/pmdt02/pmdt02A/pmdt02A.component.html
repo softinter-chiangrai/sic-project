@@ -47,6 +47,20 @@
         @if (form.get('dueDate')?.touched && form.get('dueDate')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_DUE_DATE_REQUIRED' | translate }}</p>
         }
+        @if (dueHolidayInfo().isHoliday) {
+          <div class="mt-1.5 flex items-center justify-between text-xs px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 animate-in fade-in">
+            <span class="flex items-center gap-1 truncate mr-2" [title]="dueHolidayInfo().name">
+              <i class="bi bi-calendar-x"></i>
+              ตรงกับ{{ dueHolidayInfo().name }}
+            </span>
+            <button
+              type="button"
+              (click)="skipDueDateToNextWorkday()"
+              class="text-[var(--crm-primary)] hover:underline font-medium text-[0.7rem] flex items-center gap-1 flex-shrink-0">
+              <i class="bi bi-arrow-right"></i> เลื่อนเป็นวันทำการถัดไป
+            </button>
+          </div>
+        }
       </div>
       <div>
         <sic-timepicker

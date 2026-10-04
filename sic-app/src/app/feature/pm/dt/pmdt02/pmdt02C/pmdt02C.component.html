@@ -57,6 +57,26 @@
         [multiple]="true"
         (selectionChanged)="onAssigneeSelectionChanged($event)"
       ></sic-combobox>
+
+      <!-- Personal Leave Conflict Alert -->
+      @if (leaveConflicts().hasConflict) {
+        <div class="mt-2 p-3 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-600 dark:text-amber-400 space-y-1 animate-in fade-in">
+          <div class="font-semibold flex items-center gap-1.5">
+            <i class="bi bi-exclamation-triangle-fill"></i>
+            แจ้งเตือน: ผู้รับผิดชอบมีวันลาในช่วงเวลาของงานนี้
+          </div>
+          <ul class="list-disc list-inside space-y-0.5 pl-1">
+            @for (item of leaveConflicts().conflictingLeaves; track item.leave.id) {
+              <li>
+                <strong>{{ item.userName }}</strong> ลา{{ item.leave.leaveType === 'vacation' ? 'พักร้อน' : item.leave.leaveType === 'sick' ? 'ป่วย' : 'งาน' }} ({{ item.leave.startDate }} ถึง {{ item.leave.endDate }})
+                @if (item.leave.remark) {
+                  - <span class="italic">{{ item.leave.remark }}</span>
+                }
+              </li>
+            }
+          </ul>
+        </div>
+      }
     </div>
 
     <!-- Start Date + Time -->
@@ -70,6 +90,20 @@
         ></sic-datepicker>
         @if (form.get('startDate')?.touched && form.get('startDate')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_START_DATE_REQUIRED' | translate }}</p>
+        }
+        @if (startHolidayInfo().isHoliday) {
+          <div class="mt-1.5 flex items-center justify-between text-xs px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 animate-in fade-in">
+            <span class="flex items-center gap-1 truncate mr-2" [title]="startHolidayInfo().name">
+              <i class="bi bi-calendar-x"></i>
+              ตรงกับ{{ startHolidayInfo().name }}
+            </span>
+            <button
+              type="button"
+              (click)="skipStartDateToNextWorkday()"
+              class="text-[var(--crm-primary)] hover:underline font-medium text-[0.7rem] flex items-center gap-1 flex-shrink-0">
+              <i class="bi bi-arrow-right"></i> เลื่อนเป็นวันทำการถัดไป
+            </button>
+          </div>
         }
       </div>
       <div>
@@ -93,6 +127,20 @@
         @if (form.get('endDate')?.touched && form.get('endDate')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_END_DATE_REQUIRED' | translate }}</p>
         }
+        @if (endHolidayInfo().isHoliday) {
+          <div class="mt-1.5 flex items-center justify-between text-xs px-2.5 py-1 rounded bg-amber-500/10 border border-amber-500/30 text-amber-600 dark:text-amber-400 animate-in fade-in">
+            <span class="flex items-center gap-1 truncate mr-2" [title]="endHolidayInfo().name">
+              <i class="bi bi-calendar-x"></i>
+              ตรงกับ{{ endHolidayInfo().name }}
+            </span>
+            <button
+              type="button"
+              (click)="skipEndDateToNextWorkday()"
+              class="text-[var(--crm-primary)] hover:underline font-medium text-[0.7rem] flex items-center gap-1 flex-shrink-0">
+              <i class="bi bi-arrow-right"></i> เลื่อนเป็นวันทำการถัดไป
+            </button>
+          </div>
+        }
       </div>
       <div>
         <sic-timepicker
@@ -103,10 +151,49 @@
       </div>
     </div>
 
+    <!-- Working Days Live Calculation Summary -->
+    @if (startDateVal() && endDateVal() && workdayCalculation().totalDays > 0) {
+      <div class="p-3 bg-[var(--bg)]/80 border border-[var(--border)] rounded-xl flex items-center justify-between text-xs text-[var(--text-muted)] flex-wrap gap-2 shadow-sm animate-in fade-in">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="font-semibold text-[var(--text-active)] flex items-center gap-1.5">
+            <i class="bi bi-briefcase text-[var(--crm-primary)]"></i>
+            รวม {{ workdayCalculation().workingDays }} วันทำการ
+          </span>
+          @if (workdayCalculation().weekendDays > 0 || workdayCalculation().holidayDays > 0) {
+            <span class="text-[var(--text-muted)]">
+              (ข้ามวันเสาร์-อาทิตย์ {{ workdayCalculation().weekendDays }} วัน
+              @if (workdayCalculation().holidayDays > 0) {
+                , วันหยุดพิเศษ {{ workdayCalculation().holidayDays }} วัน
+              })
+            </span>
+          }
+        </div>
+        @if (mandayVal() && workdayCalculation().workingDays !== mandayVal()) {
+          <button
+            type="button"
+            (click)="calculateEndDateFromManday()"
+            class="text-[var(--crm-primary)] hover:underline text-[0.72rem] font-medium flex items-center gap-1">
+            <i class="bi bi-arrow-repeat"></i> ซิงค์วันจบให้ตรงกับ {{ mandayVal() }} วันทำการ
+          </button>
+        }
+      </div>
+    }
+
     <!-- Estimate Manday & Priority -->
     <div class="grid grid-cols-2 gap-4">
       <div>
-        <label class="block text-sm font-medium text-[var(--text)]">{{ 'PMDT02_MANDAY_LABEL' | translate }} <span class="text-red-500">*</span></label>
+        <div class="flex items-center justify-between mb-1">
+          <label class="block text-sm font-medium text-[var(--text)]">{{ 'PMDT02_MANDAY_LABEL' | translate }} <span class="text-red-500">*</span></label>
+          @if (startDateVal() && mandayVal()) {
+            <button
+              type="button"
+              (click)="calculateEndDateFromManday()"
+              class="text-[0.7rem] text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 px-2 py-0.5 rounded font-medium transition-colors flex items-center gap-1"
+              title="คำนวณวันสิ้นสุดโดยข้ามวันเสาร์-อาทิตย์และวันหยุด">
+              <i class="bi bi-lightning-charge"></i> คำนวณวันจบอัตโนมัติ
+            </button>
+          }
+        </div>
         <input type="number" min="1" step="1" formControlName="estimateManday" class="w-full px-3 py-2 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-[var(--text)] focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] outline-none transition-all" />
         @if (form.get('estimateManday')?.touched && form.get('estimateManday')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT02_MANDAY_REQUIRED' | translate }}</p>

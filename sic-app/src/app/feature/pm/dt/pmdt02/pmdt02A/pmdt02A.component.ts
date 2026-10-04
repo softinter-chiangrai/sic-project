@@ -19,6 +19,9 @@ import { environment } from '../../../../../../environments/environment';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
+import { HolidayService } from '../../../../../core/services/holiday.service';
+import { signal, computed } from '@angular/core';
+
 @Component({
   selector: 'app-pmdt02A',
   standalone: true,
@@ -46,6 +49,7 @@ export class Pmdt02AComponent implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private translate = inject(TranslateService);
+  private holidayService = inject(HolidayService);
 
   phaseId = '';
   projectId = '';
@@ -55,6 +59,9 @@ export class Pmdt02AComponent implements OnInit {
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
   apiGetComboboxPhase = `${environment.apiBaseUrl}/api/pm/phases/combobox`;
   phaseParams: Record<string, any> = {};
+
+  dueDateVal = signal<string>('');
+  dueHolidayInfo = computed(() => this.holidayService.checkHoliday(this.dueDateVal(), this.phaseId));
 
   formData: SicFromData<MilestoneModel> = new SicFromData<MilestoneModel>(Pmdt02AForm.createForm(this.fb));
 
@@ -99,11 +106,22 @@ export class Pmdt02AComponent implements OnInit {
           dueDate: cleanDate,
           dueTime: '17:00',
         });
+        this.dueDateVal.set(cleanDate);
       }
       if (this.isEdit && this.milestoneId && !this.data) {
         this.loadMilestone(this.milestoneId);
       }
     });
+
+    this.form.get('dueDate')?.valueChanges.subscribe((v) => this.dueDateVal.set(v ? String(v).split('T')[0] : ''));
+  }
+
+  skipDueDateToNextWorkday(): void {
+    const current = this.dueDateVal() || this.form.get('dueDate')?.value;
+    if (!current) return;
+    const next = this.holidayService.getNextWorkday(current, this.phaseId);
+    this.form.patchValue({ dueDate: next });
+    this.dueDateVal.set(next);
   }
 
   loadMilestone(id: string) {
@@ -131,6 +149,7 @@ export class Pmdt02AComponent implements OnInit {
       dueTime: dueTime,
       color: data.color || '', // ✅ patch ค่าสี
     });
+    if (dueDate) this.dueDateVal.set(dueDate);
   }
 
   loadProjectFromPhase(phaseId: string): void {
