@@ -675,6 +675,12 @@ export class PortfolioGanttWidgetComponent {
     if (!data) return;
     if (data.hasChildren) {
       this.toggleRow(String(row.id));
+    } else if (data.type === 'task') {
+      this.navigateToTask(data);
+    } else if (data.type === 'workpackage') {
+      this.navigateToWorkPackage(data);
+    } else if (data.type === 'milestone') {
+      this.navigateToMilestone(data);
     } else if (data.projectId) {
       this.navigateToProject(data.projectId);
     } else if (data.type === 'project') {
@@ -685,13 +691,53 @@ export class PortfolioGanttWidgetComponent {
   onPhaseClick(event: { row: SicCalendarTimelineRow<PortfolioRowData>; phase: any }): void {
     const data = event.row.data;
     if (!data) return;
-    if (data.hasChildren) {
+    if (data.type === 'task') {
+      this.navigateToTask(data);
+    } else if (data.type === 'workpackage') {
+      this.navigateToWorkPackage(data);
+    } else if (data.type === 'milestone') {
+      this.navigateToMilestone(data);
+    } else if (data.type === 'phase') {
+      this.navigateToPhase(data);
+    } else if (data.hasChildren) {
       this.toggleRow(String(event.row.id));
     } else if (data.projectId) {
       this.navigateToProject(data.projectId);
     } else if (data.type === 'project') {
       this.navigateToProject(data.id);
     }
+  }
+
+  navigateToTask(data: PortfolioRowData): void {
+    const queryParams: Record<string, string> = {};
+    if (data.projectId) queryParams['projectId'] = data.projectId;
+    if (data.phaseId) queryParams['phaseId'] = data.phaseId;
+    if (data.workPackageId) queryParams['workPackageId'] = data.workPackageId;
+
+    this.router.navigate(['/feature/pm/task', data.id, 'edit'], { queryParams });
+  }
+
+  navigateToWorkPackage(data: PortfolioRowData): void {
+    const queryParams: Record<string, string> = {};
+    if (data.projectId) queryParams['projectId'] = data.projectId;
+    if (data.phaseId) queryParams['phaseId'] = data.phaseId;
+
+    this.router.navigate(['/feature/pm/work-package', data.id, 'edit'], { queryParams });
+  }
+
+  navigateToMilestone(data: PortfolioRowData): void {
+    const queryParams: Record<string, string> = {};
+    if (data.projectId) queryParams['projectId'] = data.projectId;
+    if (data.phaseId) queryParams['phaseId'] = data.phaseId;
+
+    this.router.navigate(['/feature/pm/milestone', data.id, 'edit'], { queryParams });
+  }
+
+  navigateToPhase(data: PortfolioRowData): void {
+    const queryParams: Record<string, string> = {};
+    if (data.projectId) queryParams['projectId'] = data.projectId;
+
+    this.router.navigate(['/feature/pm/phase', data.id], { queryParams });
   }
 
   navigateToProject(projectId: string): void {

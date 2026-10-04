@@ -259,9 +259,10 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         state: SicEntityState.Added,
       }));
       this.items.set(newItems);
+      this.recalcSubtotalFromItems();
+    } else {
+      this.calculateTotals();
     }
-
-    this.calculateTotals();
     this.formData.markAsDirty();
   }
 

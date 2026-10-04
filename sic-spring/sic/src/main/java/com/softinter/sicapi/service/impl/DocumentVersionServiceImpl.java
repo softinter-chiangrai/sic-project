@@ -94,13 +94,68 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             version.setApprovedDate(request.getApprovedDate());
             version.setSnapshotData(request.getSnapshotData());
             version.setFileRefId(request.getFileRefId());
+            version = versionRepository.save(version);
         } else {
+            // Check if a version with same documentType, documentId and versionNo already exists
+            List<PmDocumentVersion> existingVersions = versionRepository
+                    .findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(request.getDocumentType(), request.getDocumentId());
+
+            PmDocumentVersion matched = existingVersions.stream()
+                    .filter(v -> request.getVersionNo() != null && request.getVersionNo().equalsIgnoreCase(v.getVersionNo()))
+                    .findFirst()
+                    .orElse(null);
+
+            if (matched != null) {
+                // If it already exists (e.g. created on document edit), update approval metadata instead of inserting duplicate blank version
+                if (request.getApprovalStatus() != null) {
+                    matched.setApprovalStatus(request.getApprovalStatus());
+                }
+                if (request.getApprovedBy() != null) {
+                    matched.setApprovedBy(request.getApprovedBy());
+                }
+                if (request.getApprovedDate() != null) {
+                    matched.setApprovedDate(request.getApprovedDate());
+                }
+                if (request.getSnapshotData() != null) {
+                    matched.setSnapshotData(request.getSnapshotData());
+                }
+                if (request.getFileRefId() != null) {
+                    matched.setFileRefId(request.getFileRefId());
+                }
+                if (request.getFilePath() != null) {
+                    matched.setFilePath(request.getFilePath());
+                }
+                matched.setIsActive(true);
+                version = versionRepository.save(matched);
+
+                // Deactivate all other versions of this document
+                for (PmDocumentVersion v : existingVersions) {
+                    if (!v.getId().equals(matched.getId()) && Boolean.TRUE.equals(v.getIsActive())) {
+                        v.setIsActive(false);
+                        versionRepository.save(v);
+                    }
+                }
+                return version.getId();
+            }
+
+            // Deactivate previous active versions so only the newest version is active
+            for (PmDocumentVersion prev : existingVersions) {
+                if (Boolean.TRUE.equals(prev.getIsActive())) {
+                    prev.setIsActive(false);
+                    versionRepository.save(prev);
+                }
+            }
+
             version = new PmDocumentVersion();
             version.setDocumentType(request.getDocumentType());
             version.setDocumentId(request.getDocumentId());
             version.setDocumentCode(request.getDocumentCode());
             version.setProjectId(request.getProjectId());
-            version.setBusinessId(businessAccessService.getBusinessId());
+            UUID bizId = businessAccessService != null ? businessAccessService.getBusinessId() : null;
+            if (bizId == null) {
+                bizId = BusinessContextHolder.getBusinessId();
+            }
+            version.setBusinessId(bizId);
             version.setVersionNo(request.getVersionNo());
             version.setChangeSummary(request.getChangeSummary());
             version.setPreviousVersionId(request.getPreviousVersionId());
@@ -111,8 +166,8 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
             version.setFileRefId(request.getFileRefId());
             version.setFilePath(request.getFilePath());
             version.setIsActive(true);
+            version = versionRepository.save(version);
         }
-        version = versionRepository.save(version);
         return version.getId();
     }
 
@@ -184,6 +239,16 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
                 .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId)
                 .map(PmDocumentVersion::getId)
                 .orElse(null);
+
+        // Deactivate previous active versions so only the newest version is active
+        List<PmDocumentVersion> previousVersions = versionRepository
+                .findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(documentType, documentId);
+        for (PmDocumentVersion prev : previousVersions) {
+            if (Boolean.TRUE.equals(prev.getIsActive())) {
+                prev.setIsActive(false);
+                versionRepository.save(prev);
+            }
+        }
 
         PmDocumentVersion version = new PmDocumentVersion();
         version.setDocumentType(documentType);

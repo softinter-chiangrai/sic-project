@@ -13,7 +13,7 @@ import { NavigationService } from '../../../../core/services/navigation.service'
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { SicGridColumnConfig, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
 import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -106,23 +106,36 @@ export class Pmdt19Component implements OnInit {
 
   @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
-  get gridConfig(): SicGridPanelConfig {
-    return {
-      id: 'id',
-      lazy: false,
-      selectable: false,
-      showToolbar: false,
-      pageSizeOptions: [10, 20, 50, 100],
-      column: [
-        { label: this.translate.instant('PMDT19_COL_VERSION'), name: 'versionNo', type: 'versionInfo', minWidth: 100 },
-        { label: this.translate.instant('PMDT19_COL_DOC_TYPE'), name: 'documentType', type: 'docTypeTag', minWidth: 130 },
-        { label: this.translate.instant('PMDT19_COL_DOC_CODE'), name: 'documentCode', type: 'text', minWidth: 130 },
-        { label: this.translate.instant('PMDT19_COL_CHANGE_SUMMARY'), name: 'changeSummary', type: 'summaryText', minWidth: 180 },
-        { label: this.translate.instant('PMDT19_COL_CREATED_BY'), name: 'createdBy', type: 'createdByInfo', minWidth: 120 },
-        { label: this.translate.instant('PMDT19_COL_CREATED_DATE'), name: 'createdDate', type: 'dateText', minWidth: 140 },
-        { label: this.translate.instant('PMDT19_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
-      ],
-    };
+  gridConfig: SicGridPanelConfig = {
+    id: 'id',
+    lazy: false,
+    selectable: false,
+    showToolbar: false,
+    defaultSortField: 'createdDate',
+    defaultSortDescending: true,
+    pageSize: 25,
+    pageSizeOptions: [10, 20, 25, 50, 100],
+    column: [
+      { label: this.translate.instant('PMDT19_COL_VERSION'), name: 'versionNo', type: 'versionInfo', sortable: true, minWidth: 100 },
+      { label: this.translate.instant('PMDT19_COL_DOC_TYPE'), name: 'documentType', type: 'docTypeTag', sortable: true, minWidth: 130 },
+      { label: this.translate.instant('PMDT19_COL_DOC_CODE'), name: 'documentCode', type: 'text', sortable: true, minWidth: 130 },
+      { label: this.translate.instant('PMDT19_COL_CHANGE_SUMMARY'), name: 'changeSummary', type: 'summaryText', sortable: true, minWidth: 180 },
+      { label: this.translate.instant('PMDT19_COL_CREATED_BY'), name: 'createdBy', type: 'createdByInfo', sortable: true, minWidth: 120 },
+      { label: this.translate.instant('PMDT19_COL_CREATED_DATE'), name: 'createdDate', type: 'dateText', sortable: true, minWidth: 140 },
+      { label: this.translate.instant('PMDT19_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
+    ],
+  };
+
+  private buildColumns(): SicGridColumnConfig[] {
+    return [
+      { label: this.translate.instant('PMDT19_COL_VERSION'), name: 'versionNo', type: 'versionInfo', sortable: true, minWidth: 100 },
+      { label: this.translate.instant('PMDT19_COL_DOC_TYPE'), name: 'documentType', type: 'docTypeTag', sortable: true, minWidth: 130 },
+      { label: this.translate.instant('PMDT19_COL_DOC_CODE'), name: 'documentCode', type: 'text', sortable: true, minWidth: 130 },
+      { label: this.translate.instant('PMDT19_COL_CHANGE_SUMMARY'), name: 'changeSummary', type: 'summaryText', sortable: true, minWidth: 180 },
+      { label: this.translate.instant('PMDT19_COL_CREATED_BY'), name: 'createdBy', type: 'createdByInfo', sortable: true, minWidth: 120 },
+      { label: this.translate.instant('PMDT19_COL_CREATED_DATE'), name: 'createdDate', type: 'dateText', sortable: true, minWidth: 140 },
+      { label: this.translate.instant('PMDT19_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 110 },
+    ];
   }
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
@@ -152,6 +165,13 @@ export class Pmdt19Component implements OnInit {
     this.filterDocId.set(page.filterDocId || '');
     this.versions.set(page.items || []);
     this.applyFilter();
+
+    this.translate.onLangChange.subscribe(() => {
+      this.gridConfig = {
+        ...this.gridConfig,
+        column: this.buildColumns(),
+      };
+    });
 
     // Subsequent navigations to the same route instance (e.g. documentType/documentId
     // query param changes) are handled reactively; skip(1) avoids re-fetching the data

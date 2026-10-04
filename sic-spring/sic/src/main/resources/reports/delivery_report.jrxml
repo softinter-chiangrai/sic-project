@@ -336,8 +336,6 @@
 					</component>
 				</element>
 
-		<!-- ขึ้นหน้าใหม่เสมอก่อนส่วนรายการส่งมอบ กันเนื้อหาตาราง/รูปด้านบน (ความสูงไม่แน่นอน) ทับซ้อนกับส่วนนี้ -->
-		<element kind="break" uuid="d3a1000b-4008-4008-4008-a1b2c3d4e5f6" positionType="Float" x="0" y="232" width="1" height="1" type="Page"/>
 		<!-- Section 2 Header -->
 		<element kind="textField" uuid="8ea6f8e7-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="0" y="234" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 			<expression><![CDATA[($P{lang}.equals("en") ? "2. Deliverables & Checklists" : "2. รายการส่งมอบและรายการตรวจสอบ (Deliverables & Checklists)")]]></expression>

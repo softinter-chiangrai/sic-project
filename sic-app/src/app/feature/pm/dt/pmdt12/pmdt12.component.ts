@@ -607,8 +607,37 @@ export class Pmdt12Component implements OnInit {
     }
   }
 
+  private getResolvedProjectId(): string | null {
+    if (this.customerState.getProjectId()) {
+      return this.customerState.getProjectId();
+    }
+    const qProjectId = this.route.snapshot.queryParams['projectId'];
+    if (qProjectId) {
+      return qProjectId;
+    }
+    const selectedIds = this.selectedProjectIds();
+    if (selectedIds && selectedIds.length === 1) {
+      return selectedIds[0];
+    }
+    const visibleCases = this.filteredTestCases();
+    if (visibleCases.length > 0) {
+      const firstProjectId = visibleCases[0].projectId;
+      if (firstProjectId && visibleCases.every((c) => !c.projectId || c.projectId === firstProjectId)) {
+        return firstProjectId;
+      }
+    }
+    const visibleScenarios = this.filteredScenarios();
+    if (visibleScenarios.length > 0) {
+      const firstProjectId = visibleScenarios[0].projectId;
+      if (firstProjectId && visibleScenarios.every((s) => !s.projectId || s.projectId === firstProjectId)) {
+        return firstProjectId;
+      }
+    }
+    return null;
+  }
+
   exportUatReport(testType: string = 'UAT') {
-    const projectId = this.customerState.getProjectId();
+    const projectId = this.getResolvedProjectId();
     if (!projectId) {
       this.dialog.warn(this.translate.instant('PMDT12_NO_PROJECT_TITLE'), this.translate.instant('PMDT12_SELECT_PROJECT_FIRST_MSG'));
       return;
@@ -661,7 +690,7 @@ export class Pmdt12Component implements OnInit {
 
   exportScenarioReport(scenario: PmTestScenarioModel, event?: MouseEvent) {
     if (event) event.stopPropagation();
-    const projectId = this.customerState.getProjectId();
+    const projectId = scenario.projectId || this.getResolvedProjectId();
     if (!projectId) {
       this.dialog.warn(this.translate.instant('PMDT12_NO_PROJECT_TITLE'), this.translate.instant('PMDT12_SELECT_PROJECT_FIRST_MSG'));
       return;
