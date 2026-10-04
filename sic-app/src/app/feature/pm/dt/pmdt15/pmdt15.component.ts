@@ -84,13 +84,13 @@ export class Pmdt15Component implements OnInit {
     selectable: false,
     showToolbar: false,
     column: [
-      { label: this.translate.instant('PMDT15_COL_MANUAL_CODE'), name: 'manualCode', type: 'code', minWidth: 140 },
-      { label: this.translate.instant('PMDT15_COL_MANUAL_TITLE'), name: 'manualTitle', type: 'text', minWidth: 200 },
-      { label: this.translate.instant('PMDT15_COL_TYPE'), name: 'manualType', type: 'typeTag', minWidth: 140 },
-      { label: this.translate.instant('PMDT15_COL_VERSION'), name: 'version', type: 'versionText', align: 'center', minWidth: 90 },
-      { label: this.translate.instant('PMDT15_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', minWidth: 120 },
-      { label: this.translate.instant('PMDT15_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', minWidth: 120 },
-      { label: this.translate.instant('PMDT15_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 100 },
+      { label: this.translate.instant('PMDT15_COL_MANUAL_CODE'), name: 'manualCode', type: 'code', width: 140 },
+      { label: this.translate.instant('PMDT15_COL_MANUAL_TITLE'), name: 'manualTitle', type: 'text', width: 220 },
+      { label: this.translate.instant('PMDT15_COL_TYPE'), name: 'manualType', type: 'typeTag', width: 140 },
+      { label: this.translate.instant('PMDT15_COL_VERSION'), name: 'version', type: 'versionText', width: 90 },
+      { label: this.translate.instant('PMDT15_COL_STATUS'), name: 'status', type: 'statusBadge', width: 120 },
+      { label: this.translate.instant('PMDT15_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', width: 130 },
+      { label: this.translate.instant('PMDT15_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 120 },
     ],
   };
 

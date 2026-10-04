@@ -87,12 +87,12 @@ export class Pmdt16Component implements OnInit {
         { label: this.translate.instant('PMDT16_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', width: 240 },
         { label: this.translate.instant('PMDT16_COL_BILLING_TYPE'), name: 'billingType', type: 'text', hidden: !visible.has('billingType'), width: 120 },
         { label: this.translate.instant('PMDT16_COL_DUE_DATE'), name: 'dueDate', type: 'dateText', hidden: !visible.has('dueDate'), width: 120 },
-        { label: this.translate.instant('PMDT16_COL_TOTAL_AMOUNT'), name: 'totalAmount', type: 'amountText', align: 'right', width: 130 },
-        { label: this.translate.instant('PMDT16_COL_PAID_AMOUNT'), name: 'paidAmount', type: 'paidAmountText', hidden: !visible.has('paidAmount'), align: 'right', width: 130 },
-        { label: this.translate.instant('PMDT16_COL_STATUS'), name: 'paymentStatus', type: 'statusBadge', align: 'center', width: 120 },
-        { label: this.translate.instant('PMDT16_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', width: 130 },
-        { label: this.translate.instant('PMDT16_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
-        { label: this.translate.instant('PMDT16_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 120 },
+        { label: this.translate.instant('PMDT16_COL_TOTAL_AMOUNT'), name: 'totalAmount', type: 'amountText', width: 130 },
+        { label: this.translate.instant('PMDT16_COL_PAID_AMOUNT'), name: 'paidAmount', type: 'paidAmountText', hidden: !visible.has('paidAmount'), width: 130 },
+        { label: this.translate.instant('PMDT16_COL_STATUS'), name: 'paymentStatus', type: 'statusBadge', width: 120 },
+        { label: this.translate.instant('PMDT16_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), width: 130 },
+        { label: this.translate.instant('PMDT16_COL_VERSION'), name: 'version', type: 'versionText', width: 90 },
+        { label: this.translate.instant('PMDT16_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 120 },
       ],
     };
   });

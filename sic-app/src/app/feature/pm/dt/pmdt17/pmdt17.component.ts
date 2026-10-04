@@ -92,12 +92,12 @@ export class Pmdt17Component implements OnInit {
         { label: this.translate.instant('PMDT17_COL_TITLE'), name: 'title', type: 'titleTruncate', width: 240 },
         { label: this.translate.instant('PMDT17_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', width: 220 },
         { label: this.translate.instant('PMDT17_COL_TYPE'), name: 'ticketType', type: 'typeText', hidden: !visible.has('ticketType'), width: 120 },
-        { label: this.translate.instant('PMDT17_COL_SEVERITY'), name: 'severity', type: 'severityBadge', hidden: !visible.has('severity'), align: 'center', width: 110 },
-        { label: this.translate.instant('PMDT17_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', width: 120 },
-        { label: this.translate.instant('PMDT17_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), align: 'center', width: 130 },
+        { label: this.translate.instant('PMDT17_COL_SEVERITY'), name: 'severity', type: 'severityBadge', hidden: !visible.has('severity'), width: 110 },
+        { label: this.translate.instant('PMDT17_COL_STATUS'), name: 'status', type: 'statusBadge', width: 120 },
+        { label: this.translate.instant('PMDT17_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), width: 130 },
         { label: this.translate.instant('PMDT17_COL_ASSIGNED'), name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), width: 140 },
-        { label: this.translate.instant('PMDT17_COL_VERSION'), name: 'version', type: 'text', minWidth: 90 },
-        { label: this.translate.instant('PMDT17_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 110 },
+        { label: this.translate.instant('PMDT17_COL_VERSION'), name: 'version', type: 'versionText', width: 90 },
+        { label: this.translate.instant('PMDT17_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 110 },
       ],
     };
   });

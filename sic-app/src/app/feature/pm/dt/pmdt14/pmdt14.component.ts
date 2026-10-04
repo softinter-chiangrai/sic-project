@@ -71,8 +71,8 @@ export class Pmdt14Component implements OnInit {
       { label: this.translate.instant('PMDT14_COL_VERSION'), name: 'deliveryVersion', type: 'versionText', width: 90 },
       { label: this.translate.instant('PMDT14_COL_DELIVERY_DATE'), name: 'deliveryDate', type: 'dateText', width: 120 },
       { label: this.translate.instant('PMDT14_COL_STATUS'), name: 'status', type: 'statusBadge', width: 160 },
-      { label: this.translate.instant('PMDT14_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', width: 140 },
-      { label: this.translate.instant('PMDT14_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 140 },
+      { label: this.translate.instant('PMDT14_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', width: 140 },
+      { label: this.translate.instant('PMDT14_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 140 },
     ],
   };
 

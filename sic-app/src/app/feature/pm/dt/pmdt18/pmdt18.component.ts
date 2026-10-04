@@ -66,10 +66,10 @@ export class Pmdt18Component implements OnInit {
       { label: this.translate.instant('PMDT18_COL_CONTRACT_REF'), name: 'contractNo', type: 'contractText', width: 140 },
       { label: this.translate.instant('PMDT18_COL_CUSTOMER_PROJECT'), name: 'customerName', type: 'customerInfo', width: 220 },
       { label: this.translate.instant('PMDT18_COL_NEW_TERM'), name: 'newStartDate', type: 'dateRangeText', width: 160 },
-      { label: this.translate.instant('PMDT18_COL_PROPOSED_AMOUNT'), name: 'proposedAmount', type: 'amountText', align: 'right', width: 130 },
-      { label: this.translate.instant('PMDT18_COL_STATUS'), name: 'status', type: 'statusBadge', align: 'center', width: 120 },
-      { label: this.translate.instant('PMDT18_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', align: 'center', width: 130 },
-      { label: this.translate.instant('PMDT18_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, width: 120 },
+      { label: this.translate.instant('PMDT18_COL_PROPOSED_AMOUNT'), name: 'proposedAmount', type: 'amountText', width: 130 },
+      { label: this.translate.instant('PMDT18_COL_STATUS'), name: 'status', type: 'statusBadge', width: 120 },
+      { label: this.translate.instant('PMDT18_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', width: 130 },
+      { label: this.translate.instant('PMDT18_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 120 },
     ],
   };
 

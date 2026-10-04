@@ -521,19 +521,22 @@ html, body {
   font-family: var(--font-sans) !important;
 }
 
-/* Gridpanel: หัวคอลัมน์ปกติของ sic-gridpanel ถูกบังคับ justify-content: center ไว้ตายตัวใน library
-   (align ใน column config มีผลแค่เนื้อหาในเซลล์ ไม่ใช่ label หัวตาราง) แก้ให้ชิดซ้ายทั้งแอปเพื่อให้เข้ากับ
-   เนื้อหาส่วนใหญ่ที่เป็นข้อความชิดซ้าย ส่วนคอลัมน์ badge/action ที่ตั้ง align: 'center' ไว้ในเซลล์
-   จะได้ header ชิดซ้าย + เนื้อหากึ่งกลาง ซึ่งเป็นแพทเทิร์นปกติของตารางข้อมูลทั่วไป */
+/* Gridpanel: จัดตำแหน่งหัวตารางและเซลล์ข้อมูลให้ชิดซ้ายตรงกันเป็นมาตรฐานเดียวทั้งระบบ */
 .sic-gridpanel__sort {
   justify-content: flex-start !important;
   text-align: left !important;
 }
 
-/* หัวคอลัมน์ที่ไม่สามารถเรียงลำดับได้ (sortable: false) เช่น คอลัมน์จัดการ / Actions ให้จัดกึ่งกลางให้ตรงกับเนื้อหา/ไอคอน */
-.sic-gridpanel__sort:disabled,
-.sic-gridpanel__sort:not(.sic-gridpanel__sort--enabled),
-.sic-gridpanel__header-cell:last-child .sic-gridpanel__sort {
+.sic-gridpanel__cell {
+  justify-content: flex-start !important;
+  text-align: left !important;
+}
+
+/* คอลัมน์จัดการ (Actions / คอลัมน์สุดท้าย) และ Selection ให้จัดกึ่งกลางทั้งหัวตารางและเซลล์ข้อมูล */
+.sic-gridpanel__header-cell:last-child .sic-gridpanel__sort,
+.sic-gridpanel__cell:last-child,
+.sic-gridpanel__header-cell--selection,
+.sic-gridpanel__cell--selection {
   justify-content: center !important;
   text-align: center !important;
 }

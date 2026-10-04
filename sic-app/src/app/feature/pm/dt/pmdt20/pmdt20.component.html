@@ -108,11 +108,9 @@
 
       <ng-template sicGridPanelTemplate="statusBadge" section="cell" let-row>
         @let r = $any(row);
-        <div class="w-full flex items-center justify-center">
-          <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
-            {{ r.status }}
-          </span>
-        </div>
+        <span [class]="getStatusClass(r.status) + ' inline-block px-2.5 py-0.5 rounded-full text-xs font-medium'">
+          {{ r.status }}
+        </span>
       </ng-template>
     </sic-gridpanel>
 </div>
