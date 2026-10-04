@@ -2,6 +2,7 @@ import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { firstValueFrom, Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
+import { DateTimeUtil } from '../utils/datetime.util';
 
 export type AppLanguage = 'th' | 'en';
 
@@ -1335,6 +1336,7 @@ export class LanguageService {
     this.translate.setTranslation('en', this.defaultTranslations.en, true);
     const lang = this.resolveInitialLanguage();
     this.updateHtmlLang(lang);
+    DateTimeUtil.setEra(lang);
 
     this.initPromise = firstValueFrom(this.translate.use(lang)).catch((err) => {
       console.error('Failed to load translations:', err);
@@ -1351,11 +1353,7 @@ export class LanguageService {
 
     this.translate.use(lang);
     this.updateHtmlLang(lang);
-
-    // Reload page to refresh all components and dynamic labels according to chosen language
-    if (isPlatformBrowser(this.platformId)) {
-      window.location.reload();
-    }
+    DateTimeUtil.setEra(lang);
   }
 
   getCurrentLanguage(): AppLanguage {
