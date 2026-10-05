@@ -304,11 +304,12 @@
                 >
                   <!-- Checkbox on left -->
                   <div
-                    class="flex h-5 w-5 items-center justify-center rounded-lg border border-[var(--border)] bg-[var(--sidebar)] transition-all flex-shrink-0 group-hover:border-[var(--crm-primary)]"
-                    [class.bg-[var(--crm-primary)]]="isProjectSelected(proj.id)"
-                    [class.border-[var(--crm-primary)]]="isProjectSelected(proj.id)"
+                    class="sic-project-checkbox group-hover:border-[var(--crm-primary)]"
+                    [class.selected]="isProjectSelected(proj.id)"
                   >
-                    <i class="bi bi-check-lg text-xs text-white font-bold" *ngIf="isProjectSelected(proj.id)"></i>
+                    @if (isProjectSelected(proj.id)) {
+                      <i class="bi bi-check-lg text-xs font-bold text-white"></i>
+                    }
                   </div>
 
                   <!-- Project Info -->

@@ -247,7 +247,18 @@ export class Pmdt02Component implements OnInit {
     return [...events, ...this.customEvents()];
   });
 
+  calendarVisible = signal(true);
+
+  triggerCalendarRefresh(): void {
+    this.calendarVisible.set(false);
+    setTimeout(() => {
+      this.calendarVisible.set(true);
+      this.cdr.markForCheck();
+    });
+  }
+
   calendarHolidays = computed<SicCalendarHoliday[]>(() => {
+    this.holidayService.leavesChanged();
     const p = this.phase();
     const phaseId = p?.id || this.currentPhaseId();
     const allSystemHolidays = this.holidayService.getAllCalendarHolidays(phaseId);
@@ -921,12 +932,22 @@ export class Pmdt02Component implements OnInit {
     });
   }
 
-  // ===== NAVIGATION TO FULLSCREEN GANTT =====
+  // ===== NAVIGATION TO FULLSCREEN GANTT & CALENDAR =====
   goToGanttFullscreen() {
     const phaseId = this.currentPhaseId();
     const projectId = this.projectId();
     if (phaseId) {
       this.router.navigate(['/feature/pm/phase', phaseId, 'gantt'], {
+        queryParams: { projectId }
+      });
+    }
+  }
+
+  goToCalendarFullscreen() {
+    const phaseId = this.currentPhaseId();
+    const projectId = this.projectId();
+    if (phaseId) {
+      this.router.navigate(['/feature/pm/phase', phaseId, 'calendar'], {
         queryParams: { projectId }
       });
     }
@@ -1147,10 +1168,11 @@ export class Pmdt02Component implements OnInit {
         remark: this.customItemForm.description,
       };
       this.holidayService.saveUserLeave(newLeave);
+      this.loadCustomItems();
       this.selectedCalendarDate.set(this.customItemForm.date);
       this.isSidebarOpen.set(true);
       this.closeCustomItemModal();
-      this.cdr.markForCheck();
+      this.triggerCalendarRefresh();
       return;
     }
 
@@ -1171,6 +1193,7 @@ export class Pmdt02Component implements OnInit {
     this.selectedCalendarDate.set(this.customItemForm.date);
     this.isSidebarOpen.set(true);
     this.closeCustomItemModal();
+    this.triggerCalendarRefresh();
   }
 
   deleteCustomItem(itemId: string, event?: Event): void {
@@ -1180,12 +1203,14 @@ export class Pmdt02Component implements OnInit {
         if (itemId.startsWith('leave_') || itemId.startsWith('leave-')) {
           const actualId = itemId.replace(/^leave-/, '');
           this.holidayService.deleteUserLeave(actualId);
-          this.cdr.markForCheck();
+          this.loadCustomItems();
+          this.triggerCalendarRefresh();
           return;
         }
         const currentItems = this.getRawCustomItems();
         const updated = currentItems.filter((i) => i.id !== itemId);
         this.saveCustomItems(updated);
+        this.triggerCalendarRefresh();
       }
     });
   }

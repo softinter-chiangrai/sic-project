@@ -1,6 +1,4 @@
-// src/app/core/services/holiday.service.ts
-
-import { Injectable } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import type { SicCalendarHoliday } from 'sic-ng';
 import dayjs from '../dayjs';
 
@@ -38,6 +36,8 @@ export interface CustomHolidayItem {
 export class HolidayService {
   private readonly LEAVES_STORAGE_KEY = 'sic_user_leaves';
   private readonly COMPANY_HOLIDAYS_KEY = 'sic_company_holidays';
+
+  readonly leavesChanged = signal(0);
 
   // รายการวันหยุดนักขัตฤกษ์/ประเพณีไทย (2025, 2026, 2027)
   private readonly thaiPublicHolidays: Record<string, string> = {
@@ -319,11 +319,13 @@ export class HolidayService {
       list.push(leave);
     }
     localStorage.setItem(this.LEAVES_STORAGE_KEY, JSON.stringify(list));
+    this.leavesChanged.update((n) => n + 1);
   }
 
   deleteUserLeave(leaveId: string): void {
     const list = this.getUserLeaves().filter((l) => l.id !== leaveId);
     localStorage.setItem(this.LEAVES_STORAGE_KEY, JSON.stringify(list));
+    this.leavesChanged.update((n) => n + 1);
   }
 
   /**

@@ -49,6 +49,7 @@ import { pmrt04AResolver } from './rt/pmrt04/pmrt04A/pmrt04A.resolver';
 import { pmrt04BResolver } from './rt/pmrt04/pmrt04B/pmrt04B.resolver';
 import { pmrt07Resolver } from './rt/pmrt07/pmrt07.resolver';
 import { ganttResolver } from '../../core/component/sic-gantt/gantt.resolver';
+import { calendarViewResolver } from '../../core/component/sic-calendar-view/calendar-view.resolver';
 
 export const PM_ROUTES: Routes = [
   {
@@ -392,6 +393,18 @@ export const PM_ROUTES: Routes = [
     loadComponent: () =>
       import('../../core/component/sic-gantt/sic-gantt.component').then((m) => m.SicGanttComponent),
     resolve: { pageData: ganttResolver },
+  },
+  {
+    path: 'calendar',
+    loadComponent: () =>
+      import('../../core/component/sic-calendar-view/sic-calendar-view.component').then((m) => m.SicCalendarViewComponent),
+    resolve: { pageData: calendarViewResolver },
+  },
+  {
+    path: 'phase/:id/calendar',
+    loadComponent: () =>
+      import('../../core/component/sic-calendar-view/sic-calendar-view.component').then((m) => m.SicCalendarViewComponent),
+    resolve: { pageData: calendarViewResolver },
   },
   {
     path: 'gantt/:id/update',

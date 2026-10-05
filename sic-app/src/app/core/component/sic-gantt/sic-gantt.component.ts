@@ -43,6 +43,13 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
           @if (phaseName()) {
             <span class="text-sm text-[var(--text-muted)] ml-2">(Phase: {{ phaseName() }})</span>
           }
+          <div class="ml-auto flex items-center gap-2">
+            <button
+              (click)="showAllProjectsView()"
+              class="text-xs px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--sidebar)] text-[var(--text-active)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] flex items-center gap-1.5 transition-all shadow-sm">
+              <i class="bi bi-grid-3x3-gap"></i> ดูทุกโครงการ (All Projects)
+            </button>
+          </div>
         </div>
 
         @if (isLoading()) {
@@ -461,6 +468,12 @@ export class SicGanttComponent implements OnInit {
     if (!assignees || assignees.length === 0) return '';
     const names = assignees.map((p) => this.getAssigneeName(p)).filter(Boolean);
     return names.length > 0 ? ` | ${this.translate.instant('GANTT_ASSIGNEE_LABEL')}: ${names.join(', ')}` : '';
+  }
+
+  showAllProjectsView(): void {
+    this.phaseId.set(null);
+    this.phaseName.set(null);
+    this.router.navigate(['/feature/pm/gantt']);
   }
 
   goBack() {

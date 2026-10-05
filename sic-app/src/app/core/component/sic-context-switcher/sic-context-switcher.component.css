@@ -9,6 +9,25 @@
   box-shadow: 0 20px 45px -10px rgba(0, 0, 0, 0.25), 0 0 0 1px var(--border);
 }
 
+.sic-project-checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  border: 1px solid var(--border);
+  background-color: var(--sidebar, #ffffff);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sic-project-checkbox.selected {
+  background-color: var(--crm-primary) !important;
+  border-color: var(--crm-primary) !important;
+  color: #ffffff !important;
+}
+
 /* Scrollbar styles for results list */
 .sic-results-list::-webkit-scrollbar,
 .sic-filter-popover div::-webkit-scrollbar {

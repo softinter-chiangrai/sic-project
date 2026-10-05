@@ -20,6 +20,7 @@ const COMMON_PATH_LABELS: Record<string, string> = {
   approval: 'BREADCRUMB_SEG_APPROVAL',
   renew: 'BREADCRUMB_SEG_RENEW',
   gantt: 'BREADCRUMB_SEG_GANTT',
+  calendar: 'BREADCRUMB_SEG_CALENDAR',
   history: 'BREADCRUMB_SEG_HISTORY',
   options: 'BREADCRUMB_SEG_OPTIONS',
   invite: 'BREADCRUMB_SEG_INVITE',
