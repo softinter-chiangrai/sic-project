@@ -19,6 +19,7 @@ import { Pmdt19AService } from './pmdt19A.service';
 import { DocumentVersionModel, Pmdt19APageData } from './pmdt19A.model';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt19a',
@@ -33,6 +34,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicInputAreaComponent,
     SicUploadComponent,
     TranslateModule,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt19A.component.html',
   styleUrls: ['./pmdt19A.component.css'],
@@ -51,6 +53,10 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   id = signal<string | null>(null);
   isEdit = signal(false);
   isSaving = signal(false);
+
+  get projectId(): string | null {
+    return this.formData?.form?.controls['projectId']?.value || this.customerState.getProjectId() || null;
+  }
 
   get docTypeOptions() {
     return [

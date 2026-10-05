@@ -612,6 +612,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     });
   }
 
+  editCurrentTab(): void {
+    if (this.currentTabId) {
+      this.editTab(this.currentTabId);
+    }
+  }
+
   editTab(tabId: string): void {
     const tab = this.tabs().find((t) => t.id === tabId);
     if (!tab) return;

@@ -27,6 +27,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt12b',
@@ -44,6 +45,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicUploadComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt12B.component.html',
   styleUrls: ['./pmdt12B.component.css'],
@@ -66,6 +68,10 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   isLoading = signal(false);
   isSaving = signal(false);
   scenarioId: string | null = null;
+
+  get projectId(): string | null {
+    return this.formData?.form?.get('projectId')?.value || this.customerState.getProjectId() || null;
+  }
 
   taskOptions = signal<{ value: string; text: string }[]>([]);
   taskLoading = signal(false);

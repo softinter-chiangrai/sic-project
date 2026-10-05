@@ -39,6 +39,7 @@ import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 // ✅ เปลี่ยนเป็น sic-tiptap-editor
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 // Services
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -134,6 +135,7 @@ export class Pmdt04AService {
     SicDatePipe,
     TranslateModule,
     SicAiAttachmentPickerComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt04A.component.html',
   styleUrls: ['./pmdt04A.component.css'],

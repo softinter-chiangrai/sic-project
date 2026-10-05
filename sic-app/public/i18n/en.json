@@ -1690,6 +1690,8 @@
   "PMDT05_RENDERING_HINT": "Generating and saving all diagram images for document export...",
   "PMDT05_RELOAD_BTN": "Reload",
   "PMDT05_RELOAD_TITLE": "Reload diagram from server",
+  "PMDT05_TRACE_LINKS_BTN": "Trace Links",
+  "PMDT05_TRACE_LINKS_TITLE": "Traceability Links",
   "PMDT05_REQUEST_CHANGE_BTN": "Request Change",
   "PMDT05_REQUIREMENT_LABEL": "Link with Requirement (optional)",
   "PMDT05_REQUIREMENT_PLACEHOLDER": "Select Requirement...",

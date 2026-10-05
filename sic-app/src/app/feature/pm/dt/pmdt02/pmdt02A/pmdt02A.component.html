@@ -94,6 +94,15 @@
       ></sic-upload>
     </div>
 
+    <!-- Trace Link Panel -->
+    @if (isEdit && milestoneId) {
+      <sic-trace-link-panel
+        entityType="MILESTONE"
+        [entityId]="milestoneId"
+        [projectId]="projectId"
+      ></sic-trace-link-panel>
+    }
+
     <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
       <sic-button type="button" variant="outline" color="primary" (click)="cancel()">
         <i class="bi bi-arrow-left"></i>

@@ -19,6 +19,7 @@ import { BusinessService } from '../../../../../core/services/business.service';
 import { SicButtonComponent } from "sic-ng";
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt01A',
@@ -34,8 +35,9 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
     SicUploadComponent,
     RouterModule,
     SicButtonComponent,
-    TranslateModule
-],
+    TranslateModule,
+    SicTraceLinkPanelComponent,
+  ],
   templateUrl: './pmdt01A.component.html',
 })
 export class Pmdt01AComponent implements OnInit {

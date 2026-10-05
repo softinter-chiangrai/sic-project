@@ -1690,6 +1690,8 @@
   "PMDT05_RENDERING_HINT": "ระบบกำลังแปลงและบันทึกรูปภาพแผนภาพทั้งหมดเพื่อพิมพ์เอกสาร...",
   "PMDT05_RELOAD_BTN": "โหลดใหม่",
   "PMDT05_RELOAD_TITLE": "โหลดไดอะแกรมใหม่จากเซิร์ฟเวอร์",
+  "PMDT05_TRACE_LINKS_BTN": "ความสัมพันธ์",
+  "PMDT05_TRACE_LINKS_TITLE": "ความสัมพันธ์ที่เชื่อมโยง (Traceability)",
   "PMDT05_REQUEST_CHANGE_BTN": "ขอแก้ไข (Change Request)",
   "PMDT05_REQUIREMENT_LABEL": "ผูกกับ Requirement (ถ้ามี)",
   "PMDT05_REQUIREMENT_PLACEHOLDER": "เลือก Requirement...",

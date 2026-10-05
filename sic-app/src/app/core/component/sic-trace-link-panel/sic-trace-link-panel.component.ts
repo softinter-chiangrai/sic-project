@@ -26,7 +26,7 @@ interface DisplayLink {
 @Component({
   selector: 'sic-trace-link-panel',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent, TranslateModule],
+  imports: [CommonModule, RouterModule, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
     <div class="rounded-xl border p-4" style="border-color: var(--border);">
@@ -35,9 +35,6 @@ interface DisplayLink {
           <i class="bi bi-link-45deg text-[var(--crm-primary)]"></i>
           {{ 'TRACE_LINK_PANEL_TITLE' | translate }}
         </span>
-        <sic-button variant="outline" color="primary" size="sm" type="button" (click)="openPicker()" [disabled]="!entityId || !projectId">
-          <i class="bi bi-plus-lg"></i> {{ 'TRACE_LINK_PANEL_ADD_BUTTON' | translate }}
-        </sic-button>
       </div>
 
       @if (loading()) {
@@ -52,9 +49,6 @@ interface DisplayLink {
                 <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] shrink-0">{{ link.otherType }}</span>
                 <span class="truncate">{{ link.relationshipLabel }} {{ link.name }}</span>
               </a>
-              <button (click)="removeLink(link)" class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] shrink-0" [title]="'TRACE_LINK_PANEL_REMOVE_TITLE' | translate">
-                <i class="bi bi-x-lg"></i>
-              </button>
             </li>
           }
         </ul>
@@ -85,14 +79,37 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       return;
     }
     this.loading.set(true);
+    const normalizedType = (this.entityType || '').toUpperCase().trim();
+    const diagramTypes = ['DFD', 'ER', 'FLOWCHART', 'SEQUENCE', 'CLASS', 'STATE', 'GANTT', 'MINDMAP', 'JOURNEY', 'PIE', 'C4', 'USE_CASE', 'USE CASE'];
+    const isDiag = diagramTypes.includes(normalizedType);
+
     forkJoin({
       asSource: this.traceLinkService.getLinksBySource(this.entityType, this.entityId).pipe(catchError(() => of([]))),
       asTarget: this.traceLinkService.getLinksByTarget(this.entityType, this.entityId).pipe(catchError(() => of([]))),
-    }).subscribe(({ asSource, asTarget }) => {
-      const rows: { link: TraceLink; otherType: string; otherId: string; fromSource: boolean }[] = [
-        ...asSource.map((link) => ({ link, otherType: link.targetType, otherId: link.targetId, fromSource: true })),
-        ...asTarget.map((link) => ({ link, otherType: link.sourceType, otherId: link.sourceId, fromSource: false })),
-      ];
+      asSourceDiag: (isDiag && normalizedType !== 'DIAGRAM')
+        ? this.traceLinkService.getLinksBySource('DIAGRAM', this.entityId).pipe(catchError(() => of([])))
+        : of([] as TraceLink[]),
+      asTargetDiag: (isDiag && normalizedType !== 'DIAGRAM')
+        ? this.traceLinkService.getLinksByTarget('DIAGRAM', this.entityId).pipe(catchError(() => of([])))
+        : of([] as TraceLink[]),
+    }).subscribe(({ asSource, asTarget, asSourceDiag, asTargetDiag }) => {
+      const allSource = [...asSource, ...asSourceDiag];
+      const allTarget = [...asTarget, ...asTargetDiag];
+      const seen = new Set<string>();
+      const rows: { link: TraceLink; otherType: string; otherId: string; fromSource: boolean }[] = [];
+
+      for (const link of allSource) {
+        if (!seen.has(link.id)) {
+          seen.add(link.id);
+          rows.push({ link, otherType: link.targetType, otherId: link.targetId, fromSource: true });
+        }
+      }
+      for (const link of allTarget) {
+        if (!seen.has(link.id)) {
+          seen.add(link.id);
+          rows.push({ link, otherType: link.sourceType, otherId: link.sourceId, fromSource: false });
+        }
+      }
 
       if (rows.length === 0) {
         this.links.set([]);
@@ -165,7 +182,14 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       case 'FLOWCHART':
       case 'SEQUENCE':
       case 'USE_CASE':
+      case 'USE CASE':
       case 'CLASS':
+      case 'STATE':
+      case 'GANTT':
+      case 'MINDMAP':
+      case 'JOURNEY':
+      case 'PIE':
+      case 'C4':
         return this.http.get<any>(`${base}/api/diagram/tabs/${id}`).pipe(
           map((data) => {
             const code = data?.diagramCode || id.slice(0, 8);
@@ -262,6 +286,54 @@ export class SicTraceLinkPanelComponent implements OnChanges {
           }),
           catchError(() => of({ code: id.slice(0, 8), name: 'Delivery' }))
         );
+      case 'TEST_SCENARIO':
+      case 'SCENARIO':
+        return this.http.get<any>(`${base}/api/pm/test-scenarios/${id}`).pipe(
+          map((data) => {
+            const code = data?.scenarioCode || 'SCENARIO';
+            const title = data?.scenarioName || data?.title || 'Test Scenario';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Test Scenario' }))
+        );
+      case 'USER_MANUAL':
+      case 'MANUAL':
+        return this.http.get<any>(`${base}/api/pm/user-manuals/${id}`).pipe(
+          map((data) => {
+            const code = data?.manualCode || 'MANUAL';
+            const title = data?.title || 'User Manual';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'User Manual' }))
+        );
+      case 'INVOICE':
+        return this.http.get<any>(`${base}/api/pm/invoices/${id}`).pipe(
+          map((data) => {
+            const code = data?.invoiceNo || data?.code || 'INVOICE';
+            const title = data?.title || 'Invoice';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Invoice' }))
+        );
+      case 'MA_TICKET':
+      case 'TICKET':
+        return this.http.get<any>(`${base}/api/pm/ma-tickets/${id}`).pipe(
+          map((data) => {
+            const code = data?.ticketNo || 'TICKET';
+            const title = data?.title || 'MA Ticket';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'MA Ticket' }))
+        );
+      case 'PHASE':
+        return this.http.get<any>(`${base}/api/pm/phases/${id}`).pipe(
+          map((data) => {
+            const code = data?.phaseCode || 'PHASE';
+            const title = data?.phaseName || data?.name || 'Phase';
+            return { code, name: code ? `[${code}] ${title}` : title };
+          }),
+          catchError(() => of({ code: id.slice(0, 8), name: 'Phase' }))
+        );
       default:
         return of({ code: id.slice(0, 8), name: id });
     }
@@ -277,7 +349,14 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       case 'FLOWCHART':
       case 'SEQUENCE':
       case 'USE_CASE':
+      case 'USE CASE':
       case 'CLASS':
+      case 'STATE':
+      case 'GANTT':
+      case 'MINDMAP':
+      case 'JOURNEY':
+      case 'PIE':
+      case 'C4':
         return `${base}/diagram?tabId=${id}`;
       case 'REQUIREMENT':
       case 'REQ':
@@ -290,9 +369,11 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       case 'TEST_CASE':
       case 'TESTCASE':
       case 'TC':
-        return `${base}/test-case/${id}/edit`;
       case 'BUG':
         return `${base}/test-case/${id}/edit`;
+      case 'TEST_SCENARIO':
+      case 'SCENARIO':
+        return `${base}/test-scenario/${id}/edit`;
       case 'CHANGE_REQUEST':
       case 'CR':
         return `${base}/change-request/${id}/edit`;
@@ -303,7 +384,24 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       case 'CONTRACT':
         return `${base}/contract`;
       case 'DELIVERY':
-        return `${base}/delivery`;
+        return `${base}/delivery/${id}/edit`;
+      case 'USER_MANUAL':
+      case 'MANUAL':
+        return `${base}/manual/${id}/edit`;
+      case 'INVOICE':
+        return `${base}/invoice/${id}/edit`;
+      case 'MA_TICKET':
+      case 'TICKET':
+        return `${base}/ma-ticket/${id}/edit`;
+      case 'PHASE':
+        return `${base}/phase/${id}/edit`;
+      case 'MILESTONE':
+        return `${base}/milestone/${id}/edit`;
+      case 'WORK_PACKAGE':
+        return `${base}/work-package/${id}/edit`;
+      case 'DOCUMENT_VERSION':
+      case 'VERSION':
+        return `${base}/version/${id}/edit`;
       default:
         return '#';
     }

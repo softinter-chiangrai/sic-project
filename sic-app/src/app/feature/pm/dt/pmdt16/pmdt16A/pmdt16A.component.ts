@@ -34,6 +34,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt16a',
@@ -53,6 +54,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicUploadComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],
@@ -78,6 +80,10 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   isView = signal(false);
   isLocked = signal(false);
   isPrinting = signal(false);
+
+  get projectId(): string | null {
+    return (this.formData?.form?.controls['projectId']?.value) || this.customerState.getProjectId() || null;
+  }
 
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);

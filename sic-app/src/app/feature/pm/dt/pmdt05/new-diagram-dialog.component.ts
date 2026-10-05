@@ -11,6 +11,7 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import type { ApprovalFlow } from '../pmdt03/approval.model';
 import { environment } from '../../../../../environments/environment';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { SicTraceLinkPanelComponent } from '../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 export interface DiagramEditData {
   id: string;
@@ -29,10 +30,10 @@ export interface DiagramEditData {
 @Component({
   selector: 'app-new-diagram-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent, SicUploadComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, SicInputComponent, SicButtonComponent, SicComboboxComponent, SicUploadComponent, TranslateModule, SicTraceLinkPanelComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   template: `
-    <div class="w-[min(92vw,30rem)] overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
+    <div [ngClass]="editData ? 'w-[min(92vw,38rem)]' : 'w-[min(92vw,30rem)]'" class="overflow-hidden rounded-2xl border bg-[var(--bg)] text-[var(--text)] shadow-2xl">
       <div class="border-b px-5 py-4 flex items-center justify-between" style="border-color: var(--border);">
         <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
           <i class="bi" [class.bi-pencil-square]="editData" [class.bi-plus-circle]="!editData"></i>
@@ -146,6 +147,17 @@ export interface DiagramEditData {
                 <i class="bi bi-send-check"></i> {{ 'PMDT05_SUBMIT_ON_SAVE_HINT' | translate }}
               </p>
             }
+          </div>
+        }
+
+        <!-- ความสัมพันธ์ที่เชื่อมโยง (Traceability Links) -->
+        @if (editData?.id) {
+          <div class="border-t border-[var(--border)] pt-4 mt-2">
+            <sic-trace-link-panel
+              [entityType]="editData.type || 'DIAGRAM'"
+              [entityId]="editData.id"
+              [projectId]="projectId"
+            ></sic-trace-link-panel>
           </div>
         }
       </div>

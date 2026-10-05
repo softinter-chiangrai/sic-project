@@ -206,6 +206,15 @@
               </div>
             </div>
 
+            <!-- Trace Link Panel -->
+            @if ((isEdit || isViewOnly) && (reqId || form.value.id)) {
+              <sic-trace-link-panel
+                entityType="REQUIREMENT"
+                [entityId]="reqId || form.value.id"
+                [projectId]="form.value.projectId"
+              ></sic-trace-link-panel>
+            }
+
             <!-- Action Buttons -->
             <div class="flex items-center justify-end gap-3 pt-2 border-t border-[var(--border)]">
               <sic-button

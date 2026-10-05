@@ -24,6 +24,7 @@ import { SicButtonComponent } from "sic-ng";
 import { computed } from '@angular/core';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt02C',
@@ -39,8 +40,9 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
     SicTiptapEditorComponent,
     SicUploadComponent,
     SicButtonComponent,
-    TranslateModule
-],
+    TranslateModule,
+    SicTraceLinkPanelComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02C.component.html',
 })

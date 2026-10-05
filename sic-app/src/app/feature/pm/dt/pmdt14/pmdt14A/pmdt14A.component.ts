@@ -31,6 +31,7 @@ import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.u
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 @Component({
   selector: 'app-pmdt14a',
@@ -50,6 +51,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
     SicTiptapEditorComponent,
     TranslateModule,
     SicAiAttachmentPickerComponent,
+    SicTraceLinkPanelComponent,
   ],
   templateUrl: './pmdt14A.component.html',
   styleUrls: ['./pmdt14A.component.css'],
@@ -72,6 +74,10 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   isView = signal(false);
   isLocked = signal(false);
   isSaving = signal(false);
+
+  get projectId(): string | null {
+    return (this.formData?.form?.controls['projectId']?.value) || this.customerState.getProjectId() || null;
+  }
 
   // Approval Flow
   approvalFlowsApi = `${apiBaseUrl}/api/pm/approvals/flows/document-type/DELIVERY`;

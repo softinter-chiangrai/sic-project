@@ -18,6 +18,7 @@ import { SicButtonComponent } from "sic-ng";
 import { environment } from '../../../../../../environments/environment';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 
 import { HolidayService } from '../../../../../core/services/holiday.service';
 import { signal, computed } from '@angular/core';
@@ -36,8 +37,9 @@ import { signal, computed } from '@angular/core';
     SicTiptapEditorComponent,
     SicUploadComponent,
     SicButtonComponent,
-    TranslateModule
-],
+    TranslateModule,
+    SicTraceLinkPanelComponent,
+  ],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt02B.component.html',
 })
