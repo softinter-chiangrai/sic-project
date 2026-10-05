@@ -101,8 +101,20 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     return !!(tab?.isApproved || tab?.approvalStatus === 'APPROVED');
   }
 
-  /** Mermaid จากแชท AI: ให้ draw.io แปลง (mode merge) แล้วรับ XML กลับมา merge เข้าแผนภาพที่เปิดอยู่ ดู onMermaidResult */
-  insertAiMermaid(code: string): void {
+  /** Mermaid จากแชท AI: ให้ draw.io แปลง (mode merge) แล้วรับ XML กลับมาสร้างเป็น Page ใหม่ */
+  private pendingAiPageTitle: string = 'AI Diagram';
+
+  insertAiMermaid(event: string | { code: string; pageTitle?: string }): void {
+    const code = typeof event === 'string' ? event : event?.code;
+    const pageTitle = typeof event === 'string' ? 'AI Diagram' : (event?.pageTitle || 'AI Diagram');
+    this.pendingAiPageTitle = pageTitle;
+
+    // ถ้าไม่มีแท็บเปิดอยู่เลย -> สร้างแท็บ Diagram ใหม่ให้อัตโนมัติ
+    if (!this.currentTabId) {
+      this.createTabFromAiMermaid(code, pageTitle);
+      return;
+    }
+
     if (this.currentTabLocked) {
       this.dialogService.warn(
         this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_TITLE'),
@@ -110,7 +122,60 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       );
       return;
     }
+
     this.drawioService.insertMermaid(code, 'merge');
+  }
+
+  /**
+   * สร้างแท็บ Diagram ใหม่ให้อัตโนมัติเมื่อยังไม่มีแท็บใดเปิดอยู่
+   */
+  private createTabFromAiMermaid(code: string, pageTitle: string): void {
+    const targetProjId = this.projectId || (this.projects().length > 0 ? this.projects()[0].id : null);
+    if (!targetProjId) {
+      this.dialogService.warn(
+        this.translate.instant('PMDT05_CREATE_FAIL_TITLE'),
+        this.translate.instant('PMDT05_NO_PROJECT_DESC') || 'กรุณาสร้างหรือเลือกโครงการก่อนสร้างไดอะแกรม'
+      );
+      return;
+    }
+
+    let diagramType = 'DFD';
+    const firstLine = code.trim().split('\n')[0].toLowerCase();
+    if (firstLine.includes('erdiagram')) {
+      diagramType = 'ER';
+    } else if (firstLine.includes('flowchart') || firstLine.includes('graph')) {
+      diagramType = 'Flowchart';
+    } else if (firstLine.includes('sequencediagram')) {
+      diagramType = 'Sequence';
+    } else if (firstLine.includes('classdiagram')) {
+      diagramType = 'Class';
+    } else if (firstLine.includes('statediagram')) {
+      diagramType = 'State';
+    } else if (firstLine.includes('gantt')) {
+      diagramType = 'Gantt';
+    } else if (firstLine.includes('mindmap')) {
+      diagramType = 'Mindmap';
+    }
+
+    const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
+    const name = pageTitle || `${diagramType} Diagram`;
+
+    this.diagramService.createTab(targetProjId, name, diagramType as any, code, reqId).subscribe({
+      next: (newTab) => {
+        this.tabs.update((t) => [...t, newTab]);
+        this.switchTab(newTab.id);
+        this.dialogService.success(
+          this.translate.instant('PMDT05_CREATE_SUCCESS_TITLE'),
+          this.translate.instant('PMDT05_CREATE_SUCCESS_MSG').replace('{0}', name)
+        );
+      },
+      error: (err) => {
+        this.dialogService.error(
+          this.translate.instant('PMDT05_CREATE_FAIL_TITLE'),
+          err.error?.message || this.translate.instant('PMDT05_GENERIC_ERROR')
+        );
+      }
+    });
   }
 
   private onMermaidResult(res: MermaidInsertResult): void {
@@ -118,16 +183,82 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       // diagram ที่สร้างจาก Mermaid (เช่น จาก AI pipeline) เพิ่งถูกวาด → ขอ XML ไปให้ auto-save บันทึกกลับ
       this.drawioService.requestXml();
     } else if (res.stage === 'parsed' && res.xml) {
-      this.drawioService.mergeXml(res.xml);
-      this.dialogService.success(
-        this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_TITLE'),
-        this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_MSG'),
-      );
+      this.addNewPageFromXml(res.xml, this.pendingAiPageTitle);
     } else {
       this.dialogService.warn(
         this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_TITLE'),
         res.message || this.translate.instant('PMDT05_INSERT_MERMAID_FAIL_MSG'),
       );
+    }
+  }
+
+  /**
+   * เพิ่ม diagram XML ที่ได้จาก AI เป็น Page ใหม่ใน Diagram ปัจจุบัน
+   */
+  private addNewPageFromXml(parsedXml: string, pageName: string): void {
+    try {
+      const currentXml = this.lastSavedXml || this.currentDiagram?.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+      const parser = new DOMParser();
+      const currentDoc = parser.parseFromString(currentXml, 'text/xml');
+      const parsedDoc = parser.parseFromString(parsedXml, 'text/xml');
+
+      // หา root <mxfile> ของเอกสารปัจจุบัน
+      let mxfileEl = currentDoc.querySelector('mxfile');
+      if (!mxfileEl) {
+        // ถ้าเอกสารเดิมไม่มี mxfile ให้ห่อใหม่
+        const newXml = `<mxfile>${currentXml}</mxfile>`;
+        const wrappedDoc = parser.parseFromString(newXml, 'text/xml');
+        mxfileEl = wrappedDoc.querySelector('mxfile');
+      }
+
+      // ดึง <diagram> element หรือ <mxGraphModel> จาก parsedXml
+      let newDiagramEl = parsedDoc.querySelector('diagram');
+      if (!newDiagramEl) {
+        const modelEl = parsedDoc.querySelector('mxGraphModel');
+        if (modelEl) {
+          const created = currentDoc.createElement('diagram');
+          created.setAttribute('id', `page-${Date.now()}`);
+          created.setAttribute('name', pageName);
+          created.appendChild(currentDoc.importNode(modelEl, true));
+          newDiagramEl = created;
+        }
+      } else {
+        newDiagramEl = currentDoc.importNode(newDiagramEl, true) as Element;
+        newDiagramEl.setAttribute('id', `page-${Date.now()}`);
+        newDiagramEl.setAttribute('name', pageName);
+      }
+
+      if (newDiagramEl && mxfileEl) {
+        // กำหนดชื่อหน้าที่ไม่ซ้ำ
+        const existingPages = currentDoc.querySelectorAll('diagram');
+        const pageCount = existingPages.length + 1;
+        if (!pageName || pageName === 'AI Diagram') {
+          newDiagramEl.setAttribute('name', `Page-${pageCount} (${pageName || 'AI'})`);
+        }
+
+        mxfileEl.appendChild(newDiagramEl);
+
+        const serializer = new XMLSerializer();
+        const updatedXml = serializer.serializeToString(currentDoc);
+
+        // โหลด XML ที่มี Page ใหม่กลับเข้า Draw.io
+        this.drawioService.loadXml(updatedXml);
+        this.dialogService.success(
+          this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_TITLE'),
+          this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_MSG'),
+        );
+        return;
+      }
+
+      // Fallback: หาก parse ไม่สำเร็จ ให้ merge เข้าหน้าปัจจุบันตามเดิม
+      this.drawioService.mergeXml(parsedXml);
+      this.dialogService.success(
+        this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_TITLE'),
+        this.translate.instant('PMDT05_INSERT_MERMAID_SUCCESS_MSG'),
+      );
+    } catch (err) {
+      console.error('[PMDT05] Failed to add as new page, falling back to mergeXml:', err);
+      this.drawioService.mergeXml(parsedXml);
     }
   }
 

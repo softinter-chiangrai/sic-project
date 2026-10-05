@@ -46,7 +46,7 @@ export interface DiagramEditData {
       </div>
 
       <div class="space-y-4 px-5 py-4 max-h-[75vh] overflow-y-auto">
-        <!-- Requirement (แสดงเฉพาะตอนสร้างใหม่) -->
+        <!-- Requirement -->
         @if (requirementTitle && !editData) {
           <div class="p-3 rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/5">
             <div class="flex items-center gap-2 text-sm">
@@ -55,7 +55,7 @@ export interface DiagramEditData {
               <span>{{ requirementTitle }}</span>
             </div>
           </div>
-        } @else if (!editData) {
+        } @else {
           <div>
             <sic-combobox
               [label]="'PMDT05_REQUIREMENT_LABEL' | translate"

@@ -485,11 +485,30 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
     return match ? match[1].trim() : null;
   }
 
-  // ส่ง Mermaid ให้หน้าแผนภาพ → draw.io แปลงและ merge เข้าแผนภาพที่เปิดอยู่ (ไม่ต้องคัดลอกไป insert เอง)
+  // ส่ง Mermaid ให้หน้าแผนภาพ → draw.io แปลงและเพิ่มเป็น Page ใหม่
   insertMermaidToDiagram(content: string): void {
     const code = this.getMermaidCode(content);
     if (!code) return;
-    this.insertMermaid.emit(code);
+
+    let pageTitle = 'AI Diagram';
+    const firstLine = code.trim().split('\n')[0].toLowerCase();
+    if (firstLine.includes('erdiagram')) {
+      pageTitle = 'ER Diagram';
+    } else if (firstLine.includes('flowchart') || firstLine.includes('graph')) {
+      pageTitle = 'Flowchart';
+    } else if (firstLine.includes('sequencediagram')) {
+      pageTitle = 'Sequence Diagram';
+    } else if (firstLine.includes('classdiagram')) {
+      pageTitle = 'Class Diagram';
+    } else if (firstLine.includes('statediagram')) {
+      pageTitle = 'State Diagram';
+    } else if (firstLine.includes('gantt')) {
+      pageTitle = 'Gantt';
+    } else if (firstLine.includes('mindmap')) {
+      pageTitle = 'Mindmap';
+    }
+
+    this.insertMermaid.emit({ code, pageTitle } as any);
   }
 
   // ฟังก์ชันคัดลอก Mermaid code
