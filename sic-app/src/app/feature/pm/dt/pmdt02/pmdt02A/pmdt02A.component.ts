@@ -104,7 +104,7 @@ export class Pmdt02AComponent implements OnInit {
         const cleanDate = dateParam.split('T')[0];
         this.form.patchValue({
           dueDate: cleanDate,
-          dueTime: '17:00',
+          dueTime: '18:00',
         });
         this.dueDateVal.set(cleanDate);
       }
@@ -136,7 +136,7 @@ export class Pmdt02AComponent implements OnInit {
 
   patchForm(data: MilestoneResponse) {
     const dueDate = data.dueDate ? data.dueDate.split('T')[0] : '';
-    const dueTime = data.dueDate ? data.dueDate.split('T')[1]?.substring(0, 5) : '';
+    const dueTime = (data.dueDate?.includes('T') ? data.dueDate.split('T')[1]?.substring(0, 5) : '') || (data as any).dueTime || '18:00';
     if (data.phaseId) {
       this.phaseId = data.phaseId;
       this.loadProjectFromPhase(data.phaseId);

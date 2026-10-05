@@ -140,31 +140,35 @@
 
         <ng-template sicGridPanelTemplate="permCheckbox" section="header" let-column>
           @let c = $any(column);
-          <label class="inline-flex items-center gap-1.5 cursor-pointer justify-center" [title]="(('BURT02A_SELECT_UNSELECT_ALL_PREFIX' | translate)) + ' ' + c.label">
-            <input
-              type="checkbox"
-              class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 cursor-pointer"
-              [checked]="isColumnAllChecked(c.name)"
-              (change)="toggleColumn(c.name)"
-            />
-            <span>{{ c.label }}</span>
-          </label>
+          <div class="w-full flex items-center justify-center">
+            <label class="inline-flex items-center gap-1.5 cursor-pointer justify-center" [title]="(('BURT02A_SELECT_UNSELECT_ALL_PREFIX' | translate)) + ' ' + c.label">
+              <input
+                type="checkbox"
+                class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 cursor-pointer"
+                [checked]="isColumnAllChecked(c.name)"
+                (change)="toggleColumn(c.name)"
+              />
+              <span>{{ c.label }}</span>
+            </label>
+          </div>
         </ng-template>
 
         <ng-template sicGridPanelTemplate="permCheckbox" section="cell" let-row let-column="column">
           @let r = $any(row);
           @let c = $any(column);
-          <input
-            type="checkbox"
-            class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 cursor-pointer"
-            [checked]="isChecked(r.moduleId, c.name)"
-            (change)="togglePerm(r.moduleId, c.name, $event)"
-          />
+          <div class="w-full flex items-center justify-center">
+            <input
+              type="checkbox"
+              class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20 cursor-pointer"
+              [checked]="isChecked(r.moduleId, c.name)"
+              (change)="togglePerm(r.moduleId, c.name, $event)"
+            />
+          </div>
         </ng-template>
 
         <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
           @let r = $any(row);
-          <div class="flex items-center justify-center gap-1">
+          <div class="w-full flex items-center justify-center gap-1">
             <button
               type="button"
               (click)="setRowPermissions(r.moduleId, 'full')"

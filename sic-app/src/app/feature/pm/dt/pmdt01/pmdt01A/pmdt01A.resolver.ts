@@ -19,8 +19,13 @@ export const pmdt01AEditResolver: ResolveFn<Pmdt01APageData> = async (route) => 
   try {
     const data = await lastValueFrom(service.getPhaseById(id));
     if (data) {
-      form.patchValue(data);
-      return { phaseData: new SicFromData<Pmdt01AModel>(form, data) };
+      const patched = {
+        ...data,
+        startTime: (data.startDate?.includes('T') ? data.startDate.split('T')[1]?.substring(0, 5) : '') || (data as any).startTime || '09:00',
+        endTime: (data.endDate?.includes('T') ? data.endDate.split('T')[1]?.substring(0, 5) : '') || (data as any).endTime || '18:00',
+      };
+      form.patchValue(patched);
+      return { phaseData: new SicFromData<Pmdt01AModel>(form, patched as Pmdt01AModel) };
     }
     router.navigate(['/not-found']);
     return EMPTY as any;

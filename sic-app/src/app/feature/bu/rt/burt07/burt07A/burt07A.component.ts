@@ -66,6 +66,7 @@ export class Burt07AComponent implements OnInit, CanComponentDeactivate {
     this.formData = page.modelData;
     this.isEdit = page.isEdit;
     this.modelId = this.route.snapshot.paramMap.get('id');
+    this.formData.markAsPristine();
   }
 
   cancel(): void {

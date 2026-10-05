@@ -135,6 +135,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
 
   get countLabels(): Record<string, string> {
     return {
+      customer: this.translate.instant('AIWIZARD_COUNT_CUSTOMER'),
       project: this.translate.instant('AIWIZARD_COUNT_PROJECT'),
       contract: this.translate.instant('AIWIZARD_COUNT_CONTRACT'),
       wbs: this.translate.instant('AIWIZARD_COUNT_WBS'),

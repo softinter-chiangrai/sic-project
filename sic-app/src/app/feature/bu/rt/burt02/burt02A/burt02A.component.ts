@@ -181,14 +181,14 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       showToolbar: false,
       pageSize: this.pageSize(),
       column: [
-        { label: this.translate.instant('BURT02A_COL_MODULE'), name: 'moduleName', type: 'moduleInfo', minWidth: 180 },
-        { label: this.translate.instant('BURT02A_COL_ACTIVE'), name: 'isActive', type: 'permCheckbox', align: 'center', minWidth: 90 },
-        { label: this.translate.instant('BURT02A_COL_ADD'), name: 'isAdd', type: 'permCheckbox', align: 'center', minWidth: 90 },
-        { label: this.translate.instant('BURT02A_COL_SAVE'), name: 'isSave', type: 'permCheckbox', align: 'center', minWidth: 90 },
-        { label: this.translate.instant('BURT02A_COL_DELETE'), name: 'isRemove', type: 'permCheckbox', align: 'center', minWidth: 90 },
-        { label: this.translate.instant('BURT02A_COL_PRINT'), name: 'isPrint', type: 'permCheckbox', align: 'center', minWidth: 90 },
-        { label: this.translate.instant('BURT02A_COL_SEARCH'), name: 'isSearch', type: 'permCheckbox', align: 'center', minWidth: 90 },
-        { label: this.translate.instant('BURT02A_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150 },
+        { label: this.translate.instant('BURT02A_COL_MODULE'), name: 'moduleName', type: 'moduleInfo', minWidth: 180, width: 250 },
+        { label: this.translate.instant('BURT02A_COL_ACTIVE'), name: 'isActive', type: 'permCheckbox', align: 'center', minWidth: 85, width: 90 },
+        { label: this.translate.instant('BURT02A_COL_ADD'), name: 'isAdd', type: 'permCheckbox', align: 'center', minWidth: 85, width: 90 },
+        { label: this.translate.instant('BURT02A_COL_SAVE'), name: 'isSave', type: 'permCheckbox', align: 'center', minWidth: 85, width: 90 },
+        { label: this.translate.instant('BURT02A_COL_DELETE'), name: 'isRemove', type: 'permCheckbox', align: 'center', minWidth: 85, width: 90 },
+        { label: this.translate.instant('BURT02A_COL_PRINT'), name: 'isPrint', type: 'permCheckbox', align: 'center', minWidth: 85, width: 90 },
+        { label: this.translate.instant('BURT02A_COL_SEARCH'), name: 'isSearch', type: 'permCheckbox', align: 'center', minWidth: 85, width: 90 },
+        { label: this.translate.instant('BURT02A_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', align: 'center', sortable: false, minWidth: 150, width: 170 },
       ],
     };
   }

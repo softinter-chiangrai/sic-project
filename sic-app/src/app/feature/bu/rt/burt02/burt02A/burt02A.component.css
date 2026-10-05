@@ -1,0 +1,16 @@
+/* Ensure permission checkbox cells and actions are centered */
+:host ::ng-deep .sic-gridpanel__cell {
+  justify-content: center;
+}
+
+:host ::ng-deep .sic-gridpanel__cell:first-child {
+  justify-content: flex-start;
+}
+
+:host ::ng-deep .sic-gridpanel__header-cell {
+  justify-content: center;
+}
+
+:host ::ng-deep .sic-gridpanel__header-cell:first-child {
+  justify-content: flex-start;
+}

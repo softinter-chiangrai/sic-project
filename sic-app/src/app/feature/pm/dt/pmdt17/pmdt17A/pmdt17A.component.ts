@@ -257,9 +257,9 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         description: draft.description,
         resolutionSummary: draft.resolutionSummary || draft.resolution,
         startDate: draft.startDate,
-        startTime: draft.startTime,
+        startTime: draft.startTime || '09:00',
         endDate: draft.endDate,
-        endTime: draft.endTime,
+        endTime: draft.endTime || '18:00',
         assignedToIds: draft.assignedToIds,
       },
       ['id'],
@@ -402,7 +402,11 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   loadData(id: string) {
     this.service.getById(id).subscribe({
       next: (data) => {
-        this.formData.form.patchValue(data);
+        this.formData.form.patchValue({
+          ...data,
+          startTime: data.startTime || '09:00',
+          endTime: data.endTime || '18:00',
+        });
         if (data.isLocked) {
           this.isLocked.set(true);
           this.isView.set(true);

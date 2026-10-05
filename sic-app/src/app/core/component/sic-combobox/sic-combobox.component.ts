@@ -75,9 +75,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   @Input()
   set options(val: any[]) {
     this._options = Array.isArray(val) ? val : [];
-    if (this.ready) {
-      this.syncSelectedDisplay();
-    }
+    this.syncSelectedDisplay();
   }
   get options(): any[] {
     return this._options;
@@ -240,6 +238,8 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
       // Auto-load options globally whenever apiUrl is provided
       if (this.apiUrl && (!this.options || this.options.length === 0)) {
         this.loadOptions(true);
+      } else {
+        this.syncSelectedDisplay();
       }
     }, 0);
 
@@ -385,6 +385,10 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   }
 
   closeDropdown(): void {
+    if (!this.opened && !this.closeDropdownHandle) {
+      return;
+    }
+
     if (this.closeDropdownHandle) {
       clearTimeout(this.closeDropdownHandle);
       this.closeDropdownHandle = null;
@@ -393,6 +397,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     this.closeDropdownHandle = setTimeout(() => {
       this.clearSearchDebounce();
       this.cancelPendingLoad();
+      const wasOpened = this.opened;
       this.opened = false;
       this.loading = false;
       this.activeIndex = -1;
@@ -406,7 +411,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
         return;
       }
 
-      if (!this.inputText.trim()) {
+      if (wasOpened && !this.inputText.trim() && this.value !== null) {
         this.selectedItem = null;
         this.selectedText = '';
         this.value = null;
@@ -459,7 +464,9 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   onFocusOut(event: FocusEvent): void {
     const target = event.relatedTarget as HTMLElement | null;
     if (!target || !this.elementRef.nativeElement.contains(target)) {
-      this.closeDropdown();
+      if (this.opened) {
+        this.closeDropdown();
+      }
     }
   }
 
@@ -889,9 +896,10 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     this.selectedItem = matched;
     this.selectedText = this.resolveLabel(matched);
 
-    if (!this.searchTerm || this.inputText === previousSelectedText) {
+    if (!this.searchTerm || this.inputText === previousSelectedText || !this.inputText) {
       this.inputText = this.selectedText;
     }
+    this.cdr.markForCheck();
   }
 
   private extractItemValue(item: any): any {
@@ -1103,58 +1111,62 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   }
 
   private handleLanguageChange(): void {
-    const currentValue = this.value;
-    const currentSelectedItem = this.selectedItem;
+    if (this.apiUrl) {
+      const currentValue = this.value;
+      const currentSelectedItem = this.selectedItem;
 
-    this.clearSearchDebounce();
-    this.cancelPendingLoad();
+      this.clearSearchDebounce();
+      this.cancelPendingLoad();
 
-    if (this.closeDropdownHandle) {
-      clearTimeout(this.closeDropdownHandle);
-      this.closeDropdownHandle = null;
-    }
+      if (this.closeDropdownHandle) {
+        clearTimeout(this.closeDropdownHandle);
+        this.closeDropdownHandle = null;
+      }
 
-    if (this.positionDropdownHandle) {
-      clearTimeout(this.positionDropdownHandle);
-      this.positionDropdownHandle = null;
-    }
+      if (this.positionDropdownHandle) {
+        clearTimeout(this.positionDropdownHandle);
+        this.positionDropdownHandle = null;
+      }
 
-    this.options = [];
-    this.totalElements = 0;
-    this.totalPages = 1;
-    this.pageNumber = 1;
-    this.activeIndex = -1;
-    this.searchTerm = '';
-    this.dropdownPanelStyle = {};
-    this.opened = false;
-    this.loading = false;
+      this.options = [];
+      this.totalElements = 0;
+      this.totalPages = 1;
+      this.pageNumber = 1;
+      this.activeIndex = -1;
+      this.searchTerm = '';
+      this.dropdownPanelStyle = {};
+      this.opened = false;
+      this.loading = false;
 
-    if (currentSelectedItem) {
-      const refreshedDisplay = this.resolveLabel(currentSelectedItem);
-      this.selectedText = refreshedDisplay;
-      this.inputText = refreshedDisplay;
-    }
+      if (currentSelectedItem) {
+        const refreshedDisplay = this.resolveLabel(currentSelectedItem);
+        this.selectedText = refreshedDisplay;
+        this.inputText = refreshedDisplay;
+      }
 
-    if (currentValue === null || currentValue === undefined) {
-      this.cdr.markForCheck();
-      return;
-    }
-
-    this.selectedItem = null;
-    this.selectedText = '';
-    this.inputText = '';
-    this.loading = true;
-    this.cdr.markForCheck();
-
-    setTimeout(() => {
-      if (this.value !== currentValue) {
-        this.loading = false;
+      if (currentValue === null || currentValue === undefined) {
         this.cdr.markForCheck();
         return;
       }
 
-      this.loadValueById(currentValue);
-    }, 0);
+      this.selectedItem = null;
+      this.selectedText = '';
+      this.inputText = '';
+      this.loading = true;
+      this.cdr.markForCheck();
+
+      setTimeout(() => {
+        if (this.value !== currentValue) {
+          this.loading = false;
+          this.cdr.markForCheck();
+          return;
+        }
+
+        this.loadValueById(currentValue);
+      }, 0);
+    } else {
+      this.syncSelectedDisplay();
+    }
   }
 
   private resolveLocalizedLabel(item: any): string | null {

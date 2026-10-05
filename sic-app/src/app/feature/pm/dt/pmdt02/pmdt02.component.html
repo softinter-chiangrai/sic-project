@@ -464,14 +464,14 @@
             <div class="flex rounded-lg bg-[var(--bg)] p-1 border border-[var(--border)]">
               <button
                 type="button"
-                (click)="customItemForm.type = 'holiday'"
+                (click)="selectCustomItemType('holiday')"
                 [class]="customItemForm.type === 'holiday' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
                 class="flex-1 py-1.5 text-xs rounded-md transition-all flex items-center justify-center gap-1.5">
                 <span>🎉</span> วันหยุด / กิจกรรม
               </button>
               <button
                 type="button"
-                (click)="customItemForm.type = 'leave'"
+                (click)="selectCustomItemType('leave')"
                 [class]="customItemForm.type === 'leave' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
                 class="flex-1 py-1.5 text-xs rounded-md transition-all flex items-center justify-center gap-1.5">
                 <span>🏖️</span> วันลาทีมงาน (Leave)
@@ -481,12 +481,18 @@
             @if (customItemForm.type === 'leave') {
               <!-- Member Leave Fields -->
               <div>
-                <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">ชื่อผู้ลา / พนักงาน <span class="text-red-500">*</span></label>
-                <input
-                  type="text"
-                  [(ngModel)]="customItemForm.userName"
-                  placeholder="เช่น สมชาย ใจดี"
-                  class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]" />
+                <sic-combobox
+                  label="ชื่อผู้ลา / พนักงาน *"
+                  [apiUrl]="memberApiUrl"
+                  [options]="memberOptions"
+                  valueField="value"
+                  textField="text"
+                  placeholder="เลือกสมาชิกในทีม"
+                  [clearable]="false"
+                  [(ngModel)]="customItemForm.userId"
+                  [ngModelOptions]="{ standalone: true }"
+                  (selectionChanged)="onLeaveMemberChanged($event)">
+                </sic-combobox>
               </div>
 
               <div>
@@ -604,7 +610,7 @@
             </button>
             <button
               (click)="saveCustomItem()"
-              [disabled]="customItemForm.type === 'leave' ? !(customItemForm.userName || customItemForm.title).trim() : !customItemForm.title.trim()"
+              [disabled]="customItemForm.type === 'leave' ? !(customItemForm.userId || customItemForm.userName || customItemForm.title).trim() : !customItemForm.title.trim()"
               class="px-4 py-2 text-xs font-medium bg-[var(--crm-primary)] text-white rounded-lg hover:opacity-90 transition-all disabled:opacity-50">
               {{ 'PMDT02_SAVE' | translate }}
             </button>

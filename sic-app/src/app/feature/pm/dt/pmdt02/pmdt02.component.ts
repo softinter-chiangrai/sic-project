@@ -35,6 +35,11 @@ import { buildCalendarEvents, buildCalendarHolidays, buildTimelineItems } from '
 import { FormsModule } from '@angular/forms';
 
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
+import { environment } from '../../../../../environments/environment';
+import { BusinessService } from '../../../../core/services/business.service';
+import { AuthService } from '../../../../core/auth/auth.service';
+import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
+import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 export type { CalendarItemDetail };
 
@@ -49,6 +54,7 @@ export type { CalendarItemDetail };
     SicCalendarComponent,
     SicCalendarTimelineComponent,
     SicDatepickerComponent,
+    SicComboboxComponent,
     SicStripHtmlPipe,
     TranslateModule,
   ],
@@ -73,7 +79,26 @@ export class Pmdt02Component implements OnInit {
   private translate = inject(TranslateService);
   private aiModelsSvc = inject(AiModelsService);
   private holidayService = inject(HolidayService);
+  private businessService = inject(BusinessService);
+  private authService = inject(AuthService);
+  private sidebarService = inject(SicSidebarService);
   private routerSub?: Subscription;
+
+  memberApiUrl = '';
+  currentUserId = '';
+  currentUserName = '';
+  memberOptions: { value: string; text: string }[] = [];
+
+  updateCurrentMemberOption(): void {
+    if (this.currentUserId && this.currentUserName) {
+      const existing = this.memberOptions.find((m) => m.value === this.currentUserId);
+      if (existing) {
+        existing.text = this.currentUserName;
+      } else {
+        this.memberOptions = [{ value: this.currentUserId, text: this.currentUserName }, ...this.memberOptions];
+      }
+    }
+  }
 
   // ===== SIGNALS =====
   phase = signal<PhaseResponse | null>(null);
@@ -529,6 +554,30 @@ export class Pmdt02Component implements OnInit {
 
   // ===== LIFECYCLE =====
   ngOnInit() {
+    const businessId = this.businessService.getCurrentBusinessId();
+    this.memberApiUrl = businessId
+      ? `${environment.apiBaseUrl}/api/business/combobox-members?businessId=${businessId}`
+      : `${environment.apiBaseUrl}/api/business/combobox-members`;
+
+    this.currentUserId = this.authService.getUserId() || '';
+    const claims = this.authService.getIdentityClaims();
+    if (claims?.name || claims?.preferred_username) {
+      this.currentUserName = claims.name || claims.preferred_username;
+      this.updateCurrentMemberOption();
+    }
+    this.sidebarService.getProfile().subscribe({
+      next: (prof) => {
+        if (prof?.id) this.currentUserId = prof.id;
+        if (prof?.name) this.currentUserName = prof.name;
+        this.updateCurrentMemberOption();
+        if (this.customItemForm.type === 'leave' && !this.customItemForm.userName) {
+          this.customItemForm.userId = this.currentUserId;
+          this.customItemForm.userName = this.currentUserName;
+        }
+      },
+      error: () => {},
+    });
+
     const pageData: PhasePageData | undefined = this.route.snapshot.data['pageData'];
 
     this.route.paramMap.subscribe((params) => {
@@ -1035,8 +1084,8 @@ export class Pmdt02Component implements OnInit {
             icon: item.rawObject.icon || (isLeave ? '🏖️' : '📌'),
             color: item.rawObject.color || (isLeave ? '#ec4899' : '#8b5cf6'),
             leaveType: item.rawObject.leaveType || 'vacation',
-            userId: item.rawObject.userId || '',
-            userName: item.rawObject.userName || item.rawObject.title || '',
+            userId: item.rawObject.userId || (isLeave ? this.currentUserId : ''),
+            userName: item.rawObject.userName || item.rawObject.title || (isLeave ? this.currentUserName : ''),
           };
           this.showCustomItemModal.set(true);
         }
@@ -1056,10 +1105,28 @@ export class Pmdt02Component implements OnInit {
       icon: '📌',
       color: '#8b5cf6',
       leaveType: 'vacation',
-      userId: '',
-      userName: '',
+      userId: this.currentUserId,
+      userName: this.currentUserName,
     };
     this.showCustomItemModal.set(true);
+  }
+
+  selectCustomItemType(type: 'holiday' | 'leave'): void {
+    this.customItemForm.type = type;
+    if (type === 'leave' && !this.customItemForm.userId) {
+      this.customItemForm.userId = this.currentUserId;
+      this.customItemForm.userName = this.currentUserName;
+    }
+  }
+
+  onLeaveMemberChanged(item: any): void {
+    if (item) {
+      this.customItemForm.userId = item.value || '';
+      this.customItemForm.userName = item.text || item.label || '';
+    } else {
+      this.customItemForm.userId = '';
+      this.customItemForm.userName = '';
+    }
   }
 
   closeCustomItemModal(): void {
@@ -1069,11 +1136,11 @@ export class Pmdt02Component implements OnInit {
   saveCustomItem(): void {
     if (this.customItemForm.type === 'leave') {
       const uName = (this.customItemForm.userName || this.customItemForm.title).trim();
-      if (!uName) return;
+      if (!uName && !this.customItemForm.userId) return;
       const newLeave: UserLeave = {
         id: this.customItemForm.id || `leave_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
-        userId: this.customItemForm.userId || `user_${Date.now()}`,
-        userName: uName,
+        userId: this.customItemForm.userId || this.currentUserId || `user_${Date.now()}`,
+        userName: uName || this.currentUserName || 'Team Member',
         startDate: this.customItemForm.date,
         endDate: this.customItemForm.endDate || this.customItemForm.date,
         leaveType: this.customItemForm.leaveType,

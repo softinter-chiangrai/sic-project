@@ -266,9 +266,9 @@ export class Pmdt02CComponent implements OnInit {
 
   patchForm(data: TaskResponse) {
     const startDate = data.startDate ? data.startDate.split('T')[0] : '';
-    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const startTime = (data.startDate?.includes('T') ? data.startDate.split('T')[1]?.substring(0, 5) : '') || (data as any).startTime || '09:00';
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
-    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    const endTime = (data.endDate?.includes('T') ? data.endDate.split('T')[1]?.substring(0, 5) : '') || (data as any).endTime || '18:00';
 
     if (data.workPackageId) {
       this.workPackageId = data.workPackageId;

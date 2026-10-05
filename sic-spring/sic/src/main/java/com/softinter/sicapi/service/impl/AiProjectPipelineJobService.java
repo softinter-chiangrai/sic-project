@@ -218,6 +218,9 @@ public class AiProjectPipelineJobService {
         job.durationWeeks = request.getDurationWeeks();
         job.aiModel = request.getModel();
         job.projectName = request.getProjectName();
+        if (request.getCustomerId() == null) {
+            job.steps.add(new StepState("CUSTOMER", "ลูกค้า (Customer)"));
+        }
         job.steps.add(new StepState("PROJECT", "สร้างโครงการ"));
         if (on(request.getIncludeContract())) job.steps.add(new StepState("CONTRACT", "สัญญา"));
         if (on(request.getIncludeGanttPhases())) job.steps.add(new StepState("WBS", "Phase / Milestone / Work Package"));
@@ -355,6 +358,7 @@ public class AiProjectPipelineJobService {
                 step.status = "RUNNING";
                 try {
                     switch (step.key) {
+                        case "CUSTOMER" -> stepCustomer(c, step);
                         case "PROJECT" -> stepProject(c, step);
                         case "CONTRACT" -> stepContract(c, step);
                         case "WBS" -> stepWbs(c, step);
@@ -378,10 +382,10 @@ public class AiProjectPipelineJobService {
                     step.status = "FAILED";
                     step.message = e.getMessage();
                     anyFailed = true;
-                    if ("PROJECT".equals(step.key)) {
+                    if ("PROJECT".equals(step.key) || "CUSTOMER".equals(step.key)) {
                         markRemainingSkipped(job);
                         job.status = "FAILED";
-                        job.message = "สร้างโครงการไม่สำเร็จ: " + e.getMessage();
+                        job.message = ("CUSTOMER".equals(step.key) ? "สร้าง/จับคู่ลูกค้าไม่สำเร็จ: " : "สร้างโครงการไม่สำเร็จ: ") + e.getMessage();
                         persistJob(job, businessId, userId, request);
                         return;
                     }
@@ -427,18 +431,75 @@ public class AiProjectPipelineJobService {
 
     // ===================== steps =====================
 
+    private void stepCustomer(Ctx c, StepState step) {
+        JsonNode root = ask(c, """
+                You are an Enterprise CRM Specialist.
+                Analyze the project brief and identify or invent the client/customer organization in Thailand.
+                Respond ONLY with valid JSON in a ```json block, in the same language as the user's request:
+                {
+                  "customerName": "organization/client company name in Thailand if mentioned or implied in the prompt, else realistic Thai company name (e.g. บริษัท สยามนวัตกรรม ดิจิทัล จำกัด)",
+                  "customerNameEn": "company name in English (e.g. Siam Digital Innovation Co., Ltd.)",
+                  "contactPerson": "realistic Thai executive contact name with title (e.g. คุณสมชาย วิจิตรศิลป์)"
+                }
+                """, "รายละเอียดโครงการ: " + firstNonBlank(c.req.getPrompt(), c.req.getProjectName()), true);
+
+        String aiCustName = txt(root, "customerName");
+        String aiCustNameEn = txt(root, "customerNameEn");
+        String aiContact = txt(root, "contactPerson");
+
+        UUID customerId = null;
+        List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(c.businessId);
+
+        // 1. ถ้ามีชื่อ AI สกัดได้ ให้ลอง Match กับชื่อลูกค้าในระบบ
+        if (aiCustName != null && !aiCustName.isBlank() && !customers.isEmpty()) {
+            String needle = aiCustName.toLowerCase().trim();
+            for (PmCustomer cust : customers) {
+                if ((cust.getCompanyNameLocal() != null && cust.getCompanyNameLocal().toLowerCase().contains(needle))
+                        || (cust.getCompanyNameEn() != null && cust.getCompanyNameEn().toLowerCase().contains(needle))) {
+                    customerId = cust.getId();
+                    thaiCustomerGenerator.enrichCustomerIfIncomplete(cust);
+                    step.message = "จับคู่ลูกค้าเดิม: " + cust.getCompanyNameLocal();
+                    break;
+                }
+            }
+        }
+
+        // 2. ถ้าไม่พบลูกค้าเดิม หรือไม่มีลูกค้าในระบบ -> สร้างลูกค้าสัญชาติไทยรายใหม่ ข้อมูลครบถ้วนทุกฟิลด์
+        if (customerId == null) {
+            PmCustomer autoCust = thaiCustomerGenerator.createAndSaveFullThaiCustomer(
+                    c.businessId, aiCustName, aiCustNameEn, aiContact);
+            customerId = autoCust.getId();
+            step.message = "สร้างลูกค้าใหม่: " + autoCust.getCompanyNameLocal();
+            log.info("Auto-created complete Thai customer '{}' ({}) for AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
+        }
+
+        c.customerId = customerId;
+        step.count = 1;
+    }
+
     private void stepProject(Ctx c, StepState step) {
+        UUID customerId = c.customerId != null ? c.customerId : c.req.getCustomerId();
+        if (customerId == null) {
+            PmCustomer autoCust = thaiCustomerGenerator.createAndSaveFullThaiCustomer(c.businessId, null, null, null);
+            customerId = autoCust.getId();
+        } else {
+            customerRepository.findById(customerId).ifPresent(thaiCustomerGenerator::enrichCustomerIfIncomplete);
+        }
+        c.customerId = customerId;
+
+        String customerContext = customerRepository.findById(customerId)
+                .map(cust -> "\nลูกค้า: " + cust.getCompanyNameLocal())
+                .orElse("");
+
         JsonNode root = ask(c, """
                 You are a Lead Enterprise Software Architect & Project Director.
                 Create the project charter for the request. Fill EVERY field.
                 Respond ONLY with valid JSON in a ```json block, in the same language as the user's request:
                 { "projectName": "professional title", "description": "plain text charter (objectives, scope, deliverables), max 1500 characters",
-                  "customerName": "organization/client company name in Thailand if mentioned or implied in the prompt, else realistic Thai company name (e.g. บริษัท สยามนวัตกรรม ดิจิทัล จำกัด)",
-                  "customerNameEn": "company name in English (e.g. Siam Digital Innovation Co., Ltd.)",
-                  "contactPerson": "realistic Thai executive contact name with title (e.g. คุณสมชาย วิจิตรศิลป์)",
                   "estimatedDurationWeeks": 12, "budgetManday": 120, "priority": "Low | Medium | High | Critical" }
                 """, "รายละเอียดโครงการ: " + firstNonBlank(c.req.getPrompt(), c.req.getProjectName())
                 + (c.req.getProjectName() != null && !c.req.getProjectName().isBlank() ? "\nชื่อโครงการที่ผู้ใช้กำหนด: " + c.req.getProjectName() : "")
+                + customerContext
                 + "\nระยะเวลาเป้าหมาย: " + c.weeks + " สัปดาห์", true);
 
         String name = firstNonBlank(c.req.getProjectName(), txt(root, "projectName"), "โครงการใหม่ (AI Generated)");
@@ -446,37 +507,6 @@ public class AiProjectPipelineJobService {
         int weeks = root != null && root.path("estimatedDurationWeeks").asInt(0) > 0 && c.req.getDurationWeeks() == null
                 ? root.path("estimatedDurationWeeks").asInt() : c.weeks;
         c.weeks = weeks;
-
-        UUID customerId = c.req.getCustomerId();
-        List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(c.businessId);
-
-        String aiCustName = txt(root, "customerName");
-        String aiCustNameEn = txt(root, "customerNameEn");
-        String aiContact = txt(root, "contactPerson");
-
-        // 1. ถ้าไม่ได้ระบุ customerId มา ให้ลอง Match กับชื่อลูกค้าในระบบจากที่ AI สกัดได้
-        if (customerId == null && aiCustName != null && !aiCustName.isBlank() && !customers.isEmpty()) {
-            String needle = aiCustName.toLowerCase().trim();
-            for (PmCustomer cust : customers) {
-                if ((cust.getCompanyNameLocal() != null && cust.getCompanyNameLocal().toLowerCase().contains(needle))
-                        || (cust.getCompanyNameEn() != null && cust.getCompanyNameEn().toLowerCase().contains(needle))) {
-                    customerId = cust.getId();
-                    thaiCustomerGenerator.enrichCustomerIfIncomplete(cust);
-                    break;
-                }
-            }
-        }
-
-        // 2. ถ้าไม่พบลูกค้าเดิม หรือไม่มีลูกค้าในระบบ -> สร้างลูกค้าสัญชาติไทยรายใหม่ ข้อมูลครบถ้วนทุกฟิลด์ (สถานที่ในไทย, ที่อยู่, เบอร์โทร, เลขภาษี, ผู้ติดต่อ)
-        if (customerId == null) {
-            PmCustomer autoCust = thaiCustomerGenerator.createAndSaveFullThaiCustomer(
-                    c.businessId, aiCustName, aiCustNameEn, aiContact);
-            customerId = autoCust.getId();
-            log.info("Auto-created complete Thai customer '{}' ({}) for AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
-        } else {
-            customerRepository.findById(customerId).ifPresent(thaiCustomerGenerator::enrichCustomerIfIncomplete);
-        }
-        c.customerId = customerId;
 
         PmCustomerProjectRequest pr = new PmCustomerProjectRequest();
         pr.setCustomerId(customerId);
@@ -1139,7 +1169,7 @@ public class AiProjectPipelineJobService {
             tq.setStartDate(goLive.plusDays(1));
             tq.setStartTime("09:00");
             tq.setEndDate(goLive.plusDays(3));
-            tq.setEndTime("17:00");
+            tq.setEndTime("18:00");
             tq.setReportedBy(c.userId);
             tq.setState(STATE_ADDED);
             maTicketService.save(tq, c.businessId, c.userId);

@@ -24,7 +24,7 @@ export const pmdt02AResolver: ResolveFn<MilestonePageData> = async (route) => {
     const detail = await lastValueFrom(service.getMilestoneById(id));
     if (detail) {
       const dueDate = detail.dueDate ? detail.dueDate.split('T')[0] : '';
-      const dueTime = detail.dueDate ? detail.dueDate.split('T')[1]?.substring(0, 5) : '';
+      const dueTime = (detail.dueDate?.includes('T') ? detail.dueDate.split('T')[1]?.substring(0, 5) : '') || '18:00';
       form.patchValue({
         id: detail.id,
         phaseId: detail.phaseId,

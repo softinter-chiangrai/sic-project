@@ -24,9 +24,9 @@ export const pmdt02CResolver: ResolveFn<TaskPageData> = async (route) => {
     const detail = await lastValueFrom(service.getTaskById(id));
     if (detail) {
       const startDate = detail.startDate ? detail.startDate.split('T')[0] : '';
-      const startTime = detail.startDate ? detail.startDate.split('T')[1]?.substring(0, 5) : '';
+      const startTime = (detail.startDate?.includes('T') ? detail.startDate.split('T')[1]?.substring(0, 5) : '') || '09:00';
       const endDate = detail.endDate ? detail.endDate.split('T')[0] : '';
-      const endTime = detail.endDate ? detail.endDate.split('T')[1]?.substring(0, 5) : '';
+      const endTime = (detail.endDate?.includes('T') ? detail.endDate.split('T')[1]?.substring(0, 5) : '') || '18:00';
       form.patchValue({
         id: detail.id,
         workPackageId: detail.workPackageId,

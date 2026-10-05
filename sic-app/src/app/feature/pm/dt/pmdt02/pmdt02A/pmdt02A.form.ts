@@ -12,7 +12,7 @@ export class Pmdt02AForm {
       milestoneName: fb.control(null, [Validators.required]),
       description: fb.control(null),
       dueDate: fb.control(null, [Validators.required]),
-      dueTime: fb.control(null, [Validators.required]),
+      dueTime: fb.control('18:00', [Validators.required]),
       status: fb.control(null),
       color: fb.control(null),
       attachmentGroupId: fb.control(null),

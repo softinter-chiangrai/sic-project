@@ -14,8 +14,8 @@
         [style.--node-color]="node.color"
         [class.sic-organizational-chart__node--readonly]="node.editable === false"
         (click)="onNodeClick(node)" 
-        title="Edit key: name_local / name_en"
-        aria-label="Edit keys name_local and name_en for {{ node.name_en }}">
+        [title]="'BURT03_EDIT_ROLE' | translate"
+        [attr.aria-label]="('BURT03_EDIT_ROLE' | translate) + ' ' + (node.nameEn || '')">
         <span class="sic-organizational-chart__node-badge">
           {{ resolveNodeLabel(node) }}
         </span>
@@ -27,8 +27,8 @@
             type="button"
             class="sic-organizational-chart__btn sic-organizational-chart__btn--add"
             (click)="addChild(node)"
-            title="Add item to key: children[]"
-            aria-label="Add child to children for {{ node.name_en }}">
+            [title]="'BURT03_ADD_SUB_ROLE' | translate"
+            [attr.aria-label]="('BURT03_ADD_SUB_ROLE' | translate) + ' ' + (node.nameEn || '')">
             <i class="bi bi-plus-circle"></i>
           </button>
         </div>
@@ -55,8 +55,8 @@
                   type="button"
                   class="sic-organizational-chart__btn sic-organizational-chart__btn--remove"
                   (click)="removeChild(node, child.id, $index)"
-                  title="Remove item from key: children[]"
-                  aria-label="Remove child from children for {{ child.name_en }}">
+                  [title]="'BURT03_REMOVE_ROLE' | translate"
+                  [attr.aria-label]="('BURT03_REMOVE_ROLE' | translate) + ' ' + (child.nameEn || '')">
                   <i class="bi bi-x-circle"></i>
                 </button>
               }

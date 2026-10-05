@@ -65,7 +65,7 @@ public class MaTicketGeneratorService {
         if (draft.getStartDate() == null || draft.getStartDate().isBlank()) draft.setStartDate(today.toString());
         if (draft.getStartTime() == null || draft.getStartTime().isBlank()) draft.setStartTime("09:00");
         if (draft.getEndDate() == null || draft.getEndDate().isBlank()) draft.setEndDate(today.plusDays(3).toString());
-        if (draft.getEndTime() == null || draft.getEndTime().isBlank()) draft.setEndTime("17:00");
+        if (draft.getEndTime() == null || draft.getEndTime().isBlank()) draft.setEndTime("18:00");
         AiMemberPicker.Member assignee = memberPicker.pick();
         if (assignee != null) draft.setAssignedToIds(java.util.List.of(assignee.userId()));
 

@@ -95,9 +95,9 @@ export class Pmdt01AComponent implements OnInit {
 
   patchForm(data: Pmdt01AModel) {
     const startDate = data.startDate ? data.startDate.split('T')[0] : '';
-    const startTime = data.startDate ? data.startDate.split('T')[1]?.substring(0, 5) : '';
+    const startTime = (data.startDate?.includes('T') ? data.startDate.split('T')[1]?.substring(0, 5) : '') || data.startTime || '09:00';
     const endDate = data.endDate ? data.endDate.split('T')[0] : '';
-    const endTime = data.endDate ? data.endDate.split('T')[1]?.substring(0, 5) : '';
+    const endTime = (data.endDate?.includes('T') ? data.endDate.split('T')[1]?.substring(0, 5) : '') || data.endTime || '18:00';
 
     let ownerValues: string[] = [];
     if (data.owner) {

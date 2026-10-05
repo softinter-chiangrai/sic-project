@@ -74,18 +74,31 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
     @Override
     @Transactional(readOnly = true)
     public LovResponse getComboboxMemberByValue(UUID businessId, String value) {
-        List<SuUserBusiness> allMembers = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId);
-        for (SuUserBusiness ub : allMembers) {
-            SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
-            String displayName = ub.getUserId();
-            if (profile != null) {
-                String fullName = LocalizationHelper.getFullName(profile);
-                if (fullName != null && !fullName.isBlank()) {
-                    displayName = fullName;
+        if (value == null || value.isBlank()) {
+            return new LovResponse(value, value);
+        }
+        if (businessId != null) {
+            List<SuUserBusiness> allMembers = userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId);
+            for (SuUserBusiness ub : allMembers) {
+                if (ub.getUserId() != null && ub.getUserId().equalsIgnoreCase(value)) {
+                    SuProfile profile = profileRepository.findByUserId(ub.getUserId()).orElse(null);
+                    String displayName = ub.getUserId();
+                    if (profile != null) {
+                        String fullName = LocalizationHelper.getFullName(profile);
+                        if (fullName != null && !fullName.isBlank()) {
+                            displayName = fullName;
+                        }
+                    }
+                    return new LovResponse(ub.getUserId(), displayName);
                 }
             }
-            if (displayName.equals(value)) {
-                return new LovResponse(displayName, displayName);
+        }
+        // Direct profile fallback by userId
+        SuProfile profile = profileRepository.findByUserId(value).orElse(null);
+        if (profile != null) {
+            String fullName = LocalizationHelper.getFullName(profile);
+            if (fullName != null && !fullName.isBlank()) {
+                return new LovResponse(value, fullName);
             }
         }
         return new LovResponse(value, value);

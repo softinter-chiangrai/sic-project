@@ -18,7 +18,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { DialogService } from '../../services/dialog.service';
 import { SicButtonComponent } from 'sic-ng';
@@ -39,6 +39,7 @@ type NodeEditPayload = {
   imports: [
     CommonModule,
     FormsModule,
+    TranslateModule,
     SicButtonComponent,
     SicInputComponent,
     SicColorpickerComponent,
@@ -50,33 +51,35 @@ type NodeEditPayload = {
       style="border-color: var(--border);"
     >
       <div class="px-5 py-4 border-b" style="border-color: var(--border);">
-        <h3 class="text-base font-semibold text-[var(--text-active)]">Edit Node</h3>
+        <h3 class="text-base font-semibold text-[var(--text-active)]">
+          {{ (isNew ? 'BURT03_ADD_NODE_TITLE' : 'BURT03_EDIT_NODE_TITLE') | translate }}
+        </h3>
       </div>
 
       <div class="space-y-3 px-5 py-4">
         <sic-input
-          label="role_code"
+          [label]="'BURT03_ROLE_CODE' | translate"
           [required]="true"
           [(ngModel)]="roleCode"
           [ngModelOptions]="{ standalone: true }"
           placeholder="ADMIN, PM, DEV"
         ></sic-input>
         <sic-input
-          label="name_en"
+          [label]="'BURT03_NAME_EN' | translate"
           [required]="true"
           [(ngModel)]="nameEn"
           [ngModelOptions]="{ standalone: true }"
         ></sic-input>
 
         <sic-input
-          label="name_local"
+          [label]="'BURT03_NAME_LOCAL' | translate"
           [required]="true"
           [(ngModel)]="nameLocal"
           [ngModelOptions]="{ standalone: true }"
         ></sic-input>
 
         <sic-colorpicker
-          label="color"
+          [label]="'BURT03_COLOR' | translate"
           [required]="true"
           [(ngModel)]="color"
           [ngModelOptions]="{ standalone: true }"
@@ -84,9 +87,12 @@ type NodeEditPayload = {
       </div>
 
       <div class="flex justify-end gap-2 border-t px-5 py-4" style="border-color: var(--border);">
-        <!-- ✅ แก้ไข: ใช้ property binding -->
-        <sic-button [variant]="'outline'" [color]="'primary'" size="sm" (click)="cancel()">Cancel</sic-button>
-        <sic-button [variant]="'solid'" [color]="'primary'" size="sm" [disabled]="!canSave" (click)="save()">Save</sic-button>
+        <sic-button [variant]="'outline'" [color]="'primary'" size="sm" (click)="cancel()">
+          {{ 'COMMON_CANCEL_BTN' | translate }}
+        </sic-button>
+        <sic-button [variant]="'solid'" [color]="'primary'" size="sm" [disabled]="!canSave" (click)="save()">
+          {{ 'COMMON_SAVE_BTN' | translate }}
+        </sic-button>
       </div>
     </div>
   `,
@@ -101,6 +107,10 @@ export class SicOrganizationalChartEditDialog implements OnInit {
   color = '';
 
   constructor(private readonly dialogService: DialogService) {}
+
+  get isNew(): boolean {
+    return !this.node?.nameEn && !this.node?.roleCode;
+  }
 
   ngOnInit(): void {
     this.roleCode = this.node.roleCode || '';
@@ -137,7 +147,7 @@ export class SicOrganizationalChartEditDialog implements OnInit {
 @Component({
   selector: 'sic-organizational-chart',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, TranslateModule],
   templateUrl: './sic-organizational-chart.component.html',
   styleUrls: ['./sic-organizational-chart.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
