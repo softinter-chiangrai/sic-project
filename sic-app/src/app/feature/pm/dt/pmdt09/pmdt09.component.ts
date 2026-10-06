@@ -385,6 +385,12 @@ export class Pmdt09Component implements OnInit {
     this.router.navigate(['/feature/pm/design-review/new']);
   }
 
+  printReview(id: string) {
+    this.service.printPdf(id).subscribe({
+      error: () => this.dialog.error(this.translate.instant('PMDT09_PRINT_FAIL_TITLE'), this.translate.instant('PMDT09_PRINT_FAIL_MSG')),
+    });
+  }
+
   goToEdit(id: string) {
     this.router.navigate(['/feature/pm/design-review', id, 'edit']);
   }

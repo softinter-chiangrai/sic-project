@@ -80,6 +80,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("deliveryDate", deliveryDateStr);
         parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
         parameters.put("deliverySummary", delivery.getDeliverySummary());
+        parameters.put("releaseNote", delivery.getReleaseNote());
         String attachmentNames = delivery.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(delivery.getAttachmentGroupId())
                         .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))

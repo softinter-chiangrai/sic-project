@@ -7,7 +7,9 @@ import com.softinter.sicapi.dto.response.PmDesignReviewResponse;
 import com.softinter.sicapi.service.ApprovalService;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.PmDesignReviewService;
+import com.softinter.sicapi.service.impl.PmDesignReviewExportService;
 import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.util.ReportHelper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,6 +35,7 @@ public class PmDesignReviewController {
     private final PmDesignReviewService designReviewService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
+    private final PmDesignReviewExportService exportService;
 
     @GetMapping
     @Operation(summary = "Get design reviews with pagination and filters")
@@ -138,6 +141,25 @@ public class PmDesignReviewController {
             return ResponseEntity.badRequest().build();
         }
         return ResponseEntity.ok(designReviewService.findById(id, businessId));
+    }
+
+    @GetMapping("/{id}/export-pdf")
+    @Operation(summary = "Export design review report as PDF")
+    public ResponseEntity<byte[]> exportPdf(
+            @PathVariable UUID id,
+            @RequestParam(required = false) String lang,
+            @RequestHeader(value = "x-language-code", required = false) String headerLang
+    ) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        designReviewService.findById(id, businessId); // ตรวจว่ามีอยู่จริงและอยู่ใน business นี้
+        byte[] pdf = exportService.exportPdf(id, businessId, ReportHelper.resolveLang(lang, headerLang));
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/pdf")
+                .header("Content-Disposition", "attachment; filename=\"design-review-" + id + ".pdf\"")
+                .body(pdf);
     }
 
     @PostMapping("/{id}/create-revision")

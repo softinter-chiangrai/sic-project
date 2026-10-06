@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<jasperReport name="DesignReviewReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="d9e50009-0001-4001-8001-d3516a000001">
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
+
+	<parameter name="designReviewId" class="java.lang.String"/>
+	<parameter name="businessId" class="java.lang.String"/>
+	<parameter name="lang" class="java.lang.String"><defaultValueExpression><![CDATA["th"]]></defaultValueExpression></parameter>
+	<parameter name="exportDate" class="java.lang.String"><defaultValueExpression><![CDATA["-"]]></defaultValueExpression></parameter>
+	<parameter name="logoStream" class="java.io.InputStream"><defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression></parameter>
+
+	<query language="sql"><![CDATA[SELECT
+                COALESCE(r.review_code, SUBSTRING(CAST(r.id AS text), 1, 8)) AS "reviewCode",
+                COALESCE(r.title, '-')                  AS "title",
+                COALESCE(p.project_code, '-')           AS "projectCode",
+                COALESCE(p.project_name, '-')           AS "projectName",
+                COALESCE(r.review_item_type, '-')       AS "reviewItemType",
+                COALESCE(r.reviewer, '-')               AS "reviewer",
+                COALESCE(r.assigned_to, '-')            AS "assignedTo",
+                COALESCE(r.severity, '-')               AS "severity",
+                COALESCE(r.status, '-')                 AS "status",
+                COALESCE(TO_CHAR(r.due_date, 'DD/MM/YYYY'), '-') AS "dueDate",
+                COALESCE(r.figma_url, '-')              AS "figmaUrl",
+                COALESCE(r.description, '-')            AS "description",
+                (SELECT STRING_AGG(
+                        TO_CHAR(c.created_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI') || ' | '
+                        || COALESCE(NULLIF(TRIM(CASE WHEN $P{lang} = 'en'
+                                THEN CONCAT(sp.first_name_en, ' ', sp.last_name_en)
+                                ELSE CONCAT(sp.first_name_local, ' ', sp.last_name_local) END), ''), c.created_by, '-')
+                        || ' [' || COALESCE(c.comment_type, '-') || ' / ' || COALESCE(c.severity, '-') || ' / ' || COALESCE(c.status, '-') || ']: '
+                        || c.comment_text, E'\n' ORDER BY c.created_date)
+                   FROM pm_review_comment c
+                   LEFT JOIN su_profile sp ON sp.user_id = c.created_by AND sp.is_delete = false
+                  WHERE c.review_id = r.id AND c.is_delete = false) AS "comments"
+            FROM pm_design_review r
+            LEFT JOIN pm_customer_project p ON p.id = r.project_id
+            WHERE r.is_delete = false
+              AND r.id = CAST($P{designReviewId} AS uuid)
+              AND r.business_id = $P{businessId}]]></query>
+
+	<field name="reviewCode" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="projectCode" class="java.lang.String"/>
+	<field name="projectName" class="java.lang.String"/>
+	<field name="reviewItemType" class="java.lang.String"/>
+	<field name="reviewer" class="java.lang.String"/>
+	<field name="assignedTo" class="java.lang.String"/>
+	<field name="severity" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="dueDate" class="java.lang.String"/>
+	<field name="figmaUrl" class="java.lang.String"/>
+	<field name="description" class="java.lang.String"/>
+	<field name="comments" class="java.lang.String"/>
+
+	<title height="106">
+		<element kind="image" uuid="d9e50009-0001-4001-8001-d3516a000002" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="d9e50009-0001-4001-8001-d3516a000003" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000004" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Design Review Report" : "รายงานการตรวจสอบงานออกแบบ")]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000005" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + $P{exportDate}]]></expression>
+		</element>
+		<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000006" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+		<element kind="rectangle" uuid="d9e50009-0001-4001-8001-d3516a000007" mode="Opaque" x="0" y="74" width="515" height="28" backcolor="#F8FAFC" radius="3">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000008" x="10" y="76" width="65" height="22" blankWhenNull="true" vTextAlign="Bottom" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Code:" : "รหัส:")]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000009" x="78" y="76" width="427" height="22" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+			<expression><![CDATA["[" + $F{reviewCode} + "] " + $F{title}]]></expression>
+		</element>
+	</title>
+
+	<detail>
+		<band height="410" splitType="Stretch">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000010" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "1. General Information" : "1. ข้อมูลทั่วไป (General Information)")]]></expression>
+			</element>
+			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000011" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+
+			<!-- Row 1: Project & Status -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000012" positionType="Float" x="10" y="34" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000013" positionType="Float" x="110" y="34" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{projectCode} + " " + $F{projectName}]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000014" positionType="Float" x="270" y="34" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000015" positionType="Float" x="370" y="34" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+				<expression><![CDATA[$F{status}]]></expression>
+			</element>
+
+			<!-- Row 2: Reviewed item & Severity -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000016" positionType="Float" x="10" y="54" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Reviewed Item:" : "รายการที่ตรวจ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000017" positionType="Float" x="110" y="54" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{reviewItemType}]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000018" positionType="Float" x="270" y="54" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Severity:" : "ความรุนแรง:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000019" positionType="Float" x="370" y="54" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{severity}]]></expression>
+			</element>
+
+			<!-- Row 3: Reviewer & Assignee -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000020" positionType="Float" x="10" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Reviewer:" : "ผู้ตรวจสอบ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000021" positionType="Float" x="110" y="74" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{reviewer}]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000022" positionType="Float" x="270" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Assigned To:" : "ผู้รับผิดชอบ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000023" positionType="Float" x="370" y="74" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{assignedTo}]]></expression>
+			</element>
+
+			<!-- Row 4: Due date -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000024" positionType="Float" x="10" y="94" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Due Date:" : "กำหนดเสร็จ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000025" positionType="Float" x="110" y="94" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{dueDate}]]></expression>
+			</element>
+
+			<!-- Row 5: Design link -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000026" positionType="Float" x="10" y="114" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Design Link:" : "ลิงก์งานออกแบบ:")]]></expression>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000027" positionType="Float" x="110" y="114" width="398" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{figmaUrl}]]></expression>
+			</element>
+
+			<!-- Section 2: Description -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000028" positionType="Float" x="0" y="144" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "2. Description" : "2. รายละเอียด (Description)")]]></expression>
+			</element>
+			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000029" positionType="Float" x="0" y="166" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000030" positionType="Float" x="8" y="172" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
+				<expression><![CDATA[$F{description}]]></expression>
+			</element>
+
+			<!-- Section 3: Review comments -->
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000031" positionType="Float" x="0" y="204" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+				<expression><![CDATA[($P{lang}.equals("en") ? "3. Review Comments" : "3. ความเห็นการตรวจสอบ (Review Comments)")]]></expression>
+			</element>
+			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000032" positionType="Float" x="0" y="226" width="515" height="1" forecolor="#CBD5E1">
+				<pen lineWidth="0.6"/>
+			</element>
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000033" positionType="Float" x="8" y="232" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
+				<expression><![CDATA[$F{comments} != null ? $F{comments} : ($P{lang}.equals("en") ? "No comments." : "ไม่มีความเห็น")]]></expression>
+			</element>
+		</band>
+	</detail>
+
+	<pageFooter height="30">
+		<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000034" x="0" y="4" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+		<element kind="staticText" uuid="d9e50009-0001-4001-8001-d3516a000035" x="0" y="8" width="350" height="18" vTextAlign="Bottom" style="FooterText">
+			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000036" x="380" y="8" width="135" height="18" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Page " : "หน้า ") + $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+</jasperReport>

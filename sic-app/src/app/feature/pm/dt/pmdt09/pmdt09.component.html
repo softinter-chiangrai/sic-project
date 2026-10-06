@@ -319,6 +319,14 @@
                 }
                 <button
                   type="button"
+                  (click)="printReview(review.id)"
+                  class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
+                  [title]="'PMDT09_PRINT_BTN' | translate"
+                >
+                  <i class="bi bi-printer text-sm"></i>
+                </button>
+                <button
+                  type="button"
                   (click)="goToEdit(review.id)"
                   class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
                   [title]="'PMDT09_EDIT_REVIEW_TITLE' | translate"

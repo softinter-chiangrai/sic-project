@@ -203,32 +203,15 @@
               </h3>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-              <div class="md:col-span-8">
-                <sic-input
-                  [ngModel]="sec.sectionTitle"
-                  [ngModelOptions]="{standalone: true}"
-                  [disabled]="isLocked()"
-                  (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'sectionTitle', $event)"
-                  [label]="'PMDT15_SECTION_NAME_LABEL' | translate"
-                  [placeholder]="'PMDT15_SECTION_NAME_PLACEHOLDER' | translate">
-                </sic-input>
-              </div>
-
-              <div class="md:col-span-4">
-                <sic-combobox
-                  [ngModel]="sec.specId"
-                  [ngModelOptions]="{standalone: true}"
-                  [disabled]="isLocked()"
-                  (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'specId', $event)"
-                  [label]="'PMDT15_LINK_SPEC_LABEL' | translate"
-                  [options]="specificationOptions()"
-                  [placeholder]="'PMDT15_LINK_SPEC_PLACEHOLDER' | translate"
-                  [clearable]="true"
-                  valueField="value"
-                  displayField="text">
-                </sic-combobox>
-              </div>
+            <div>
+              <sic-input
+                [ngModel]="sec.sectionTitle"
+                [ngModelOptions]="{standalone: true}"
+                [disabled]="isLocked()"
+                (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'sectionTitle', $event)"
+                [label]="'PMDT15_SECTION_NAME_LABEL' | translate"
+                [placeholder]="'PMDT15_SECTION_NAME_PLACEHOLDER' | translate">
+              </sic-input>
             </div>
 
             <div>

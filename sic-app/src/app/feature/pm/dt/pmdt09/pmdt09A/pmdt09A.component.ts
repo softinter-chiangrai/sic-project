@@ -24,6 +24,7 @@ import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { DesignReviewModel, Pmdt09APageData } from './pmdt09A.model';
 import { Pmdt09AService } from './pmdt09A.service';
+import { Pmdt09Service } from '../pmdt09.service';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 
@@ -53,6 +54,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
   readonly service = inject(Pmdt09AService);
+  private readonly listService = inject(Pmdt09Service);
   readonly dialog = inject(DialogService);
   readonly customerState = inject(CustomerStateService);
   private readonly approvalService = inject(ApprovalService);
@@ -316,6 +318,13 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     if (url) {
       window.open(url, '_blank');
     }
+  }
+
+  printReport(): void {
+    if (!this.reviewId) return;
+    this.listService.printPdf(this.reviewId).subscribe({
+      error: () => this.dialog.error(this.translate.instant('PMDT09_PRINT_FAIL_TITLE'), this.translate.instant('PMDT09_PRINT_FAIL_MSG')),
+    });
   }
 
   onBack(): void {

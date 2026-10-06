@@ -1170,10 +1170,11 @@ public class AiProjectPipelineJobService {
 
     private void stepMa(Ctx c, StepState step) {
         JsonNode root = ask(c, """
-                You are a Maintenance & Support Manager. Anticipate 2-3 realistic post-go-live support tickets for this project and one MA renewal proposal. Fill EVERY field.
+                You are a Maintenance & Support Manager and Technical Lead. Anticipate 2-3 realistic post-go-live support tickets for this project and one MA renewal proposal. Fill EVERY field.
                 ticketType is one of: BUG_SUPPORT | DATA_ISSUE | USER_SUPPORT | CHANGE_REQUEST. severity is one of: LOW | MEDIUM | HIGH | CRITICAL.
+                IMPORTANT: For EACH ticket, you MUST provide 'resolutionSummary' with a realistic, professional technical resolution method formatted in HTML (<p>, <ul>, <li>, <strong>). Explain root cause analysis, troubleshooting steps, and solution. Do NOT leave 'resolutionSummary' empty.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "tickets": [ { "title": "...", "description": "HTML", "ticketType": "USER_SUPPORT", "severity": "MEDIUM" } ],
+                { "tickets": [ { "title": "...", "description": "HTML description of the issue", "resolutionSummary": "HTML root cause and technical resolution steps", "ticketType": "BUG_SUPPORT", "severity": "MEDIUM" } ],
                   "renewal": { "proposedAmount": 180000, "remark": "..." } }
                 """, projectContext(c) + (c.contractValueText != null ? "\nสัญญา: " + c.contractValueText : ""), false);
 
@@ -1187,6 +1188,35 @@ public class AiProjectPipelineJobService {
             tq.setDescription(firstNonBlank(txt(t, "description"), tq.getTitle()));
             tq.setTicketType(MaTicketType.valueOf(pick(txt(t, "ticketType"), Set.of("BUG_SUPPORT", "DATA_ISSUE", "USER_SUPPORT", "CHANGE_REQUEST"), "USER_SUPPORT")));
             tq.setSeverity(MaTicketSeverity.valueOf(pick(txt(t, "severity"), Set.of("LOW", "MEDIUM", "HIGH", "CRITICAL"), "MEDIUM")));
+            
+            String res = firstNonBlank(txt(t, "resolutionSummary"), txt(t, "resolution"), txt(t, "solution"));
+            if (res == null || res.isBlank()) {
+                String title = tq.getTitle() != null ? tq.getTitle() : "ปัญหาที่แจ้ง";
+                res = switch (tq.getTicketType()) {
+                    case BUG_SUPPORT -> "<p><strong>สาเหตุของปัญหา:</strong> พบข้อผิดพลาดในการประมวลผลข้อมูล (" + title + ")</p>"
+                            + "<p><strong>แนวทางแก้ไขปัญหา:</strong></p><ul>"
+                            + "<li>ตรวจสอบ Log และทำ Unit/Integration Test เพื่อจำลองเงื่อนไขที่เกิดปัญหา</li>"
+                            + "<li>แก้ไข Bug ใน Source Code พร้อมป้องกันผลข้างเคียง (Side Effect)</li>"
+                            + "<li>ทดสอบผลบน Staging Environment ก่อนปล่อย Patch อัปเดต</li></ul>";
+                    case DATA_ISSUE -> "<p><strong>สาเหตุของปัญหา:</strong> ข้อมูลในระบบไม่สอดคล้องกันเนื่องจากเงื่อนไขการซิงค์ข้อมูล</p>"
+                            + "<p><strong>แนวทางแก้ไขปัญหา:</strong></p><ul>"
+                            + "<li>ตรวจสอบความสอดคล้องของข้อมูล (Data Consistency & Foreign Keys)</li>"
+                            + "<li>รัน Script ปรับปรุงและกู้คืนข้อมูลที่ได้รับผลกระทบ</li>"
+                            + "<li>เพิ่มระบบ Validation ป้องกันไม่ให้เกิดข้อมูลไม่ถูกต้องซ้ำอีก</li></ul>";
+                    case CHANGE_REQUEST -> "<p><strong>การวิเคราะห์ความต้องการ:</strong> คำขอปรับปรุงฟังก์ชันเพิ่มเติม (" + title + ")</p>"
+                            + "<p><strong>แนวทางดำเนินการ:</strong></p><ul>"
+                            + "<li>ประเมินผลกระทบ (Impact Analysis) และกำหนดขอบเขตงาน</li>"
+                            + "<li>ออกแบบ UI และ Flow การทำงานร่วมกับทีมผู้ใช้งาน</li>"
+                            + "<li>กำหนดแผนงานพัฒนาและทดสอบในรอบ Release ถัดไป</li></ul>";
+                    default -> "<p><strong>การให้บริการผู้ใช้งาน:</strong> ให้คำปรึกษาและแนะนำแนวทางการใช้งาน (" + title + ")</p>"
+                            + "<p><strong>แนวทางดำเนินการ:</strong></p><ul>"
+                            + "<li>ตรวจสอบสิทธิ์การใช้งาน (User Permissions) ของผู้ใช้งาน</li>"
+                            + "<li>แนะนำขั้นตอนการปฏิบัติงานที่ถูกต้องตามคู่มือการใช้งานระบบ</li>"
+                            + "<li>จัดทำบันทึกสรุปแนวทางการใช้งานสำหรับทีมงาน</li></ul>";
+                };
+            }
+            tq.setResolutionSummary(res);
+
             Member assignee = randomMember(c);
             if (assignee != null) tq.setAssignedToIds(List.of(assignee.userId()));
             LocalDate goLive = c.startDate.plusWeeks(c.weeks);
