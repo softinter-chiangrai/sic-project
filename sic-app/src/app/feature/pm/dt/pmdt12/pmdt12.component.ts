@@ -1,8 +1,19 @@
 // src/app/feature/pm/dt/pmdt13/pmdt13.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, computed, HostListener, inject, OnInit, signal } from '@angular/core';
-import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize, forkJoin } from 'rxjs';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  HostListener,
+  inject,
+  OnDestroy,
+  OnInit,
+  signal,
+  untracked,
+} from '@angular/core';
+import { ActivatedRoute, NavigationEnd, Router, RouterModule } from '@angular/router';
+import { filter, finalize, forkJoin, interval, Subject, takeUntil } from 'rxjs';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
@@ -28,13 +39,29 @@ import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/comp
   styleUrls: ['./pmdt12.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Pmdt12Component implements OnInit {
+export class Pmdt12Component implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private service = inject(Pmdt12Service);
   private customerState = inject(CustomerStateService);
   private dialog = inject(DialogService);
   private translate = inject(TranslateService);
+
+  private destroy$ = new Subject<void>();
+  private initialized = false;
+  protected isSilentRefreshing = signal(false);
+
+  constructor() {
+    // Auto-reload when project selection in navbar changes
+    effect(() => {
+      this.selectedProjectIds(); // track signal dependency
+      untracked(() => {
+        if (this.initialized) {
+          this.loadData(true);
+        }
+      });
+    });
+  }
 
   // ===== State =====
   protected searchTerm = signal('');
@@ -207,10 +234,10 @@ export class Pmdt12Component implements OnInit {
       }
       // Filter taskStatus
       if (taskStatus === 'ready' || taskStatus === 'testing') {
-        const ts = (tc.taskStatus || '').toLowerCase();
+        const ts = (this.getEffectiveTaskStatus(tc) || '').toLowerCase();
         if (ts !== 'testing' && ts !== 'ready') return false;
       } else if (taskStatus !== 'all') {
-        if ((tc.taskStatus || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
+        if ((this.getEffectiveTaskStatus(tc) || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
       }
       // Search keyword
       if (search) {
@@ -292,6 +319,7 @@ export class Pmdt12Component implements OnInit {
 
   // ===== Lifecycle =====
   ngOnInit() {
+    this.initialized = true;
     const bId = localStorage.getItem('businessId');
     if (bId) {
       this.businessId.set(bId);
@@ -319,6 +347,55 @@ export class Pmdt12Component implements OnInit {
     }
 
     this.loadData();
+
+    // 1. Auto-refresh when navigating back to test management from other routes
+    this.router.events
+      .pipe(
+        filter((e): e is NavigationEnd => e instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
+      .subscribe((e) => {
+        if (e.urlAfterRedirects.includes('/feature/pm/test-management')) {
+          this.loadData(true);
+        }
+      });
+
+    // 2. Background live polling (every 8 seconds when active tab)
+    interval(8000)
+      .pipe(
+        filter(
+          () =>
+            typeof document !== 'undefined' &&
+            document.visibilityState === 'visible' &&
+            !this.isLoading() &&
+            !this.isSilentRefreshing()
+        ),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(() => {
+        this.loadData(true);
+      });
+  }
+
+  @HostListener('window:focus')
+  onWindowFocus(): void {
+    this.loadData(true);
+  }
+
+  @HostListener('document:visibilitychange')
+  onVisibilityChange(): void {
+    if (typeof document !== 'undefined' && document.visibilityState === 'visible') {
+      this.loadData(true);
+    }
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  refreshData(): void {
+    this.loadData(false);
   }
 
   // ===== AI Batch Create =====
@@ -370,9 +447,13 @@ export class Pmdt12Component implements OnInit {
     });
   }
 
-  loadData() {
-    this.isLoading.set(true);
-    // Always load ALL test cases/scenarios of ALL projects; navbar context filters client-side.
+  loadData(silent = false) {
+    if (!silent) {
+      this.isLoading.set(true);
+    } else {
+      this.isSilentRefreshing.set(true);
+    }
+
     const projectId = resolveProjectId(this.route, this.customerState);
 
     const requests: any = {
@@ -380,13 +461,19 @@ export class Pmdt12Component implements OnInit {
       testCasesRes: this.service.getTestCases(undefined, null, 1, 1000, 'testCaseCode', 'ASC'),
     };
 
-    // projectTasks (used for bug-tracking helpers) remains scoped to the current route project, if any.
     if (projectId) {
       requests.tasks = this.service.getTasksByProjectId(projectId);
+    } else {
+      requests.tasks = this.service.getTasksByBusiness();
     }
 
     forkJoin(requests)
-      .pipe(finalize(() => this.isLoading.set(false)))
+      .pipe(
+        finalize(() => {
+          if (!silent) this.isLoading.set(false);
+          this.isSilentRefreshing.set(false);
+        })
+      )
       .subscribe({
         next: ({ scenarios, testCasesRes, tasks }: any) => {
           this.scenarios.set(scenarios || []);
@@ -398,22 +485,97 @@ export class Pmdt12Component implements OnInit {
           } else if (Array.isArray(testCasesRes)) {
             tcs = testCasesRes;
           }
+
+          // Synchronize task status:
+          // A task should ONLY move to 'complete' if ALL test cases in the test scenario linked to that task have passed.
+          const taskMap = new Map<string, PmTestCaseModel[]>();
+          tcs.forEach((tc) => {
+            if (tc.taskId) {
+              const key = tc.taskId;
+              if (!taskMap.has(key)) {
+                taskMap.set(key, []);
+              }
+              taskMap.get(key)!.push(tc);
+            }
+          });
+
+          taskMap.forEach((cases, taskId) => {
+            const allPassed =
+              cases.length > 0 &&
+              cases.every((c) => {
+                const st = (c.testStatus || '').toLowerCase();
+                return (st === 'pass' || st === 'passed') && !this.hasActiveBug(c);
+              });
+            const anyFailed = cases.some((c) => {
+              const st = (c.testStatus || '').toLowerCase();
+              return st === 'fail' || st === 'failed' || this.hasActiveBug(c);
+            });
+
+            const targetStatus = allPassed ? 'complete' : anyFailed ? 'waiting fix' : 'testing';
+
+            // Sync test cases taskStatus
+            cases.forEach((tc) => {
+              if (tc.id && (tc.taskStatus || '').toLowerCase() !== targetStatus) {
+                tc.taskStatus = targetStatus;
+                this.service.saveTestCase({ id: tc.id, taskStatus: targetStatus }).subscribe();
+              }
+            });
+
+            // Sync parent Task in backend if needed
+            this.service.getTaskById(taskId).subscribe({
+              next: (taskRecord) => {
+                if (taskRecord && taskRecord.id) {
+                  const currentStatus = (taskRecord.status || '').toLowerCase();
+                  if (currentStatus !== targetStatus) {
+                    const isPrematureComplete =
+                      (currentStatus === 'complete' || currentStatus === 'completed' || currentStatus === 'done') &&
+                      !allPassed;
+                    const shouldMoveToComplete = allPassed && currentStatus !== 'complete';
+                    const shouldMoveToWaitingFix =
+                      anyFailed && currentStatus !== 'waiting fix' && currentStatus !== 'bugfix';
+
+                    if (isPrematureComplete || shouldMoveToComplete || shouldMoveToWaitingFix) {
+                      this.service.updateTask(taskRecord.id, { ...taskRecord, status: targetStatus }).subscribe({
+                        next: () => {
+                          const currentTasks = this.projectTasks();
+                          const idx = currentTasks.findIndex((t: any) => t.id === taskId);
+                          if (idx !== -1) {
+                            const updated = [...currentTasks];
+                            updated[idx] = { ...updated[idx], status: targetStatus };
+                            this.projectTasks.set(updated);
+                          }
+                        },
+                      });
+                    }
+                  }
+                }
+              },
+            });
+          });
+
           this.testCases.set(tcs);
 
-          // Expand all by default
-          const allIds = new Set<string>();
-          (scenarios || []).forEach((s: any) => {
-            if (s.id) allIds.add(s.id);
-          });
-          allIds.add('unassigned');
-          this.expandedScenarioIds.set(allIds);
+          // Expand all by default on first load
+          if (this.expandedScenarioIds().size === 0) {
+            const allIds = new Set<string>();
+            (scenarios || []).forEach((s: any) => {
+              if (s.id) allIds.add(s.id);
+            });
+            allIds.add('unassigned');
+            this.expandedScenarioIds.set(allIds);
+          }
         },
         error: (err) => {
-          console.error('Failed to load scenarios/test cases:', err);
-          this.scenarios.set([]);
-          this.testCases.set([]);
-          this.projectTasks.set([]);
-          this.dialog.error(this.translate.instant('PMDT12_LOAD_FAIL_TITLE'), err.error?.message || this.translate.instant('PMDT12_LOAD_FAIL_MSG'));
+          if (!silent) {
+            console.error('Failed to load scenarios/test cases:', err);
+            this.scenarios.set([]);
+            this.testCases.set([]);
+            this.projectTasks.set([]);
+            this.dialog.error(
+              this.translate.instant('PMDT12_LOAD_FAIL_TITLE'),
+              err.error?.message || this.translate.instant('PMDT12_LOAD_FAIL_MSG')
+            );
+          }
         },
       });
   }
@@ -454,13 +616,21 @@ export class Pmdt12Component implements OnInit {
     return this.getActiveBugsForTestCase(testCase).length > 0;
   }
 
+  isPassedTest(testCase: PmTestCaseModel): boolean {
+    const s = (testCase.testStatus || '').toLowerCase();
+    return s === 'pass' || s === 'passed';
+  }
+
   canExecuteTest(testCase: PmTestCaseModel): boolean {
+    if (this.isPassedTest(testCase)) {
+      return false;
+    }
     if (this.hasActiveBug(testCase)) {
       return false;
     }
     // If testCase has a linked task, allow execution if in 'testing' or 'waiting fix'
     if (testCase.taskId) {
-      const status = (testCase.taskStatus || '').toLowerCase();
+      const status = (this.getEffectiveTaskStatus(testCase) || testCase.taskStatus || '').toLowerCase();
       return status === 'testing' || status === 'waiting fix';
     }
     // If no task is linked, allow execution (general / regression test)
@@ -471,7 +641,7 @@ export class Pmdt12Component implements OnInit {
     if (this.hasActiveBug(testCase)) {
       return this.translate.instant('PMDT12_CANNOT_TEST_BUG_MSG');
     }
-    const status = (testCase.taskStatus || '').toLowerCase();
+    const status = (this.getEffectiveTaskStatus(testCase) || testCase.taskStatus || '').toLowerCase();
     if (testCase.taskId && status !== 'testing' && status !== 'waiting fix') {
       return this.translate.instant('PMDT12_TASK_NOT_READY_MSG');
     }
@@ -781,6 +951,50 @@ export class Pmdt12Component implements OnInit {
     this.router.navigate(['/feature/pm/test-case', id, 'view']);
   }
 
+  goToTaskBoard(testCase: PmTestCaseModel, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    const queryParams: Record<string, any> = {};
+    let projectId = testCase.projectId;
+    let taskId = testCase.taskId;
+    let taskCode = testCase.taskCode;
+
+    // Look up in loaded projectTasks if missing details
+    const pTasks = this.projectTasks();
+    if (pTasks && pTasks.length > 0) {
+      const match = pTasks.find((t: any) =>
+        (taskId && t.id === taskId) ||
+        (taskCode && t.taskCode && t.taskCode.trim().toLowerCase() === taskCode.trim().toLowerCase())
+      );
+      if (match) {
+        if (!projectId && match.projectId) projectId = match.projectId;
+        if (!taskId && match.id) taskId = match.id;
+        if (!taskCode && match.taskCode) taskCode = match.taskCode;
+      }
+    }
+
+    if (!projectId && testCase.scenarioId) {
+      const parentScenario = this.scenarios().find((s) => s.id === testCase.scenarioId);
+      if (parentScenario?.projectId) {
+        projectId = parentScenario.projectId;
+      }
+    }
+    if (!projectId) {
+      projectId = this.getResolvedProjectId() || undefined;
+    }
+    if (projectId) {
+      queryParams['projectId'] = projectId;
+    }
+    if (taskId) {
+      queryParams['taskId'] = taskId;
+    }
+    if (taskCode) {
+      queryParams['taskCode'] = taskCode;
+    }
+    this.router.navigate(['/feature/pm/task-board'], { queryParams });
+  }
+
   deleteTestCase(id: string) {
     this.dialog.confirm(this.translate.instant('PMDT12_CONFIRM_DELETE_TITLE'), this.translate.instant('PMDT12_CONFIRM_DELETE_TC_MSG')).then((ok) => {
       if (ok) {
@@ -797,158 +1011,24 @@ export class Pmdt12Component implements OnInit {
     });
   }
 
-  openBugModal(testCase: PmTestCaseModel, event?: Event): void {
+  goToCreateBug(testCase: PmTestCaseModel, event?: Event): void {
     if (event) {
       event.stopPropagation();
     }
+    const queryParams: Record<string, any> = {};
+    const projectId = testCase.projectId || this.getResolvedProjectId();
+    if (projectId) queryParams['projectId'] = projectId;
+    if (testCase.id) queryParams['testCaseId'] = testCase.id;
+    if (testCase.testCaseCode) queryParams['testCaseCode'] = testCase.testCaseCode;
+    if (testCase.scenarioId) queryParams['scenarioId'] = testCase.scenarioId;
+    if (testCase.taskId) queryParams['taskId'] = testCase.taskId;
+    queryParams['returnUrl'] = '/feature/pm/test-management';
 
-    if (!testCase.taskId) {
-      this.dialog.warn(this.translate.instant('PMDT12_CANNOT_CREATE_BUG_TITLE'), this.translate.instant('PMDT12_BUG_NO_TASK_MSG'));
-      return;
-    }
-
-    this.service.getTaskById(testCase.taskId).subscribe({
-      next: (parentTask) => {
-        if (!parentTask || !parentTask.workPackageId) {
-          this.dialog.warn(this.translate.instant('PMDT12_CANNOT_CREATE_BUG_TITLE'), this.translate.instant('PMDT12_BUG_NO_WP_MSG'));
-          return;
-        }
-
-        this.bugTestCase.set(testCase);
-        this.bugParentTask.set(parentTask);
-
-        const todayStr = new Date().toISOString().split('T')[0];
-        const nextDayStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-        const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
-
-        const cleanHtml = (htmlStr?: string | null): string => {
-          if (!htmlStr) return '-';
-          return htmlStr
-            .replace(/<br\s*[\/]?>/gi, '\n')
-            .replace(/<\/p>/gi, '\n')
-            .replace(/<[^>]+>/g, '')
-            .replace(/&nbsp;/g, ' ')
-            .replace(/&amp;/g, '&')
-            .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>')
-            .replace(/\n\s*\n/g, '\n')
-            .trim();
-        };
-
-        let desc = `[${this.translate.instant('PMDT12_BUG_FROM_TEST_RESULT')}: ${testCase.testCaseCode || ''}]\n\n`;
-        if (testCase.title) desc += `• ${this.translate.instant('PMDT12_TC_TITLE_BULLET')}: ${testCase.title}\n`;
-        if (testCase.testStep) desc += `• ${this.translate.instant('PMDT12_TEST_STEP_BULLET')}:\n${cleanHtml(testCase.testStep)}\n\n`;
-        if (testCase.expectedResult) desc += `• ${this.translate.instant('PMDT12_EXPECTED_RESULT_BULLET')}:\n${cleanHtml(testCase.expectedResult)}\n\n`;
-        if (testCase.actualResult) desc += `• ${this.translate.instant('PMDT12_ACTUAL_RESULT_ERROR_BULLET')}:\n${cleanHtml(testCase.actualResult)}\n\n`;
-        if (testCase.tester) desc += `• ${this.translate.instant('PMDT12_REPORTER_BULLET')}: ${testCase.tester}\n`;
-
-        const rawPriority = (testCase.priority || 'HIGH').toUpperCase();
-        let defaultPriority = 'HIGH';
-        if (rawPriority.includes('CRITICAL') || rawPriority === 'HIGH') {
-          defaultPriority = 'CRITICAL';
-        } else if (rawPriority.includes('MED')) {
-          defaultPriority = 'MEDIUM';
-        } else if (rawPriority.includes('LOW')) {
-          defaultPriority = 'LOW';
-        }
-
-        this.bugForm.set({
-          taskCode: bugCode,
-          taskName: `[BUG] ${testCase.title || testCase.testCaseCode}`,
-          priority: defaultPriority,
-          description: desc.trim(),
-          assignedTo: parentTask.assignedTo || null,
-          estimateManday: 1,
-          startDate: todayStr,
-          endDate: nextDayStr,
-        });
-
-        this.showBugModal.set(true);
-      },
-      error: () => {
-        this.dialog.error(this.translate.instant('PMDT12_ERROR_TITLE'), this.translate.instant('PMDT12_LOAD_TASK_ERROR_MSG'));
-      },
-    });
+    this.router.navigate(['/feature/pm/bug/new'], { queryParams });
   }
 
-  closeBugModal(): void {
-    this.showBugModal.set(false);
-    this.bugTestCase.set(null);
-    this.bugParentTask.set(null);
-  }
-
-  updateBugFormField(field: string, value: any): void {
-    this.bugForm.update((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  }
-
-  submitBug(): void {
-    const form = this.bugForm();
-    const testCase = this.bugTestCase();
-    const parentTask = this.bugParentTask();
-
-    if (!form.taskName || !form.taskName.trim()) {
-      this.dialog.warn(this.translate.instant('PMDT12_INCOMPLETE_DATA_TITLE'), this.translate.instant('PMDT12_ENTER_BUG_TITLE_MSG'));
-      return;
-    }
-
-    if (!parentTask || !parentTask.workPackageId) {
-      this.dialog.error(this.translate.instant('PMDT12_CANNOT_SAVE_TITLE'), this.translate.instant('PMDT12_NO_WP_FOR_TASK_MSG'));
-      return;
-    }
-
-    this.isSubmittingBug.set(true);
-
-    const rawName = (form.taskName || '').trim();
-    const finalTaskName = rawName.toUpperCase().startsWith('[BUG]')
-      ? rawName
-      : `[BUG] ${rawName}`;
-
-    const taskPayload: any = {
-      taskCode: form.taskCode,
-      taskName: finalTaskName,
-      description: form.description,
-      priority: form.priority,
-      status: 'To Do', // Bug task starts in 'To Do' for dev to pick up
-      startDate: form.startDate ? `${form.startDate}T09:00:00Z` : new Date().toISOString(),
-      endDate: form.endDate ? `${form.endDate}T18:00:00Z` : new Date().toISOString(),
-      estimateManday: form.estimateManday || 1,
-      workPackageId: parentTask.workPackageId,
-      specificationId: parentTask.specificationId || null,
-      assignedTo: form.assignedTo || parentTask.assignedTo || null,
-      assigneeIds: form.assignedTo ? [form.assignedTo] : (parentTask.assigneeIds || []),
-    };
-
-    // 1. Move parent task to bugfix status if not already
-    if (parentTask.id && parentTask.status !== 'bugfix') {
-      const updatedParent = {
-        ...parentTask,
-        status: 'bugfix',
-      };
-      this.service.updateTask(parentTask.id, updatedParent).subscribe({
-        next: () => console.log('Parent task moved to bugfix status'),
-        error: (err) => console.error('Failed to update parent task status to bugfix', err),
-      });
-    }
-
-    // 2. Create the Bug Task
-    this.service.createTask(taskPayload).subscribe({
-      next: () => {
-        this.isSubmittingBug.set(false);
-        this.closeBugModal();
-        this.dialog.success(
-          this.translate.instant('PMDT12_BUG_OPEN_SUCCESS_TITLE'),
-          this.translate.instant('PMDT12_BUG_CREATED_MSG', { taskCode: form.taskCode })
-        );
-        this.loadData();
-      },
-      error: (err) => {
-        this.isSubmittingBug.set(false);
-        this.dialog.error(this.translate.instant('PMDT12_BUG_CREATE_FAILED_TITLE'), err.message || this.translate.instant('PMDT12_CREATE_TASK_ERROR_MSG'));
-      },
-    });
+  openBugModal(testCase: PmTestCaseModel, event?: Event): void {
+    this.goToCreateBug(testCase, event);
   }
 
   // ===== Badges & Utilities =====
@@ -1032,18 +1112,90 @@ export class Pmdt12Component implements OnInit {
     }
   }
 
+  getEffectiveTaskStatus(testCase: PmTestCaseModel): string {
+    const tcs = this.testCases();
+    const taskCases = tcs.filter((c) => {
+      const matchTask =
+        (testCase.taskId && c.taskId === testCase.taskId) ||
+        (testCase.taskCode &&
+          c.taskCode &&
+          c.taskCode.trim().toLowerCase() === testCase.taskCode.trim().toLowerCase());
+      if (!matchTask) return false;
+
+      // Group within the same test scenario if scenarioId is present
+      if (testCase.scenarioId && c.scenarioId) {
+        return c.scenarioId === testCase.scenarioId;
+      }
+      return true;
+    });
+
+    const relevantCases = taskCases.length > 0 ? taskCases : [testCase];
+
+    // Check if ALL test cases for this task in the scenario have passed (and have no active bug)
+    const allPassed =
+      relevantCases.length > 0 &&
+      relevantCases.every((c) => {
+        const st = (c.testStatus || '').toLowerCase();
+        return (st === 'pass' || st === 'passed') && !this.hasActiveBug(c);
+      });
+
+    // Check if ANY test case has failed or has an active bug
+    const anyFailedOrBug = relevantCases.some((c) => {
+      const st = (c.testStatus || '').toLowerCase();
+      return st === 'fail' || st === 'failed' || this.hasActiveBug(c);
+    });
+
+    // 1. If any test case failed or has an active bug, task status MUST be waiting fix
+    if (anyFailedOrBug) {
+      return 'waiting fix';
+    }
+
+    // 2. If ALL test cases in the scenario linked to this task have passed, task status is complete
+    if (allPassed) {
+      return 'complete';
+    }
+
+    // 3. Otherwise (some passed or untested, but none failed)
+    // The task CANNOT be complete yet!
+    const pTasks = this.projectTasks();
+    if (pTasks && pTasks.length > 0) {
+      const match = pTasks.find(
+        (t: any) =>
+          (testCase.taskId && t.id === testCase.taskId) ||
+          (testCase.taskCode &&
+            t.taskCode &&
+            t.taskCode.trim().toLowerCase() === testCase.taskCode.trim().toLowerCase())
+      );
+      if (match && match.status) {
+        const liveStatus = (match.status || '').toLowerCase();
+        // If live task was prematurely set to complete, display as testing because not all cases have passed!
+        if (liveStatus === 'complete' || liveStatus === 'completed' || liveStatus === 'done') {
+          return 'testing';
+        }
+        return match.status;
+      }
+    }
+
+    const storedStatus = (testCase.taskStatus || '').toLowerCase();
+    if (storedStatus === 'complete' || storedStatus === 'completed' || storedStatus === 'done') {
+      return 'testing';
+    }
+
+    return testCase.taskStatus || 'To Do';
+  }
+
   getTaskStatusClass(status?: string): string {
     const s = (status || '').toLowerCase();
     if (s === 'testing') {
       return 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300 border border-amber-300 dark:border-amber-700 animate-pulse';
     }
-    if (s === 'bugfix') {
+    if (s === 'bugfix' || s === 'waiting fix') {
       return 'bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300 border border-rose-300 dark:border-rose-700';
     }
     if (s === 'in progress') {
       return 'bg-blue-100 text-blue-800 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-300 dark:border-blue-700';
     }
-    if (s === 'complete') {
+    if (s === 'complete' || s === 'completed' || s === 'done') {
       return 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-700';
     }
     if (s === 'on hold') {
@@ -1055,11 +1207,11 @@ export class Pmdt12Component implements OnInit {
   getTaskStatusLabel(status?: string): string {
     const s = (status || '').toLowerCase();
     if (s === 'testing') return '🧪 Testing';
-    if (s === 'bugfix') return '🚨 Bugfix';
+    if (s === 'bugfix' || s === 'waiting fix') return '🚨 Waiting Fix';
     if (s === 'in progress') return '🛠️ In Progress';
-    if (s === 'complete') return '✅ Complete';
+    if (s === 'complete' || s === 'completed' || s === 'done') return '✅ Complete';
     if (s === 'on hold') return '⏸️ On Hold';
-    if (s === 'to do') return '📝 To Do';
+    if (s === 'to do' || s === 'todo') return '📝 To Do';
     return status || 'To Do';
   }
 

@@ -60,6 +60,7 @@ export class Pmdt02CComponent implements OnInit {
   workPackageId = '';
   projectId = '';
   phaseId = '';
+  returnUrl = '';
   apiGetComboboxWorkPackage = `${environment.apiBaseUrl}/api/pm/work-packages/combobox`;
   taskId: string | null = null;
   isEdit = false;
@@ -136,12 +137,16 @@ export class Pmdt02CComponent implements OnInit {
     });
 
     this.route.queryParams.subscribe((qParams) => {
+      this.returnUrl = qParams['returnUrl'] || this.returnUrl;
       this.workPackageId = qParams['workPackageId'] || this.workPackageId;
-      this.projectId = qParams['projectId'] || this.data?.projectId || this.customerState.getProjectId() || '';
-      this.phaseId = qParams['phaseId'] || '';
+      this.projectId = qParams['projectId'] || this.data?.projectId || this.customerState.getProjectId() || this.projectId;
+      this.phaseId = qParams['phaseId'] || this.phaseId;
 
       if (this.workPackageId) {
         this.form.patchValue({ workPackageId: this.workPackageId });
+      }
+      if (qParams['specificationId']) {
+        this.form.patchValue({ specificationId: qParams['specificationId'] });
       }
 
       const dateParam = qParams['startDate'] || qParams['date'];
@@ -203,6 +208,9 @@ export class Pmdt02CComponent implements OnInit {
     this.taskService.getTaskById(id).subscribe({
       next: (data) => {
         this.data = data;
+        if (data.projectId && !this.projectId) {
+          this.projectId = data.projectId;
+        }
         this.patchForm(data);
         this.loadLinkedTestCases(id, data.projectId || this.projectId);
       },
@@ -364,18 +372,30 @@ export class Pmdt02CComponent implements OnInit {
     request.subscribe({
       next: (res) => {
         this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_TASK_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_TASK_SUCCESS_MSG'));
-        this.router.navigate(['/feature/pm/phase', this.phaseId], {
-          queryParams: { projectId: this.projectId },
-        });
+        if (this.returnUrl) {
+          this.router.navigateByUrl(this.returnUrl);
+        } else if (this.phaseId) {
+          this.router.navigate(['/feature/pm/phase', this.phaseId], {
+            queryParams: { projectId: this.projectId },
+          });
+        } else {
+          this.router.navigate(['/feature/pm/task-board']);
+        }
       },
       error: (err) => this.dialog.error(this.translate.instant('PMDT02_FAIL_TITLE'), err.message),
     });
   }
 
   cancel() {
-    this.router.navigate(['/feature/pm/phase', this.phaseId], {
-      queryParams: { projectId: this.projectId },
-    });
+    if (this.returnUrl) {
+      this.router.navigateByUrl(this.returnUrl);
+    } else if (this.phaseId) {
+      this.router.navigate(['/feature/pm/phase', this.phaseId], {
+        queryParams: { projectId: this.projectId },
+      });
+    } else {
+      this.router.navigate(['/feature/pm/task-board']);
+    }
   }
 
   private extractUploadGroupId(val: any): string | null {

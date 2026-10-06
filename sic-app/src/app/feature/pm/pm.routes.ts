@@ -458,6 +458,20 @@ export const PM_ROUTES: Routes = [
     loadComponent: () => import('./dt/pmdt12/pmdt12B/pmdt12B.component').then((m) => m.Pmdt12BComponent),
     resolve: { pageData: pmdt12BResolver },
   },
+  {
+    path: 'bug/new',
+    loadComponent: () => import('./dt/pmdt12/pmdt12C/pmdt12C.component').then((m) => m.Pmdt12CComponent),
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'bug/:id/edit',
+    loadComponent: () => import('./dt/pmdt12/pmdt12C/pmdt12C.component').then((m) => m.Pmdt12CComponent),
+    canDeactivate: [CanDeactivateGuard],
+  },
+  {
+    path: 'bug/:id/view',
+    loadComponent: () => import('./dt/pmdt12/pmdt12C/pmdt12C.component').then((m) => m.Pmdt12CComponent),
+  },
 
   // ============================================================
   // ===== PMDT14: DELIVERY MANAGEMENT =====

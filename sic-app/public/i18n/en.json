@@ -2617,6 +2617,8 @@
   "PMDT12_CANNOT_TEST_BUG_MSG": "Cannot test while related bug is pending resolution",
   "PMDT12_COL_ACTIONS": "Actions",
   "PMDT12_COL_LINKED_TASK": "Linked Task",
+  "PMDT12_GO_TO_TASK_BOARD": "Go to Task Board",
+  "PMDT12_VIEW_IN_TASK_BOARD": "View in Task Board",
   "PMDT12_COL_PRIORITY": "Priority",
   "PMDT12_COL_STEPS_EXPECTED": "Steps & Expected Result",
   "PMDT12_COL_TESTCASE_ID": "Test Case ID",

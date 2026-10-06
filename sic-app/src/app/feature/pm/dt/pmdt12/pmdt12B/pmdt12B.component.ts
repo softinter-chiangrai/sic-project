@@ -84,8 +84,8 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   private buildStaticOptions(): void {
     this.testTypeOptions = [
-      { value: 'SIT', text: `🧪 ${this.translate.instant('PMDT12B_TEST_TYPE_SIT')}` },
-      { value: 'UAT', text: `📋 ${this.translate.instant('PMDT12B_TEST_TYPE_UAT')}` },
+      { value: 'SIT', text: this.translate.instant('PMDT12B_TEST_TYPE_SIT') },
+      { value: 'UAT', text: this.translate.instant('PMDT12B_TEST_TYPE_UAT') },
     ];
 
     this.priorityOptions = [

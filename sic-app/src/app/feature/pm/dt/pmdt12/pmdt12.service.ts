@@ -45,6 +45,10 @@ export class Pmdt12Service {
     return this.http.get<any[]>(`${this.apiBase}/api/pm/projects/${projectId}/tasks`);
   }
 
+  getTasksByBusiness(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiBase}/api/pm/tasks/business`);
+  }
+
   getTasksByWorkPackageId(wpId: string): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiBase}/api/pm/tasks/work-package/${wpId}`);
   }

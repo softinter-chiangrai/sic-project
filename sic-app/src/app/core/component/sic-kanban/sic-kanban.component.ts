@@ -6,6 +6,7 @@ import {
   computed,
   EventEmitter,
   Input,
+  OnDestroy,
   Output,
   signal,
 } from '@angular/core';
@@ -73,10 +74,13 @@ export interface KanbanMilestoneStatusChangeEvent {
   styleUrl: './sic-kanban.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class SicKanbanComponent {
+export class SicKanbanComponent implements OnDestroy {
   // ===== INPUTS =====
   @Input({ required: true }) set tasks(value: TaskResponse[] | null | undefined) {
     this._tasks.set(value || []);
+    if (this._highlightedTaskId() || this._highlightedTaskCode()) {
+      this.checkScrollToHighlighted();
+    }
   }
   @Input() set workPackages(value: WorkPackageResponse[] | null | undefined) {
     this._workPackages.set(value || []);
@@ -96,12 +100,121 @@ export class SicKanbanComponent {
   get specifications(): { id: string; code: string; title: string }[] {
     return this._specifications();
   }
+
+  private _highlightedTaskId = signal<string | null>(null);
+  private _highlightedTaskCode = signal<string | null>(null);
+  private _scrollRetryTimer?: any;
+
+  @Input() set highlightedTaskId(value: string | null | undefined) {
+    this._highlightedTaskId.set(value || null);
+    if (value) {
+      this.checkScrollToHighlighted();
+    }
+  }
+  get highlightedTaskId(): string | null {
+    return this._highlightedTaskId();
+  }
+
+  @Input() set highlightedTaskCode(value: string | null | undefined) {
+    this._highlightedTaskCode.set(value || null);
+    if (value) {
+      this.checkScrollToHighlighted();
+    }
+  }
+  get highlightedTaskCode(): string | null {
+    return this._highlightedTaskCode();
+  }
+
   @Input() readonly = false;
   @Input() allowDragDrop = true;
   @Input() allowActions = true;
   @Input() showToolbar = true;
   @Input() allowCreate = true;
   @Input() showColumnFooterCreate = true;
+
+  isTaskHighlighted(task: TaskResponse): boolean {
+    if (!task) return false;
+    const targetId = this._highlightedTaskId()?.trim().toLowerCase();
+    if (targetId && task.id && task.id.trim().toLowerCase() === targetId) {
+      return true;
+    }
+    const targetCode = this._highlightedTaskCode()?.trim().toLowerCase();
+    if (targetCode && task.taskCode && task.taskCode.trim().toLowerCase() === targetCode) {
+      return true;
+    }
+    return false;
+  }
+
+  checkScrollToHighlighted(attempt = 1): void {
+    if (!this._highlightedTaskId() && !this._highlightedTaskCode()) return;
+
+    if (this._scrollRetryTimer) {
+      clearTimeout(this._scrollRetryTimer);
+    }
+
+    this._scrollRetryTimer = setTimeout(() => {
+      const targetId = this._highlightedTaskId()?.trim();
+      const targetCode = this._highlightedTaskCode()?.trim();
+
+      let card = document.querySelector('.kanban-card--highlighted') as HTMLElement | null;
+      if (!card && targetId) {
+        card = (document.getElementById('task-card-' + targetId) ||
+          document.querySelector(`[data-task-id="${targetId}"]`)) as HTMLElement | null;
+      }
+      if (!card && targetCode) {
+        card = (document.getElementById('task-card-' + targetCode) ||
+          document.querySelector(`[data-task-code="${targetCode}"]`)) as HTMLElement | null;
+      }
+
+      if (card) {
+        // Stage 1: Scroll horizontal columns wrapper so column is visible/centered
+        const column = card.closest('.kanban-column') as HTMLElement | null;
+        const columnsWrapper = card.closest('.kanban-columns-wrapper') as HTMLElement | null;
+        if (columnsWrapper && column) {
+          const wrapperRect = columnsWrapper.getBoundingClientRect();
+          const colRect = column.getBoundingClientRect();
+          const targetLeft =
+            columnsWrapper.scrollLeft +
+            (colRect.left - wrapperRect.left) -
+            wrapperRect.width / 2 +
+            colRect.width / 2;
+          columnsWrapper.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
+        }
+
+        // Stage 2: Scroll vertical card list so card is centered in column
+        const cardList = card.closest('.kanban-card-list') as HTMLElement | null;
+        if (cardList) {
+          const listRect = cardList.getBoundingClientRect();
+          const cardRect = card.getBoundingClientRect();
+          const targetTop =
+            cardList.scrollTop +
+            (cardRect.top - listRect.top) -
+            listRect.height / 2 +
+            cardRect.height / 2;
+          cardList.scrollTo({ top: Math.max(0, targetTop), behavior: 'smooth' });
+        }
+
+        // Stage 3: Scroll document/page viewport
+        card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+
+        // Stage 4: Trigger eye-catching bounce animation
+        card.classList.remove('kanban-card--bouncing');
+        void card.offsetWidth;
+        card.classList.add('kanban-card--bouncing');
+        setTimeout(() => {
+          card?.classList.remove('kanban-card--bouncing');
+        }, 3200);
+      } else if (attempt < 15) {
+        this.checkScrollToHighlighted(attempt + 1);
+      }
+    }, attempt === 1 ? 250 : 150);
+  }
+
+  ngOnDestroy(): void {
+    if (this._scrollRetryTimer) {
+      clearTimeout(this._scrollRetryTimer);
+    }
+  }
 
   get canDrag(): boolean {
     return !this.readonly && this.allowDragDrop;

@@ -1,0 +1,20 @@
+/* src/app/feature/pm/dt/pmdt12/pmdt12C/pmdt12C.component.css */
+.pmdt12c-container {
+  width: 100%;
+}
+
+.trace-chain-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+.bug-glow-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.bug-glow-card:hover {
+  border-color: rgba(244, 63, 94, 0.4);
+}

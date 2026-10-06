@@ -2617,6 +2617,8 @@
   "PMDT12_CANNOT_TEST_BUG_MSG": "ไม่สามารถทดสอบได้เนื่องจากมี Bug ที่กำลังรอการแก้ไข",
   "PMDT12_COL_ACTIONS": "จัดการ",
   "PMDT12_COL_LINKED_TASK": "Task ที่ผูก",
+  "PMDT12_GO_TO_TASK_BOARD": "ไปยัง Task Board",
+  "PMDT12_VIEW_IN_TASK_BOARD": "เปิด Task Board",
   "PMDT12_COL_PRIORITY": "ลำดับความสำคัญ (Priority)",
   "PMDT12_COL_STEPS_EXPECTED": "ขั้นตอน & ผลที่คาดหวัง",
   "PMDT12_COL_TESTCASE_ID": "รหัส Test Case",

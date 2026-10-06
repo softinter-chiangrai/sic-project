@@ -183,6 +183,10 @@
             @for (task of colTasks; track task.id) {
               <div
                 class="kanban-card"
+                [attr.id]="'task-card-' + (task.id || task.taskCode)"
+                [attr.data-task-code]="task.taskCode"
+                [attr.data-task-id]="task.id"
+                [class.kanban-card--highlighted]="isTaskHighlighted(task)"
                 [class.kanban-card--bug]="isBugTask(task) && !isCompletedStatus(task.status)"
                 [class.kanban-card--bug-complete]="isBugCompleteTask(task)"
                 cdkDrag

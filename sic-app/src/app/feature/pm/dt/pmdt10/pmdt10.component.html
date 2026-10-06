@@ -211,6 +211,8 @@
         <sic-kanban
           [tasks]="filteredTasks()"
           [specifications]="specifications()"
+          [highlightedTaskId]="highlightedTaskId()"
+          [highlightedTaskCode]="highlightedTaskCode()"
           [showToolbar]="false"
           [allowCreate]="true"
           [allowDragDrop]="true"
@@ -350,19 +352,5 @@
 
   }
   }
-
-  <!-- ===== 5. TASK CREATE / EDIT MODAL (PMDT10A) ===== -->
-  <app-pmdt10a
-    #taskModal
-    [isOpen]="isModalOpen()"
-    [isEdit]="isModalEdit()"
-    [taskId]="selectedTaskId()"
-    [projectId]="projectId()"
-    [initialSpecId]="selectedSpecId()"
-    [specifications]="specifications()"
-    [workPackages]="workPackages()"
-    (close)="isModalOpen.set(false)"
-    (saved)="onTaskSaved($event)"
-  ></app-pmdt10a>
 
 </div>

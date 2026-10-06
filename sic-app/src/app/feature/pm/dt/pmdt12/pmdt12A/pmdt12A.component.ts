@@ -120,8 +120,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
   get testTypeOptions() {
     return [
-      { value: 'SIT', text: '🧪 ' + this.translate.instant('PMDT12A_TEST_TYPE_SIT') },
-      { value: 'UAT', text: '📋 ' + this.translate.instant('PMDT12A_TEST_TYPE_UAT') },
+      { value: 'SIT', text: this.translate.instant('PMDT12A_TEST_TYPE_SIT') },
+      { value: 'UAT', text: this.translate.instant('PMDT12A_TEST_TYPE_UAT') },
     ];
   }
 
@@ -633,6 +633,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       id: targetId || undefined,
       attachmentGroupId: this.extractUploadGroupId((rawVal as any).attachmentGroupId) || undefined,
       state: isEditMode ? 3 : 4,
+      taskStatus: rawVal.taskStatus || this.linkedTaskStatus() || undefined,
     };
     this.saveExecution(data);
   }
@@ -645,9 +646,9 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
         this.isSaved = true;
         this.formData.markAsPristine();
 
-        // Check if all test cases of this task now PASS, if so, move parent task to 'complete'
-        if (data.taskId && (data.testStatus || '').toLowerCase() === 'pass') {
-          this.checkAndAutoCompleteTask(data.taskId, data.projectId);
+        // Check and sync parent task status based on ALL test cases in the test scenario
+        if (data.taskId) {
+          this.checkAndSyncTaskStatus(data.taskId, data.projectId, data.scenarioId, data.id, data.testStatus);
         }
 
         this.dialog.success(this.translate.instant('PMDT12A_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT12A_SAVE_SUCCESS_MSG')).then(() => {
@@ -661,37 +662,85 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  private checkAndAutoCompleteTask(taskId: string, projectId?: string) {
-    this.service.getTestCases(projectId).subscribe({
+  private checkAndSyncTaskStatus(
+    taskId: string,
+    projectId?: string,
+    scenarioId?: string,
+    currentCaseId?: string,
+    currentTestStatus?: string
+  ) {
+    const pId = projectId || this.customerState.getProjectId();
+    this.service.getTestCases(pId).subscribe({
       next: (res) => {
-        const list: any[] = res?.content || res?.data || (Array.isArray(res) ? res : []);
-        const siblingTestCases = list.filter((tc: any) => tc.taskId === taskId && !tc.isDelete);
-        
-        // If there are test cases and ALL of them are 'Pass'
-        if (siblingTestCases.length > 0) {
-          const allPassed = siblingTestCases.every((tc: any) => {
-            const s = (tc.testStatus || '').toLowerCase();
-            return s === 'pass' || s === 'passed';
-          });
+        let tcs: PmTestCaseModel[] = [];
+        if (res && res.content && Array.isArray(res.content)) {
+          tcs = res.content;
+        } else if (Array.isArray(res)) {
+          tcs = res;
+        }
 
-          if (allPassed) {
-            this.service.getTaskById(taskId).subscribe({
-              next: (parentTask) => {
-                if (parentTask && parentTask.id && parentTask.status !== 'complete') {
-                  const updatedParent = {
-                    ...parentTask,
-                    status: 'complete',
-                  };
-                  this.service.updateTask(parentTask.id, updatedParent).subscribe({
-                    next: () => console.log(`Parent task ${parentTask.taskCode} auto-moved to complete because all test cases passed.`),
-                    error: (err) => console.error('Failed to auto-complete parent task:', err),
-                  });
-                }
-              },
-            });
+        // Filter test cases linked to this task (matching scenario if available)
+        const taskCases = tcs.filter((c) => {
+          const matchTask = c.taskId === taskId;
+          if (!matchTask) return false;
+          if (scenarioId && c.scenarioId) {
+            return c.scenarioId === scenarioId;
+          }
+          return true;
+        });
+
+        // Update the current test case in memory with its newly saved status
+        if (currentCaseId) {
+          const matchCase = taskCases.find((c) => c.id === currentCaseId);
+          if (matchCase) {
+            matchCase.testStatus = currentTestStatus || '';
           }
         }
+
+        const allPassed =
+          taskCases.length > 0 &&
+          taskCases.every((c) => {
+            const st = (c.testStatus || '').toLowerCase();
+            return st === 'pass' || st === 'passed';
+          });
+
+        const anyFailed = taskCases.some((c) => {
+          const st = (c.testStatus || '').toLowerCase();
+          return st === 'fail' || st === 'failed';
+        });
+
+        this.service.getTaskById(taskId).subscribe({
+          next: (parentTask) => {
+            if (!parentTask || !parentTask.id) return;
+            const currentStatus = (parentTask.status || '').toLowerCase();
+
+            if (allPassed) {
+              // ALL test cases in the scenario linked to this task have passed -> Move task to complete!
+              if (currentStatus !== 'complete') {
+                this.service.updateTask(parentTask.id, { ...parentTask, status: 'complete' }).subscribe({
+                  next: () => console.log(`Parent task ${parentTask.taskCode} moved to complete because ALL test cases passed.`),
+                });
+              }
+            } else if (anyFailed) {
+              // If any test case failed, keep/move to waiting fix
+              if (currentStatus !== 'waiting fix' && currentStatus !== 'bugfix') {
+                this.service.updateTask(parentTask.id, { ...parentTask, status: 'waiting fix' }).subscribe({
+                  next: () => console.log(`Parent task ${parentTask.taskCode} moved to waiting fix because a test case failed.`),
+                });
+              }
+            } else {
+              // Not all passed and none failed (some untested / in progress):
+              // If task was prematurely in 'complete', revert to 'testing'
+              if (currentStatus === 'complete' || currentStatus === 'completed' || currentStatus === 'done') {
+                this.service.updateTask(parentTask.id, { ...parentTask, status: 'testing' }).subscribe({
+                  next: () => console.log(`Parent task ${parentTask.taskCode} reverted to testing because not all test cases passed yet.`),
+                });
+              }
+            }
+          },
+        });
       },
+      error: (err) => console.error('Failed to load test cases for task sync:', err),
     });
   }
 

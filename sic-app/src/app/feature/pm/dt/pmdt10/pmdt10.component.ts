@@ -16,7 +16,6 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../core/services/business.service';
 
 import { Pmdt10Service } from './pmdt10.service';
-import { Pmdt10AComponent } from './pmdt10A/pmdt10A.component';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
 import { SicAvatarComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -34,7 +33,6 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     SicKanbanComponent,
     SicGridPanelComponent,
     SicGridPanelTemplate,
-    Pmdt10AComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt10.component.html',
@@ -49,8 +47,6 @@ export class Pmdt10Component implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private translate = inject(TranslateService);
-
-  @ViewChild('taskModal') taskModal?: Pmdt10AComponent;
 
   // View state
   viewType = signal<'kanban' | 'list'>('kanban');
@@ -70,11 +66,8 @@ export class Pmdt10Component implements OnInit {
   selectedPriority = signal<string | null>(null);
   selectedAssignee = signal<string | null>(null);
   searchQuery = signal<string>('');
-
-  // Modal signals
-  isModalOpen = signal(false);
-  isModalEdit = signal(false);
-  selectedTaskId = signal<string | null>(null);
+  highlightedTaskId = signal<string | null>(null);
+  highlightedTaskCode = signal<string | null>(null);
 
   // Columns definition
   readonly columns: KanbanColumnConfig[] = [
@@ -288,12 +281,14 @@ export class Pmdt10Component implements OnInit {
   }
 
   constructor() {
-    // เปลี่ยนโครงการใน context switcher แล้วโหลดใหม่ (เฉพาะโหมดที่ไม่ได้ระบุโครงการใน URL)
+    // เปลี่ยนโครงการใน context switcher แล้วโหลดใหม่
     effect(() => {
       const key = this.customerState.currentSelectedProjectIds().join(',');
       untracked(() => {
-        if (this.contextReady && !this.projectId() && key !== this.loadedContextKey) {
-          this.loadProjectData(null);
+        if (this.contextReady && key !== this.loadedContextKey) {
+          if (!this.projectId()) {
+            this.loadProjectData(null);
+          }
         }
       });
     });
@@ -311,16 +306,30 @@ export class Pmdt10Component implements OnInit {
     }
 
     this.route.queryParams.subscribe((params) => {
-      const pId = params['projectId'] || resolveProjectId(this.route, this.customerState);
+      const projectIdsParam = params['projectIds'] as string | undefined;
+      const pIds = projectIdsParam ? projectIdsParam.split(',').map((s) => s.trim()).filter(Boolean) : [];
+      const projectIdParam = params['projectId'] as string | undefined;
+
+      // ถ้าเข้ามาครั้งแรกโดยไม่มี query param ระบุโครงการโดยตรง หรือกดล้างตัวกรอง
+      // ให้เคลียร์ context โครงการเดิม เพื่อให้แสดงข้อมูลทุกโครงการตามค่าเริ่มต้น
+      if (!projectIdParam && pIds.length === 0) {
+        if (this.customerState.getSelectedProjects().length > 0) {
+          this.customerState.clearProject();
+        }
+      }
+
+      const singleProjectId = projectIdParam || (pIds.length === 1 ? pIds[0] : null);
       const specId = params['specificationId'] || null;
 
-      if (pId) {
-        this.projectId.set(pId);
+      this.projectId.set(singleProjectId);
+      this.selectedSpecId.set(specId);
+      this.highlightedTaskId.set(params['taskId'] || null);
+      const targetCode = params['taskCode'] || null;
+      this.highlightedTaskCode.set(targetCode);
+      if (params['search']) {
+        this.searchQuery.set(params['search']);
       }
-      if (specId) {
-        this.selectedSpecId.set(specId);
-      }
-      this.loadProjectData(this.projectId());
+      this.loadProjectData(singleProjectId);
       this.contextReady = true;
     });
   }
@@ -496,23 +505,32 @@ export class Pmdt10Component implements OnInit {
     grid.setRows(list as unknown as SicGridRowData[], { totalElements: list.length }, request.requestId);
   }
 
-  // Modal Actions
+  // Navigation to PMDT02C Task Form (แนวทาง A)
   openCreateTask(preselectedSpecId?: string | null): void {
-    this.isModalEdit.set(false);
-    this.selectedTaskId.set(null);
-    this.isModalOpen.set(true);
-    setTimeout(() => {
-      this.taskModal?.initForCreate(preselectedSpecId || this.selectedSpecId());
-    });
+    const queryParams: Record<string, any> = {
+      returnUrl: this.router.url,
+    };
+    if (this.projectId()) {
+      queryParams['projectId'] = this.projectId();
+    }
+    const specId = preselectedSpecId || this.selectedSpecId();
+    if (specId) {
+      queryParams['specificationId'] = specId;
+    }
+    this.router.navigate(['/feature/pm/task/new'], { queryParams });
   }
 
   openEditTask(task: TaskResponse): void {
-    this.isModalEdit.set(true);
-    this.selectedTaskId.set(task.id);
-    this.isModalOpen.set(true);
-    setTimeout(() => {
-      this.taskModal?.loadTaskData(task);
-    });
+    const queryParams: Record<string, any> = {
+      returnUrl: this.router.url,
+    };
+    if (task.projectId || this.projectId()) {
+      queryParams['projectId'] = task.projectId || this.projectId();
+    }
+    if (task.workPackageId) {
+      queryParams['workPackageId'] = task.workPackageId;
+    }
+    this.router.navigate(['/feature/pm/task', task.id, 'edit'], { queryParams });
   }
 
   onTaskSaved(saved: TaskResponse): void {
