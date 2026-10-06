@@ -289,8 +289,30 @@ export class Pmdt12Component implements OnInit, OnDestroy {
         (sc.description || '').toLowerCase().includes(search)
       );
 
-      // Include scenario if it has matching test cases OR if scenario itself matches search (without status/priority filter active)
-      if (casesForThisSc.length > 0 || (matchScKeyword && status === 'all' && priority === 'all') || (!search && status === 'all' && priority === 'all')) {
+      const isTaskStatusFilter = taskStatus !== 'all';
+      const isStatusFilter = status !== 'all';
+      const isPriorityFilter = priority !== 'all';
+      const hasSpecificFilter = isTaskStatusFilter || isStatusFilter || isPriorityFilter;
+
+      // When specific filters (like 'Testing', 'Pass', 'Fail', Priority) are active:
+      // ONLY include scenarios that have matching test cases (do not display empty scenarios)
+      if (hasSpecificFilter) {
+        if (casesForThisSc.length > 0) {
+          groups.push({
+            scenario: sc,
+            testCases: casesForThisSc,
+          });
+        }
+      } else if (search) {
+        // When searching, include if test cases match OR scenario itself matches search
+        if (casesForThisSc.length > 0 || matchScKeyword) {
+          groups.push({
+            scenario: sc,
+            testCases: casesForThisSc,
+          });
+        }
+      } else {
+        // Default (no filter): include all scenarios
         groups.push({
           scenario: sc,
           testCases: casesForThisSc,
@@ -506,18 +528,14 @@ export class Pmdt12Component implements OnInit, OnDestroy {
                 const st = (c.testStatus || '').toLowerCase();
                 return (st === 'pass' || st === 'passed') && !this.hasActiveBug(c);
               });
-            const anyFailed = cases.some((c) => {
-              const st = (c.testStatus || '').toLowerCase();
-              return st === 'fail' || st === 'failed' || this.hasActiveBug(c);
-            });
+            const anyActiveBug = cases.some((c) => this.hasActiveBug(c));
 
-            const targetStatus = allPassed ? 'complete' : anyFailed ? 'waiting fix' : 'testing';
+            const targetStatus = allPassed ? 'complete' : anyActiveBug ? 'waiting fix' : 'testing';
 
-            // Sync test cases taskStatus
+            // Sync test cases in-memory taskStatus
             cases.forEach((tc) => {
               if (tc.id && (tc.taskStatus || '').toLowerCase() !== targetStatus) {
                 tc.taskStatus = targetStatus;
-                this.service.saveTestCase({ id: tc.id, taskStatus: targetStatus }).subscribe();
               }
             });
 
@@ -532,9 +550,11 @@ export class Pmdt12Component implements OnInit, OnDestroy {
                       !allPassed;
                     const shouldMoveToComplete = allPassed && currentStatus !== 'complete';
                     const shouldMoveToWaitingFix =
-                      anyFailed && currentStatus !== 'waiting fix' && currentStatus !== 'bugfix';
+                      anyActiveBug && currentStatus !== 'waiting fix' && currentStatus !== 'bugfix';
+                    const shouldMoveToTesting =
+                      !anyActiveBug && !allPassed && (currentStatus === 'waiting fix' || currentStatus === 'bugfix');
 
-                    if (isPrematureComplete || shouldMoveToComplete || shouldMoveToWaitingFix) {
+                    if (isPrematureComplete || shouldMoveToComplete || shouldMoveToWaitingFix || shouldMoveToTesting) {
                       this.service.updateTask(taskRecord.id, { ...taskRecord, status: targetStatus }).subscribe({
                         next: () => {
                           const currentTasks = this.projectTasks();
@@ -600,18 +620,14 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   getActiveBugsForTestCase(testCase: PmTestCaseModel): any[] {
     const bugs = this.getBugsForTestCase(testCase);
     return bugs.filter((t: any) => {
-      const status = (t.status || '').toLowerCase();
-      return status !== 'complete' && status !== 'completed';
+      const status = (t.status || '').toLowerCase().trim();
+      return !['complete', 'completed', 'done', 'closed', 'bug complete', 'bug completed', 'bug done'].includes(status);
     });
   }
 
   hasActiveBug(testCase: PmTestCaseModel): boolean {
     const tcCode = (testCase.testCaseCode || '').trim();
     if (!tcCode) return false;
-
-    // Check if task status is currently bugfix
-    const ts = (testCase.taskStatus || '').toLowerCase();
-    if (ts === 'bugfix') return true;
 
     return this.getActiveBugsForTestCase(testCase).length > 0;
   }
@@ -778,9 +794,6 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   }
 
   private getResolvedProjectId(): string | null {
-    if (this.customerState.getProjectId()) {
-      return this.customerState.getProjectId();
-    }
     const qProjectId = this.route.snapshot.queryParams['projectId'];
     if (qProjectId) {
       return qProjectId;
@@ -789,32 +802,17 @@ export class Pmdt12Component implements OnInit, OnDestroy {
     if (selectedIds && selectedIds.length === 1) {
       return selectedIds[0];
     }
-    const visibleCases = this.filteredTestCases();
-    if (visibleCases.length > 0) {
-      const firstProjectId = visibleCases[0].projectId;
-      if (firstProjectId && visibleCases.every((c) => !c.projectId || c.projectId === firstProjectId)) {
-        return firstProjectId;
-      }
-    }
-    const visibleScenarios = this.filteredScenarios();
-    if (visibleScenarios.length > 0) {
-      const firstProjectId = visibleScenarios[0].projectId;
-      if (firstProjectId && visibleScenarios.every((s) => !s.projectId || s.projectId === firstProjectId)) {
-        return firstProjectId;
-      }
+    if (this.customerState.getSelectedProjects().length === 1) {
+      return this.customerState.getProjectId();
     }
     return null;
   }
 
   exportUatReport(testType: string = 'UAT') {
     const projectId = this.getResolvedProjectId();
-    if (!projectId) {
-      this.dialog.warn(this.translate.instant('PMDT12_NO_PROJECT_TITLE'), this.translate.instant('PMDT12_SELECT_PROJECT_FIRST_MSG'));
-      return;
-    }
 
     this.isExportingUat.set(true);
-    this.service.exportUatReport(projectId, testType)
+    this.service.exportUatReport(projectId || undefined, testType)
       .pipe(finalize(() => this.isExportingUat.set(false)))
       .subscribe({
         next: (blob: Blob) => {
@@ -861,14 +859,10 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   exportScenarioReport(scenario: PmTestScenarioModel, event?: MouseEvent) {
     if (event) event.stopPropagation();
     const projectId = scenario.projectId || this.getResolvedProjectId();
-    if (!projectId) {
-      this.dialog.warn(this.translate.instant('PMDT12_NO_PROJECT_TITLE'), this.translate.instant('PMDT12_SELECT_PROJECT_FIRST_MSG'));
-      return;
-    }
 
     const testType = scenario.testType || 'UAT';
     this.isExportingUat.set(true);
-    this.service.exportUatReport(projectId, testType, scenario.id)
+    this.service.exportUatReport(projectId || undefined, testType, scenario.id)
       .pipe(finalize(() => this.isExportingUat.set(false)))
       .subscribe({
         next: (blob: Blob) => {
@@ -1032,7 +1026,18 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   }
 
   // ===== Badges & Utilities =====
-  getStatusClass(status?: string): string {
+  isWaitingRetest(testCaseOrStatus?: PmTestCaseModel | string): boolean {
+    if (!testCaseOrStatus || typeof testCaseOrStatus === 'string') return false;
+    const s = (testCaseOrStatus.testStatus || '').toLowerCase();
+    const isFailed = s === 'fail' || s === 'failed';
+    return isFailed && !this.hasActiveBug(testCaseOrStatus);
+  }
+
+  getStatusClass(testCaseOrStatus?: PmTestCaseModel | string): string {
+    if (this.isWaitingRetest(testCaseOrStatus)) {
+      return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
+    }
+    const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus?.testStatus;
     const s = (status || '').toLowerCase();
     switch (s) {
       case 'pass':
@@ -1049,7 +1054,11 @@ export class Pmdt12Component implements OnInit, OnDestroy {
     }
   }
 
-  getStatusText(status?: string): string {
+  getStatusText(testCaseOrStatus?: PmTestCaseModel | string): string {
+    if (this.isWaitingRetest(testCaseOrStatus)) {
+      return 'รอ Re-test';
+    }
+    const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus?.testStatus;
     const s = (status || '').toLowerCase();
     switch (s) {
       case 'pass':
@@ -1066,7 +1075,11 @@ export class Pmdt12Component implements OnInit, OnDestroy {
     }
   }
 
-  getStatusIcon(status?: string): string {
+  getStatusIcon(testCaseOrStatus?: PmTestCaseModel | string): string {
+    if (this.isWaitingRetest(testCaseOrStatus)) {
+      return 'bi-arrow-repeat text-blue-500';
+    }
+    const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus?.testStatus;
     const s = (status || '').toLowerCase();
     switch (s) {
       case 'pass':
@@ -1139,20 +1152,26 @@ export class Pmdt12Component implements OnInit, OnDestroy {
         return (st === 'pass' || st === 'passed') && !this.hasActiveBug(c);
       });
 
-    // Check if ANY test case has failed or has an active bug
-    const anyFailedOrBug = relevantCases.some((c) => {
-      const st = (c.testStatus || '').toLowerCase();
-      return st === 'fail' || st === 'failed' || this.hasActiveBug(c);
-    });
+    // Check if ANY test case currently has an active unresolved bug
+    const anyActiveBug = relevantCases.some((c) => this.hasActiveBug(c));
 
-    // 1. If any test case failed or has an active bug, task status MUST be waiting fix
-    if (anyFailedOrBug) {
+    // 1. If any test case has an active bug, task status MUST be waiting fix
+    if (anyActiveBug) {
       return 'waiting fix';
     }
 
     // 2. If ALL test cases in the scenario linked to this task have passed, task status is complete
     if (allPassed) {
       return 'complete';
+    }
+
+    // 3. If there are failed test cases but ALL bugs have been resolved, status is 'testing' (ready for re-test)
+    const anyFailed = relevantCases.some((c) => {
+      const st = (c.testStatus || '').toLowerCase();
+      return st === 'fail' || st === 'failed';
+    });
+    if (anyFailed && !anyActiveBug) {
+      return 'testing';
     }
 
     // 3. Otherwise (some passed or untested, but none failed)

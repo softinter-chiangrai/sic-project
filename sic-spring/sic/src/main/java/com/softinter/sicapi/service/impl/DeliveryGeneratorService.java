@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -71,8 +72,24 @@ public class DeliveryGeneratorService {
 
         if (request.getDeliveryType() != null && !request.getDeliveryType().isBlank()) draft.setDeliveryType(request.getDeliveryType());
         if (draft.getDeliveryDate() == null || draft.getDeliveryDate().isBlank()) draft.setDeliveryDate(java.time.LocalDate.now().plusDays(30).toString());
-        if (draft.getChecklists() == null) {
-            draft.setChecklists(new ArrayList<>());
+        if (draft.getChecklists() == null || draft.getChecklists().isEmpty()) {
+            List<DeliveryDraft.DeliveryChecklistDraftItem> defaultChecklists = new ArrayList<>();
+            defaultChecklists.add(DeliveryDraft.DeliveryChecklistDraftItem.builder()
+                    .checklistName("ตรวจสอบความครบถ้วนของ Source Code และ Git Repository Handover")
+                    .isPassed(false).build());
+            defaultChecklists.add(DeliveryDraft.DeliveryChecklistDraftItem.builder()
+                    .checklistName("ตรวจสอบผลการทดสอบระบบ (UAT Acceptance & Test Results)")
+                    .isPassed(false).build());
+            defaultChecklists.add(DeliveryDraft.DeliveryChecklistDraftItem.builder()
+                    .checklistName("เอกสารคู่มือการใช้งานระบบและคู่มือผู้ดูแลระบบ (User & Admin Manual)")
+                    .isPassed(false).build());
+            defaultChecklists.add(DeliveryDraft.DeliveryChecklistDraftItem.builder()
+                    .checklistName("เอกสารขั้นตอนการติดตั้งและสถาปัตยกรรมระบบ (Deployment Architecture Guide)")
+                    .isPassed(false).build());
+            defaultChecklists.add(DeliveryDraft.DeliveryChecklistDraftItem.builder()
+                    .checklistName("หนังสือรับรองการตรวจรับงานและรายงานสรุปผลการส่งมอบ")
+                    .isPassed(false).build());
+            draft.setChecklists(defaultChecklists);
         }
         if (draft.getItems() == null) {
             draft.setItems(new ArrayList<>());

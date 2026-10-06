@@ -586,11 +586,16 @@ export class Pmdt10Component implements OnInit {
         this.allTasks.set(all);
 
         // If a Bug Task is moved to complete, check if all bugs of the work package/parent task are resolved
-        const isComplete = ['complete', 'done', 'completed'].includes((event.newStatus || '').toLowerCase());
-        const isBug = (event.task.taskCode || '').toUpperCase().startsWith('BUG') || (event.task.taskName || '').toUpperCase().startsWith('[BUG]');
+        const isComplete = ['complete', 'done', 'completed', 'bug complete', 'bug completed', 'bug done'].includes(
+          (event.newStatus || '').toLowerCase().trim()
+        );
+        const isBug =
+          (event.task.taskCode || '').toUpperCase().startsWith('BUG') ||
+          (event.task.taskName || '').toUpperCase().startsWith('[BUG]') ||
+          (event.task.taskName || '').toUpperCase().includes('BUG');
 
-        if (isComplete && isBug && event.task.workPackageId) {
-          this.checkAndAutoMoveParentTaskToTesting(event.task.workPackageId, event.task.id);
+        if (isComplete && isBug) {
+          this.checkAndAutoMoveParentTaskToTesting(event.task.workPackageId, event.task.specificationId, event.task.id);
         }
       },
       error: (err) => {
@@ -600,15 +605,29 @@ export class Pmdt10Component implements OnInit {
     });
   }
 
-  private checkAndAutoMoveParentTaskToTesting(wpId: string, completedBugId: string): void {
-    const tasks = this.allTasks().filter((t) => t.workPackageId === wpId);
-    const bugfixTasks = tasks.filter((t) => (t.status || '').toLowerCase() === 'bugfix');
+  private checkAndAutoMoveParentTaskToTesting(
+    wpId: string | null | undefined,
+    specId: string | null | undefined,
+    completedBugId: string
+  ): void {
+    const tasks = this.allTasks().filter((t) => {
+      if (wpId && t.workPackageId === wpId) return true;
+      if (!wpId && specId && t.specificationId === specId) return true;
+      return false;
+    });
+    const fixStatuses = ['bugfix', 'bug fixing', 'bug', 'fixing', 'waiting fix', 'blocked'];
+    const bugfixTasks = tasks.filter((t) => fixStatuses.includes((t.status || '').toLowerCase().trim()));
 
     bugfixTasks.forEach((parentTask) => {
       const hasUnresolvedBugs = tasks.some((t) => {
         if (t.id === completedBugId) return false;
-        const isTaskBug = (t.taskCode || '').toUpperCase().startsWith('BUG') || (t.taskName || '').toUpperCase().startsWith('[BUG]');
-        const isTaskDone = ['complete', 'done', 'completed'].includes((t.status || '').toLowerCase());
+        const isTaskBug =
+          (t.taskCode || '').toUpperCase().startsWith('BUG') ||
+          (t.taskName || '').toUpperCase().startsWith('[BUG]') ||
+          (t.taskName || '').toUpperCase().includes('BUG');
+        const isTaskDone = ['complete', 'done', 'completed', 'bug complete', 'bug completed', 'bug done'].includes(
+          (t.status || '').toLowerCase().trim()
+        );
         return isTaskBug && !isTaskDone;
       });
 

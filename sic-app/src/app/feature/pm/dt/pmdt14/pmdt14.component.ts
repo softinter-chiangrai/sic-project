@@ -58,6 +58,7 @@ export class Pmdt14Component implements OnInit {
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
   private rawDeliveries = signal<PmDeliveryModel[]>([]);
   private gridRef = signal<SicGridPanelComponent | null>(null);
+  private hasLoadedData = signal(false);
 
   gridConfig: SicGridPanelConfig = {
     id: 'id',
@@ -83,7 +84,7 @@ export class Pmdt14Component implements OnInit {
       const ids = this.selectedProjectIds();
       const all = this.rawDeliveries();
       const grid = this.gridRef();
-      if (!grid) return;
+      if (!grid || !this.hasLoadedData()) return;
 
       const filtered = !ids || ids.length === 0
         ? all
@@ -92,7 +93,6 @@ export class Pmdt14Component implements OnInit {
       this.deliveries.set(filtered);
       this.totalElements.set(filtered.length);
       grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length });
-      this.loadApprovalStatuses(filtered, grid, undefined, filtered.length);
     });
   }
 
@@ -139,12 +139,24 @@ export class Pmdt14Component implements OnInit {
       status: this.filterStatus(),
     }).subscribe({
       next: (res) => {
-        this.rawDeliveries.set((res.data || []) as PmDeliveryModel[]);
+        const items = (res.data || []) as PmDeliveryModel[];
+        this.rawDeliveries.set(items);
+        this.hasLoadedData.set(true);
         this.isLoading.set(false);
-        // Rendering into the grid happens via the `selectedProjectIds`/`rawDeliveries` effect.
+
+        const ids = this.selectedProjectIds();
+        const filtered = !ids || ids.length === 0
+          ? items
+          : items.filter((d) => d.projectId && ids.includes(d.projectId));
+
+        this.deliveries.set(filtered);
+        this.totalElements.set(filtered.length);
+        grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length }, request.requestId);
+        this.loadApprovalStatuses(filtered);
       },
       error: (err) => {
         this.isLoading.set(false);
+        this.hasLoadedData.set(true);
         const msg = err.error?.message || this.translate.instant('PMDT14_LOAD_ERROR');
         this.rawDeliveries.set([]);
         this.deliveries.set([]);
@@ -156,13 +168,12 @@ export class Pmdt14Component implements OnInit {
     });
   }
 
-  loadApprovalStatuses(deliveries: PmDeliveryModel[], grid: SicGridPanelComponent, requestId: number | undefined, totalElements: number): void {
+  loadApprovalStatuses(deliveries: PmDeliveryModel[]): void {
     deliveries.forEach((delivery) => {
       if (!delivery.id) return;
       this.approvalService.getDocumentStatus('DELIVERY', delivery.id).subscribe({
         next: (approval) => {
           this.approvalStatusMap.update((map) => ({ ...map, [delivery.id!]: approval.status }));
-          grid.setRows(this.deliveries() as unknown as SicGridRowData[], { totalElements }, requestId);
         },
         error: () => {
           // No approval status or not submitted yet

@@ -197,13 +197,15 @@ export class SicKanbanComponent implements OnDestroy {
         // Stage 3: Scroll document/page viewport
         card.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
 
-        // Stage 4: Trigger eye-catching bounce animation
+        // Stage 4: Trigger gentle attention animation and auto-clear highlight
         card.classList.remove('kanban-card--bouncing');
         void card.offsetWidth;
         card.classList.add('kanban-card--bouncing');
         setTimeout(() => {
           card?.classList.remove('kanban-card--bouncing');
-        }, 3200);
+          this._highlightedTaskId.set(null);
+          this._highlightedTaskCode.set(null);
+        }, 2500);
       } else if (attempt < 15) {
         this.checkScrollToHighlighted(attempt + 1);
       }

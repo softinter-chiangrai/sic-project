@@ -230,8 +230,8 @@ public class AiProjectPipelineJobService {
         if (on(request.getIncludeDesignReviews())) job.steps.add(new StepState("DESIGN_REVIEW", "Design Review"));
         if (on(request.getIncludeTasks())) job.steps.add(new StepState("TASK", "Task"));
         if (on(request.getIncludeTests())) job.steps.add(new StepState("TEST", "Test Scenario / Test Case"));
-        if (on(request.getIncludeDelivery())) job.steps.add(new StepState("DELIVERY", "การส่งมอบ (Delivery)"));
         if (on(request.getIncludeManuals())) job.steps.add(new StepState("MANUAL", "คู่มือการใช้งาน"));
+        if (on(request.getIncludeDelivery())) job.steps.add(new StepState("DELIVERY", "การส่งมอบ (Delivery)"));
         if (on(request.getIncludeInvoices())) job.steps.add(new StepState("INVOICE", "ใบแจ้งหนี้ (ร่าง)"));
         if (on(request.getIncludeMa())) job.steps.add(new StepState("MA", "MA Ticket / ต่ออายุ MA"));
         persistJob(job, businessId, userId, request);
@@ -368,8 +368,8 @@ public class AiProjectPipelineJobService {
                         case "DESIGN_REVIEW" -> stepDesignReviews(c, step);
                         case "TASK" -> stepTasks(c, step);
                         case "TEST" -> stepTests(c, step);
-                        case "DELIVERY" -> stepDeliveries(c, step);
                         case "MANUAL" -> stepManuals(c, step);
+                        case "DELIVERY" -> stepDeliveries(c, step);
                         case "INVOICE" -> stepInvoices(c, step);
                         case "MA" -> stepMa(c, step);
                         default -> step.status = "SKIPPED";
@@ -856,9 +856,10 @@ public class AiProjectPipelineJobService {
         JsonNode root = ask(c, """
                 You are a Delivery Manager. Plan the deliveries (2-4, the last one is FINAL), each optionally tied to a milestone by number. Fill EVERY field.
                 deliveryType is one of: FINAL | PARTIAL | MILESTONE.
+                IMPORTANT: For EACH delivery, you MUST provide 3 to 6 realistic acceptance checklist items in the 'checklists' array (e.g. source code inspection, test results verification, user manuals, deployment checklist). Do NOT leave 'checklists' empty!
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "deliveries": [ { "milestoneRef": 1, "deliveryTitle": "...", "deliveryType": "PARTIAL", "deliverySummary": "HTML", "releaseNote": "HTML",
-                    "checklists": [ { "itemName": "acceptance check item", "itemCategory": "Documentation | Testing | Deployment | Training" } ] } ] }
+                    "checklists": [ { "itemName": "specific acceptance check item in project language", "itemCategory": "Documentation | Testing | Deployment | Training" } ] } ] }
                 """, projectContext(c) + "\n\nMilestones:\n" + numbered(c.milestones), false);
 
         List<JsonNode> items = arr(root, "deliveries");
@@ -877,7 +878,7 @@ public class AiProjectPipelineJobService {
             dq.setDeliveryVersion("1.0." + (idx - 1));
             dq.setDeliverySummary(txt(d, "deliverySummary"));
             dq.setReleaseNote(txt(d, "releaseNote"));
-            dq.setChecklists(checklists(d));
+            dq.setChecklists(checklists(d, dq.getDeliveryTitle()));
             if (idx == n) dq.setItems(deliveryItems(c));
             dq.setStatus("DRAFT");
             dq.setState(STATE_ADDED);
@@ -889,16 +890,39 @@ public class AiProjectPipelineJobService {
         if (c.deliveries.isEmpty()) step.message = "AI ไม่สามารถวางแผนการส่งมอบได้";
     }
 
-    private List<PmDeliveryChecklistRequest> checklists(JsonNode d) {
+    private List<PmDeliveryChecklistRequest> checklists(JsonNode d, String deliveryTitle) {
         List<PmDeliveryChecklistRequest> out = new ArrayList<>();
         for (JsonNode k : arr(d, "checklists")) {
-            PmDeliveryChecklistRequest cr = new PmDeliveryChecklistRequest();
-            cr.setItemName(cut(txt(k, "itemName"), 255));
-            cr.setItemCategory(cut(txt(k, "itemCategory"), 100));
-            cr.setIsChecked(false);
-            cr.setSortOrder(out.size() + 1);
-            cr.setState(STATE_ADDED);
-            out.add(cr);
+            String name = txt(k, "itemName");
+            if (name.isBlank()) name = txt(k, "checklistName");
+            if (name.isBlank()) name = txt(k, "name");
+            if (!name.isBlank()) {
+                PmDeliveryChecklistRequest cr = new PmDeliveryChecklistRequest();
+                cr.setItemName(cut(name, 255));
+                cr.setItemCategory(cut(txt(k, "itemCategory"), 100));
+                cr.setIsChecked(false);
+                cr.setSortOrder(out.size() + 1);
+                cr.setState(STATE_ADDED);
+                out.add(cr);
+            }
+        }
+        if (out.isEmpty()) {
+            List<String> defaultItems = List.of(
+                    "ตรวจสอบความครบถ้วนของ Source Code และ Git Repository Handover",
+                    "ตรวจสอบผลการทดสอบระบบ (UAT Acceptance & Test Results)",
+                    "เอกสารคู่มือการใช้งานระบบ (User & Admin Manual)",
+                    "เอกสารการติดตั้งและสถาปัตยกรรมระบบ (Deployment Architecture & Guide)",
+                    "รายงานสรุปผลการส่งมอบและเอกสารรับรองงวดงาน (" + (deliveryTitle != null && !deliveryTitle.isBlank() ? deliveryTitle : "การตรวจรับงาน") + ")"
+            );
+            for (String itemName : defaultItems) {
+                PmDeliveryChecklistRequest cr = new PmDeliveryChecklistRequest();
+                cr.setItemName(itemName);
+                cr.setItemCategory("Acceptance");
+                cr.setIsChecked(false);
+                cr.setSortOrder(out.size() + 1);
+                cr.setState(STATE_ADDED);
+                out.add(cr);
+            }
         }
         return out;
     }

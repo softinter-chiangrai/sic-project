@@ -673,7 +673,9 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     this.service.getTestCases(pId).subscribe({
       next: (res) => {
         let tcs: PmTestCaseModel[] = [];
-        if (res && res.content && Array.isArray(res.content)) {
+        if (res && res.data && Array.isArray(res.data)) {
+          tcs = res.data;
+        } else if (res && res.content && Array.isArray(res.content)) {
           tcs = res.content;
         } else if (Array.isArray(res)) {
           tcs = res;
@@ -694,6 +696,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
           const matchCase = taskCases.find((c) => c.id === currentCaseId);
           if (matchCase) {
             matchCase.testStatus = currentTestStatus || '';
+          } else if (taskId) {
+            taskCases.push({ id: currentCaseId, taskId, scenarioId, testStatus: currentTestStatus || '' } as any);
           }
         }
 
@@ -716,7 +720,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
             if (allPassed) {
               // ALL test cases in the scenario linked to this task have passed -> Move task to complete!
-              if (currentStatus !== 'complete') {
+              if (currentStatus !== 'complete' && currentStatus !== 'completed' && currentStatus !== 'done') {
                 this.service.updateTask(parentTask.id, { ...parentTask, status: 'complete' }).subscribe({
                   next: () => console.log(`Parent task ${parentTask.taskCode} moved to complete because ALL test cases passed.`),
                 });

@@ -25,15 +25,16 @@
     </div>
 
     <!-- Action Buttons -->
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-2 flex-shrink-0">
       <!-- AI Batch Create -->
       <button
         type="button"
-        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all cursor-pointer"
         (click)="showAiBatchModal.set(true)"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
+        [title]="'AI_BATCH_CREATE_BUTTON' | translate"
       >
-        <i class="bi bi-stars"></i>
-        {{ 'AI_BATCH_CREATE_BUTTON' | translate }}
+        <i class="bi bi-stars text-base"></i>
+        <span>{{ 'AI_BATCH_CREATE_BUTTON' | translate }}</span>
       </button>
 
       <!-- Export Test / UAT Report Dropdown -->
@@ -436,9 +437,9 @@
                       <!-- สถานะ -->
                       <td class="px-4 py-3 align-top">
                         <div class="flex items-center gap-1.5">
-                          <i class="bi text-sm" [class]="getStatusIcon(testCase.testStatus)"></i>
-                          <span [class]="getStatusClass(testCase.testStatus) + ' inline-block px-2 py-0.5 rounded-full text-xs font-medium'">
-                            {{ getStatusText(testCase.testStatus) }}
+                          <i class="bi text-sm" [class]="getStatusIcon(testCase)"></i>
+                          <span [class]="getStatusClass(testCase) + ' inline-block px-2 py-0.5 rounded-full text-xs font-medium'">
+                            {{ getStatusText(testCase) }}
                           </span>
                         </div>
                       </td>
@@ -464,7 +465,7 @@
                                 class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-amber-500 hover:bg-amber-600 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
                                 [title]="'PMDT12_SAVE_TEST_RESULT_TT' | translate"
                               >
-                                <i class="bi bi-play-circle-fill"></i> ทดสอบ
+                                <i class="bi bi-play-circle-fill"></i> {{ isWaitingRetest(testCase) ? 'Re-test' : 'ทดสอบ' }}
                               </button>
                             } @else if (!hasActiveBug(testCase) && testCase.taskId) {
                               <button
@@ -476,27 +477,17 @@
                               </button>
                             }
                           }
-                          <!-- Bug Button & Badges when test case is Fail or has Active Bugs -->
-                          @if ((testCase.testStatus || '').toLowerCase() === 'fail' || (testCase.testStatus || '').toLowerCase() === 'failed' || hasActiveBug(testCase)) {
-                            @if (hasActiveBug(testCase)) {
-                              <button
-                                (click)="goToCreateBug(testCase, $event)"
-                                class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700 transition-all cursor-pointer shadow-xs"
-                                [title]="'คลิกเพื่อเปิด Bug เพิ่มเติม (ปัจจุบันมี ' + getActiveBugsForTestCase(testCase).length + ' Bug ที่ยังเปิดอยู่)'"
-                              >
-                                <i class="bi bi-bug-fill text-xs"></i>
-                                <span>{{ getActiveBugsForTestCase(testCase).length }} Bug</span>
-                                <i class="bi bi-plus text-xs -ml-0.5"></i>
-                              </button>
-                            } @else {
-                              <button
-                                (click)="goToCreateBug(testCase, $event)"
-                                class="px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1 text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/40 dark:hover:bg-rose-900/60 dark:text-rose-400 border border-rose-200 dark:border-rose-800 transition-all cursor-pointer shadow-xs"
-                                [title]="'PMDT12_OPEN_BUG_TASKBOARD_TT' | translate"
-                              >
-                                <i class="bi bi-bug-fill text-xs"></i> เปิด Bug
-                              </button>
-                            }
+                          <!-- Bug Button & Badges when test case has Active Bugs -->
+                          @if (hasActiveBug(testCase)) {
+                            <button
+                              (click)="goToCreateBug(testCase, $event)"
+                              class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700 transition-all cursor-pointer shadow-xs"
+                              [title]="'คลิกเพื่อเปิด Bug เพิ่มเติม (ปัจจุบันมี ' + getActiveBugsForTestCase(testCase).length + ' Bug ที่ยังเปิดอยู่)'"
+                            >
+                              <i class="bi bi-bug-fill text-xs"></i>
+                              <span>{{ getActiveBugsForTestCase(testCase).length }} Bug</span>
+                              <i class="bi bi-plus text-xs -ml-0.5"></i>
+                            </button>
                           }
                           <!-- View -->
                           <button

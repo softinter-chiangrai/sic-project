@@ -14,6 +14,8 @@ import java.util.UUID;
 @Repository
 public interface PmTestCaseRepository extends JpaRepository<PmTestCase, UUID>, JpaSpecificationExecutor<PmTestCase> {
 
+    List<PmTestCase> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+
     Page<PmTestCase> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 
     Page<PmTestCase> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);

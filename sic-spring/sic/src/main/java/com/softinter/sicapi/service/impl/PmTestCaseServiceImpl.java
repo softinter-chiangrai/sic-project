@@ -260,39 +260,49 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
     private void mapRequestToEntity(PmTestCaseRequest req, PmTestCase entity) {
         // ✅ derive taskId/projectId จาก Test Scenario เสมอถ้า scenario มีค่า ถ้าไม่มีให้ fallback ไปที่ request
         PmTestScenario sc = req.getScenarioId() != null
-                ? scenarioRepository.findById(req.getScenarioId())
-                        .orElseThrow(() -> new RuntimeException("ไม่พบ Test Scenario"))
+                ? scenarioRepository.findById(req.getScenarioId()).orElse(null)
                 : null;
-        entity.setScenarioId(req.getScenarioId());
-        entity.setScenarioName(req.getScenarioName());
+        if (req.getScenarioId() != null) entity.setScenarioId(req.getScenarioId());
+        if (req.getScenarioName() != null) entity.setScenarioName(req.getScenarioName());
         if (sc != null) {
-            entity.setTaskId(sc.getTaskId() != null ? sc.getTaskId() : req.getTaskId());
-            entity.setProjectId(sc.getProjectId() != null ? sc.getProjectId() : req.getProjectId());
+            entity.setTaskId(sc.getTaskId() != null ? sc.getTaskId() : (req.getTaskId() != null ? req.getTaskId() : entity.getTaskId()));
+            entity.setProjectId(sc.getProjectId() != null ? sc.getProjectId() : (req.getProjectId() != null ? req.getProjectId() : entity.getProjectId()));
         } else {
-            entity.setTaskId(req.getTaskId());
-            entity.setProjectId(req.getProjectId());
+            if (req.getTaskId() != null) entity.setTaskId(req.getTaskId());
+            if (req.getProjectId() != null) entity.setProjectId(req.getProjectId());
         }
-        entity.setTestCaseCode(req.getTestCaseCode());
-        entity.setTitle(req.getTitle());
-        entity.setPriority(req.getPriority() != null ? req.getPriority() : "Medium");
-        entity.setTestStep(req.getTestStep());
-        entity.setExpectedResult(req.getExpectedResult());
-        entity.setActualResult(req.getActualResult());
-        entity.setTestStatus(req.getTestStatus() != null ? req.getTestStatus() : "Pending");
+        if (req.getTestCaseCode() != null) entity.setTestCaseCode(req.getTestCaseCode());
+        if (req.getTitle() != null) entity.setTitle(req.getTitle());
+        if (req.getPriority() != null) {
+            entity.setPriority(req.getPriority());
+        } else if (entity.getPriority() == null) {
+            entity.setPriority("Medium");
+        }
+        if (req.getTestStep() != null) entity.setTestStep(req.getTestStep());
+        if (req.getExpectedResult() != null) entity.setExpectedResult(req.getExpectedResult());
+        if (req.getActualResult() != null) entity.setActualResult(req.getActualResult());
+        if (req.getTestStatus() != null) {
+            entity.setTestStatus(req.getTestStatus());
+        } else if (entity.getTestStatus() == null) {
+            entity.setTestStatus("Pending");
+        }
 
         // Auto-inherit testType from Scenario if scenarioId is present
         String effectiveTestType = req.getTestType();
         if (sc != null && sc.getTestType() != null && !sc.getTestType().isBlank()) {
             effectiveTestType = sc.getTestType();
         }
-        entity.setTestType(effectiveTestType != null ? effectiveTestType : "SIT");
-        entity.setTester(req.getTester());
-        // Map testDate (LocalDate)
-        entity.setTestDate(req.getTestDate());
-        entity.setRelatedRequirement(req.getRelatedRequirement());
-        entity.setRelatedSpec(req.getRelatedSpec());
-        entity.setRelatedTask(req.getRelatedTask());
-        entity.setAttachmentGroupId(req.getAttachmentGroupId());
+        if (effectiveTestType != null) {
+            entity.setTestType(effectiveTestType);
+        } else if (entity.getTestType() == null) {
+            entity.setTestType("SIT");
+        }
+        if (req.getTester() != null) entity.setTester(req.getTester());
+        if (req.getTestDate() != null) entity.setTestDate(req.getTestDate());
+        if (req.getRelatedRequirement() != null) entity.setRelatedRequirement(req.getRelatedRequirement());
+        if (req.getRelatedSpec() != null) entity.setRelatedSpec(req.getRelatedSpec());
+        if (req.getRelatedTask() != null) entity.setRelatedTask(req.getRelatedTask());
+        if (req.getAttachmentGroupId() != null) entity.setAttachmentGroupId(req.getAttachmentGroupId());
     }
 
     private PmTestCaseResponse toResponse(PmTestCase entity) {

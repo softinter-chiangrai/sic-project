@@ -236,15 +236,20 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       { deliveryType: this.typeOptions },
     );
 
-    const rawItems = draft.items || draft.checklists;
-    if (rawItems && Array.isArray(rawItems) && rawItems.length > 0) {
-      const newItems: PmDeliveryChecklistModel[] = rawItems.map((it: any, idx: number) => ({
-        itemName: typeof it === 'string' ? it : (it.itemName || it.checklistName || it.name || this.translate.instant('PMDT14_DEFAULT_ITEM_NAME', { n: idx + 1 })),
-        isChecked: typeof it === 'object' && it.isPassed !== undefined ? it.isPassed : false,
+    const rawChecklists = (draft.checklists && draft.checklists.length > 0)
+      ? draft.checklists
+      : (draft.items && draft.items.length > 0 ? draft.items : []);
+
+    if (rawChecklists && Array.isArray(rawChecklists) && rawChecklists.length > 0) {
+      const newItems: PmDeliveryChecklistModel[] = rawChecklists.map((it: any, idx: number) => ({
+        itemName: typeof it === 'string' ? it : (it.itemName || it.checklistName || it.title || it.name || this.translate.instant('PMDT14_DEFAULT_ITEM_NAME', { n: idx + 1 })),
+        isChecked: typeof it === 'object' && it.isPassed !== undefined ? !!it.isPassed : false,
         sortOrder: idx + 1,
         state: SicEntityState.Added,
       }));
       this.checklists.set(newItems);
+    } else if (this.checklists().length === 0) {
+      this.initDefaultChecklist();
     }
 
     this.formData.markAsDirty();
@@ -398,8 +403,12 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
     } else {
       this.formData.form.enable();
     }
-    if (data.checklists) {
+    if (data.checklists && data.checklists.length > 0) {
       this.checklists.set(data.checklists);
+    } else if (!this.isView() && !data.isLocked) {
+      this.initDefaultChecklist();
+    } else {
+      this.checklists.set(data.checklists || []);
     }
     this.formData.resetModel(this.formData.form.getRawValue() as any);
     if (data.projectId) {
@@ -430,13 +439,21 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   }
 
   initDefaultChecklist(): void {
-    const defaults: PmDeliveryChecklistModel[] = [
-      { itemName: 'Source Code Package & Git Repository Handover', isChecked: false, sortOrder: 1 },
-      { itemName: 'Database Migration Script & DDL/DML Package', isChecked: false, sortOrder: 2 },
-      { itemName: 'User Manual & Admin Manual (PDF Attached below)', isChecked: false, sortOrder: 3 },
-      { itemName: 'Installation Guide & Deployment Architecture Documentation', isChecked: false, sortOrder: 4 },
-      { itemName: 'UAT Sign-Off Certificate & Test Execution Summary Report', isChecked: false, sortOrder: 5 },
-      { itemName: 'System Credential Sheet & Security Handover Form', isChecked: false, sortOrder: 6 },
+    const isThai = this.translate.currentLang !== 'en';
+    const defaults: PmDeliveryChecklistModel[] = isThai ? [
+      { itemName: 'ตรวจสอบความครบถ้วนของ Source Code และ Git Repository Handover', isChecked: false, sortOrder: 1, state: SicEntityState.Added },
+      { itemName: 'ตรวจสอบ Database Migration Script และ DDL/DML Package', isChecked: false, sortOrder: 2, state: SicEntityState.Added },
+      { itemName: 'เอกสารคู่มือการใช้งานระบบและคู่มือผู้ดูแลระบบ (User & Admin Manual)', isChecked: false, sortOrder: 3, state: SicEntityState.Added },
+      { itemName: 'เอกสารขั้นตอนการติดตั้งและสถาปัตยกรรมระบบ (Deployment Architecture & Guide)', isChecked: false, sortOrder: 4, state: SicEntityState.Added },
+      { itemName: 'เอกสารผลการทดสอบระบบและหนังสือรับรองการตรวจรับ (UAT Sign-Off Certificate)', isChecked: false, sortOrder: 5, state: SicEntityState.Added },
+      { itemName: 'เอกสารการส่งมอบข้อมูลความปลอดภัยและบัญชีเข้าใช้งาน (Security & Credential Handover)', isChecked: false, sortOrder: 6, state: SicEntityState.Added },
+    ] : [
+      { itemName: 'Source Code Package & Git Repository Handover', isChecked: false, sortOrder: 1, state: SicEntityState.Added },
+      { itemName: 'Database Migration Script & DDL/DML Package', isChecked: false, sortOrder: 2, state: SicEntityState.Added },
+      { itemName: 'User Manual & Admin Manual (PDF Attached below)', isChecked: false, sortOrder: 3, state: SicEntityState.Added },
+      { itemName: 'Installation Guide & Deployment Architecture Documentation', isChecked: false, sortOrder: 4, state: SicEntityState.Added },
+      { itemName: 'UAT Sign-Off Certificate & Test Execution Summary Report', isChecked: false, sortOrder: 5, state: SicEntityState.Added },
+      { itemName: 'System Credential Sheet & Security Handover Form', isChecked: false, sortOrder: 6, state: SicEntityState.Added },
     ];
     this.checklists.set(defaults);
   }

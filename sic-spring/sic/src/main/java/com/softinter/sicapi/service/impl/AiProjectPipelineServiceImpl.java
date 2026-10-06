@@ -36,6 +36,7 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
     private final PmTaskRepository taskRepository;
     private final PmPhaseRepository phaseRepository;
     private final PmDeliveryRepository deliveryRepository;
+    private final PmDeliveryChecklistRepository deliveryChecklistRepository;
     private final ThaiCustomerGeneratorHelper thaiCustomerGenerator;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -284,7 +285,28 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
                 delivery.setDeliverySummary(String.valueOf(delData.getOrDefault("summary", "")));
                 delivery.setDeliveryDate(endDate.minusDays((plan.getPreviewDeliveries().size() - delIdx) * 14L));
                 delivery.setStatus("DRAFT");
-                deliveryRepository.save(delivery);
+                delivery = deliveryRepository.save(delivery);
+
+                // Create acceptance checklists
+                List<String> defaultChecks = List.of(
+                        "ตรวจสอบความครบถ้วนของ Source Code และ Repository Handover",
+                        "ตรวจสอบผลการทดสอบระบบ (UAT Acceptance & Test Results)",
+                        "เอกสารคู่มือการใช้งานและเอกสารผู้ดูแลระบบ (User & Admin Manual)",
+                        "เอกสารการติดตั้งและสถาปัตยกรรมระบบ (Installation & Architecture Guide)",
+                        "หนังสือรับรองการตรวจรับงานและรายงานผลการส่งมอบ"
+                );
+                int chkOrder = 1;
+                for (String chkName : defaultChecks) {
+                    PmDeliveryChecklist chk = new PmDeliveryChecklist();
+                    chk.setDeliveryId(delivery.getId());
+                    chk.setItemName(chkName);
+                    chk.setItemCategory("Acceptance");
+                    chk.setIsChecked(false);
+                    chk.setSortOrder(chkOrder++);
+                    chk.setIsDelete(false);
+                    chk.setCreatedBy("AI_PIPELINE");
+                    deliveryChecklistRepository.save(chk);
+                }
             }
             counts.put("deliveries", plan.getPreviewDeliveries().size());
         }

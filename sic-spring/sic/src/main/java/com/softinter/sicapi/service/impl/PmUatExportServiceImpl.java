@@ -52,16 +52,10 @@ public class PmUatExportServiceImpl implements PmUatExportService {
         String projectName = "-";
         String customerName = "-";
 
-        if (projectId != null) {
-            PmCustomerProject project = projectRepository.findById(projectId).orElse(null);
-            if (project != null) {
-                projectName = project.getProjectName() != null ? project.getProjectName() : "-";
-                if (project.getCustomerId() != null) {
-                    PmCustomer customer = customerRepository.findById(project.getCustomerId()).orElse(null);
-                    if (customer != null) {
-                        customerName = customer.getCompanyNameEn() != null ? customer.getCompanyNameEn() : "-";
-                    }
-                }
+        if (projectId == null && scenarioId != null) {
+            PmTestScenario sc = scenarioRepository.findById(scenarioId).orElse(null);
+            if (sc != null && sc.getProjectId() != null) {
+                projectId = sc.getProjectId();
             }
         }
 
@@ -79,6 +73,26 @@ public class PmUatExportServiceImpl implements PmUatExportService {
                     }
                 }
             }
+        } else if (scenarioId != null) {
+            allCases.addAll(testCaseRepository.findByBusinessIdAndScenarioIdAndIsDeleteFalse(businessId, scenarioId));
+        } else if (businessId != null) {
+            allCases.addAll(testCaseRepository.findByBusinessIdAndIsDeleteFalse(businessId));
+        }
+
+        if (projectId != null) {
+            PmCustomerProject project = projectRepository.findById(projectId).orElse(null);
+            if (project != null) {
+                projectName = project.getProjectName() != null ? project.getProjectName() : "-";
+                if (project.getCustomerId() != null) {
+                    PmCustomer customer = customerRepository.findById(project.getCustomerId()).orElse(null);
+                    if (customer != null) {
+                        customerName = customer.getCompanyNameEn() != null ? customer.getCompanyNameEn() : "-";
+                    }
+                }
+            }
+        } else {
+            projectName = "en".equals(normalizedLang) ? "All Projects" : "โครงการทั้งหมด (All Projects)";
+            customerName = "-";
         }
 
         List<PmTestCase> filteredCases = allCases.stream().filter(tc -> {
