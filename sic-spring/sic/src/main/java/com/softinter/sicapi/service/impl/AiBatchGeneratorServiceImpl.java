@@ -54,7 +54,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
                 : "สร้างข้อมูลตัวอย่างที่สมเหตุสมผลสำหรับโมดูลนี้จำนวน " + count + " รายการ";
 
         try {
-            String raw = aiProviderService.generateRawResponse(userPrompt, systemPrompt, request.getModel(), request.getAttachments());
+            String raw = aiProviderService.generateRawResponse(userPrompt, systemPrompt, request);
             List<Map<String, Object>> items = parseItems(raw);
             if ("TEST_CASE".equals(def.getModuleType())) fillTestCaseDefaults(items);
             return AiBatchGenerateResponse.builder()

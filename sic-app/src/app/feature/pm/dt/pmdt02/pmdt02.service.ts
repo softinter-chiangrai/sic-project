@@ -1,4 +1,5 @@
 // src/app/feature/pm/dt/pmdt02/pmdt02.service.ts
+import { AiAttachmentPayload } from '../../../../core/utils/ai-attachment.util';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -31,10 +32,11 @@ export class Pmdt02Service {
     phaseId: string,
     prompt: string,
     model: string,
+    attachments: AiAttachmentPayload[] = [],
   ): Observable<{ milestones: number; workPackages: number; tasks: number; message: string }> {
     return this.http.post<{ milestones: number; workPackages: number; tasks: number; message: string }>(
       `${this.apiBaseUrl}/api/pm/ai/phase-wbs/generate`,
-      { phaseId, prompt, model },
+      { phaseId, prompt, model, attachments },
     );
   }
 

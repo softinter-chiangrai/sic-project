@@ -24,13 +24,15 @@ import type { AiModel, ChatMessage, DiagramChatSession } from '../diagram.model'
 import { DiagramService, PmChatResponse } from '../diagram.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'app-pmdt05a',
   standalone: true,
-  imports: [CommonModule, FormsModule, MarkdownModule, SicComboboxComponent, TranslateModule],
+  imports: [CommonModule, FormsModule, MarkdownModule, SicComboboxComponent, SicAiAttachmentPickerComponent, TranslateModule],
   templateUrl: './pmdt05A.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt05A.component.css'],
@@ -105,6 +107,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
   });
 
   userInput = '';
+  aiFiles = signal<File[]>([]);
   isLoading = signal(false);
   copiedStatus = signal<Record<string, boolean>>({});
 
@@ -375,7 +378,7 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
     this.sendMessage();
   }
 
-  sendMessage() {
+  async sendMessage() {
     if (!this.userInput.trim() || this.isLoading() || !this.diagramId) return;
 
     let currentSession = this.activeSession();
@@ -415,13 +418,16 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
     this.saveSessionsToStorage(this.diagramId, this.sessions());
 
     const activeModel = this.selectedModelId();
+    const files = this.aiFiles();
     this.userInput = '';
+    this.aiFiles.set([]);
     this.isLoading.set(true);
     this.scrollToBottom();
+    const attachments = await filesToAiAttachments(files);
 
     // Call Backend API with sessionId, sessionTitle and model
     this.diagramService
-      .sendChatMessage(this.diagramId, input, updatedSession.id, sessionTitle, activeModel)
+      .sendChatMessage(this.diagramId, input, updatedSession.id, sessionTitle, activeModel, attachments)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: PmChatResponse) => {

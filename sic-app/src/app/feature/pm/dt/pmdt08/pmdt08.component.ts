@@ -16,7 +16,7 @@ import { DiscussionService } from './discussion.service';
 import { Pmdt08AComponent } from './pmdt08A/pmdt08A.component';
 import { environment } from '../../../../../environments/environment';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { SicInputUploadComponent } from '../../../../core/component/sic-input-upload/sic-input-upload.component';
+import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { AttachmentFile, Pmdt08PageData } from './pmdt08.model';
 
@@ -30,7 +30,7 @@ import { AttachmentFile, Pmdt08PageData } from './pmdt08.model';
     SicInputAreaComponent,
     SicDatePipe,
     Pmdt08AComponent,
-    SicInputUploadComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt08.component.html',

@@ -70,7 +70,8 @@
             </span>
           </div>
           <!-- ✅ ใช้ uploadGroupId binding โดยตรง -->
-          <sic-input-upload
+          <sic-upload
+            [compact]="true"
             label=""
             formControlName="attachmentGroupId"
             [multiple]="true"
@@ -78,7 +79,7 @@
             [visibility]="1"
             [uploadGroupId]="postToEdit?.attachmentGroupId || null"
             [helperText]="('PMDT08A_ATTACH_HELPER_TEXT' | translate)"
-          ></sic-input-upload>
+          ></sic-upload>
         </div>
       </form>
     </div>

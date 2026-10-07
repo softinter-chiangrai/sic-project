@@ -27,6 +27,7 @@ public class PmDiagramChatServiceImpl implements PmDiagramChatService {
     private final PmDiagramChatRepository chatRepository;
     private final PmDiagramTabRepository tabRepository;
     private final PmAiProviderService aiProviderService;
+    private final AiScopeContextService scopeContextService;
     private final CurrentUserService currentUserService; 
 
     @Override
@@ -142,7 +143,7 @@ public class PmDiagramChatServiceImpl implements PmDiagramChatService {
 
         // Build context and get AI response
         String context = buildContext(tab, sessionId, request);
-        String aiResponse = aiProviderService.generateResponse(request.getMessage(), context, request.getModel());
+        String aiResponse = aiProviderService.generateResponse(request.getMessage(), context, request.getModel(), request.getAttachments());
 
         // Save AI message
         PmDiagramChat aiChat = new PmDiagramChat();
@@ -173,6 +174,10 @@ public class PmDiagramChatServiceImpl implements PmDiagramChatService {
                 PmDiagramChat chat = recent.get(i);
                 context.append(chat.getRole()).append(": ").append(chat.getContent()).append("\n");
             }
+        }
+
+        if (tab.getProjectId() != null) {
+            context.append("\n").append(scopeContextService.build(java.util.Map.of("projectId", tab.getProjectId().toString())));
         }
 
         return context.toString();

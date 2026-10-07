@@ -244,7 +244,7 @@
 .sic-gridpanel__row--disabled sic-timepicker,
 .sic-gridpanel__row--disabled sic-combobox,
 .sic-gridpanel__row--disabled sic-colorpicker,
-.sic-gridpanel__row--disabled sic-input-upload,
+.sic-gridpanel__row--disabled sic-upload,
 .sic-gridpanel__row--disabled sic-checkbox,
 .sic-gridpanel__row--disabled sic-radio,
 .sic-gridpanel__row--deleted sic-input,
@@ -254,7 +254,7 @@
 .sic-gridpanel__row--deleted sic-timepicker,
 .sic-gridpanel__row--deleted sic-combobox,
 .sic-gridpanel__row--deleted sic-colorpicker,
-.sic-gridpanel__row--deleted sic-input-upload,
+.sic-gridpanel__row--deleted sic-upload,
 .sic-gridpanel__row--deleted sic-checkbox,
 .sic-gridpanel__row--deleted sic-radio {
   width: 100%;
@@ -267,7 +267,7 @@
 .sic-gridpanel__row--disabled sic-timepicker ::ng-deep .sic-timepicker__field,
 .sic-gridpanel__row--disabled sic-combobox ::ng-deep .sic-combobox__field,
 .sic-gridpanel__row--disabled sic-colorpicker ::ng-deep .sic-colorpicker__field,
-.sic-gridpanel__row--disabled sic-input-upload ::ng-deep .sic-input-upload__field,
+.sic-gridpanel__row--disabled sic-upload ::ng-deep .sic-upload__dropzone,
 .sic-gridpanel__row--deleted sic-input ::ng-deep .sic-input__field,
 .sic-gridpanel__row--deleted sic-number ::ng-deep .sic-number__field,
 .sic-gridpanel__row--deleted sic-input-area ::ng-deep .sic-input-area__field,
@@ -275,7 +275,7 @@
 .sic-gridpanel__row--deleted sic-timepicker ::ng-deep .sic-timepicker__field,
 .sic-gridpanel__row--deleted sic-combobox ::ng-deep .sic-combobox__field,
 .sic-gridpanel__row--deleted sic-colorpicker ::ng-deep .sic-colorpicker__field,
-.sic-gridpanel__row--deleted sic-input-upload ::ng-deep .sic-input-upload__field {
+.sic-gridpanel__row--deleted sic-upload ::ng-deep .sic-upload__dropzone {
   border-color: transparent;
   background: transparent;
   box-shadow: none;
@@ -399,8 +399,7 @@
 .sic-gridpanel__cell > sic-combobox,
 .sic-gridpanel__cell > sic-radio,
 .sic-gridpanel__cell > sic-checkbox,
-.sic-gridpanel__cell > sic-upload,
-.sic-gridpanel__cell > sic-input-upload {
+.sic-gridpanel__cell > sic-upload {
   width: 100%;
 }
 
@@ -412,17 +411,12 @@
 .sic-gridpanel__cell > sic-combobox ::ng-deep .sic-combobox,
 .sic-gridpanel__cell > sic-radio ::ng-deep .sic-radio,
 .sic-gridpanel__cell > sic-checkbox ::ng-deep .sic-checkbox,
-.sic-gridpanel__cell > sic-upload ::ng-deep .sic-upload,
-.sic-gridpanel__cell > sic-input-upload ::ng-deep .sic-input-upload {
+.sic-gridpanel__cell > sic-upload ::ng-deep .sic-upload {
   position: relative;
   gap: 0;
 }
 
 .sic-gridpanel__cell > sic-upload ::ng-deep .sic-upload {
-  padding-bottom: 0;
-}
-
-.sic-gridpanel__cell > sic-input-upload ::ng-deep .sic-input-upload {
   padding-bottom: 0;
 }
 

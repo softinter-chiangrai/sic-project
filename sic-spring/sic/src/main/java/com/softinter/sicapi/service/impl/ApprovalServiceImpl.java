@@ -213,18 +213,11 @@ public class ApprovalServiceImpl implements ApprovalService {
 
         approval.setStepStatuses(stepStatuses);
 
-        PmApprovalFlowStep currentStep = null;
-        for (PmApprovalStepStatus stepStatus : stepStatuses) {
-            if (stepStatus.getStatus() == ApprovalStatus.PENDING) {
-                currentStep = stepStatus.getStep();
-                break;
-            }
-        }
+        PmApprovalFlowStep currentStep = approval.actionableSteps().stream()
+                .findFirst().map(PmApprovalStepStatus::getStep).orElse(null);
 
-        boolean allCompleted = stepStatuses.stream()
-                .allMatch(ss -> Boolean.TRUE.equals(ss.getIsCompleted()));
-
-        if (allCompleted || currentStep == null) {
+        if (isApprovalComplete(approval) || currentStep == null) {
+            skipRemainingSteps(approval);
             approval.setStatus(ApprovalStatus.APPROVED);
             approval.setFinalApprover(userId);
             approval.setFinalApprovalDate(Instant.now());
@@ -309,6 +302,10 @@ public class ApprovalServiceImpl implements ApprovalService {
             predicates.add(cb.equal(steps.get("status"), ApprovalStatus.PENDING));
             predicates.add(cb.isTrue(root.get("isActive")));
             predicates.add(root.get("status").in(List.of(ApprovalStatus.PENDING, ApprovalStatus.PARTIALLY_APPROVED)));
+            // CHAIN: ผู้อนุมัติ step ถัดไปยังไม่เห็นจนกว่าจะถึงคิว
+            predicates.add(cb.or(
+                    cb.notEqual(root.get("flow").get("approvalMode"), ApprovalMode.CHAIN),
+                    cb.equal(steps.get("step"), root.get("currentStep"))));
             addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
             return cb.and(predicates.toArray(new Predicate[0]));
         };
@@ -481,14 +478,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
-        PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
-                .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
-
-        if (!userId.equals(pendingStep.getApprover())) {
-            throw new IllegalStateException("คุณไม่ได้เป็นผู้อนุมัติในขั้นตอนปัจจุบัน");
-        }
+        PmApprovalStepStatus pendingStep = findActionableStep(approval, userId);
 
         pendingStep.setStatus(ApprovalStatus.APPROVED);
         pendingStep.setIsCompleted(true);
@@ -503,10 +493,10 @@ public class ApprovalServiceImpl implements ApprovalService {
         createLog(approval, pendingStep, "APPROVE", userId, userName, comment, ApprovalStatus.PENDING,
                 ApprovalStatus.APPROVED);
 
-        boolean allDone = approval.getStepStatuses().stream()
-                .allMatch(ss -> Boolean.TRUE.equals(ss.getIsCompleted()));
+        boolean allDone = isApprovalComplete(approval);
 
         if (allDone) {
+            skipRemainingSteps(approval);
             approval.setStatus(ApprovalStatus.APPROVED);
             approval.setFinalApprover(userId);
             approval.setFinalApprovalDate(Instant.now());
@@ -516,15 +506,16 @@ public class ApprovalServiceImpl implements ApprovalService {
             updateDocumentStatusOnApprove(approval);
             notificationService.notifyApproved(approval, stepName);
         } else {
-            PmApprovalStepStatus nextPending = approval.getStepStatuses().stream()
-                    .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
-                    .findFirst()
-                    .orElse(null);
+            PmApprovalStepStatus nextPending = approval.actionableSteps().stream().findFirst().orElse(null);
 
             if (nextPending != null) {
+                boolean stepChanged = approval.getCurrentStep() == null
+                        || !approval.getCurrentStep().getId().equals(nextPending.getStep().getId());
                 approval.setCurrentStep(nextPending.getStep());
                 approvalRepository.save(approval);
-                notificationService.notifySubmitted(approval);
+                if (stepChanged) {
+                    notificationService.notifySubmitted(approval);
+                }
             } else {
                 approval.setStatus(ApprovalStatus.APPROVED);
                 approval.setFinalApprover(userId);
@@ -556,10 +547,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
-        PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
-                .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
+        PmApprovalStepStatus pendingStep = findActionableStep(approval, userId);
 
         pendingStep.setStatus(ApprovalStatus.REJECTED);
         pendingStep.setIsCompleted(true);
@@ -615,10 +603,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
-        PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
-                .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
+        PmApprovalStepStatus pendingStep = findActionableStep(approval, userId);
 
         pendingStep.setStatus(ApprovalStatus.NEED_REVISION);
         pendingStep.setIsCompleted(true);
@@ -809,10 +794,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new IllegalStateException("รายการอนุมัตินี้อยู่ในสถานะสิ้นสุดแล้ว (" + approval.getStatus() + ")");
         }
 
-        PmApprovalStepStatus pendingStep = approval.getStepStatuses().stream()
-                .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !ss.getIsCompleted())
-                .findFirst()
-                .orElseThrow(() -> new IllegalStateException("ไม่พบขั้นตอนที่รอดำเนินการสำหรับรายการอนุมัตินี้"));
+        PmApprovalStepStatus pendingStep = findActionableStep(approval, userId);
 
         pendingStep.setApprover(delegateToUserId);
         pendingStep.setApproverName(getUserName(delegateToUserId));
@@ -853,10 +835,33 @@ public class ApprovalServiceImpl implements ApprovalService {
             return false;
         }
 
-        return approval.getStepStatuses().stream()
-                .anyMatch(ss -> ss.getStatus() == ApprovalStatus.PENDING &&
-                        !ss.getIsCompleted() &&
-                        userId.equals(ss.getApprover()));
+        return approval.actionableSteps().stream().anyMatch(ss -> userId.equals(ss.getApprover()));
+    }
+
+    // แถวที่ผู้ใช้กดได้ตอนนี้ (โหมด CHAIN = เฉพาะ step ปัจจุบัน) ใช้ร่วมกันใน approve/reject/revise
+    private PmApprovalStepStatus findActionableStep(PmApproval approval, String userId) {
+        return approval.actionableSteps().stream()
+                .filter(ss -> userId.equals(ss.getApprover()))
+                .findFirst()
+                .orElseThrow(() -> new IllegalStateException("คุณไม่ได้เป็นผู้อนุมัติในขั้นตอนปัจจุบัน"));
+    }
+
+    // โหมด ANY: คนใดคนหนึ่งอนุมัติแล้วข้ามแถวที่เหลือ
+    private void skipRemainingSteps(PmApproval approval) {
+        approval.getStepStatuses().stream()
+                .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !Boolean.TRUE.equals(ss.getIsCompleted()))
+                .forEach(ss -> {
+                    ss.setStatus(ApprovalStatus.SKIPPED);
+                    ss.setIsCompleted(true);
+                });
+    }
+
+    private boolean isApprovalComplete(PmApproval approval) {
+        if (approval.getFlow().getApprovalMode() == ApprovalMode.ANY) {
+            return approval.getStepStatuses().stream()
+                    .anyMatch(ss -> ss.getStatus() == ApprovalStatus.APPROVED);
+        }
+        return approval.getStepStatuses().stream().allMatch(ss -> Boolean.TRUE.equals(ss.getIsCompleted()));
     }
 
     @Override
@@ -1108,7 +1113,9 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Transactional(readOnly = true)
     public ApprovalSummaryResponse getSummary() {
         ApprovalSummaryResponse response = new ApprovalSummaryResponse();
-        response.setTotalPending(approvalRepository.countByStatusAndIsActiveTrue(ApprovalStatus.PENDING));
+        // นับเฉพาะรายการที่ผู้ใช้ปัจจุบันเป็นผู้อนุมัติ ให้ตรงกับรายการในแท็บ "รออนุมัติ"
+        response.setTotalPending(approvalRepository
+                .findPendingByApprover(currentUserService.getUserId(), PageRequest.of(0, 1)).getTotalElements());
         response.setTotalApproved(approvalRepository.countByStatusAndIsActiveTrue(ApprovalStatus.APPROVED));
         response.setTotalRejected(approvalRepository.countByStatusAndIsActiveTrue(ApprovalStatus.REJECTED));
         response.setTotalNeedRevision(approvalRepository.countByStatusAndIsActiveTrue(ApprovalStatus.NEED_REVISION));
@@ -1915,10 +1922,10 @@ public class ApprovalServiceImpl implements ApprovalService {
     }
 
     private void advanceToNextStepOrComplete(PmApproval approval, String previousStepName) {
-        boolean allDone = approval.getStepStatuses().stream()
-                .allMatch(ss -> Boolean.TRUE.equals(ss.getIsCompleted()));
+        boolean allDone = isApprovalComplete(approval);
 
         if (allDone) {
+            skipRemainingSteps(approval);
             approval.setStatus(ApprovalStatus.APPROVED);
             approval.setFinalApprover("system");
             approval.setFinalApprovalDate(Instant.now());
@@ -1928,10 +1935,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             updateDocumentStatusOnApprove(approval);
             notificationService.notifyApproved(approval, previousStepName);
         } else {
-            PmApprovalStepStatus nextPending = approval.getStepStatuses().stream()
-                    .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !Boolean.TRUE.equals(ss.getIsCompleted()))
-                    .findFirst()
-                    .orElse(null);
+            PmApprovalStepStatus nextPending = approval.actionableSteps().stream().findFirst().orElse(null);
 
             if (nextPending != null) {
                 approval.setCurrentStep(nextPending.getStep());

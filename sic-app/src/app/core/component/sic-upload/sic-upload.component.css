@@ -408,3 +408,73 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+/* ===== compact: ขนาดเล็กสำหรับกล่องโพสต์/คอมเมนต์ inline ===== */
+.sic-upload--compact {
+  gap: 0.4rem;
+  padding-bottom: 0;
+}
+
+.sic-upload--compact .sic-upload__dropzone {
+  min-height: 0;
+  gap: 0.6rem;
+  padding: 0.45rem 0.7rem;
+  border-radius: 0.75rem;
+}
+
+.sic-upload--compact .sic-upload__dropzone-icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.sic-upload--compact .sic-upload__dropzone-title {
+  font-size: 0.85rem;
+}
+
+.sic-upload--compact .sic-upload__dropzone-subtitle {
+  display: none;
+}
+
+.sic-upload--compact .sic-upload__grid {
+  grid-template-columns: 1fr;
+  gap: 0.4rem;
+}
+
+.sic-upload--compact .sic-upload__card {
+  grid-template-rows: none;
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  border-radius: 0.75rem;
+  box-shadow: none;
+}
+
+.sic-upload--compact .sic-upload__placeholder {
+  font-size: 1.1rem;
+}
+
+.sic-upload--compact .sic-upload__status-chip,
+.sic-upload--compact .sic-upload__streaming-chip,
+.sic-upload--compact .sic-upload__type-chip {
+  display: none;
+}
+
+.sic-upload--compact .sic-upload__card-body {
+  gap: 0.2rem;
+  padding: 0.4rem 0.6rem;
+  justify-content: center;
+}
+
+.sic-upload--compact .sic-upload__card-head {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.sic-upload--compact .sic-upload__card-name {
+  font-size: 0.82rem;
+  -webkit-line-clamp: 1;
+}
+
+.sic-upload--compact .sic-upload__card-meta {
+  font-size: 0.72rem;
+}

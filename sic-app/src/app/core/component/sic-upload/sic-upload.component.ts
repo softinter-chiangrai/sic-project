@@ -117,6 +117,8 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnChang
   @Input() label?: string;
   @Input() hint?: string;
   @Input() disabled = false;
+  /** แบบกะทัดรัด: dropzone บรรทัดเดียว + ไฟล์เป็นแถวเล็ก (ใช้กับกล่องโพสต์/คอมเมนต์ inline) */
+  @Input() compact = false;
   @Input() multiple = true;
   @Input() category: SicUploadCategory = 'all';
   @Input() visibility: 1 | 2 | 3 | 4 = 1;

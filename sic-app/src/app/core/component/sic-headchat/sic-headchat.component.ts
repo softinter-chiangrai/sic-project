@@ -10,7 +10,8 @@ import {
   computed,
   inject,
   signal,
-  ChangeDetectionStrategy
+  ChangeDetectionStrategy,
+  HostListener
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -141,6 +142,29 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   // Lifecycle
   // ─────────────────────────────────────────────────────────────────────────
 
+  @HostListener('window:resize')
+  onWindowResize(): void {
+    const current = this.fabOffset();
+    const clamped = this.clampFabOffset(current.x, current.y);
+    if (clamped.x !== current.x || clamped.y !== current.y) {
+      this.fabOffset.set(clamped);
+    }
+  }
+
+  private clampFabOffset(x: number, y: number, btnSize = 52, baseMargin = 24): { x: number; y: number } {
+    if (typeof window === 'undefined') return { x, y };
+    const margin = 8;
+    const maxRightMove = baseMargin - margin;
+    const maxLeftMove = -(window.innerWidth - baseMargin - btnSize - margin);
+    const maxBottomMove = baseMargin - margin;
+    const maxTopMove = -(window.innerHeight - baseMargin - btnSize - margin);
+
+    return {
+      x: Math.min(maxRightMove, Math.max(maxLeftMove, x)),
+      y: Math.min(maxBottomMove, Math.max(maxTopMove, y)),
+    };
+  }
+
   ngOnInit(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
@@ -149,7 +173,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (typeof parsed.x === 'number' && typeof parsed.y === 'number') {
-          this.fabOffset.set(parsed);
+          this.fabOffset.set(this.clampFabOffset(parsed.x, parsed.y));
         }
       }
     } catch { /* ignore */ }
@@ -196,10 +220,12 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
         this.didDragMove = true;
       }
 
-      this.fabOffset.set({
-        x: this.dragStartOffset.x + deltaX,
-        y: this.dragStartOffset.y + deltaY,
-      });
+      this.fabOffset.set(
+        this.clampFabOffset(
+          this.dragStartOffset.x + deltaX,
+          this.dragStartOffset.y + deltaY
+        )
+      );
     };
 
     const onEnd = () => {

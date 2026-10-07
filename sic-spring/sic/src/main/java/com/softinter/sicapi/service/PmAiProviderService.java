@@ -13,6 +13,9 @@ public interface PmAiProviderService {
 
     String generateResponse(String userMessage, String context, String modelId);
 
+    /** เหมือนกันแต่แนบไฟล์/รูปให้ AI อ่านด้วย */
+    String generateResponse(String userMessage, String context, String modelId, List<AiAttachmentDto> attachments);
+
     String generateRawResponse(String prompt, String systemPrompt);
 
     String generateRawResponse(String prompt, String systemPrompt, String modelId);

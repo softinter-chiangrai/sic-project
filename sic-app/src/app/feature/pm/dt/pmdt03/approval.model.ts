@@ -11,7 +11,7 @@ export type ApprovalStatus =
     | 'EXPIRED';
 
 
-export type ApprovalMode = 'CHAIN' | 'PARALLEL' | 'ANY' | 'SINGLE';
+export type ApprovalMode = 'CHAIN' | 'PARALLEL' | 'ANY';
 
 export type DocumentType =
     | 'REQUIREMENT'

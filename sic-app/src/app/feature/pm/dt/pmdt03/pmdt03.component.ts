@@ -311,6 +311,24 @@ export class Pmdt03Component implements OnInit {
     this.router.navigate(['/feature/pm/approval', id]);
   }
 
+  // ยกเลิกคำขอของตัวเอง (เฉพาะแท็บ "รายการที่ฉันยื่นขอ" และสถานะ PENDING)
+  cancelRequest(item: ApprovalItem, grid: SicGridPanelComponent): void {
+    const doc = item.title || item.documentCode;
+    this.dialog.confirm(
+      this.translate.instant('APPROVAL_CONFIRM_CANCEL_TITLE'),
+      this.translate.instant('APPROVAL_CONFIRM_CANCEL_MSG', { doc }),
+    ).then((confirmed) => {
+      if (!confirmed) return;
+      this.approvalService.cancel(item.id).subscribe({
+        next: () => {
+          grid.reload();
+          this.dialog.success(this.translate.instant('APPROVAL_SUCCESS_TITLE'), this.translate.instant('APPROVAL_SUCCESS_CANCEL_MSG', { doc }));
+        },
+        error: (error) => this.dialog.error(this.translate.instant('APPROVAL_ERROR_TITLE'), error.error?.message || this.translate.instant('APPROVAL_GENERIC_ERROR')),
+      });
+    });
+  }
+
   // ===== Bulk Selection (เฉพาะแท็บ "รอฉันอนุมัติ") — ใช้ grid.selectedRowIds ในตัว =====
   bulkApprove(grid: SicGridPanelComponent): void {
     const ids = Array.from(grid.selectedRowIds) as string[];

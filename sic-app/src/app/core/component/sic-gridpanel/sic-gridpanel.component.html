@@ -173,9 +173,9 @@
                     }
                     @case ('upload') {
                       @if (shouldRenderCellField(row, column)) {
-                        <sic-input-upload
+                        <sic-upload
+                          [compact]="true"
                           [label]="''"
-                          [placeholder]="column.placeholder || ''"
                           [hint]="column.hint"
                           [multiple]="resolveUploadMultiple(row, column)"
                           [category]="resolveUploadCategory(row, column)"
@@ -186,8 +186,8 @@
                           [emptyText]="resolveUploadEmptyText(row, column)"
                           [helperText]="resolveUploadHelperText(row, column)"
                           [errorMessages]="column.errorMessages ?? {}"
-                          [readonly]="isCellReadonly(row, column)"
-                          [formControl]="getControl(row, column)"></sic-input-upload>
+                          [disabled]="isCellReadonly(row, column)"
+                          [formControl]="getControl(row, column)"></sic-upload>
                       } @else {
                         <span class="sic-gridpanel__display">{{ formatCellValue(row, column) }}</span>
                       }

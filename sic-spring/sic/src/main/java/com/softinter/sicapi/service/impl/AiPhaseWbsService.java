@@ -164,7 +164,8 @@ public class AiPhaseWbsService {
         }
 
         try {
-            String raw = aiProvider.generateRawResponse(user.toString(), system, request.getModel());
+            request.setProjectId(phase.getProjectId());
+            String raw = aiProvider.generateRawResponse(user.toString(), system, request);
             if (raw == null || raw.isBlank() || "{}".equals(raw.trim())) return null;
             Matcher m = JSON_PATTERN.matcher(raw);
             String json;

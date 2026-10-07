@@ -1,4 +1,5 @@
 // src/app/feature/pm/dt/pmdt06/diagram.service.ts
+import { AiAttachmentPayload } from '../../../../core/utils/ai-attachment.util';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, map, Observable, tap } from 'rxjs';
@@ -200,11 +201,12 @@ export class DiagramService {
     message: string,
     sessionId?: string,
     sessionTitle?: string,
-    model?: string
+    model?: string,
+    attachments: AiAttachmentPayload[] = []
   ): Observable<PmChatResponse> {
     return this.http.post<PmChatResponse>(
       `${this.apiUrl}/api/diagram/chat`,
-      { diagramId: tabId, message, sessionId, sessionTitle, model }
+      { diagramId: tabId, message, sessionId, sessionTitle, model, attachments }
     );
   }
 

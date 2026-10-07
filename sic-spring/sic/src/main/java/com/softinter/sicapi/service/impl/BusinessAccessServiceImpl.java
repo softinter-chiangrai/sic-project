@@ -356,7 +356,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             flow.setFlowCode("DEF-" + documentType.name() + "-" + businessSuffix);
             flow.setFlowName("Default " + documentType.getDisplayName() + " Approval");
             flow.setDocumentType(documentType.name());
-            flow.setApprovalMode(ApprovalMode.SINGLE);
+            flow.setApprovalMode(ApprovalMode.CHAIN);
             flow.setIsActive(true);
             flow.setDescription("สร้างอัตโนมัติเมื่อสมัครธุรกิจ โดยตั้งผู้สมัครเป็นผู้อนุมัติเริ่มต้น");
             flow = approvalFlowRepository.save(flow);

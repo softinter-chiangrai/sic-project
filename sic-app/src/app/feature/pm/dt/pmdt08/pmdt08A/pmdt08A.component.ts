@@ -9,7 +9,7 @@ import { SicButtonComponent } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
-import { SicInputUploadComponent } from '../../../../../core/component/sic-input-upload/sic-input-upload.component';
+import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -21,7 +21,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicButtonComponent,
     SicInputComponent,
     SicTiptapEditorComponent,
-    SicInputUploadComponent,
+    SicUploadComponent,
     TranslateModule,
   ],
   templateUrl: './pmdt08A.component.html',

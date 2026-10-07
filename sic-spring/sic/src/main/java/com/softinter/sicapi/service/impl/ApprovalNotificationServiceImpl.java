@@ -27,19 +27,21 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
     @Transactional
     public void notifySubmitted(PmApproval approval) {
         log.info("🔔 Approval submitted: {} - {}", approval.getDocumentCode(), approval.getDocumentTitle());
-        String recipient = approval.getCurrentStep() != null ? approval.getCurrentStep().getApproverUserId() : null;
-        if (recipient != null && !recipient.isBlank() && !recipient.equals(approval.getRequestedBy())) {
-            sendNotification(
-                    recipient,
-                    approval.getRequestedBy(),
-                    approval.getRequestedByName(),
-                    "คำขออนุมัติใหม่: " + approval.getDocumentCode(),
-                    "มีเอกสาร " + approval.getDocumentTitle() + " รอการอนุมัติจากคุณ",
-                    "APPROVAL",
-                    "/pm/approval/" + approval.getId(),
-                    approval.getBusinessId()
-            );
-        }
+        // แจ้งทุกคนที่กดอนุมัติได้ตอนนี้ (CHAIN = step ปัจจุบัน, PARALLEL/ANY = ทุกคนที่ค้าง)
+        approval.actionableSteps().stream()
+                .map(ss -> ss.getApprover())
+                .filter(r -> r != null && !r.isBlank() && !r.equals(approval.getRequestedBy()))
+                .distinct()
+                .forEach(recipient -> sendNotification(
+                        recipient,
+                        approval.getRequestedBy(),
+                        approval.getRequestedByName(),
+                        "คำขออนุมัติใหม่: " + approval.getDocumentCode(),
+                        "มีเอกสาร " + approval.getDocumentTitle() + " รอการอนุมัติจากคุณ",
+                        "APPROVAL",
+                        "/pm/approval/" + approval.getId(),
+                        approval.getBusinessId()
+                ));
     }
 
     @Override

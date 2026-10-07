@@ -199,30 +199,6 @@
                         </sic-button>
                     }
 
-                    @if (canRevise()) {
-                        <sic-button
-                            variant="outline" color="primary"
-                            size="sm"
-                            [disabled]="isSubmitting()"
-                            (click)="requestRevision()"
-                        >
-                            <i class="bi bi-pencil"></i>
-                            {{ 'APPROVAL_REVISE_BUTTON' | translate }}
-                        </sic-button>
-                    }
-
-                    @if (canCancel()) {
-                        <sic-button
-                            variant="outline" color="primary"
-                            size="sm"
-                            [disabled]="isSubmitting()"
-                            (click)="cancel()"
-                        >
-                            <i class="bi bi-x-lg"></i>
-                            {{ 'APPROVAL_CANCEL_BUTTON' | translate }}
-                        </sic-button>
-                    }
-
                     <sic-button
                         variant="ghost"
                         size="sm"

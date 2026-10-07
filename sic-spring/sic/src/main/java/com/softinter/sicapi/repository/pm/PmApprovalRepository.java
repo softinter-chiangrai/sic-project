@@ -61,6 +61,7 @@ public interface PmApprovalRepository extends JpaRepository<PmApproval, UUID>, J
            "AND ss.approver = :approverId " +
            "AND a.isActive = true " +
            "AND a.status IN ('PENDING', 'PARTIALLY_APPROVED') " +
+           "AND (a.flow.approvalMode <> 'CHAIN' OR ss.step = a.currentStep) " +
            "ORDER BY a.requestedDate ASC")
     Page<PmApproval> findPendingByApprover(@Param("approverId") String approverId, Pageable pageable);
 

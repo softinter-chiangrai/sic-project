@@ -33,8 +33,7 @@ import { SicTimepickerComponent } from '../sic-timepicker/sic-timepicker.compone
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import { SicRadioComponent, SicRadioOption } from '../sic-radio/sic-radio.component';
 import { SicColorpickerComponent } from 'sic-ng';
-import { SicInputUploadComponent } from '../sic-input-upload/sic-input-upload.component';
-import { SicUploadCategory } from '../sic-upload/sic-upload.component';
+import { SicUploadCategory, SicUploadComponent } from '../sic-upload/sic-upload.component';
 import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
 import { DialogService } from '../../services/dialog.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -49,7 +48,7 @@ const SIC_GRID_INPUT_IMPORTS = [
   SicComboboxComponent,
   SicRadioComponent,
   SicColorpickerComponent,
-  SicInputUploadComponent,
+  SicUploadComponent,
 ];
 
 const SIC_GRID_TEMPLATE_IMPORTS = [TooltipDirective, TranslateModule];

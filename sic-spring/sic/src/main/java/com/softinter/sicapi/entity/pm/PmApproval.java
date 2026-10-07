@@ -91,6 +91,21 @@ public class PmApproval extends BaseBusinessEntity {
     @OneToMany(mappedBy = "approval", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PmApprovalStepStatus> stepStatuses = new ArrayList<>();
 
+    /**
+     * แถวผู้อนุมัติที่กดได้ในตอนนี้ตามโหมดของ flow:
+     * CHAIN = เฉพาะ step ที่เลขลำดับต่ำสุดที่ยังค้าง, PARALLEL/ANY = ทุกแถวที่ยังค้าง
+     */
+    public List<PmApprovalStepStatus> actionableSteps() {
+        List<PmApprovalStepStatus> pending = stepStatuses.stream()
+                .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !Boolean.TRUE.equals(ss.getIsCompleted()))
+                .toList();
+        if (flow.getApprovalMode() != com.softinter.sicapi.entity.enums.ApprovalMode.CHAIN) {
+            return pending;
+        }
+        int first = pending.stream().mapToInt(ss -> ss.getStep().getStepOrder()).min().orElse(0);
+        return pending.stream().filter(ss -> ss.getStep().getStepOrder() == first).toList();
+    }
+
     @OneToMany(mappedBy = "approval", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("createdDate ASC")
     private List<PmApprovalLog> logs = new ArrayList<>();

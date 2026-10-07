@@ -4,6 +4,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+import java.util.List;
 import java.util.UUID;
 
 @Data
@@ -21,4 +22,6 @@ public class PmChatRequest {
     private String model;
 
     private String context;
+
+    private List<AiAttachmentDto> attachments;
 }

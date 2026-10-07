@@ -32,6 +32,7 @@ import java.util.regex.Pattern;
 public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     private final DbAiModelConfigRepository aiModelConfigRepository;
+    private final AiScopeContextService scopeContextService;
 
     @Value("${app.ai.default-model:gemini-2.5-flash-lite}")
     private String defaultModel;
@@ -436,6 +437,11 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
 
     @Override
     public String generateResponse(String userMessage, String context, String modelId) {
+        return generateResponse(userMessage, context, modelId, null);
+    }
+
+    @Override
+    public String generateResponse(String userMessage, String context, String modelId, List<AiAttachmentDto> attachments) {
         String systemPrompt = """
                 You are an expert Mermaid diagram generator and software architect.
                 RULES:
@@ -450,7 +456,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                 %s
                 """.formatted(context != null ? context : "");
 
-        String result = callAiApi(userMessage, systemPrompt, modelId);
+        String result = callAiApi(userMessage, systemPrompt, modelId, attachments);
         if (result != null && !result.isBlank()) {
             return result;
         }
@@ -466,6 +472,16 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
     @Override
     public String generateRawResponse(String prompt, String systemPrompt, String modelId) {
         return generateRawResponse(prompt, systemPrompt, modelId, null);
+    }
+
+    /** ทุก generator ที่ส่ง AiDraftRequest เข้ามาจะได้บริบทขอบเขต (โครงการ/เอกสารที่ผูก/ความสัมพันธ์) ต่อท้าย system prompt */
+    @Override
+    public String generateRawResponse(String prompt, String systemPrompt,
+                                      com.softinter.sicapi.dto.request.AiDraftRequest request) {
+        String scope = scopeContextService.build(request);
+        String system = scope.isEmpty() ? systemPrompt
+                : (systemPrompt == null || systemPrompt.isBlank() ? scope : systemPrompt + "\n\n" + scope);
+        return generateRawResponse(prompt, system, request.getModel(), request.getAttachments());
     }
 
     @Override

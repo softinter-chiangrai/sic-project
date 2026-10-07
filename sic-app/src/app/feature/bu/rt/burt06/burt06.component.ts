@@ -73,7 +73,6 @@ export class Burt06Component implements OnInit {
     { value: 'CHAIN', text: this.getApprovalModeText('CHAIN') },
     { value: 'PARALLEL', text: this.getApprovalModeText('PARALLEL') },
     { value: 'ANY', text: this.getApprovalModeText('ANY') },
-    { value: 'SINGLE', text: this.getApprovalModeText('SINGLE') },
   ]);
 
   // Filtered list
@@ -220,7 +219,6 @@ export class Burt06Component implements OnInit {
       CHAIN: this.translate.instant('BURT06_MODE_CHAIN'),
       PARALLEL: this.translate.instant('BURT06_MODE_PARALLEL'),
       ANY: this.translate.instant('BURT06_MODE_ANY'),
-      SINGLE: this.translate.instant('BURT06_MODE_SINGLE'),
     };
     return map[mode] || mode;
   }

@@ -439,6 +439,13 @@
         </sic-combobox>
       </div>
 
+      <div class="mb-2">
+        <sic-ai-attachment-picker
+          [files]="aiFiles()"
+          (filesChange)="aiFiles.set($event)"
+        ></sic-ai-attachment-picker>
+      </div>
+
       <div class="flex gap-2 items-center">
         <input
           [(ngModel)]="userInput"

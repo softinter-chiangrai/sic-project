@@ -80,11 +80,9 @@ export class SicApprovalComponent implements OnInit, OnChanges {
 
     protected canApprove = computed(() => this.approval()?.canApprove ?? false);
     protected canReject = computed(() => this.approval()?.canReject ?? false);
-    protected canRevise = computed(() => this.approval()?.canRevise ?? false);
-    protected canCancel = computed(() => this.approval()?.canCancel ?? false);
 
     protected hasAction = computed(() =>
-        this.canApprove() || this.canReject() || this.canRevise() || this.canCancel()
+        this.canApprove() || this.canReject()
     );
 
     protected isPending = computed(() =>
@@ -179,50 +177,6 @@ export class SicApprovalComponent implements OnInit, OnChanges {
             });
     }
 
-    requestRevision(): void {
-        const approval = this.approval();
-        if (!approval) return;
-
-        if (!this.comment()) {
-            this.dialogService.warn(
-                this.translate.instant('APPROVAL_WARN_TITLE'),
-                this.translate.instant('APPROVAL_REVISE_REASON_MSG')
-            );
-            return;
-        }
-
-        this.dialogService
-            .confirm(
-                this.translate.instant('APPROVAL_CONFIRM_REVISE_TITLE'),
-                this.translate.instant('APPROVAL_CONFIRM_REVISE_MSG', { doc: approval.documentTitle || approval.documentCode })
-            )
-            .then((confirmed) => {
-                if (confirmed) {
-                    this.executeAction('revise', () =>
-                        this.approvalService.requestRevision(approval.id, this.comment())
-                    );
-                }
-            });
-    }
-
-    cancel(): void {
-        const approval = this.approval();
-        if (!approval) return;
-
-        this.dialogService
-            .confirm(
-                this.translate.instant('APPROVAL_CONFIRM_CANCEL_TITLE'),
-                this.translate.instant('APPROVAL_CONFIRM_CANCEL_MSG', { doc: approval.documentTitle || approval.documentCode })
-            )
-            .then((confirmed) => {
-                if (confirmed) {
-                    this.executeAction('cancel', () =>
-                        this.approvalService.cancel(approval.id, this.comment())
-                    );
-                }
-            });
-    }
-
     // ===== Private =====
     private executeAction(action: string, apiCall: () => Observable<Approval>): void {
         this.isSubmitting.set(true);
@@ -252,10 +206,6 @@ export class SicApprovalComponent implements OnInit, OnChanges {
                 return this.translate.instant('APPROVAL_SUCCESS_APPROVE_MSG', { doc });
             case 'reject':
                 return this.translate.instant('APPROVAL_SUCCESS_REJECT_MSG', { doc });
-            case 'revise':
-                return this.translate.instant('APPROVAL_SUCCESS_REVISE_MSG', { doc });
-            case 'cancel':
-                return this.translate.instant('APPROVAL_SUCCESS_CANCEL_MSG', { doc });
             default:
                 return this.translate.instant('APPROVAL_SUCCESS_TITLE');
         }

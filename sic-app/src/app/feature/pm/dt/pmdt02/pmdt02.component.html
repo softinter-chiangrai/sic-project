@@ -644,13 +644,15 @@
 
       <div>
         <label class="block text-xs font-medium text-[var(--text-muted)] mb-1">{{ 'PMDT02_AI_WBS_MODEL_LABEL' | translate }}</label>
-        <select
-          class="w-full rounded-lg border border-[var(--border)] bg-[var(--bg)] px-3 py-2 text-sm text-[var(--text)]"
-          [ngModel]="aiWbsModel()" (ngModelChange)="aiWbsModel.set($event)" [disabled]="isAiWbsRunning()">
-          @for (m of aiModels; track m.id) {
-            <option [value]="m.id">{{ m.name }}</option>
-          }
-        </select>
+        <sic-combobox
+          [options]="aiModels"
+          valueField="id"
+          textField="name"
+          [ngModel]="aiWbsModel()"
+          (ngModelChange)="aiWbsModel.set($event)"
+          [disabled]="isAiWbsRunning()"
+          [clearable]="false">
+        </sic-combobox>
       </div>
 
       <div>
@@ -662,6 +664,11 @@
           [ngModel]="aiWbsPrompt()" (ngModelChange)="aiWbsPrompt.set($event)" [disabled]="isAiWbsRunning()"></textarea>
         <p class="mt-1 text-xs text-[var(--text-muted)]">{{ 'PMDT02_AI_WBS_HINT' | translate }}</p>
       </div>
+
+      <sic-ai-attachment-picker
+        [files]="aiWbsFiles()"
+        (filesChange)="aiWbsFiles.set($event)"
+      ></sic-ai-attachment-picker>
 
       <div class="flex justify-end gap-2 pt-2">
         <button (click)="closeAiWbs()" [disabled]="isAiWbsRunning()"

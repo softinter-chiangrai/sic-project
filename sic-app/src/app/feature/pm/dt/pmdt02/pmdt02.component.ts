@@ -40,6 +40,8 @@ import { BusinessService } from '../../../../core/services/business.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicAiAttachmentPickerComponent } from '../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { filesToAiAttachments } from '../../../../core/utils/ai-attachment.util';
 
 export type { CalendarItemDetail };
 
@@ -55,6 +57,7 @@ export type { CalendarItemDetail };
     SicCalendarTimelineComponent,
     SicDatepickerComponent,
     SicComboboxComponent,
+    SicAiAttachmentPickerComponent,
     SicStripHtmlPipe,
     TranslateModule,
   ],
@@ -757,6 +760,7 @@ export class Pmdt02Component implements OnInit {
   showAiWbsModal = signal(false);
   aiWbsPrompt = signal('');
   aiWbsModel = signal('');
+  aiWbsFiles = signal<File[]>([]);
   isAiWbsRunning = signal(false);
   get aiModels() {
     return this.aiModelsSvc.models();
@@ -774,12 +778,13 @@ export class Pmdt02Component implements OnInit {
     this.showAiWbsModal.set(false);
   }
 
-  runAiWbs(): void {
+  async runAiWbs(): Promise<void> {
     const phaseId = this.currentPhaseId();
     if (!phaseId || this.isAiWbsRunning()) return;
 
     this.isAiWbsRunning.set(true);
-    this.phaseService.generateWbsWithAi(phaseId, this.aiWbsPrompt(), this.aiWbsModel()).subscribe({
+    const attachments = await filesToAiAttachments(this.aiWbsFiles());
+    this.phaseService.generateWbsWithAi(phaseId, this.aiWbsPrompt(), this.aiWbsModel(), attachments).subscribe({
       next: (res) => {
         this.isAiWbsRunning.set(false);
         if (res.milestones + res.workPackages + res.tasks === 0) {
@@ -788,6 +793,7 @@ export class Pmdt02Component implements OnInit {
         }
         this.showAiWbsModal.set(false);
         this.aiWbsPrompt.set('');
+        this.aiWbsFiles.set([]);
         this.dialog.success(this.translate.instant('PMDT02_AI_WBS_SUCCESS_TITLE'), res.message);
         this.loadPhaseDetail(phaseId, false);
       },
