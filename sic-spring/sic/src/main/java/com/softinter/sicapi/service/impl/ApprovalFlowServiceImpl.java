@@ -61,7 +61,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
     @Override
     @Transactional(readOnly = true)
     public List<ApprovalFlowResponse> getAllFlows() {
-        return flowRepository.findByIsActiveTrueOrderByFlowCode()
+        return flowRepository.findAllAvailableFlows(currentUserService.getBusinessId())
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

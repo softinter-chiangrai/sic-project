@@ -42,7 +42,7 @@
             LEFT JOIN pm_customer_project p ON p.id = r.project_id
             WHERE r.is_delete = false
               AND r.id = CAST($P{designReviewId} AS uuid)
-              AND r.business_id = $P{businessId}]]></query>
+              AND ($P{businessId} IS NULL OR $P{businessId} = '' OR r.business_id = CAST(NULLIF($P{businessId}, '') AS uuid))]]></query>
 
 	<field name="reviewCode" class="java.lang.String"/>
 	<field name="title" class="java.lang.String"/>
@@ -160,7 +160,7 @@
 				<pen lineWidth="0.6"/>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000030" positionType="Float" x="8" y="172" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
-				<expression><![CDATA[$F{description}]]></expression>
+				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.htmlToPlainText($F{description})]]></expression>
 			</element>
 
 			<!-- Section 3: Review comments -->
@@ -187,4 +187,47 @@
 			<expression><![CDATA[($P{lang}.equals("en") ? "Page " : "หน้า ") + $V{PAGE_NUMBER}]]></expression>
 		</element>
 	</pageFooter>
+
+	<summary height="190" splitType="Prevent">
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000040" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "4. Review & Approval" : "4. การพิจารณาและอนุมัติ (Review & Approval)")]]></expression>
+		</element>
+		<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000041" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.6"/>
+		</element>
+
+		<!-- ผู้จัดทำ -->
+		<element kind="rectangle" uuid="d9e50009-0001-4001-8001-d3516a000042" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000043" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Prepared By" : "ผู้จัดทำ")]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000044" x="10" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000045" x="10" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Position: ....................................................." : "ตำแหน่ง: .....................................................")]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000046" x="10" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Date: ........ / ........ / ................" : "วันที่: ........ / ........ / ................")]]></expression>
+		</element>
+
+		<!-- ผู้อนุมัติ -->
+		<element kind="rectangle" uuid="d9e50009-0001-4001-8001-d3516a000047" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000048" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Approved By" : "ผู้อนุมัติ")]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000049" x="280" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000050" x="280" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Position: ....................................................." : "ตำแหน่ง: .....................................................")]]></expression>
+		</element>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000051" x="280" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Date: ........ / ........ / ................" : "วันที่: ........ / ........ / ................")]]></expression>
+		</element>
+	</summary>
 </jasperReport>

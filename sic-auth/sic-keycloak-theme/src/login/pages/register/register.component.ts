@@ -31,6 +31,7 @@ import {
   SicFlexComponent,
   SicTextComponent,
   SicToastService,
+  type SicToastType,
 } from 'sic-ng';
 
 import { MainLayoutComponent } from '../../components/main-layout/main-layout.component';
@@ -113,9 +114,16 @@ export class RegisterComponent extends ComponentReference implements OnInit, OnD
   override doUseDefaultCss = inject<boolean>(USE_DEFAULT_CSS);
   override classes = inject<Partial<Record<ClassKey, string>>>(LOGIN_CLASSES);
 
-  displayMessage = !this.kcContext?.messagesPerField?.existsError('global');
+  displayMessage = false;
   bodyClassName = 'kc-sic-custom-login';
   documentTitle = buildDocumentTitle(this.kcContext?.realm, this.i18n.msgStr('registerTitle'));
+
+  private static readonly TOAST_TYPE_BY_KC_MESSAGE_TYPE: Record<string, SicToastType> = {
+    success: 'success',
+    warning: 'warning',
+    error: 'danger',
+    info: 'info',
+  };
 
   // -------------------------------------------------------------------------
   // register.ftl มี field ที่ config เปลี่ยนได้จาก Keycloak Admin (User Profile) —
@@ -160,7 +168,7 @@ export class RegisterComponent extends ComponentReference implements OnInit, OnD
       return ai - bi;
     });
 
-    const fields = orderedAttributes.map((attribute) => {
+    const fields: FieldVM[] = orderedAttributes.map((attribute) => {
       const kind = kindOf(attribute);
       const initialValue = attribute.values ?? attribute.value ?? (kind === 'multichoice' ? [] : '');
       const control = new FormControl<string | string[]>(initialValue, { nonNullable: true });
@@ -249,6 +257,14 @@ export class RegisterComponent extends ComponentReference implements OnInit, OnD
   }
 
   ngOnInit(): void {
+    const message = this.kcContext?.message;
+    if (message && !(message.type === 'warning' && this.kcContext?.isAppInitiatedAction)) {
+      this.toasts.show({
+        message: message.summary.replace(/<[^>]+>/g, ''),
+        type: RegisterComponent.TOAST_TYPE_BY_KC_MESSAGE_TYPE[message.type] ?? 'info',
+      });
+    }
+
     // sync error/ความถูกต้องของแต่ละ field กลับจาก reactless engine → FormControl.errors
     // (ผ่าน setErrors เฉยๆ ไม่ผ่าน validator function — เพื่อไม่ให้ยิง valueChanges ซ้ำ
     // จนวนลูปกับ dispatch ด้านบน) ทุกครั้งที่ formState เปลี่ยน (ทุก keystroke ของทุกช่อง)
@@ -259,6 +275,7 @@ export class RegisterComponent extends ComponentReference implements OnInit, OnD
         const hasError = fieldState.displayableErrors.length > 0;
         if (hasError) {
           nextErrorTexts[fieldState.attribute.name] = fieldState.displayableErrors[0].errorMessageStr;
+          control?.markAsTouched();
         }
         control?.setErrors(hasError ? { kc: true } : null);
       }

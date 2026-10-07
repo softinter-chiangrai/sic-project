@@ -23,5 +23,6 @@ public interface PmApprovalFlowRepository extends JpaRepository<PmApprovalFlow, 
     @Query("SELECT f FROM PmApprovalFlow f WHERE ((:businessId IS NOT NULL AND f.businessId = :businessId) OR f.businessId IS NULL) AND f.documentType = :documentType AND f.isActive = true AND f.isDelete = false ORDER BY f.businessId DESC NULLS LAST, f.flowCode ASC")
     List<PmApprovalFlow> findAvailableFlowsByDocumentType(@Param("businessId") UUID businessId, @Param("documentType") String documentType);
 
-    List<PmApprovalFlow> findByIsActiveTrueOrderByFlowCode();
+    @Query("SELECT f FROM PmApprovalFlow f WHERE (f.businessId = :businessId OR f.businessId IS NULL) AND f.isActive = true AND f.isDelete = false ORDER BY f.flowCode ASC")
+    List<PmApprovalFlow> findAllAvailableFlows(@Param("businessId") UUID businessId);
 }

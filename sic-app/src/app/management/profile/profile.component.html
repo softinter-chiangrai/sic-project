@@ -211,18 +211,16 @@
 @if (!showProfile() && formVerifyData; as data2) {
   <form [formGroup]="data2.formGroup" (ngSubmit)="verify()">
     <div class="grid grid-cols-6 gap-4">
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold">{{ 'PROFILE_VERIFY_HEADER' | translate }}</h2>
-      </div>
-      <div class="col-span-6 text-center">
-        <h2 class="text-4xl font-semibold">
+      <div class="col-span-6 text-center space-y-2">
+        <h2 class="text-3xl font-semibold">{{ 'PROFILE_VERIFY_HEADER' | translate }}</h2>
+        <p class="text-base text-gray-500 font-medium">
           {{ formVerifyData.formGroup.get('recipient')?.value }}
-        </h2>
+        </p>
       </div>
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3"
+        class="col-span-6 md:col-span-4 md:col-start-2 lg:col-span-4 lg:col-start-2"
       >
-        <div class="flex gap-4">
+        <div class="flex items-end gap-3">
           <div class="flex-1">
             <sic-input
               [label]="'PROFILE_VERIFY_CODE_LABEL' | translate"
@@ -233,15 +231,15 @@
               }"
             ></sic-input>
           </div>
-          <div class="w-50">
-            <sic-button [block]="true" [type]="'button'" variant="outline" color="primary" (click)="resend()">
+          <div class="shrink-0">
+            <sic-button [type]="'button'" variant="outline" color="primary" (click)="resend()">
               {{ 'PROFILE_RESEND_BUTTON' | translate }}
             </sic-button>
           </div>
         </div>
       </div>
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
+        class="col-span-6 md:col-span-4 md:col-start-2 lg:col-span-4 lg:col-start-2 flex justify-end gap-3 mt-4"
       >
         <sic-button [type]="'button'" variant="outline" color="primary" (click)="back()">
           {{ 'PROFILE_BACK_BUTTON' | translate }}
