@@ -10,4 +10,7 @@ public interface ApprovalNotificationService {
     void notifyRevisionRequested(PmApproval approval);
     void notifyPendingReminder(PmApproval approval);
     void notifyDelegate(PmApproval approval, String delegatedTo);
+
+    /** แจ้งเตือนผู้ใช้โดยตรง (ระบบเป็นผู้ส่ง) ใช้กับงานตั้งเวลา เช่น เตือนสัญญาใกล้หมดอายุ */
+    void notifyUser(java.util.UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl);
 }

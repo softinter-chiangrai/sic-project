@@ -322,6 +322,12 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         if (req.getContractId() != null) {
             var contract = contractRepository.findById(req.getContractId())
                     .orElseThrow(() -> new RuntimeException("ไม่พบสัญญา"));
+            // สัญญาที่ยกเลิกแล้วไม่มีสิทธิ์รับบริการ MA (ตรวจตอนสร้าง/เปลี่ยนสัญญา; สัญญาหมดอายุให้ผ่านแต่ฝั่งหน้าจอเตือน)
+            if (!contract.getId().equals(entity.getContractId())
+                    && com.softinter.sicapi.util.ContractLifecycle.CANCELLED.equals(com.softinter.sicapi.util.ContractLifecycle.status(
+                            contract.getSignStatus(), contract.getRenewalStatus(), contract.getEndDate(), java.time.LocalDate.now()))) {
+                throw new RuntimeException("สัญญา " + contract.getContractNo() + " ถูกยกเลิกแล้ว ไม่สามารถเปิดตั๋ว MA ภายใต้สัญญานี้ได้");
+            }
             entity.setCustomerId(contract.getCustomerId());
             entity.setProjectId(contract.getProjectId());
         } else {

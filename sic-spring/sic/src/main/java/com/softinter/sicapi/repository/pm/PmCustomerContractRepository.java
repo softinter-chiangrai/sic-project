@@ -43,4 +43,12 @@ public interface PmCustomerContractRepository
                          @org.springframework.data.repository.query.Param("closed") java.util.Collection<String> closed,
                          @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
                          @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
+
+    /** สัญญาที่ลงนามแล้ว ยังไม่ถูกต่อ/ยกเลิก และจะหมดอายุภายในช่วงที่กำหนด (ใช้กับงานรายวัน ไม่แยก business) */
+    @org.springframework.data.jpa.repository.Query("SELECT c FROM PmCustomerContract c WHERE c.isDelete = false " +
+           "AND LOWER(c.signStatus) = 'signed' AND c.endDate BETWEEN :from AND :to " +
+           "AND (c.renewalStatus IS NULL OR c.renewalStatus NOT IN :closed) ORDER BY c.endDate ASC")
+    List<PmCustomerContract> findExpiringContracts(@org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
+                                                   @org.springframework.data.repository.query.Param("to") java.time.LocalDate to,
+                                                   @org.springframework.data.repository.query.Param("closed") java.util.Collection<String> closed);
 }

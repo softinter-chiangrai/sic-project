@@ -24,6 +24,11 @@ public class PmCustomerContractResponse {
     private String signStatus;
     private Boolean isLocked;
     private String renewalStatus;
+    private Boolean autoRenew;
+    /** DRAFT | ACTIVE | EXPIRING | EXPIRED | RENEWED | CANCELLED (คำนวณจากวันที่และสถานะ ไม่ได้เก็บใน DB) */
+    private String lifecycleStatus;
+    /** จำนวนวันก่อนหมดอายุ (ติดลบ = หมดอายุแล้ว) */
+    private Integer daysUntilExpiry;
     private UUID parentContractId;
     private String parentContractNo;
     private Boolean isActive;

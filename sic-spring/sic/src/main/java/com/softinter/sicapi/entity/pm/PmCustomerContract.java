@@ -60,6 +60,9 @@ public class PmCustomerContract extends BaseBusinessEntity {
     @Column(name = "renewal_status", length = 50)
     private String renewalStatus;
 
+    @Column(name = "auto_renew", nullable = false)
+    private Boolean autoRenew = false;
+
     @Column(name = "parent_contract_id")
     private UUID parentContractId;
 

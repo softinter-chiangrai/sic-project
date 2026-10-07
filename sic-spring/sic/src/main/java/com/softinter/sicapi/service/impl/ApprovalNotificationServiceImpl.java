@@ -127,6 +127,12 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
         );
     }
 
+    @Override
+    @Transactional
+    public void notifyUser(UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl) {
+        sendNotification(recipientUserId, "system", "ระบบ", title, message, type, linkUrl, businessId);
+    }
+
     private void sendNotification(String recipientUserId, String senderId, String senderName, String title, String message, String type, String linkUrl, UUID businessId) {
         if (recipientUserId == null || recipientUserId.isBlank()) return;
 

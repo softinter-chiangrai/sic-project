@@ -342,6 +342,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setScopeSummary(request.getScopeSummary());
         contract.setSignStatus(request.getSignStatus());
         contract.setRenewalStatus(request.getRenewalStatus());
+        contract.setAutoRenew(Boolean.TRUE.equals(request.getAutoRenew()));
         contract.setParentContractId(request.getParentContractId());
         contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         contract.setAttachmentGroupId(request.getAttachmentGroupId());
@@ -594,6 +595,11 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         dto.setSignStatus(contract.getSignStatus());
         dto.setIsLocked(approvalService.isApproved("CONTRACT", contract.getId()));
         dto.setRenewalStatus(contract.getRenewalStatus());
+        dto.setAutoRenew(Boolean.TRUE.equals(contract.getAutoRenew()));
+        java.time.LocalDate today = java.time.LocalDate.now();
+        dto.setDaysUntilExpiry(com.softinter.sicapi.util.ContractLifecycle.daysUntilExpiry(contract.getEndDate(), today));
+        dto.setLifecycleStatus(com.softinter.sicapi.util.ContractLifecycle.status(
+                contract.getSignStatus(), contract.getRenewalStatus(), contract.getEndDate(), today));
         dto.setParentContractId(contract.getParentContractId());
         if (contract.getParentContract() != null) {
             dto.setParentContractNo(contract.getParentContract().getContractNo());
