@@ -53,8 +53,23 @@ public interface PmCustomerContractService {
             String contractType,
             Integer expiringWithinDays,
             boolean latestOnly,
+            String renewalStatus,
             Pageable pageable
     );
+
+    default Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Integer expiringWithinDays,
+            boolean latestOnly,
+            Pageable pageable
+    ) {
+        return getContracts(businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, latestOnly, null, pageable);
+    }
 
     /** สายการต่ออายุทั้งหมดของสัญญานี้ เรียงจากฉบับแรกถึงฉบับล่าสุด */
     java.util.List<PmCustomerContractResponse> getRenewalChain(UUID id);

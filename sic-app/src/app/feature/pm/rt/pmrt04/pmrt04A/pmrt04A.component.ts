@@ -33,6 +33,7 @@ import { environment } from '../../../../../../environments/environment';
 import { ApprovalService } from '../../../dt/pmdt03/approval.service';
 import { Pmrt02Service } from '../../pmrt02/pmrt02.service';
 import { Pmrt04AForm } from './pmrt04A.form';
+import { Pmrt04BForm } from '../pmrt04B/pmrt04B.form';
 import { ContractModel, Pmrt04APageData } from './pmrt04A.model';
 import { Pmrt04AService, ContractSummary } from './pmrt04A.service';
 import { SicEntitySummaryComponent, EntitySummaryCard } from '../../../../../core/component/sic-entity-summary/sic-entity-summary.component';
@@ -301,33 +302,88 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       }
     }
 
-    // รับ projectId และ customerId จาก queryParams
+    // รับ projectId, customerId, parentContractId, contractType จาก queryParams
     this.route.queryParams.subscribe((params) => {
       if (params['mode'] === 'view') {
         this.isView = true;
       }
+      if (this.contractId) return;
+
+      const parentContractId = params['parentContractId'];
       const projectId = params['projectId'];
-      if (projectId && !this.contractId) {
-        this.projectId = projectId;
-        this.projectService.getProject(projectId).subscribe({
-          next: (project) => {
-            this.customerId = project.customerId;
-            this.customerName = project.customerName || null;
-            this.projectName = project.projectName || null;
-            // ✅ ใช้ formData.patchValue() — patch + re-snapshot อัตโนมัติ
+      const customerId = params['customerId'];
+      const contractType = params['contractType'];
+      const refTicketNo = params['refTicketNo'];
+
+      if (parentContractId) {
+        this.service.getContract(parentContractId).subscribe({
+          next: (parent) => {
+            this.customerId = parent.customerId;
+            this.customerName = parent.customerName || null;
+            this.projectId = parent.projectId;
+            this.projectName = parent.projectName || null;
+            this.apiGetProjectsUrl = this.service.getComboboxProject(parent.customerId);
+
+            let newStartDate: string | null = null;
+            let newEndDate: string | null = null;
+            if (parent.endDate) {
+              const d = new Date(parent.endDate);
+              d.setDate(d.getDate() + 1);
+              const ed = new Date(d);
+              ed.setFullYear(ed.getFullYear() + 1);
+              newStartDate = d.toISOString().split('T')[0];
+              newEndDate = ed.toISOString().split('T')[0];
+            }
+
+            const renewalNo = Pmrt04BForm.computeRenewalContractNo(parent.contractNo);
+
             this.formData.patchValue({
-              projectId,
-              customerId: project.customerId,
-              projectName: project.projectName,
-              customerName: project.customerName,
+              contractNo: renewalNo || null,
+              contractType: contractType || parent.contractType || 'Maintenance Contract',
+              customerId: parent.customerId,
+              customerName: parent.customerName,
+              projectId: parent.projectId,
+              projectName: parent.projectName,
+              parentContractId: parent.id,
+              parentContractNo: parent.contractNo,
+              contractValue: parent.contractValue,
+              paymentTerms: parent.paymentTerms,
+              autoRenew: true,
+              renewalStatus: 'ต่อแล้ว',
+              scopeSummary: parent.scopeSummary || (refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : null),
+              startDate: newStartDate,
+              endDate: newEndDate,
             });
+
+            this.loadRenewalChain(parentContractId);
             if (this.isView) {
               this.form.disable();
             }
             this.cdr.detectChanges();
           },
-          error: () => this.navigation.navigate(['/feature/pm/contract']),
+          error: () => {
+            if (projectId) {
+              this.loadProjectDefaults(projectId, customerId, contractType, refTicketNo);
+            }
+          },
         });
+      } else if (projectId) {
+        this.loadProjectDefaults(projectId, customerId, contractType, refTicketNo);
+      } else if (customerId || contractType) {
+        if (customerId) {
+          this.customerId = customerId;
+          this.apiGetProjectsUrl = this.service.getComboboxProject(customerId);
+        }
+        this.formData.patchValue({
+          customerId: customerId || null,
+          contractType: contractType || 'Maintenance Contract',
+          autoRenew: contractType === 'Maintenance Contract',
+          scopeSummary: refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : null,
+        });
+        if (this.isView) {
+          this.form.disable();
+        }
+        this.cdr.detectChanges();
       }
 
       // Global AI Navigator ส่งผู้ใช้มาที่นี่พร้อมสั่งให้เปิด AI Draft Modal และกรอกข้อมูลทันที
@@ -407,7 +463,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     this.navigation.navigate(['/feature/pm/contract', id, 'view']);
   }
 
-  loadSummary(id: string): void {
+  loadRenewalChain(id: string): void {
     this.service.getRenewalChain(id).subscribe({
       next: (chain) => {
         this.renewalChain.set(chain);
@@ -415,6 +471,44 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       },
       error: () => this.renewalChain.set([]),
     });
+  }
+
+  private loadProjectDefaults(projectId: string, customerId?: string, contractType?: string, refTicketNo?: string): void {
+    this.projectId = projectId;
+    this.projectService.getProject(projectId).subscribe({
+      next: (project) => {
+        this.customerId = project.customerId;
+        this.customerName = project.customerName || null;
+        this.projectName = project.projectName || null;
+        this.apiGetProjectsUrl = this.service.getComboboxProject(project.customerId);
+
+        const patchData: any = {
+          projectId,
+          customerId: project.customerId,
+          projectName: project.projectName,
+          customerName: project.customerName,
+        };
+        if (contractType) {
+          patchData.contractType = contractType;
+        }
+        if (contractType === 'Maintenance Contract') {
+          patchData.autoRenew = true;
+        }
+        if (refTicketNo) {
+          patchData.scopeSummary = `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>`;
+        }
+        this.formData.patchValue(patchData);
+        if (this.isView) {
+          this.form.disable();
+        }
+        this.cdr.detectChanges();
+      },
+      error: () => this.navigation.navigate(['/feature/pm/contract']),
+    });
+  }
+
+  loadSummary(id: string): void {
+    this.loadRenewalChain(id);
     this.summaryLoading.set(true);
     this.service.getContractSummary(id).subscribe({
       next: (data) => {

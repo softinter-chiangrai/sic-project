@@ -58,6 +58,12 @@
           </span>
           <sic-version-badge [status]="form.get('signStatus')?.value" [isLocked]="isLocked"></sic-version-badge>
         }
+        @if (form.get('parentContractNo')?.value) {
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20" [title]="'PMRT04A_RENEWAL_PARENT_HINT' | translate">
+            <i class="bi bi-arrow-repeat"></i>
+            {{ 'PMRT04A_RENEWAL_OF' | translate }}: <strong class="font-mono">{{ form.get('parentContractNo')?.value }}</strong>
+          </span>
+        }
       </div>
     </div>
 
@@ -65,8 +71,8 @@
       <sic-entity-summary [cards]="summaryCards()" [isLoading]="summaryLoading()"></sic-entity-summary>
     }
 
-    <!-- ประวัติการต่อสัญญา (แสดงเมื่อสัญญานี้อยู่ในสายที่มีมากกว่า 1 ฉบับ) -->
-    @if (contractId && renewalChain().length > 1) {
+    <!-- ประวัติการต่อสัญญา (แสดงเมื่อสัญญานี้อยู่ในสายที่มีมากกว่า 1 ฉบับ หรือต่อมาจากสัญญาเดิม) -->
+    @if ((contractId || form.get('parentContractId')?.value) && renewalChain().length > 0) {
       <div class="rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] p-4">
         <h3 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2 mb-3">
           <i class="bi bi-arrow-repeat text-[var(--crm-primary)]"></i>

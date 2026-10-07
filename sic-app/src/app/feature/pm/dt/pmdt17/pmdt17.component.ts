@@ -100,7 +100,7 @@ export class Pmdt17Component implements OnInit {
         { label: this.translate.instant('PMDT17_COL_APPROVAL'), name: 'approvalStatus', type: 'approvalBadge', hidden: !visible.has('approvalStatus'), width: 130 },
         { label: this.translate.instant('PMDT17_COL_ASSIGNED'), name: 'assignedTo', type: 'assignedText', hidden: !visible.has('assignedTo'), width: 140 },
         { label: this.translate.instant('PMDT17_COL_VERSION'), name: 'version', type: 'versionText', width: 90 },
-        { label: this.translate.instant('PMDT17_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 110 },
+        { label: this.translate.instant('PMDT17_COL_ACTIONS'), name: 'rowActions', type: 'rowActions', sortable: false, width: 150 },
       ],
     };
   });
@@ -425,6 +425,18 @@ export class Pmdt17Component implements OnInit {
 
   goToEdit(id: string) {
     this.router.navigate(['/feature/pm/ma-ticket', id, 'edit']);
+  }
+
+  goToRenewContract(row: any) {
+    const queryParams: Record<string, any> = {
+      contractType: 'Maintenance Contract',
+    };
+    if (row.projectId) queryParams['projectId'] = row.projectId;
+    if (row.customerId) queryParams['customerId'] = row.customerId;
+    if (row.contractId) queryParams['parentContractId'] = row.contractId;
+    if (row.ticketNo) queryParams['refTicketNo'] = row.ticketNo;
+
+    this.router.navigate(['/feature/pm/contract/new'], { queryParams });
   }
 
   printTicket(item: any) {

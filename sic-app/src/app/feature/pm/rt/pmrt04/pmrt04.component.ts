@@ -76,8 +76,8 @@ export class Pmrt04Component implements OnInit {
 
   // ===== Preset Filter Tabs =====
   protected activePreset = signal<'all' | 'expiring'>('all');
-  /** false = ซ่อนฉบับที่ถูกต่ออายุไปแล้ว เหลือฉบับล่าสุดของแต่ละสาย */
-  protected showRenewed = signal(false);
+  /** 'all' = ทั้งหมด, 'renewed' = ต่อแล้ว, 'not_renewed' = ยังไม่ต่อ */
+  protected filterRenewalStatus = signal<string>('all');
 
   // ===== Bulk Selection — ใช้ selection ในตัวของ grid =====
 
@@ -130,6 +130,15 @@ export class Pmrt04Component implements OnInit {
     return this.contractTypes().map((t) => ({ value: t, text: this.translate.instant(t) || t }));
   });
 
+  renewalStatusOptions = computed(() => {
+    this.languageService.currentLang();
+    return [
+      { value: 'all', text: this.translate.instant('PMRT04_RENEWAL_STATUS_ALL') },
+      { value: 'renewed', text: this.translate.instant('PMRT04_STATUS_RENEWED') },
+      { value: 'not_renewed', text: this.translate.instant('PMRT04_STATUS_NOT_RENEWED') },
+    ];
+  });
+
   statusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
   signStatusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
 
@@ -180,6 +189,7 @@ export class Pmrt04Component implements OnInit {
       if (params['q'] !== undefined) this.searchTerm.set(params['q']);
       if (params['status'] !== undefined) this.filterStatus.set(params['status']);
       if (params['type'] !== undefined) this.filterType.set(params['type']);
+      if (params['renewal'] !== undefined) this.filterRenewalStatus.set(params['renewal'] || 'all');
       if (params['page'] !== undefined) this.currentPage.set(+params['page'] || 1);
       if (params['preset'] !== undefined) this.activePreset.set(params['preset'] === 'expiring' ? 'expiring' : 'all');
 
@@ -281,7 +291,10 @@ export class Pmrt04Component implements OnInit {
     if (this.activePreset() === 'expiring') {
       params = params.set('expiringWithinDays', '30');
     }
-    params = params.set('latestOnly', String(!this.showRenewed()));
+    const renewal = this.filterRenewalStatus();
+    if (renewal && renewal !== 'all') {
+      params = params.set('renewalStatus', renewal);
+    }
 
     const sortField = request.sortField ?? 'contractNo';
     params = params.set('sortBy', sortField).set('sortDirection', request.sortDescending ? 'desc' : 'asc');
@@ -341,6 +354,7 @@ export class Pmrt04Component implements OnInit {
         q: this.searchTerm() || null,
         status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
         type: this.filterType() !== 'all' ? this.filterType() : null,
+        renewal: this.filterRenewalStatus() !== 'all' ? this.filterRenewalStatus() : null,
         page: this.currentPage() > 1 ? this.currentPage() : null,
         preset: this.activePreset() !== 'all' ? this.activePreset() : null,
         projectId: this.filterProjectId() || null,
@@ -379,8 +393,10 @@ export class Pmrt04Component implements OnInit {
     this.reloadFromPage1(grid);
   }
 
-  toggleShowRenewed(grid: SicGridPanelComponent): void {
-    this.showRenewed.update((v) => !v);
+  onRenewalStatusChange(value: any, grid: SicGridPanelComponent) {
+    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
+    this.filterRenewalStatus.set(val || 'all');
+    this.syncFiltersToUrl();
     this.reloadFromPage1(grid);
   }
 
@@ -467,7 +483,8 @@ export class Pmrt04Component implements OnInit {
     const type = this.filterType();
     if (type !== 'all') params = params.set('contractType', type);
     if (this.activePreset() === 'expiring') params = params.set('expiringWithinDays', '30');
-    params = params.set('latestOnly', String(!this.showRenewed()));
+    const renewalCsv = this.filterRenewalStatus();
+    if (renewalCsv && renewalCsv !== 'all') params = params.set('renewalStatus', renewalCsv);
 
     this.http
       .get<PaginationResponse<Contract>>(this.apiUrl, { params })

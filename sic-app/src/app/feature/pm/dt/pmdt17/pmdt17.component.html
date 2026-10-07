@@ -166,6 +166,14 @@
       <ng-template sicGridPanelTemplate="rowActions" section="cell" let-row>
         @let r = $any(row);
         <div class="flex items-center justify-center gap-1">
+          <button
+            type="button"
+            (click)="goToRenewContract(r)"
+            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all cursor-pointer"
+            [title]="'PMDT17_RENEW_MA_CONTRACT_TITLE' | translate"
+          >
+            <i class="bi bi-file-earmark-plus"></i>
+          </button>
           <sic-table-actions
             [showView]="true"
             [showEdit]="true"

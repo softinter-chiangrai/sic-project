@@ -73,10 +73,6 @@
         : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
       {{ 'PMRT04_PRESET_EXPIRING' | translate }}
     </button>
-    <label class="ml-auto inline-flex items-center gap-2 text-sm text-[var(--text)] cursor-pointer select-none">
-      <input type="checkbox" [checked]="showRenewed()" (change)="toggleShowRenewed(grid)" />
-      {{ 'PMRT04_SHOW_RENEWED' | translate }}
-    </label>
   </div>
 
   <!-- FILTERS -->
@@ -118,6 +114,16 @@
         [ngModel]="filterType()"
         (ngModelChange)="onTypeChange($event, grid)"
         [placeholder]="'PMRT04_TYPE_ALL_PLACEHOLDER' | translate"
+        [clearable]="true"
+      ></sic-combobox>
+    </div>
+
+    <div class="min-w-[190px]">
+      <sic-combobox
+        [options]="renewalStatusOptions()"
+        [ngModel]="filterRenewalStatus()"
+        (ngModelChange)="onRenewalStatusChange($event, grid)"
+        [placeholder]="'PMRT04_RENEWAL_STATUS_PLACEHOLDER' | translate"
         [clearable]="true"
       ></sic-combobox>
     </div>

@@ -114,6 +114,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             String contractType,
             Integer expiringWithinDays,
             boolean latestOnly,
+            String renewalStatus,
             Pageable pageable) {
 
         Specification<PmCustomerContract> spec = (root, query, cb) -> {
@@ -168,7 +169,23 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             if (contractType != null && !contractType.isBlank() && !"all".equals(contractType)) {
                 predicates.add(cb.equal(root.get("contractType"), contractType));
             }
-            if (latestOnly) {
+            if (renewalStatus != null && !renewalStatus.isBlank() && !"all".equalsIgnoreCase(renewalStatus)) {
+                var sub = query.subquery(UUID.class);
+                var child = sub.from(PmCustomerContract.class);
+                sub.select(child.get("id")).where(
+                        cb.equal(child.get("parentContractId"), root.get("id")),
+                        cb.isFalse(child.get("isDelete")),
+                        cb.or(cb.isNull(child.get("renewalStatus")),
+                                cb.notEqual(child.get("renewalStatus"), RENEWAL_STATUS_CANCELLED)));
+
+                if ("renewed".equalsIgnoreCase(renewalStatus) || "ต่อแล้ว".equals(renewalStatus)) {
+                    predicates.add(cb.or(cb.equal(root.get("renewalStatus"), "ต่อแล้ว"), cb.exists(sub)));
+                } else if ("not_renewed".equalsIgnoreCase(renewalStatus) || "ยังไม่ต่อ".equals(renewalStatus)) {
+                    predicates.add(cb.and(
+                            cb.or(cb.isNull(root.get("renewalStatus")), cb.notEqual(root.get("renewalStatus"), "ต่อแล้ว")),
+                            cb.not(cb.exists(sub))));
+                }
+            } else if (latestOnly) {
                 // ซ่อนฉบับที่มีฉบับต่ออายุ (ที่ยังไม่ยกเลิก/ลบ) ชี้มาแล้ว
                 var sub = query.subquery(UUID.class);
                 var child = sub.from(PmCustomerContract.class);

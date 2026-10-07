@@ -81,6 +81,7 @@ public class PmCustomerContractController {
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) Integer expiringWithinDays,
             @RequestParam(defaultValue = "false") boolean latestOnly,
+            @RequestParam(required = false) String renewalStatus,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -91,7 +92,7 @@ public class PmCustomerContractController {
                 com.softinter.sicapi.entity.pm.PmCustomerContract.class, sortBy, sortDirection, "contractNo");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmCustomerContractResponse> pageResult = contractService.getContracts(
-                businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, latestOnly, pageable);
+                businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, latestOnly, renewalStatus, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
     }
 
