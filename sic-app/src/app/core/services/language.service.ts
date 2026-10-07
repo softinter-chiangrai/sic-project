@@ -21,6 +21,16 @@ export class LanguageService {
 
   private readonly defaultTranslations: Record<'th' | 'en', Record<string, string>> = {
     th: {
+      PMRT04A_CONTRACT_TYPE_DEV: 'สัญญาพัฒนาซอฟต์แวร์ (Development Contract)',
+      PMRT04A_CONTRACT_TYPE_MA: 'สัญญาบำรุงรักษา (Maintenance Contract)',
+      PMRT04A_CONTRACT_TYPE_SUPPORT: 'สัญญาบริการดูแลระบบ (Support Contract)',
+      PMRT04A_CONTRACT_TYPE_CR: 'สัญญาปรับแก้ความต้องการ (Change Request Contract)',
+      PMRT04A_CONTRACT_TYPE_EXTENSION: 'สัญญาต่ออายุ/ขยายระยะเวลา (Extension Contract)',
+      'Development Contract': 'สัญญาพัฒนาซอฟต์แวร์ (Development Contract)',
+      'Maintenance Contract': 'สัญญาบำรุงรักษา (Maintenance Contract)',
+      'Support Contract': 'สัญญาบริการดูแลระบบ (Support Contract)',
+      'Change Request Contract': 'สัญญาปรับแก้ความต้องการ (Change Request Contract)',
+      'Extension Contract': 'สัญญาต่ออายุ/ขยายระยะเวลา (Extension Contract)',
       COMMON_UNSAVED_CHANGES_TITLE: 'มีการเปลี่ยนแปลงที่ยังไม่บันทึก',
       COMMON_UNSAVED_CHANGES_MSG: 'คุณมีการเปลี่ยนแปลงที่ยังไม่บันทึก ต้องการออกจากหน้านี้หรือไม่?',
       DASHBOARD_CHIP_ACTIVE_PROJECTS: 'โครงการดำเนินงาน',
@@ -688,6 +698,16 @@ export class LanguageService {
       TRACE_REL_AFFECTED_BY_SOURCE: 'ส่งผลกระทบต่อ',
     },
     en: {
+      PMRT04A_CONTRACT_TYPE_DEV: 'Development Contract',
+      PMRT04A_CONTRACT_TYPE_MA: 'Maintenance Contract',
+      PMRT04A_CONTRACT_TYPE_SUPPORT: 'Support Contract',
+      PMRT04A_CONTRACT_TYPE_CR: 'Change Request Contract',
+      PMRT04A_CONTRACT_TYPE_EXTENSION: 'Extension Contract',
+      'Development Contract': 'Development Contract',
+      'Maintenance Contract': 'Maintenance Contract',
+      'Support Contract': 'Support Contract',
+      'Change Request Contract': 'Change Request Contract',
+      'Extension Contract': 'Extension Contract',
       COMMON_UNSAVED_CHANGES_TITLE: 'Unsaved Changes',
       COMMON_UNSAVED_CHANGES_MSG: 'You have unsaved changes. Leave this page anyway?',
       DASHBOARD_CHIP_ACTIVE_PROJECTS: 'Active Projects',

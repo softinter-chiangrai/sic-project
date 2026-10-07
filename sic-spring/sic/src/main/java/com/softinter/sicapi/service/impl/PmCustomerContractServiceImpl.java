@@ -506,24 +506,25 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     }
 
     @Override
-
     public List<ComboboxResponse> getLovContractTypes() {
+        boolean isThai = "th".equalsIgnoreCase(com.softinter.sicapi.util.LanguageUtils.getLanguage());
         return Arrays.asList(
-                new ComboboxResponse("Development Contract", "Development Contract"),
-                new ComboboxResponse("Maintenance Contract", "Maintenance Contract"),
-                new ComboboxResponse("Support Contract", "Support Contract"),
-                new ComboboxResponse("Change Request Contract", "Change Request Contract"),
-                new ComboboxResponse("Extension Contract", "Extension Contract")
+                new ComboboxResponse("Development Contract", isThai ? "สัญญาพัฒนาซอฟต์แวร์ (Development Contract)" : "Development Contract"),
+                new ComboboxResponse("Maintenance Contract", isThai ? "สัญญาบำรุงรักษา (Maintenance Contract)" : "Maintenance Contract"),
+                new ComboboxResponse("Support Contract", isThai ? "สัญญาบริการดูแลระบบ (Support Contract)" : "Support Contract"),
+                new ComboboxResponse("Change Request Contract", isThai ? "สัญญาปรับแก้ความต้องการ (Change Request Contract)" : "Change Request Contract"),
+                new ComboboxResponse("Extension Contract", isThai ? "สัญญาต่ออายุ/ขยายระยะเวลา (Extension Contract)" : "Extension Contract")
         );
     }
 
     @Override
     public List<ComboboxResponse> getLovSignStatuses() {
+        boolean isThai = "th".equalsIgnoreCase(com.softinter.sicapi.util.LanguageUtils.getLanguage());
         return Arrays.asList(
-                new ComboboxResponse("Draft", "Draft"),
-                new ComboboxResponse("Sent", "Sent"),
-                new ComboboxResponse("Signed", "Signed"),
-                new ComboboxResponse("Expired", "Expired")
+                new ComboboxResponse("Draft", isThai ? "ร่าง" : "Draft"),
+                new ComboboxResponse("Sent", isThai ? "ส่งแล้ว" : "Sent"),
+                new ComboboxResponse("Signed", isThai ? "ลงนามแล้ว" : "Signed"),
+                new ComboboxResponse("Expired", isThai ? "หมดอายุ" : "Expired")
         );
     }
 

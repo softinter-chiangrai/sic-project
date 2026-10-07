@@ -45,6 +45,10 @@ export interface Contract {
   signStatus: 'Draft' | 'Sent' | 'Signed' | 'Changed' | 'Expired';
   approvalStatus?: string;
   renewalStatus: string;
+  autoRenew?: boolean;
+  /** DRAFT | ACTIVE | EXPIRING | EXPIRED | RENEWED | CANCELLED (คำนวณจาก backend) */
+  lifecycleStatus?: string;
+  daysUntilExpiry?: number | null;
   parentContractId?: string;
   parentContractNo?: string;
   isActive: boolean;

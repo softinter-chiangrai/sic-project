@@ -127,7 +127,7 @@ export class Pmrt04Component implements OnInit {
   ];
 
   typeSelectOptions = computed(() => {
-    return this.contractTypes().map((t) => ({ value: t, text: t }));
+    return this.contractTypes().map((t) => ({ value: t, text: this.translate.instant(t) || t }));
   });
 
   statusOptions = ['Draft', 'Sent', 'Signed', 'Changed', 'Expired'];
@@ -385,6 +385,13 @@ export class Pmrt04Component implements OnInit {
   }
 
   // ===== Preset Tabs =====
+  /** ตัวกรองชนิดสัญญาแบบแท็บ: ทั้งหมด / สัญญา MA (ชนิดอื่นเลือกจาก dropdown) */
+  setTypePreset(type: 'all' | 'Maintenance Contract', grid: SicGridPanelComponent): void {
+    this.filterType.set(type);
+    this.syncFiltersToUrl();
+    this.reloadFromPage1(grid);
+  }
+
   setPreset(preset: 'all' | 'expiring', grid: SicGridPanelComponent): void {
     this.activePreset.set(preset);
     this.syncFiltersToUrl();
@@ -645,14 +652,24 @@ export class Pmrt04Component implements OnInit {
     return row?.renewalStatus === 'ยกเลิก';
   }
 
-  getRowStatusClass(row: { signStatus: string; renewalStatus?: string | null }): string {
-    return this.isCancelled(row)
-      ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-      : this.getStatusClass(row.signStatus);
+  getRowStatusClass(row: { signStatus: string; renewalStatus?: string | null; lifecycleStatus?: string }): string {
+    if (this.isCancelled(row)) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+    switch (row.lifecycleStatus) {
+      case 'RENEWED': return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+      case 'EXPIRED': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'EXPIRING': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+      default: return this.getStatusClass(row.signStatus);
+    }
   }
 
-  getRowStatusText(row: { signStatus: string; renewalStatus?: string | null }): string {
-    return this.isCancelled(row) ? this.translate.instant('PMRT04_STATUS_CANCELLED') : this.getStatusText(row.signStatus);
+  getRowStatusText(row: { signStatus: string; renewalStatus?: string | null; lifecycleStatus?: string; daysUntilExpiry?: number | null }): string {
+    if (this.isCancelled(row)) return this.translate.instant('PMRT04_STATUS_CANCELLED');
+    switch (row.lifecycleStatus) {
+      case 'RENEWED': return this.translate.instant('PMRT04_STATUS_RENEWED');
+      case 'EXPIRED': return this.translate.instant('PMRT04_STATUS_EXPIRED');
+      case 'EXPIRING': return this.translate.instant('PMRT04_STATUS_EXPIRING', { days: row.daysUntilExpiry ?? 0 });
+      default: return this.getStatusText(row.signStatus);
+    }
   }
 
   getStatusText(status: string): string {

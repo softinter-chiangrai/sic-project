@@ -34,6 +34,10 @@ export interface ContractModel {
   signStatus: 'Draft' | 'Sent' | 'Signed' | 'Expired' | 'Changed';
   isLocked?: boolean;
   renewalStatus: string;
+  autoRenew?: boolean;
+  /** DRAFT | ACTIVE | EXPIRING | EXPIRED | RENEWED | CANCELLED (คำนวณจาก backend) */
+  lifecycleStatus?: string;
+  daysUntilExpiry?: number | null;
   parentContractId?: string;
   parentContractNo?: string;
   attachmentGroupId?: string | null;

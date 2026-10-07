@@ -47,6 +47,16 @@
         {{ 'PMDT17_SECTION_GENERAL_INFO' | translate }}
       </h2>
 
+      @if (contractAlert(); as alert) {
+        <div class="flex items-start gap-2 rounded-lg border px-3 py-2 text-sm"
+          [class]="alert.level === 'danger'
+            ? 'border-red-300 bg-red-50 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+            : 'border-amber-300 bg-amber-50 text-amber-800 dark:bg-amber-900/20 dark:text-amber-300'">
+          <i class="bi bi-exclamation-triangle-fill mt-0.5"></i>
+          <span>{{ alert.text }}</span>
+        </div>
+      }
+
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
         <sic-combobox
           [label]="'PMDT17A_CONTRACT_LABEL' | translate"

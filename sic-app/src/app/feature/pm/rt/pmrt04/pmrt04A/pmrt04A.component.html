@@ -166,7 +166,9 @@
             <sic-combobox
               [label]="'PMRT04A_CONTRACT_TYPE_LABEL' | translate"
               formControlName="contractType"
-              [apiUrl]="service.getLovContractType()"
+              [items]="contractTypeOptions"
+              valueField="value"
+              textField="label"
               [required]="true"
               [placeholder]="'PMRT04A_CONTRACT_TYPE_PLACEHOLDER' | translate"
               [errorMessages]="{ required: 'PMRT04A_CONTRACT_TYPE_REQUIRED' | translate }"
@@ -212,13 +214,25 @@
             ></sic-input>
           </div>
 
-          <!-- Payment Terms -->
-          <div>
-            <sic-input
+          <!-- Payment Terms (Full Width) -->
+          <div class="md:col-span-2">
+            <sic-tiptap-editor
               [label]="'PMRT04A_PAYMENT_TERMS_LABEL' | translate"
               formControlName="paymentTerms"
+              minHeight="120px"
               [placeholder]="'PMRT04A_PAYMENT_TERMS_PLACEHOLDER' | translate"
-            ></sic-input>
+            ></sic-tiptap-editor>
+          </div>
+
+          <!-- Auto-renew -->
+          <div class="md:col-span-2">
+            <label class="inline-flex items-start gap-2 text-sm text-[var(--text)] cursor-pointer">
+              <input type="checkbox" class="mt-1" formControlName="autoRenew" />
+              <span>
+                <span class="font-medium text-[var(--text-active)]">{{ 'PMRT04A_AUTO_RENEW_LABEL' | translate }}</span>
+                <span class="block text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AUTO_RENEW_HINT' | translate }}</span>
+              </span>
+            </label>
           </div>
 
           <!-- Scope Summary (Full Width) -->

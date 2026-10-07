@@ -740,7 +740,12 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
 
   resolveLabel(item: any): string {
     if (typeof item !== 'object' || item === null) {
-      return String(item ?? '');
+      const raw = String(item ?? '');
+      if (raw && this.translate) {
+        const trans = this.translate.instant(raw);
+        if (trans !== raw) return trans;
+      }
+      return raw;
     }
     const localizedLabel = this.resolveLocalizedLabel(item);
     const configuredLabel =
@@ -748,7 +753,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
         ? localizedLabel
         : item?.[this.textField];
 
-    return String(
+    const raw = String(
       configuredLabel ??
       item?.text ??
       item?.label ??
@@ -756,6 +761,20 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
       localizedLabel ??
       '',
     );
+
+    if (raw && this.translate) {
+      const trans = this.translate.instant(raw);
+      if (trans !== raw) {
+        return trans;
+      }
+      if (item?.value && typeof item.value === 'string') {
+        const valTrans = this.translate.instant(item.value);
+        if (valTrans !== item.value) {
+          return valTrans;
+        }
+      }
+    }
+    return raw;
   }
 
   private moveActive(step: 1 | -1): void {
@@ -1013,7 +1032,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
 
         const items = Array.isArray(response) ? response : (response.data ?? []);
         if (items.length > 0) {
-          const item = items[0];
+          const item = items.find((it) => this.areValuesEqual(this.resolveValue(it), value)) ?? items[0];
           this.selectedItem = item;
           this.selectedText = this.resolveLabel(item);
           this.inputText = this.selectedText;

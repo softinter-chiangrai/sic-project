@@ -177,6 +177,36 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     ];
   }
 
+  get contractTypeOptions() {
+    return [
+      {
+        value: 'Development Contract',
+        label: this.translate.instant('PMRT04A_CONTRACT_TYPE_DEV'),
+        text: this.translate.instant('PMRT04A_CONTRACT_TYPE_DEV'),
+      },
+      {
+        value: 'Maintenance Contract',
+        label: this.translate.instant('PMRT04A_CONTRACT_TYPE_MA'),
+        text: this.translate.instant('PMRT04A_CONTRACT_TYPE_MA'),
+      },
+      {
+        value: 'Support Contract',
+        label: this.translate.instant('PMRT04A_CONTRACT_TYPE_SUPPORT'),
+        text: this.translate.instant('PMRT04A_CONTRACT_TYPE_SUPPORT'),
+      },
+      {
+        value: 'Change Request Contract',
+        label: this.translate.instant('PMRT04A_CONTRACT_TYPE_CR'),
+        text: this.translate.instant('PMRT04A_CONTRACT_TYPE_CR'),
+      },
+      {
+        value: 'Extension Contract',
+        label: this.translate.instant('PMRT04A_CONTRACT_TYPE_EXTENSION'),
+        text: this.translate.instant('PMRT04A_CONTRACT_TYPE_EXTENSION'),
+      },
+    ];
+  }
+
   // Approval Integration
   selectedFlowId: string | null = null;
   apiGetApprovals = `${environment.apiBaseUrl}/api/pm/approvals/flows/document-type/CONTRACT`;

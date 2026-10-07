@@ -375,10 +375,28 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   }
 
   // เลือกสัญญาแล้วผูกลูกค้า/โครงการให้อัตโนมัติ (ตัวเลือกหลักตามแผนผังความสัมพันธ์)
+  /** สถานะสิทธิ์รับบริการของสัญญาที่เลือก (null = ไม่ต้องเตือน) */
+  contractAlert = signal<{ level: 'warn' | 'danger'; text: string } | null>(null);
+
+  private updateContractAlert(contract: any): void {
+    const status = contract?.lifecycleStatus;
+    const days = contract?.daysUntilExpiry;
+    if (status === 'CANCELLED') {
+      this.contractAlert.set({ level: 'danger', text: this.translate.instant('PMDT17A_CONTRACT_CANCELLED') });
+    } else if (status === 'EXPIRED') {
+      this.contractAlert.set({ level: 'danger', text: this.translate.instant('PMDT17A_CONTRACT_EXPIRED', { days: -(days ?? 0) }) });
+    } else if (status === 'EXPIRING') {
+      this.contractAlert.set({ level: 'warn', text: this.translate.instant('PMDT17A_CONTRACT_EXPIRING', { days: days ?? 0 }) });
+    } else {
+      this.contractAlert.set(null);
+    }
+  }
+
   onContractSelected(item: any): void {
     const contractId = item?.value ?? item?.id ?? null;
     if (!contractId) {
       this.isProjectDerived.set(false);
+      this.contractAlert.set(null);
       return;
     }
     this.service.getContractById(contractId).subscribe({
@@ -388,6 +406,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
           customerId: contract?.customerId || null,
         } as any);
         this.isProjectDerived.set(!!contract?.projectId);
+        this.updateContractAlert(contract);
       },
     });
   }

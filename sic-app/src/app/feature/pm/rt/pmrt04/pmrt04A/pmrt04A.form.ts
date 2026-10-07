@@ -21,6 +21,7 @@ export class Pmrt04AForm {
       signStatus: fb.control(model?.signStatus ?? 'Draft'),
       isLocked: fb.control(model?.isLocked ?? false),
       renewalStatus: fb.control(model?.renewalStatus ?? null),
+      autoRenew: fb.control(model?.autoRenew ?? false),
       parentContractId: fb.control(model?.parentContractId ?? null),
       parentContractNo: fb.control(model?.parentContractNo ?? null),
       attachmentGroupId: fb.control(model?.attachmentGroupId ?? null),

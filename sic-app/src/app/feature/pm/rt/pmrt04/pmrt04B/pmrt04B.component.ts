@@ -276,6 +276,7 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       contractValue: formValue.newContractValue,
       signStatus: 'Draft',
       renewalStatus: formValue.renewalStatus,
+      autoRenew: original.autoRenew ?? false,
       attachmentGroupId: this.extractUploadGroupId(formValue.attachmentGroupId),
       isActive: true,
     };

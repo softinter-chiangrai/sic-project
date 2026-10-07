@@ -18,9 +18,7 @@ const CANCELLED = 'ยกเลิก';
 /** หน้ารายการนี้ เพื่อให้หน้าต่อสัญญากลับมาที่แท็บนี้หลังเสร็จ */
 const RETURN_TO = '/feature/pm/ma-ticket?tab=contracts';
 
-interface MaContractRow extends Contract {
-  daysLeft: number | null;
-}
+type MaContractRow = Contract;
 
 @Component({
   selector: 'app-ma-contracts',
@@ -72,12 +70,7 @@ export class MaContractsComponent {
 
     this.http.get<PaginationResponse<Contract>>(`${environment.apiBaseUrl}/api/pm/contracts`, { params }).subscribe({
       next: (res) => {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        this.all = (res.data ?? []).map((c) => ({
-          ...c,
-          daysLeft: c.endDate ? Math.ceil((new Date(c.endDate).getTime() - today.getTime()) / 86400000) : null,
-        }));
+        this.all = res.data ?? [];
         this.render(request.requestId);
       },
       error: () => grid.setLoadError(this.translate.instant('PMDT17_MA_LOAD_FAILED'), request.requestId),
@@ -115,19 +108,24 @@ export class MaContractsComponent {
   }
 
   protected expiryClass(r: MaContractRow): string {
-    if (this.isCancelled(r)) return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
-    if (this.isRenewed(r)) return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
-    if (r.daysLeft !== null && r.daysLeft < 0) return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
-    if (r.daysLeft !== null && r.daysLeft <= 30) return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
-    return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+    switch (r.lifecycleStatus) {
+      case 'CANCELLED': return 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400';
+      case 'EXPIRED': return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400';
+      case 'EXPIRING': return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
+      case 'DRAFT': return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+      default: return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
+    }
   }
 
   protected expiryText(r: MaContractRow): string {
-    if (this.isCancelled(r)) return this.translate.instant('PMDT17_MA_STATUS_CANCELLED');
-    if (this.isRenewed(r)) return this.translate.instant('PMDT17_MA_STATUS_RENEWED');
-    if (r.daysLeft === null) return '-';
-    if (r.daysLeft < 0) return this.translate.instant('PMDT17_MA_EXPIRED_DAYS', { days: -r.daysLeft });
-    return this.translate.instant('PMDT17_MA_DAYS_LEFT', { days: r.daysLeft });
+    const days = r.daysUntilExpiry;
+    switch (r.lifecycleStatus) {
+      case 'CANCELLED': return this.translate.instant('PMDT17_MA_STATUS_CANCELLED');
+      case 'RENEWED': return this.translate.instant('PMDT17_MA_STATUS_RENEWED');
+      case 'DRAFT': return this.translate.instant('PMDT17_MA_STATUS_DRAFT');
+      case 'EXPIRED': return this.translate.instant('PMDT17_MA_EXPIRED_DAYS', { days: -(days ?? 0) });
+      default: return days == null ? '-' : this.translate.instant('PMDT17_MA_DAYS_LEFT', { days });
+    }
   }
 
   protected view(id: string): void {
