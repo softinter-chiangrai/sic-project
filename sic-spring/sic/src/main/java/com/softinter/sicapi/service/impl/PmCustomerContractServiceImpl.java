@@ -99,6 +99,22 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             String contractType,
             Integer expiringWithinDays,
             Pageable pageable) {
+        return getContracts(businessId, customerId, projectId, keyword, status, contractType,
+                expiringWithinDays, false, pageable);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Integer expiringWithinDays,
+            boolean latestOnly,
+            Pageable pageable) {
 
         Specification<PmCustomerContract> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
@@ -152,6 +168,17 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             if (contractType != null && !contractType.isBlank() && !"all".equals(contractType)) {
                 predicates.add(cb.equal(root.get("contractType"), contractType));
             }
+            if (latestOnly) {
+                // ซ่อนฉบับที่มีฉบับต่ออายุ (ที่ยังไม่ยกเลิก/ลบ) ชี้มาแล้ว
+                var sub = query.subquery(UUID.class);
+                var child = sub.from(PmCustomerContract.class);
+                sub.select(child.get("id")).where(
+                        cb.equal(child.get("parentContractId"), root.get("id")),
+                        cb.isFalse(child.get("isDelete")),
+                        cb.or(cb.isNull(child.get("renewalStatus")),
+                                cb.notEqual(child.get("renewalStatus"), RENEWAL_STATUS_CANCELLED)));
+                predicates.add(cb.not(cb.exists(sub)));
+            }
             if (expiringWithinDays != null) {
                 java.time.LocalDate today = java.time.LocalDate.now();
                 java.time.LocalDate until = today.plusDays(expiringWithinDays);
@@ -167,6 +194,49 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             var dto = this.toResponse(e);
             dto.setVersion(versions.get(e.getId()));
             return dto;
+        });
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public java.util.List<PmCustomerContractResponse> getRenewalChain(UUID id) {
+        PmCustomerContract root = contractRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));
+        // ขึ้นไปหาฉบับแรก (กันวนลูปด้วย visited)
+        java.util.Set<UUID> visited = new java.util.HashSet<>();
+        while (root.getParentContractId() != null && visited.add(root.getId())) {
+            var parent = contractRepository.findById(root.getParentContractId()).orElse(null);
+            if (parent == null || Boolean.TRUE.equals(parent.getIsDelete())) break;
+            root = parent;
+        }
+        // ลงมาตามฉบับต่ออายุ เรียงตามวันเริ่มสัญญา
+        java.util.List<PmCustomerContractResponse> chain = new java.util.ArrayList<>();
+        java.util.ArrayDeque<PmCustomerContract> queue = new java.util.ArrayDeque<>(java.util.List.of(root));
+        java.util.Set<UUID> seen = new java.util.HashSet<>();
+        while (!queue.isEmpty()) {
+            PmCustomerContract c = queue.poll();
+            if (!seen.add(c.getId())) continue;
+            chain.add(toResponse(c));
+            contractRepository.findByParentContractIdAndIsDeleteFalse(c.getId()).stream()
+                    .sorted(java.util.Comparator.comparing(PmCustomerContract::getStartDate,
+                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                    .forEach(queue::add);
+        }
+        return chain;
+    }
+
+    /** ฉบับต่ออายุถูกยกเลิก/ลบ: ถ้าสัญญาเดิมไม่เหลือฉบับต่ออายุที่ใช้งานอยู่ ให้เอาสถานะ "ต่อแล้ว" ออก */
+    private void releaseParentIfNoActiveRenewal(PmCustomerContract renewal) {
+        if (renewal.getParentContractId() == null) return;
+        boolean hasOther = contractRepository.findByParentContractIdAndIsDeleteFalse(renewal.getParentContractId()).stream()
+                .anyMatch(c -> !c.getId().equals(renewal.getId())
+                        && !RENEWAL_STATUS_CANCELLED.equals(c.getRenewalStatus()));
+        if (hasOther) return;
+        contractRepository.findById(renewal.getParentContractId()).ifPresent(parent -> {
+            if ("ต่อแล้ว".equals(parent.getRenewalStatus())) {
+                parent.setRenewalStatus(null);
+                contractRepository.save(parent);
+            }
         });
     }
 
@@ -379,6 +449,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setIsDelete(true);
         contract.setIsActive(false);
         contractRepository.save(contract);
+        releaseParentIfNoActiveRenewal(contract);
 
         // ✅ Soft Delete Document Versions
         documentVersionService.deleteVersionsByDocument("CONTRACT", contract.getId());
@@ -411,6 +482,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
 
         contract.setRenewalStatus(RENEWAL_STATUS_CANCELLED);
         contract = contractRepository.save(contract);
+        releaseParentIfNoActiveRenewal(contract);
 
         String summary = "ยกเลิกสัญญา " + contract.getContractNo()
                 + (reason != null && !reason.isBlank() ? " เหตุผล: " + reason.trim() : "");
@@ -478,7 +550,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     // ✅ Combobox Contract (กรองตาม projectId หรือ customerId หรือ businessId)
     @Override
     @Transactional(readOnly = true)
-    public List<ComboboxResponse> getComboboxContracts(UUID businessId, UUID customerId, UUID projectId) {
+    public List<ComboboxResponse> getComboboxContracts(UUID businessId, UUID customerId, UUID projectId, String contractType) {
         List<PmCustomerContract> contracts;
 
         // ถ้ามี projectId ให้ลองหา customerId หรือ contractId จากโปรเจกต์ก่อน
@@ -499,6 +571,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         }
 
         return contracts.stream()
+                .filter(c -> contractType == null || contractType.isBlank() || contractType.equalsIgnoreCase(c.getContractType()))
                 .map(c -> new ComboboxResponse(
                         c.getId().toString(),
                         (c.getContractNo() != null ? c.getContractNo() : "สัญญา") +

@@ -33,7 +33,6 @@ import com.softinter.sicapi.dto.request.AiProjectPipelineRequest;
 import com.softinter.sicapi.dto.request.MilestoneRequest;
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
-import com.softinter.sicapi.dto.request.PmMaRenewalRequest;
 import com.softinter.sicapi.dto.request.PmMaTicketRequest;
 import com.softinter.sicapi.dto.request.PhaseRequest;
 import com.softinter.sicapi.dto.request.PmCustomerContractRequest;
@@ -77,7 +76,6 @@ import com.softinter.sicapi.service.PmCustomerContractService;
 import com.softinter.sicapi.service.PmCustomerProjectService;
 import com.softinter.sicapi.service.PmDesignReviewService;
 import com.softinter.sicapi.service.PmDiagramTabService;
-import com.softinter.sicapi.service.PmMaRenewalService;
 import com.softinter.sicapi.service.PmMaTicketService;
 import com.softinter.sicapi.service.PmDeliveryService;
 import com.softinter.sicapi.service.PmRequirementService;
@@ -118,7 +116,6 @@ public class AiProjectPipelineJobService {
     private final PmDiagramTabService diagramTabService;
     private final PmDesignReviewService designReviewService;
     private final PmMaTicketService maTicketService;
-    private final PmMaRenewalService maRenewalService;
     private final AiPipelineJobRepository jobRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
@@ -1170,12 +1167,11 @@ public class AiProjectPipelineJobService {
 
     private void stepMa(Ctx c, StepState step) {
         JsonNode root = ask(c, """
-                You are a Maintenance & Support Manager and Technical Lead. Anticipate 2-3 realistic post-go-live support tickets for this project and one MA renewal proposal. Fill EVERY field.
+                You are a Maintenance & Support Manager and Technical Lead. Anticipate 2-3 realistic post-go-live support tickets for this project. Fill EVERY field.
                 ticketType is one of: BUG_SUPPORT | DATA_ISSUE | USER_SUPPORT | CHANGE_REQUEST. severity is one of: LOW | MEDIUM | HIGH | CRITICAL.
                 IMPORTANT: For EACH ticket, you MUST provide 'resolutionSummary' with a realistic, professional technical resolution method formatted in HTML (<p>, <ul>, <li>, <strong>). Explain root cause analysis, troubleshooting steps, and solution. Do NOT leave 'resolutionSummary' empty.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "tickets": [ { "title": "...", "description": "HTML description of the issue", "resolutionSummary": "HTML root cause and technical resolution steps", "ticketType": "BUG_SUPPORT", "severity": "MEDIUM" } ],
-                  "renewal": { "proposedAmount": 180000, "remark": "..." } }
+                { "tickets": [ { "title": "...", "description": "HTML description of the issue", "resolutionSummary": "HTML root cause and technical resolution steps", "ticketType": "BUG_SUPPORT", "severity": "MEDIUM" } ] }
                 """, projectContext(c) + (c.contractValueText != null ? "\nสัญญา: " + c.contractValueText : ""), false);
 
         int count = 0;
@@ -1230,25 +1226,6 @@ public class AiProjectPipelineJobService {
             count++;
         }
 
-        JsonNode renewal = root == null ? null : root.path("renewal");
-        if (renewal != null && renewal.isObject() && c.contractId != null) {
-            LocalDate end = c.startDate.plusWeeks(c.weeks);
-            PmMaRenewalRequest rq = new PmMaRenewalRequest();
-            rq.setContractId(c.contractId);
-            rq.setCustomerId(c.customerId);
-            rq.setProjectId(c.projectId);
-            rq.setCurrentEndDate(end);
-            rq.setNewStartDate(end.plusDays(1));
-            rq.setNewEndDate(end.plusYears(1));
-            rq.setProposedAmount(renewal.path("proposedAmount").isNumber() ? renewal.path("proposedAmount").decimalValue() : BigDecimal.ZERO);
-            rq.setRemark(txt(renewal, "remark"));
-            rq.setStatus(com.softinter.sicapi.entity.enums.MaRenewalStatus.DRAFT);
-            rq.setState(STATE_ADDED);
-            maRenewalService.save(rq, c.businessId, c.userId);
-            count++;
-        } else if (c.contractId == null) {
-            step.message = "ข้ามข้อเสนอต่ออายุ MA เพราะไม่มีสัญญา";
-        }
         step.count = count;
         if (count == 0) step.message = "AI ไม่สามารถสร้างข้อมูล MA ได้";
     }

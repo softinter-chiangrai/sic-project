@@ -11,7 +11,7 @@ import { Contract, Pmrt04ListPageData } from './pmrt04.model';
 // navbar project-context selection filters what's shown client-side.
 export const pmrt04Resolver: ResolveFn<Pmrt04ListPageData | null> = () => {
   const http = inject(HttpClient);
-  const params = new HttpParams().set('page', '1').set('size', '10');
+  const params = new HttpParams().set('page', '1').set('size', '10').set('latestOnly', 'true');
 
   return http.get<PaginationResponse<Contract>>(`${environment.apiBaseUrl}/api/pm/contracts`, { params }).pipe(
     map((contracts) => ({ project: null, contracts })),

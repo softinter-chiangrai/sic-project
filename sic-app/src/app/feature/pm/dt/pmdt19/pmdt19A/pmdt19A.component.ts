@@ -69,7 +69,6 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
       { label: this.translate.instant('PMDT19A_DOCTYPE_CONTRACT'), value: 'CONTRACT' },
       { label: this.translate.instant('PMDT19A_DOCTYPE_INVOICE'), value: 'INVOICE' },
       { label: this.translate.instant('PMDT19A_DOCTYPE_MA_TICKET'), value: 'MA_TICKET' },
-      { label: this.translate.instant('PMDT19A_DOCTYPE_MA_RENEWAL'), value: 'MA_RENEWAL' },
       { label: this.translate.instant('PMDT19A_DOCTYPE_USER_MANUAL'), value: 'USER_MANUAL' },
       { label: this.translate.instant('PMDT19A_DOCTYPE_PROJECT'), value: 'PROJECT' },
     ];

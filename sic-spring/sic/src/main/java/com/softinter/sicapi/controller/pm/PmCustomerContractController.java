@@ -80,6 +80,7 @@ public class PmCustomerContractController {
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) Integer expiringWithinDays,
+            @RequestParam(defaultValue = "false") boolean latestOnly,
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
@@ -90,8 +91,15 @@ public class PmCustomerContractController {
                 com.softinter.sicapi.entity.pm.PmCustomerContract.class, sortBy, sortDirection, "contractNo");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmCustomerContractResponse> pageResult = contractService.getContracts(
-                businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, pageable);
+                businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, latestOnly, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
+    }
+
+    // ===== ประวัติการต่อสัญญา (ฉบับแรก → ฉบับล่าสุด) =====
+    @GetMapping("/{id}/renewal-chain")
+    @Operation(summary = "ดึงสายการต่ออายุของสัญญา")
+    public ResponseEntity<List<PmCustomerContractResponse>> getRenewalChain(@PathVariable UUID id) {
+        return ResponseEntity.ok(contractService.getRenewalChain(id));
     }
 
     // ===== ดึงข้อมูลสัญญาเดี่ยว =====
@@ -167,9 +175,10 @@ public class PmCustomerContractController {
     @Operation(summary = "ดึงรายการสัญญาสำหรับ Combobox")
     public ResponseEntity<List<ComboboxResponse>> getComboboxContracts(
             @RequestParam(required = false) UUID customerId,
-            @RequestParam(required = false) UUID projectId
+            @RequestParam(required = false) UUID projectId,
+            @RequestParam(required = false) String contractType
     ) {
         UUID businessId = businessAccessService.getBusinessId();
-        return ResponseEntity.ok(contractService.getComboboxContracts(businessId, customerId, projectId));
+        return ResponseEntity.ok(contractService.getComboboxContracts(businessId, customerId, projectId, contractType));
     }
 }

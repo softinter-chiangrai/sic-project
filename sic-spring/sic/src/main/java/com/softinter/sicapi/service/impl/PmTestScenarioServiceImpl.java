@@ -28,6 +28,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
     private final com.softinter.sicapi.repository.pm.PmTestCaseRepository testCaseRepository;
     private final PmTaskRepository taskRepository;
     private final TraceLinkService traceLinkService;
+    private final com.softinter.sicapi.service.DocumentVersionService documentVersionService;
 
     @Override
     @Transactional(readOnly = true)
@@ -56,6 +57,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
                 : EntityState.DETACHED;
         PmTestScenario entity;
         boolean isNew = (request.getId() == null);
+        String diffSummary = "สร้าง Test Scenario (Initial scenario)";
 
         if (state == EntityState.DELETED) {
             delete(request.getId(), businessId, userId);
@@ -73,6 +75,16 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
             if (request.getRowVersion() != null && !request.getRowVersion().equals(entity.getRowVersion())) {
                 throw new RuntimeException("ข้อมูลถูกแก้ไขโดยผู้อื่น กรุณารีเฟรชข้อมูล");
             }
+            // เทียบก่อน map (mapRequestToEntity เขียนทับทุก field) โดยใช้ค่าเริ่มต้นเดียวกับตอน map
+            java.util.List<String> changes = new java.util.ArrayList<>();
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รหัส Scenario", entity.getScenarioCode(), request.getScenarioCode());
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อ Scenario", entity.getScenarioName(), request.getScenarioName());
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", entity.getDescription(), request.getDescription());
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", entity.getPriority(), request.getPriority() != null ? request.getPriority() : "Medium");
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus(), request.getStatus() != null ? request.getStatus() : "Active");
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ประเภทการทดสอบ (Test Type)", entity.getTestType(), request.getTestType() != null ? request.getTestType() : "SIT");
+            diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดต Test Scenario " + (request.getScenarioName() != null ? request.getScenarioName() : entity.getScenarioName()));
+
             mapRequestToEntity(request, entity);
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
@@ -119,6 +131,14 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
             }
         }
 
+        try {
+            documentVersionService.createVersion("TEST_SCENARIO", entity.getId(), entity.getProjectId(),
+                    entity.getScenarioCode(), "v1.0.0", diffSummary,
+                    com.softinter.sicapi.util.JsonSnapshotHelper.toJson(toResponse(entity)));
+        } catch (Exception e) {
+            log.warn("Failed to create version for test scenario {}: {}", entity.getId(), e.getMessage());
+        }
+
         return entity.getId();
     }
 
@@ -131,6 +151,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         scenario.setDeleteBy(userId);
         scenario.setDeleteDate(Instant.now());
         scenarioRepository.save(scenario);
+        documentVersionService.deleteVersionsByDocument("TEST_SCENARIO", scenario.getId());
     }
 
     private void mapRequestToEntity(PmTestScenarioRequest req, PmTestScenario entity) {

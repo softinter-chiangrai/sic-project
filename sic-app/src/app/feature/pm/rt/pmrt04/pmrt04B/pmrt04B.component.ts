@@ -222,6 +222,13 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
 
   // ✅ เมธอดสำหรับนำทางกลับไปหน้ารายการสัญญา โดยใช้ projectId จากข้อมูลสัญญา
   private navigateBack(): void {
+    // เปิดมาจากหน้าอื่น (เช่นแท็บสัญญา MA) ให้กลับไปที่เดิม
+    const returnTo = this.route.snapshot.queryParamMap.get('returnTo');
+    if (returnTo && returnTo.startsWith('/feature/pm/')) {
+      const [path, qs] = returnTo.split('?');
+      this.navigation.navigate([path], { queryParams: Object.fromEntries(new URLSearchParams(qs ?? '')) });
+      return;
+    }
     const projectId = this.originalContract?.projectId;
     if (projectId) {
       // ส่ง projectId กลับไปเพื่อให้หน้ารายการแสดงสัญญาของโครงการนั้น

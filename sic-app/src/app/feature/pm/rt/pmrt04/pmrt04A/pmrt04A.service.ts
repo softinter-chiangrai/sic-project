@@ -31,6 +31,10 @@ export class Pmrt04AService {
     return this.http.get<ContractModel>(`${this.apiUrl}/${id}`);
   }
 
+  getRenewalChain(id: string): Observable<ContractModel[]> {
+    return this.http.get<ContractModel[]>(`${this.apiUrl}/${id}/renewal-chain`);
+  }
+
   getContractSummary(id: string): Observable<ContractSummary> {
     return this.http.get<ContractSummary>(`${this.apiUrl}/${id}/summary`);
   }

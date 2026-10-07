@@ -9,7 +9,6 @@ public enum DocumentType {
     DESIGN_REVIEW("Design Review"),
     DELIVERY("Delivery"),
     INVOICE("Invoice"),
-    MA_RENEWAL("MA Renewal"),
     CONTRACT("Contract"),
     CHANGE_REQUEST("Change Request"),
     TEST_PLAN("Test Plan"),

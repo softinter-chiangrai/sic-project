@@ -217,13 +217,14 @@
 		<parameter name="projectId" class="java.lang.String"/>
 		<parameter name="lang" class="java.lang.String"/>
 		<query language="sql"><![CDATA[SELECT
-                COALESCE(renewal_no, '-') AS "renewalNo",
-                COALESCE(TO_CHAR(current_end_date, 'DD/MM/YYYY'), '-') || ' -> ' || COALESCE(TO_CHAR(new_end_date, 'DD/MM/YYYY'), '-') AS "period",
-                COALESCE(TO_CHAR(proposed_amount, 'FM999,999,990.00'), '0.00') AS "amount",
-                COALESCE(status, '-') AS "status",
-                remark AS "remark"
-            FROM pm_ma_renewal
+                COALESCE(contract_no, '-') AS "renewalNo",
+                COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') || ' -> ' || COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-') AS "period",
+                COALESCE(TO_CHAR(contract_value, 'FM999,999,990.00'), '0.00') AS "amount",
+                COALESCE(renewal_status, sign_status, '-') AS "status",
+                scope_summary AS "remark"
+            FROM pm_customer_contract
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
+              AND contract_type = 'Maintenance Contract' AND parent_contract_id IS NOT NULL
             ORDER BY created_date ASC]]></query>
 		<field name="renewalNo" class="java.lang.String"/>
 		<field name="period" class="java.lang.String"/>
@@ -358,7 +359,7 @@
                 CAST((SELECT COUNT(*) FROM pm_invoice inv WHERE inv.project_id = p.id AND inv.is_delete = false) AS VARCHAR) AS "totalInvoices",
                 CAST((SELECT COUNT(*) FROM pm_change_request cr WHERE cr.project_id = p.id AND cr.is_delete = false) AS VARCHAR) AS "totalChangeRequests",
                 CAST((SELECT COUNT(*) FROM pm_ma_ticket mt WHERE mt.project_id = p.id AND mt.is_delete = false) AS VARCHAR) AS "totalMaTickets",
-                CAST((SELECT COUNT(*) FROM pm_ma_renewal mr WHERE mr.project_id = p.id AND mr.is_delete = false) AS VARCHAR) AS "totalMaRenewals",
+                CAST((SELECT COUNT(*) FROM pm_customer_contract mc WHERE mc.project_id = p.id AND mc.is_delete = false AND mc.contract_type = 'Maintenance Contract' AND mc.parent_contract_id IS NOT NULL) AS VARCHAR) AS "totalMaRenewals",
                 CAST((SELECT COUNT(*) FROM pm_user_manual um WHERE um.project_id = p.id AND um.is_delete = false) AS VARCHAR) AS "totalUserManuals",
                 CAST((SELECT COUNT(*) FROM pm_design_review dr WHERE dr.project_id = p.id AND dr.is_delete = false) AS VARCHAR) AS "totalDesignReviews",
                 CAST((SELECT COUNT(*) FROM pm_diagram dg WHERE dg.project_id = p.id AND dg.is_delete = false) AS VARCHAR) AS "totalDiagrams",

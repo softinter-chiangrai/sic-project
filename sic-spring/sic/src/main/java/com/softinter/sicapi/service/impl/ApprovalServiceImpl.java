@@ -27,7 +27,6 @@ import com.softinter.sicapi.dto.response.CancelApprovalResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.entity.enums.ApprovalMode;
 import com.softinter.sicapi.entity.enums.ApprovalStatus;
-import com.softinter.sicapi.entity.enums.MaRenewalStatus;
 import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.pm.PmApproval;
 import com.softinter.sicapi.entity.pm.PmApprovalFlow;
@@ -52,7 +51,6 @@ import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
-import com.softinter.sicapi.repository.pm.PmMaRenewalRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
@@ -99,7 +97,6 @@ public class ApprovalServiceImpl implements ApprovalService {
     private final PmDeliveryRepository deliveryRepository;
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
-    private final PmMaRenewalRepository maRenewalRepository;
     private final PmUserManualRepository userManualRepository;
     private final DocumentVersionService versionService;
     private final AuditLogService auditLogService;
@@ -911,10 +908,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 return maTicketRepository.findById(documentId)
                         .map(t -> t.getStatus() == MaTicketStatus.RESOLVED)
                         .orElse(false);
-            case "MA_RENEWAL":
-                return maRenewalRepository.findById(documentId)
-                        .map(r -> r.getStatus() == MaRenewalStatus.CONFIRMED)
-                        .orElse(false);
             case "USER_MANUAL":
             case "MANUAL":
                 return userManualRepository.findById(documentId)
@@ -1036,15 +1029,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                     String newVersion = nextVersionAfterChange("MA_TICKET", ticket.getId(), changeLevel);
                     versionService.createVersion("MA_TICKET", ticket.getId(), ticket.getProjectId(),
                             ticket.getTicketNo(), newVersion, reason);
-                });
-                break;
-            case "MA_RENEWAL":
-                maRenewalRepository.findById(documentId).ifPresent(ren -> {
-                    ren.setStatus(MaRenewalStatus.DRAFT);
-                    maRenewalRepository.save(ren);
-                    String newVersion = nextVersionAfterChange("MA_RENEWAL", ren.getId(), changeLevel);
-                    versionService.createVersion("MA_RENEWAL", ren.getId(), ren.getProjectId(),
-                            ren.getRenewalNo(), newVersion, reason);
                 });
                 break;
             case "USER_MANUAL":
@@ -1304,6 +1288,13 @@ public class ApprovalServiceImpl implements ApprovalService {
                 customerContractRepository.findById(docId).ifPresent(contract -> {
                     contract.setSignStatus("Signed");
                     customerContractRepository.save(contract);
+                    // ฉบับต่ออายุลงนามแล้ว: ยืนยันให้สัญญาเดิมเป็น "ต่อแล้ว"
+                    if (contract.getParentContractId() != null) {
+                        customerContractRepository.findById(contract.getParentContractId()).ifPresent(parent -> {
+                            parent.setRenewalStatus("ต่อแล้ว");
+                            customerContractRepository.save(parent);
+                        });
+                    }
                 });
                 break;
             case "DELIVERY":

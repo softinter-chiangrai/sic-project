@@ -280,24 +280,66 @@
 
                         <!-- แสดงไฟล์แนบของ reply -->
                         @if (reply.attachmentGroupId) {
-                          <div class="mt-1.5 ml-2">
-                            @for (file of getAttachments(reply.attachmentGroupId); track file.id) {
-                              <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text-muted)] mr-1.5 mb-1">
+                          <div class="mt-2 ml-1 space-y-2">
+                            <!-- รูปภาพ (แสดงเป็น Thumbnail กว้าง ชัดเจน คลิกขยายเต็มจอได้เหมือน Facebook) -->
+                            <div class="flex flex-col gap-2">
+                              @for (file of getAttachments(reply.attachmentGroupId); track file.id) {
                                 @if (isImage(file)) {
-                                  <img [src]="file.accessUrl" class="w-6 h-6 rounded object-cover" [alt]="file.fileName" />
-                                } @else {
-                                  <i class="bi" [class]="isVideo(file) ? 'bi-play-circle' : 'bi-file-earmark'"></i>
+                                  <div
+                                    class="group rounded-2xl overflow-hidden border border-[var(--border)] bg-[var(--sidebar)] cursor-pointer hover:border-[var(--crm-primary)]/50 transition-all max-w-xl shadow-xs"
+                                    (click)="previewFile(file, $event)"
+                                  >
+                                    <div class="relative bg-black/5 flex items-center justify-center overflow-hidden">
+                                      <img
+                                        [src]="file.accessUrl"
+                                        [alt]="file.fileName"
+                                        class="max-h-96 w-full object-contain group-hover:scale-[1.01] transition-transform duration-200"
+                                      />
+                                      <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
+                                        <span class="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-xs">
+                                          <i class="bi bi-arrows-fullscreen"></i> คลิกดูภาพเต็ม
+                                        </span>
+                                      </div>
+                                    </div>
+                                    <div class="p-2 px-3 text-xs text-[var(--text-muted)] flex items-center justify-between bg-[var(--bg)]/90 border-t border-[var(--border)]/60">
+                                      <div class="flex items-center gap-1.5 min-w-0 pr-2">
+                                        <i class="bi bi-image text-emerald-500 flex-shrink-0"></i>
+                                        <span class="truncate font-medium text-[var(--text-active)]" [title]="file.fileName">{{ file.fileName }}</span>
+                                        <span class="text-[11px] text-[var(--text-muted)] flex-shrink-0">({{ formatFileSize(file.fileSize) }})</span>
+                                      </div>
+                                      <button
+                                        type="button"
+                                        (click)="$event.stopPropagation(); downloadFile(file.accessUrl, file.fileName)"
+                                        class="p-1.5 rounded-lg text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-colors flex-shrink-0"
+                                        [title]="'PMDT08_DOWNLOAD' | translate"
+                                      >
+                                        <i class="bi bi-download"></i>
+                                      </button>
+                                    </div>
+                                  </div>
                                 }
-                                <span class="truncate max-w-[120px]">{{ file.fileName }}</span>
-                                <button
-                                  (click)="downloadFile(file.accessUrl, file.fileName)"
-                                  class="text-[var(--crm-primary)] hover:underline"
-                                  [title]="'PMDT08_DOWNLOAD' | translate"
-                                >
-                                  <i class="bi bi-download"></i>
-                                </button>
-                              </div>
-                            }
+                              }
+                            </div>
+
+                            <!-- ไฟล์เอกสาร / ไฟล์อื่นๆ (แสดงเป็น Badge ชิป) -->
+                            <div class="flex flex-wrap gap-1.5">
+                              @for (file of getAttachments(reply.attachmentGroupId); track file.id) {
+                                @if (!isImage(file)) {
+                                  <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text-muted)] hover:bg-[var(--sidebar-hover)] transition-colors">
+                                    <i class="bi" [class]="isVideo(file) ? 'bi-play-circle text-blue-500' : 'bi-file-earmark text-amber-500'"></i>
+                                    <span class="truncate max-w-[180px]" [title]="file.fileName">{{ file.fileName }}</span>
+                                    <button
+                                      type="button"
+                                      (click)="downloadFile(file.accessUrl, file.fileName)"
+                                      class="text-[var(--crm-primary)] hover:underline ml-1"
+                                      [title]="'PMDT08_DOWNLOAD' | translate"
+                                    >
+                                      <i class="bi bi-download"></i>
+                                    </button>
+                                  </div>
+                                }
+                              }
+                            </div>
                           </div>
                         }
                       }
@@ -496,6 +538,65 @@
     ></app-pmdt08a>
   }
 
+  <!-- ===== FACEBOOK-STYLE FULLSCREEN IMAGE LIGHTBOX ===== -->
+  @if (previewingImage(); as img) {
+    <div
+      class="fixed inset-0 z-[9999] bg-black/95 backdrop-blur-md flex flex-col justify-between select-none animate-fade-in"
+      (click)="closeImagePreview()"
+    >
+      <!-- Top Bar -->
+      <div
+        class="w-full h-16 px-6 flex items-center justify-between bg-gradient-to-b from-black/80 to-transparent z-10"
+        (click)="$event.stopPropagation()"
+      >
+        <div class="flex items-center gap-3 text-white min-w-0">
+          <i class="bi bi-image text-emerald-400 text-xl flex-shrink-0"></i>
+          <div class="min-w-0">
+            <p class="text-sm font-semibold truncate max-w-lg">{{ img.fileName }}</p>
+            <p class="text-xs text-zinc-400">{{ formatFileSize(img.fileSize) }}</p>
+          </div>
+        </div>
 
+        <div class="flex items-center gap-2">
+          <button
+            type="button"
+            (click)="downloadFile(img.accessUrl, img.fileName)"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
+            [title]="'PMDT08_DOWNLOAD' | translate"
+          >
+            <i class="bi bi-download text-lg"></i>
+          </button>
+          <button
+            type="button"
+            (click)="closeImagePreview()"
+            class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
+            title="ปิด (Esc)"
+          >
+            <i class="bi bi-x-lg text-lg"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Image Display Area -->
+      <div
+        class="flex-1 w-full flex items-center justify-center p-4 md:p-8 overflow-hidden"
+        (click)="closeImagePreview()"
+      >
+        <img
+          [src]="img.accessUrl"
+          [alt]="img.fileName"
+          class="max-w-[95vw] max-h-[82vh] object-contain rounded-lg shadow-2xl transition-transform cursor-zoom-out"
+          (click)="$event.stopPropagation()"
+        />
+      </div>
+
+      <!-- Bottom Bar / Hint -->
+      <div
+        class="w-full py-3 text-center text-xs text-zinc-400 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
+      >
+        คลิกพื้นที่ว่างหรือกด Esc เพื่อปิด
+      </div>
+    </div>
+  }
 
 </div>

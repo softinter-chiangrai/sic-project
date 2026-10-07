@@ -19,6 +19,7 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { MaContractsComponent } from './ma-contracts/ma-contracts.component';
 
 @Component({
   selector: 'app-pmdt17',
@@ -32,6 +33,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicGridPanelComponent,
     SicGridPanelTemplate,
     TranslateModule,
+    MaContractsComponent,
   ],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
@@ -56,6 +58,7 @@ export class Pmdt17Component implements OnInit {
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
+  viewTab = signal<'tickets' | 'contracts'>('tickets');
 
   // ===== Navbar context filter (client-side) =====
   // Backend has no project-scope filter param for ma-tickets, so — matching the pattern used
@@ -207,6 +210,7 @@ export class Pmdt17Component implements OnInit {
 
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
+    if (qp['tab'] === 'contracts') this.viewTab.set('contracts');
     if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
     if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
     if (qp['page'] !== undefined) this.currentPage.set(+qp['page'] || 1);
@@ -215,6 +219,16 @@ export class Pmdt17Component implements OnInit {
     if (pageData) {
       this.pendingPreload = { tickets: pageData.initialTickets ?? [] };
     }
+  }
+
+  setViewTab(tab: 'tickets' | 'contracts'): void {
+    this.viewTab.set(tab);
+    this.router.navigate([], {
+      relativeTo: this.route,
+      queryParams: { tab: tab === 'contracts' ? 'contracts' : null },
+      queryParamsHandling: 'merge',
+      replaceUrl: true,
+    });
   }
 
   // ===== URL State Sync =====

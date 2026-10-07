@@ -583,7 +583,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             case "DIAGRAM":
                 return approvalService.isApproved("DIAGRAM", targetId) ? "APPROVED" : "DRAFT";
             default:
-                // สำหรับ CONTRACT, DESIGN_REVIEW, DELIVERY, USER_MANUAL, INVOICE, MA_TICKET, MA_RENEWAL ฯลฯ
+                // สำหรับ CONTRACT, DESIGN_REVIEW, DELIVERY, USER_MANUAL, INVOICE, MA_TICKET ฯลฯ
                 return approvalService.isApproved(targetType.toUpperCase(), targetId) ? "APPROVED" : "DRAFT";
         }
     }
@@ -619,7 +619,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             case "USER_MANUAL":
             case "INVOICE":
             case "MA_TICKET":
-            case "MA_RENEWAL":
             case "DFD":
             case "ER":
                 // เอกสารประเภทอื่น ๆ ที่ระบบรองรับ

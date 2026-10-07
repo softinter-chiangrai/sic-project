@@ -15,7 +15,6 @@ import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridColumnConfig, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 
-import { Pmdt19ViewDialogComponent } from './pmdt19-view-dialog.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 @Component({
@@ -51,12 +50,14 @@ export class Pmdt19Component implements OnInit {
       { text: 'Specification', value: 'SPECIFICATION' },
       { text: 'Diagram', value: 'DIAGRAM' },
       { text: 'Design Review', value: 'DESIGN_REVIEW' },
+      { text: 'Test Scenario', value: 'TEST_SCENARIO' },
+      { text: 'Test Case', value: 'TEST_CASE' },
+      { text: 'Task', value: 'TASK' },
       { text: 'Change Request', value: 'CHANGE_REQUEST' },
       { text: 'Delivery Document', value: 'DELIVERY' },
       { text: 'Contract', value: 'CONTRACT' },
       { text: 'Invoice', value: 'INVOICE' },
       { text: 'MA Ticket', value: 'MA_TICKET' },
-      { text: 'MA Renewal', value: 'MA_RENEWAL' },
       { text: 'User Manual', value: 'USER_MANUAL' },
       { text: 'Project', value: 'PROJECT' },
     ];
@@ -241,14 +242,7 @@ export class Pmdt19Component implements OnInit {
   }
 
   onViewContent(ver: DocumentVersionModel): void {
-    this.dialog.open({
-      type: 'info',
-      title: this.translate.instant('PMDT19_VIEW_CONTENT_TITLE') + ' ' + ver.versionNo,
-      component: Pmdt19ViewDialogComponent,
-      componentInputs: {
-        version: ver,
-      },
-    });
+    this.router.navigate(['/feature/pm/version', ver.id, 'content']);
   }
 
   onActivate(id: string): void {

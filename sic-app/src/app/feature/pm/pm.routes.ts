@@ -37,6 +37,7 @@ import { pmdt17Resolver } from './dt/pmdt17/pmdt17.resolver';
 import { pmdt17AResolver } from './dt/pmdt17/pmdt17A/pmdt17A.resolver';
 import { pmdt19Resolver } from './dt/pmdt19/pmdt19.resolver';
 import { pmdt19AResolver } from './dt/pmdt19/pmdt19A/pmdt19A.resolver';
+import { pmdt19BResolver } from './dt/pmdt19/pmdt19B/pmdt19B.resolver';
 import { pmdt20Resolver } from './dt/pmdt20/pmdt20.resolver';
 
 // PMRT Resolvers
@@ -570,23 +571,6 @@ export const PM_ROUTES: Routes = [
   },
 
   // ============================================================
-  // ===== PMDT18: RENEWAL MANAGEMENT (REDIRECT TO CONTRACT) =====
-  // ============================================================
-  {
-    path: 'renewal',
-    redirectTo: 'contract',
-    pathMatch: 'full',
-  },
-  {
-    path: 'renewal/:id',
-    redirectTo: 'contract',
-  },
-  {
-    path: 'renewal/:id/view',
-    redirectTo: 'contract',
-  },
-
-  // ============================================================
   // ===== PMDT19: DOCUMENT VERSION HISTORY =====
   // ============================================================
   {
@@ -610,6 +594,11 @@ export const PM_ROUTES: Routes = [
     path: 'version/:id/view',
     loadComponent: () => import('./dt/pmdt19/pmdt19A/pmdt19A.component').then((m) => m.Pmdt19AComponent),
     resolve: { pageData: pmdt19AResolver },
+  },
+  {
+    path: 'version/:id/content',
+    loadComponent: () => import('./dt/pmdt19/pmdt19B/pmdt19B.component').then((m) => m.Pmdt19BComponent),
+    resolve: { version: pmdt19BResolver },
   },
   {
     path: 'version/history/:code',

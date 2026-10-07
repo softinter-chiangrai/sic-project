@@ -205,7 +205,6 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             { value: 'USER_MANUAL', text: this.translate.instant('PMDT06_TARGET_USER_MANUAL') },
             { value: 'INVOICE', text: this.translate.instant('PMDT06_TARGET_INVOICE') },
             { value: 'MA_TICKET', text: this.translate.instant('PMDT06_TARGET_MA_TICKET') },
-            { value: 'MA_RENEWAL', text: this.translate.instant('PMDT06_TARGET_MA_RENEWAL') },
         ];
     }
     targetDocumentOptions = signal<any[]>([]);

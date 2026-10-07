@@ -22,7 +22,6 @@ export type DocumentType =
     | 'DESIGN_REVIEW'
     | 'DELIVERY'
     | 'INVOICE'
-    | 'MA_RENEWAL'
     | 'CONTRACT'
     | 'CHANGE_REQUEST'
     | 'TEST_PLAN'

@@ -101,7 +101,6 @@ export class Pmdt03Component implements OnInit {
     { value: 'UAT', text: 'UAT' },
     { value: 'DELIVERY', text: 'DELIVERY' },
     { value: 'INVOICE', text: 'INVOICE' },
-    { value: 'MA_RENEWAL', text: 'MA_RENEWAL' },
     { value: 'CONTRACT', text: 'CONTRACT' },
     { value: 'USER_MANUAL', text: 'USER_MANUAL' },
     { value: 'PROJECT', text: 'PROJECT' },
@@ -130,7 +129,6 @@ export class Pmdt03Component implements OnInit {
     'UAT',
     'DELIVERY',
     'INVOICE',
-    'MA_RENEWAL',
     'CONTRACT',
     'USER_MANUAL',
   ];
@@ -502,7 +500,6 @@ export class Pmdt03Component implements OnInit {
       UAT: 'bi-check2-all',
       DELIVERY: 'bi-box-seam',
       INVOICE: 'bi-receipt',
-      MA_RENEWAL: 'bi-clock-history',
       CONTRACT: 'bi-file-earmark-text',
       PROJECT: 'bi-briefcase',
     };

@@ -41,6 +41,24 @@ public interface PmCustomerContractService {
             Pageable pageable
     );
 
+    /**
+     * latestOnly = true: ซ่อนฉบับที่ถูกต่ออายุไปแล้ว (มีฉบับต่ออายุที่ยังไม่ถูกยกเลิก/ลบ) เหลือเฉพาะฉบับล่าสุดของแต่ละสาย
+     */
+    Page<PmCustomerContractResponse> getContracts(
+            UUID businessId,
+            UUID customerId,
+            UUID projectId,
+            String keyword,
+            String status,
+            String contractType,
+            Integer expiringWithinDays,
+            boolean latestOnly,
+            Pageable pageable
+    );
+
+    /** สายการต่ออายุทั้งหมดของสัญญานี้ เรียงจากฉบับแรกถึงฉบับล่าสุด */
+    java.util.List<PmCustomerContractResponse> getRenewalChain(UUID id);
+
     PmCustomerContractResponse getContract(UUID id);
 
     com.softinter.sicapi.dto.response.PmContractSummaryResponse getContractSummary(UUID id);
@@ -60,5 +78,6 @@ public interface PmCustomerContractService {
     List<ComboboxResponse> getComboboxProjects(UUID businessId, UUID customerId);
 
     // ✅ Combobox Contract (กรองตาม customerId หรือ projectId หรือ businessId)
-    List<ComboboxResponse> getComboboxContracts(UUID businessId, UUID customerId, UUID projectId);
+    /** contractType: ถ้าระบุ กรองเฉพาะสัญญาชนิดนั้น (เช่น MA Renewal ใช้ "Maintenance Contract") */
+    List<ComboboxResponse> getComboboxContracts(UUID businessId, UUID customerId, UUID projectId, String contractType);
 }

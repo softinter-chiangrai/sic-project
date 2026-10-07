@@ -6,11 +6,14 @@
         <i class="bi bi-headset text-[var(--crm-primary)]"></i>
         {{ 'PMDT17_PAGE_TITLE' | translate }}
       </h1>
-      <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
-        {{ totalItems() }} {{ 'PMDT17_ITEMS_SUFFIX' | translate }}
-      </span>
+      @if (viewTab() === 'tickets') {
+        <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
+          {{ totalItems() }} {{ 'PMDT17_ITEMS_SUFFIX' | translate }}
+        </span>
+      }
     </div>
     <div class="flex gap-2">
+      @if (viewTab() === 'tickets') {
       <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
@@ -18,8 +21,26 @@
         <i class="bi bi-plus-lg"></i>
         {{ 'PMDT17_NEW_TICKET_BUTTON' | translate }}
       </button>
+      }
     </div>
   </div>
+
+  <!-- VIEW TABS: Ticket / สัญญา MA -->
+  <div class="flex gap-6 border-b border-[var(--border)]">
+    @for (t of [{ v: 'tickets', l: ('PMDT17_TAB_TICKETS' | translate), i: 'bi-headset' }, { v: 'contracts', l: ('PMDT17_TAB_MA_CONTRACTS' | translate), i: 'bi-file-earmark-text' }]; track t.v) {
+      <button type="button" (click)="setViewTab($any(t.v))"
+        class="pb-2.5 text-sm font-semibold flex items-center gap-2 border-b-2 transition-all"
+        [class]="viewTab() === t.v
+          ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]'
+          : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+        <i class="bi" [class]="t.i"></i> {{ t.l }}
+      </button>
+    }
+  </div>
+
+  @if (viewTab() === 'contracts') {
+    <app-ma-contracts></app-ma-contracts>
+  } @else {
 
   <!-- PRESET TABS -->
   <div class="flex flex-wrap gap-2">
@@ -177,4 +198,5 @@
   }
 
 
+}
 </div>

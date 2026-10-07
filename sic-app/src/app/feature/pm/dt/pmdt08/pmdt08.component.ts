@@ -1,5 +1,5 @@
 // src/app/feature/pm/dt/pmdt09/pmdt09.component.ts
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, HostListener, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -48,6 +48,7 @@ export class Pmdt08Component implements OnInit {
   private http = inject(HttpClient);
   private customerState = inject(CustomerStateService);
   private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
   readonly apiBaseUrl = environment.apiBaseUrl;
 
@@ -79,8 +80,8 @@ export class Pmdt08Component implements OnInit {
   replyForm!: FormGroup;
   editForm!: FormGroup;
 
-  // Cache for attachments (key = groupId)
-  private attachmentCache = new Map<string, AttachmentFile[]>();
+  // Reactive cache for attachments (key = groupId)
+  attachmentCache = signal<Record<string, AttachmentFile[]>>({});
 
   // guards against re-fetching on the first (synchronous) queryParams emission,
   // since that initial value was already preloaded by pmdt08Resolver
@@ -181,7 +182,7 @@ export class Pmdt08Component implements OnInit {
 
   // ===== Load attachments with Authorization header =====
   loadAttachments(groupId: string): void {
-    if (this.attachmentCache.has(groupId)) return;
+    if (this.attachmentCache()[groupId]) return;
 
     const token = this.authService.getAccessToken();
     let headers = new HttpHeaders();
@@ -193,7 +194,8 @@ export class Pmdt08Component implements OnInit {
       .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`, { headers })
       .subscribe({
         next: (files) => {
-          this.attachmentCache.set(groupId, files);
+          this.attachmentCache.update((c) => ({ ...c, [groupId]: files || [] }));
+          this.cdr.markForCheck();
         },
         error: (err) => {
           console.error('Failed to load attachments:', err);
@@ -201,16 +203,22 @@ export class Pmdt08Component implements OnInit {
           this.http
             .get<AttachmentFile[]>(`${this.apiBaseUrl}/api/storage/group/${groupId}`)
             .subscribe({
-              next: (files) => this.attachmentCache.set(groupId, files),
-              error: () => this.attachmentCache.set(groupId, []),
+              next: (files) => {
+                this.attachmentCache.update((c) => ({ ...c, [groupId]: files || [] }));
+                this.cdr.markForCheck();
+              },
+              error: () => {
+                this.attachmentCache.update((c) => ({ ...c, [groupId]: [] }));
+                this.cdr.markForCheck();
+              },
             });
         },
       });
   }
 
-  // ===== Get attachments from cache =====
+  // ===== Get attachments from reactive cache signal =====
   getAttachments(groupId: string): AttachmentFile[] {
-    return this.attachmentCache.get(groupId) || [];
+    return this.attachmentCache()[groupId] || [];
   }
 
   // ===== File type helpers =====
@@ -247,6 +255,8 @@ export class Pmdt08Component implements OnInit {
            !this.isPdf(file) && !this.isWord(file) && !this.isExcel(file) && !this.isPowerPoint(file);
   }
 
+  previewingImage = signal<AttachmentFile | null>(null);
+
   formatFileSize(bytes: number): string {
     if (!bytes) return '0 B';
     if (bytes < 1024) return bytes + ' B';
@@ -255,9 +265,27 @@ export class Pmdt08Component implements OnInit {
     return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
   }
 
-  previewFile(file: AttachmentFile): void {
-    if (this.isImage(file) || this.isVideo(file)) {
+  previewFile(file: AttachmentFile, event?: Event): void {
+    if (event) {
+      event.stopPropagation();
+    }
+    if (this.isImage(file)) {
+      this.previewingImage.set(file);
+    } else if (this.isVideo(file)) {
       window.open(file.accessUrl, '_blank');
+    } else {
+      this.downloadFile(file.accessUrl, file.fileName);
+    }
+  }
+
+  closeImagePreview(): void {
+    this.previewingImage.set(null);
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscKey(): void {
+    if (this.previewingImage()) {
+      this.closeImagePreview();
     }
   }
 
@@ -317,6 +345,13 @@ export class Pmdt08Component implements OnInit {
   }
 
   onPostSaved(savedPost: Post): void {
+    if (savedPost?.attachmentGroupId) {
+      this.attachmentCache.update((c) => {
+        const next = { ...c };
+        delete next[savedPost.attachmentGroupId!];
+        return next;
+      });
+    }
     this.closeModal();
     this.currentPage.set(0);
     this.loadPosts();

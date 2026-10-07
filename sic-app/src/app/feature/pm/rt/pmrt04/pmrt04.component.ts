@@ -76,6 +76,8 @@ export class Pmrt04Component implements OnInit {
 
   // ===== Preset Filter Tabs =====
   protected activePreset = signal<'all' | 'expiring'>('all');
+  /** false = ซ่อนฉบับที่ถูกต่ออายุไปแล้ว เหลือฉบับล่าสุดของแต่ละสาย */
+  protected showRenewed = signal(false);
 
   // ===== Bulk Selection — ใช้ selection ในตัวของ grid =====
 
@@ -279,6 +281,7 @@ export class Pmrt04Component implements OnInit {
     if (this.activePreset() === 'expiring') {
       params = params.set('expiringWithinDays', '30');
     }
+    params = params.set('latestOnly', String(!this.showRenewed()));
 
     const sortField = request.sortField ?? 'contractNo';
     params = params.set('sortBy', sortField).set('sortDirection', request.sortDescending ? 'desc' : 'asc');
@@ -376,6 +379,11 @@ export class Pmrt04Component implements OnInit {
     this.reloadFromPage1(grid);
   }
 
+  toggleShowRenewed(grid: SicGridPanelComponent): void {
+    this.showRenewed.update((v) => !v);
+    this.reloadFromPage1(grid);
+  }
+
   // ===== Preset Tabs =====
   setPreset(preset: 'all' | 'expiring', grid: SicGridPanelComponent): void {
     this.activePreset.set(preset);
@@ -452,6 +460,7 @@ export class Pmrt04Component implements OnInit {
     const type = this.filterType();
     if (type !== 'all') params = params.set('contractType', type);
     if (this.activePreset() === 'expiring') params = params.set('expiringWithinDays', '30');
+    params = params.set('latestOnly', String(!this.showRenewed()));
 
     this.http
       .get<PaginationResponse<Contract>>(this.apiUrl, { params })

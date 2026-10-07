@@ -49,6 +49,7 @@ public class TaskServiceImpl implements TaskService {
     private final SuProfileRepository profileRepository;
     private final TraceLinkService traceLinkService;
     private final AuditLogService auditLogService;
+    private final com.softinter.sicapi.service.DocumentVersionService documentVersionService;
 
     // ===== CREATE =====
     @Override
@@ -106,6 +107,8 @@ public class TaskServiceImpl implements TaskService {
 
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
 
+        recordVersion(task, "สร้าง Task (Initial task)");
+
         try {
             auditLogService.log("CREATE_TASK", "Task Management",
                     "สร้าง Task: " + task.getTaskName() + " (" + task.getTaskCode() + ")",
@@ -123,6 +126,18 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse updateTask(UUID taskId, TaskRequest request) {
         PmTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new RuntimeException("Task not found"));
+
+        java.util.List<String> changes = new java.util.ArrayList<>();
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รหัส Task", task.getTaskCode(), request.getTaskCode());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อ Task", task.getTaskName(), request.getTaskName());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", task.getDescription(), request.getDescription());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", task.getAssignedTo(), request.getAssignedTo());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "วันเริ่ม (Start Date)", task.getStartDate(), request.getStartDate());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "วันสิ้นสุด (End Date)", task.getEndDate(), request.getEndDate());
+        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", task.getPriority(), request.getPriority());
+        if (request.getStatus() != null && !request.getStatus().isBlank()) {
+            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", task.getStatus(), request.getStatus());
+        }
 
         task.setTaskCode(request.getTaskCode());
         task.setTaskName(request.getTaskName());
@@ -173,6 +188,11 @@ public class TaskServiceImpl implements TaskService {
 
         updatePhaseProgress(task.getWorkPackage().getMilestone().getPhase());
 
+        // บันทึกเวอร์ชันเฉพาะเมื่อมี field สำคัญเปลี่ยนจริง (กันเวอร์ชันซ้ำทุกครั้งที่ลาก/บันทึกซ้ำ)
+        if (!changes.isEmpty()) {
+            recordVersion(task, com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดต Task " + task.getTaskName()));
+        }
+
         try {
             auditLogService.log("UPDATE_TASK", "Task Management",
                     "แก้ไข Task: " + task.getTaskName() + " (" + task.getTaskCode() + ")",
@@ -182,6 +202,17 @@ public class TaskServiceImpl implements TaskService {
         }
 
         return toResponse(task);
+    }
+
+    /** บันทึกประวัติเวอร์ชันของ Task (ห้ามทำให้การบันทึก Task ล้มถ้าสร้างเวอร์ชันไม่สำเร็จ) */
+    private void recordVersion(PmTask task, String summary) {
+        try {
+            UUID projectId = task.getWorkPackage().getMilestone().getPhase().getProject().getId();
+            documentVersionService.createVersion("TASK", task.getId(), projectId, task.getTaskCode(), "v1.0.0", summary,
+                    com.softinter.sicapi.util.JsonSnapshotHelper.toJson(toResponse(task)));
+        } catch (Exception e) {
+            log.warn("Failed to create version for task {}: {}", task.getId(), e.getMessage());
+        }
     }
 
     // ===== PRIVATE: บันทึก assignees =====
@@ -350,6 +381,7 @@ public class TaskServiceImpl implements TaskService {
         task.setIsDelete(true);
         task.setDeleteDate(now);
         taskRepository.save(task);
+        documentVersionService.deleteVersionsByDocument("TASK", taskId);
 
         // ✅ Cascade Soft Delete: ลบ Test Cases ทั้งหมดที่ผูกกับ Task นี้
         try {

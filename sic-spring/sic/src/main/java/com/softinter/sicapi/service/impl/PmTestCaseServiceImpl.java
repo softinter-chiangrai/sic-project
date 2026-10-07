@@ -127,9 +127,10 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
-            DocumentDiffHelper.checkChange(changes, "ชื่อ Test Case (Title)", entity.getTitle(), request.getTitle());
-            DocumentDiffHelper.checkChange(changes, "ผลการทดสอบ (Status)", entity.getTestStatus(), request.getTestStatus());
-            DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", entity.getPriority(), request.getPriority());
+            // mapRequestToEntity ข้าม field ที่ request ไม่ส่งมา จึงเทียบเฉพาะ field ที่ส่งมา (กันสรุปว่า "ลบ" ทั้งที่ไม่ได้ลบ)
+            DocumentDiffHelper.checkChange(changes, "ชื่อ Test Case (Title)", entity.getTitle(), request.getTitle() != null ? request.getTitle() : entity.getTitle());
+            DocumentDiffHelper.checkChange(changes, "ผลการทดสอบ (Status)", entity.getTestStatus(), request.getTestStatus() != null ? request.getTestStatus() : entity.getTestStatus());
+            DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", entity.getPriority(), request.getPriority() != null ? request.getPriority() : entity.getPriority());
             diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดต Test Case " + (request.getTitle() != null ? request.getTitle() : entity.getTitle()));
 
             mapRequestToEntity(request, entity);

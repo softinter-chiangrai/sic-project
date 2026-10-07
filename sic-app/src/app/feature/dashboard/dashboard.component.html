@@ -174,35 +174,7 @@
   }
 
   <!-- ========================================================================= -->
-  <!-- 💓 TIER 3: PROJECT HEALTH SCORE WIDGET (Real Project Score & Breakdown)   -->
-  <!-- ========================================================================= -->
-  <app-project-health-widget [projects]="realProjects()"></app-project-health-widget>
-
-  <!-- ========================================================================= -->
-  <!-- 🗺️ TIER 3.5: ENTERPRISE PORTFOLIO GANTT CHART (Customer-Project Roadmap)    -->
-  <!-- ========================================================================= -->
-  <app-portfolio-gantt-widget [projects]="realProjects()"></app-portfolio-gantt-widget>
-
-  <!-- ========================================================================= -->
-  <!-- 🎯 TIER 4: CORE WORKSPACE GRID (My Work & Focus vs Sprint Health)         -->
-  <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
-    <!-- Left: Personal Assigned Work Hub -->
-    <app-my-work-widget
-      [projects]="realProjects()"
-      [designReviews]="realDesignReviews()"
-      [approvals]="myPendingApprovals()"
-      [deadlines]="orgDeadlines()"
-    ></app-my-work-widget>
-
-    <!-- Right: Sprint Health & Release Velocity -->
-    <app-sprint-health-widget
-      [summary]="orgSummary()"
-    ></app-sprint-health-widget>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- 🔄 TIER 4: SDLC DELIVERY PIPELINE (Interactive 5 Stages)                  -->
+  <!-- 🔄 TIER 3: SDLC DELIVERY PIPELINE (Interactive 5 Stages)                  -->
   <!-- ========================================================================= -->
   <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm">
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4">
@@ -246,11 +218,33 @@
   </div>
 
   <!-- ========================================================================= -->
-  <!-- 👥 TIER 5: TEAM WORKLOAD & REAL PROJECTS / AUDIT LOGS                     -->
+  <!-- 🎯 TIER 4: WORKSPACE EXECUTION (My Work & Pending My Approval)            -->
   <!-- ========================================================================= -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
+    <!-- Left: Personal Assigned Work Hub -->
+    <app-my-work-widget
+      class="block h-full"
+      [projects]="realProjects()"
+      [designReviews]="realDesignReviews()"
+      [approvals]="myPendingApprovals()"
+      [deadlines]="orgDeadlines()"
+    ></app-my-work-widget>
+
+    <!-- Right: Pending My Approval Widget -->
+    <app-pending-approval-widget
+      class="block h-full"
+      [approvals]="myPendingApprovals()"
+      [totalPending]="approvalSummaryTotal()"
+    ></app-pending-approval-widget>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- 👥 TIER 5: TEAM WORKLOAD & LIVE PROJECTS STREAM                           -->
+  <!-- ========================================================================= -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 items-stretch">
     <!-- Left: Team Capacity & Workload Matrix -->
     <app-team-workload-widget
+      class="block h-full"
       [summary]="orgSummary()"
       [members]="realMembers()"
       [deadlines]="orgDeadlines()"
@@ -258,7 +252,7 @@
     ></app-team-workload-widget>
 
     <!-- Right: Real Customer Projects Stream -->
-    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm flex flex-col justify-between">
+    <div class="p-6 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-sm flex flex-col justify-between h-full">
       <div>
         <div class="flex items-center justify-between mb-5">
           <div>
@@ -331,4 +325,14 @@
       </div>
     </div>
   </div>
+
+  <!-- ========================================================================= -->
+  <!-- 💓 TIER 6: PROJECT HEALTH SCORE WIDGET (Real Project Score & Breakdown)   -->
+  <!-- ========================================================================= -->
+  <app-project-health-widget [projects]="realProjects()"></app-project-health-widget>
+
+  <!-- ========================================================================= -->
+  <!-- 🗺️ TIER 7: ENTERPRISE PORTFOLIO GANTT CHART (Customer-Project Roadmap)    -->
+  <!-- ========================================================================= -->
+  <app-portfolio-gantt-widget [projects]="realProjects()"></app-portfolio-gantt-widget>
 </div>

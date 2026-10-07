@@ -1,0 +1,22 @@
+.formatted-content ::ng-deep p { margin-bottom: 0.5rem; }
+.formatted-content ::ng-deep p:last-child { margin-bottom: 0; }
+.formatted-content ::ng-deep ul,
+.formatted-content ::ng-deep ol { padding-left: 1.25rem; margin-bottom: 0.5rem; }
+.formatted-content ::ng-deep ul { list-style-type: disc; }
+.formatted-content ::ng-deep ol { list-style-type: decimal; }
+.formatted-content ::ng-deep h1,
+.formatted-content ::ng-deep h2,
+.formatted-content ::ng-deep h3 { font-weight: 700; margin: 0.75rem 0 0.35rem; }
+.formatted-content ::ng-deep blockquote {
+  border-left: 3px solid var(--crm-primary);
+  padding-left: 0.75rem;
+  margin: 0.5rem 0;
+  color: var(--text-muted);
+}
+.formatted-content ::ng-deep pre,
+.formatted-content ::ng-deep code { font-family: monospace; background: var(--bg); border-radius: 0.375rem; padding: 0.1rem 0.3rem; }
+.formatted-content ::ng-deep table { width: 100%; border-collapse: collapse; margin: 0.5rem 0; }
+.formatted-content ::ng-deep th,
+.formatted-content ::ng-deep td { border: 1px solid var(--border); padding: 0.35rem 0.5rem; }
+.formatted-content ::ng-deep img { max-width: 100%; height: auto; border-radius: 0.5rem; }
+.formatted-content ::ng-deep a { color: var(--crm-primary); text-decoration: underline; }

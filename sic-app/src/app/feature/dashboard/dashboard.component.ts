@@ -44,7 +44,7 @@ import {
 import { TeamMember } from '../bu/rt/burt04/burt04.model';
 
 import { MyWorkWidgetComponent } from '../../core/component/my-work-widget/my-work-widget.component';
-import { SprintHealthWidgetComponent } from '../../core/component/sprint-health-widget/sprint-health-widget.component';
+import { PendingApprovalWidgetComponent } from '../../core/component/pending-approval-widget/pending-approval-widget.component';
 import { TeamWorkloadWidgetComponent } from '../../core/component/team-workload-widget/team-workload-widget.component';
 import { ProjectHealthWidgetComponent } from '../../core/component/project-health-widget/project-health-widget.component';
 import { PortfolioGanttWidgetComponent } from '../../core/component/portfolio-gantt-widget/portfolio-gantt-widget.component';
@@ -60,7 +60,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     ReactiveFormsModule,
     SicDatePipe,
     MyWorkWidgetComponent,
-    SprintHealthWidgetComponent,
+    PendingApprovalWidgetComponent,
     TeamWorkloadWidgetComponent,
     ProjectHealthWidgetComponent,
     PortfolioGanttWidgetComponent,

@@ -99,6 +99,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   // ===== Cross-Entity Summary =====
   summary = signal<ContractSummary | null>(null);
+  renewalChain = signal<ContractModel[]>([]);
   summaryLoading = signal(false);
 
   summaryCards = computed<EntitySummaryCard[]>(() => {
@@ -365,7 +366,25 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       });
   }
 
+  /** ฉบับล่าสุดที่ยังใช้งานของสาย (ไม่นับฉบับที่ยกเลิก) */
+  isLatestInChain(c: ContractModel): boolean {
+    const active = this.renewalChain().filter((x) => x.renewalStatus !== 'ยกเลิก');
+    return active.length > 0 && active[active.length - 1].id === c.id;
+  }
+
+  openChainContract(id?: string): void {
+    if (!id || id === this.contractId) return;
+    this.navigation.navigate(['/feature/pm/contract', id, 'view']);
+  }
+
   loadSummary(id: string): void {
+    this.service.getRenewalChain(id).subscribe({
+      next: (chain) => {
+        this.renewalChain.set(chain);
+        this.cdr.markForCheck();
+      },
+      error: () => this.renewalChain.set([]),
+    });
     this.summaryLoading.set(true);
     this.service.getContractSummary(id).subscribe({
       next: (data) => {

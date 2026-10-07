@@ -29,12 +29,12 @@
 .sic-upload__dropzone {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  min-height: 8rem;
+  gap: 0.75rem;
+  min-height: 0;
   width: 100%;
-  padding: 1.1rem 1.2rem;
+  padding: 0.55rem 0.85rem;
   border: 1.5px dashed color-mix(in srgb, var(--crm-primary) 28%, var(--border));
-  border-radius: 1.1rem;
+  border-radius: 0.75rem;
   background:
     linear-gradient(135deg, color-mix(in srgb, var(--crm-primary) 6%, var(--bg)), color-mix(in srgb, var(--sidebar) 72%, var(--bg)));
   text-align: left;
@@ -55,33 +55,34 @@
 .sic-upload__dropzone-icon {
   display: grid;
   place-items: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.9rem;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.55rem;
   background: var(--crm-primary);
   color: white;
-  font-size: 1.6rem;
+  font-size: 1.15rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .sic-upload__dropzone-copy {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.1rem;
 }
 
 .sic-upload__dropzone-title {
   color: var(--text-active);
-  font-size: 1rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 600;
 }
 
 .sic-upload__dropzone-subtitle,
 .sic-upload__hint,
 .sic-upload__item-meta {
   color: var(--text-muted);
-  font-size: 0.8rem;
-  line-height: 1.35;
+  font-size: 0.75rem;
+  line-height: 1.25;
 }
 
 .sic-upload__list {
@@ -415,66 +416,6 @@
   padding-bottom: 0;
 }
 
-.sic-upload--compact .sic-upload__dropzone {
-  min-height: 0;
-  gap: 0.6rem;
-  padding: 0.45rem 0.7rem;
-  border-radius: 0.75rem;
-}
-
-.sic-upload--compact .sic-upload__dropzone-icon {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 0.5rem;
-  font-size: 1.1rem;
-}
-
-.sic-upload--compact .sic-upload__dropzone-title {
-  font-size: 0.85rem;
-}
-
 .sic-upload--compact .sic-upload__dropzone-subtitle {
   display: none;
-}
-
-.sic-upload--compact .sic-upload__grid {
-  grid-template-columns: 1fr;
-  gap: 0.4rem;
-}
-
-.sic-upload--compact .sic-upload__card {
-  grid-template-rows: none;
-  grid-template-columns: 2.75rem minmax(0, 1fr);
-  border-radius: 0.75rem;
-  box-shadow: none;
-}
-
-.sic-upload--compact .sic-upload__placeholder {
-  font-size: 1.1rem;
-}
-
-.sic-upload--compact .sic-upload__status-chip,
-.sic-upload--compact .sic-upload__streaming-chip,
-.sic-upload--compact .sic-upload__type-chip {
-  display: none;
-}
-
-.sic-upload--compact .sic-upload__card-body {
-  gap: 0.2rem;
-  padding: 0.4rem 0.6rem;
-  justify-content: center;
-}
-
-.sic-upload--compact .sic-upload__card-head {
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-}
-
-.sic-upload--compact .sic-upload__card-name {
-  font-size: 0.82rem;
-  -webkit-line-clamp: 1;
-}
-
-.sic-upload--compact .sic-upload__card-meta {
-  font-size: 0.72rem;
 }

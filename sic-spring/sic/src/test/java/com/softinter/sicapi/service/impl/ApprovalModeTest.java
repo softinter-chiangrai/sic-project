@@ -69,7 +69,7 @@ class ApprovalModeTest {
                 Mockito.mock(PmDiagramTabRepository.class), Mockito.mock(PmCustomerContractRepository.class),
                 Mockito.mock(PmCustomerProjectRepository.class), Mockito.mock(PmDeliveryRepository.class),
                 Mockito.mock(PmInvoiceRepository.class), Mockito.mock(PmMaTicketRepository.class),
-                Mockito.mock(PmMaRenewalRepository.class), Mockito.mock(PmUserManualRepository.class),
+                Mockito.mock(PmUserManualRepository.class),
                 Mockito.mock(DocumentVersionService.class), Mockito.mock(AuditLogService.class));
     }
 

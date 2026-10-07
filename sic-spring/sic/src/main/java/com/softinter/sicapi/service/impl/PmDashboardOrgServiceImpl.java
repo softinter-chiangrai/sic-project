@@ -18,16 +18,14 @@ import org.springframework.transaction.annotation.Transactional;
 import com.softinter.sicapi.dto.response.DashboardDeadlineResponse;
 import com.softinter.sicapi.dto.response.DashboardProjectHealthResponse;
 import com.softinter.sicapi.dto.response.DashboardSummaryResponse;
-import com.softinter.sicapi.entity.enums.MaRenewalStatus;
 import com.softinter.sicapi.entity.enums.MaTicketStatus;
 import com.softinter.sicapi.entity.enums.PaymentStatus;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
-import com.softinter.sicapi.entity.pm.PmMaRenewal;
 import com.softinter.sicapi.entity.pm.PmTask;
 import com.softinter.sicapi.repository.pm.PmBugRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
-import com.softinter.sicapi.repository.pm.PmMaRenewalRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
@@ -51,15 +49,15 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
             Set.of(PaymentStatus.UNPAID, PaymentStatus.PARTIAL, PaymentStatus.OVERDUE);
     private static final Set<MaTicketStatus> CLOSED_TICKET_STATUSES =
             Set.of(MaTicketStatus.RESOLVED, MaTicketStatus.CLOSED);
-    private static final Set<MaRenewalStatus> FINAL_RENEWAL_STATUSES =
-            Set.of(MaRenewalStatus.CONFIRMED, MaRenewalStatus.REJECTED, MaRenewalStatus.EXPIRED);
+    /** สัญญาที่ต่อแล้ว/ยกเลิกแล้ว ไม่นับเป็น "ใกล้หมดอายุ" */
+    private static final Set<String> CLOSED_CONTRACT_STATUSES = Set.of("ต่อแล้ว", "ยกเลิก");
     private static final int NEAR_EXPIRY_DAYS = 30;
 
     private final PmCustomerProjectRepository projectRepository;
     private final PmBugRepository bugRepository;
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
-    private final PmMaRenewalRepository maRenewalRepository;
+    private final PmCustomerContractRepository contractRepository;
     private final PmTaskRepository taskRepository;
     private final PmRequirementRepository requirementRepository;
     private final PmDesignReviewRepository designReviewRepository;
@@ -106,9 +104,8 @@ public class PmDashboardOrgServiceImpl implements PmDashboardOrgService {
                 businessId, CLOSED_TICKET_STATUSES));
 
         LocalDate today = LocalDate.now();
-        List<PmMaRenewal> nearExpiry = maRenewalRepository.findNearExpiry(
-                businessId, FINAL_RENEWAL_STATUSES, today, today.plusDays(NEAR_EXPIRY_DAYS));
-        response.setContractsNearExpiry(nearExpiry.size());
+        response.setContractsNearExpiry((int) contractRepository.countNearExpiry(
+                businessId, CLOSED_CONTRACT_STATUSES, today, today.plusDays(NEAR_EXPIRY_DAYS)));
 
         // SDLC Funnel Counts
         response.setStageRequirementsCount(requirementRepository.countByBusinessIdAndIsDeleteFalse(businessId));
