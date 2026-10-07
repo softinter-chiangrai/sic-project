@@ -40,6 +40,7 @@ import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 
 // Services
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -136,6 +137,7 @@ export class Pmdt04AService {
     TranslateModule,
     SicAiAttachmentPickerComponent,
     SicTraceLinkPanelComponent,
+    SicCrHistoryPanelComponent,
   ],
   templateUrl: './pmdt04A.component.html',
   styleUrls: ['./pmdt04A.component.css'],

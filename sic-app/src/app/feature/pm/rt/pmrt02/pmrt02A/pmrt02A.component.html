@@ -12,6 +12,11 @@
 
 <!-- ===== FORM ===== -->
 @if (!isLoading && form) {
+  @if (projectId) {
+    <div class="max-w-3xl mx-auto px-4 pt-4">
+      <sic-cr-history-panel targetType="PROJECT" [targetId]="projectId"></sic-cr-history-panel>
+    </div>
+  }
   <form [formGroup]="form" (ngSubmit)="submit()" class="max-w-3xl mx-auto p-4 space-y-6">
 
     <!-- HEADER -->

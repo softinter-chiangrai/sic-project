@@ -208,6 +208,7 @@
 
             <!-- Trace Link Panel -->
             @if ((isEdit || isViewOnly) && (reqId || form.value.id)) {
+              <sic-cr-history-panel targetType="REQUIREMENT" [targetId]="reqId || form.value.id"></sic-cr-history-panel>
               <sic-trace-link-panel
                 entityType="REQUIREMENT"
                 [entityId]="reqId || form.value.id"

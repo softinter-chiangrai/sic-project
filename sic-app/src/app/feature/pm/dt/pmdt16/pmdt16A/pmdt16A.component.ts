@@ -35,6 +35,7 @@ import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/u
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 
 @Component({
   selector: 'app-pmdt16a',
@@ -55,6 +56,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
     TranslateModule,
     SicAiAttachmentPickerComponent,
     SicTraceLinkPanelComponent,
+    SicCrHistoryPanelComponent,
   ],
   templateUrl: './pmdt16A.component.html',
   styleUrls: ['./pmdt16A.component.css'],

@@ -1,4 +1,4 @@
-import { Injectable, inject, PLATFORM_ID } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID, signal } from '@angular/core';
 import { DOCUMENT, isPlatformBrowser } from '@angular/common';
 import { firstValueFrom, Observable } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
@@ -12,6 +12,7 @@ export class LanguageService {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly translate = inject(TranslateService);
   private readonly storageKey = 'app-lang';
+  readonly currentLang = signal<AppLanguage>('en');
 
   constructor() {
     this.translate.onLangChange.subscribe(({ lang }) => {
@@ -1404,6 +1405,7 @@ export class LanguageService {
     this.translate.setTranslation('en', this.defaultTranslations.en, true);
     const lang = this.resolveInitialLanguage();
     this.updateHtmlLang(lang);
+    this.currentLang.set(lang);
     DateTimeUtil.setEra(lang);
 
     this.initPromise = firstValueFrom(this.translate.use(lang)).catch((err) => {
@@ -1421,6 +1423,7 @@ export class LanguageService {
 
     this.translate.use(lang);
     this.updateHtmlLang(lang);
+    this.currentLang.set(lang);
     DateTimeUtil.setEra(lang);
   }
 

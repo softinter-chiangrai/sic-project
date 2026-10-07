@@ -14,6 +14,7 @@ import { SicInputComponent } from 'sic-ng';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
+import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
@@ -36,6 +37,7 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
   selector: 'app-pmrt02a',
   standalone: true,
   imports: [
+    SicCrHistoryPanelComponent,
     CommonModule,
     ReactiveFormsModule,
     FormsModule,

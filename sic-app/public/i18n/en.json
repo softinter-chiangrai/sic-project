@@ -1784,6 +1784,8 @@
   "PMDT06_COL_TITLE": "Title / Description",
   "PMDT06_COL_TARGET_VERSION": "Target Version",
   "PMDT06_COL_VERSION": "Version",
+  "CR_HISTORY_TITLE": "Change Request History",
+  "CR_HISTORY_COL_DATE": "Requested Date",
   "PMDT06_CONFIRM_DELETE_MSG": "Do you want to delete this Change Request?",
   "PMDT06_CONFIRM_DELETE_TITLE": "Confirm Deletion",
   "PMDT06_CONFIRM_DONE_TITLE": "Mark Task as Completed",

@@ -211,6 +211,7 @@
                         <input type="hidden" formControlName="createdBy" />
 
                         @if (isEdit) {
+                            <sic-cr-history-panel targetType="SPECIFICATION" [targetId]="form.getRawValue().id"></sic-cr-history-panel>
                             <sic-trace-link-panel
                                 class="block mt-4"
                                 entityType="SPECIFICATION"

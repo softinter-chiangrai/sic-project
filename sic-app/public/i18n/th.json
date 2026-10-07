@@ -1784,6 +1784,8 @@
   "PMDT06_COL_TITLE": "หัวข้อ / รายละเอียด",
   "PMDT06_COL_TARGET_VERSION": "เวอร์ชันเป้าหมาย",
   "PMDT06_COL_VERSION": "เวอร์ชัน",
+  "CR_HISTORY_TITLE": "ประวัติ Change Request",
+  "CR_HISTORY_COL_DATE": "วันที่ขอ",
   "PMDT06_CONFIRM_DELETE_MSG": "คุณต้องการลบคำขอเปลี่ยนแปลงนี้ใช่หรือไม่?",
   "PMDT06_CONFIRM_DELETE_TITLE": "ยืนยันการลบ",
   "PMDT06_CONFIRM_DONE_TITLE": "ยืนยันทำรายการเสร็จสิ้น",

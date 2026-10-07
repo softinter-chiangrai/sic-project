@@ -20,6 +20,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
+import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
@@ -48,6 +49,7 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
   selector: 'app-pmrt04a',
   standalone: true,
   imports: [
+    SicCrHistoryPanelComponent,
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -318,9 +320,9 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       if (parentContractId) {
         this.service.getContract(parentContractId).subscribe({
           next: (parent) => {
-            this.customerId = parent.customerId;
+            this.customerId = parent.customerId ?? null;
             this.customerName = parent.customerName || null;
-            this.projectId = parent.projectId;
+            this.projectId = parent.projectId ?? null;
             this.projectName = parent.projectName || null;
             this.apiGetProjectsUrl = this.service.getComboboxProject(parent.customerId);
 
@@ -338,7 +340,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
             const renewalNo = Pmrt04BForm.computeRenewalContractNo(parent.contractNo);
 
             this.formData.patchValue({
-              contractNo: renewalNo || null,
+              contractNo: renewalNo || undefined,
               contractType: contractType || parent.contractType || 'Maintenance Contract',
               customerId: parent.customerId,
               customerName: parent.customerName,
@@ -350,9 +352,9 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
               paymentTerms: parent.paymentTerms,
               autoRenew: true,
               renewalStatus: 'ต่อแล้ว',
-              scopeSummary: parent.scopeSummary || (refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : null),
-              startDate: newStartDate,
-              endDate: newEndDate,
+              scopeSummary: parent.scopeSummary || (refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : undefined),
+              startDate: newStartDate ?? undefined,
+              endDate: newEndDate ?? undefined,
             });
 
             this.loadRenewalChain(parentContractId);
@@ -378,7 +380,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           customerId: customerId || null,
           contractType: contractType || 'Maintenance Contract',
           autoRenew: contractType === 'Maintenance Contract',
-          scopeSummary: refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : null,
+          scopeSummary: refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : undefined,
         });
         if (this.isView) {
           this.form.disable();

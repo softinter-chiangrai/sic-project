@@ -22,6 +22,7 @@ import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { DesignReviewModel, Pmdt09APageData } from './pmdt09A.model';
 import { Pmdt09AService } from './pmdt09A.service';
 import { Pmdt09Service } from '../pmdt09.service';
@@ -44,6 +45,7 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
     SicInputComponent,
     SicTiptapEditorComponent,
     SicTraceLinkPanelComponent,
+    SicCrHistoryPanelComponent,
     SicUploadComponent,
   ],
   templateUrl: './pmdt09A.component.html',

@@ -36,6 +36,7 @@ import { HttpClient } from '@angular/common/http';
 import { SicCheckboxComponent } from 'sic-ng';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
@@ -62,6 +63,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
         SicDatePipe,
         Pmdt07PreviewComponent,
         SicTraceLinkPanelComponent,
+    SicCrHistoryPanelComponent,
         TranslateModule,
         SicAiAttachmentPickerComponent
     ],

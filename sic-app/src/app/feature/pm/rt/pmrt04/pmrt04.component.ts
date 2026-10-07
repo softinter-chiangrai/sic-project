@@ -24,6 +24,7 @@ import { Contract, Pmrt04ListPageData } from './pmrt04.model';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { LanguageService } from '../../../../core/services/language.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -48,6 +49,7 @@ export class Pmrt04Component implements OnInit {
   private customerState = inject(CustomerStateService);
   private recentItems = inject(RecentItemsService);
   private translate = inject(TranslateService);
+  private languageService = inject(LanguageService);
 
   // ===== State =====
   protected searchTerm = signal('');
