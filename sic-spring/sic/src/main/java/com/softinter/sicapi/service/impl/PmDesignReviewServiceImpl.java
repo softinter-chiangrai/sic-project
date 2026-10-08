@@ -215,7 +215,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         if (saved.getProject() != null && saved.getReviewItemType() != null && saved.getReviewItemId() != null) {
             try {
                 traceLinkService.createLink(saved.getProject().getId(),
-                        saved.getReviewItemType(), saved.getReviewItemId(),
+                        saved.getReviewItemType().trim().toUpperCase(), saved.getReviewItemId(),
                         "DESIGN_REVIEW", saved.getId(),
                         TraceRelationship.RELATED_TO);
             } catch (Exception e) {

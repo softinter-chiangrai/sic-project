@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -22,11 +23,17 @@ import com.softinter.sicapi.repository.pm.PmChangeRequestRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerRepository;
+import com.softinter.sicapi.repository.pm.PmDeliveryItemRepository;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
+import com.softinter.sicapi.repository.pm.PmDesignReviewRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
+import com.softinter.sicapi.repository.pm.PmInvoiceRepository;
+import com.softinter.sicapi.repository.pm.PmMaTicketRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestCaseRepository;
+import com.softinter.sicapi.repository.pm.PmUserManualRepository;
 import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.ImpactAnalysisService;
 import com.softinter.sicapi.service.TraceLinkService;
@@ -47,6 +54,12 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     private final ChangeImpactAnalysisRepository repository;
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmDiagramTabRepository diagramTabRepository;
+    private final PmDesignReviewRepository designReviewRepository;
+    private final PmDeliveryRepository deliveryRepository;
+    private final PmDeliveryItemRepository deliveryItemRepository;
+    private final PmUserManualRepository userManualRepository;
+    private final PmInvoiceRepository invoiceRepository;
+    private final PmMaTicketRepository maTicketRepository;
     private final PmRequirementRepository requirementRepository;
     private final PmSpecificationRepository specificationRepository;
     private final PmTaskRepository taskRepository;
@@ -122,6 +135,22 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     }
 
     private ChangeImpactAnalysis computeImpactAnalysis(String targetType, UUID targetId) {
+        ChangeImpactAnalysis nonTraced = computeForUntracedDocument(targetType, targetId);
+        if (nonTraced != null) {
+            return nonTraced;
+        }
+
+        // เป้าหมายเป็น Design Review: ผลกระทบคือสิ่งที่ถูกตรวจทาน (Specification / Diagram / Requirement) และทุกอย่างที่เชื่อมกับมัน
+        // ไม่ใช้ trace link ของ Design Review เอง เพราะลิงก์นั้นชี้ไปหาเอกสารที่ถูกตรวจแค่ชั้นเดียว
+        if ("DESIGN_REVIEW".equalsIgnoreCase(targetType) && targetId != null) {
+            var item = designReviewRepository.findById(targetId)
+                    .filter(dr -> dr.getReviewItemType() != null && dr.getReviewItemId() != null)
+                    .orElse(null);
+            if (item != null) {
+                return computeImpactAnalysis(item.getReviewItemType().trim().toUpperCase(), item.getReviewItemId());
+            }
+        }
+
         TraceLinkService.ImpactTraceResult traceResult = traceLinkService.getImpactedItems(targetType, targetId);
 
         Map<String, Set<UUID>> impacted = traceResult.getImpacted();
@@ -416,6 +445,95 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             } catch (Exception ignored) {}
         }
 
+        return analysis;
+    }
+
+    /**
+     * เอกสารที่ระบบไม่สร้าง trace link ไว้เลย (Delivery, User Manual, Invoice, MA Ticket) การไล่กราฟจึงได้ผลว่างเสมอ
+     * จึงหาผลกระทบจากความสัมพันธ์ในตัวเอกสารเองแทน คืน null ถ้าไม่ใช่เอกสารกลุ่มนี้ (ให้ใช้ตรรกะ trace เดิม)
+     */
+    private ChangeImpactAnalysis computeForUntracedDocument(String targetType, UUID targetId) {
+        if (targetType == null || targetId == null) {
+            return null;
+        }
+        switch (targetType.toUpperCase()) {
+            case "DELIVERY": {
+                var delivery = deliveryRepository.findById(targetId).orElse(null);
+                Set<UUID> reqs = new HashSet<>(), specs = new HashSet<>(), cases = new HashSet<>(), diagrams = new HashSet<>();
+                // ผลกระทบของการส่งมอบ คือสิ่งที่ถูกส่งมอบอยู่ในรายการของมัน
+                for (var item : deliveryItemRepository.findByDeliveryIdAndIsDeleteFalseOrderBySortOrderAsc(targetId)) {
+                    if (item.getItemType() == null || item.getItemId() == null) continue;
+                    switch (item.getItemType().toUpperCase()) {
+                        case "REQUIREMENT" -> reqs.add(item.getItemId());
+                        case "SPECIFICATION" -> specs.add(item.getItemId());
+                        case "TEST_CASE" -> cases.add(item.getItemId());
+                        case "DIAGRAM" -> diagrams.add(item.getItemId());
+                        default -> { }
+                    }
+                }
+                return scopeAnalysis(delivery == null ? null : delivery.getProjectId(), null, reqs, specs, cases, diagrams);
+            }
+            case "USER_MANUAL": {
+                var manual = userManualRepository.findById(targetId).orElse(null);
+                if (manual == null) return scopeAnalysis(null, null, Set.of(), Set.of(), Set.of(), Set.of());
+                // คู่มือผูกกับ Specification: ผลกระทบคือเดียวกับการแก้ Specification นั้น
+                ChangeImpactAnalysis analysis = manual.getRelatedSpecId() != null
+                        ? computeImpactAnalysis("SPECIFICATION", manual.getRelatedSpecId())
+                        : scopeAnalysis(null, null, Set.of(), Set.of(), Set.of(), Set.of());
+                return withProject(analysis, manual.getProjectId());
+            }
+            case "INVOICE": {
+                // ใบแจ้งหนี้ไม่กระทบ Requirement/Spec/Task จึงมีผลแค่ระดับโครงการและลูกค้า
+                var invoice = invoiceRepository.findById(targetId).orElse(null);
+                return scopeAnalysis(invoice == null ? null : invoice.getProjectId(), invoice == null ? null : invoice.getCustomerId(),
+                        Set.of(), Set.of(), Set.of(), Set.of());
+            }
+            case "MA_TICKET": {
+                var ticket = maTicketRepository.findById(targetId).orElse(null);
+                return scopeAnalysis(ticket == null ? null : ticket.getProjectId(), ticket == null ? null : ticket.getCustomerId(),
+                        Set.of(), Set.of(), Set.of(), Set.of());
+            }
+            default:
+                return null;
+        }
+    }
+
+    private ChangeImpactAnalysis withProject(ChangeImpactAnalysis analysis, UUID projectId) {
+        if (projectId == null) return analysis;
+        Set<UUID> projects = new HashSet<>(Arrays.asList(analysis.getImpactedProjectIds() == null ? new UUID[0] : analysis.getImpactedProjectIds()));
+        Set<UUID> customers = new HashSet<>(Arrays.asList(analysis.getImpactedCustomerIds() == null ? new UUID[0] : analysis.getImpactedCustomerIds()));
+        projects.add(projectId);
+        customerProjectRepository.findById(projectId).ifPresent(p -> {
+            if (p.getCustomerId() != null) customers.add(p.getCustomerId());
+        });
+        analysis.setImpactedProjectIds(projects.toArray(UUID[]::new));
+        analysis.setImpactedCustomerIds(customers.toArray(UUID[]::new));
+        return analysis;
+    }
+
+    /** สร้างผลวิเคราะห์จากรายการเอกสารที่ระบุตรงๆ (ไม่ไล่กราฟ) พร้อมประเมิน manday ด้วยสูตรเดียวกับการไล่กราฟ */
+    private ChangeImpactAnalysis scopeAnalysis(UUID projectId, UUID customerId, Set<UUID> reqs, Set<UUID> specs, Set<UUID> cases, Set<UUID> diagrams) {
+        ChangeImpactAnalysis analysis = new ChangeImpactAnalysis();
+        analysis.setImpactedRequirementIds(reqs.toArray(UUID[]::new));
+        analysis.setImpactedSpecIds(specs.toArray(UUID[]::new));
+        analysis.setImpactedTaskIds(new UUID[0]);
+        analysis.setImpactedTestCaseIds(cases.toArray(UUID[]::new));
+        analysis.setImpactedBugIds(new UUID[0]);
+        analysis.setImpactedDiagramIds(diagrams.toArray(UUID[]::new));
+        analysis.setImpactedTableNames(new String[0]);
+        analysis.setImpactedProjectIds(new UUID[0]);
+        analysis.setImpactedCustomerIds(customerId == null ? new UUID[0] : new UUID[] { customerId });
+        withProject(analysis, projectId);
+
+        int manday = Math.max(1, specs.size() * 2 + (int) Math.ceil(diagrams.size() * 1.5));
+        analysis.setMandayImpact(manday);
+        analysis.setTimelineImpact(Math.max(1, (int) Math.ceil(manday / 2.0)));
+        analysis.setAnalysisStatus("AUTO");
+        analysis.setAnalyzedAt(Instant.now());
+        try {
+            analysis.setAnalyzedBy(currentUserService.getUserId());
+        } catch (Exception ignored) {
+        }
         return analysis;
     }
 
