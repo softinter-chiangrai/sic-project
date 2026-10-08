@@ -1,5 +1,5 @@
 import { ApplicationConfig, inject, provideAppInitializer, provideBrowserGlobalErrorListeners } from '@angular/core';
-import { provideRouter } from '@angular/router';
+import { ActivatedRouteSnapshot, BaseRouteReuseStrategy, provideRouter, RouteReuseStrategy } from '@angular/router';
 import { provideTranslateService, TranslateLoader } from '@ngx-translate/core';
 import { provideOAuthClient } from 'angular-oauth2-oidc';
 import { provideEnvironmentNgxMask } from 'ngx-mask';
@@ -32,12 +32,20 @@ function getActiveAppLanguage(): 'th' | 'en' {
   return 'th';
 }
 
+// route เดิมแต่ :id เปลี่ยน (เช่นกดสัญญาอีกฉบับจากประวัติการต่อสัญญา) ต้องสร้าง component ใหม่ ไม่งั้นฟอร์มยังเป็นข้อมูลเดิม
+class IdAwareRouteReuseStrategy extends BaseRouteReuseStrategy {
+  override shouldReuseRoute(future: ActivatedRouteSnapshot, curr: ActivatedRouteSnapshot): boolean {
+    return super.shouldReuseRoute(future, curr) && future.paramMap.get('id') === curr.paramMap.get('id');
+  }
+}
+
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideAnimations(),
     provideAngularQuery(new QueryClient()),
     provideRouter(routes),
+    { provide: RouteReuseStrategy, useClass: IdAwareRouteReuseStrategy },
     provideHttpClient(withFetch(), withInterceptors([authTokenInterceptor, errorInterceptor])),
     provideEnvironmentNgxMask(),
     provideSicNumberConfig({ decimal: 2 }),

@@ -235,10 +235,27 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Override
     @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData, UUID fileRefId, String filePath) {
-        UUID previousVersionId = versionRepository
-                .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId)
-                .map(PmDocumentVersion::getId)
-                .orElse(null);
+        var latest = versionRepository
+                .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId);
+
+        // เวอร์ชัน placeholder (เช่นที่สร้างตอน CR อนุมัติ) ยังไม่มี snapshot: เมื่อแก้ไขเอกสารจริงด้วยเลขเวอร์ชันเดิม
+        // ให้เติม snapshot ลงแถวเดิม แทนการสร้างแถวซ้ำเลขเวอร์ชันเดียวกัน
+        if (snapshotData != null && latest.isPresent()
+                && versionNo != null && versionNo.equals(latest.get().getVersionNo())
+                && (latest.get().getSnapshotData() == null || latest.get().getSnapshotData().isBlank())) {
+            PmDocumentVersion ph = latest.get();
+            String prevSummary = ph.getChangeSummary();
+            ph.setChangeSummary(changeSummary == null || prevSummary == null ? (changeSummary != null ? changeSummary : prevSummary)
+                    : changeSummary + " (" + prevSummary + ")");
+            ph.setSnapshotData(snapshotData);
+            ph.setFileRefId(fileRefId);
+            ph.setFilePath(filePath);
+            ph.setIsActive(true);
+            versionRepository.save(ph);
+            return;
+        }
+
+        UUID previousVersionId = latest.map(PmDocumentVersion::getId).orElse(null);
 
         // Deactivate previous active versions so only the newest version is active
         List<PmDocumentVersion> previousVersions = versionRepository

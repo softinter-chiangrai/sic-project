@@ -4120,6 +4120,8 @@
   "PMRT04A_RENEWAL_OF": "Renewal of",
   "PMRT04A_RENEWAL_PARENT_HINT": "Renewed from original contract",
   "PMRT04A_RENEWAL_VIEWING": "viewing",
+  "PMRT04A_AUTO_RENEW_LABEL": "Auto-renew",
+  "PMRT04A_AUTO_RENEW_HINT": "The system drafts a renewal automatically 30 days or less before expiry",
   "PMRT04_PRINT_BTN": "Print",
   "PMRT04_PROJECT_LABEL": "Project:",
   "PMRT04_QUICK_VIEW_TITLE": "Quick view",

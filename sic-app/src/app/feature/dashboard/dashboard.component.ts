@@ -105,7 +105,7 @@ export class DashboardComponent implements OnInit {
     { labelKey: 'DASHBOARD_QA_REQUIREMENT', icon: 'bi-clipboard2-plus-fill', route: '/feature/pm/dt/pmdt01', color: 'info' },
     { labelKey: 'DASHBOARD_QA_TASK_BOARD', icon: 'bi-check2-square', route: '/feature/pm/dt/pmdt02', color: 'primary' },
     { labelKey: 'DASHBOARD_QA_REPORT_BUG', icon: 'bi-bug-fill', route: '/feature/pm/dt/pmdt06', color: 'danger' },
-    { labelKey: 'DASHBOARD_QA_REQUEST_APPROVAL', icon: 'bi-shield-check', route: '/feature/pm/dt/pmdt03', color: 'warning' },
+    { labelKey: 'DASHBOARD_QA_REQUEST_APPROVAL', icon: 'bi-shield-check', route: '/feature/pm/approval', color: 'warning' },
     { labelKey: 'DASHBOARD_QA_INVOICE', icon: 'bi-receipt-cutoff', route: '/feature/pm/dt/pmdt07', color: 'success' },
   ];
 
@@ -406,7 +406,9 @@ export class DashboardComponent implements OnInit {
 
   goToApproval(approval: Approval): void {
     if (approval?.id) {
-      this.router.navigate(['/feature/pm/approval'], { queryParams: { id: approval.id } });
+      this.router.navigate(['/feature/pm/approval', approval.id]);
+    } else {
+      this.router.navigate(['/feature/pm/approval']);
     }
   }
 

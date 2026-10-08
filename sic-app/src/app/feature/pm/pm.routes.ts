@@ -242,6 +242,15 @@ export const PM_ROUTES: Routes = [
       import('./dt/pmdt03/pmdt03A/pmdt03A.component').then((m) => m.Pmdt03AComponent),
     resolve: { pageData: pmdt03AResolver },
   },
+  {
+    path: 'dt/pmdt03',
+    redirectTo: 'approval',
+    pathMatch: 'full',
+  },
+  {
+    path: 'dt/pmdt03/:id',
+    redirectTo: 'approval/:id',
+  },
 
   // ============================================================
   // ===== PMDT04: REQUIREMENT MANAGEMENT =====

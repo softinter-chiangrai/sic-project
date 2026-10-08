@@ -293,6 +293,7 @@ export class Pmrt04Component implements OnInit {
     if (this.activePreset() === 'expiring') {
       params = params.set('expiringWithinDays', '30');
     }
+    params = params.set('latestOnly', 'true'); // แสดงเฉพาะฉบับล่าสุดของแต่ละสาย (ฉบับก่อนหน้าดูได้จากประวัติการต่อสัญญา)
     const renewal = this.filterRenewalStatus();
     if (renewal && renewal !== 'all') {
       params = params.set('renewalStatus', renewal);
@@ -485,6 +486,7 @@ export class Pmrt04Component implements OnInit {
     const type = this.filterType();
     if (type !== 'all') params = params.set('contractType', type);
     if (this.activePreset() === 'expiring') params = params.set('expiringWithinDays', '30');
+    params = params.set('latestOnly', 'true');
     const renewalCsv = this.filterRenewalStatus();
     if (renewalCsv && renewalCsv !== 'all') params = params.set('renewalStatus', renewalCsv);
 

@@ -85,6 +85,7 @@
             <!-- EDIT PANEL -->
             @if (viewMode !== 'preview') {
                 <div class="pmdt08-panel pmdt08-panel--edit">
+                    <div class="mb-4"><sic-cr-history-panel targetType="SPECIFICATION" [targetId]="form.getRawValue().id"></sic-cr-history-panel></div>
                     <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
                         <!-- Form Inputs Grid -->
                         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -211,7 +212,6 @@
                         <input type="hidden" formControlName="createdBy" />
 
                         @if (isEdit) {
-                            <sic-cr-history-panel targetType="SPECIFICATION" [targetId]="form.getRawValue().id"></sic-cr-history-panel>
                             <sic-trace-link-panel
                                 class="block mt-4"
                                 entityType="SPECIFICATION"

@@ -39,6 +39,7 @@
     </div>
   </div>
 
+  <div class="mb-4"><sic-cr-history-panel targetType="MA_TICKET" [targetId]="id()"></sic-cr-history-panel></div>
   <form [formGroup]="formData.form" class="space-y-5">
     <!-- Section 1: Classification -->
     <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
@@ -234,7 +235,6 @@
 
     <!-- Trace Link Panel -->
     @if (id()) {
-      <sic-cr-history-panel targetType="MA_TICKET" [targetId]="id()"></sic-cr-history-panel>
       <sic-trace-link-panel
         entityType="MA_TICKET"
         [entityId]="id()"

@@ -4120,6 +4120,8 @@
   "PMRT04A_RENEWAL_OF": "ต่อสัญญาจาก",
   "PMRT04A_RENEWAL_PARENT_HINT": "ต่อสัญญาจากฉบับเดิม",
   "PMRT04A_RENEWAL_VIEWING": "ฉบับที่ดูอยู่",
+  "PMRT04A_AUTO_RENEW_LABEL": "ต่ออายุอัตโนมัติ",
+  "PMRT04A_AUTO_RENEW_HINT": "ระบบสร้างฉบับต่ออายุ (ร่าง) ให้เองเมื่อเหลือไม่เกิน 30 วันก่อนหมดอายุ",
   "PMRT04_PRINT_BTN": "พิมพ์",
   "PMRT04_PROJECT_LABEL": "โครงการ:",
   "PMRT04_QUICK_VIEW_TITLE": "ดูสรุปด่วน",

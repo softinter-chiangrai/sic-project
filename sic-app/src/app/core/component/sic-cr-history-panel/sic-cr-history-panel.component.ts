@@ -2,8 +2,9 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, Input, OnChanges, inject, signal } from '@angular/core';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { catchError, forkJoin, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { PaginationResponse } from '../../model/pagination.model';
 
@@ -12,6 +13,8 @@ interface CrHistoryRow {
   crCode: string;
   title: string;
   targetVersion?: string;
+  targetType: string;
+  targetId: string;
   status: string;
   createdDate: string;
 }
@@ -43,10 +46,17 @@ interface CrHistoryRow {
             <tbody>
               @for (r of rows(); track r.id) {
                 <tr class="border-t border-[var(--border)] cursor-pointer hover:bg-[var(--sidebar-hover)]"
-                    [routerLink]="['/feature/pm/change-request', r.id, 'view']">
+                    (click)="router.navigate(['/feature/pm/change-request', r.id, 'view'])">
                   <td class="py-2 pr-3 font-mono font-semibold text-[var(--text-active)]">{{ r.crCode }}</td>
                   <td class="py-2 pr-3 text-[var(--text)]">{{ r.title }}</td>
-                  <td class="py-2 pr-3 text-[var(--text)]">{{ r.targetVersion || '-' }}</td>
+                  <td class="py-2 pr-3">
+                    @if (versionIds()[r.id]; as vid) {
+                      <button type="button" class="font-mono text-[var(--crm-primary)] hover:underline cursor-pointer"
+                              (click)="openVersion(vid, $event)">{{ r.targetVersion }}</button>
+                    } @else {
+                      <span class="font-mono text-[var(--text-muted)]">{{ r.targetVersion || '-' }}</span>
+                    }
+                  </td>
                   <td class="py-2 pr-3 text-[var(--text)]">{{ r.createdDate | date: 'dd/MM/yyyy' }}</td>
                   <td class="py-2 text-[var(--text)]">{{ statusLabel(r.status) }}</td>
                 </tr>
@@ -64,8 +74,11 @@ export class SicCrHistoryPanelComponent implements OnChanges {
 
   private http = inject(HttpClient);
   private translate = inject(TranslateService);
+  protected router = inject(Router);
 
   rows = signal<CrHistoryRow[]>([]);
+  // crId -> id ของ document version ที่ตรงกับเวอร์ชันเป้าหมายของ CR (มีเฉพาะที่มีเวอร์ชันนั้นอยู่จริง)
+  versionIds = signal<Record<string, string>>({});
 
   ngOnChanges(): void {
     if (!this.targetType || !this.targetId) {
@@ -73,9 +86,33 @@ export class SicCrHistoryPanelComponent implements OnChanges {
       return;
     }
     const params = new HttpParams().set('targetType', this.targetType).set('targetId', this.targetId).set('size', 100);
-    this.http
-      .get<PaginationResponse<CrHistoryRow>>(`${environment.apiBaseUrl}/api/pm/change-requests`, { params })
-      .subscribe({ next: (res) => this.rows.set(res.data ?? []), error: () => this.rows.set([]) });
+    const vParams = new HttpParams().set('documentType', this.targetType).set('documentId', this.targetId);
+    forkJoin({
+      crs: this.http.get<PaginationResponse<CrHistoryRow>>(`${environment.apiBaseUrl}/api/pm/change-requests`, { params }),
+      versions: this.http
+        .get<{ id: string; versionNo: string; snapshotData?: string }[]>(`${environment.apiBaseUrl}/api/pm/document-versions`, { params: vParams })
+        .pipe(catchError(() => of([]))),
+    }).subscribe({
+      next: ({ crs, versions }) => {
+        const rows = crs.data ?? [];
+        const norm = (v?: string) => (v ?? '').trim().replace(/^v/i, '');
+        const ids: Record<string, string> = {};
+        for (const r of rows) {
+          const same = versions.filter((x) => norm(x.versionNo) === norm(r.targetVersion));
+          const v = same.find((x) => x.snapshotData) ?? same[0];
+          if (v) ids[r.id] = v.id;
+        }
+        this.versionIds.set(ids);
+        this.rows.set(rows);
+      },
+      error: () => this.rows.set([]),
+    });
+  }
+
+  // เปิดหน้า snapshot ของเอกสาร ณ เวอร์ชันนั้นทันที
+  openVersion(versionId: string, e: Event): void {
+    e.stopPropagation();
+    this.router.navigate(['/feature/pm/version', versionId, 'content']);
   }
 
   statusLabel(status: string): string {

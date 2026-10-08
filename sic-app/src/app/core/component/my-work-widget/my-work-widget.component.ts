@@ -86,8 +86,8 @@ export class MyWorkWidgetComponent {
       type: 'APPROVAL' as const,
       status: a.status || 'PENDING',
       priority: 'CRITICAL' as const,
-      link: '/feature/pm/approval',
-      queryParams: a.id ? { id: a.id } : undefined,
+      link: a.id ? `/feature/pm/approval/${a.id}` : '/feature/pm/approval',
+      queryParams: a.id ? undefined : { q: a.documentCode || a.documentTitle },
     }));
   });
 

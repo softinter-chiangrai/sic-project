@@ -25,7 +25,7 @@
       </div>
 
       <a
-        routerLink="/feature/pm/dt/pmdt03"
+        routerLink="/feature/pm/approval"
         class="text-xs text-[var(--crm-primary)] font-semibold hover:underline flex items-center gap-1 whitespace-nowrap"
       >
         {{ 'DASHBOARD_VIEW_ALL' | translate }}
@@ -40,8 +40,8 @@
     <div class="space-y-2.5">
       @for (item of pendingList(); track item.id || item.documentCode) {
         <a
-          routerLink="/feature/pm/dt/pmdt03"
-          [queryParams]="{ q: item.documentCode || item.documentTitle }"
+          [routerLink]="item.id ? ['/feature/pm/approval', item.id] : ['/feature/pm/approval']"
+          [queryParams]="item.id ? null : { q: item.documentCode || item.documentTitle }"
           class="flex flex-col sm:flex-row sm:items-center justify-between p-3.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] hover:border-amber-500/40 transition-all cursor-pointer group"
         >
           <div class="flex items-start sm:items-center gap-3 min-w-0">
@@ -108,7 +108,7 @@
   <!-- Footer Link -->
   <div class="pt-3 mt-3 border-t border-[var(--border)] flex items-center justify-between text-xs text-[var(--text-muted)]">
     <span>{{ 'DASHBOARD_PENDING_APPROVALS_VIEW_ALL' | translate }}</span>
-    <a routerLink="/feature/pm/dt/pmdt03" class="text-[var(--crm-primary)] font-semibold hover:underline flex items-center gap-1">
+    <a routerLink="/feature/pm/approval" class="text-[var(--crm-primary)] font-semibold hover:underline flex items-center gap-1">
       {{ 'DASHBOARD_PENDING_APPROVALS_ACTION' | translate }} &rarr;
     </a>
   </div>

@@ -85,6 +85,7 @@
       <!-- ===== EDIT PANEL ===== -->
       @if (viewMode !== 'preview') {
         <div class="pmdt05-panel pmdt05-panel--edit">
+          <div class="mb-4"><sic-cr-history-panel targetType="REQUIREMENT" [targetId]="reqId || form.value.id"></sic-cr-history-panel></div>
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
             <!-- Customer & Project -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -208,7 +209,6 @@
 
             <!-- Trace Link Panel -->
             @if ((isEdit || isViewOnly) && (reqId || form.value.id)) {
-              <sic-cr-history-panel targetType="REQUIREMENT" [targetId]="reqId || form.value.id"></sic-cr-history-panel>
               <sic-trace-link-panel
                 entityType="REQUIREMENT"
                 [entityId]="reqId || form.value.id"

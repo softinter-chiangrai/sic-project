@@ -45,6 +45,7 @@
   </div>
 
   <!-- Main Meta Form -->
+  <div class="mb-4"><sic-cr-history-panel targetType="USER_MANUAL" [targetId]="id()"></sic-cr-history-panel></div>
   <form [formGroup]="formData.form" class="space-y-5">
     <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
       <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
@@ -264,7 +265,6 @@
 
     <!-- Trace Link Panel -->
     @if (id()) {
-      <sic-cr-history-panel targetType="USER_MANUAL" [targetId]="id()"></sic-cr-history-panel>
       <sic-trace-link-panel
         entityType="USER_MANUAL"
         [entityId]="id()"
