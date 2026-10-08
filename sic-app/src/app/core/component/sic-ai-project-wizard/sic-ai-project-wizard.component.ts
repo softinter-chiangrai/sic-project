@@ -7,6 +7,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../environments/environment';
 import { AI_MODEL_OPTIONS } from '../../config/ai-models.config';
 import { AiModelsService } from '../../services/ai-models.service';
+import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import {
   AiPipelineJob,
   AiPipelineJobStep,
@@ -20,7 +21,7 @@ import { filesToAiAttachments } from '../../utils/ai-attachment.util';
 @Component({
   selector: 'sic-ai-project-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule],
+  imports: [CommonModule, FormsModule, TranslateModule, SicComboboxComponent],
   templateUrl: './sic-ai-project-wizard.component.html',
   styleUrl: './sic-ai-project-wizard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

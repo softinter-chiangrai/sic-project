@@ -372,8 +372,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     return (
       msg.messageType !== 3 &&
       msg.senderId === this.currentUserId() &&
-      !msg.isCancelled &&
-      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
+      !msg.isCancelled
     );
   }
 
@@ -381,8 +380,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     return (
       msg.messageType === 0 &&
       msg.senderId === this.currentUserId() &&
-      !msg.isCancelled &&
-      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
+      !msg.isCancelled
     );
   }
 
@@ -640,16 +638,14 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     return (
       msg.messageType === 0 &&
       msg.senderId === this.currentUserId() &&
-      !msg.isCancelled &&
-      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
+      !msg.isCancelled
     );
   }
 
   canCancelGroup(msg: ChatGroupMessage): boolean {
     return (
       msg.senderId === this.currentUserId() &&
-      !msg.isCancelled &&
-      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
+      !msg.isCancelled
     );
   }
 
