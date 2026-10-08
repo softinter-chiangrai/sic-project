@@ -55,6 +55,14 @@ public class ImpactAnalysisResponse {
     private Instant analyzedAt;
     private String analyzedBy;
 
+    private String dfdImpact;
+    private String erImpact;
+    private String uiImpact;
+    private String apiImpact;
+    private String testImpact;
+    private String costImpact;
+    private String aiRationale;
+
     @Data
     public static class ImpactItem {
         private UUID id;

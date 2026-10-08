@@ -1,4 +1,3 @@
-// src/main/java/com/softinter/sicapi/entity/pm/ChangeImpactAnalysis.java
 package com.softinter.sicapi.entity.pm;
 
 import com.softinter.sicapi.entity.base.BaseEntity;
@@ -14,12 +13,27 @@ import java.util.UUID;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Entity
-@Table(name = "pm_change_impact_analysis")
-public class ChangeImpactAnalysis extends BaseEntity {
+@Table(name = "pm_change_impact_analysis_history")
+public class ChangeImpactAnalysisHistory extends BaseEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "change_request_id", nullable = false)
     private PmChangeRequest changeRequest;
+
+    @Column(name = "analysis_id")
+    private UUID analysisId;
+
+    @Column(name = "analysis_status", length = 20, nullable = false)
+    private String analysisStatus = "MANUAL";
+
+    @Column(name = "version_no", nullable = false)
+    private Integer versionNo = 1;
+
+    @Column(name = "manday_impact")
+    private Integer mandayImpact;
+
+    @Column(name = "timeline_impact")
+    private Integer timelineImpact;
 
     @Column(name = "dfd_impact", columnDefinition = "TEXT")
     private String dfdImpact;
@@ -36,16 +50,12 @@ public class ChangeImpactAnalysis extends BaseEntity {
     @Column(name = "test_impact", columnDefinition = "TEXT")
     private String testImpact;
 
-    @Column(name = "manday_impact")
-    private Integer mandayImpact;
-
-    @Column(name = "timeline_impact")
-    private Integer timelineImpact;
-
     @Column(name = "cost_impact", columnDefinition = "TEXT")
     private String costImpact;
 
-    // ---- Array fields สำหรับ Auto-Detect 100% ----
+    @Column(name = "ai_rationale", columnDefinition = "TEXT")
+    private String aiRationale;
+
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "impacted_requirement_ids", columnDefinition = "UUID[]")
     private UUID[] impactedRequirementIds;
@@ -81,12 +91,6 @@ public class ChangeImpactAnalysis extends BaseEntity {
     @JdbcTypeCode(SqlTypes.ARRAY)
     @Column(name = "impacted_customer_ids", columnDefinition = "UUID[]")
     private UUID[] impactedCustomerIds;
-
-    @Column(name = "analysis_status", length = 20)
-    private String analysisStatus = "MANUAL";
-
-    @Column(name = "ai_rationale", columnDefinition = "TEXT")
-    private String aiRationale;
 
     @Column(name = "analyzed_at")
     private Instant analyzedAt;

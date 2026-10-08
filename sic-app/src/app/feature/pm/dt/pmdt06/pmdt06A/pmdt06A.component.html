@@ -191,19 +191,40 @@
                 </span>
               }
             </h4>
-            @if (!isView) {
-              <div class="flex gap-2">
+            <div class="flex items-center gap-2">
+              @if (changeRequestId) {
+                <button
+                  type="button"
+                  (click)="openHistoryModal()"
+                  class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--text-active)] bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--border)] flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                  title="ดูประวัติการวิเคราะห์ผลกระทบทั้งหมด"
+                >
+                  <i class="bi bi-clock-history text-indigo-500"></i>
+                  <span>ประวัติการวิเคราะห์</span>
+                </button>
+              }
+              @if (!isView) {
                 <button
                   type="button"
                   (click)="refreshImpact()"
-                  [disabled]="isLoadingImpact()"
+                  [disabled]="isLoadingImpact() || isAiAnalyzing()"
                   class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
                 >
                   <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
                   {{ 'PMDT06_REANALYZE_BTN' | translate }}
                 </button>
-              </div>
-            }
+                <button
+                  type="button"
+                  (click)="aiAnalyzeImpact()"
+                  [disabled]="isLoadingImpact() || isAiAnalyzing()"
+                  class="text-xs px-2.5 py-1 rounded-md font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title="ใช้อัจฉริยะ AI ช่วยคัดกรองเอกสารและประเมิน Manday"
+                >
+                  <i class="bi bi-stars" [class.animate-spin]="isAiAnalyzing()"></i>
+                  <span>{{ isAiAnalyzing() ? 'กำลังวิเคราะห์ AI...' : 'วิเคราะห์ด้วย AI' }}</span>
+                </button>
+              }
+            </div>
           </div>
 
           @if (showImpactSection() && impactData(); as impact) {
@@ -294,6 +315,16 @@
                     </span>
                   }
                 </div>
+                @if (impact.aiRationale) {
+                  <div class="md:col-span-2 bg-gradient-to-r from-violet-50/80 to-indigo-50/80 dark:from-violet-950/20 dark:to-indigo-950/20 rounded-lg p-3 border border-violet-200 dark:border-violet-800/50 space-y-1">
+                    <div class="flex items-center gap-1.5 font-semibold text-xs text-violet-700 dark:text-violet-300">
+                      <i class="bi bi-stars"></i>
+                      <span>เหตุผลและการวิเคราะห์จาก AI (AI Semantic Rationale)</span>
+                    </div>
+                    <p class="text-xs text-[var(--text-active)] leading-relaxed whitespace-pre-line">{{ impact.aiRationale }}</p>
+                  </div>
+                }
+
                 @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
                   <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
                     <p class="font-medium text-[var(--text-active)] mb-1">{{ 'PMDT06_IMPACT_DETAIL_LABEL' | translate }}</p>
@@ -610,3 +641,130 @@
       </div>
     </form>
 </div>
+<!-- Modal: ประวัติการวิเคราะห์ผลกระทบ (Impact Analysis History) -->
+@if (showHistoryModal()) {
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
+    <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+            <i class="bi bi-clock-history text-base"></i>
+          </div>
+          <div>
+            <h3 class="font-semibold text-sm text-[var(--text-active)]">ประวัติการวิเคราะห์ผลกระทบ</h3>
+            <p class="text-xs text-[var(--text-muted)]">บันทึก snapshot ของการวิเคราะห์ผลกระทบแต่ละครั้ง</p>
+          </div>
+        </div>
+        <button type="button" (click)="closeHistoryModal()" class="text-[var(--text-muted)] hover:text-[var(--text-active)] p-1 rounded-lg hover:bg-[var(--border)] transition-colors">
+          <i class="bi bi-x-lg text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="flex-1 overflow-y-auto p-5 space-y-3">
+        @if (isLoadingHistory()) {
+          <div class="py-12 flex flex-col items-center justify-center text-[var(--text-muted)] gap-2">
+            <i class="bi bi-arrow-repeat animate-spin text-2xl text-[var(--crm-primary)]"></i>
+            <span class="text-xs">กำลังโหลดประวัติการวิเคราะห์...</span>
+          </div>
+        } @else if (impactHistory().length === 0) {
+          <div class="py-12 flex flex-col items-center justify-center text-[var(--text-muted)] gap-2">
+            <i class="bi bi-journal-x text-3xl opacity-40"></i>
+            <span class="text-xs">ยังไม่มีประวัติการวิเคราะห์ผลกระทบสำหรับ Change Request นี้</span>
+          </div>
+        } @else {
+          <div class="space-y-3">
+            @for (item of impactHistory(); track item.id) {
+              <div class="border border-[var(--border)] rounded-lg p-3.5 bg-[var(--bg)] hover:border-indigo-300 dark:hover:border-indigo-700/60 transition-all shadow-sm">
+                <div class="flex items-start justify-between gap-3 mb-2">
+                  <div class="flex items-center gap-2 flex-wrap">
+                    <span class="px-2 py-0.5 rounded text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-[var(--text-active)] border border-[var(--border)]">
+                      Version #{{ item.versionNo }}
+                    </span>
+                    <span [class]="getImpactStatusClass(item.analysisStatus) + ' px-2 py-0.5 rounded-full text-xs font-medium'">
+                      {{ getImpactStatusText(item.analysisStatus) }}
+                    </span>
+                    @if (item.createdDate) {
+                      <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                        <i class="bi bi-calendar3"></i> {{ item.createdDate | sicDate: null : 'DD/MM/YYYY HH:mm' }}
+                      </span>
+                    }
+                  </div>
+
+                  @if (!isView) {
+                    <button
+                      type="button"
+                      (click)="restoreHistoryVersion(item)"
+                      class="text-xs px-2.5 py-1 rounded font-medium text-white bg-indigo-600 hover:bg-indigo-700 flex items-center gap-1 shadow-sm active:scale-95 transition-all"
+                      title="นำผลการวิเคราะห์เวอร์ชันนี้มาใช้งาน"
+                    >
+                      <i class="bi bi-arrow-counterclockwise"></i>
+                      <span>นำมาใช้</span>
+                    </button>
+                  }
+                </div>
+
+                <!-- Stats summary -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-2 border-y border-[var(--border)] my-2 bg-[var(--bg-card)] rounded p-2">
+                  <div>
+                    <span class="text-[var(--text-muted)]">Mandays:</span>
+                    <span class="font-semibold text-[var(--text-active)] ml-1">{{ item.mandayImpact || 0 }} วัน</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">Timeline:</span>
+                    <span class="font-semibold text-[var(--text-active)] ml-1">{{ item.timelineImpact || 0 }} วัน</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">Specs:</span>
+                    <span class="font-semibold text-purple-600 dark:text-purple-400 ml-1">{{ item.specCount }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">Diagrams:</span>
+                    <span class="font-semibold text-orange-600 dark:text-orange-400 ml-1">{{ item.diagramCount }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">Tasks:</span>
+                    <span class="font-semibold text-emerald-600 dark:text-emerald-400 ml-1">{{ item.taskCount }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">Test Cases:</span>
+                    <span class="font-semibold text-yellow-600 dark:text-yellow-400 ml-1">{{ item.testCaseCount }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">Bugs:</span>
+                    <span class="font-semibold text-red-600 dark:text-red-400 ml-1">{{ item.bugCount }}</span>
+                  </div>
+                  <div>
+                    <span class="text-[var(--text-muted)]">ผู้บันทึก:</span>
+                    <span class="text-[var(--text-active)] ml-1 truncate">{{ item.analyzedBy || '-' }}</span>
+                  </div>
+                </div>
+
+                @if (item.aiRationale) {
+                  <div class="mt-2 text-xs bg-violet-50/70 dark:bg-violet-950/20 border border-violet-200/70 dark:border-violet-800/40 rounded p-2 text-[var(--text-active)]">
+                    <div class="font-medium text-violet-700 dark:text-violet-300 flex items-center gap-1 mb-0.5">
+                      <i class="bi bi-stars"></i> AI Rationale:
+                    </div>
+                    <p class="whitespace-pre-line leading-relaxed">{{ item.aiRationale }}</p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="px-5 py-3 border-t border-[var(--border)] bg-[var(--bg)] flex justify-end">
+        <button
+          type="button"
+          (click)="closeHistoryModal()"
+          class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-active)] bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--border)] transition-colors"
+        >
+          ปิด
+        </button>
+      </div>
+    </div>
+  </div>
+}

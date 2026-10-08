@@ -26,7 +26,7 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
 import { BusinessService } from '../../../../../core/services/business.service';
-import { ImpactAnalysisService, ImpactAnalysis } from '../impact-analysis.service';
+import { ImpactAnalysisService, ImpactAnalysis, ImpactAnalysisHistoryItem } from '../impact-analysis.service';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 
 import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
@@ -98,7 +98,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     // ===== Impact Analysis =====
     impactData = signal<ImpactAnalysis | null>(null);
     isLoadingImpact = signal(false);
+    isAiAnalyzing = signal(false);
     showImpactSection = signal(false);
+    impactHistory = signal<ImpactAnalysisHistoryItem[]>([]);
+    isLoadingHistory = signal(false);
+    showHistoryModal = signal(false);
 
     // ===== Form =====
     apiGetComboboxCustomer = `${environment.apiBaseUrl}/api/pm/customers/combobox`;
@@ -572,6 +576,103 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         this.triggerImpactAnalysis();
     }
 
+    openHistoryModal() {
+        if (!this.changeRequestId) {
+            this.dialog.warn('แจ้งเตือน', 'กรุณาบันทึกแบบร่าง Change Request ก่อนดูประวัติการวิเคราะห์');
+            return;
+        }
+        this.isLoadingHistory.set(true);
+        this.showHistoryModal.set(true);
+        this.impactService.getHistory(this.changeRequestId)
+            .pipe(finalize(() => this.isLoadingHistory.set(false)))
+            .subscribe({
+                next: (items) => {
+                    this.impactHistory.set(items || []);
+                    this.cdr.detectChanges();
+                },
+                error: (err) => {
+                    console.error('Failed to load impact analysis history:', err);
+                }
+            });
+    }
+
+    closeHistoryModal() {
+        this.showHistoryModal.set(false);
+    }
+
+    restoreHistoryVersion(historyItem: ImpactAnalysisHistoryItem) {
+        if (!historyItem || !historyItem.id) return;
+        this.dialog.confirm(
+            'ยืนยันการนำประวัติกลับมาใช้',
+            `ต้องการนำผลการวิเคราะห์เวอร์ชัน #${historyItem.versionNo} (${this.getImpactStatusText(historyItem.analysisStatus)}) กลับมาใช้แทนที่ปัจจุบันหรือไม่?`
+        ).then((confirmed: boolean) => {
+            if (!confirmed) return;
+            this.isLoadingImpact.set(true);
+            this.impactService.restoreHistory(historyItem.id)
+                .pipe(finalize(() => this.isLoadingImpact.set(false)))
+                .subscribe({
+                    next: (restored) => {
+                        this.impactData.set(restored);
+                        this.showImpactSection.set(true);
+                        this.closeHistoryModal();
+                        this.dialog.success('สำเร็จ', `นำผลการวิเคราะห์เวอร์ชัน #${historyItem.versionNo} กลับมาใช้เรียบร้อยแล้ว`);
+                        this.cdr.detectChanges();
+                    },
+                    error: (err) => {
+                        console.error('Restore history failed:', err);
+                        this.dialog.error('ผิดพลาด', 'ไม่สามารถนำผลการวิเคราะห์ประวัติกลับมาใช้ได้');
+                    }
+                });
+        });
+    }
+
+    aiAnalyzeImpact() {
+        const targetType = this.form.get('targetType')?.value || this.selectedTargetType();
+        const targetId = this.form.get('targetId')?.value;
+        const changeLevel = this.form.get('changeLevel')?.value || 'MINOR';
+        if (!targetType || !targetId) {
+            return;
+        }
+
+        this.isAiAnalyzing.set(true);
+        if (this.changeRequestId) {
+            this.impactService.aiAnalyze(this.changeRequestId)
+                .pipe(finalize(() => this.isAiAnalyzing.set(false)))
+                .subscribe({
+                    next: (data) => {
+                        this.impactData.set(data);
+                        this.showImpactSection.set(true);
+                        this.cdr.detectChanges();
+                    },
+                    error: (err) => {
+                        console.error('AI analyze impact failed:', err);
+                    }
+                });
+        } else {
+            const formVal = this.form.getRawValue();
+            this.impactService.aiPreview({
+                targetType,
+                targetId,
+                title: formVal.title,
+                description: formVal.description,
+                changeReason: formVal.changeReason,
+                changeLevel: formVal.changeLevel,
+                priority: formVal.priority,
+            })
+                .pipe(finalize(() => this.isAiAnalyzing.set(false)))
+                .subscribe({
+                    next: (data) => {
+                        this.impactData.set(data);
+                        this.showImpactSection.set(true);
+                        this.cdr.detectChanges();
+                    },
+                    error: (err) => {
+                        console.error('AI preview impact failed:', err);
+                    }
+                });
+        }
+    }
+
     // ===== CRUD =====
     save() {
         if (this.isSaving) return;
@@ -789,11 +890,13 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     }
 
     getImpactStatusClass(status?: string): string {
+        if (status === 'AI') return 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 font-semibold border border-purple-300 dark:border-purple-700';
         if (status === 'AUTO') return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400';
         return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
     }
 
     getImpactStatusText(status?: string): string {
+        if (status === 'AI') return 'AI Assisted (คัดกรองโดย AI)';
         return status === 'AUTO' ? this.translate.instant('PMDT06_IMPACT_STATUS_AUTO') : this.translate.instant('PMDT06_IMPACT_STATUS_MANUAL');
     }
 

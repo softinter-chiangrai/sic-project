@@ -1,6 +1,8 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.dto.request.AiImpactPreviewRequest;
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
+import com.softinter.sicapi.dto.response.ImpactAnalysisHistoryResponse;
 import com.softinter.sicapi.dto.response.ImpactAnalysisResponse;
 import com.softinter.sicapi.service.ImpactAnalysisService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -21,7 +24,6 @@ import java.util.UUID;
 @Tag(name = "Impact Analysis", description = "Impact Analysis for Change Requests")
 public class ImpactAnalysisController {
 
-    // ✅ ใช้ชื่อ field ให้ตรงกับ error
     private final ImpactAnalysisService impactAnalysisService;
 
     @GetMapping("/change-request/{changeRequestId}")
@@ -60,6 +62,35 @@ public class ImpactAnalysisController {
     @Operation(summary = "Auto-detect impact using Traceability Engine")
     public ResponseEntity<ImpactAnalysisResponse> autoDetectUsingTrace(@PathVariable UUID changeRequestId) {
         ImpactAnalysisResponse response = impactAnalysisService.autoDetectUsingTrace(changeRequestId);
+        return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
+    }
+
+    // ✅ วิเคราะห์ด้วย AI: Hybrid Engine (Candidate Graph + LLM Semantic Filter)
+    @PostMapping("/ai-analyze/{changeRequestId}")
+    @Operation(summary = "Analyze impact using AI with Traceability Engine")
+    public ResponseEntity<ImpactAnalysisResponse> aiAnalyze(@PathVariable UUID changeRequestId) {
+        ImpactAnalysisResponse response = impactAnalysisService.aiAnalyze(changeRequestId);
+        return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
+    }
+
+    @PostMapping("/ai-preview")
+    @Operation(summary = "Preview impact analysis using AI before creating Change Request")
+    public ResponseEntity<ImpactAnalysisResponse> aiPreview(@RequestBody AiImpactPreviewRequest request) {
+        ImpactAnalysisResponse response = impactAnalysisService.aiPreview(request);
+        return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
+    }
+
+    // ✅ ประวัติการวิเคราะห์ผลกระทบ (Impact Analysis History)
+    @GetMapping("/history/{changeRequestId}")
+    @Operation(summary = "Get impact analysis history for a change request")
+    public ResponseEntity<List<ImpactAnalysisHistoryResponse>> getHistory(@PathVariable UUID changeRequestId) {
+        return ResponseEntity.ok(impactAnalysisService.getHistory(changeRequestId));
+    }
+
+    @PostMapping("/history/{historyId}/restore")
+    @Operation(summary = "Restore impact analysis from a history version")
+    public ResponseEntity<ImpactAnalysisResponse> restoreHistory(@PathVariable UUID historyId) {
+        ImpactAnalysisResponse response = impactAnalysisService.restoreHistory(historyId);
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 
