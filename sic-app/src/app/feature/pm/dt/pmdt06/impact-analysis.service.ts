@@ -85,10 +85,12 @@ export class ImpactAnalysisService {
         return this.http.get<ImpactAnalysis>(`${this.baseUrl}/change-request/${changeRequestId}`);
     }
 
-    preview(targetType: string, targetId: string): Observable<ImpactAnalysis> {
-        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/preview`, {
-            params: { targetType, targetId }
-        });
+    preview(targetType: string, targetId: string, changeLevel?: string): Observable<ImpactAnalysis> {
+        const params: Record<string, string> = { targetType, targetId };
+        if (changeLevel) {
+            params['changeLevel'] = changeLevel;
+        }
+        return this.http.get<ImpactAnalysis>(`${this.baseUrl}/preview`, { params });
     }
 
     autoDetect(changeRequestId: string): Observable<ImpactAnalysis> {

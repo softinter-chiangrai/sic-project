@@ -377,92 +377,164 @@
                   <div class="flex flex-wrap gap-1 mt-1">
                     @if (impact.impactedRequirements && impact.impactedRequirements.length > 0) {
                       @for (req of impact.impactedRequirements; track req.id) {
-                        <span (click)="openItemDetail('REQ', req.id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
-                          REQ: {{ req.name ? (req.code ? req.code + ' - ' + req.name : req.name) : (req.code || (req.id | slice:0:8)) }}
+                        <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
+                          <span (click)="openItemDetail('REQ', req.id)" class="cursor-pointer hover:underline">
+                            REQ: {{ req.name ? (req.code ? req.code + ' - ' + req.name : req.name) : (req.code || (req.id | slice:0:8)) }}
+                          </span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('REQ', req.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
                         </span>
                       }
                     } @else {
                       @for (id of impact.impactedRequirementIds; track id) {
-                        <span (click)="openItemDetail('REQ', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">REQ: {{ id | slice:0:8 }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
+                          <span (click)="openItemDetail('REQ', id)" class="cursor-pointer hover:underline">REQ: {{ id | slice:0:8 }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('REQ', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     }
 
                     @if (impact.impactedSpecs && impact.impactedSpecs.length > 0) {
                       @for (spec of impact.impactedSpecs; track spec.id) {
-                        <span (click)="openItemDetail('SPEC', spec.id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
-                          SPEC: {{ spec.name ? (spec.code ? spec.code + ' - ' + spec.name : spec.name) : (spec.code || (spec.id | slice:0:8)) }}
+                        <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
+                          <span (click)="openItemDetail('SPEC', spec.id)" class="cursor-pointer hover:underline">
+                            SPEC: {{ spec.name ? (spec.code ? spec.code + ' - ' + spec.name : spec.name) : (spec.code || (spec.id | slice:0:8)) }}
+                          </span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('SPEC', spec.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
                         </span>
                       }
                     } @else {
                       @for (id of impact.impactedSpecIds; track id) {
-                        <span (click)="openItemDetail('SPEC', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">SPEC: {{ id | slice:0:8 }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
+                          <span (click)="openItemDetail('SPEC', id)" class="cursor-pointer hover:underline">SPEC: {{ id | slice:0:8 }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('SPEC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     }
 
                     @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
                       @for (diag of impact.impactedDiagrams; track diag.id) {
-                        <span (click)="openItemDetail('DIAGRAM', diag.id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400 font-medium">DIAGRAM: {{ diag.name }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400 font-medium">
+                          <span (click)="openItemDetail('DIAGRAM', diag.id)" class="cursor-pointer hover:underline">DIAGRAM: {{ diag.name }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('DIAGRAM', diag.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     } @else {
                       @for (id of impact.impactedDiagramIds; track id) {
-                        <span (click)="openItemDetail('DIAGRAM', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400">DIAGRAM: {{ id | slice:0:8 }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400">
+                          <span (click)="openItemDetail('DIAGRAM', id)" class="cursor-pointer hover:underline">DIAGRAM: {{ id | slice:0:8 }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('DIAGRAM', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     }
 
                     @if (impact.impactedTasks && impact.impactedTasks.length > 0) {
                       @for (task of impact.impactedTasks; track task.id) {
-                        <span (click)="openItemDetail('TASK', task.id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
-                          TASK: {{ task.name ? (task.code ? task.code + ' - ' + task.name : task.name) : (task.code || (task.id | slice:0:8)) }}
+                        <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
+                          <span (click)="openItemDetail('TASK', task.id)" class="cursor-pointer hover:underline">
+                            TASK: {{ task.name ? (task.code ? task.code + ' - ' + task.name : task.name) : (task.code || (task.id | slice:0:8)) }}
+                          </span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('TASK', task.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
                         </span>
                       }
                     } @else {
                       @for (id of impact.impactedTaskIds; track id) {
-                        <span (click)="openItemDetail('TASK', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">TASK: {{ id | slice:0:8 }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
+                          <span (click)="openItemDetail('TASK', id)" class="cursor-pointer hover:underline">TASK: {{ id | slice:0:8 }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('TASK', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     }
 
                     @if (impact.impactedTestCases && impact.impactedTestCases.length > 0) {
                       @for (tc of impact.impactedTestCases; track tc.id) {
-                        <span (click)="openItemDetail('TC', tc.id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
-                          TC: {{ tc.name ? (tc.code ? tc.code + ' - ' + tc.name : tc.name) : (tc.code || (tc.id | slice:0:8)) }}
+                        <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
+                          <span (click)="openItemDetail('TC', tc.id)" class="cursor-pointer hover:underline">
+                            TC: {{ tc.name ? (tc.code ? tc.code + ' - ' + tc.name : tc.name) : (tc.code || (tc.id | slice:0:8)) }}
+                          </span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('TC', tc.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
                         </span>
                       }
                     } @else {
                       @for (id of impact.impactedTestCaseIds; track id) {
-                        <span (click)="openItemDetail('TC', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">TC: {{ id | slice:0:8 }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
+                          <span (click)="openItemDetail('TC', id)" class="cursor-pointer hover:underline">TC: {{ id | slice:0:8 }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('TC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     }
 
                     @if (impact.impactedBugs && impact.impactedBugs.length > 0) {
                       @for (bug of impact.impactedBugs; track bug.id) {
-                        <span (click)="openItemDetail('BUG', bug.id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
-                          BUG: {{ bug.name ? (bug.code ? bug.code + ' - ' + bug.name : bug.name) : (bug.code || (bug.id | slice:0:8)) }}
+                        <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
+                          <span (click)="openItemDetail('BUG', bug.id)" class="cursor-pointer hover:underline">
+                            BUG: {{ bug.name ? (bug.code ? bug.code + ' - ' + bug.name : bug.name) : (bug.code || (bug.id | slice:0:8)) }}
+                          </span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('BUG', bug.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
                         </span>
                       }
                     } @else {
                       @for (id of impact.impactedBugIds; track id) {
-                        <span (click)="openItemDetail('BUG', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
+                        <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
+                          <span (click)="openItemDetail('BUG', id)" class="cursor-pointer hover:underline">BUG: {{ id | slice:0:8 }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('BUG', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     }
 
                     @for (x of impact.impactedManuals; track x.id) {
-                      <span class="select-none bg-sky-50 dark:bg-sky-900/20 px-2 py-0.5 rounded text-[0.6rem] text-sky-600 dark:text-sky-400">
-                        MANUAL: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      <span class="inline-flex items-center gap-1 select-none bg-sky-50 dark:bg-sky-900/20 px-2 py-0.5 rounded text-[0.6rem] text-sky-600 dark:text-sky-400">
+                        <span>MANUAL: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                        @if (!isView) {
+                          <button type="button" (click)="excludeItem('MANUAL', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                        }
                       </span>
                     }
                     @for (x of impact.impactedDeliveries; track x.id) {
-                      <span class="select-none bg-teal-50 dark:bg-teal-900/20 px-2 py-0.5 rounded text-[0.6rem] text-teal-600 dark:text-teal-400">
-                        DELIVERY: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      <span class="inline-flex items-center gap-1 select-none bg-teal-50 dark:bg-teal-900/20 px-2 py-0.5 rounded text-[0.6rem] text-teal-600 dark:text-teal-400">
+                        <span>DELIVERY: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                        @if (!isView) {
+                          <button type="button" (click)="excludeItem('DELIVERY', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                        }
                       </span>
                     }
                     @for (x of impact.impactedInvoices; track x.id) {
-                      <span class="select-none bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded text-[0.6rem] text-pink-600 dark:text-pink-400">
-                        INVOICE: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      <span class="inline-flex items-center gap-1 select-none bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded text-[0.6rem] text-pink-600 dark:text-pink-400">
+                        <span>INVOICE: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                        @if (!isView) {
+                          <button type="button" (click)="excludeItem('INVOICE', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                        }
                       </span>
                     }
                     @for (x of impact.impactedMaTickets; track x.id) {
-                      <span class="select-none bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">
-                        MA: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      <span class="inline-flex items-center gap-1 select-none bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">
+                        <span>MA: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                        @if (!isView) {
+                          <button type="button" (click)="excludeItem('MA', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                        }
                       </span>
                     }
                   </div>

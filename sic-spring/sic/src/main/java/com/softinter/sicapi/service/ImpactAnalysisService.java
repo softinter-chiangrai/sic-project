@@ -19,5 +19,7 @@ public interface ImpactAnalysisService {
 
     ImpactAnalysisResponse previewImpact(String targetType, UUID targetId);
 
+    ImpactAnalysisResponse previewImpact(String targetType, UUID targetId, String changeLevel);
+
     void delete(UUID id);
 }

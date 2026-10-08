@@ -21,6 +21,11 @@
       "source": "local/skills",
       "sourceType": "local",
       "skillPath": "web-research/SKILL.md"
+    },
+    "bug-hunt": {
+      "source": "local/skills",
+      "sourceType": "local",
+      "skillPath": "bug-hunt/SKILL.md"
     }
   }
 }

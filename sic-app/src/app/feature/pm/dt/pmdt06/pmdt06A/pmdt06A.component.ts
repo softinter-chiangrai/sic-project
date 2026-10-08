@@ -273,6 +273,14 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             }
         });
 
+        this.form.get('changeLevel')?.valueChanges.subscribe(() => {
+            if (this.impactData() && !this.changeRequestId) {
+                this.triggerImpactAnalysis();
+            } else if (this.impactData()) {
+                this.recalculateImpactMetrics();
+            }
+        });
+
         this.route.queryParams.subscribe((qParams) => {
             if (qParams['projectId']) {
                 this.projectId = qParams['projectId'];
@@ -434,9 +442,94 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             });
     }
 
+    recalculateImpactMetrics() {
+        const current = this.impactData();
+        if (!current) return;
+        const changeLevel = this.form.get('changeLevel')?.value || 'MINOR';
+        const multiplier = changeLevel === 'PATCH' ? 0.5 : (changeLevel === 'MAJOR' ? 2.0 : 1.0);
+        const baseManday = ((current.impactedSpecIds?.length || 0) * 2)
+            + (current.impactedTaskIds?.length || 0)
+            + (current.impactedBugIds?.length || 0)
+            + Math.ceil((current.impactedDiagramIds?.length || 0) * 1.5);
+        const manday = Math.max(1, Math.round(baseManday * multiplier));
+        const timeline = Math.max(1, Math.ceil(manday / 2.0));
+        this.impactData.set({
+            ...current,
+            mandayImpact: manday,
+            timelineImpact: timeline,
+        });
+        this.cdr.detectChanges();
+    }
+
+    excludeItem(type: string, id: string, event?: Event) {
+        if (event) {
+            event.stopPropagation();
+            event.preventDefault();
+        }
+        const current = this.impactData();
+        if (!current) return;
+
+        const updated: ImpactAnalysis = { ...current, analysisStatus: 'MANUAL' };
+        switch (type) {
+            case 'REQ':
+                updated.impactedRequirementIds = (updated.impactedRequirementIds || []).filter(x => x !== id);
+                updated.impactedRequirements = (updated.impactedRequirements || []).filter(x => x.id !== id);
+                break;
+            case 'SPEC':
+                updated.impactedSpecIds = (updated.impactedSpecIds || []).filter(x => x !== id);
+                updated.impactedSpecs = (updated.impactedSpecs || []).filter(x => x.id !== id);
+                break;
+            case 'DIAGRAM':
+                updated.impactedDiagramIds = (updated.impactedDiagramIds || []).filter(x => x !== id);
+                updated.impactedDiagrams = (updated.impactedDiagrams || []).filter(x => x.id !== id);
+                break;
+            case 'TASK':
+                updated.impactedTaskIds = (updated.impactedTaskIds || []).filter(x => x !== id);
+                updated.impactedTasks = (updated.impactedTasks || []).filter(x => x.id !== id);
+                break;
+            case 'TC':
+                updated.impactedTestCaseIds = (updated.impactedTestCaseIds || []).filter(x => x !== id);
+                updated.impactedTestCases = (updated.impactedTestCases || []).filter(x => x.id !== id);
+                break;
+            case 'BUG':
+                updated.impactedBugIds = (updated.impactedBugIds || []).filter(x => x !== id);
+                updated.impactedBugs = (updated.impactedBugs || []).filter(x => x.id !== id);
+                break;
+            case 'MANUAL':
+                updated.impactedManualIds = (updated.impactedManualIds || []).filter(x => x !== id);
+                updated.impactedManuals = (updated.impactedManuals || []).filter(x => x.id !== id);
+                break;
+            case 'DELIVERY':
+                updated.impactedDeliveryIds = (updated.impactedDeliveryIds || []).filter(x => x !== id);
+                updated.impactedDeliveries = (updated.impactedDeliveries || []).filter(x => x.id !== id);
+                break;
+            case 'INVOICE':
+                updated.impactedInvoiceIds = (updated.impactedInvoiceIds || []).filter(x => x !== id);
+                updated.impactedInvoices = (updated.impactedInvoices || []).filter(x => x.id !== id);
+                break;
+            case 'MA':
+                updated.impactedMaTicketIds = (updated.impactedMaTicketIds || []).filter(x => x !== id);
+                updated.impactedMaTickets = (updated.impactedMaTickets || []).filter(x => x.id !== id);
+                break;
+        }
+
+        const changeLevel = this.form.get('changeLevel')?.value || 'MINOR';
+        const multiplier = changeLevel === 'PATCH' ? 0.5 : (changeLevel === 'MAJOR' ? 2.0 : 1.0);
+        const baseManday = ((updated.impactedSpecIds?.length || 0) * 2)
+            + (updated.impactedTaskIds?.length || 0)
+            + (updated.impactedBugIds?.length || 0)
+            + Math.ceil((updated.impactedDiagramIds?.length || 0) * 1.5);
+        updated.mandayImpact = Math.max(1, Math.round(baseManday * multiplier));
+        updated.timelineImpact = Math.max(1, Math.ceil(updated.mandayImpact / 2.0));
+
+        this.impactData.set(updated);
+        this.cdr.detectChanges();
+    }
+
     triggerImpactAnalysis() {
         const targetType = this.form.get('targetType')?.value || this.selectedTargetType();
         const targetId = this.form.get('targetId')?.value;
+        const changeLevel = this.form.get('changeLevel')?.value || 'MINOR';
         if (!targetType || !targetId) {
             return;
         }
@@ -456,7 +549,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                     }
                 });
         } else {
-            this.impactService.preview(targetType, targetId)
+            this.impactService.preview(targetType, targetId, changeLevel)
                 .pipe(finalize(() => this.isLoadingImpact.set(false)))
                 .subscribe({
                     next: (data) => {
@@ -517,6 +610,18 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         saveRequest.subscribe({
             next: (res: any) => {
                 const id = res?.id || (typeof res === 'string' ? res : null) || this.changeRequestId;
+
+                // บันทึก Impact Analysis หากผู้ใช้ปรับแต่งรายการ (MANUAL) หรือสร้างใหม่
+                const currentImpact = this.impactData();
+                if (id && currentImpact && (currentImpact.analysisStatus === 'MANUAL' || !this.changeRequestId)) {
+                    const impactPayload = {
+                        ...currentImpact,
+                        changeRequestId: id,
+                    };
+                    this.impactService.save(impactPayload).subscribe({
+                        error: (err) => console.warn('บันทึกผลกระทบไม่สำเร็จ:', err)
+                    });
+                }
 
                 if (this.selectedFlowId && id) {
                     this.approvalService

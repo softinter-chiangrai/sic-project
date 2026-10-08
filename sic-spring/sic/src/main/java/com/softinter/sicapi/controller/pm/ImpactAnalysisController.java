@@ -35,8 +35,9 @@ public class ImpactAnalysisController {
     @Operation(summary = "Preview impact analysis by targetType and targetId")
     public ResponseEntity<ImpactAnalysisResponse> previewImpact(
             @RequestParam String targetType,
-            @RequestParam UUID targetId) {
-        ImpactAnalysisResponse response = impactAnalysisService.previewImpact(targetType, targetId);
+            @RequestParam UUID targetId,
+            @RequestParam(required = false) String changeLevel) {
+        ImpactAnalysisResponse response = impactAnalysisService.previewImpact(targetType, targetId, changeLevel);
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 

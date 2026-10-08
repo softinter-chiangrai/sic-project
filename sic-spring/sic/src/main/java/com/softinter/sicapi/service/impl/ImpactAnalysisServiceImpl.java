@@ -43,6 +43,8 @@ import lombok.extern.slf4j.Slf4j;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
 import java.util.ArrayList;
 import org.springframework.data.domain.PageRequest;
+import com.softinter.sicapi.entity.enums.MaTicketStatus;
+import com.softinter.sicapi.entity.enums.PaymentStatus;
 import com.softinter.sicapi.entity.pm.PmBug;
 import com.softinter.sicapi.entity.pm.PmSpecification;
 
@@ -135,7 +137,11 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     }
 
     private ChangeImpactAnalysis computeImpactAnalysis(String targetType, UUID targetId) {
-        ChangeImpactAnalysis nonTraced = computeForUntracedDocument(targetType, targetId);
+        return computeImpactAnalysis(targetType, targetId, "MINOR");
+    }
+
+    private ChangeImpactAnalysis computeImpactAnalysis(String targetType, UUID targetId, String changeLevel) {
+        ChangeImpactAnalysis nonTraced = computeForUntracedDocument(targetType, targetId, changeLevel);
         if (nonTraced != null) {
             return nonTraced;
         }
@@ -147,7 +153,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                     .filter(dr -> dr.getReviewItemType() != null && dr.getReviewItemId() != null)
                     .orElse(null);
             if (item != null) {
-                return computeImpactAnalysis(item.getReviewItemType().trim().toUpperCase(), item.getReviewItemId());
+                return computeImpactAnalysis(item.getReviewItemType().trim().toUpperCase(), item.getReviewItemId(), changeLevel);
             }
         }
 
@@ -197,6 +203,11 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 if (Boolean.TRUE.equals(task.getIsDelete())) {
                     return;
                 }
+                // กรองเฉพาะ Task ที่ยังไม่เสร็จสิ้น (ตัด DONE, CANCELLED)
+                String tStatus = task.getStatus() != null ? task.getStatus().toUpperCase() : "";
+                if ("DONE".equals(tStatus) || "CANCELLED".equals(tStatus)) {
+                    return;
+                }
                 String code = task.getTaskCode() != null ? task.getTaskCode().toUpperCase() : "";
                 String name = task.getTaskName() != null ? task.getTaskName().toUpperCase() : "";
                 if (code.startsWith("BUG-") || code.startsWith("BUG") || name.startsWith("[BUG]") || name.contains("BUG")) {
@@ -233,37 +244,49 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             });
         }
 
-        // กรองเฉพาะ Bug Task และ PmBug ที่ยังไม่ถูกลบ
+        // กรองเฉพาะ Bug Task และ PmBug ที่ยังเปิดอยู่ (ตัด CLOSED, RESOLVED, REJECTED, CANCELLED)
         Set<UUID> activeBugIds = new HashSet<>();
         for (UUID bId : rawBugIds) {
             taskRepository.findById(bId).ifPresent(task -> {
                 if (!Boolean.TRUE.equals(task.getIsDelete())) {
-                    activeBugIds.add(bId);
+                    String tStatus = task.getStatus() != null ? task.getStatus().toUpperCase() : "";
+                    if (!"DONE".equals(tStatus) && !"CANCELLED".equals(tStatus)) {
+                        activeBugIds.add(bId);
+                    }
                 }
             });
             bugRepository.findById(bId).ifPresent(bug -> {
                 if (!Boolean.TRUE.equals(bug.getIsDelete())) {
-                    activeBugIds.add(bId);
+                    String bStatus = bug.getStatus() != null ? bug.getStatus().toUpperCase() : "";
+                    if (!"CLOSED".equals(bStatus) && !"RESOLVED".equals(bStatus) && !"REJECTED".equals(bStatus) && !"CANCELLED".equals(bStatus)) {
+                        activeBugIds.add(bId);
+                    }
                 }
             });
         }
 
-        // กรองเฉพาะ Requirement ที่ยังไม่ถูกลบ
+        // กรองเฉพาะ Requirement ที่ยังใช้งานอยู่ (ตัด CANCELLED, REJECTED)
         Set<UUID> activeReqIds = new HashSet<>();
         for (UUID rId : reqIds) {
             requirementRepository.findById(rId).ifPresent(r -> {
                 if (!Boolean.TRUE.equals(r.getIsDelete())) {
-                    activeReqIds.add(rId);
+                    String rStatus = r.getStatus() != null ? r.getStatus().toUpperCase() : "";
+                    if (!"CANCELLED".equals(rStatus) && !"REJECTED".equals(rStatus)) {
+                        activeReqIds.add(rId);
+                    }
                 }
             });
         }
 
-        // กรองเฉพาะ Specification ที่ยังไม่ถูกลบ
+        // กรองเฉพาะ Specification ที่ยังใช้งานอยู่ (ตัด CANCELLED, REJECTED)
         Set<UUID> activeSpecIds = new HashSet<>();
         for (UUID sId : specIds) {
             specificationRepository.findById(sId).ifPresent(s -> {
                 if (!Boolean.TRUE.equals(s.getIsDelete())) {
-                    activeSpecIds.add(sId);
+                    String sStatus = s.getStatus() != null ? s.getStatus().toUpperCase() : "";
+                    if (!"CANCELLED".equals(sStatus) && !"REJECTED".equals(sStatus)) {
+                        activeSpecIds.add(sId);
+                    }
                 }
             });
         }
@@ -431,8 +454,14 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedProjectIds(impactedProjectIds.toArray(UUID[]::new));
         analysis.setImpactedCustomerIds(impactedCustomerIds.toArray(UUID[]::new));
 
-        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติหากยังไม่ระบุ
-        int calculatedManday = Math.max(1, (filteredSpecIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5));
+        // ✅ ประเมิน Manday & Timeline เบื้องต้นอัตโนมัติโดยคำนึงถึง Change Level (PATCH=0.5x, MINOR=1.0x, MAJOR=2.0x)
+        double levelMultiplier = switch (changeLevel != null ? changeLevel.toUpperCase() : "MINOR") {
+            case "PATCH" -> 0.5;
+            case "MAJOR" -> 2.0;
+            default -> 1.0;
+        };
+        int baseManday = (filteredSpecIds.length * 2) + taskIds.length + bugIds.length + (int) Math.ceil(diagramIds.length * 1.5);
+        int calculatedManday = Math.max(1, (int) Math.round(baseManday * levelMultiplier));
         analysis.setMandayImpact(calculatedManday);
         int calculatedDays = Math.max(1, (int) Math.ceil(calculatedManday / 2.0));
         analysis.setTimelineImpact(calculatedDays);
@@ -452,7 +481,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
      * เอกสารที่ระบบไม่สร้าง trace link ไว้เลย (Delivery, User Manual, Invoice, MA Ticket) การไล่กราฟจึงได้ผลว่างเสมอ
      * จึงหาผลกระทบจากความสัมพันธ์ในตัวเอกสารเองแทน คืน null ถ้าไม่ใช่เอกสารกลุ่มนี้ (ให้ใช้ตรรกะ trace เดิม)
      */
-    private ChangeImpactAnalysis computeForUntracedDocument(String targetType, UUID targetId) {
+    private ChangeImpactAnalysis computeForUntracedDocument(String targetType, UUID targetId, String changeLevel) {
         if (targetType == null || targetId == null) {
             return null;
         }
@@ -471,27 +500,27 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                         default -> { }
                     }
                 }
-                return scopeAnalysis(delivery == null ? null : delivery.getProjectId(), null, reqs, specs, cases, diagrams);
+                return scopeAnalysis(delivery == null ? null : delivery.getProjectId(), null, reqs, specs, cases, diagrams, changeLevel);
             }
             case "USER_MANUAL": {
                 var manual = userManualRepository.findById(targetId).orElse(null);
-                if (manual == null) return scopeAnalysis(null, null, Set.of(), Set.of(), Set.of(), Set.of());
+                if (manual == null) return scopeAnalysis(null, null, Set.of(), Set.of(), Set.of(), Set.of(), changeLevel);
                 // คู่มือผูกกับ Specification: ผลกระทบคือเดียวกับการแก้ Specification นั้น
                 ChangeImpactAnalysis analysis = manual.getRelatedSpecId() != null
-                        ? computeImpactAnalysis("SPECIFICATION", manual.getRelatedSpecId())
-                        : scopeAnalysis(null, null, Set.of(), Set.of(), Set.of(), Set.of());
+                        ? computeImpactAnalysis("SPECIFICATION", manual.getRelatedSpecId(), changeLevel)
+                        : scopeAnalysis(null, null, Set.of(), Set.of(), Set.of(), Set.of(), changeLevel);
                 return withProject(analysis, manual.getProjectId());
             }
             case "INVOICE": {
                 // ใบแจ้งหนี้ไม่กระทบ Requirement/Spec/Task จึงมีผลแค่ระดับโครงการและลูกค้า
                 var invoice = invoiceRepository.findById(targetId).orElse(null);
                 return scopeAnalysis(invoice == null ? null : invoice.getProjectId(), invoice == null ? null : invoice.getCustomerId(),
-                        Set.of(), Set.of(), Set.of(), Set.of());
+                        Set.of(), Set.of(), Set.of(), Set.of(), changeLevel);
             }
             case "MA_TICKET": {
                 var ticket = maTicketRepository.findById(targetId).orElse(null);
                 return scopeAnalysis(ticket == null ? null : ticket.getProjectId(), ticket == null ? null : ticket.getCustomerId(),
-                        Set.of(), Set.of(), Set.of(), Set.of());
+                        Set.of(), Set.of(), Set.of(), Set.of(), changeLevel);
             }
             default:
                 return null;
@@ -512,7 +541,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     }
 
     /** สร้างผลวิเคราะห์จากรายการเอกสารที่ระบุตรงๆ (ไม่ไล่กราฟ) พร้อมประเมิน manday ด้วยสูตรเดียวกับการไล่กราฟ */
-    private ChangeImpactAnalysis scopeAnalysis(UUID projectId, UUID customerId, Set<UUID> reqs, Set<UUID> specs, Set<UUID> cases, Set<UUID> diagrams) {
+    private ChangeImpactAnalysis scopeAnalysis(UUID projectId, UUID customerId, Set<UUID> reqs, Set<UUID> specs, Set<UUID> cases, Set<UUID> diagrams, String changeLevel) {
         ChangeImpactAnalysis analysis = new ChangeImpactAnalysis();
         analysis.setImpactedRequirementIds(reqs.toArray(UUID[]::new));
         analysis.setImpactedSpecIds(specs.toArray(UUID[]::new));
@@ -525,7 +554,13 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setImpactedCustomerIds(customerId == null ? new UUID[0] : new UUID[] { customerId });
         withProject(analysis, projectId);
 
-        int manday = Math.max(1, specs.size() * 2 + (int) Math.ceil(diagrams.size() * 1.5));
+        double levelMultiplier = switch (changeLevel != null ? changeLevel.toUpperCase() : "MINOR") {
+            case "PATCH" -> 0.5;
+            case "MAJOR" -> 2.0;
+            default -> 1.0;
+        };
+        int baseManday = specs.size() * 2 + (int) Math.ceil(diagrams.size() * 1.5);
+        int manday = Math.max(1, (int) Math.round(baseManday * levelMultiplier));
         analysis.setMandayImpact(manday);
         analysis.setTimelineImpact(Math.max(1, (int) Math.ceil(manday / 2.0)));
         analysis.setAnalysisStatus("AUTO");
@@ -540,11 +575,17 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     @Override
     @Transactional(readOnly = true)
     public ImpactAnalysisResponse previewImpact(String targetType, UUID targetId) {
+        return previewImpact(targetType, targetId, "MINOR");
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public ImpactAnalysisResponse previewImpact(String targetType, UUID targetId, String changeLevel) {
         if (targetType == null || targetId == null) {
             return null;
         }
-        log.info("Previewing impact analysis for targetType={}, targetId={}", targetType, targetId);
-        ChangeImpactAnalysis analysis = computeImpactAnalysis(targetType, targetId);
+        log.info("Previewing impact analysis for targetType={}, targetId={}, changeLevel={}", targetType, targetId, changeLevel);
+        ChangeImpactAnalysis analysis = computeImpactAnalysis(targetType, targetId, changeLevel);
         return toResponse(analysis);
     }
 
@@ -559,8 +600,9 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         UUID targetId = changeRequest.getTargetId();
         String targetType = changeRequest.getTargetType();
+        String changeLevel = changeRequest.getChangeLevel();
 
-        ChangeImpactAnalysis computed = computeImpactAnalysis(targetType, targetId);
+        ChangeImpactAnalysis computed = computeImpactAnalysis(targetType, targetId, changeLevel);
 
         ChangeImpactAnalysis analysis = repository
                 .findByChangeRequestId(changeRequestId)
@@ -624,7 +666,12 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         List<ImpactAnalysisResponse.ImpactItem> manuals = new ArrayList<>();
         if (!specs.isEmpty()) {
             userManualRepository.findByRelatedSpecIdInAndIsDeleteFalse(specs)
-                    .forEach(m -> manuals.add(item(m.getId(), m.getManualCode(), m.getManualTitle())));
+                    .forEach(m -> {
+                        String mStatus = m.getStatus() != null ? m.getStatus().toUpperCase() : "";
+                        if (!"CANCELLED".equals(mStatus) && !"OBSOLETE".equals(mStatus)) {
+                            manuals.add(item(m.getId(), m.getManualCode(), m.getManualTitle()));
+                        }
+                    });
         }
 
         Set<UUID> deliveryIds = new HashSet<>();
@@ -651,6 +698,9 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (!deliveryIds.isEmpty()) {
             for (var d : deliveryRepository.findAllById(deliveryIds)) {
                 if (Boolean.TRUE.equals(d.getIsDelete())) continue;
+                // กรองเฉพาะ Delivery ที่ยังไม่ตรวจรับเสร็จสิ้นสมบูรณ์ (ตัด CONFIRMED, CANCELLED)
+                String dStatus = d.getStatus() != null ? d.getStatus().toUpperCase() : "";
+                if ("CONFIRMED".equals(dStatus) || "CANCELLED".equals(dStatus)) continue;
                 activeDeliveryIds.add(d.getId());
                 deliveries.add(item(d.getId(), d.getDeliveryCode(), d.getDeliveryTitle()));
             }
@@ -659,13 +709,23 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         List<ImpactAnalysisResponse.ImpactItem> invoices = new ArrayList<>();
         if (!activeDeliveryIds.isEmpty()) {
             invoiceRepository.findByDeliveryIdInAndIsDeleteFalse(activeDeliveryIds)
-                    .forEach(i -> invoices.add(item(i.getId(), i.getInvoiceNo(), i.getRemark())));
+                    .forEach(i -> {
+                        // กรองเฉพาะ Invoice ที่ยังไม่ชำระเงินเสร็จสิ้น (ตัด PAID, CANCELLED)
+                        if (i.getPaymentStatus() != PaymentStatus.PAID && i.getPaymentStatus() != PaymentStatus.CANCELLED) {
+                            invoices.add(item(i.getId(), i.getInvoiceNo(), i.getRemark()));
+                        }
+                    });
         }
 
         List<ImpactAnalysisResponse.ImpactItem> tickets = new ArrayList<>();
         if (!projects.isEmpty()) {
             maTicketRepository.findByProjectIdInAndIsDeleteFalse(projects)
-                    .forEach(t -> tickets.add(item(t.getId(), t.getTicketNo(), t.getTitle())));
+                    .forEach(t -> {
+                        // กรองตั๋ว MA ที่ยังเปิดอยู่ (ตัด CLOSED, RESOLVED)
+                        if (t.getStatus() == null || (t.getStatus() != MaTicketStatus.CLOSED && t.getStatus() != MaTicketStatus.RESOLVED)) {
+                            tickets.add(item(t.getId(), t.getTicketNo(), t.getTitle()));
+                        }
+                    });
         }
 
         dto.setImpactedManuals(manuals);
