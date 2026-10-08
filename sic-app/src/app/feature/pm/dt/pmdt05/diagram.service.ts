@@ -2,7 +2,7 @@
 import { AiAttachmentPayload } from '../../../../core/utils/ai-attachment.util';
 import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
-import { BehaviorSubject, map, Observable, tap } from 'rxjs';
+import { BehaviorSubject, firstValueFrom, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import type {
   AiModel,
@@ -309,5 +309,65 @@ export class DiagramService {
 
   getDiagram(id: string): Observable<DiagramModel> {
     return this.http.get<DiagramModel>(`${this.apiUrl}/api/diagram/tabs/${id}`);
+  }
+
+  /**
+   * สร้างรูป PNG ให้ diagram ของโครงการที่ยังไม่มีรูป (เช่น AI สร้างมาแต่ยังไม่เคยเปิดหน้า diagram) โดย render Mermaid ในเบราว์เซอร์
+   * เพื่อให้รายงานโครงการมีรูปทันทีโดยไม่ต้องเข้าหน้า diagram ก่อน คืนจำนวนรูปที่สร้างได้
+   */
+  async ensureProjectImages(projectId: string): Promise<number> {
+    const tabs = await firstValueFrom(this.getTabs(projectId));
+    const missing = tabs.filter((t) => t.mermaidScript?.trim() && !t.graphData?.png?.trim());
+    if (!missing.length) return 0;
+
+    const { default: mermaid } = await import('mermaid');
+    mermaid.initialize({ startOnLoad: false, securityLevel: 'strict', htmlLabels: false, flowchart: { htmlLabels: false } } as any);
+
+    let done = 0;
+    for (const tab of missing) {
+      try {
+        const png = await this.mermaidToPng(mermaid, tab.mermaidScript, tab.id);
+        await firstValueFrom(
+          this.updateTab({ ...tab, graphData: { ...(tab.graphData ?? {}), png }, state: 3, rowVersion: tab.rowVersion ?? null } as DiagramModel),
+        );
+        done++;
+      } catch (e) {
+        console.warn('[DiagramImage] skip', tab.name, e);
+      }
+    }
+    return done;
+  }
+
+  private async mermaidToPng(mermaid: any, script: string, id: string): Promise<string> {
+    const { svg } = await mermaid.render('dg' + id.replace(/-/g, ''), script);
+    const el = new DOMParser().parseFromString(svg, 'image/svg+xml').documentElement;
+    const vb = (el.getAttribute('viewBox') || '').split(/\s+/).map(Number);
+    const w = vb[2] || parseFloat(el.getAttribute('width') || '') || 800;
+    const h = vb[3] || parseFloat(el.getAttribute('height') || '') || 600;
+    el.setAttribute('width', String(w));
+    el.setAttribute('height', String(h));
+    el.removeAttribute('style');
+
+    const url = URL.createObjectURL(new Blob([new XMLSerializer().serializeToString(el)], { type: 'image/svg+xml;charset=utf-8' }));
+    try {
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const i = new Image();
+        i.onload = () => resolve(i);
+        i.onerror = reject;
+        i.src = url;
+      });
+      const scale = Math.min(2, 4000 / Math.max(w, h));
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(w * scale);
+      canvas.height = Math.round(h * scale);
+      const ctx = canvas.getContext('2d')!;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0, w, h);
+      return canvas.toDataURL('image/png');
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }
 }

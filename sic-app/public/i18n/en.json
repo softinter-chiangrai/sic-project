@@ -1663,7 +1663,7 @@
   "PMDT05_MISSING_REQ_TITLE": "Incomplete Information",
   "PMDT05_NEEDS_REVISION_BADGE": "Needs Revision",
   "PMDT05_NEW_CHAT_LABEL": "New Chat",
-  "PMDT05_NEW_DIAGRAM_BTN": "+ Create New Diagram",
+  "PMDT05_NEW_DIAGRAM_BTN": "Create New Diagram",
   "PMDT05_NEW_SESSION_TITLE": "New Chat Session",
   "PMDT05_NEW_SESSION_TITLE_DEFAULT": "New Chat Session",
   "PMDT05_NO_CHAT_HISTORY_MSG": "No chat history yet",

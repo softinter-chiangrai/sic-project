@@ -265,6 +265,19 @@
   margin-bottom: 1rem;
 }
 
+.hd-items { margin-bottom: 1rem; }
+.hd-items-title { font-weight: 600; font-size: 0.85rem; margin-bottom: 0.5rem; color: var(--text, #334155); }
+.hd-step { border: 1px solid var(--border, #e2e8f0); border-radius: 10px; margin-bottom: 0.5rem; background: rgba(255, 255, 255, 0.5); }
+.hd-step > summary { cursor: pointer; padding: 0.55rem 0.8rem; font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+.hd-step-count { background: var(--primary, #34c58a); color: #fff; border-radius: 999px; padding: 0 0.5rem; font-size: 0.72rem; }
+.hd-card { padding: 0.6rem 0.8rem; border-top: 1px dashed var(--border, #e2e8f0); }
+.hd-card-head { display: flex; align-items: center; gap: 0.5rem; font-size: 0.83rem; }
+.hd-code { font-family: monospace; font-size: 0.72rem; background: rgba(52, 197, 138, 0.15); color: #1f9d6b; border-radius: 6px; padding: 0.05rem 0.4rem; }
+.hd-details { display: grid; grid-template-columns: max-content 1fr; gap: 0.2rem 0.8rem; margin: 0.4rem 0 0; font-size: 0.78rem; }
+.hd-details dt { color: var(--text-muted, #64748b); font-weight: 500; }
+.hd-details dd { margin: 0; color: var(--text, #334155); white-space: pre-wrap; word-break: break-word; }
+.hd-script { margin: 0.4rem 0 0; max-height: 200px; overflow: auto; font-size: 0.72rem; background: rgba(0, 0, 0, 0.04); border-radius: 8px; padding: 0.5rem; }
+
 .history-detail-body .failed-steps-box {
   max-width: none;
   margin-bottom: 1rem;

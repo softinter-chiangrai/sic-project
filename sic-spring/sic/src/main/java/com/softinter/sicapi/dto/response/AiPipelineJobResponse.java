@@ -42,5 +42,7 @@ public class AiPipelineJobResponse {
         private String status;
         private int count;
         private String message;
+        /** รายการที่ AI สร้างในขั้นนี้ แต่ละรายการมี code, name, details[{label,value}] (และ script สำหรับ Diagram) */
+        private List<Map<String, Object>> items;
     }
 }

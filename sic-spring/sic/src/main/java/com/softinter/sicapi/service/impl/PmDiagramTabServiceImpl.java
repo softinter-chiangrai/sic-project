@@ -494,6 +494,12 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<UUID> getIdsMissingImage() {
+        return tabRepository.findIdsMissingImage(BusinessContextHolder.getBusinessId());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PmDiagramTabResponse getTab(UUID id) {
         PmDiagramTab tab = tabRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Tab not found: " + id));

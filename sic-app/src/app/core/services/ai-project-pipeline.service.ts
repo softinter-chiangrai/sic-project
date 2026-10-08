@@ -86,12 +86,26 @@ export interface AiProjectPipelineExecuteResponse {
   success: boolean;
 }
 
+export interface AiPipelineJobItemDetail {
+  label: string;
+  value: string;
+}
+
+/** รายการที่ AI สร้างจริงในแต่ละขั้น (เก็บในประวัติ) */
+export interface AiPipelineJobItem {
+  code?: string | null;
+  name: string;
+  details?: AiPipelineJobItemDetail[];
+  script?: string | null;
+}
+
 export interface AiPipelineJobStep {
   key: string;
   label: string;
   status: 'PENDING' | 'RUNNING' | 'DONE' | 'FAILED' | 'SKIPPED';
   count: number;
   message?: string | null;
+  items?: AiPipelineJobItem[];
 }
 
 export interface AiPipelineJob {

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadLocalRandom;
@@ -150,10 +151,32 @@ public class AiProjectPipelineJobService {
         volatile String status = "PENDING";
         volatile int count;
         volatile String message;
+        /** รายการที่ AI สร้างจริงในขั้นนี้ (เก็บลงประวัติเพื่อดูย้อนหลังแบบละเอียด) */
+        final List<Map<String, Object>> items = new CopyOnWriteArrayList<>();
 
         StepState(String key, String label) {
             this.key = key;
             this.label = label;
+        }
+
+        /** บันทึก 1 รายการ: labelValues เป็นคู่ label, value ตามลำดับ (ค่าว่างจะถูกข้าม, HTML ถูกแปลงเป็นข้อความ) */
+        Map<String, Object> rec(String code, String name, String... labelValues) {
+            Map<String, Object> item = new LinkedHashMap<>();
+            item.put("code", code);
+            item.put("name", name);
+            item.put("details", new ArrayList<Map<String, String>>());
+            for (int i = 0; i + 1 < labelValues.length; i += 2) {
+                addDetail(item, labelValues[i], labelValues[i + 1]);
+            }
+            items.add(item);
+            return item;
+        }
+
+        @SuppressWarnings("unchecked")
+        static void addDetail(Map<String, Object> item, String label, String value) {
+            String text = cut(plain(value), 600);
+            if (text == null || text.isBlank()) return;
+            ((List<Map<String, String>>) item.get("details")).add(Map.of("label", label, "value", text));
         }
     }
 
@@ -269,7 +292,8 @@ public class AiProjectPipelineJobService {
     private AiPipelineJobResponse toResponse(Job job) {
         List<AiPipelineJobResponse.Step> steps = new ArrayList<>();
         for (StepState s : job.steps) {
-            steps.add(AiPipelineJobResponse.Step.builder().key(s.key).label(s.label).status(s.status).count(s.count).message(s.message).build());
+            steps.add(AiPipelineJobResponse.Step.builder().key(s.key).label(s.label).status(s.status).count(s.count).message(s.message)
+                    .items(new ArrayList<>(s.items)).build());
         }
         return AiPipelineJobResponse.builder()
                 .jobId(job.id).status(job.status).finished(!"RUNNING".equals(job.status))
@@ -289,6 +313,8 @@ public class AiProjectPipelineJobService {
                         .status(String.valueOf(m.get("status")))
                         .count(m.get("count") == null ? 0 : ((Number) m.get("count")).intValue())
                         .message(m.get("message") == null ? null : String.valueOf(m.get("message")))
+                        .items(m.get("items") instanceof List<?> l ? l.stream().filter(Map.class::isInstance)
+                                .<Map<String, Object>>map(i -> (Map<String, Object>) i).toList() : new ArrayList<>())
                         .build());
             }
         }
@@ -326,6 +352,7 @@ public class AiProjectPipelineJobService {
                 m.put("status", s.status);
                 m.put("count", s.count);
                 m.put("message", s.message);
+                m.put("items", new ArrayList<>(s.items));
                 stepsJson.add(m);
             }
             entity.setSteps(stepsJson);
@@ -458,6 +485,7 @@ public class AiProjectPipelineJobService {
                     customerId = cust.getId();
                     thaiCustomerGenerator.enrichCustomerIfIncomplete(cust);
                     step.message = "จับคู่ลูกค้าเดิม: " + cust.getCompanyNameLocal();
+                    step.rec(null, cust.getCompanyNameLocal(), "ที่มา", "จับคู่ลูกค้าเดิมในระบบ", "ชื่อ (อังกฤษ)", cust.getCompanyNameEn());
                     break;
                 }
             }
@@ -469,6 +497,8 @@ public class AiProjectPipelineJobService {
                     c.businessId, aiCustName, aiCustNameEn, aiContact);
             customerId = autoCust.getId();
             step.message = "สร้างลูกค้าใหม่: " + autoCust.getCompanyNameLocal();
+            step.rec(null, autoCust.getCompanyNameLocal(), "ที่มา", "สร้างลูกค้าใหม่", "ชื่อ (อังกฤษ)", autoCust.getCompanyNameEn(),
+                    "ผู้ติดต่อ", aiContact);
             log.info("Auto-created complete Thai customer '{}' ({}) for AI Project Pipeline", autoCust.getCompanyNameLocal(), customerId);
         }
 
@@ -527,6 +557,9 @@ public class AiProjectPipelineJobService {
         c.job.projectCode = saved.getProjectCode();
         c.job.projectName = saved.getProjectName();
         step.count = 1;
+        step.rec(saved.getProjectCode(), saved.getProjectName(), "ระยะเวลา", c.weeks + " สัปดาห์",
+                "วันที่เริ่ม", "" + pr.getStartDate(), "วันที่สิ้นสุดตามแผน", "" + pr.getPlannedEndDate(),
+                "Man-day ที่ประเมิน", "" + pr.getBudgetManday(), "ความสำคัญ", pr.getPriority(), "รายละเอียดโครงการ", desc);
     }
 
     private void stepContract(Ctx c, StepState step) {
@@ -559,6 +592,9 @@ public class AiProjectPipelineJobService {
         });
         c.contractValueText = cr.getContractValue() + " บาท, " + cr.getContractType();
         step.count = 1;
+        step.rec(cr.getContractNo(), cr.getContractType(), "มูลค่าสัญญา", cr.getContractValue() + " บาท",
+                "ระยะเวลา", cr.getStartDate() + " ถึง " + cr.getEndDate(), "เงื่อนไขการชำระเงิน", cr.getPaymentTerms(),
+                "ขอบเขตงาน", cr.getScopeSummary(), "สถานะลงนาม", cr.getSignStatus());
     }
 
     private void stepWbs(Ctx c, StepState step) {
@@ -583,6 +619,8 @@ public class AiProjectPipelineJobService {
             pq.setOwner(randomName(c));
             PhaseResponse phase = phaseService.createPhase(pq);
             c.phases.add(new Ref(phase.getId(), pq.getPhaseName()));
+            step.rec("Phase", pq.getPhaseName(), "ช่วงเวลา", pq.getStartDate() + " ถึง " + pq.getEndDate(),
+                    "ผู้รับผิดชอบ", pq.getOwner(), "รายละเอียด", pq.getDescription());
             total++;
 
             for (JsonNode ms : arr(ph, "milestones")) {
@@ -594,6 +632,8 @@ public class AiProjectPipelineJobService {
                 mq.setColor(pq.getColor());
                 MilestoneResponse milestone = milestoneService.createMilestone(mq);
                 c.milestones.add(new Ref(milestone.getId(), mq.getMilestoneName()));
+                step.rec("Milestone", mq.getMilestoneName(), "Phase", pq.getPhaseName(), "กำหนดส่ง", "" + mq.getDueDate(),
+                        "รายละเอียด", mq.getDescription());
                 total++;
 
                 for (JsonNode wp : arr(ms, "workPackages")) {
@@ -606,6 +646,8 @@ public class AiProjectPipelineJobService {
                     wq.setColor(pq.getColor());
                     WorkPackageResponse saved = workPackageService.createWorkPackage(wq);
                     c.workPackages.add(new Ref(saved.getId(), wq.getPackageName()));
+                    step.rec("Work Package", wq.getPackageName(), "Milestone", mq.getMilestoneName(),
+                            "ช่วงเวลา", wq.getStartDate() + " ถึง " + wq.getEndDate(), "รายละเอียด", wq.getDescription());
                     c.wpColors.put(saved.getId(), wq.getColor());
                     total++;
                 }
@@ -644,6 +686,9 @@ public class AiProjectPipelineJobService {
             rq.setState(STATE_ADDED);
             PmRequirementResponse saved = requirementService.save(rq, c.businessId, c.userId);
             c.requirements.add(new Ref(saved.getId(), rq.getTitle()));
+            step.rec(rq.getRequirementCode(), rq.getTitle(), "ประเภท", rq.getRequirementType(), "ความสำคัญ", rq.getPriority(),
+                    "แหล่งที่มา", rq.getSource(), "รายละเอียด", rq.getDescription(), "คุณค่าทางธุรกิจ", rq.getBusinessValue(),
+                    "เกณฑ์การยอมรับ", rq.getAcceptanceCriteria());
         }
         step.count = c.requirements.size();
         if (c.requirements.isEmpty()) step.message = "AI ไม่สามารถสร้าง Requirement ได้";
@@ -680,6 +725,9 @@ public class AiProjectPipelineJobService {
             if (req != null) sq.setRequirementId(req.id());
             UUID id = specificationService.save(sq, c.businessId, c.userId);
             c.specs.add(new Ref(id, sq.getTitle()));
+            step.rec(sq.getSpecificationCode(), sq.getTitle(), "ประเภท", sq.getSpecificationType(), "ความสำคัญ", sq.getPriority(),
+                    "โมดูล", sq.getModule(), "ประมาณการ (man-day)", "" + sq.getEstimatedManday(),
+                    "Requirement ที่เชื่อม", req == null ? null : req.name(), "รายละเอียด", sq.getDescription());
         }
         step.count = c.specs.size();
         if (c.specs.isEmpty()) step.message = "AI ไม่สามารถสร้าง Specification ได้";
@@ -722,6 +770,10 @@ public class AiProjectPipelineJobService {
             tq.setPriority(pickIgnoreCase(txt(n, "priority"), List.of("Critical", "High", "Medium", "Low"), "Medium"));
             TaskResponse saved = taskService.createTask(tq);
             c.tasks.add(new Ref(saved.getId(), tq.getTaskName()));
+            step.rec(tq.getTaskCode(), tq.getTaskName(), "Work Package", wp.name(), "Specification", spec == null ? null : spec.name(),
+                    "ผู้รับผิดชอบ", assignee == null ? null : assignee.name(), "ความสำคัญ", tq.getPriority(),
+                    "ช่วงเวลา", tq.getStartDate() + " ถึง " + tq.getEndDate(), "ประมาณการ (man-day)", "" + tq.getEstimateManday(),
+                    "รายละเอียด", tq.getDescription());
             } catch (Exception e) {
                 log.warn("AI pipeline: skip task #{}: {}", idx - 1, e.getMessage());
                 failed++;
@@ -770,6 +822,9 @@ public class AiProjectPipelineJobService {
             sq.setState(STATE_ADDED);
             UUID scenarioId = scenarioService.save(sq, c.businessId, c.userId);
             coveredTaskIds.add(task.id());
+            step.rec(sq.getScenarioCode(), sq.getScenarioName(), "ชนิดการทดสอบ", sq.getTestType(), "ความสำคัญ", sq.getPriority(),
+                    "Task", task.name(), "ผู้ทดสอบ", tester, "Requirement", reqRef == null ? null : reqRef.name(),
+                    "Specification", specRef == null ? null : specRef.name(), "รายละเอียด", sq.getDescription());
 
             for (JsonNode cn : arr(sn, "cases")) {
                 PmTestCaseRequest cq = new PmTestCaseRequest();
@@ -793,6 +848,8 @@ public class AiProjectPipelineJobService {
                 try {
                     testCaseService.save(cq, c.businessId, c.userId);
                     cases++;
+                    step.rec(cq.getTestCaseCode(), cq.getTitle(), "Scenario", cq.getScenarioName(), "ความสำคัญ", cq.getPriority(),
+                            "ผู้ทดสอบ", cq.getTester(), "ขั้นตอนการทดสอบ", cq.getTestStep(), "ผลที่คาดหวัง", cq.getExpectedResult());
                 } catch (Exception e) {
                     log.warn("AI pipeline: skip test case {}: {}", cq.getTestCaseCode(), e.getMessage());
                     failed++;
@@ -821,6 +878,8 @@ public class AiProjectPipelineJobService {
                 sq.setState(STATE_ADDED);
                 UUID scenarioId = scenarioService.save(sq, c.businessId, c.userId);
                 coveredTaskIds.add(task.id());
+                step.rec(sq.getScenarioCode(), sq.getScenarioName(), "ชนิดการทดสอบ", sq.getTestType(), "ความสำคัญ", sq.getPriority(),
+                        "Task", task.name(), "ผู้ทดสอบ", tester, "รายละเอียด", sq.getDescription());
 
                 PmTestCaseRequest cq = new PmTestCaseRequest();
                 cq.setProjectId(c.projectId);
@@ -840,6 +899,8 @@ public class AiProjectPipelineJobService {
                 cq.setState(STATE_ADDED);
                 testCaseService.save(cq, c.businessId, c.userId);
                 cases++;
+                step.rec(cq.getTestCaseCode(), cq.getTitle(), "Scenario", cq.getScenarioName(), "ความสำคัญ", cq.getPriority(),
+                        "ผู้ทดสอบ", cq.getTester(), "ขั้นตอนการทดสอบ", cq.getTestStep(), "ผลที่คาดหวัง", cq.getExpectedResult());
             } catch (Exception e) {
                 log.warn("AI pipeline: fallback scenario for task {} failed: {}", task.name(), e.getMessage());
                 failed++;
@@ -883,6 +944,10 @@ public class AiProjectPipelineJobService {
             dq.setState(STATE_ADDED);
             UUID id = deliveryService.save(dq, c.businessId, c.userId);
             c.deliveries.add(new Ref(id, dq.getDeliveryTitle()));
+            step.rec(dq.getDeliveryCode(), dq.getDeliveryTitle(), "ประเภท", dq.getDeliveryType(), "เวอร์ชัน", dq.getDeliveryVersion(),
+                    "วันที่ส่งมอบ", "" + dq.getDeliveryDate(), "Milestone", ms == null ? null : ms.name(),
+                    "สรุปการส่งมอบ", dq.getDeliverySummary(), "Release Note", dq.getReleaseNote(),
+                    "Checklist ตรวจรับ", String.join(" • ", dq.getChecklists().stream().map(PmDeliveryChecklistRequest::getItemName).toList()));
             idx++;
         }
         step.count = c.deliveries.size();
@@ -983,6 +1048,11 @@ public class AiProjectPipelineJobService {
             mq.setSections(sections);
             manualService.save(mq, c.businessId, c.userId);
             count++;
+            Map<String, Object> manualItem = step.rec(mq.getManualCode(), mq.getManualTitle(), "ประเภท", mq.getManualType(),
+                    "เวอร์ชัน", mq.getVersion(), "Specification ที่เกี่ยวข้อง", spec == null ? null : spec.name());
+            for (PmUserManualSectionRequest sec : sections) {
+                StepState.addDetail(manualItem, sec.getSectionTitle(), sec.getContent());
+            }
         }
         step.count = count;
         if (count == 0) step.message = "AI ไม่สามารถสร้างคู่มือได้";
@@ -1046,6 +1116,15 @@ public class AiProjectPipelineJobService {
                 List<PmInvoiceItemRequest> customItems = itemsByDeliveryRef.get(dIdx);
                 deliveryService.createInvoiceFromDelivery(d.id(), c.businessId, c.userId, customItems);
                 count++;
+                Map<String, Object> invoiceItem = step.rec(null, "ใบแจ้งหนี้ (ร่าง): " + d.name(), "รายการส่งมอบ", d.name());
+                if (customItems == null) {
+                    StepState.addDetail(invoiceItem, "รายการ", "สร้างจากรายการส่งมอบ");
+                } else {
+                    for (PmInvoiceItemRequest it : customItems) {
+                        StepState.addDetail(invoiceItem, it.getItemName(), it.getAmount() + " บาท"
+                                + (it.getDescription() == null || it.getDescription().isBlank() ? "" : " — " + it.getDescription()));
+                    }
+                }
             } catch (Exception e) {
                 errors.append(d.name()).append(": ").append(e.getMessage()).append("; ");
             }
@@ -1053,6 +1132,13 @@ public class AiProjectPipelineJobService {
         }
         step.count = count;
         if (errors.length() > 0) step.message = "สร้างบางรายการไม่ได้: " + errors;
+    }
+
+    /** HTML เป็นข้อความธรรมดา (ขึ้นบรรทัด/รายการแทนด้วยช่องว่าง) ใช้เก็บรายละเอียดลงประวัติ */
+    private static String plain(String text) {
+        if (text == null) return null;
+        return text.replaceAll("(?i)</(p|li|h[1-6]|div|tr)>|<br\\s*/?>", " ").replaceAll("<[^>]*>", "")
+                .replace("&nbsp;", " ").replaceAll("\\s+", " ").trim();
     }
 
     private static String cleanHtmlText(String text) {
@@ -1093,6 +1179,7 @@ public class AiProjectPipelineJobService {
                 if (script != null) {
                     saveDiagram(c, d[0], d[1], script);
                     made++;
+                    step.rec(d[0], d[1], "ชนิด", d[2]).put("script", cut(script, 4000));
                 }
             } catch (Exception e) {
                 log.warn("AI pipeline: skip diagram {}: {}", d[1], e.getMessage());
@@ -1162,6 +1249,9 @@ public class AiProjectPipelineJobService {
             rq.setIsActive(true);
             designReviewService.save(rq, c.businessId, c.userId);
             count++;
+            step.rec(rq.getReviewCode(), rq.getTitle(), "ประเภทเป้าหมาย", rq.getReviewableType(), "เป้าหมาย", target.name(),
+                    "ความรุนแรง", rq.getSeverity(), "ผู้ตรวจทาน", rq.getReviewer(), "ผู้รับผิดชอบ", rq.getAssignedTo(),
+                    "กำหนดเสร็จ", "" + rq.getDueDate(), "รายละเอียด", rq.getDescription());
         }
         step.count = count;
         if (count == 0) step.message = "AI ไม่สามารถสร้าง Design Review ได้";
@@ -1226,6 +1316,10 @@ public class AiProjectPipelineJobService {
             tq.setState(STATE_ADDED);
             maTicketService.save(tq, c.businessId, c.userId);
             count++;
+            step.rec(null, tq.getTitle(), "ประเภท", "" + tq.getTicketType(), "ความรุนแรง", "" + tq.getSeverity(),
+                    "ผู้รับผิดชอบ", assignee == null ? null : assignee.name(),
+                    "กำหนดดำเนินการ", tq.getStartDate() + " ถึง " + tq.getEndDate(),
+                    "รายละเอียดปัญหา", tq.getDescription(), "แนวทางแก้ไข", tq.getResolutionSummary());
         }
 
         step.count = count;

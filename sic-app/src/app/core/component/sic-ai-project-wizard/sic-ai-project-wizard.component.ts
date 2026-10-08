@@ -105,6 +105,10 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   // Helper สำหรับแปลง label ของ step ให้เป็นภาษาตามระบบ
+  hasHistoryItems(job: AiPipelineJob): boolean {
+    return (job.steps || []).some((s) => !!s.items?.length);
+  }
+
   getStepLabel(st: { key?: string; label?: string }): string {
     if (st?.key) {
       const i18nKey = `AIWIZARD_STEP_${st.key.toUpperCase()}`;

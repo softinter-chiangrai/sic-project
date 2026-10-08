@@ -106,111 +106,121 @@
 
   <!-- ===== Tab Bar ===== -->
   <div
-    class="flex items-center gap-1 px-4 py-1.5 bg-[var(--sidebar)] border-b border-[var(--border)] overflow-x-auto flex-shrink-0 min-h-[44px]"
+    class="flex items-center bg-[var(--sidebar)] border-b border-[var(--border)] flex-shrink-0 min-h-[44px]"
   >
-    @if (isLoadingTabs) {
-      <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] px-2">
-        <div
-          class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
-        ></div>
-        {{ 'PMDT05_LOADING_TABS' | translate }}
-      </div>
-    }
-
-    @for (tab of tabs(); track tab.id) {
-      <div
-        (click)="switchTab(tab.id)"
-        (dblclick)="editTab(tab.id)"
-        class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer select-none"
-        [class.border-[var(--crm-primary)]]="currentTabId === tab.id"
-        [class.bg-[var(--sidebar-hover)]]="currentTabId === tab.id"
-        [class.text-[var(--text-active)]]="currentTabId === tab.id"
-        [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
-        [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
-        [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
+    <!-- ปุ่มสร้าง Diagram ใหม่ (ตรึงอยู่ซ้ายสุดเสมอ เพื่อไม่ต้องเลื่อนหา) -->
+    <div class="pl-3 pr-2 py-1.5 flex-shrink-0">
+      <button
+        (click)="createNewTab()"
+        class="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] hover:bg-[var(--sidebar-hover)] transition-all whitespace-nowrap bg-[var(--card,#ffffff)]"
+        [title]="'PMDT05_CREATE_DIAGRAM_TITLE' | translate"
       >
-        <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
+        <i class="bi bi-plus-lg"></i>
+        <span>{{ 'PMDT05_NEW_DIAGRAM_BTN' | translate }}</span>
+      </button>
+    </div>
 
-        <span class="text-sm font-medium">
-          {{ tab.name }}
-        </span>
+    <!-- เส้นคั่นแบ่งระหว่างปุ่มสร้างกับรายการ Tab -->
+    <div class="h-5 w-[1px] bg-[var(--border)] flex-shrink-0 opacity-60"></div>
 
-        @if (tab.diagramCode) {
-          <span class="text-[0.68rem] px-1.5 py-0.5 rounded font-mono bg-[var(--border)] text-[var(--text-muted)]">
-            {{ tab.diagramCode }}
-          </span>
-        }
+    <!-- แถบรายการ Tabs (เลื่อนแนวนอนได้) -->
+    <div class="flex items-center gap-1 px-2 py-1.5 overflow-x-auto flex-1 min-w-0">
+      @if (isLoadingTabs) {
+        <div class="flex items-center gap-2 text-sm text-[var(--text-muted)] px-2">
+          <div
+            class="w-4 h-4 border-2 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"
+          ></div>
+          {{ 'PMDT05_LOADING_TABS' | translate }}
+        </div>
+      }
 
-        <span class="text-[0.65rem] opacity-60 text-[var(--text-muted)]">
-          {{ tab.diagramType }}
-        </span>
-
-        <!-- ป้ายแสดงสถานะการอนุมัติ (Approval Status Badge) -->
-        @if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
-          <span
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
-            [title]="'PMDT05_APPROVED_TITLE' | translate"
-          >
-            <i class="bi bi-check-circle-fill text-[9px]"></i>
-            <span>{{ 'PMDT05_APPROVED_BADGE' | translate }}</span>
-          </span>
-        } @else if (tab.approvalStatus === 'PENDING' || tab.approvalStatus === 'IN_REVIEW' || tab.approvalStatus === 'In Review' || tab.approvalStatus === 'PARTIALLY_APPROVED') {
-          <span
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
-            [title]="'PMDT05_PENDING_TITLE' | translate"
-          >
-            <i class="bi bi-clock-history text-[9px]"></i>
-            <span>{{ 'PMDT05_PENDING_BADGE' | translate }}</span>
-          </span>
-        } @else if (tab.approvalStatus === 'REJECTED' || tab.approvalStatus === 'NEED_REVISION') {
-          <span
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
-            [title]="'PMDT05_REJECTED_TITLE' | translate"
-          >
-            <i class="bi bi-x-circle-fill text-[9px]"></i>
-            <span>{{ (tab.approvalStatus === 'NEED_REVISION' ? 'PMDT05_NEEDS_REVISION_BADGE' : 'PMDT05_REJECTED_BADGE') | translate }}</span>
-          </span>
-        } @else {
-          <span
-            class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-400 dark:text-sky-300 border border-sky-500/30"
-            [title]="'PMDT05_DRAFT_TITLE' | translate"
-          >
-            <i class="bi bi-file-earmark-text text-[9px] text-sky-400"></i>
-            <span>{{ 'PMDT05_DRAFT_BADGE' | translate }}</span>
-          </span>
-        }
-
-        <!-- ปุ่มแก้ไขข้อมูล Tab (รูปดินสอ / info) -->
-        <button
-          (click)="editTab(tab.id); $event.stopPropagation()"
-          class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
-          [class.opacity-100]="currentTabId === tab.id"
-          [title]="'PMDT05_EDIT_TAB_TITLE' | translate"
+      @for (tab of tabs(); track tab.id) {
+        <div
+          (click)="switchTab(tab.id)"
+          (dblclick)="editTab(tab.id)"
+          class="group flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-md transition-all whitespace-nowrap border-2 border-transparent cursor-pointer select-none flex-shrink-0"
+          [class.border-[var(--crm-primary)]]="currentTabId === tab.id"
+          [class.bg-[var(--sidebar-hover)]]="currentTabId === tab.id"
+          [class.text-[var(--text-active)]]="currentTabId === tab.id"
+          [class.text-[var(--text-muted)]]="currentTabId !== tab.id"
+          [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
+          [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
         >
-          <i class="bi text-xs" [class.bi-info-circle]="tab.isApproved || tab.approvalStatus === 'APPROVED'" [class.bi-pencil]="!tab.isApproved && tab.approvalStatus !== 'APPROVED'"></i>
-        </button>
+          <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
-        <!-- ปุ่มลบ Tab (ซ่อนถ้าผ่านการอนุมัติแล้ว) -->
-        @if (!tab.isApproved && tab.approvalStatus !== 'APPROVED') {
+          <span class="text-sm font-medium">
+            {{ tab.name }}
+          </span>
+
+          @if (tab.diagramCode) {
+            <span class="text-[0.68rem] px-1.5 py-0.5 rounded font-mono bg-[var(--border)] text-[var(--text-muted)]">
+              {{ tab.diagramCode }}
+            </span>
+          }
+
+          <span class="text-[0.65rem] opacity-60 text-[var(--text-muted)]">
+            {{ tab.diagramType }}
+          </span>
+
+          <!-- ป้ายแสดงสถานะการอนุมัติ (Approval Status Badge) -->
+          @if (tab.isApproved || tab.approvalStatus === 'APPROVED') {
+            <span
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30"
+              [title]="'PMDT05_APPROVED_TITLE' | translate"
+            >
+              <i class="bi bi-check-circle-fill text-[9px]"></i>
+              <span>{{ 'PMDT05_APPROVED_BADGE' | translate }}</span>
+            </span>
+          } @else if (tab.approvalStatus === 'PENDING' || tab.approvalStatus === 'IN_REVIEW' || tab.approvalStatus === 'In Review' || tab.approvalStatus === 'PARTIALLY_APPROVED') {
+            <span
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-500/15 text-amber-600 dark:text-amber-400 border border-amber-500/30"
+              [title]="'PMDT05_PENDING_TITLE' | translate"
+            >
+              <i class="bi bi-clock-history text-[9px]"></i>
+              <span>{{ 'PMDT05_PENDING_BADGE' | translate }}</span>
+            </span>
+          } @else if (tab.approvalStatus === 'REJECTED' || tab.approvalStatus === 'NEED_REVISION') {
+            <span
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-rose-500/15 text-rose-600 dark:text-rose-400 border border-rose-500/30"
+              [title]="'PMDT05_REJECTED_TITLE' | translate"
+            >
+              <i class="bi bi-x-circle-fill text-[9px]"></i>
+              <span>{{ (tab.approvalStatus === 'NEED_REVISION' ? 'PMDT05_NEEDS_REVISION_BADGE' : 'PMDT05_REJECTED_BADGE') | translate }}</span>
+            </span>
+          } @else {
+            <span
+              class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-sky-500/15 text-sky-400 dark:text-sky-300 border border-sky-500/30"
+              [title]="'PMDT05_DRAFT_TITLE' | translate"
+            >
+              <i class="bi bi-file-earmark-text text-[9px] text-sky-400"></i>
+              <span>{{ 'PMDT05_DRAFT_BADGE' | translate }}</span>
+            </span>
+          }
+
+          <!-- ปุ่มแก้ไขข้อมูล Tab (รูปดินสอ / info) -->
           <button
-            (click)="deleteTab(tab.id, $event)"
-            class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
+            (click)="editTab(tab.id); $event.stopPropagation()"
+            class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
             [class.opacity-100]="currentTabId === tab.id"
-            [title]="'PMDT05_DELETE_TAB_TITLE' | translate"
+            [title]="'PMDT05_EDIT_TAB_TITLE' | translate"
           >
-            <i class="bi bi-x text-sm"></i>
+            <i class="bi text-xs" [class.bi-info-circle]="tab.isApproved || tab.approvalStatus === 'APPROVED'" [class.bi-pencil]="!tab.isApproved && tab.approvalStatus !== 'APPROVED'"></i>
           </button>
-        }
-      </div>
-    }
 
-    <button
-      (click)="createNewTab()"
-      class="flex items-center gap-1 px-3 py-1.5 text-sm rounded-md border border-dashed border-[var(--border)] text-[var(--text-muted)] hover:border-[var(--crm-primary)] hover:text-[var(--crm-primary)] transition-all whitespace-nowrap"
-    >
-      <i class="bi bi-plus-lg"></i>
-      {{ 'PMDT05_NEW_DIAGRAM_BTN' | translate }}
-    </button>
+          <!-- ปุ่มลบ Tab (ซ่อนถ้าผ่านการอนุมัติแล้ว) -->
+          @if (!tab.isApproved && tab.approvalStatus !== 'APPROVED') {
+            <button
+              (click)="deleteTab(tab.id, $event)"
+              class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
+              [class.opacity-100]="currentTabId === tab.id"
+              [title]="'PMDT05_DELETE_TAB_TITLE' | translate"
+            >
+              <i class="bi bi-x text-sm"></i>
+            </button>
+          }
+        </div>
+      }
+    </div>
   </div>
 
   <!-- ===== Status Bar ===== -->

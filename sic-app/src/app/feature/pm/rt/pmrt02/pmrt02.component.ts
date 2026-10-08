@@ -10,10 +10,11 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, from, switchMap } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { Pmrt02Service } from './pmrt02.service';
+import { DiagramService } from '../../dt/pmdt05/diagram.service';
 import { PmCustomerProject } from './pmrt02.model';
 
 import { FormsModule } from '@angular/forms';
@@ -41,6 +42,7 @@ export class Pmrt02Component implements OnInit {
   private recentItems = inject(RecentItemsService);
   private translate = inject(TranslateService);
   private pipelineSvc = inject(AiProjectPipelineService);
+  private diagramService = inject(DiagramService);
 
   openAiProjectWizard(): void {
     this.pipelineSvc.openWizard();
@@ -325,8 +327,12 @@ export class Pmrt02Component implements OnInit {
     }
 
     this.isLoading.set(true);
-    this.service.exportProjectPdf(project.id)
-      .pipe(finalize(() => this.isLoading.set(false)))
+    // diagram ที่ AI สร้างมายังไม่มีรูป: render ให้ก่อน เพื่อให้รายงานมีรูปโดยไม่ต้องเปิดหน้า diagram
+    from(this.diagramService.ensureProjectImages(project.id).catch(() => 0))
+      .pipe(
+        switchMap(() => this.service.exportProjectPdf(project.id!)),
+        finalize(() => this.isLoading.set(false)),
+      )
       .subscribe({
         next: (blob) => {
           const pdfBlob = new Blob([blob], { type: 'application/pdf' });

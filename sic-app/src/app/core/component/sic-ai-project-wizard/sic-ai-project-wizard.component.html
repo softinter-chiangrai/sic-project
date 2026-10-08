@@ -78,6 +78,23 @@
           </ng-container>
         </div>
 
+        <div class="hd-items">
+          <div class="hd-items-title"><i class="bi bi-list-check"></i> {{ 'AIWIZARD_GENERATED_DETAIL_TITLE' | translate }}</div>
+          <ng-container *ngFor="let st of job.steps">
+            <details class="hd-step" *ngIf="st.items?.length">
+              <summary>{{ getStepLabel(st) }} <span class="hd-step-count">{{ st.items?.length }}</span></summary>
+              <div class="hd-card" *ngFor="let it of st.items">
+                <div class="hd-card-head"><span class="hd-code" *ngIf="it.code">{{ it.code }}</span><strong>{{ it.name }}</strong></div>
+                <dl class="hd-details" *ngIf="it.details?.length">
+                  <ng-container *ngFor="let d of it.details"><dt>{{ d.label }}</dt><dd>{{ d.value }}</dd></ng-container>
+                </dl>
+                <pre class="hd-script" *ngIf="it.script">{{ it.script }}</pre>
+              </div>
+            </details>
+          </ng-container>
+          <p class="history-empty" *ngIf="!hasHistoryItems(job)">{{ 'AIWIZARD_NO_DETAIL_ITEMS' | translate }}</p>
+        </div>
+
         <div class="failed-steps-box" *ngIf="selectedHistoryFailedSteps().length">
           <div class="failed-steps-title"><i class="bi bi-exclamation-triangle-fill"></i> {{ 'AIWIZARD_FAILED_MODULES_TITLE' | translate }}</div>
           <div class="failed-step-row" *ngFor="let st of selectedHistoryFailedSteps()">

@@ -1663,7 +1663,7 @@
   "PMDT05_MISSING_REQ_TITLE": "ข้อมูลไม่ครบถ้วน",
   "PMDT05_NEEDS_REVISION_BADGE": "ต้องแก้ไข",
   "PMDT05_NEW_CHAT_LABEL": "แชทใหม่",
-  "PMDT05_NEW_DIAGRAM_BTN": "+ สร้าง Diagram ใหม่",
+  "PMDT05_NEW_DIAGRAM_BTN": "สร้าง Diagram ใหม่",
   "PMDT05_NEW_SESSION_TITLE": "สร้างการสนทนาใหม่",
   "PMDT05_NEW_SESSION_TITLE_DEFAULT": "การสนทนาใหม่",
   "PMDT05_NO_CHAT_HISTORY_MSG": "ยังไม่มีประวัติการสนทนา",
