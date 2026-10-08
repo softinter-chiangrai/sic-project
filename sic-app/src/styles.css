@@ -1,5 +1,4 @@
 @import 'sic-ng/theme/default-theme.css';
-@import "dhtmlx-gantt/codebase/dhtmlxgantt.css";
 @import 'tailwindcss';
 
 @custom-variant dark (&:where(.dark, .dark *));

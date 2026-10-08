@@ -33,10 +33,6 @@ import { SicDatePipe } from "../../../../../core/pipes/sic-date.pipe";
     FormsModule,
     RouterModule,
     SicApprovalComponent,
-    SicButtonComponent,
-    SicCardComponent,
-    SicInputComponent,
-    SicDatePipe,
     TranslateModule
 ],
   templateUrl: './pmdt03A.component.html',

@@ -14,11 +14,11 @@ import { finalize } from 'rxjs';
 import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
-import { SicCardComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
-import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { } from '../../../../../core/component/sic-number/sic-number.component';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../../core/services/language.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
@@ -48,10 +48,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
         SicButtonComponent,
         SicVersionBadgeComponent,
         SicInputComponent,
-        SicInputAreaComponent,
         SicComboboxComponent,
-        SicNumberComponent,
-        SicCardComponent,
         SicDatePipe,
         SicTiptapEditorComponent,
         SicTraceLinkPanelComponent,

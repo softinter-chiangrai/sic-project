@@ -1893,6 +1893,8 @@
   "PMDT06_TARGET_DFD": "Data Flow Diagram (DFD)",
   "PMDT06_TARGET_DIAGRAM_FULL": "Diagram",
   "PMDT06_TARGET_DOC_LABEL": "Target Document",
+  "PMDT06_TARGET_DOC_HINT": "Only approved documents are listed (drafts, pending approval, or already unlocked documents are not shown)",
+  "PMDT06_TARGET_DOC_EMPTY": "No approved documents of this type. Get the document approved first before requesting a change.",
   "PMDT06_TARGET_DOC_REQUIRED_MSG": "Please select a target document",
   "PMDT06_TARGET_ER": "Entity Relationship (ER)",
   "PMDT06_TARGET_INVOICE": "Invoice",

@@ -1893,6 +1893,8 @@
   "PMDT06_TARGET_DFD": "Data Flow Diagram (DFD)",
   "PMDT06_TARGET_DIAGRAM_FULL": "แผนภาพ (Diagram)",
   "PMDT06_TARGET_DOC_LABEL": "เอกสารเป้าหมายที่ต้องการเปลี่ยน",
+  "PMDT06_TARGET_DOC_HINT": "แสดงเฉพาะเอกสารที่ผ่านการอนุมัติแล้วเท่านั้น",
+  "PMDT06_TARGET_DOC_EMPTY": "ไม่พบเอกสารที่อนุมัติแล้วในประเภทนี้ กรุณาขออนุมัติเอกสารให้เสร็จก่อนจึงจะขอเปลี่ยนแปลงได้",
   "PMDT06_TARGET_DOC_REQUIRED_MSG": "กรุณาเลือกเอกสารที่ต้องการเปลี่ยน",
   "PMDT06_TARGET_ER": "Entity Relationship (ER)",
   "PMDT06_TARGET_INVOICE": "ใบแจ้งหนี้ (Invoice)",

@@ -30,11 +30,11 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
-import { SicCardComponent } from 'sic-ng';
-import { SicCheckboxComponent } from 'sic-ng';
-import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
+import { } from 'sic-ng';
+import { } from 'sic-ng';
+import { } from '../../../../../core/pipes/sic-date.pipe';
 
 // ✅ เปลี่ยนเป็น sic-tiptap-editor
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
@@ -127,13 +127,9 @@ export class Pmdt04AService {
     SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicInputAreaComponent,
     SicRequirementPreviewComponent,
-    SicCardComponent,
-    SicCheckboxComponent,
     SicTiptapEditorComponent,
     SicUploadComponent,
-    SicDatePipe,
     TranslateModule,
     SicAiAttachmentPickerComponent,
     SicTraceLinkPanelComponent,

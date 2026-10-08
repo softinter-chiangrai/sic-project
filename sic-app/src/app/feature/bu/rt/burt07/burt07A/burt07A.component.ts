@@ -26,7 +26,6 @@ import { AiModelsService } from '../../../../../core/services/ai-models.service'
     SicButtonComponent,
     SicInputComponent,
     SicCheckboxComponent,
-    SicCardComponent,
     SicComboboxComponent,
     TranslateModule,
   ],

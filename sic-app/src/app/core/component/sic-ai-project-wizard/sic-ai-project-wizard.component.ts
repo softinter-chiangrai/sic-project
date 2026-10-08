@@ -21,7 +21,7 @@ import { filesToAiAttachments } from '../../utils/ai-attachment.util';
 @Component({
   selector: 'sic-ai-project-wizard',
   standalone: true,
-  imports: [CommonModule, FormsModule, TranslateModule, SicComboboxComponent],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './sic-ai-project-wizard.component.html',
   styleUrl: './sic-ai-project-wizard.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

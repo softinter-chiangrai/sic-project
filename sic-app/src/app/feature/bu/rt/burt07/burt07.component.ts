@@ -15,7 +15,7 @@ import { AiModelsService } from '../../../../core/services/ai-models.service';
 @Component({
   selector: 'app-burt07',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [CommonModule, RouterModule, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './burt07.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt07.component.css',

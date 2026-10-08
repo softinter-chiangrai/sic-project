@@ -13,8 +13,8 @@ import { SicInputComponent } from 'sic-ng';
 import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
-import { SicApprovalComponent } from '../../../../../core/component/sic-approval/sic-approval.component';
-import { SicDatePipe } from '../../../../../core/pipes/sic-date.pipe';
+import { } from '../../../../../core/component/sic-approval/sic-approval.component';
+import { } from '../../../../../core/pipes/sic-date.pipe';
 import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../../core/services/language.service';
@@ -59,8 +59,6 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
         SicTiptapEditorComponent,
         SicUploadComponent,
         SicCheckboxComponent,
-        SicApprovalComponent,
-        SicDatePipe,
         Pmdt07PreviewComponent,
         SicTraceLinkPanelComponent,
     SicCrHistoryPanelComponent,

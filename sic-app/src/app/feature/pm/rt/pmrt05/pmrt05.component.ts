@@ -6,9 +6,9 @@ import { Component, computed, inject, OnInit, signal, ChangeDetectionStrategy } 
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { forkJoin, of, catchError, map, Observable } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
-import { SicButtonComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicCardComponent } from 'sic-ng';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { } from '../../../../core/pipes/sic-date.pipe';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
@@ -19,7 +19,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-pmrt05',
   standalone: true,
-  imports: [CommonModule, RouterModule, SicButtonComponent, SicCardComponent, SicDatePipe, TranslateModule],
+  imports: [CommonModule, RouterModule, SicCardComponent, TranslateModule],
   templateUrl: './pmrt05.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
   styleUrls: ['./pmrt05.component.css'],

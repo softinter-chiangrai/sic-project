@@ -10,7 +10,7 @@ import { environment } from '../../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicInputComponent } from 'sic-ng';
-import { SicNumberComponent } from '../../../../../core/component/sic-number/sic-number.component';
+import { } from '../../../../../core/component/sic-number/sic-number.component';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { BusinessService } from '../../../../../core/services/business.service';
@@ -34,7 +34,6 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
     SicComboboxComponent,
     SicInputComponent,
     SicTiptapEditorComponent,
-    SicNumberComponent,
     SicUploadComponent,
     TranslateModule,
   ],

@@ -10,7 +10,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicDatepickerComponent } from 'sic-ng';
-import { SicInputAreaComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import type { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate.guard';
@@ -41,7 +41,6 @@ import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
     SicComboboxComponent,
     SicInputComponent,
     SicDatepickerComponent,
-    SicInputAreaComponent,
     SicTiptapEditorComponent,
     SicUploadComponent,
     TranslateModule,

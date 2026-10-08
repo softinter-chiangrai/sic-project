@@ -8,9 +8,9 @@ import { finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { AuthService } from '../../../../core/auth/auth.service';
 import { SicSidebarService } from '../../../../core/component/sic-sidebar/sic-sidebar.service';
-import { SicButtonComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicInputAreaComponent } from 'sic-ng';
-import { SicDatePipe } from '../../../../core/pipes/sic-date.pipe';
+import { } from '../../../../core/pipes/sic-date.pipe';
 import { Post, Reply } from './discussion.model';
 import { DiscussionService } from './discussion.service';
 import { Pmdt08AComponent } from './pmdt08A/pmdt08A.component';
@@ -26,9 +26,7 @@ import { AttachmentFile, Pmdt08PageData } from './pmdt08.model';
   imports: [
     CommonModule,
     ReactiveFormsModule,
-    SicButtonComponent,
     SicInputAreaComponent,
-    SicDatePipe,
     Pmdt08AComponent,
     SicUploadComponent,
     TranslateModule,

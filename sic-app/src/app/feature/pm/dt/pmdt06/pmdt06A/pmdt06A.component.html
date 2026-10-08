@@ -49,6 +49,8 @@
             [required]="true"
             [disabled]="isTargetLocked()"
             [clearable]="!isTargetLocked()"
+            [hint]="'PMDT06_TARGET_DOC_HINT' | translate"
+            [emptyText]="'PMDT06_TARGET_DOC_EMPTY' | translate"
             [errorMessages]="{ required: ('PMDT06_TARGET_DOC_REQUIRED_MSG' | translate) }"
           ></sic-combobox>
         </div>

@@ -8,7 +8,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicButtonComponent } from 'sic-ng';
 import { SicVersionBadgeComponent } from '../../../../../core/component/sic-version-badge/sic-version-badge.component';
 import { SicComboboxComponent } from '../../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicInputAreaComponent } from 'sic-ng';
+import { } from 'sic-ng';
 import { SicInputComponent } from 'sic-ng';
 import { SicDatepickerComponent } from 'sic-ng';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
@@ -46,7 +46,6 @@ import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr
     SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicInputAreaComponent,
     SicDatepickerComponent,
     SicUploadComponent,
     SicTiptapEditorComponent,

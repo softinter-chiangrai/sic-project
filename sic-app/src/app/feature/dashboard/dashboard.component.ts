@@ -58,7 +58,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     RouterModule,
     FormsModule,
     ReactiveFormsModule,
-    SicDatePipe,
     MyWorkWidgetComponent,
     PendingApprovalWidgetComponent,
     TeamWorkloadWidgetComponent,
