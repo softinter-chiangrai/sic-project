@@ -17,7 +17,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-burt06',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicButtonComponent, SicComboboxComponent, SicStripHtmlPipe, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicStripHtmlPipe, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './burt06.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './burt06.component.css',

@@ -44,7 +44,6 @@ import { BreadcrumbService } from '../../services/breadcrumb.service';
     NgTemplateOutlet,
     SicCardComponent,
     FormsModule,
-    DatePipe,
     SicNotificationPanelComponent,
     SicContextSwitcherComponent,
   ],

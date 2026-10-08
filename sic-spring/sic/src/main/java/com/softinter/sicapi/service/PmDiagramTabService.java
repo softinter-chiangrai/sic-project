@@ -15,9 +15,6 @@ public interface PmDiagramTabService {
 
     List<PmDiagramTabResponse> getTabs(UUID projectId, String keyword);
 
-    /** id ของ diagram ใน business นี้ที่ยังไม่มีรูป PNG */
-    List<UUID> getIdsMissingImage();
-
     PmDiagramTabResponse getTab(UUID id);
 
     PmDiagramTabResponse createTab(PmDiagramTabRequest request);

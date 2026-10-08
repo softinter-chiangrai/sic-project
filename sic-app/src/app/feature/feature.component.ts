@@ -1,4 +1,4 @@
-import { Component, signal, ChangeDetectionStrategy, inject, afterNextRender } from '@angular/core';
+import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { SicSidebarComponent } from '../core/component/sic-sidebar/sic-sidebar.component';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -10,7 +10,6 @@ import { SicOrganizationalChartNode } from '../core/component/sic-organizational
 import { SicHeadchatComponent } from "../core/component/sic-headchat/sic-headchat.component";
 import { SicAiNavigatorComponent } from "../core/component/sic-ai-navigator/sic-ai-navigator.component";
 import { SicAiProjectWizardComponent } from "../core/component/sic-ai-project-wizard/sic-ai-project-wizard.component";
-import { DiagramService } from './pm/dt/pmdt05/diagram.service';
 import { APP_TRANSLATE_MODULE_CODE, APP_TRANSLATE_PROGRAM_CODE, AppTranslateLoader } from '../core/services/app-translate-loader.service';
 
 type TaskPersistMeta = {
@@ -29,15 +28,6 @@ type TaskPersistMeta = {
   changeDetection: ChangeDetectionStrategy.Eager,
 })
 export class Feature {
-  private readonly diagramService = inject(DiagramService);
-
-  constructor() {
-    // render รูป diagram ที่ AI สร้างมาแต่ยังไม่มีรูป เบื้องหลังหลังเข้าเว็บ (ไม่ต้องรอเปิดหน้า diagram) ให้รายงานมีรูปทันที
-    afterNextRender(() => {
-      setTimeout(() => this.diagramService.ensureMissingImagesInBackground().catch(() => undefined), 4000);
-    });
-  }
-
   private readonly taskPersistMeta = new Map<string, TaskPersistMeta>();
 
   protected readonly title = signal('sic-app');

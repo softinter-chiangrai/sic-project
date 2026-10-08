@@ -37,11 +37,6 @@ public class PmDiagramTabController {
         return ResponseEntity.ok(tabService.getTabs(projectId, keyword));
     }
 
-    @GetMapping("/missing-images")
-    public ResponseEntity<List<UUID>> getMissingImageIds() {
-        return ResponseEntity.ok(tabService.getIdsMissingImage());
-    }
-
     @GetMapping("/combobox")
     public ResponseEntity<List<ComboboxResponse>> getComboboxDiagrams(
             @RequestParam(required = false) UUID projectId) {

@@ -33,7 +33,6 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
     SicInputComponent,
     SicTiptapEditorComponent,
     SicCheckboxComponent,
-    SicCardComponent,
     SicComboboxComponent,
     TranslateModule,
   ],
