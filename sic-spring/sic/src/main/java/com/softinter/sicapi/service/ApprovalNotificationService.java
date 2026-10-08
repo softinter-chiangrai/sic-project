@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service;
 
 import com.softinter.sicapi.entity.pm.PmApproval;
+import java.util.UUID;
 
 public interface ApprovalNotificationService {
 
@@ -12,5 +13,5 @@ public interface ApprovalNotificationService {
     void notifyDelegate(PmApproval approval, String delegatedTo);
 
     /** แจ้งเตือนผู้ใช้โดยตรง (ระบบเป็นผู้ส่ง) ใช้กับงานตั้งเวลา เช่น เตือนสัญญาใกล้หมดอายุ */
-    void notifyUser(java.util.UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl);
+    void notifyUser(UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl);
 }

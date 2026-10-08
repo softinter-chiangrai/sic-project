@@ -21,6 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest;
+import com.softinter.sicapi.dto.response.InvoiceDraft;
+import com.softinter.sicapi.service.impl.InvoiceGeneratorService;
+import com.softinter.sicapi.entity.pm.PmInvoice;
+import com.softinter.sicapi.service.PmInvoiceExportService;
+import com.softinter.sicapi.util.ReportHelper;
 
 @Slf4j
 @RestController
@@ -31,8 +37,8 @@ import java.util.UUID;
 public class PmInvoiceController {
 
     private final PmInvoiceService invoiceService;
-    private final com.softinter.sicapi.service.PmInvoiceExportService exportService;
-    private final com.softinter.sicapi.service.impl.InvoiceGeneratorService invoiceGeneratorService;
+    private final PmInvoiceExportService exportService;
+    private final InvoiceGeneratorService invoiceGeneratorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
 
@@ -42,7 +48,7 @@ public class PmInvoiceController {
             @PathVariable UUID id,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         UUID businessId = BusinessContextHolder.getBusinessId();
         byte[] pdfBytes = exportService.exportInvoicePdf(id, businessId, finalLang);
         return ResponseEntity.ok()
@@ -63,7 +69,7 @@ public class PmInvoiceController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmInvoice.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(PmInvoice.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmInvoiceResponse> pageResult = invoiceService.findAll(businessId, projectId, keyword, paymentStatus, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
@@ -103,9 +109,9 @@ public class PmInvoiceController {
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate invoice draft using AI")
-    public ResponseEntity<com.softinter.sicapi.dto.response.InvoiceDraft> generateDraft(
-            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest request) {
-        com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateInvoiceDraftRequest();
+    public ResponseEntity<InvoiceDraft> generateDraft(
+            @RequestBody(required = false) GenerateInvoiceDraftRequest request) {
+        GenerateInvoiceDraftRequest req = request != null ? request : new GenerateInvoiceDraftRequest();
         return ResponseEntity.ok(invoiceGeneratorService.generateDraft(req));
     }
 }

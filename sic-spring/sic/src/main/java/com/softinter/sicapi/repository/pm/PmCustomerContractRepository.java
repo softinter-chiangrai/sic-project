@@ -9,6 +9,10 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Collection;
+import java.time.LocalDate;
+import org.springframework.data.repository.query.Param;
+import org.springframework.data.jpa.repository.Query;
 
 @Repository
 public interface PmCustomerContractRepository
@@ -36,19 +40,19 @@ public interface PmCustomerContractRepository
     boolean existsByContractNo(String contractNo);
 
     /** สัญญาที่จะหมดอายุในช่วงที่กำหนด และยังไม่ถูกต่อ/ยกเลิก */
-    @org.springframework.data.jpa.repository.Query("SELECT COUNT(c) FROM PmCustomerContract c WHERE c.businessId = :businessId " +
+    @Query("SELECT COUNT(c) FROM PmCustomerContract c WHERE c.businessId = :businessId " +
            "AND c.isDelete = false AND c.endDate BETWEEN :from AND :to " +
            "AND (c.renewalStatus IS NULL OR c.renewalStatus NOT IN :closed)")
-    long countNearExpiry(@org.springframework.data.repository.query.Param("businessId") UUID businessId,
-                         @org.springframework.data.repository.query.Param("closed") java.util.Collection<String> closed,
-                         @org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
-                         @org.springframework.data.repository.query.Param("to") java.time.LocalDate to);
+    long countNearExpiry(@Param("businessId") UUID businessId,
+                         @Param("closed") Collection<String> closed,
+                         @Param("from") LocalDate from,
+                         @Param("to") LocalDate to);
 
     /** สัญญาที่ลงนามแล้ว ยังไม่ถูกต่อ/ยกเลิก และจะหมดอายุภายในช่วงที่กำหนด (ใช้กับงานรายวัน ไม่แยก business) */
-    @org.springframework.data.jpa.repository.Query("SELECT c FROM PmCustomerContract c WHERE c.isDelete = false " +
+    @Query("SELECT c FROM PmCustomerContract c WHERE c.isDelete = false " +
            "AND LOWER(c.signStatus) = 'signed' AND c.endDate BETWEEN :from AND :to " +
            "AND (c.renewalStatus IS NULL OR c.renewalStatus NOT IN :closed) ORDER BY c.endDate ASC")
-    List<PmCustomerContract> findExpiringContracts(@org.springframework.data.repository.query.Param("from") java.time.LocalDate from,
-                                                   @org.springframework.data.repository.query.Param("to") java.time.LocalDate to,
-                                                   @org.springframework.data.repository.query.Param("closed") java.util.Collection<String> closed);
+    List<PmCustomerContract> findExpiringContracts(@Param("from") LocalDate from,
+                                                   @Param("to") LocalDate to,
+                                                   @Param("closed") Collection<String> closed);
 }

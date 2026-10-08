@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.entity.enums.ApprovalStatus;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 
 @Slf4j
 @Service
@@ -611,7 +613,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             try {
                 var status = approvalService.getCurrentStatus("DIAGRAM", tab.getId());
                 dto.setApprovalStatus(status != null ? status.name() : "DRAFT");
-                dto.setIsApproved(status == com.softinter.sicapi.entity.enums.ApprovalStatus.APPROVED);
+                dto.setIsApproved(status == ApprovalStatus.APPROVED);
             } catch (Exception e) {
                 dto.setApprovalStatus("DRAFT");
                 dto.setIsApproved(false);
@@ -628,7 +630,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<com.softinter.sicapi.dto.response.ComboboxResponse> getComboboxDiagrams(UUID projectId) {
+    public List<ComboboxResponse> getComboboxDiagrams(UUID projectId) {
         if (projectId == null) {
             return List.of();
         }
@@ -642,7 +644,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
                     if (t.getDiagramType() != null && !t.getDiagramType().isBlank()) {
                         label = label + " (" + t.getDiagramType() + ")";
                     }
-                    return new com.softinter.sicapi.dto.response.ComboboxResponse(t.getId().toString(), label);
+                    return new ComboboxResponse(t.getId().toString(), label);
                 })
                 .collect(Collectors.toList());
     }

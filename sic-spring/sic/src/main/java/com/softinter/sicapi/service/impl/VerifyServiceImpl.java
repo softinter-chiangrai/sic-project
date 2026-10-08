@@ -14,6 +14,7 @@ import java.security.SecureRandom;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
+import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Service
@@ -47,7 +48,7 @@ public class VerifyServiceImpl implements VerifyService {
             verify.setRecipient(recipient);
             verify.setToken(token);
             verify.setReferenceNumber(referenceNumber);
-            verify.setExpireAt(Instant.now().plus(24, java.time.temporal.ChronoUnit.HOURS));
+            verify.setExpireAt(Instant.now().plus(24, ChronoUnit.HOURS));
             verify.setVerifyType("Email");
 
             SuVerify saved = verifyRepository.save(verify);

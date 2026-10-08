@@ -32,6 +32,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pm/customers")
@@ -134,7 +135,7 @@ public class PmCustomerController {
         List<ComboboxResponse> list = customers.stream()
                 .map(c -> new ComboboxResponse(c.getId().toString(),
                         c.getCustomerCode() + " - " + (c.getCompanyNameLocal() != null && !c.getCompanyNameLocal().isBlank() ? c.getCompanyNameLocal() : (c.getCompanyNameEn() != null ? c.getCompanyNameEn() : ""))))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 }

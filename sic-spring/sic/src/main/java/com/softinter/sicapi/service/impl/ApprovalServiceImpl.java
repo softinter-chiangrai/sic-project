@@ -71,6 +71,8 @@ import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Root;
 
 @Slf4j
 @Service
@@ -370,8 +372,8 @@ public class ApprovalServiceImpl implements ApprovalService {
         return toPaginationResponse(pageResult, pageable);
     }
 
-    private void addKeywordAndTypeFilters(jakarta.persistence.criteria.CriteriaBuilder cb,
-                                           jakarta.persistence.criteria.Root<PmApproval> root,
+    private void addKeywordAndTypeFilters(CriteriaBuilder cb,
+                                           Root<PmApproval> root,
                                            List<Predicate> predicates,
                                            String keyword,
                                            String documentType) {

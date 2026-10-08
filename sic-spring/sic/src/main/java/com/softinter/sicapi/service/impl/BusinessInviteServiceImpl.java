@@ -33,6 +33,7 @@ import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.security.SecureRandom;
 
 @Slf4j
 @Service
@@ -89,7 +90,7 @@ public class BusinessInviteServiceImpl implements BusinessInviteService {
 
         // สร้าง Token
         byte[] randomBytes = new byte[24];
-        new java.security.SecureRandom().nextBytes(randomBytes);
+        new SecureRandom().nextBytes(randomBytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
 
         // สร้าง Invite

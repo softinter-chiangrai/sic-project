@@ -40,6 +40,8 @@ import java.util.List;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Slf4j
 @Service
@@ -59,9 +61,9 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     @Transactional
     public PmCustomerProjectResponse create(UUID businessId, PmCustomerProjectRequest request) {
         PmCustomer customer = customerRepository.findById(request.getCustomerId())
-                .orElseThrow(() -> new RuntimeException("Customer not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer not found"));
         SuBusiness business = businessRepository.findById(businessId)
-                .orElseThrow(() -> new RuntimeException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
 
         PmCustomerProject project = new PmCustomerProject();
         project.setBusinessId(businessId);
@@ -114,7 +116,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     @Transactional
     public PmCustomerProjectResponse update(UUID id, PmCustomerProjectRequest request) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         // ✅ ป้องกันการแก้ไขโดยตรงหากผ่านการอนุมัติแล้ว (Baseline Locked)
         approvalService.assertNotApproved("PROJECT", project.getId());
@@ -182,7 +184,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     @Transactional
     public void delete(UUID id) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         approvalService.assertNotApproved("PROJECT", project.getId());
 
@@ -206,7 +208,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     @Transactional(readOnly = true)
     public PmCustomerProjectResponse findById(UUID id) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
         return toResponse(project);
     }
 
@@ -257,15 +259,6 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             Map.entry("ma", List.of("MA Active"))
     );
 
-    private static final Map<String, String> PRIORITY_THAI_MAP = Map.of(
-            "ต่ำ", "Low",
-            "กลาง", "Medium",
-            "ปานกลาง", "Medium",
-            "สูง", "High",
-            "วิกฤต", "Critical",
-            "ด่วน", "Critical"
-    );
-
     @Override
     @Transactional(readOnly = true)
     public Page<PmCustomerProjectResponse> getProjects(
@@ -308,7 +301,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             // Direct Priority filter
             if (priority != null && !priority.isBlank() && !"all".equalsIgnoreCase(priority)) {
                 String cleanPriority = priority.trim().toLowerCase();
-                String mappedPr = PRIORITY_THAI_MAP.get(cleanPriority);
+                String mappedPr = KeywordSearchHelper.PRIORITY_THAI_MAP.get(cleanPriority);
                 if (mappedPr != null) {
                     predicates.add(cb.equal(cb.lower(root.get("priority")), mappedPr.toLowerCase()));
                 } else {
@@ -344,11 +337,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
                 }
 
                 // 2. Match Thai Priority words
-                for (var entry : PRIORITY_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "priority", KeywordSearchHelper.PRIORITY_THAI_MAP, rawKw, orPreds);
 
                 // 3. Match Approval Status words
                 if (rawKw.contains("ยังไม่อนุมัติ") || rawKw.contains("ยังไม่ได้อนุมัติ") || rawKw.contains("unapproved") || rawKw.contains("not approved")) {
@@ -399,8 +388,8 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        org.springframework.data.domain.Page<PmCustomerProject> page = projectRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Page<PmCustomerProject> page = projectRepository.findAll(spec, pageable);
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "PROJECT", page.getContent().stream().map(PmCustomerProject::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);
@@ -461,7 +450,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             if (!approvals.isEmpty()) {
                 var latest = approvals.get(0);
                 response.setApprovalStatus(latest.getStatus() != null ? latest.getStatus().name() : null);
-                response.setIsApproved(latest.getStatus() == com.softinter.sicapi.entity.enums.ApprovalStatus.APPROVED);
+                response.setIsApproved(latest.getStatus() == ApprovalStatus.APPROVED);
             } else {
                 response.setApprovalStatus(null);
                 response.setIsApproved(false);

@@ -33,6 +33,11 @@ import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import com.softinter.sicapi.entity.enums.FileVisibility;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -47,7 +52,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
 
-    private static final java.util.Map<String, String> STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, String> STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
             "ตรวจสอบ", "In Review",
             "รีวิว", "In Review",
@@ -76,34 +81,16 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
 
-                List<Predicate> orPreds = new ArrayList<>(List.of(
-                        cb.like(cb.lower(root.get("requirementCode")), pattern),
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("description")), pattern),
-                        cb.like(cb.lower(root.get("source")), pattern),
-                        cb.like(cb.lower(root.get("acceptanceCriteria")), pattern),
-                        cb.like(cb.lower(root.get("businessValue")), pattern),
-                        cb.like(cb.lower(root.get("requirementType")), pattern),
-                        cb.like(cb.lower(root.get("status")), pattern),
-                        cb.like(cb.lower(root.get("priority")), pattern)
-                ));
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "requirementCode", "title", "description", "source", "acceptanceCriteria", "businessValue", "requirementType", "status", "priority");
 
                 // ✅ Bilingual: สถานะ (ไทย ↔ อังกฤษ)
-                for (var entry : STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: ความสำคัญ (ไทย ↔ อังกฤษ)
-                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "priority", KeywordSearchHelper.PRIORITY_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "REQUIREMENT", rawKw, orPreds);
 
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
@@ -119,7 +106,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     @Transactional(readOnly = true)
     public PmRequirementResponse findById(UUID id, UUID businessId) {
         PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Requirement not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Requirement not found"));
         return toResponse(requirement);
     }
 
@@ -137,7 +124,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         if (state == EntityState.DELETED) {
             // ===== SOFT DELETE =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Requirement not found"));
             approvalService.assertNotApproved("REQUIREMENT", requirement.getId());
             requirement.setIsDelete(true);
             requirement.setIsActive(false);
@@ -215,7 +202,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         } else {
             // ===== UPDATE EXISTING =====
             requirement = requirementRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Requirement not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Requirement not found"));
 
             approvalService.assertNotApproved("REQUIREMENT", requirement.getId());
 
@@ -298,7 +285,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     @Transactional
     public void delete(UUID id, UUID businessId, String userId) {
         PmRequirement requirement = requirementRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Requirement not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Requirement not found"));
         approvalService.assertNotApproved("REQUIREMENT", requirement.getId());
         requirement.setIsDelete(true);
         requirement.setIsActive(false);
@@ -431,7 +418,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         return null;
     }
 
-    private String mapVisibilityToString(com.softinter.sicapi.entity.enums.FileVisibility visibility) {
+    private String mapVisibilityToString(FileVisibility visibility) {
         if (visibility == null) return "Public";
         switch (visibility) {
             case UPLOADER_ONLY: return "UploaderOnly";

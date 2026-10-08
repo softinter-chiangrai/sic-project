@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface PmUserManualRepository extends JpaRepository<PmUserManual, UUID>, JpaSpecificationExecutor<PmUserManual> {
@@ -16,7 +17,7 @@ public interface PmUserManualRepository extends JpaRepository<PmUserManual, UUID
 
     Page<PmUserManual> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId, Pageable pageable);
 
-    java.util.List<PmUserManual> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+    List<PmUserManual> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
 
     Page<PmUserManual> findByBusinessIdAndIsDeleteFalse(UUID businessId, Pageable pageable);
 

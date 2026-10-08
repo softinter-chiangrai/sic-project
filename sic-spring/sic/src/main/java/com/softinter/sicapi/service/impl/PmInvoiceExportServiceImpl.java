@@ -39,6 +39,8 @@ import net.sf.jasperreports.engine.JasperExportManager;
 import net.sf.jasperreports.engine.JasperFillManager;
 import net.sf.jasperreports.engine.JasperPrint;
 import net.sf.jasperreports.engine.JasperReport;
+import java.time.Instant;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -86,7 +88,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
                     .map(PmCustomerContract::getContractNo).orElse("-");
         }
 
-        String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
+        String exportDate = DISPLAY_FORMATTER.format(Instant.now());
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("invoiceId", invoiceId != null ? invoiceId.toString() : "");
@@ -109,11 +111,11 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
                 : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน");
         String attachmentNames = invoice.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(invoice.getAttachmentGroupId())
-                        .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
+                        .stream().map(u -> ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
         parameters.put("lang", normalizedLang);
-        parameters.put(net.sf.jasperreports.engine.JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
+        parameters.put(net.sf.jasperreports.engine.JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? Locale.ENGLISH : new Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

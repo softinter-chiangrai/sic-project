@@ -43,6 +43,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import java.util.Map;
+import com.softinter.sicapi.entity.pm.PmRequirement;
+import com.softinter.sicapi.dto.request.PmReviewCommentRequest;
+import com.softinter.sicapi.entity.pm.PmSpecification;
 
 @Slf4j
 @Service
@@ -62,7 +69,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private final DocumentVersionService documentVersionService;
     private final TraceLinkService traceLinkService;
 
-    private static final java.util.Map<String, String> DESIGN_REVIEW_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, String> DESIGN_REVIEW_STATUS_THAI_MAP = Map.of(
             "เปิด", "Open",
             "กำลังตรวจ", "In Review",
             "ตรวจสอบ", "In Review",
@@ -88,33 +95,16 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.toLowerCase().trim();
                 String pattern = "%" + rawKw + "%";
-                List<Predicate> orPreds = new ArrayList<>(List.of(
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("reviewCode")), pattern),
-                        cb.like(cb.lower(root.get("reviewer")), pattern),
-                        cb.like(cb.lower(root.get("description")), pattern),
-                        cb.like(cb.lower(root.get("assignedTo")), pattern),
-                        cb.like(cb.lower(root.get("reviewItemType")), pattern),
-                        cb.like(cb.lower(root.get("status")), pattern),
-                        cb.like(cb.lower(root.get("severity")), pattern)
-                ));
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "title", "reviewCode", "reviewer", "description", "assignedTo", "reviewItemType", "status", "severity");
 
                 // ✅ Bilingual: สถานะ
-                for (var entry : DESIGN_REVIEW_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", DESIGN_REVIEW_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: ความรุนแรง/ความสำคัญ
-                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("severity")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "severity", KeywordSearchHelper.PRIORITY_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "DESIGN_REVIEW", rawKw, orPreds);
 
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
@@ -124,7 +114,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         };
 
         Page<PmDesignReview> page = designReviewRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "DESIGN_REVIEW", page.getContent().stream().map(PmDesignReview::getId).toList());
         return page.map(e -> {
             var dto = this.mapToResponse(e);
@@ -137,7 +127,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     @Transactional(readOnly = true)
     public PmDesignReviewResponse findById(UUID id, UUID businessId) {
         PmDesignReview entity = designReviewRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new RuntimeException("Design review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Design review not found"));
 
         PmDesignReviewResponse response = mapToResponse(entity);
         List<PmReviewComment> comments = reviewCommentRepository.findByReviewId(id);
@@ -155,7 +145,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
 
         if (!isNew) {
             entity = designReviewRepository.findByIdAndBusinessId(request.getId(), businessId)
-                    .orElseThrow(() -> new RuntimeException("Design review not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Design review not found"));
             approvalService.assertNotApproved("DESIGN_REVIEW", entity.getId());
             oldStatus = entity.getStatus();
 
@@ -181,7 +171,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         }
 
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(request.getProjectId())
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
 
         entity.setProject(project);
         if (request.getReviewCode() == null || request.getReviewCode().isBlank()) {
@@ -305,9 +295,9 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
 
     @Override
     @Transactional
-    public PmReviewCommentResponse addComment(UUID reviewId, com.softinter.sicapi.dto.request.PmReviewCommentRequest request, UUID businessId, String userId) {
+    public PmReviewCommentResponse addComment(UUID reviewId, PmReviewCommentRequest request, UUID businessId, String userId) {
         PmDesignReview review = designReviewRepository.findByIdAndBusinessId(reviewId, businessId)
-                .orElseThrow(() -> new RuntimeException("Design review not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Design review not found"));
 
         PmReviewComment comment = new PmReviewComment();
         comment.setBusinessId(businessId);
@@ -416,7 +406,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
                     return List.of();
                 }
             }
-            List<com.softinter.sicapi.entity.pm.PmRequirement> list = projectId != null
+            List<PmRequirement> list = projectId != null
                     ? requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId)
                     : requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
             return list.stream()
@@ -435,7 +425,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
                 return List.of();
             }
         }
-        List<com.softinter.sicapi.entity.pm.PmSpecification> specs = projectId != null
+        List<PmSpecification> specs = projectId != null
                 ? specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId)
                 : specificationRepository.findByBusinessIdAndIsDeleteFalse(businessId);
         return specs.stream()
@@ -454,7 +444,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     @Override
     @Transactional(readOnly = true)
     public List<ComboboxResponse> getComboboxRequirements(UUID businessId, UUID projectId) {
-        List<com.softinter.sicapi.entity.pm.PmRequirement> list = projectId != null
+        List<PmRequirement> list = projectId != null
                 ? requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId)
                 : requirementRepository.findByBusinessIdAndIsDeleteFalse(businessId);
         return list.stream()

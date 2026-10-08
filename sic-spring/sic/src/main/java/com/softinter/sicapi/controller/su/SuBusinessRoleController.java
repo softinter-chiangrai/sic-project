@@ -37,6 +37,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/api/su/business-roles")
@@ -138,7 +139,7 @@ public class SuBusinessRoleController {
     @Operation(summary = "Get business role by ID")
     public ResponseEntity<BusinessRoleResponse> getById(@PathVariable UUID id) {
         SuBusinessRole role = businessRoleRepository.findByIdWithParent(id)
-                .orElseThrow(() -> new RuntimeException("Business role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Business role not found"));
         return ResponseEntity.ok(toResponse(role));
     }
 
@@ -150,7 +151,7 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
     // ===== 1. กรณีแก้ไข (มี id) =====
     if (request.getId() != null) {
         role = businessRoleRepository.findById(request.getId())
-                .orElseThrow(() -> new RuntimeException("Business role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Business role not found"));
         if (request.getRowVersion() != null) {
             role.setRowVersion(request.getRowVersion());
         }
@@ -248,7 +249,7 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
     @Operation(summary = "Delete business role")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SuBusinessRole role = businessRoleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Business role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Business role not found"));
 
         // ===== Soft Delete =====
         role.setIsDelete(true);

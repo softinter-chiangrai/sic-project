@@ -25,6 +25,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -55,10 +56,10 @@ public class AiProjectPipelineController {
 
     @PostMapping("/execute-async")
     @Operation(summary = "เริ่มสร้างโครงการครบทุก module แบบทำงานเบื้องหลัง (คืน jobId ให้ poll ความคืบหน้า)")
-    public ResponseEntity<java.util.Map<String, UUID>> executeAsync(@RequestBody AiProjectPipelineRequest request) {
+    public ResponseEntity<Map<String, UUID>> executeAsync(@RequestBody AiProjectPipelineRequest request) {
         UUID businessId = currentUserService.getBusinessId();
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(java.util.Map.of("jobId", jobService.start(request, businessId, userId)));
+        return ResponseEntity.ok(Map.of("jobId", jobService.start(request, businessId, userId)));
     }
 
     @GetMapping("/jobs/{jobId}")

@@ -19,6 +19,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest;
+import com.softinter.sicapi.entity.pm.PmTestCase;
+import com.softinter.sicapi.service.PmUatExportService;
+import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.dto.response.TestCaseDraftResponse;
+import com.softinter.sicapi.service.impl.TestCaseGeneratorService;
 
 @Slf4j
 @RestController
@@ -29,8 +35,8 @@ import java.util.UUID;
 public class PmTestCaseController {
 
     private final PmTestCaseService testCaseService;
-    private final com.softinter.sicapi.service.impl.TestCaseGeneratorService generatorService;
-    private final com.softinter.sicapi.service.PmUatExportService uatExportService;
+    private final TestCaseGeneratorService generatorService;
+    private final PmUatExportService uatExportService;
     private final CurrentUserService currentUserService;
 
     @GetMapping("/export-uat-report")
@@ -41,7 +47,7 @@ public class PmTestCaseController {
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         byte[] pdfBytes = uatExportService.exportUatReportPdf(projectId, businessId, testType, scenarioId, finalLang);
         String filename = "uat-report-" + (scenarioId != null ? "scenario-" + scenarioId : (projectId != null ? projectId : "all")) + ".pdf";
         return ResponseEntity.ok()
@@ -60,7 +66,7 @@ public class PmTestCaseController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmTestCase.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(PmTestCase.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmTestCaseResponse> pageResult = testCaseService.findAll(businessId, projectId, keyword, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
@@ -80,9 +86,9 @@ public class PmTestCaseController {
     }
 
     @PostMapping("/generate/draft")
-    public ResponseEntity<com.softinter.sicapi.dto.response.TestCaseDraftResponse> generateDraft(
-            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest request) {
-        com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateTestCaseDraftRequest();
+    public ResponseEntity<TestCaseDraftResponse> generateDraft(
+            @RequestBody(required = false) GenerateTestCaseDraftRequest request) {
+        GenerateTestCaseDraftRequest req = request != null ? request : new GenerateTestCaseDraftRequest();
         return ResponseEntity.ok(generatorService.generateDraft(req));
     }
 

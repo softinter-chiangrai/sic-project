@@ -9,6 +9,14 @@ import java.util.Base64;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.awt.Dimension;
+import java.awt.geom.Dimension2D;
+import java.awt.Graphics2D;
+import javax.imageio.ImageIO;
+import java.awt.RenderingHints;
 
 @Slf4j
 public class ReportHelper {
@@ -58,13 +66,13 @@ public class ReportHelper {
         String text = html;
 
         // 1. Process Ordered Lists <ol>...</ol> -> 1. , 2. , 3. ...
-        java.util.regex.Pattern olPattern = java.util.regex.Pattern.compile("(?is)<ol[^>]*>(.*?)</ol>");
-        java.util.regex.Matcher olMatcher = olPattern.matcher(text);
+        Pattern olPattern = Pattern.compile("(?is)<ol[^>]*>(.*?)</ol>");
+        Matcher olMatcher = olPattern.matcher(text);
         StringBuilder sb = new StringBuilder();
         while (olMatcher.find()) {
             String olContent = olMatcher.group(1);
-            java.util.regex.Pattern liPattern = java.util.regex.Pattern.compile("(?is)<li[^>]*>(.*?)</li>");
-            java.util.regex.Matcher liMatcher = liPattern.matcher(olContent);
+            Pattern liPattern = Pattern.compile("(?is)<li[^>]*>(.*?)</li>");
+            Matcher liMatcher = liPattern.matcher(olContent);
             StringBuilder numberedList = new StringBuilder();
             int count = 1;
             while (liMatcher.find()) {
@@ -73,19 +81,19 @@ public class ReportHelper {
                     numberedList.append(count++).append(". ").append(liText).append("\n");
                 }
             }
-            olMatcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(numberedList.toString()));
+            olMatcher.appendReplacement(sb, Matcher.quoteReplacement(numberedList.toString()));
         }
         olMatcher.appendTail(sb);
         text = sb.toString();
 
         // 2. Process Unordered Lists <ul>...</ul> -> • item
-        java.util.regex.Pattern ulPattern = java.util.regex.Pattern.compile("(?is)<ul[^>]*>(.*?)</ul>");
-        java.util.regex.Matcher ulMatcher = ulPattern.matcher(text);
+        Pattern ulPattern = Pattern.compile("(?is)<ul[^>]*>(.*?)</ul>");
+        Matcher ulMatcher = ulPattern.matcher(text);
         sb = new StringBuilder();
         while (ulMatcher.find()) {
             String ulContent = ulMatcher.group(1);
-            java.util.regex.Pattern liPattern = java.util.regex.Pattern.compile("(?is)<li[^>]*>(.*?)</li>");
-            java.util.regex.Matcher liMatcher = liPattern.matcher(ulContent);
+            Pattern liPattern = Pattern.compile("(?is)<li[^>]*>(.*?)</li>");
+            Matcher liMatcher = liPattern.matcher(ulContent);
             StringBuilder bulletList = new StringBuilder();
             while (liMatcher.find()) {
                 String liText = stripTagsAndEntities(liMatcher.group(1)).trim();
@@ -93,7 +101,7 @@ public class ReportHelper {
                     bulletList.append("• ").append(liText).append("\n");
                 }
             }
-            ulMatcher.appendReplacement(sb, java.util.regex.Matcher.quoteReplacement(bulletList.toString()));
+            ulMatcher.appendReplacement(sb, Matcher.quoteReplacement(bulletList.toString()));
         }
         ulMatcher.appendTail(sb);
         text = sb.toString();
@@ -218,18 +226,18 @@ public class ReportHelper {
      */
     static byte[] fitWidth(byte[] src, int targetWidth) {
         try {
-            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(src));
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(src));
             if (img == null) return src;
             int w = Math.min(targetWidth > 0 ? targetWidth : img.getWidth(), MAX_IMAGE_WIDTH);
             if (w == img.getWidth()) return src;
             int h = Math.max(1, Math.round(img.getHeight() * (float) w / img.getWidth()));
-            java.awt.image.BufferedImage out = new java.awt.image.BufferedImage(w, h, java.awt.image.BufferedImage.TYPE_INT_ARGB);
-            java.awt.Graphics2D g = out.createGraphics();
-            g.setRenderingHint(java.awt.RenderingHints.KEY_INTERPOLATION, java.awt.RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+            BufferedImage out = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g = out.createGraphics();
+            g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
             g.drawImage(img, 0, 0, w, h, null);
             g.dispose();
-            java.io.ByteArrayOutputStream bos = new java.io.ByteArrayOutputStream();
-            javax.imageio.ImageIO.write(out, "png", bos);
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ImageIO.write(out, "png", bos);
             return bos.toByteArray();
         } catch (Exception e) {
             return src;
@@ -346,15 +354,15 @@ public class ReportHelper {
      */
     static class ScaledImageRenderer extends net.sf.jasperreports.renderers.SimpleDataRenderer
             implements net.sf.jasperreports.renderers.DimensionRenderable {
-        private final java.awt.geom.Dimension2D size;
+        private final Dimension2D size;
 
         ScaledImageRenderer(byte[] data, int w, int h) {
             super(data, null);
-            this.size = new java.awt.Dimension(w, h);
+            this.size = new Dimension(w, h);
         }
 
         @Override
-        public java.awt.geom.Dimension2D getDimension(net.sf.jasperreports.engine.JasperReportsContext ctx) {
+        public Dimension2D getDimension(net.sf.jasperreports.engine.JasperReportsContext ctx) {
             return size;
         }
     }
@@ -362,7 +370,7 @@ public class ReportHelper {
     /** targetWidth px (0 = กว้างตามไฟล์) ไม่เกินความกว้างหน้ากระดาษ — ย่อที่ตอนแสดง ไม่แตะ pixel ต้นฉบับ */
     static net.sf.jasperreports.renderers.Renderable scaled(byte[] src, int targetWidth, int maxWidth) {
         try {
-            java.awt.image.BufferedImage img = javax.imageio.ImageIO.read(new java.io.ByteArrayInputStream(src));
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(src));
             if (img == null) return net.sf.jasperreports.renderers.SimpleDataRenderer.getInstance(src);
             int w = Math.min(targetWidth > 0 ? targetWidth : img.getWidth(), maxWidth);
             int h = Math.max(1, Math.round(img.getHeight() * (float) w / img.getWidth()));
@@ -380,8 +388,8 @@ public class ReportHelper {
             this.data = fitWidth(data, 0);
         }
 
-        public java.io.InputStream getImageData() {
-            return new java.io.ByteArrayInputStream(data);
+        public InputStream getImageData() {
+            return new ByteArrayInputStream(data);
         }
     }
 

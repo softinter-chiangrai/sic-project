@@ -21,6 +21,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest;
+import com.softinter.sicapi.dto.response.MaTicketDraft;
+import com.softinter.sicapi.service.impl.MaTicketGeneratorService;
+import com.softinter.sicapi.entity.pm.PmMaTicket;
+import com.softinter.sicapi.service.PmMaTicketExportService;
+import com.softinter.sicapi.util.ReportHelper;
 
 @Slf4j
 @RestController
@@ -31,8 +37,8 @@ import java.util.UUID;
 public class PmMaTicketController {
 
     private final PmMaTicketService ticketService;
-    private final com.softinter.sicapi.service.PmMaTicketExportService exportService;
-    private final com.softinter.sicapi.service.impl.MaTicketGeneratorService maTicketGeneratorService;
+    private final PmMaTicketExportService exportService;
+    private final MaTicketGeneratorService maTicketGeneratorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
 
@@ -42,7 +48,7 @@ public class PmMaTicketController {
             @PathVariable UUID id,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         UUID businessId = BusinessContextHolder.getBusinessId();
         byte[] pdfBytes = exportService.exportTicketPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
@@ -65,7 +71,7 @@ public class PmMaTicketController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmMaTicket.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(PmMaTicket.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmMaTicketResponse> pageResult = ticketService.findAll(businessId, projectId, keyword, status, severity, ticketType, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
@@ -105,9 +111,9 @@ public class PmMaTicketController {
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate MA ticket draft using AI")
-    public ResponseEntity<com.softinter.sicapi.dto.response.MaTicketDraft> generateDraft(
-            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest request) {
-        com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateMaTicketDraftRequest();
+    public ResponseEntity<MaTicketDraft> generateDraft(
+            @RequestBody(required = false) GenerateMaTicketDraftRequest request) {
+        GenerateMaTicketDraftRequest req = request != null ? request : new GenerateMaTicketDraftRequest();
         return ResponseEntity.ok(maTicketGeneratorService.generateDraft(req));
     }
 }

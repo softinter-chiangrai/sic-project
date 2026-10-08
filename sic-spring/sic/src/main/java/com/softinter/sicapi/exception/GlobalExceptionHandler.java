@@ -14,6 +14,7 @@ import org.springframework.web.context.request.WebRequest;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.transaction.UnexpectedRollbackException;
 
 @Slf4j
 @RestControllerAdvice
@@ -37,8 +38,8 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    @ExceptionHandler(org.springframework.transaction.UnexpectedRollbackException.class)
-    public ResponseEntity<ErrorResponse> handleUnexpectedRollbackException(org.springframework.transaction.UnexpectedRollbackException ex) {
+    @ExceptionHandler(UnexpectedRollbackException.class)
+    public ResponseEntity<ErrorResponse> handleUnexpectedRollbackException(UnexpectedRollbackException ex) {
         log.error("Unexpected rollback exception: {}", ex.getMessage(), ex);
         Throwable rootCause = ex.getMostSpecificCause();
         String msg = (rootCause != null && rootCause.getMessage() != null) ? rootCause.getMessage() : ex.getMessage();

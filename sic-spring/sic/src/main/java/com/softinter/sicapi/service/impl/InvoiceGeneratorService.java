@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.time.LocalDate;
 
 @Slf4j
 @Service
@@ -73,8 +74,8 @@ public class InvoiceGeneratorService {
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
         InvoiceDraft draft = parseAiResponse(aiResponse);
 
-        if (draft.getIssueDate() == null || draft.getIssueDate().isBlank()) draft.setIssueDate(java.time.LocalDate.now().toString());
-        if (draft.getDueDate() == null || draft.getDueDate().isBlank()) draft.setDueDate(java.time.LocalDate.parse(draft.getIssueDate()).plusDays(30).toString());
+        if (draft.getIssueDate() == null || draft.getIssueDate().isBlank()) draft.setIssueDate(LocalDate.now().toString());
+        if (draft.getDueDate() == null || draft.getDueDate().isBlank()) draft.setDueDate(LocalDate.parse(draft.getIssueDate()).plusDays(30).toString());
         if (draft.getItems() == null) {
             draft.setItems(new ArrayList<>());
         }

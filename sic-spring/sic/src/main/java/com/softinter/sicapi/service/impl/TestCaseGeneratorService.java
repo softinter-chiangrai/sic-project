@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.time.LocalDate;
 
 @Slf4j
 @Service
@@ -82,7 +83,7 @@ public class TestCaseGeneratorService {
 
         AiMemberPicker.Member tester = memberPicker.pick();
         if (tester != null) draft.setTester(tester.name());
-        draft.setTestDate(java.time.LocalDate.now().plusDays(7).toString());
+        draft.setTestDate(LocalDate.now().plusDays(7).toString());
         if (task != null) draft.setRelatedTask(task.getTaskName());
         if (spec != null) draft.setRelatedSpec(spec.getTitle());
         if (req != null) draft.setRelatedRequirement(req.getTitle());

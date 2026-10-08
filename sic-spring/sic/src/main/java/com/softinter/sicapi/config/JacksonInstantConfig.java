@@ -13,6 +13,9 @@ import java.time.LocalDate;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 @Configuration
 public class JacksonInstantConfig {
@@ -39,7 +42,7 @@ public class JacksonInstantConfig {
 
             // 2. ลอง parse กรณีมี timezone offset อื่นๆ (เช่น 2027-07-31T00:00:00+07:00)
             try {
-                return java.time.OffsetDateTime.parse(text).toInstant();
+                return OffsetDateTime.parse(text).toInstant();
             } catch (DateTimeParseException ignored) {
             }
 
@@ -75,15 +78,15 @@ public class JacksonInstantConfig {
 
             if (text.contains("T")) {
                 try {
-                    return Instant.parse(text).atZone(java.time.ZoneId.of("UTC")).toLocalDate();
+                    return Instant.parse(text).atZone(ZoneId.of("UTC")).toLocalDate();
                 } catch (DateTimeParseException ignored) {
                 }
                 try {
-                    return java.time.OffsetDateTime.parse(text).toLocalDate();
+                    return OffsetDateTime.parse(text).toLocalDate();
                 } catch (DateTimeParseException ignored) {
                 }
                 try {
-                    return java.time.LocalDateTime.parse(text).toLocalDate();
+                    return LocalDateTime.parse(text).toLocalDate();
                 } catch (DateTimeParseException ignored) {
                 }
             }

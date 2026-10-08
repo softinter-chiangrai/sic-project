@@ -26,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import com.softinter.sicapi.config.BusinessContextHolder;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pm/tasks")
@@ -75,7 +77,7 @@ public class TaskController {
     /** Task ทั้งหมดของ business (ใช้กับหน้า Task Board เมื่อยังไม่ได้ระบุโครงการใน URL) */
     @GetMapping("/business")
     public ResponseEntity<List<TaskResponse>> getBusinessTasks() {
-        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -102,7 +104,7 @@ public class TaskController {
             log.info("Getting tasks combobox for project ID: {}", projectId);
             tasks = taskService.getAllTasksByProjectId(projectId);
         } else {
-            UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+            UUID businessId = BusinessContextHolder.getBusinessId();
             if (businessId == null) {
                 return ResponseEntity.badRequest().build();
             }
@@ -111,7 +113,7 @@ public class TaskController {
         }
         List<ComboboxResponse> list = tasks.stream()
                 .map(t -> new ComboboxResponse(t.getId().toString(), t.getTaskCode() + " - " + t.getTaskName()))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 }

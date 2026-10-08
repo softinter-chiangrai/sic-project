@@ -39,6 +39,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import java.util.Map;
+import com.softinter.sicapi.entity.pm.PmCustomer;
+import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
+import jakarta.persistence.criteria.Subquery;
 
 @Slf4j
 @Service
@@ -61,7 +69,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         return findAll(businessId, projectId, null, null, pageable);
     }
 
-    private static final java.util.Map<String, PaymentStatus> PAYMENT_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, PaymentStatus> PAYMENT_STATUS_THAI_MAP = Map.of(
             "ยังไม่จ่าย", PaymentStatus.UNPAID,
             "ค้างชำระ", PaymentStatus.UNPAID,
             "จ่ายบางส่วน", PaymentStatus.PARTIAL,
@@ -75,8 +83,8 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
     @Override
     @Transactional(readOnly = true)
     public Page<PmInvoiceResponse> findAll(UUID businessId, UUID projectId, String keyword, String paymentStatus, Pageable pageable) {
-        org.springframework.data.jpa.domain.Specification<PmInvoice> spec = (root, query, cb) -> {
-            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+        Specification<PmInvoice> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
             predicates.add(cb.isFalse(root.get("isDelete")));
             if (projectId != null) {
@@ -89,8 +97,8 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
 
-                jakarta.persistence.criteria.Subquery<UUID> customerSub = query.subquery(UUID.class);
-                var customerRoot = customerSub.from(com.softinter.sicapi.entity.pm.PmCustomer.class);
+                Subquery<UUID> customerSub = query.subquery(UUID.class);
+                var customerRoot = customerSub.from(PmCustomer.class);
                 customerSub.select(customerRoot.get("id"));
                 customerSub.where(cb.or(
                         cb.like(cb.lower(customerRoot.get("companyNameEn")), pattern),
@@ -98,12 +106,12 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                         cb.like(cb.lower(customerRoot.get("customerCode")), pattern)
                 ));
 
-                jakarta.persistence.criteria.Subquery<UUID> projectSub = query.subquery(UUID.class);
-                var projectRoot = projectSub.from(com.softinter.sicapi.entity.pm.PmCustomerProject.class);
+                Subquery<UUID> projectSub = query.subquery(UUID.class);
+                var projectRoot = projectSub.from(PmCustomerProject.class);
                 projectSub.select(projectRoot.get("id"));
                 projectSub.where(cb.like(cb.lower(projectRoot.get("projectName")), pattern));
 
-                List<jakarta.persistence.criteria.Predicate> orPreds = new ArrayList<>(List.of(
+                List<Predicate> orPreds = new ArrayList<>(List.of(
                         cb.like(cb.lower(root.get("invoiceNo")), pattern),
                         cb.like(cb.lower(root.get("remark")), pattern),
                         cb.like(cb.lower(root.get("paymentStatus").as(String.class)), pattern),
@@ -112,23 +120,19 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 ));
 
                 // ✅ Bilingual: สถานะการชำระเงิน
-                for (var entry : PAYMENT_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(root.get("paymentStatus"), entry.getValue()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "paymentStatus", PAYMENT_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "INVOICE", rawKw, orPreds);
 
-                predicates.add(cb.or(orPreds.toArray(new jakarta.persistence.criteria.Predicate[0])));
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
-            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        org.springframework.data.domain.Page<PmInvoice> page = invoiceRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Page<PmInvoice> page = invoiceRepository.findAll(spec, pageable);
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "INVOICE", page.getContent().stream().map(PmInvoice::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);
@@ -353,7 +357,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         // ✅ derive customerId จาก Project เสมอเมื่อรู้ projectId (ห้าม trust req.getCustomerId() แยกต่างหาก)
         if (effectiveProjectId != null) {
             entity.setCustomerId(projectRepository.findById(effectiveProjectId)
-                    .map(com.softinter.sicapi.entity.pm.PmCustomerProject::getCustomerId)
+                    .map(PmCustomerProject::getCustomerId)
                     .orElse(req.getCustomerId()));
         } else {
             entity.setCustomerId(req.getCustomerId());

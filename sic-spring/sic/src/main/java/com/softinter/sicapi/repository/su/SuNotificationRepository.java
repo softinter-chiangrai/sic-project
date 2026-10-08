@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Repository
 public interface SuNotificationRepository extends JpaRepository<SuNotification, UUID> {
@@ -17,10 +19,10 @@ public interface SuNotificationRepository extends JpaRepository<SuNotification, 
     List<SuNotification> findByRecipientUserIdOrderByCreatedDateDesc(@Param("recipientUserId") String recipientUserId);
 
     @Query("SELECT n FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isDelete = false")
-    org.springframework.data.domain.Page<SuNotification> findByRecipientUserIdAndIsDeleteFalse(@Param("recipientUserId") String recipientUserId, org.springframework.data.domain.Pageable pageable);
+    Page<SuNotification> findByRecipientUserIdAndIsDeleteFalse(@Param("recipientUserId") String recipientUserId, Pageable pageable);
 
     @Query("SELECT n FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isRead = false AND n.isDelete = false")
-    org.springframework.data.domain.Page<SuNotification> findByRecipientUserIdAndIsReadFalseAndIsDeleteFalse(@Param("recipientUserId") String recipientUserId, org.springframework.data.domain.Pageable pageable);
+    Page<SuNotification> findByRecipientUserIdAndIsReadFalseAndIsDeleteFalse(@Param("recipientUserId") String recipientUserId, Pageable pageable);
 
     @Query("SELECT COUNT(n) FROM SuNotification n WHERE n.recipientUserId = :recipientUserId AND n.isRead = false AND n.isDelete = false")
     long countUnreadByRecipientUserId(@Param("recipientUserId") String recipientUserId);

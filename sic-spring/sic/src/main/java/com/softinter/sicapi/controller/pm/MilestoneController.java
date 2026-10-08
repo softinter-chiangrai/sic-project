@@ -24,6 +24,8 @@ import com.softinter.sicapi.service.MilestoneService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.config.BusinessContextHolder;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pm/milestones")
@@ -38,7 +40,7 @@ public class MilestoneController {
     @GetMapping("/combobox")
     public ResponseEntity<List<ComboboxResponse>> getComboboxMilestones(
             @RequestParam(required = false) String keyword) {
-        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -46,7 +48,7 @@ public class MilestoneController {
         List<PmMilestone> milestones = milestoneRepository.findByBusinessIdAndKeyword(businessId, normalizedKeyword);
         List<ComboboxResponse> list = milestones.stream()
                 .map(m -> new ComboboxResponse(m.getId().toString(), m.getMilestoneName()))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 

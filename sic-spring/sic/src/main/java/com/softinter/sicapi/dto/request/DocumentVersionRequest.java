@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 import java.util.UUID;
+import java.time.Instant;
 
 @Data
 public class DocumentVersionRequest {
@@ -26,7 +27,7 @@ public class DocumentVersionRequest {
     private UUID previousVersionId;
     private String approvalStatus;
     private String approvedBy;
-    private java.time.Instant approvedDate;
+    private Instant approvedDate;
     private String snapshotData;
     private UUID fileRefId;
     private String filePath;

@@ -27,6 +27,11 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.dto.response.DeliveryDraft;
+import com.softinter.sicapi.service.impl.DeliveryGeneratorService;
+import com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest;
+import com.softinter.sicapi.service.PmDeliveryExportService;
+import com.softinter.sicapi.util.ReportHelper;
 
 @Slf4j
 @RestController
@@ -38,8 +43,8 @@ public class PmDeliveryController {
 
     private final PmDeliveryService deliveryService;
     private final PmDeliveryRepository deliveryRepository;
-    private final com.softinter.sicapi.service.PmDeliveryExportService exportService;
-    private final com.softinter.sicapi.service.impl.DeliveryGeneratorService deliveryGeneratorService;
+    private final PmDeliveryExportService exportService;
+    private final DeliveryGeneratorService deliveryGeneratorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
 
@@ -131,7 +136,7 @@ public class PmDeliveryController {
             @PathVariable UUID id,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         UUID businessId = BusinessContextHolder.getBusinessId();
         byte[] pdfBytes = exportService.exportDeliveryHandoverPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
@@ -160,9 +165,9 @@ public class PmDeliveryController {
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate delivery draft using AI")
-    public ResponseEntity<com.softinter.sicapi.dto.response.DeliveryDraft> generateDraft(
-            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest request) {
-        com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateDeliveryDraftRequest();
+    public ResponseEntity<DeliveryDraft> generateDraft(
+            @RequestBody(required = false) GenerateDeliveryDraftRequest request) {
+        GenerateDeliveryDraftRequest req = request != null ? request : new GenerateDeliveryDraftRequest();
         return ResponseEntity.ok(deliveryGeneratorService.generateDraft(req));
     }
 }

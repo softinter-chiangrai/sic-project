@@ -25,6 +25,7 @@ import com.softinter.sicapi.util.LocalizationHelper; // ✅ import
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Slf4j
 @Service
@@ -55,7 +56,7 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
     @Override
     public SuUserBusiness findById(UUID id) {
         return userBusinessRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User business not found"));
     }
 
     @Override

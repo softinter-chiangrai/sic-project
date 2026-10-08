@@ -28,6 +28,14 @@ import java.util.UUID;
 import com.softinter.sicapi.service.PmCustomerProjectExportService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import java.util.stream.Collectors;
+import com.softinter.sicapi.dto.request.GenerateProjectDraftRequest;
+import java.util.List;
+import org.springframework.data.domain.PageRequest;
+import com.softinter.sicapi.dto.response.ProjectDraft;
+import com.softinter.sicapi.service.impl.ProjectGeneratorService;
+import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.util.SortValidator;
 
 @RestController
 @RequestMapping("/api/pm/customer-projects")
@@ -38,13 +46,13 @@ public class PmCustomerProjectController {
 
     private final PmCustomerProjectService projectService;
     private final PmCustomerProjectExportService projectExportService;
-    private final com.softinter.sicapi.service.impl.ProjectGeneratorService projectGeneratorService;
+    private final ProjectGeneratorService projectGeneratorService;
     private final PmCustomerProjectRepository projectRepository;
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate project charter/plan draft with AI")
-    public ResponseEntity<com.softinter.sicapi.dto.response.ProjectDraft> generateDraft(
-            @RequestBody com.softinter.sicapi.dto.request.GenerateProjectDraftRequest req) {
+    public ResponseEntity<ProjectDraft> generateDraft(
+            @RequestBody GenerateProjectDraftRequest req) {
         return ResponseEntity.ok(projectGeneratorService.generateDraft(req));
     }
 
@@ -62,8 +70,8 @@ public class PmCustomerProjectController {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
 
-        Sort sort = com.softinter.sicapi.util.SortValidator.build(
-                com.softinter.sicapi.entity.pm.PmCustomerProject.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(
+                PmCustomerProject.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
 
         Page<PmCustomerProjectResponse> pageResult = projectService.getProjects(
@@ -75,31 +83,31 @@ public class PmCustomerProjectController {
 
     @GetMapping("/combobox")
     @Operation(summary = "Get project combobox list (ค้นหาได้อิสระ หรือกรองตาม customerId)")
-    public ResponseEntity<java.util.List<ComboboxResponse>> getComboboxProjects(
+    public ResponseEntity<List<ComboboxResponse>> getComboboxProjects(
             @RequestParam(required = false) UUID customerId,
             @RequestParam(required = false) String keyword) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
-        java.util.List<PmCustomerProject> projects;
+        List<PmCustomerProject> projects;
         if (customerId != null) {
             if (keyword != null && !keyword.isBlank()) {
                 projects = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
-                        customerId, businessId, keyword, org.springframework.data.domain.PageRequest.of(0, 50)).getContent();
+                        customerId, businessId, keyword, PageRequest.of(0, 50)).getContent();
             } else {
                 projects = projectRepository.findByCustomerIdAndBusinessIdAndIsDeleteFalse(
-                        customerId, businessId, org.springframework.data.domain.PageRequest.of(0, 100)).getContent();
+                        customerId, businessId, PageRequest.of(0, 100)).getContent();
             }
         } else {
             projects = (keyword != null && !keyword.isBlank())
                     ? projectRepository.findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(
-                            businessId, keyword, org.springframework.data.domain.PageRequest.of(0, 50)).getContent()
+                            businessId, keyword, PageRequest.of(0, 50)).getContent()
                     : projectRepository.findByBusinessIdAndIsDeleteFalse(businessId);
         }
-        java.util.List<ComboboxResponse> list = projects.stream()
+        List<ComboboxResponse> list = projects.stream()
                 .map(p -> new ComboboxResponse(p.getId().toString(), p.getProjectName()))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
@@ -122,7 +130,7 @@ public class PmCustomerProjectController {
             return ResponseEntity.badRequest().build();
         }
 
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         byte[] pdfBytes = projectExportService.exportProjectPdf(id, businessId, finalLang);
 
         String filename = "project_" + id + ".pdf";

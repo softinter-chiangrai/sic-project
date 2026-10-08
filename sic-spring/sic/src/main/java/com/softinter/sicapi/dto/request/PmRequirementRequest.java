@@ -3,6 +3,8 @@ package com.softinter.sicapi.dto.request;
 import lombok.Data;
 
 import java.util.UUID;
+import java.util.List;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 @Data
 public class PmRequirementRequest {
@@ -23,5 +25,5 @@ public class PmRequirementRequest {
     private Integer state;
     private Integer rowVersion;
     private UUID uploadGroupId;
-    private java.util.List<com.softinter.sicapi.entity.ex.StorageUploadReference> uploadGroupData;
+    private List<StorageUploadReference> uploadGroupData;
 }

@@ -7,6 +7,7 @@ import com.softinter.sicapi.dto.response.PmDiagramVersionResponse;
 
 import java.util.List;
 import java.util.UUID;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
 
 public interface PmDiagramTabService {
 
@@ -30,5 +31,5 @@ public interface PmDiagramTabService {
 
     PmDiagramTabResponse restoreVersion(UUID tabId, UUID versionId);
 
-    List<com.softinter.sicapi.dto.response.ComboboxResponse> getComboboxDiagrams(UUID projectId);
+    List<ComboboxResponse> getComboboxDiagrams(UUID projectId);
 }

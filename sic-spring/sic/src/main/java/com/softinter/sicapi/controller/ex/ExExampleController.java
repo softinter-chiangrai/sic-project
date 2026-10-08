@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/api/ex/examples")
@@ -88,7 +89,7 @@ public class ExExampleController {
     @Operation(summary = "Get example by ID")
     public ResponseEntity<ExExample> getById(@PathVariable UUID id) {
         ExExample example = exampleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Example not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Example not found"));
         return ResponseEntity.ok(example);
     }
 
@@ -98,7 +99,7 @@ public class ExExampleController {
         ExExample example;
         if (request.getId() != null) {
             example = exampleRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Example not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Example not found"));
         } else {
             example = new ExExample();
         }
@@ -123,7 +124,7 @@ public class ExExampleController {
     @Operation(summary = "Delete example")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         ExExample example = exampleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Example not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Example not found"));
         example.setIsDelete(true);
         example.setIsActive(false);
         exampleRepository.save(example);

@@ -46,6 +46,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import java.util.HashMap;
+import java.util.Map;
+import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.util.SortValidator;
 
 @RestController
 @RequestMapping("/api/pm/requirement")
@@ -79,7 +83,7 @@ public class PmRequirementController {
             return ResponseEntity.badRequest().build();
         }
 
-        Sort sort = com.softinter.sicapi.util.SortValidator.build(
+        Sort sort = SortValidator.build(
                 PmRequirement.class, sortBy, sortDirection, "requirementCode");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
 
@@ -197,7 +201,7 @@ public class PmRequirementController {
                     String label = (r.getRequirementCode() != null && !r.getRequirementCode().isBlank()
                             ? "[" + r.getRequirementCode() + "] " : "") + r.getTitle();
                     ComboboxResponse cbResp = new ComboboxResponse(r.getId().toString(), label);
-                    java.util.Map<String, Object> meta = new java.util.HashMap<>();
+                    Map<String, Object> meta = new HashMap<>();
                     meta.put("projectId", r.getProjectId());
                     if (r.getProject() != null) {
                         meta.put("projectName", r.getProject().getProjectName());
@@ -240,7 +244,7 @@ public class PmRequirementController {
             return ResponseEntity.badRequest().build();
         }
 
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         byte[] pdfBytes = requirementExportService.exportRequirementPdf(id, businessId, finalLang);
 
         // Resolve the filename from requirement code
@@ -269,7 +273,7 @@ public class PmRequirementController {
     @PostMapping("/export")
     @Operation(summary = "Export requirement document (POST, matches frontend export service)")
     public ResponseEntity<byte[]> exportRequirementPost(
-            @RequestBody java.util.Map<String, Object> body,
+            @RequestBody Map<String, Object> body,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
 
@@ -292,7 +296,7 @@ public class PmRequirementController {
 
         Object bodyLangObj = body.get("lang");
         String bodyLang = bodyLangObj != null ? bodyLangObj.toString() : null;
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(
+        String finalLang = ReportHelper.resolveLang(
                 lang != null ? lang : bodyLang, headerLang);
         byte[] pdfBytes = requirementExportService.exportRequirementPdf(requirementId, businessId, finalLang);
 

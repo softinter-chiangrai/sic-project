@@ -20,6 +20,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.entity.pm.PmPayment;
 
 @Slf4j
 @RestController
@@ -42,7 +43,7 @@ public class PmPaymentController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmPayment.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(PmPayment.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmPaymentResponse> pageResult = paymentService.findAll(businessId, invoiceId, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));

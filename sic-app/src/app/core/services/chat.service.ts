@@ -136,6 +136,7 @@ export class ChatService {
   // ── Group chat ──
   readonly groupMessageReceived$ = new Subject<ChatGroupMessage>();
   readonly groupMessageCancelled$ = new Subject<string>();
+  readonly groupMessageEdited$ = new Subject<ChatGroupMessage>();
   readonly groupCallLogUpdated$ = new Subject<ChatGroupMessage>();
   readonly groupCreated$ = new Subject<ChatGroup>();
   readonly groupUpdated$ = new Subject<ChatGroup>();
@@ -586,6 +587,20 @@ export class ChatService {
 
   cancelGroupMessage(messageId: string): void {
     this.publishStomp('/app/chat/cancel', { messageId });
+    this.http.post(`${environment.apiBaseUrl}/api/su/chat/cancel/${messageId}`, {}).subscribe({
+      next: () => this.groupMessageCancelled$.next(messageId),
+      error: () => {},
+    });
+  }
+
+  editGroupMessage(messageId: string, message: string): void {
+    this.publishStomp('/app/chat/edit', { messageId, message });
+    this.http.post<any>(`${environment.apiBaseUrl}/api/su/chat/edit/${messageId}`, { message }).subscribe({
+      next: (res) => {
+        if (res) this.groupMessageEdited$.next(this.toGroupMessage(res));
+      },
+      error: (err) => console.error('[ChatService] Error editing group message:', err),
+    });
   }
 
   // ─────────────────────────────────────────────────────────────────────────
@@ -806,6 +821,32 @@ export class ChatService {
       }
     });
     this.groupSubscriptions.set(groupId, sub);
+
+    const cancelSubKey = `${groupId}_cancel`;
+    if (!this.groupSubscriptions.has(cancelSubKey)) {
+      const cancelSub = this.stompClient.subscribe(`/topic/group/${groupId}/cancel`, (msg) => {
+        try {
+          const data = JSON.parse(msg.body);
+          if (data.messageId) this.groupMessageCancelled$.next(data.messageId);
+        } catch (err) {
+          console.error('[ChatService] Error parsing group cancel:', err);
+        }
+      });
+      this.groupSubscriptions.set(cancelSubKey, cancelSub);
+    }
+
+    const editSubKey = `${groupId}_edit`;
+    if (!this.groupSubscriptions.has(editSubKey)) {
+      const editSub = this.stompClient.subscribe(`/topic/group/${groupId}/edit`, (msg) => {
+        try {
+          const data = JSON.parse(msg.body);
+          this.groupMessageEdited$.next(this.toGroupMessage(data));
+        } catch (err) {
+          console.error('[ChatService] Error parsing group edit:', err);
+        }
+      });
+      this.groupSubscriptions.set(editSubKey, editSub);
+    }
   }
 
   private handleCallSignalPayload(payload: CallSignalPayload): void {

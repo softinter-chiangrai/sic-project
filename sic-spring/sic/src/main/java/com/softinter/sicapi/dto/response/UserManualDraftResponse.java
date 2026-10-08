@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @NoArgsConstructor
@@ -14,7 +15,7 @@ public class UserManualDraftResponse {
     private String manualType;
     private String summary;
     private String version;
-    private java.util.UUID relatedSpecId;
+    private UUID relatedSpecId;
     private List<SectionDraftDto> sections;
 
     @Data

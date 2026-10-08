@@ -35,6 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/api/su/user-business-roles")
@@ -106,7 +107,7 @@ public class SuUserBusinessRoleController {
         SuUserBusinessRole ubr;
         if (request.getId() != null) {
             ubr = userBusinessRoleRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("User business role not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User business role not found"));
         } else {
             ubr = new SuUserBusinessRole();
         }
@@ -120,7 +121,7 @@ public class SuUserBusinessRoleController {
     @Operation(summary = "Delete user business role")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SuUserBusinessRole ubr = userBusinessRoleRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User business role not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User business role not found"));
         ubr.setIsDelete(true);
         ubr.setIsActive(false);
         userBusinessRoleRepository.save(ubr);

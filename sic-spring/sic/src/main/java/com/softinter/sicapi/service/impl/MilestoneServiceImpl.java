@@ -23,6 +23,8 @@ import com.softinter.sicapi.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import java.util.ArrayList;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +46,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Transactional(readOnly = true)
     public MilestoneResponse getMilestoneById(UUID milestoneId) {
         PmMilestone ms = milestoneRepository.findById(milestoneId)
-                .orElseThrow(() -> new RuntimeException("Milestone not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
         return toResponse(ms);
     }
 
@@ -52,7 +54,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Transactional
     public MilestoneResponse createMilestone(MilestoneRequest request) {
         PmPhase phase = phaseRepository.findById(request.getPhaseId())
-                .orElseThrow(() -> new RuntimeException("Phase not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Phase not found"));
 
         PmMilestone ms = new PmMilestone();
         ms.setPhase(phase);
@@ -79,7 +81,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Transactional
     public MilestoneResponse updateMilestone(UUID milestoneId, MilestoneRequest request) {
         PmMilestone ms = milestoneRepository.findById(milestoneId)
-                .orElseThrow(() -> new RuntimeException("Milestone not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
 
         ms.setMilestoneName(request.getMilestoneName());
         ms.setDescription(request.getDescription());
@@ -105,7 +107,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     @Transactional
     public void deleteMilestone(UUID milestoneId) {
         PmMilestone ms = milestoneRepository.findById(milestoneId)
-                .orElseThrow(() -> new RuntimeException("Milestone not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
         ms.setIsDelete(true);
         milestoneRepository.save(ms);
 
@@ -128,7 +130,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         dto.setDueDate(ms.getDueDate());
         dto.setStatus(ms.getStatus());
         dto.setColor(ms.getColor());
-        List<WorkPackageResponse> wpResponses = new java.util.ArrayList<>();
+        List<WorkPackageResponse> wpResponses = new ArrayList<>();
         if (ms.getWorkPackages() != null) {
             for (PmWorkPackage wp : ms.getWorkPackages()) {
                 if (wp.getIsDelete() == null || !wp.getIsDelete()) {
@@ -151,7 +153,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         dto.setEndDate(wp.getEndDate());
         dto.setStatus(wp.getStatus());
         
-        List<TaskResponse> taskResponses = new java.util.ArrayList<>();
+        List<TaskResponse> taskResponses = new ArrayList<>();
         if (wp.getTasks() != null) {
             for (PmTask task : wp.getTasks()) {
                 if (task.getIsDelete() == null || !task.getIsDelete()) {

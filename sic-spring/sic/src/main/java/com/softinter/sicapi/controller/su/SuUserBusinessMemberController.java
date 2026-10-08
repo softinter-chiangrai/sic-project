@@ -28,6 +28,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Sort;
+import com.softinter.sicapi.util.SortValidator;
+import com.softinter.sicapi.entity.su.SuUserBusiness;
 
 @RestController
 @RequestMapping("/api/su-user-business/members")
@@ -46,8 +49,8 @@ public class SuUserBusinessMemberController {
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(required = false) String sortBy,
             @RequestParam(defaultValue = "DESC") String sortDirection) {
-        org.springframework.data.domain.Sort sort = com.softinter.sicapi.util.SortValidator.build(
-                com.softinter.sicapi.entity.su.SuUserBusiness.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(
+                SuUserBusiness.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<SuUserBusinessMemberResponse> pageResult = memberService.getMembers(businessId, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));

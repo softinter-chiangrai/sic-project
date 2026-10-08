@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/api/su/business-role-programs")
@@ -140,17 +141,17 @@ public class SuBusinessRoleProgramController {
         SuBusinessRoleProgram brp;
         if (request.getId() != null) {
             brp = brpRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Business role program not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Business role program not found"));
         } else {
             brp = new SuBusinessRoleProgram();
             if (request.getBusinessRoleId() != null) {
                 SuBusinessRole role = businessRoleRepository.findById(request.getBusinessRoleId())
-                        .orElseThrow(() -> new RuntimeException("Business role not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Business role not found"));
                 brp.setBusinessRole(role);
             }
             if (request.getProgramId() != null) {
                 SuProgram program = programRepository.findById(request.getProgramId())
-                        .orElseThrow(() -> new RuntimeException("Program not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Program not found"));
                 brp.setProgram(program);
             }
         }
@@ -175,7 +176,7 @@ public class SuBusinessRoleProgramController {
         SuBusinessRole role = null;
         if (request.getRoleId() != null) {
             role = businessRoleRepository.findById(request.getRoleId())
-                    .orElseThrow(() -> new RuntimeException("Business role not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Business role not found"));
         }
 
         UUID bRoleId = role != null ? role.getId() : (request.getRoleId() != null ? request.getRoleId() : null);
@@ -204,10 +205,10 @@ public class SuBusinessRoleProgramController {
                 SuBusinessRole moduleRole = (role != null && role.getId().equals(targetRoleId)) 
                         ? role 
                         : businessRoleRepository.findById(targetRoleId)
-                                .orElseThrow(() -> new RuntimeException("Business role not found"));
+                                .orElseThrow(() -> new ResourceNotFoundException("Business role not found"));
                 brp.setBusinessRole(moduleRole);
                 SuProgram program = programRepository.findById(req.getProgramId())
-                        .orElseThrow(() -> new RuntimeException("Program not found"));
+                        .orElseThrow(() -> new ResourceNotFoundException("Program not found"));
                 brp.setProgram(program);
                 existingMap.put(req.getProgramId(), brp);
             }
@@ -231,7 +232,7 @@ public class SuBusinessRoleProgramController {
     @Operation(summary = "Delete business role program")
     public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
         SuBusinessRoleProgram brp = brpRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Business role program not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Business role program not found"));
         brp.setIsDelete(true);
         brp.setIsActive(false);
         brpRepository.save(brp);

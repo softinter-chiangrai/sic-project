@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.Instant;
+import java.util.Locale;
+import com.softinter.sicapi.util.ReportHelper;
 
 @Slf4j
 @Service
@@ -65,7 +68,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
 
         String deliveryDateStr = delivery.getDeliveryDate() != null
                 ? DateTimeFormatter.ofPattern("dd/MM/yyyy").format(delivery.getDeliveryDate()) : "-";
-        String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
+        String exportDate = DISPLAY_FORMATTER.format(Instant.now());
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("deliveryId", deliveryId != null ? deliveryId.toString() : "");
@@ -83,11 +86,11 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("releaseNote", delivery.getReleaseNote());
         String attachmentNames = delivery.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(delivery.getAttachmentGroupId())
-                        .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
+                        .stream().map(u -> ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
         parameters.put("lang", normalizedLang);
-        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? Locale.ENGLISH : new Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {
@@ -106,7 +109,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
 
             JasperReport jasperReport = JasperCompileManager.compileReport(is);
 
-            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
+            parameters.put("logoStream", ReportHelper.getLogoInputStream());
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
 

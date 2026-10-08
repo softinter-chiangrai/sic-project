@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import org.springframework.core.io.Resource;
 
 @RestController
 @RequestMapping("/api/storage")
@@ -139,7 +141,7 @@ public class StorageController {
     // ========== Download ==========
     @GetMapping("/download/{fileId}")
     @Operation(summary = "Download file by ID")
-    public ResponseEntity<org.springframework.core.io.Resource> download(@PathVariable UUID fileId) {
+    public ResponseEntity<Resource> download(@PathVariable UUID fileId) {
         StorageDownloadResponse download = fileStorageService.downloadFile(fileId);
         InputStreamResource resource = new InputStreamResource(download.getInputStream());
         return ResponseEntity.ok()
@@ -151,7 +153,7 @@ public class StorageController {
 
     @GetMapping("/files/{bucketName}/{*objectKey}")
     @Operation(summary = "Download file by bucket and object key")
-    public ResponseEntity<org.springframework.core.io.Resource> downloadByKey(@PathVariable String bucketName,
+    public ResponseEntity<Resource> downloadByKey(@PathVariable String bucketName,
                                                                               @PathVariable String objectKey,
                                                                               @RequestParam(required = false) Integer width,
                                                                               @RequestParam(required = false) Integer height,
@@ -183,7 +185,7 @@ public class StorageController {
     public ResponseEntity<InputStreamResource> getAvatar(@PathVariable UUID groupId) {
         SuUpload upload = uploadRepository
                 .findFirstByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(groupId)
-                .orElseThrow(() -> new RuntimeException("Avatar not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Avatar not found"));
 
         StorageDownloadResponse download = fileStorageService.downloadFile(upload.getId());
         InputStreamResource resource = new InputStreamResource(download.getInputStream());

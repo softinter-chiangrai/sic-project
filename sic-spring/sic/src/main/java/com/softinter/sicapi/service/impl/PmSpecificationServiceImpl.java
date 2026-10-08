@@ -37,6 +37,9 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -54,7 +57,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
 
-    private static final java.util.Map<String, String> SPEC_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, String> SPEC_STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
             "ตรวจสอบ", "In Review",
             "รีวิว", "In Review",
@@ -91,32 +94,16 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
-                List<Predicate> orPreds = new ArrayList<>(List.of(
-                        cb.like(cb.lower(root.get("specificationCode")), pattern),
-                        cb.like(cb.lower(root.get("title")), pattern),
-                        cb.like(cb.lower(root.get("specificationType")), pattern),
-                        cb.like(cb.lower(root.get("description")), pattern),
-                        cb.like(cb.lower(root.get("status")), pattern),
-                        cb.like(cb.lower(root.get("priority")), pattern),
-                        cb.like(cb.lower(root.get("version")), pattern)
-                ));
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "specificationCode", "title", "specificationType", "description", "status", "priority", "version");
 
                 // ✅ Bilingual: สถานะ
-                for (var entry : SPEC_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", SPEC_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: ความสำคัญ
-                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "priority", KeywordSearchHelper.PRIORITY_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "SPECIFICATION", rawKw, orPreds);
 
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));

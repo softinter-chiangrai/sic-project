@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
  * สร้างบล็อก "บริบทขอบเขต" แบบสรุปสั้นๆ ให้ AI ก่อนเจนเอกสาร: โครงการ, เอกสารที่ผู้ใช้เลือกผูกมา,
@@ -211,7 +212,7 @@ public class AiScopeContextService {
 
     private static List<UUID> toUuids(Object o) {
         if (o instanceof List<?> list) {
-            return list.stream().map(AiScopeContextService::toUuid).filter(java.util.Objects::nonNull).toList();
+            return list.stream().map(AiScopeContextService::toUuid).filter(Objects::nonNull).toList();
         }
         UUID single = toUuid(o);
         return single == null ? List.of() : List.of(single);

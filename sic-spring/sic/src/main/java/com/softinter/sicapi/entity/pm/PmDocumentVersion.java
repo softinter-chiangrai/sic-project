@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
+import java.time.Instant;
 
 @Entity
 @Table(name = "pm_document_version")
@@ -43,7 +44,7 @@ public class PmDocumentVersion extends BaseBusinessEntity {
     private String approvedBy;
 
     @Column(name = "approved_date")
-    private java.time.Instant approvedDate;
+    private Instant approvedDate;
 
     @Column(name = "snapshot_data", columnDefinition = "TEXT")
     private String snapshotData;

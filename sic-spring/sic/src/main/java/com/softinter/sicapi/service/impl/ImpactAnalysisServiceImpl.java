@@ -33,6 +33,11 @@ import com.softinter.sicapi.service.TraceLinkService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import java.util.ArrayList;
+import org.springframework.data.domain.PageRequest;
+import com.softinter.sicapi.entity.pm.PmBug;
+import com.softinter.sicapi.entity.pm.PmSpecification;
 
 @Slf4j
 @Service
@@ -66,7 +71,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     public UUID save(SaveImpactAnalysisRequest request) {
         PmChangeRequest changeRequest = changeRequestRepository
                 .findById(request.getChangeRequestId())
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Change Request not found"));
 
         ChangeImpactAnalysis analysis = repository
                 .findByChangeRequestId(request.getChangeRequestId())
@@ -137,7 +142,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectScope)
                         .forEach(sp -> impacted.computeIfAbsent("SPECIFICATION", k -> new HashSet<>()).add(sp.getId()));
                 bugRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectScope,
-                                org.springframework.data.domain.PageRequest.of(0, 1000))
+                                PageRequest.of(0, 1000))
                         .getContent()
                         .forEach(bg -> impacted.computeIfAbsent("BUG", k -> new HashSet<>()).add(bg.getId()));
             }
@@ -190,8 +195,8 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 if (!Boolean.TRUE.equals(tc.getIsDelete())) {
                     activeTestCaseIds.add(tcId);
                     try {
-                        List<com.softinter.sicapi.entity.pm.PmBug> linkedBugs = bugRepository.findByTestCaseIdAndIsDeleteFalse(tcId);
-                        for (com.softinter.sicapi.entity.pm.PmBug b : linkedBugs) {
+                        List<PmBug> linkedBugs = bugRepository.findByTestCaseIdAndIsDeleteFalse(tcId);
+                        for (PmBug b : linkedBugs) {
                             rawBugIds.add(b.getId());
                         }
                     } catch (Exception ignored) {}
@@ -243,9 +248,9 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             });
         } else if ("REQUIREMENT".equalsIgnoreCase(targetType) && targetId != null) {
             // ค้นหา Specification ที่ผูกกับ Requirement นี้
-            List<com.softinter.sicapi.entity.pm.PmSpecification> specs = specificationRepository.findByRequirementIdAndIsDeleteFalse(targetId);
+            List<PmSpecification> specs = specificationRepository.findByRequirementIdAndIsDeleteFalse(targetId);
             if (specs != null) {
-                for (com.softinter.sicapi.entity.pm.PmSpecification s : specs) {
+                for (PmSpecification s : specs) {
                     if (!Boolean.TRUE.equals(s.getIsDelete())) {
                         activeSpecIds.add(s.getId());
                     }
@@ -301,7 +306,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         UUID[] bugIds = activeBugIds.toArray(UUID[]::new);
 
         // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
-        Set<UUID> diagramSet = new java.util.HashSet<>();
+        Set<UUID> diagramSet = new HashSet<>();
         String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
         for (String dType : diagramTypes) {
             if (impacted.containsKey(dType)) {
@@ -432,7 +437,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         PmChangeRequest changeRequest = changeRequestRepository
                 .findById(changeRequestId)
-                .orElseThrow(() -> new RuntimeException("Change Request not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Change Request not found"));
 
         UUID targetId = changeRequest.getTargetId();
         String targetType = changeRequest.getTargetType();
@@ -482,7 +487,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         
         dto.setImpactedRequirementIds(entity.getImpactedRequirementIds());
         if (entity.getImpactedRequirementIds() != null && entity.getImpactedRequirementIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.ImpactItem> items = new ArrayList<>();
             for (UUID reqId : entity.getImpactedRequirementIds()) {
                 requirementRepository.findById(reqId).ifPresent(r -> {
                     if (!Boolean.TRUE.equals(r.getIsDelete())) {
@@ -499,7 +504,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedSpecIds(entity.getImpactedSpecIds());
         if (entity.getImpactedSpecIds() != null && entity.getImpactedSpecIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.ImpactItem> items = new ArrayList<>();
             for (UUID specId : entity.getImpactedSpecIds()) {
                 specificationRepository.findById(specId).ifPresent(s -> {
                     if (!Boolean.TRUE.equals(s.getIsDelete())) {
@@ -516,7 +521,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedDiagramIds(entity.getImpactedDiagramIds());
         if (entity.getImpactedDiagramIds() != null && entity.getImpactedDiagramIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.DiagramItem> diagramItems = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.DiagramItem> diagramItems = new ArrayList<>();
             for (UUID diagramId : entity.getImpactedDiagramIds()) {
                 ImpactAnalysisResponse.DiagramItem item = new ImpactAnalysisResponse.DiagramItem();
                 item.setId(diagramId);
@@ -533,7 +538,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedTaskIds(entity.getImpactedTaskIds());
         if (entity.getImpactedTaskIds() != null && entity.getImpactedTaskIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.ImpactItem> items = new ArrayList<>();
             for (UUID taskId : entity.getImpactedTaskIds()) {
                 taskRepository.findById(taskId).ifPresent(t -> {
                     if (!Boolean.TRUE.equals(t.getIsDelete())) {
@@ -550,7 +555,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedTestCaseIds(entity.getImpactedTestCaseIds());
         if (entity.getImpactedTestCaseIds() != null && entity.getImpactedTestCaseIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.ImpactItem> items = new ArrayList<>();
             for (UUID tcId : entity.getImpactedTestCaseIds()) {
                 testCaseRepository.findById(tcId).ifPresent(tc -> {
                     if (!Boolean.TRUE.equals(tc.getIsDelete())) {
@@ -567,7 +572,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedBugIds(entity.getImpactedBugIds());
         if (entity.getImpactedBugIds() != null && entity.getImpactedBugIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.ImpactItem> items = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.ImpactItem> items = new ArrayList<>();
             for (UUID bugId : entity.getImpactedBugIds()) {
                 // พยายามหาใน taskRepository (กรณีเป็น Bug Task) หรือ bugRepository
                 taskRepository.findById(bugId).ifPresentOrElse(t -> {
@@ -595,7 +600,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedProjectIds(entity.getImpactedProjectIds());
         if (entity.getImpactedProjectIds() != null && entity.getImpactedProjectIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.ProjectImpactItem> projectItems = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.ProjectImpactItem> projectItems = new ArrayList<>();
             for (UUID pId : entity.getImpactedProjectIds()) {
                 customerProjectRepository.findById(pId).ifPresent(p -> {
                     if (!Boolean.TRUE.equals(p.getIsDelete())) {
@@ -621,7 +626,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         dto.setImpactedCustomerIds(entity.getImpactedCustomerIds());
         if (entity.getImpactedCustomerIds() != null && entity.getImpactedCustomerIds().length > 0) {
-            java.util.List<ImpactAnalysisResponse.CustomerImpactItem> customerItems = new java.util.ArrayList<>();
+            List<ImpactAnalysisResponse.CustomerImpactItem> customerItems = new ArrayList<>();
             for (UUID cId : entity.getImpactedCustomerIds()) {
                 customerRepository.findById(cId).ifPresent(c -> {
                     if (!Boolean.TRUE.equals(c.getIsDelete())) {

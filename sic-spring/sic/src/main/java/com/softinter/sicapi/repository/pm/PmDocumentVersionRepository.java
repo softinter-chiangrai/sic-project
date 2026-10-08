@@ -8,18 +8,20 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Collection;
+import java.util.Optional;
 
 @Repository
 public interface PmDocumentVersionRepository extends JpaRepository<PmDocumentVersion, UUID> {
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(String documentType, UUID documentId);
 
-    @org.springframework.data.jpa.repository.Query("SELECT v FROM PmDocumentVersion v WHERE v.documentType = :documentType "
+    @Query("SELECT v FROM PmDocumentVersion v WHERE v.documentType = :documentType "
             + "AND v.documentId IN :documentIds ORDER BY v.createdDate DESC")
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIds(
-            @org.springframework.data.repository.query.Param("documentType") String documentType,
-            @org.springframework.data.repository.query.Param("documentIds") java.util.Collection<UUID> documentIds);
+            @Param("documentType") String documentType,
+            @Param("documentIds") Collection<UUID> documentIds);
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIdAndIsActiveTrueOrderByCreatedDateDesc(String documentType, UUID documentId);
-    java.util.Optional<PmDocumentVersion> findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(String documentType, UUID documentId);
+    Optional<PmDocumentVersion> findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(String documentType, UUID documentId);
     List<PmDocumentVersion> findByProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID projectId);
     List<PmDocumentVersion> findByProjectIdAndDocumentTypeAndIsDeleteFalseOrderByCreatedDateDesc(UUID projectId, String documentType);
     boolean existsByDocumentTypeAndDocumentId(String documentType, UUID documentId);

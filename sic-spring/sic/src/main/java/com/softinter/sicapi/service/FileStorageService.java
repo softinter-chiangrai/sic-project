@@ -10,6 +10,7 @@ import com.softinter.sicapi.dto.response.StorageDownloadResponse;
 import com.softinter.sicapi.dto.response.StorageUploadResponse;
 import com.softinter.sicapi.dto.response.UploadSessionResponse;
 import com.softinter.sicapi.entity.ex.StorageUploadReference;
+import jakarta.servlet.http.HttpServletRequest;
 
 public interface FileStorageService {
     // Single file upload
@@ -21,7 +22,7 @@ public interface FileStorageService {
     // Resumable upload session
     UploadSessionResponse createUploadSession(UploadSessionRequest request);
     StorageUploadResponse completeUploadSession(UUID sessionId);
-    StorageUploadResponse completeUploadSession(UUID sessionId, jakarta.servlet.http.HttpServletRequest request); // overload
+    StorageUploadResponse completeUploadSession(UUID sessionId, HttpServletRequest request); // overload
 
     // Additional methods for .NET compatibility
     UploadSessionResponse uploadChunk(UUID sessionId, int chunkIndex, MultipartFile chunk);

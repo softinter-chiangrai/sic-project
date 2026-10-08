@@ -40,6 +40,18 @@ import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import java.util.ArrayDeque;
+import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
+import com.softinter.sicapi.util.ContractLifecycle;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
+import java.util.HashSet;
+import com.softinter.sicapi.util.LanguageUtils;
+import java.time.LocalDate;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -56,7 +68,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
 
-    private static final java.util.Map<String, String> SIGN_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, String> SIGN_STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
             "ส่งแล้ว", "Sent",
             "ลงนาม", "Signed",
@@ -151,14 +163,10 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 ));
 
                 // ✅ Bilingual: สถานะลงนาม (ไทย ↔ อังกฤษ)
-                for (var entry : SIGN_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("signStatus")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "signStatus", SIGN_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ (join กับ pm_approval แบบ Polymorphic Document)
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "CONTRACT", rawKw, orPreds);
 
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
@@ -197,15 +205,15 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 predicates.add(cb.not(cb.exists(sub)));
             }
             if (expiringWithinDays != null) {
-                java.time.LocalDate today = java.time.LocalDate.now();
-                java.time.LocalDate until = today.plusDays(expiringWithinDays);
+                LocalDate today = LocalDate.now();
+                LocalDate until = today.plusDays(expiringWithinDays);
                 predicates.add(cb.between(root.get("endDate"), today, until));
             }
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        org.springframework.data.domain.Page<PmCustomerContract> page = contractRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Page<PmCustomerContract> page = contractRepository.findAll(spec, pageable);
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "CONTRACT", page.getContent().stream().map(PmCustomerContract::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);
@@ -216,27 +224,27 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.List<PmCustomerContractResponse> getRenewalChain(UUID id) {
+    public List<PmCustomerContractResponse> getRenewalChain(UUID id) {
         PmCustomerContract root = contractRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + id));
         // ขึ้นไปหาฉบับแรก (กันวนลูปด้วย visited)
-        java.util.Set<UUID> visited = new java.util.HashSet<>();
+        Set<UUID> visited = new HashSet<>();
         while (root.getParentContractId() != null && visited.add(root.getId())) {
             var parent = contractRepository.findById(root.getParentContractId()).orElse(null);
             if (parent == null || Boolean.TRUE.equals(parent.getIsDelete())) break;
             root = parent;
         }
         // ลงมาตามฉบับต่ออายุ เรียงตามวันเริ่มสัญญา
-        java.util.List<PmCustomerContractResponse> chain = new java.util.ArrayList<>();
-        java.util.ArrayDeque<PmCustomerContract> queue = new java.util.ArrayDeque<>(java.util.List.of(root));
-        java.util.Set<UUID> seen = new java.util.HashSet<>();
+        List<PmCustomerContractResponse> chain = new ArrayList<>();
+        ArrayDeque<PmCustomerContract> queue = new ArrayDeque<>(List.of(root));
+        Set<UUID> seen = new HashSet<>();
         while (!queue.isEmpty()) {
             PmCustomerContract c = queue.poll();
             if (!seen.add(c.getId())) continue;
             chain.add(toResponse(c));
             contractRepository.findByParentContractIdAndIsDeleteFalse(c.getId()).stream()
-                    .sorted(java.util.Comparator.comparing(PmCustomerContract::getStartDate,
-                            java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
+                    .sorted(Comparator.comparing(PmCustomerContract::getStartDate,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
                     .forEach(queue::add);
         }
         return chain;
@@ -279,17 +287,17 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         long invoiceTotal = projectId != null ? invoiceRepository.countByProjectIdAndIsDeleteFalse(projectId) : 0;
         long invoicePending = projectId != null
                 ? invoiceRepository.countByProjectIdAndPaymentStatusInAndIsDeleteFalse(
-                        projectId, java.util.List.of(PaymentStatus.UNPAID, PaymentStatus.PARTIAL, PaymentStatus.OVERDUE))
+                        projectId, List.of(PaymentStatus.UNPAID, PaymentStatus.PARTIAL, PaymentStatus.OVERDUE))
                 : 0;
 
         long ticketTotal = projectId != null ? maTicketRepository.countByProjectIdAndIsDeleteFalse(projectId) : 0;
         long ticketOpen = projectId != null
                 ? maTicketRepository.countByProjectIdAndStatusNotInAndIsDeleteFalse(
-                        projectId, java.util.List.of(MaTicketStatus.RESOLVED, MaTicketStatus.CLOSED))
+                        projectId, List.of(MaTicketStatus.RESOLVED, MaTicketStatus.CLOSED))
                 : 0;
 
         Long daysUntilExpiry = contract.getEndDate() != null
-                ? java.time.temporal.ChronoUnit.DAYS.between(java.time.LocalDate.now(), contract.getEndDate())
+                ? ChronoUnit.DAYS.between(LocalDate.now(), contract.getEndDate())
                 : null;
 
         return PmContractSummaryResponse.builder()
@@ -404,7 +412,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             targetVersion = "v1.0.0";
         } else {
             String currentVer = documentVersionService.getVersions("CONTRACT", contract.getId())
-                    .stream().findFirst().map(com.softinter.sicapi.dto.response.DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
+                    .stream().findFirst().map(DocumentVersionResponse::getVersionNo).orElse("v1.0.0");
             targetVersion = documentVersionService.keepVersion(currentVer);
         }
 
@@ -524,7 +532,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
 
     @Override
     public List<ComboboxResponse> getLovContractTypes() {
-        boolean isThai = "th".equalsIgnoreCase(com.softinter.sicapi.util.LanguageUtils.getLanguage());
+        boolean isThai = "th".equalsIgnoreCase(LanguageUtils.getLanguage());
         return Arrays.asList(
                 new ComboboxResponse("Development Contract", isThai ? "สัญญาพัฒนาซอฟต์แวร์ (Development Contract)" : "Development Contract"),
                 new ComboboxResponse("Maintenance Contract", isThai ? "สัญญาบำรุงรักษา (Maintenance Contract)" : "Maintenance Contract"),
@@ -536,7 +544,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
 
     @Override
     public List<ComboboxResponse> getLovSignStatuses() {
-        boolean isThai = "th".equalsIgnoreCase(com.softinter.sicapi.util.LanguageUtils.getLanguage());
+        boolean isThai = "th".equalsIgnoreCase(LanguageUtils.getLanguage());
         return Arrays.asList(
                 new ComboboxResponse("Draft", isThai ? "ร่าง" : "Draft"),
                 new ComboboxResponse("Sent", isThai ? "ส่งแล้ว" : "Sent"),
@@ -614,9 +622,9 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         dto.setIsLocked(approvalService.isApproved("CONTRACT", contract.getId()));
         dto.setRenewalStatus(contract.getRenewalStatus());
         dto.setAutoRenew(Boolean.TRUE.equals(contract.getAutoRenew()));
-        java.time.LocalDate today = java.time.LocalDate.now();
-        dto.setDaysUntilExpiry(com.softinter.sicapi.util.ContractLifecycle.daysUntilExpiry(contract.getEndDate(), today));
-        dto.setLifecycleStatus(com.softinter.sicapi.util.ContractLifecycle.status(
+        LocalDate today = LocalDate.now();
+        dto.setDaysUntilExpiry(ContractLifecycle.daysUntilExpiry(contract.getEndDate(), today));
+        dto.setLifecycleStatus(ContractLifecycle.status(
                 contract.getSignStatus(), contract.getRenewalStatus(), contract.getEndDate(), today));
         dto.setParentContractId(contract.getParentContractId());
         if (contract.getParentContract() != null) {

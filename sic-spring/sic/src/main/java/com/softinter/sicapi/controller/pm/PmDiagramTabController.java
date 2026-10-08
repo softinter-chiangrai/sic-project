@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.ArrayList;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/diagram/tabs")
@@ -35,7 +38,7 @@ public class PmDiagramTabController {
     }
 
     @GetMapping("/combobox")
-    public ResponseEntity<List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxDiagrams(
+    public ResponseEntity<List<ComboboxResponse>> getComboboxDiagrams(
             @RequestParam(required = false) UUID projectId) {
         return ResponseEntity.ok(tabService.getComboboxDiagrams(projectId));
     }
@@ -61,7 +64,7 @@ public class PmDiagramTabController {
     @PostMapping("/{id}/export-pdf")
     public ResponseEntity<byte[]> exportPdf(
             @PathVariable UUID id,
-            @RequestBody(required = false) java.util.Map<String, Object> body,
+            @RequestBody(required = false) Map<String, Object> body,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
@@ -69,16 +72,16 @@ public class PmDiagramTabController {
             return ResponseEntity.badRequest().build();
         }
         String imageDataUri = null;
-        java.util.List<java.util.Map<String, Object>> requestPages = null;
+        List<Map<String, Object>> requestPages = null;
         if (body != null) {
             if (body.get("image") instanceof String img) {
                 imageDataUri = img;
             }
-            if (body.get("pages") instanceof java.util.List<?> list) {
-                requestPages = new java.util.ArrayList<>();
+            if (body.get("pages") instanceof List<?> list) {
+                requestPages = new ArrayList<>();
                 for (Object item : list) {
-                    if (item instanceof java.util.Map<?, ?> m) {
-                        requestPages.add((java.util.Map<String, Object>) m);
+                    if (item instanceof Map<?, ?> m) {
+                        requestPages.add((Map<String, Object>) m);
                     }
                 }
             }
@@ -95,7 +98,7 @@ public class PmDiagramTabController {
     @PostMapping("/export-all-pdf")
     public ResponseEntity<byte[]> exportAllPdf(
             @RequestParam UUID projectId,
-            @RequestBody(required = false) java.util.Map<String, String> body,
+            @RequestBody(required = false) Map<String, String> body,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();

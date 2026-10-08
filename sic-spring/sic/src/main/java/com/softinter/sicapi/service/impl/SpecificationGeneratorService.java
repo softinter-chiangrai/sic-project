@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.ArrayList;
 
 @Slf4j
 @Service
@@ -43,7 +44,7 @@ public class SpecificationGeneratorService {
             requirement = requirementRepository.findById(request.getRequirementId()).orElse(null);
         }
 
-        List<PmDiagramTab> diagrams = new java.util.ArrayList<>();
+        List<PmDiagramTab> diagrams = new ArrayList<>();
         if (request.getDiagramIds() != null && !request.getDiagramIds().isEmpty()) {
             diagrams.addAll(diagramRepository.findAllById(request.getDiagramIds()));
         } else if (request.getDiagramId() != null) {

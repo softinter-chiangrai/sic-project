@@ -47,6 +47,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.s3.model.UploadPartCopyRequest;
 import software.amazon.awssdk.services.s3.model.UploadPartCopyResponse;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Slf4j
 @Service
@@ -419,7 +420,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         try {
             session = uploadRepository
                     .findFirstByUploadGroupIdAndIsActiveFalseOrderByCreatedDateDesc(sessionId)
-                    .orElseThrow(() -> new RuntimeException("Session not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Session not found"));
         } catch (Exception e) {
             log.error("Session not found for cancellation: {}", sessionId, e);
             throw new RuntimeException("Session not found", e);
@@ -709,7 +710,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         SuUpload upload;
         try {
             upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         } catch (Exception e) {
             log.error("Failed to find file {}", fileId, e);
             throw new RuntimeException("File not found", e);
@@ -739,7 +740,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         SuUpload upload;
         try {
             upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         } catch (Exception e) {
             log.error("Failed to find file {} for deletion", fileId, e);
             throw new RuntimeException("File not found", e);
@@ -759,7 +760,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         SuUpload upload;
         try {
             upload = uploadRepository.findByIdAndIsActiveTrue(fileId)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         } catch (Exception e) {
             log.error("Failed to find file {} for URL", fileId, e);
             throw new RuntimeException("File not found", e);
@@ -780,7 +781,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         SuUpload upload;
         try {
             upload = uploadRepository.findByObjectKey(objectKey)
-                    .orElseThrow(() -> new RuntimeException("File not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("File not found"));
         } catch (Exception e) {
             log.error("Failed to find file by key {}", objectKey, e);
             throw new RuntimeException("File not found", e);

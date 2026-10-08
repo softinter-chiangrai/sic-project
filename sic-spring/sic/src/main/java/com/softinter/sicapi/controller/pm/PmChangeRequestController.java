@@ -16,6 +16,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import org.springframework.http.HttpHeaders;
+import java.util.List;
+import org.springframework.http.MediaType;
+import com.softinter.sicapi.util.ReportHelper;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/pm/change-requests")
@@ -27,11 +33,11 @@ public class PmChangeRequestController {
     // ===== ตัวเลือกเอกสารเป้าหมาย (เฉพาะที่อนุมัติแล้ว) =====
     @GetMapping("/target-combobox")
     @io.swagger.v3.oas.annotations.Operation(summary = "รายการเอกสารเป้าหมายของ Change Request เฉพาะเอกสารที่อยู่ในสถานะอนุมัติแล้ว")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getTargetCombobox(
+    public ResponseEntity<List<ComboboxResponse>> getTargetCombobox(
             @RequestParam String targetType,
-            @RequestParam(required = false) java.util.UUID projectId,
+            @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) java.util.UUID value) {
+            @RequestParam(required = false) UUID value) {
         return ResponseEntity.ok(changeRequestService.getApprovedTargetCombobox(targetType, projectId, keyword, value));
     }
 
@@ -60,7 +66,7 @@ public class PmChangeRequestController {
             @RequestParam(required = false) UUID targetId,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String keyword,
-            @PageableDefault(size = 10, sort = "createdDate", direction = org.springframework.data.domain.Sort.Direction.DESC) Pageable pageable) {
+            @PageableDefault(size = 10, sort = "createdDate", direction = Sort.Direction.DESC) Pageable pageable) {
         return ResponseEntity.ok(changeRequestService.listChangeRequests(projectId, targetType, targetId, status, keyword, pageable));
     }
 
@@ -110,12 +116,12 @@ public class PmChangeRequestController {
             @PathVariable UUID id,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         byte[] pdfBytes = changeRequestExportService.exportChangeRequestPdf(id, finalLang);
 
         String filename = "CR_" + id.toString().substring(0, 8).toUpperCase() + ".pdf";
-        org.springframework.http.HttpHeaders headers = new org.springframework.http.HttpHeaders();
-        headers.setContentType(org.springframework.http.MediaType.APPLICATION_PDF);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDispositionFormData("attachment", filename);
         headers.setContentLength(pdfBytes.length);
 

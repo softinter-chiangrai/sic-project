@@ -15,6 +15,8 @@ import com.softinter.sicapi.repository.su.SuChatGroupMemberRepository;
 import com.softinter.sicapi.repository.su.SuChatGroupRepository;
 import com.softinter.sicapi.repository.su.SuChatLogRepository;
 import com.softinter.sicapi.service.CurrentUserService;
+import com.softinter.sicapi.dto.response.UserBusinessResponse;
+import com.softinter.sicapi.service.SuUserBusinessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -42,10 +44,9 @@ public class ChatWebSocketController {
     private final SuChatGroupLogRepository chatGroupLogRepository;
     private final SuChatGroupMemberRepository chatGroupMemberRepository;
     private final CurrentUserService currentUserService;
+    private final SuUserBusinessService userBusinessService;
 
-    @MessageMapping("/chat/private")
-    @Transactional
-    public void sendPrivateMessage(@Payload ChatMessageRequest request, Principal principal) {
+    private String[] resolveUser(Principal principal) {
         String currentUserId = null;
         String currentUsername = null;
 
@@ -66,15 +67,48 @@ public class ChatWebSocketController {
                 log.warn("Could not determine currentUserId from currentUserService: {}", e.getMessage());
             }
         }
+        return new String[] { currentUserId, currentUsername != null ? currentUsername : currentUserId };
+    }
+
+    private UUID resolveBusinessId(String userId) {
+        UUID businessId = null;
+        try {
+            businessId = currentUserService.getBusinessId();
+        } catch (Exception ignored) {}
+
+        if (businessId == null && userId != null) {
+            try {
+                List<UserBusinessResponse> ubs = userBusinessService.findByUserId(userId);
+                if (!ubs.isEmpty() && ubs.get(0).getBusinessId() != null) {
+                    businessId = ubs.get(0).getBusinessId();
+                }
+            } catch (Exception ignored) {}
+        }
+
+        if (businessId == null) {
+            businessId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+        }
+        return businessId;
+    }
+
+    @MessageMapping("/chat/private")
+    @Transactional
+    public void sendPrivateMessage(@Payload ChatMessageRequest request, Principal principal) {
+        String[] user = resolveUser(principal);
+        String currentUserId = user[0];
+        String currentUsername = user[1];
 
         if (currentUserId == null) {
             log.error("sendPrivateMessage failed: Unauthenticated user");
             return;
         }
 
+        UUID businessId = resolveBusinessId(currentUserId);
+
         SuChatLog chatLog = new SuChatLog();
+        chatLog.setBusinessId(businessId);
         chatLog.setSenderId(currentUserId);
-        chatLog.setSenderName(currentUsername != null ? currentUsername : currentUserId);
+        chatLog.setSenderName(currentUsername);
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage() != null ? request.getMessage() : "");
         chatLog.setMessageType(request.getMessageType() != null ? request.getMessageType() : ChatMessageType.TEXT);
@@ -94,20 +128,30 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat/group")
     @Transactional
-    public void sendGroupMessage(@Payload GroupMessageRequest request) {
-        String currentUserId = currentUserService.getUserId();
-        String currentUsername = currentUserService.getUsername();
+    public void sendGroupMessage(@Payload GroupMessageRequest request, Principal principal) {
+        String[] user = resolveUser(principal);
+        String currentUserId = user[0];
+        String currentUsername = user[1];
+
+        if (currentUserId == null) {
+            log.error("sendGroupMessage failed: Unauthenticated user");
+            return;
+        }
 
         SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
+        UUID businessId = group.getBusinessId() != null ? group.getBusinessId() : resolveBusinessId(currentUserId);
+
         SuChatGroupLog logMsg = new SuChatGroupLog();
+        logMsg.setBusinessId(businessId);
         logMsg.setGroup(group);
         logMsg.setSenderId(currentUserId);
         logMsg.setSenderName(currentUsername);
         logMsg.setMessage(request.getMessage() != null ? request.getMessage() : "");
         logMsg.setMessageType(request.getMessageType() != null ? request.getMessageType() : ChatMessageType.TEXT);
         logMsg.setAttachmentId(request.getAttachmentId());
+        logMsg.setIsCancelled(false);
         logMsg.setCreatedDate(Instant.now());
 
         logMsg = chatGroupLogRepository.save(logMsg);
@@ -118,12 +162,15 @@ public class ChatWebSocketController {
 
     @MessageMapping("/chat/cancel")
     @Transactional
-    public void cancelMessage(@Payload Map<String, String> payload) {
+    public void cancelMessage(@Payload Map<String, String> payload, Principal principal) {
         String messageIdStr = payload.get("messageId");
         if (messageIdStr == null) return;
         UUID messageId = UUID.fromString(messageIdStr);
-        String currentUserId = currentUserService.getUserId();
+        String[] user = resolveUser(principal);
+        String currentUserId = user[0];
+        if (currentUserId == null) return;
 
+        // Check 1-on-1 chat
         chatLogRepository.findById(messageId).ifPresent(msg -> {
             if (msg.getSenderId().equals(currentUserId)) {
                 msg.setIsCancelled(true);
@@ -136,36 +183,78 @@ public class ChatWebSocketController {
                 messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/cancel", event);
             }
         });
+
+        // Check group chat
+        chatGroupLogRepository.findById(messageId).ifPresent(groupMsg -> {
+            if (groupMsg.getSenderId().equals(currentUserId)) {
+                groupMsg.setIsCancelled(true);
+                groupMsg.setCancelledAt(Instant.now());
+                groupMsg.setCancelledBy(currentUserId);
+                chatGroupLogRepository.save(groupMsg);
+
+                Map<String, Object> event = Map.of(
+                        "messageId", messageId.toString(),
+                        "groupId", groupMsg.getGroup() != null ? groupMsg.getGroup().getId().toString() : "",
+                        "isCancelled", true
+                );
+                if (groupMsg.getGroup() != null) {
+                    messagingTemplate.convertAndSend("/topic/group/" + groupMsg.getGroup().getId() + "/cancel", (Object) event);
+                }
+            }
+        });
+    }
+
+    @MessageMapping("/chat/edit")
+    @Transactional
+    public void editMessage(@Payload Map<String, String> payload, Principal principal) {
+        String messageIdStr = payload.get("messageId");
+        String newText = payload.get("message");
+        if (messageIdStr == null || newText == null) return;
+        UUID messageId = UUID.fromString(messageIdStr);
+        String[] user = resolveUser(principal);
+        String currentUserId = user[0];
+        if (currentUserId == null) return;
+
+        // 1-on-1 message edit
+        chatLogRepository.findById(messageId).ifPresent(msg -> {
+            if (msg.getSenderId().equals(currentUserId)) {
+                msg.setMessage(newText);
+                msg.setUpdatedDate(Instant.now());
+                chatLogRepository.save(msg);
+
+                ChatMessageResponse response = toChatMessageResponse(msg);
+                messagingTemplate.convertAndSendToUser(msg.getReceiverId(), "/queue/messages/edit", response);
+                messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/edit", response);
+            }
+        });
+
+        // Group message edit
+        chatGroupLogRepository.findById(messageId).ifPresent(groupMsg -> {
+            if (groupMsg.getSenderId().equals(currentUserId)) {
+                groupMsg.setMessage(newText);
+                groupMsg.setUpdatedDate(Instant.now());
+                chatGroupLogRepository.save(groupMsg);
+
+                ChatGroupMessageResponse response = toGroupMessageResponse(groupMsg);
+                if (groupMsg.getGroup() != null) {
+                    messagingTemplate.convertAndSend("/topic/group/" + groupMsg.getGroup().getId() + "/edit", response);
+                }
+            }
+        });
     }
 
     @MessageMapping("/call/signal")
     @Transactional
     public void handleCallSignal(@Payload CallSignalMessage signal, Principal principal) {
-        String currentUserId = null;
-        String currentUsername = null;
-
-        if (principal instanceof Authentication auth) {
-            if (auth.getPrincipal() instanceof Jwt jwt) {
-                currentUserId = jwt.getSubject() != null ? jwt.getSubject() : jwt.getClaimAsString("sub");
-                currentUsername = jwt.getClaimAsString("preferred_username");
-            } else if (auth.getName() != null) {
-                currentUserId = auth.getName();
-            }
-        }
-        if (currentUserId == null) {
-            try {
-                currentUserId = currentUserService.getUserId();
-                currentUsername = currentUserService.getUsername();
-            } catch (Exception e) {
-                log.warn("Could not determine currentUserId: {}", e.getMessage());
-            }
-        }
+        String[] user = resolveUser(principal);
+        String currentUserId = user[0];
+        String currentUsername = user[1];
 
         if (signal.getCallerId() == null || signal.getCallerId().isBlank()) {
             signal.setCallerId(currentUserId);
         }
         if (signal.getCallerName() == null || signal.getCallerName().isBlank()) {
-            signal.setCallerName(currentUsername != null ? currentUsername : currentUserId);
+            signal.setCallerName(currentUsername);
         }
 
         String action = signal.getAction();
@@ -193,11 +282,25 @@ public class ChatWebSocketController {
                 messagingTemplate.convertAndSendToUser(signal.getTargetUserId(), "/queue/call", signal);
             }
         } else if ("end".equalsIgnoreCase(action)) {
-            if (signal.getTargetUserId() != null) {
+            if (signal.getGroupId() != null && !signal.getGroupId().isBlank()) {
+                // Group Call end: Forward to all group members except caller
+                try {
+                    UUID groupId = UUID.fromString(signal.getGroupId());
+                    List<SuChatGroupMember> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId);
+                    for (SuChatGroupMember member : members) {
+                        if (!member.getUserId().equals(currentUserId)) {
+                            messagingTemplate.convertAndSendToUser(member.getUserId(), "/queue/call", signal);
+                        }
+                    }
+                } catch (Exception e) {
+                    log.warn("Error forwarding group call end: {}", e.getMessage());
+                }
+            } else if (signal.getTargetUserId() != null) {
                 messagingTemplate.convertAndSendToUser(signal.getTargetUserId(), "/queue/call", signal);
 
                 // Save call log record in database
                 SuChatLog callLog = new SuChatLog();
+                callLog.setBusinessId(resolveBusinessId(currentUserId));
                 callLog.setSenderId(currentUserId);
                 callLog.setSenderName(currentUsername);
                 callLog.setReceiverId(signal.getTargetUserId());

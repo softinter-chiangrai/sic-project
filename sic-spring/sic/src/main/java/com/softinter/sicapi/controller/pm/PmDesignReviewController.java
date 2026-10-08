@@ -24,6 +24,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import java.util.List;
+import com.softinter.sicapi.entity.pm.PmDesignReview;
+import com.softinter.sicapi.dto.request.PmReviewCommentRequest;
+import com.softinter.sicapi.dto.response.PmReviewCommentResponse;
+import com.softinter.sicapi.util.SortValidator;
 
 @RestController
 @RequestMapping("/api/pm/design-reviews")
@@ -53,8 +59,8 @@ public class PmDesignReviewController {
             return ResponseEntity.badRequest().build();
         }
 
-        Sort sort = com.softinter.sicapi.util.SortValidator.build(
-                com.softinter.sicapi.entity.pm.PmDesignReview.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(
+                PmDesignReview.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
 
         Page<PmDesignReviewResponse> pageResult = designReviewService.findAll(businessId, projectId, status, keyword, pageable);
@@ -65,7 +71,7 @@ public class PmDesignReviewController {
     // ===== Combobox Endpoints =====
     @GetMapping("/combobox")
     @Operation(summary = "Get combobox design reviews")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxDesignReviews(
+    public ResponseEntity<List<ComboboxResponse>> getComboboxDesignReviews(
             @RequestParam(required = false) UUID projectId
     ) {
         UUID businessId = BusinessContextHolder.getBusinessId();
@@ -77,7 +83,7 @@ public class PmDesignReviewController {
 
     @GetMapping("/combobox-specification")
     @Operation(summary = "Get combobox specifications/reviewables for Design Review")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxSpecifications(
+    public ResponseEntity<List<ComboboxResponse>> getComboboxSpecifications(
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String type,
             @RequestParam(required = false) String value
@@ -91,7 +97,7 @@ public class PmDesignReviewController {
 
     @GetMapping("/combobox-project")
     @Operation(summary = "Get combobox projects for Design Review")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxProjects() {
+    public ResponseEntity<List<ComboboxResponse>> getComboboxProjects() {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
@@ -101,7 +107,7 @@ public class PmDesignReviewController {
 
     @GetMapping("/combobox-requirement")
     @Operation(summary = "Get combobox requirements for Design Review")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxRequirements(
+    public ResponseEntity<List<ComboboxResponse>> getComboboxRequirements(
             @RequestParam(required = false) UUID projectId
     ) {
         UUID businessId = BusinessContextHolder.getBusinessId();
@@ -113,7 +119,7 @@ public class PmDesignReviewController {
 
     @GetMapping("/combobox-task")
     @Operation(summary = "Get combobox tasks for Design Review")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxTasks(
+    public ResponseEntity<List<ComboboxResponse>> getComboboxTasks(
             @RequestParam(required = false) UUID projectId
     ) {
         UUID businessId = BusinessContextHolder.getBusinessId();
@@ -125,7 +131,7 @@ public class PmDesignReviewController {
 
     @GetMapping("/combobox-user")
     @Operation(summary = "Get combobox users for Design Review")
-    public ResponseEntity<java.util.List<com.softinter.sicapi.dto.response.ComboboxResponse>> getComboboxUsers() {
+    public ResponseEntity<List<ComboboxResponse>> getComboboxUsers() {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
@@ -187,16 +193,16 @@ public class PmDesignReviewController {
 
     @PostMapping("/{id}/comments")
     @Operation(summary = "Add comment to design review")
-    public ResponseEntity<com.softinter.sicapi.dto.response.PmReviewCommentResponse> addComment(
+    public ResponseEntity<PmReviewCommentResponse> addComment(
             @PathVariable UUID id,
-            @Valid @RequestBody com.softinter.sicapi.dto.request.PmReviewCommentRequest request
+            @Valid @RequestBody PmReviewCommentRequest request
     ) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
         String userId = currentUserService.getUserId();
-        com.softinter.sicapi.dto.response.PmReviewCommentResponse response = designReviewService.addComment(id, request, businessId, userId);
+        PmReviewCommentResponse response = designReviewService.addComment(id, request, businessId, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 

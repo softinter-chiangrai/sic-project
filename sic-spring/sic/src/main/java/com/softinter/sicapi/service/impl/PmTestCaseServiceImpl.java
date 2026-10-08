@@ -30,6 +30,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -74,8 +75,8 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
             return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        org.springframework.data.domain.Page<PmTestCase> page = testCaseRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Page<PmTestCase> page = testCaseRepository.findAll(spec, pageable);
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "TEST_CASE", page.getContent().stream().map(PmTestCase::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);

@@ -3,6 +3,7 @@ package com.softinter.sicapi.dto.response;
 import lombok.Data;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
 
 @Data
 public class ImpactAnalysisResponse {
@@ -10,29 +11,29 @@ public class ImpactAnalysisResponse {
     private UUID changeRequestId;
 
     private UUID[] impactedRequirementIds;
-    private java.util.List<ImpactItem> impactedRequirements;
+    private List<ImpactItem> impactedRequirements;
 
     private UUID[] impactedSpecIds;
-    private java.util.List<ImpactItem> impactedSpecs;
+    private List<ImpactItem> impactedSpecs;
 
     private UUID[] impactedDiagramIds;
-    private java.util.List<DiagramItem> impactedDiagrams;
+    private List<DiagramItem> impactedDiagrams;
 
     private UUID[] impactedTaskIds;
-    private java.util.List<ImpactItem> impactedTasks;
+    private List<ImpactItem> impactedTasks;
 
     private UUID[] impactedTestCaseIds;
-    private java.util.List<ImpactItem> impactedTestCases;
+    private List<ImpactItem> impactedTestCases;
 
     private UUID[] impactedBugIds;
-    private java.util.List<ImpactItem> impactedBugs;
+    private List<ImpactItem> impactedBugs;
 
     // Upstream Traceability (Project & Customer)
     private UUID[] impactedProjectIds;
-    private java.util.List<ProjectImpactItem> impactedProjects;
+    private List<ProjectImpactItem> impactedProjects;
 
     private UUID[] impactedCustomerIds;
-    private java.util.List<CustomerImpactItem> impactedCustomers;
+    private List<CustomerImpactItem> impactedCustomers;
 
     // ฟิลด์ที่ Frontend ใช้แสดงผล (metadata + ประมาณการ)
     private Integer mandayImpact;

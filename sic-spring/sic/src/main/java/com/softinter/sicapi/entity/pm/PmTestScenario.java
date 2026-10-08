@@ -8,6 +8,9 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.util.UUID;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 
 @Entity
 @Table(name = "pm_test_scenario")
@@ -43,7 +46,7 @@ public class PmTestScenario extends BaseBusinessEntity {
     private String description;
 
     // ===== Relationships =====
-    @jakarta.persistence.ManyToOne(fetch = jakarta.persistence.FetchType.LAZY)
-    @jakarta.persistence.JoinColumn(name = "task_id", insertable = false, updatable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "task_id", insertable = false, updatable = false)
     private PmTask task;
 }

@@ -477,16 +477,55 @@
               } @else {
                 <span class="headchat-msg-text">{{ msg.message }}</span>
               }
-              <span class="headchat-msg-time">{{ msg.sentAt | date:'HH:mm' }}</span>
-              @if (canCancelGroup(msg)) {
-                <button class="headchat-msg-cancel-btn" (click)="cancelGroupMessage(msg)" [title]="'HEADCHAT_CANCEL_MESSAGE_LABEL' | translate">
-                  <i class="bi bi-trash"></i>
-                </button>
-              }
+              <div class="headchat-msg-footer">
+                <span class="headchat-msg-time">
+                  {{ msg.sentAt | date:'HH:mm' }}
+                </span>
+                <div class="headchat-msg-actions">
+                  @if (!msg.isCancelled) {
+                    <button class="headchat-msg-action-btn" (click)="startReplyGroup(chat, msg)" [title]="'HEADCHAT_REPLY_LABEL' | translate">
+                      <i class="bi bi-reply-fill"></i>
+                    </button>
+                  }
+                  @if (canEditGroup(msg)) {
+                    <button class="headchat-msg-action-btn" (click)="startEditGroup(chat, msg)" [title]="'HEADCHAT_EDIT_MESSAGE_LABEL' | translate">
+                      <i class="bi bi-pencil-fill"></i>
+                    </button>
+                  }
+                  @if (canCancelGroup(msg)) {
+                    <button class="headchat-msg-action-btn headchat-msg-action-btn--danger" (click)="cancelGroupMessage(msg)" [title]="'HEADCHAT_CANCEL_DELETE_MESSAGE_LABEL' | translate">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                </div>
+              </div>
             </div>
           }
         }
       </div>
+
+      <!-- Reply / Edit Preview Banner for Group -->
+      @if (chat.replyingTo) {
+        <div class="headchat-preview-banner">
+          <div class="headchat-preview-content">
+            <span class="headchat-preview-title"><i class="bi bi-reply-fill"></i> {{ 'HEADCHAT_REPLYING_LABEL' | translate }}</span>
+            <span class="headchat-preview-text">{{ chat.replyingTo.message || ('HEADCHAT_ATTACHMENT_DEFAULT_NAME' | translate) }}</span>
+          </div>
+          <button class="headchat-preview-close" (click)="cancelReplyGroup(chat)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      } @else if (chat.editingMessage) {
+        <div class="headchat-preview-banner headchat-preview-banner--edit">
+          <div class="headchat-preview-content">
+            <span class="headchat-preview-title"><i class="bi bi-pencil-fill"></i> {{ 'HEADCHAT_EDITING_LABEL' | translate }}</span>
+            <span class="headchat-preview-text">{{ chat.editingMessage.message }}</span>
+          </div>
+          <button class="headchat-preview-close" (click)="cancelEditGroup(chat)">
+            <i class="bi bi-x"></i>
+          </button>
+        </div>
+      }
 
       <!-- Input area -->
       <div class="headchat-input-row">
@@ -501,15 +540,15 @@
         <input
           class="headchat-input-text"
           type="text"
-          [placeholder]="'HEADCHAT_TYPE_MESSAGE_PLACEHOLDER' | translate"
+          [placeholder]="chat.editingMessage ? ('HEADCHAT_EDIT_MESSAGE_PLACEHOLDER' | translate) : (chat.replyingTo ? ('HEADCHAT_REPLY_PLACEHOLDER' | translate) : ('HEADCHAT_TYPE_MESSAGE_PLACEHOLDER' | translate))"
           [(ngModel)]="chat.inputText"
           (keydown.enter)="onGroupEnter($event, chat)" />
         <button
           class="headchat-input-send"
           (click)="sendGroupMessage(chat)"
           [disabled]="!chat.inputText.trim()"
-          [title]="'HEADCHAT_SEND_LABEL' | translate">
-          <i class="bi bi-send-fill"></i>
+          [title]="chat.editingMessage ? ('HEADCHAT_SAVE_EDIT_LABEL' | translate) : ('HEADCHAT_SEND_LABEL' | translate)">
+          <i class="bi" [class.bi-check-lg]="chat.editingMessage" [class.bi-send-fill]="!chat.editingMessage"></i>
         </button>
       </div>
 

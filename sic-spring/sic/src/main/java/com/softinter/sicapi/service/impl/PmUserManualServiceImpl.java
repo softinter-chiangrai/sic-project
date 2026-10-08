@@ -33,6 +33,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -47,7 +50,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
 
-    private static final java.util.Map<String, String> MANUAL_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, String> MANUAL_STATUS_THAI_MAP = Map.of(
             "ร่าง", "DRAFT",
             "ตรวจสอบ", "REVIEW",
             "รีวิว", "REVIEW",
@@ -83,23 +86,13 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
-                List<Predicate> orPreds = new ArrayList<>(List.of(
-                        cb.like(cb.lower(root.get("manualCode")), pattern),
-                        cb.like(cb.lower(root.get("manualTitle")), pattern),
-                        cb.like(cb.lower(root.get("manualType")), pattern),
-                        cb.like(cb.lower(root.get("version")), pattern),
-                        cb.like(cb.lower(root.get("status")), pattern)
-                ));
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "manualCode", "manualTitle", "manualType", "version", "status");
 
                 // ✅ Bilingual: สถานะ
-                for (var entry : MANUAL_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", MANUAL_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "USER_MANUAL", rawKw, orPreds);
 
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));

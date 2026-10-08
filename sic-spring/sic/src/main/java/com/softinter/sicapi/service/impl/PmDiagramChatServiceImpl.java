@@ -19,6 +19,7 @@ import com.softinter.sicapi.service.PmAiProviderService;
 import com.softinter.sicapi.service.PmDiagramChatService;
 
 import lombok.RequiredArgsConstructor;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -121,7 +122,7 @@ public class PmDiagramChatServiceImpl implements PmDiagramChatService {
         UUID businessId = BusinessContextHolder.getBusinessId();
 
         PmDiagramTab tab = tabRepository.findById(request.getDiagramId())
-                .orElseThrow(() -> new RuntimeException("Diagram not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Diagram not found"));
 
         UUID sessionId = request.getSessionId() != null ? request.getSessionId() : UUID.randomUUID();
         String sessionTitle = request.getSessionTitle();

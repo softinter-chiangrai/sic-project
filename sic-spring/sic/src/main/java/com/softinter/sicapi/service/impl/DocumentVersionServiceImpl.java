@@ -18,6 +18,11 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
+import org.springframework.transaction.annotation.Propagation;
 
 @Slf4j
 @Service
@@ -71,7 +76,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Transactional(readOnly = true)
     public DocumentVersionResponse getVersion(UUID id) {
         PmDocumentVersion version = versionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document version not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Document version not found"));
         return toResponse(version);
     }
 
@@ -81,7 +86,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         PmDocumentVersion version;
         if (request.getId() != null) {
             version = versionRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Document version not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Document version not found"));
             version.setVersionNo(request.getVersionNo());
             version.setChangeSummary(request.getChangeSummary());
             version.setFilePath(request.getFilePath());
@@ -175,7 +180,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Transactional
     public void activateVersion(UUID id) {
         PmDocumentVersion target = versionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document version not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Document version not found"));
         // Set all other versions of this document to isActive = false
         List<PmDocumentVersion> allVersions = versionRepository.findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(
                 target.getDocumentType(), target.getDocumentId());
@@ -190,7 +195,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Transactional
     public void deleteVersion(UUID id) {
         PmDocumentVersion version = versionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Document version not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Document version not found"));
         version.setIsActive(false);
         version.setIsDelete(true);
         version.setDeleteBy("system");
@@ -215,25 +220,25 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, String versionNo, String changeSummary) {
         createVersion(documentType, documentId, null, null, versionNo, changeSummary);
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary) {
         createVersion(documentType, documentId, projectId, documentCode, versionNo, changeSummary, null);
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData) {
         createVersion(documentType, documentId, projectId, documentCode, versionNo, changeSummary, snapshotData, null, null);
     }
 
     @Override
-    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void createVersion(String documentType, UUID documentId, UUID projectId, String documentCode, String versionNo, String changeSummary, String snapshotData, UUID fileRefId, String filePath) {
         var latest = versionRepository
                 .findFirstByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId);
@@ -317,8 +322,8 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
 
     @Override
     @Transactional(readOnly = true)
-    public java.util.Map<UUID, String> getLatestVersionMap(String documentType, java.util.Collection<UUID> documentIds) {
-        java.util.Map<UUID, String> result = new java.util.HashMap<>();
+    public Map<UUID, String> getLatestVersionMap(String documentType, Collection<UUID> documentIds) {
+        Map<UUID, String> result = new HashMap<>();
         if (documentIds == null || documentIds.isEmpty()) {
             return result;
         }

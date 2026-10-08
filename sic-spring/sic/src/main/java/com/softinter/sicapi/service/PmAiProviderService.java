@@ -4,6 +4,7 @@ import com.softinter.sicapi.dto.request.AiAttachmentDto;
 import com.softinter.sicapi.dto.response.AiModelResponse;
 
 import java.util.List;
+import com.softinter.sicapi.dto.request.AiDraftRequest;
 
 public interface PmAiProviderService {
 
@@ -33,7 +34,7 @@ public interface PmAiProviderService {
      * straight off any {@link com.softinter.sicapi.dto.request.AiDraftRequest} instead of every
      * call site spelling out {@code request.getModel(), request.getAttachments()}.
      */
-    default String generateRawResponse(String prompt, String systemPrompt, com.softinter.sicapi.dto.request.AiDraftRequest request) {
+    default String generateRawResponse(String prompt, String systemPrompt, AiDraftRequest request) {
         return generateRawResponse(prompt, systemPrompt, request.getModel(), request.getAttachments());
     }
 

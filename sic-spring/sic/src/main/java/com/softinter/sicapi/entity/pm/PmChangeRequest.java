@@ -7,6 +7,8 @@ import lombok.EqualsAndHashCode;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "pm_change_request")
@@ -66,8 +68,8 @@ public class PmChangeRequest extends BaseEntity {
     private UUID attachmentGroupId;
 
     @OneToMany(mappedBy = "changeRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<PmCrAssignee> assignees = new java.util.ArrayList<>();
+    private List<PmCrAssignee> assignees = new ArrayList<>();
 
     @OneToMany(mappedBy = "changeRequest", cascade = CascadeType.ALL, orphanRemoval = true)
-    private java.util.List<PmChangeImpact> impacts = new java.util.ArrayList<>();
+    private List<PmChangeImpact> impacts = new ArrayList<>();
 }

@@ -4,6 +4,8 @@ import lombok.Data;
 
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
+import com.softinter.sicapi.entity.ex.StorageUploadReference;
 
 @Data
 public class PmRequirementResponse {
@@ -29,5 +31,5 @@ public class PmRequirementResponse {
     private Instant updatedDate;
     private Integer rowVersion;
     private UUID uploadGroupId;
-    private java.util.List<com.softinter.sicapi.entity.ex.StorageUploadReference> uploadGroupData;
+    private List<StorageUploadReference> uploadGroupData;
 }

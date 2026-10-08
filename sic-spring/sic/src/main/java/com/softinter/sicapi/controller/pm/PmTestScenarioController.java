@@ -17,6 +17,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest;
+import com.softinter.sicapi.dto.response.TestScenarioDraftResponse;
+import com.softinter.sicapi.service.impl.TestScenarioGeneratorService;
 
 @Slf4j
 @RestController
@@ -27,7 +30,7 @@ import java.util.stream.Collectors;
 public class PmTestScenarioController {
 
     private final PmTestScenarioService scenarioService;
-    private final com.softinter.sicapi.service.impl.TestScenarioGeneratorService generatorService;
+    private final TestScenarioGeneratorService generatorService;
     private final CurrentUserService currentUserService;
 
     @GetMapping
@@ -60,9 +63,9 @@ public class PmTestScenarioController {
     }
 
     @PostMapping("/generate/draft")
-    public ResponseEntity<com.softinter.sicapi.dto.response.TestScenarioDraftResponse> generateDraft(
-            @RequestBody(required = false) com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest request) {
-        com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest req = request != null ? request : new com.softinter.sicapi.dto.request.GenerateTestScenarioDraftRequest();
+    public ResponseEntity<TestScenarioDraftResponse> generateDraft(
+            @RequestBody(required = false) GenerateTestScenarioDraftRequest request) {
+        GenerateTestScenarioDraftRequest req = request != null ? request : new GenerateTestScenarioDraftRequest();
         return ResponseEntity.ok(generatorService.generateDraft(req));
     }
 

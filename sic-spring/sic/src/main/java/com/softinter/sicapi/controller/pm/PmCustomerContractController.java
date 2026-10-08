@@ -25,6 +25,15 @@ import java.util.UUID;
 
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.util.PaginationUtil;
+import com.softinter.sicapi.dto.response.ContractDraft;
+import com.softinter.sicapi.service.impl.ContractGeneratorService;
+import com.softinter.sicapi.dto.request.GenerateContractDraftRequest;
+import java.util.Map;
+import com.softinter.sicapi.dto.response.PmContractSummaryResponse;
+import com.softinter.sicapi.entity.pm.PmCustomerContract;
+import com.softinter.sicapi.service.PmCustomerContractExportService;
+import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.util.SortValidator;
 
 @RestController
 @RequestMapping("/api/pm/contracts")
@@ -34,15 +43,15 @@ import com.softinter.sicapi.util.PaginationUtil;
 public class PmCustomerContractController {
 
     private final PmCustomerContractService contractService;
-    private final com.softinter.sicapi.service.PmCustomerContractExportService exportService;
+    private final PmCustomerContractExportService exportService;
     private final BusinessAccessService businessAccessService;
     private final ApprovalService approvalService;
-    private final com.softinter.sicapi.service.impl.ContractGeneratorService contractGeneratorService;
+    private final ContractGeneratorService contractGeneratorService;
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate contract draft with AI")
-    public ResponseEntity<com.softinter.sicapi.dto.response.ContractDraft> generateDraft(
-            @RequestBody com.softinter.sicapi.dto.request.GenerateContractDraftRequest req) {
+    public ResponseEntity<ContractDraft> generateDraft(
+            @RequestBody GenerateContractDraftRequest req) {
         return ResponseEntity.ok(contractGeneratorService.generateDraft(req));
     }
 
@@ -52,7 +61,7 @@ public class PmCustomerContractController {
             @PathVariable UUID id,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         UUID businessId = businessAccessService.getBusinessId();
         byte[] pdfBytes = exportService.exportContractPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
@@ -88,8 +97,8 @@ public class PmCustomerContractController {
             @RequestParam(defaultValue = "ASC") String sortDirection
     ) {
         UUID businessId = businessAccessService.getBusinessId();
-        Sort sort = com.softinter.sicapi.util.SortValidator.build(
-                com.softinter.sicapi.entity.pm.PmCustomerContract.class, sortBy, sortDirection, "contractNo");
+        Sort sort = SortValidator.build(
+                PmCustomerContract.class, sortBy, sortDirection, "contractNo");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmCustomerContractResponse> pageResult = contractService.getContracts(
                 businessId, customerId, projectId, keyword, status, contractType, expiringWithinDays, latestOnly, renewalStatus, pageable);
@@ -112,7 +121,7 @@ public class PmCustomerContractController {
 
     @GetMapping("/{id}/summary")
     @Operation(summary = "สรุปข้อมูลที่เกี่ยวข้องกับสัญญา (Milestone, ใบแจ้งหนี้, MA Ticket, วันหมดอายุ)")
-    public ResponseEntity<com.softinter.sicapi.dto.response.PmContractSummaryResponse> getContractSummary(@PathVariable UUID id) {
+    public ResponseEntity<PmContractSummaryResponse> getContractSummary(@PathVariable UUID id) {
         return ResponseEntity.ok(contractService.getContractSummary(id));
     }
 
@@ -135,7 +144,7 @@ public class PmCustomerContractController {
     @PostMapping("/{id}/cancel")
     @Operation(summary = "ยกเลิกสัญญา (ไม่ลบ) พร้อมเหตุผล")
     public ResponseEntity<PmCustomerContractResponse> cancelContract(
-            @PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> body) {
+            @PathVariable UUID id, @RequestBody(required = false) Map<String, String> body) {
         String reason = body != null ? body.get("reason") : null;
         return ResponseEntity.ok(contractService.cancelContract(id, reason));
     }

@@ -22,6 +22,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.dto.request.GenerateUserManualDraftRequest;
+import com.softinter.sicapi.entity.pm.PmUserManual;
+import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.dto.response.UserManualDraftResponse;
+import com.softinter.sicapi.service.impl.UserManualGeneratorService;
 
 @Slf4j
 @RestController
@@ -35,12 +40,12 @@ public class PmUserManualController {
     private final PmUserManualExportService exportService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
-    private final com.softinter.sicapi.service.impl.UserManualGeneratorService generatorService;
+    private final UserManualGeneratorService generatorService;
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate user manual draft content using AI")
-    public ResponseEntity<com.softinter.sicapi.dto.response.UserManualDraftResponse> generateDraft(
-            @RequestBody com.softinter.sicapi.dto.request.GenerateUserManualDraftRequest request) {
+    public ResponseEntity<UserManualDraftResponse> generateDraft(
+            @RequestBody GenerateUserManualDraftRequest request) {
         return ResponseEntity.ok(generatorService.generateDraft(request));
     }
 
@@ -57,7 +62,7 @@ public class PmUserManualController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmUserManual.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(PmUserManual.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmUserManualResponse> pageResult = manualService.findAll(businessId, projectId, keyword, manualType, status, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));
@@ -85,7 +90,7 @@ public class PmUserManualController {
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         byte[] pdfBytes = exportService.exportUserManualPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")

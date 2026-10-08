@@ -25,6 +25,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.service.FileStorageService;
 
 @Slf4j
 @Service
@@ -33,7 +34,7 @@ public class DiscussionServiceImpl implements DiscussionService {
 
     private final PmCommentRepository commentRepository;
     private final SuProfileRepository profileRepository;
-    private final com.softinter.sicapi.service.FileStorageService fileStorageService;
+    private final FileStorageService fileStorageService;
     private final AuditLogService auditLogService;
     private final CurrentUserService currentUserService;
 

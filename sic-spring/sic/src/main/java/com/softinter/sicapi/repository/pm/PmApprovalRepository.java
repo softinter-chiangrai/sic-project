@@ -33,12 +33,12 @@ public interface PmApprovalRepository extends JpaRepository<PmApproval, UUID>, J
             + "AND (:projectId IS NULL OR EXISTS (SELECT 1 FROM PmDocumentVersion v WHERE v.documentType = a.documentType "
             + "     AND v.documentId = a.documentId AND v.projectId = :projectId)) "
             + "ORDER BY a.documentCode ASC")
-    List<PmApproval> findApprovedTargets(@Param("businessId") java.util.UUID businessId,
+    List<PmApproval> findApprovedTargets(@Param("businessId") UUID businessId,
             @Param("documentType") String documentType, @Param("keyword") String keyword,
-            @Param("projectId") java.util.UUID projectId);
+            @Param("projectId") UUID projectId);
 
     @Query("SELECT a FROM PmApproval a WHERE a.documentType = :documentType AND a.documentId = :documentId ORDER BY a.createdDate DESC")
-    List<PmApproval> findAnyByDocument(@Param("documentType") String documentType, @Param("documentId") java.util.UUID documentId);
+    List<PmApproval> findAnyByDocument(@Param("documentType") String documentType, @Param("documentId") UUID documentId);
 
     @Query("SELECT a FROM PmApproval a WHERE a.documentType = :documentType AND a.documentId = :documentId AND a.status = :status AND a.isActive = true")
     Optional<PmApproval> findByDocumentAndStatus(@Param("documentType") String documentType,

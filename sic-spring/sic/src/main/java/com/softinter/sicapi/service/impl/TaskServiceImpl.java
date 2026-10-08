@@ -33,6 +33,10 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.util.DocumentDiffHelper;
+import com.softinter.sicapi.service.DocumentVersionService;
+import com.softinter.sicapi.util.JsonSnapshotHelper;
 
 @Service
 @RequiredArgsConstructor
@@ -49,14 +53,14 @@ public class TaskServiceImpl implements TaskService {
     private final SuProfileRepository profileRepository;
     private final TraceLinkService traceLinkService;
     private final AuditLogService auditLogService;
-    private final com.softinter.sicapi.service.DocumentVersionService documentVersionService;
+    private final DocumentVersionService documentVersionService;
 
     // ===== CREATE =====
     @Override
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
         PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
-                .orElseThrow(() -> new RuntimeException("Work Package not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Work Package not found"));
 
         UUID taskProjectId = wp.getMilestone().getPhase().getProject().getId();
         String taskCode = request.getTaskCode();
@@ -125,18 +129,18 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public TaskResponse updateTask(UUID taskId, TaskRequest request) {
         PmTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
 
         java.util.List<String> changes = new java.util.ArrayList<>();
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รหัส Task", task.getTaskCode(), request.getTaskCode());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อ Task", task.getTaskName(), request.getTaskName());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", task.getDescription(), request.getDescription());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", task.getAssignedTo(), request.getAssignedTo());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "วันเริ่ม (Start Date)", task.getStartDate(), request.getStartDate());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "วันสิ้นสุด (End Date)", task.getEndDate(), request.getEndDate());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", task.getPriority(), request.getPriority());
+        DocumentDiffHelper.checkChange(changes, "รหัส Task", task.getTaskCode(), request.getTaskCode());
+        DocumentDiffHelper.checkChange(changes, "ชื่อ Task", task.getTaskName(), request.getTaskName());
+        DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", task.getDescription(), request.getDescription());
+        DocumentDiffHelper.checkChange(changes, "ผู้รับผิดชอบ (Assigned To)", task.getAssignedTo(), request.getAssignedTo());
+        DocumentDiffHelper.checkChange(changes, "วันเริ่ม (Start Date)", task.getStartDate(), request.getStartDate());
+        DocumentDiffHelper.checkChange(changes, "วันสิ้นสุด (End Date)", task.getEndDate(), request.getEndDate());
+        DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", task.getPriority(), request.getPriority());
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
-            com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", task.getStatus(), request.getStatus());
+            DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", task.getStatus(), request.getStatus());
         }
 
         task.setTaskCode(request.getTaskCode());
@@ -190,7 +194,7 @@ public class TaskServiceImpl implements TaskService {
 
         // บันทึกเวอร์ชันเฉพาะเมื่อมี field สำคัญเปลี่ยนจริง (กันเวอร์ชันซ้ำทุกครั้งที่ลาก/บันทึกซ้ำ)
         if (!changes.isEmpty()) {
-            recordVersion(task, com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดต Task " + task.getTaskName()));
+            recordVersion(task, DocumentDiffHelper.buildDiffSummary(changes, "อัปเดต Task " + task.getTaskName()));
         }
 
         try {
@@ -209,7 +213,7 @@ public class TaskServiceImpl implements TaskService {
         try {
             UUID projectId = task.getWorkPackage().getMilestone().getPhase().getProject().getId();
             documentVersionService.createVersion("TASK", task.getId(), projectId, task.getTaskCode(), "v1.0.0", summary,
-                    com.softinter.sicapi.util.JsonSnapshotHelper.toJson(toResponse(task)));
+                    JsonSnapshotHelper.toJson(toResponse(task)));
         } catch (Exception e) {
             log.warn("Failed to create version for task {}: {}", task.getId(), e.getMessage());
         }
@@ -368,7 +372,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional(readOnly = true)
     public TaskResponse getTaskById(UUID taskId) {
         PmTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         return toResponse(task);
     }
 
@@ -376,7 +380,7 @@ public class TaskServiceImpl implements TaskService {
     @Transactional
     public void deleteTask(UUID taskId) {
         PmTask task = taskRepository.findById(taskId)
-                .orElseThrow(() -> new RuntimeException("Task not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
         Instant now = Instant.now();
         task.setIsDelete(true);
         task.setDeleteDate(now);

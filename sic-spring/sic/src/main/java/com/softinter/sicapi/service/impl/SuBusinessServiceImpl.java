@@ -9,6 +9,7 @@ import com.softinter.sicapi.repository.su.SuBusinessRepository;
 import com.softinter.sicapi.service.SuBusinessService;
 
 import lombok.RequiredArgsConstructor;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +19,6 @@ public class SuBusinessServiceImpl implements SuBusinessService {
     @Override
     public SuBusiness findById(UUID id) {
         return businessRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Business not found"));
     }
 }

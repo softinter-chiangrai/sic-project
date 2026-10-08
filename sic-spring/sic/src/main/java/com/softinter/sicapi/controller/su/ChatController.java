@@ -59,6 +59,15 @@ public class ChatController {
     public ResponseEntity<ChatMessageResponse> sendMessage(@RequestBody ChatMessageRequest request) {
         String currentUserId = currentUserService.getUserId();
         String currentUsername = currentUserService.getUsername();
+        UUID businessId = currentUserService.getBusinessId();
+        if (businessId == null) {
+            List<UserBusinessResponse> ubs = userBusinessService.findByUserId(currentUserId);
+            if (!ubs.isEmpty() && ubs.get(0).getBusinessId() != null) {
+                businessId = ubs.get(0).getBusinessId();
+            } else {
+                businessId = UUID.fromString("00000000-0000-0000-0000-000000000000");
+            }
+        }
 
         SuChatLog chatLog = new SuChatLog();
         chatLog.setSenderId(currentUserId);
@@ -66,6 +75,7 @@ public class ChatController {
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
+        chatLog.setBusinessId(businessId);
         chatLog.setIsRead(false);
         chatLog.setCreatedDate(Instant.now());
         chatLogRepository.save(chatLog);
@@ -130,7 +140,6 @@ public class ChatController {
             if (!ubs.isEmpty() && ubs.get(0).getBusinessId() != null) {
                 businessId = ubs.get(0).getBusinessId();
             } else {
-                // Fallback default
                 businessId = UUID.fromString("00000000-0000-0000-0000-000000000000");
             }
         }
@@ -143,13 +152,14 @@ public class ChatController {
 
         chatGroupRepository.save(group);
 
+        List<SuChatGroupMember> allMembers = new java.util.ArrayList<>();
         SuChatGroupMember creatorMember = new SuChatGroupMember();
         creatorMember.setGroup(group);
         creatorMember.setUserId(currentUserId);
         creatorMember.setBusinessId(businessId);
         creatorMember.setCreatedBy(currentUserId);
         creatorMember.setCreatedDate(Instant.now());
-        chatGroupMemberRepository.save(creatorMember);
+        allMembers.add(chatGroupMemberRepository.save(creatorMember));
 
         if (request.getMemberUserIds() != null) {
             for (String otherUserId : request.getMemberUserIds()) {
@@ -160,12 +170,20 @@ public class ChatController {
                     member.setBusinessId(businessId);
                     member.setCreatedBy(currentUserId);
                     member.setCreatedDate(Instant.now());
-                    chatGroupMemberRepository.save(member);
+                    allMembers.add(chatGroupMemberRepository.save(member));
                 }
             }
         }
 
-        return ResponseEntity.ok(toChatGroupResponse(group));
+        group.setMembers(allMembers);
+        ChatGroupResponse response = toChatGroupResponse(group);
+
+        // Broadcast to all members so their group list & member count update in real time without refreshing
+        for (String memberId : response.getMemberUserIds()) {
+            messagingTemplate.convertAndSendToUser(memberId, "/queue/groups/update", response);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/group/update")
@@ -180,6 +198,8 @@ public class ChatController {
             chatGroupRepository.save(group);
         }
 
+        java.util.Set<String> affectedUserIds = new java.util.HashSet<>();
+
         if (request.getMemberUserIds() != null) {
             List<SuChatGroupMember> currentMembers = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(group.getId());
             List<String> targetUserIds = new java.util.ArrayList<>(request.getMemberUserIds());
@@ -189,6 +209,7 @@ public class ChatController {
 
             // Remove members not in target list
             for (SuChatGroupMember m : currentMembers) {
+                affectedUserIds.add(m.getUserId());
                 if (!targetUserIds.contains(m.getUserId())) {
                     m.setIsDelete(true);
                     m.setDeleteDate(Instant.now());
@@ -204,6 +225,7 @@ public class ChatController {
 
             UUID businessId = group.getBusinessId();
             for (String uid : targetUserIds) {
+                affectedUserIds.add(uid);
                 if (!existingUserIds.contains(uid)) {
                     SuChatGroupMember newMember = new SuChatGroupMember();
                     newMember.setGroup(group);
@@ -222,9 +244,9 @@ public class ChatController {
 
         ChatGroupResponse response = toChatGroupResponse(group);
 
-        // Broadcast group update to all members via WebSocket
-        for (String memberId : response.getMemberUserIds()) {
-            messagingTemplate.convertAndSendToUser(memberId, "/queue/groups/update", response);
+        // Broadcast group update to all affected members (both current and removed)
+        for (String uid : affectedUserIds) {
+            messagingTemplate.convertAndSendToUser(uid, "/queue/groups/update", response);
         }
 
         return ResponseEntity.ok(response);
@@ -239,12 +261,18 @@ public class ChatController {
         SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
 
+        UUID businessId = group.getBusinessId();
+        if (businessId == null) {
+            businessId = currentUserService.getBusinessId();
+        }
+
         SuChatGroupLog log = new SuChatGroupLog();
         log.setGroup(group);
         log.setSenderId(currentUserId);
         log.setSenderName(currentUsername);
         log.setMessage(request.getMessage());
         log.setMessageType(request.getMessageType());
+        log.setBusinessId(businessId);
         log.setCreatedDate(Instant.now());
         chatGroupLogRepository.save(log);
 
@@ -264,9 +292,10 @@ public class ChatController {
     }
 
     @PostMapping("/cancel/{messageId}")
-    @Operation(summary = "Cancel / Delete chat message")
+    @Operation(summary = "Cancel / Delete chat message (1-on-1 or group)")
     public ResponseEntity<Void> cancelChatMessage(@PathVariable UUID messageId) {
         String currentUserId = currentUserService.getUserId();
+        // Check 1-on-1 chat
         chatLogRepository.findById(messageId).ifPresent(msg -> {
             if (msg.getSenderId().equals(currentUserId)) {
                 msg.setIsCancelled(true);
@@ -279,31 +308,72 @@ public class ChatController {
                 messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/cancel", event);
             }
         });
+        // Check Group chat
+        chatGroupLogRepository.findById(messageId).ifPresent(groupMsg -> {
+            if (groupMsg.getSenderId().equals(currentUserId)) {
+                groupMsg.setIsCancelled(true);
+                groupMsg.setCancelledAt(Instant.now());
+                groupMsg.setCancelledBy(currentUserId);
+                chatGroupLogRepository.save(groupMsg);
+
+                Map<String, Object> event = Map.of(
+                        "messageId", messageId.toString(),
+                        "groupId", groupMsg.getGroup() != null ? groupMsg.getGroup().getId().toString() : "",
+                        "isCancelled", true
+                );
+                if (groupMsg.getGroup() != null) {
+                    messagingTemplate.convertAndSend("/topic/group/" + groupMsg.getGroup().getId() + "/cancel", (Object) event);
+                }
+            }
+        });
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/edit/{messageId}")
-    @Operation(summary = "Edit chat message")
-    public ResponseEntity<ChatMessageResponse> editChatMessage(@PathVariable UUID messageId,
+    @Operation(summary = "Edit chat message (1-on-1 or group)")
+    public ResponseEntity<?> editChatMessage(@PathVariable UUID messageId,
             @RequestBody Map<String, String> body) {
         String newText = body.get("message");
         if (newText == null)
             return ResponseEntity.badRequest().build();
         String currentUserId = currentUserService.getUserId();
 
-        SuChatLog msg = chatLogRepository.findById(messageId)
-                .orElseThrow(() -> new RuntimeException("Message not found"));
-        if (!msg.getSenderId().equals(currentUserId)) {
-            return ResponseEntity.status(403).build();
-        }
-        msg.setMessage(newText);
-        msg.setUpdatedDate(Instant.now());
-        chatLogRepository.save(msg);
+        // 1-on-1 message edit
+        var optChat = chatLogRepository.findById(messageId);
+        if (optChat.isPresent()) {
+            SuChatLog msg = optChat.get();
+            if (!msg.getSenderId().equals(currentUserId)) {
+                return ResponseEntity.status(403).build();
+            }
+            msg.setMessage(newText);
+            msg.setUpdatedDate(Instant.now());
+            chatLogRepository.save(msg);
 
-        ChatMessageResponse response = toChatMessageResponse(msg);
-        messagingTemplate.convertAndSendToUser(msg.getReceiverId(), "/queue/messages/edit", response);
-        messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/edit", response);
-        return ResponseEntity.ok(response);
+            ChatMessageResponse response = toChatMessageResponse(msg);
+            messagingTemplate.convertAndSendToUser(msg.getReceiverId(), "/queue/messages/edit", response);
+            messagingTemplate.convertAndSendToUser(currentUserId, "/queue/messages/edit", response);
+            return ResponseEntity.ok(response);
+        }
+
+        // Group message edit
+        var optGroupChat = chatGroupLogRepository.findById(messageId);
+        if (optGroupChat.isPresent()) {
+            SuChatGroupLog groupMsg = optGroupChat.get();
+            if (!groupMsg.getSenderId().equals(currentUserId)) {
+                return ResponseEntity.status(403).build();
+            }
+            groupMsg.setMessage(newText);
+            groupMsg.setUpdatedDate(Instant.now());
+            chatGroupLogRepository.save(groupMsg);
+
+            ChatGroupMessageResponse response = toGroupMessageResponse(groupMsg);
+            if (groupMsg.getGroup() != null) {
+                messagingTemplate.convertAndSend("/topic/group/" + groupMsg.getGroup().getId() + "/edit", response);
+            }
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.notFound().build();
     }
 
     // ========== Private Helper Methods ==========

@@ -6,6 +6,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
+import java.util.List;
+import com.softinter.sicapi.entity.pm.PmSpecification;
 
 public interface PmSpecificationService {
     Page<PmSpecificationResponse> findAll(UUID businessId, String keyword, String status, Pageable pageable);
@@ -14,5 +16,5 @@ public interface PmSpecificationService {
     UUID save(PmSpecificationRequest request, UUID businessId, String userId);
     void delete(UUID id, UUID businessId, String userId);
     PmSpecificationResponse getByCode(UUID businessId, String code);
-    java.util.List<com.softinter.sicapi.entity.pm.PmSpecification> findByBusinessIdAndProjectId(UUID businessId, UUID projectId);
+    List<PmSpecification> findByBusinessIdAndProjectId(UUID businessId, UUID projectId);
 }

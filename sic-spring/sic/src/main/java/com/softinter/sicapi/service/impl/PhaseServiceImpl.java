@@ -37,6 +37,7 @@ import com.softinter.sicapi.util.LocalizationHelper;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -75,7 +76,7 @@ public class PhaseServiceImpl implements PhaseService {
     @Transactional(readOnly = true)
     public PhaseResponse getPhaseById(UUID phaseId) {
         PmPhase phase = phaseRepository.findById(phaseId)
-                .orElseThrow(() -> new RuntimeException("Phase not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Phase not found"));
         return toResponse(phase);
     }
 
@@ -109,7 +110,7 @@ public class PhaseServiceImpl implements PhaseService {
 
         if (request.getDependencyId() != null) {
             PmPhase dep = phaseRepository.findById(request.getDependencyId())
-                    .orElseThrow(() -> new RuntimeException("Dependency Phase not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Dependency Phase not found"));
             phase.setDependency(dep);
         }
 
@@ -130,7 +131,7 @@ public class PhaseServiceImpl implements PhaseService {
     @Transactional
     public PhaseResponse updatePhase(UUID phaseId, PhaseRequest request) {
         PmPhase phase = phaseRepository.findById(phaseId)
-                .orElseThrow(() -> new RuntimeException("Phase not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Phase not found"));
 
         if (request.getPhaseCode() != null && !request.getPhaseCode().trim().isEmpty()) {
             phase.setPhaseCode(request.getPhaseCode().trim());
@@ -144,7 +145,7 @@ public class PhaseServiceImpl implements PhaseService {
 
         if (request.getDependencyId() != null) {
             PmPhase dep = phaseRepository.findById(request.getDependencyId())
-                    .orElseThrow(() -> new RuntimeException("Dependency Phase not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Dependency Phase not found"));
             phase.setDependency(dep);
         }
 
@@ -166,7 +167,7 @@ public class PhaseServiceImpl implements PhaseService {
     @Transactional
     public void deletePhase(UUID phaseId) {
         PmPhase phase = phaseRepository.findById(phaseId)
-                .orElseThrow(() -> new RuntimeException("Phase not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Phase not found"));
         phase.setIsDelete(true);
         phase.setDeleteDate(Instant.now());
         phaseRepository.save(phase);
@@ -202,7 +203,7 @@ public class PhaseServiceImpl implements PhaseService {
 
         // คำนวณสถิติและ map milestones (นับเฉพาะ Task ปกติ ไม่รวม Bug Task)
         int total = 0, completed = 0;
-        List<MilestoneResponse> milestoneResponses = new java.util.ArrayList<>();
+        List<MilestoneResponse> milestoneResponses = new ArrayList<>();
         if (phase.getMilestones() != null) {
             for (PmMilestone ms : phase.getMilestones()) {
                 if (ms.getIsDelete() != null && ms.getIsDelete()) continue;
@@ -252,7 +253,7 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setDueDate(ms.getDueDate());
         dto.setStatus(ms.getStatus());
         
-        List<WorkPackageResponse> wpResponses = new java.util.ArrayList<>();
+        List<WorkPackageResponse> wpResponses = new ArrayList<>();
         if (ms.getWorkPackages() != null) {
             for (PmWorkPackage wp : ms.getWorkPackages()) {
                 if (wp.getIsDelete() == null || !wp.getIsDelete()) {
@@ -275,7 +276,7 @@ public class PhaseServiceImpl implements PhaseService {
         dto.setEndDate(wp.getEndDate());
         dto.setStatus(wp.getStatus());
         
-        List<TaskResponse> taskResponses = new java.util.ArrayList<>();
+        List<TaskResponse> taskResponses = new ArrayList<>();
         if (wp.getTasks() != null) {
             for (PmTask task : wp.getTasks()) {
                 if (task.getIsDelete() == null || !task.getIsDelete()) {
@@ -356,7 +357,7 @@ public class PhaseServiceImpl implements PhaseService {
 
     private PmCustomerProject getProject(UUID projectId) {
         return projectRepository.findById(projectId)
-                .orElseThrow(() -> new RuntimeException("Project not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
     }
 
     private boolean isBugTask(PmTask task) {

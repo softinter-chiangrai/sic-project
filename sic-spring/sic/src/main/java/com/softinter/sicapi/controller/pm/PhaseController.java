@@ -24,6 +24,8 @@ import com.softinter.sicapi.service.PhaseService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.config.BusinessContextHolder;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pm")
@@ -39,7 +41,7 @@ public class PhaseController {
     public ResponseEntity<List<ComboboxResponse>> getComboboxPhases(
             @RequestParam(required = false) UUID projectId,
             @RequestParam(required = false) String keyword) {
-        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -55,7 +57,7 @@ public class PhaseController {
         List<ComboboxResponse> list = phases.stream()
                 .map(p -> new ComboboxResponse(p.getId().toString(),
                         (p.getPhaseCode() != null ? p.getPhaseCode() + " - " : "") + p.getPhaseName()))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 
@@ -68,7 +70,7 @@ public class PhaseController {
         if (projectId != null) {
             return ResponseEntity.ok(phaseService.getPhasesByProjectId(projectId));
         }
-        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }

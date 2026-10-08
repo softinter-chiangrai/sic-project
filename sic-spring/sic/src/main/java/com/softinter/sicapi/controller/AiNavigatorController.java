@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/ai/navigator")
@@ -35,7 +36,7 @@ public class AiNavigatorController {
             log.error("AI Navigator chat failed", e);
             AiNavigatorChatResponse error = AiNavigatorChatResponse.builder()
                     .answer("เกิดข้อผิดพลาด: " + e.getMessage())
-                    .suggestedRoutes(java.util.List.of())
+                    .suggestedRoutes(List.of())
                     .build();
             return ResponseEntity.internalServerError().body(error);
         }

@@ -5,6 +5,8 @@ import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.Collection;
+import java.util.Map;
 
 public interface DocumentVersionService {
 
@@ -45,7 +47,7 @@ public interface DocumentVersionService {
     String keepVersion(String currentVersion);
 
     /** เวอร์ชันล่าสุดของเอกสารหลายรายการในคำสั่งเดียว (ใช้แสดงคอลัมน์ Version ในหน้า list) key = documentId */
-    java.util.Map<UUID, String> getLatestVersionMap(String documentType, java.util.Collection<UUID> documentIds);
+    Map<UUID, String> getLatestVersionMap(String documentType, Collection<UUID> documentIds);
 
     /**
      * bump เวอร์ชันแบบ semver (X.Y.Z) ตามระดับการเปลี่ยน: PATCH = Z+1, MINOR = Y+1 (Z=0), MAJOR = X+1 (Y=0, Z=0)

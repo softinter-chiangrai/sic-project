@@ -25,6 +25,9 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import com.softinter.sicapi.dto.request.AiDraftRequest;
+import java.util.stream.Collectors;
+import java.nio.charset.StandardCharsets;
 
 @Slf4j
 @Service
@@ -85,7 +88,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
                             .icon(c.getIcon())
                             .recommended(Boolean.TRUE.equals(c.getIsRecommended()))
                             .build())
-                    .collect(java.util.stream.Collectors.toList());
+                    .collect(Collectors.toList());
         }
 
         // Fallback: ตาราง db_ai_model_config ยังว่างอยู่ (ก่อน seed หรือ admin ลบหมด) — ใช้รายการ hardcode เดิม
@@ -236,7 +239,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
             if (isText) {
                 try {
                     byte[] raw = Base64.getDecoder().decode(att.getBase64Data());
-                    sb.append(new String(raw, java.nio.charset.StandardCharsets.UTF_8));
+                    sb.append(new String(raw, StandardCharsets.UTF_8));
                 } catch (Exception e) {
                     sb.append("(could not decode attachment content)");
                 }
@@ -477,7 +480,7 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
     /** ทุก generator ที่ส่ง AiDraftRequest เข้ามาจะได้บริบทขอบเขต (โครงการ/เอกสารที่ผูก/ความสัมพันธ์) ต่อท้าย system prompt */
     @Override
     public String generateRawResponse(String prompt, String systemPrompt,
-                                      com.softinter.sicapi.dto.request.AiDraftRequest request) {
+                                      AiDraftRequest request) {
         String scope = scopeContextService.build(request);
         String system = scope.isEmpty() ? systemPrompt
                 : (systemPrompt == null || systemPrompt.isBlank() ? scope : systemPrompt + "\n\n" + scope);

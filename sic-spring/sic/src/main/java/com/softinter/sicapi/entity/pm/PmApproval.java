@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import com.softinter.sicapi.entity.enums.ApprovalMode;
 
 @Entity
 @Table(name = "pm_approval")
@@ -99,7 +100,7 @@ public class PmApproval extends BaseBusinessEntity {
         List<PmApprovalStepStatus> pending = stepStatuses.stream()
                 .filter(ss -> ss.getStatus() == ApprovalStatus.PENDING && !Boolean.TRUE.equals(ss.getIsCompleted()))
                 .toList();
-        if (flow.getApprovalMode() != com.softinter.sicapi.entity.enums.ApprovalMode.CHAIN) {
+        if (flow.getApprovalMode() != ApprovalMode.CHAIN) {
             return pending;
         }
         int first = pending.stream().mapToInt(ss -> ss.getStep().getStepOrder()).min().orElse(0);

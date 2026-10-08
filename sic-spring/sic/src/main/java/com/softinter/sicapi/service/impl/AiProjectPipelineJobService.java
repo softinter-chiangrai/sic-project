@@ -88,6 +88,8 @@ import com.softinter.sicapi.service.WorkPackageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.time.Instant;
+import jakarta.annotation.PostConstruct;
 
 /**
  * AI Full-Project Generator แบบทำงานเบื้องหลัง: แตกเป็นขั้นตามลำดับ SDLC เรียก AI ทีละขั้น (ส่งผลขั้นก่อนหน้าเป็นบริบท)
@@ -158,7 +160,7 @@ public class AiProjectPipelineJobService {
     private static class Job {
         volatile UUID id; // assigned by the DB entity on first persistJob()
         final long createdAt = System.currentTimeMillis();
-        final java.time.Instant createdDate = java.time.Instant.now();
+        final Instant createdDate = Instant.now();
         final List<StepState> steps = new ArrayList<>();
         final Map<String, Integer> counts = new ConcurrentHashMap<>();
         volatile String status = "RUNNING";
@@ -252,7 +254,7 @@ public class AiProjectPipelineJobService {
     }
 
     /** ถ้า backend ถูก restart กลางคัน job ที่ค้างสถานะ RUNNING ใน DB จะไม่มีวัน finish อีก มาร์คเป็น FAILED ให้ผู้ใช้เห็นว่าโดนขัดจังหวะ */
-    @jakarta.annotation.PostConstruct
+    @PostConstruct
     void markInterruptedJobsAsFailed() {
         List<AiPipelineJob> stale = jobRepository.findByStatusAndIsDeleteFalse("RUNNING");
         if (stale.isEmpty()) return;

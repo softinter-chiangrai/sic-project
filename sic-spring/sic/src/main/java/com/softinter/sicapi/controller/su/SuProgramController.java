@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Slf4j
 @RestController
@@ -112,7 +113,7 @@ public class SuProgramController {
             program = new SuProgram();
         } else {
             program = programRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("Program not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Program not found"));
         }
 
         // Map ข้อมูล
@@ -126,7 +127,7 @@ public class SuProgramController {
 
         if (request.getParentProgramId() != null) {
             SuProgram parent = programRepository.findById(request.getParentProgramId())
-                    .orElseThrow(() -> new RuntimeException("Parent program not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent program not found"));
             program.setParentProgram(parent);
         } else {
             program.setParentProgram(null);
@@ -215,7 +216,7 @@ public class SuProgramController {
     @Operation(summary = "Get program by ID")
     public ResponseEntity<ProgramResponse> getById(@PathVariable UUID id) {
         SuProgram program = programRepository.findByIdWithParent(id)
-                .orElseThrow(() -> new RuntimeException("Program not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Program not found"));
         return ResponseEntity.ok(toResponse(program));
     }
 
@@ -239,7 +240,7 @@ public class SuProgramController {
 
         if (request.getParentProgramId() != null) {
             SuProgram parent = programRepository.findById(request.getParentProgramId())
-                    .orElseThrow(() -> new RuntimeException("Parent program not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Parent program not found"));
             program.setParentProgram(parent);
         }
 
@@ -279,7 +280,7 @@ public class SuProgramController {
     @Transactional
     public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody(required = false) DeleteRequest request) {
         SuProgram program = programRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Program not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Program not found"));
 
         List<SuProgram> children = programRepository.findByParentProgramIdAndIsDeleteFalse(id);
         if (!children.isEmpty()) {

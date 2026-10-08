@@ -24,6 +24,8 @@ import com.softinter.sicapi.service.WorkPackageService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.config.BusinessContextHolder;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/pm/work-packages")
@@ -49,7 +51,7 @@ public class WorkPackageController {
                     .orElseGet(() -> ResponseEntity.ok(List.of()));
         }
 
-        UUID businessId = com.softinter.sicapi.config.BusinessContextHolder.getBusinessId();
+        UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
@@ -57,7 +59,7 @@ public class WorkPackageController {
         List<PmWorkPackage> workPackages = workPackageRepository.findByBusinessIdAndFilters(businessId, projectId, milestoneId, normalizedKeyword);
         List<ComboboxResponse> list = workPackages.stream()
                 .map(w -> new ComboboxResponse(w.getId().toString(), w.getPackageName()))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 

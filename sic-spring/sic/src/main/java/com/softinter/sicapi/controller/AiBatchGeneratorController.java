@@ -15,6 +15,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/ai")
@@ -35,7 +36,7 @@ public class AiBatchGeneratorController {
             log.error("AI batch-generate failed", e);
             AiBatchGenerateResponse error = AiBatchGenerateResponse.builder()
                     .moduleType(request.getModuleType())
-                    .items(java.util.List.of())
+                    .items(List.of())
                     .message("เกิดข้อผิดพลาด: " + e.getMessage())
                     .build();
             return ResponseEntity.internalServerError().body(error);

@@ -20,6 +20,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
@@ -60,7 +61,7 @@ public class GlobalSearchServiceImpl implements GlobalSearchService {
                                 Stream.concat(
                                         projects.stream().map(PmCustomerProject::getCustomerId),
                                         contracts.stream().map(PmCustomerContract::getCustomerId)
-                                ).filter(java.util.Objects::nonNull).distinct().collect(Collectors.toList())
+                                ).filter(Objects::nonNull).distinct().collect(Collectors.toList())
                         ).stream())
                 .collect(Collectors.toMap(PmCustomer::getId, Function.identity(), (a, b) -> a));
 

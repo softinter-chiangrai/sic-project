@@ -19,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.UUID;
+import com.softinter.sicapi.entity.pm.PmBug;
 
 @Slf4j
 @RestController
@@ -41,7 +42,7 @@ public class PmBugController {
             @RequestParam(defaultValue = "DESC") String sortDirection) {
 
         UUID businessId = BusinessContextHolder.getBusinessId();
-        Sort sort = SortValidator.build(com.softinter.sicapi.entity.pm.PmBug.class, sortBy, sortDirection, "createdDate");
+        Sort sort = SortValidator.build(PmBug.class, sortBy, sortDirection, "createdDate");
         Pageable pageable = PaginationUtil.toPageable(page, size, sort);
         Page<PmBugResponse> pageResult = bugService.findAll(businessId, projectId, keyword, pageable);
         return ResponseEntity.ok(PaginationUtil.of(pageResult));

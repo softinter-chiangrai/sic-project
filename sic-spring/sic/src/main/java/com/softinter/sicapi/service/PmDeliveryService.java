@@ -7,6 +7,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.util.UUID;
+import java.util.List;
+import com.softinter.sicapi.dto.request.PmInvoiceItemRequest;
 
 public interface PmDeliveryService {
     Page<PmDeliveryResponse> findAll(UUID businessId, UUID projectId, Pageable pageable);
@@ -19,6 +21,6 @@ public interface PmDeliveryService {
     // Phase 4: Sign-off & Invoicing
     PmDeliveryResponse signOff(UUID deliveryId, String signedBy, UUID businessId, String userId);
     UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId);
-    UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId, java.util.List<com.softinter.sicapi.dto.request.PmInvoiceItemRequest> customItems);
+    UUID createInvoiceFromDelivery(UUID deliveryId, UUID businessId, String userId, List<PmInvoiceItemRequest> customItems);
 }
 

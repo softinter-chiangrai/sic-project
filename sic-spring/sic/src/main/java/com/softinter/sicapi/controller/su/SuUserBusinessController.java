@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @RestController
 @RequestMapping("/api/su/user-businesses")
@@ -101,7 +102,7 @@ public class SuUserBusinessController {
         SuUserBusiness ub;
         if (request.getId() != null) {
             ub = userBusinessRepository.findById(request.getId())
-                    .orElseThrow(() -> new RuntimeException("User business not found"));
+                    .orElseThrow(() -> new ResourceNotFoundException("User business not found"));
         } else {
             ub = new SuUserBusiness();
         }
@@ -117,7 +118,7 @@ public class SuUserBusinessController {
     @Operation(summary = "Delete user business")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         SuUserBusiness ub = userBusinessRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User business not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User business not found"));
         ub.setIsDelete(true);
         ub.setIsActive(false);
         userBusinessRepository.save(ub);

@@ -34,6 +34,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import com.softinter.sicapi.util.ContractLifecycle;
+import java.time.LocalDate;
+import java.util.Map;
+import jakarta.persistence.criteria.Predicate;
+import org.springframework.data.jpa.domain.Specification;
 
 @Slf4j
 @Service
@@ -55,7 +62,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         return findAll(businessId, projectId, null, null, pageable);
     }
 
-    private static final java.util.Map<String, MaTicketStatus> TICKET_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, MaTicketStatus> TICKET_STATUS_THAI_MAP = Map.of(
             "เปิด", MaTicketStatus.OPEN,
             "กำลังดำเนินการ", MaTicketStatus.IN_PROGRESS,
             "รอลูกค้า", MaTicketStatus.WAITING_CUSTOMER,
@@ -65,7 +72,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             "เปลี่ยนแปลง", MaTicketStatus.CHANGED
     );
 
-    private static final java.util.Map<String, MaTicketSeverity> TICKET_SEVERITY_THAI_MAP = java.util.Map.of(
+    private static final Map<String, MaTicketSeverity> TICKET_SEVERITY_THAI_MAP = Map.of(
             "ต่ำ", MaTicketSeverity.LOW,
             "กลาง", MaTicketSeverity.MEDIUM,
             "ปานกลาง", MaTicketSeverity.MEDIUM,
@@ -83,8 +90,8 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
     @Override
     @Transactional(readOnly = true)
     public Page<PmMaTicketResponse> findAll(UUID businessId, UUID projectId, String keyword, String status, String severity, String ticketType, Pageable pageable) {
-        org.springframework.data.jpa.domain.Specification<PmMaTicket> spec = (root, query, cb) -> {
-            java.util.List<jakarta.persistence.criteria.Predicate> predicates = new java.util.ArrayList<>();
+        Specification<PmMaTicket> spec = (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("businessId"), businessId));
             predicates.add(cb.isFalse(root.get("isDelete")));
             if (projectId != null) {
@@ -102,7 +109,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
-                List<jakarta.persistence.criteria.Predicate> orPreds = new ArrayList<>(List.of(
+                List<Predicate> orPreds = new ArrayList<>(List.of(
                         cb.like(cb.lower(root.get("ticketNo")), pattern),
                         cb.like(cb.lower(root.get("title")), pattern),
                         cb.like(cb.lower(root.get("description")), pattern),
@@ -115,30 +122,22 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
                 ));
 
                 // ✅ Bilingual: สถานะ
-                for (var entry : TICKET_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(root.get("status"), entry.getValue()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", TICKET_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: ระดับความรุนแรง/ความสำคัญ
-                for (var entry : TICKET_SEVERITY_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(root.get("severity"), entry.getValue()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "severity", TICKET_SEVERITY_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "MA_TICKET", rawKw, orPreds);
 
-                predicates.add(cb.or(orPreds.toArray(new jakarta.persistence.criteria.Predicate[0])));
+                predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
-            return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
 
-        org.springframework.data.domain.Page<PmMaTicket> page = ticketRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Page<PmMaTicket> page = ticketRepository.findAll(spec, pageable);
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "MA_TICKET", page.getContent().stream().map(PmMaTicket::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);
@@ -324,8 +323,8 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
                     .orElseThrow(() -> new RuntimeException("ไม่พบสัญญา"));
             // สัญญาที่ยกเลิกแล้วไม่มีสิทธิ์รับบริการ MA (ตรวจตอนสร้าง/เปลี่ยนสัญญา; สัญญาหมดอายุให้ผ่านแต่ฝั่งหน้าจอเตือน)
             if (!contract.getId().equals(entity.getContractId())
-                    && com.softinter.sicapi.util.ContractLifecycle.CANCELLED.equals(com.softinter.sicapi.util.ContractLifecycle.status(
-                            contract.getSignStatus(), contract.getRenewalStatus(), contract.getEndDate(), java.time.LocalDate.now()))) {
+                    && ContractLifecycle.CANCELLED.equals(ContractLifecycle.status(
+                            contract.getSignStatus(), contract.getRenewalStatus(), contract.getEndDate(), LocalDate.now()))) {
                 throw new RuntimeException("สัญญา " + contract.getContractNo() + " ถูกยกเลิกแล้ว ไม่สามารถเปิดตั๋ว MA ภายใต้สัญญานี้ได้");
             }
             entity.setCustomerId(contract.getCustomerId());

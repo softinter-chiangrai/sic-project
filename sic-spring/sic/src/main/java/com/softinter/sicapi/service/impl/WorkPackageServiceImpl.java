@@ -20,6 +20,7 @@ import com.softinter.sicapi.service.AuditLogService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.softinter.sicapi.exception.ResourceNotFoundException;
 
 @Service
 @RequiredArgsConstructor
@@ -40,7 +41,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     @Override
     public WorkPackageResponse getWorkPackageById(UUID wpId) {
         PmWorkPackage wp = wpRepository.findById(wpId)
-                .orElseThrow(() -> new RuntimeException("Work Package not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Work Package not found"));
         return toResponse(wp);
     }
 
@@ -48,7 +49,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     @Transactional
     public WorkPackageResponse createWorkPackage(WorkPackageRequest request) {
         PmMilestone ms = milestoneRepository.findById(request.getMilestoneId())
-                .orElseThrow(() -> new RuntimeException("Milestone not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
 
         PmWorkPackage wp = new PmWorkPackage();
         wp.setMilestone(ms);
@@ -84,7 +85,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     @Transactional
     public WorkPackageResponse updateWorkPackage(UUID wpId, WorkPackageRequest request) {
         PmWorkPackage wp = wpRepository.findById(wpId)
-                .orElseThrow(() -> new RuntimeException("Work Package not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Work Package not found"));
 
         wp.setPackageName(request.getPackageName());
         wp.setDescription(request.getDescription());
@@ -112,7 +113,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     @Transactional
     public void deleteWorkPackage(UUID wpId) {
         PmWorkPackage wp = wpRepository.findById(wpId)
-                .orElseThrow(() -> new RuntimeException("Work Package not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Work Package not found"));
         wp.setIsDelete(true);
         wpRepository.save(wp);
 

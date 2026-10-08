@@ -30,6 +30,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
+import com.softinter.sicapi.service.PmSpecificationExportService;
+import com.softinter.sicapi.util.ReportHelper;
 
 @RestController
 @RequestMapping("/api/pm/specifications")
@@ -39,7 +42,7 @@ import java.util.UUID;
 public class PmSpecificationController {
 
     private final PmSpecificationService specificationService;
-    private final com.softinter.sicapi.service.PmSpecificationExportService exportService;
+    private final PmSpecificationExportService exportService;
     private final SpecificationGeneratorService generatorService;
     private final CurrentUserService currentUserService;
     private final ApprovalService approvalService;
@@ -54,7 +57,7 @@ public class PmSpecificationController {
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
-        String finalLang = com.softinter.sicapi.util.ReportHelper.resolveLang(lang, headerLang);
+        String finalLang = ReportHelper.resolveLang(lang, headerLang);
         byte[] pdfBytes = exportService.exportSpecificationPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
@@ -173,7 +176,7 @@ public class PmSpecificationController {
         List<ComboboxResponse> list = specs.stream()
                 .map(s -> new ComboboxResponse(s.getId().toString(),
                         s.getSpecificationCode() + " - " + s.getTitle()))
-                .collect(java.util.stream.Collectors.toList());
+                .collect(Collectors.toList());
         return ResponseEntity.ok(list);
     }
 }

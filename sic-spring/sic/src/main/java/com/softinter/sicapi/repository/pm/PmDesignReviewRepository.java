@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
 
 @Repository
 public interface PmDesignReviewRepository extends JpaRepository<PmDesignReview, UUID>, JpaSpecificationExecutor<PmDesignReview> {
@@ -18,9 +19,9 @@ public interface PmDesignReviewRepository extends JpaRepository<PmDesignReview, 
     @Query("SELECT r FROM PmDesignReview r WHERE r.id = :id AND r.businessId = :businessId AND r.isDelete = false")
     Optional<PmDesignReview> findByIdAndBusinessId(@Param("id") UUID id, @Param("businessId") UUID businessId);
 
-    java.util.List<PmDesignReview> findByBusinessIdAndIsDeleteFalse(UUID businessId);
+    List<PmDesignReview> findByBusinessIdAndIsDeleteFalse(UUID businessId);
 
-    java.util.List<PmDesignReview> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
+    List<PmDesignReview> findByBusinessIdAndProjectIdAndIsDeleteFalse(UUID businessId, UUID projectId);
 
     @Query("SELECT r FROM PmDesignReview r WHERE r.businessId = :businessId AND r.isDelete = false AND " +
            "(:projectId IS NULL OR r.project.id = :projectId) AND " +

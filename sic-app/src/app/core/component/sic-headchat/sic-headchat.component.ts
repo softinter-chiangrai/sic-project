@@ -575,7 +575,22 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
   sendGroupMessage(chat: OpenGroupChat): void {
     const text = chat.inputText.trim();
     if (!text) return;
-    this.chatSvc.sendGroupTextMessage(chat.groupId, text);
+
+    if (chat.editingMessage) {
+      this.chatSvc.editGroupMessage(chat.editingMessage.id, text);
+      chat.editingMessage = null;
+      chat.inputText = '';
+      return;
+    }
+
+    let finalMessage = text;
+    if (chat.replyingTo) {
+      const quoted = chat.replyingTo.message?.split('\n')[0] ?? this.translate.instant('HEADCHAT_ATTACHMENT_DEFAULT_NAME');
+      finalMessage = `> ${this.translate.instant('HEADCHAT_REPLY_PREFIX_TEXT')} "${quoted}"\n${text}`;
+      chat.replyingTo = null;
+    }
+
+    this.chatSvc.sendGroupTextMessage(chat.groupId, finalMessage);
     chat.inputText = '';
   }
 
@@ -601,11 +616,40 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     input.value = '';
   }
 
+  startReplyGroup(chat: OpenGroupChat, msg: ChatGroupMessage): void {
+    chat.replyingTo = msg;
+    chat.editingMessage = null;
+  }
+
+  cancelReplyGroup(chat: OpenGroupChat): void {
+    chat.replyingTo = null;
+  }
+
+  startEditGroup(chat: OpenGroupChat, msg: ChatGroupMessage): void {
+    chat.editingMessage = msg;
+    chat.replyingTo = null;
+    chat.inputText = msg.message;
+  }
+
+  cancelEditGroup(chat: OpenGroupChat): void {
+    chat.editingMessage = null;
+    chat.inputText = '';
+  }
+
+  canEditGroup(msg: ChatGroupMessage): boolean {
+    return (
+      msg.messageType === 0 &&
+      msg.senderId === this.currentUserId() &&
+      !msg.isCancelled &&
+      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
+    );
+  }
+
   canCancelGroup(msg: ChatGroupMessage): boolean {
     return (
       msg.senderId === this.currentUserId() &&
       !msg.isCancelled &&
-      Date.now() - msg.sentAt.getTime() < 2 * 60 * 1000
+      Date.now() - msg.sentAt.getTime() < 10 * 60 * 1000
     );
   }
 
@@ -718,7 +762,7 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
         this.openChats.update(cs =>
           cs.map(c =>
             c.peerId === peerUserId
-              ? { ...c, messages: msgs.reverse(), isLoading: false }
+              ? { ...c, messages: msgs, isLoading: false }
               : c,
           ),
         );
@@ -890,13 +934,29 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
     this.chatSvc.groupUpdated$
       .pipe(takeUntil(this.destroy$))
       .subscribe(group => {
-        this.groups.update(gs => gs.map(g => g.id === group.id ? group : g));
-        this.openGroupChats.update(cs =>
-          cs.map(c => c.groupId === group.id
-            ? { ...c, groupName: group.name, memberUserIds: group.memberUserIds }
-            : c,
-          ),
-        );
+        const myId = this.currentUserId();
+        const isMember = myId ? (group.memberUserIds?.includes(myId) ?? false) : true;
+
+        if (!isMember) {
+          // If current user is removed from group, remove from group list and close open chat window
+          this.groups.update(gs => gs.filter(g => g.id !== group.id));
+          this.openGroupChats.update(cs => cs.filter(c => c.groupId !== group.id));
+        } else {
+          // Add or update group with new member count and details
+          this.groups.update(gs => {
+            const exists = gs.some(g => g.id === group.id);
+            if (exists) {
+              return gs.map(g => g.id === group.id ? group : g);
+            }
+            return [...gs, group];
+          });
+          this.openGroupChats.update(cs =>
+            cs.map(c => c.groupId === group.id
+              ? { ...c, groupName: group.name, memberUserIds: group.memberUserIds }
+              : c,
+            ),
+          );
+        }
       });
 
     this.chatSvc.groupMessageReceived$
@@ -942,6 +1002,17 @@ export class SicHeadchatComponent implements OnInit, OnDestroy {
           cs.map(c => ({
             ...c,
             messages: c.messages.map(m => m.id === id ? { ...m, isCancelled: true } : m),
+          })),
+        );
+      });
+
+    this.chatSvc.groupMessageEdited$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(editedMsg => {
+        this.openGroupChats.update(cs =>
+          cs.map(c => ({
+            ...c,
+            messages: c.messages.map(m => m.id === editedMsg.id ? { ...m, message: editedMsg.message } : m),
           })),
         );
       });

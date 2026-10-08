@@ -9,6 +9,8 @@ import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.Collection;
+import java.util.List;
 
 @Repository
 public interface PmBugRepository extends JpaRepository<PmBug, UUID>, JpaSpecificationExecutor<PmBug> {
@@ -19,9 +21,9 @@ public interface PmBugRepository extends JpaRepository<PmBug, UUID>, JpaSpecific
 
     Optional<PmBug> findByIdAndBusinessIdAndIsDeleteFalse(UUID id, UUID businessId);
 
-    java.util.List<PmBug> findByTestCaseIdAndIsDeleteFalse(UUID testCaseId);
+    List<PmBug> findByTestCaseIdAndIsDeleteFalse(UUID testCaseId);
 
-    java.util.List<PmBug> findByTaskIdAndIsDeleteFalse(UUID taskId);
+    List<PmBug> findByTaskIdAndIsDeleteFalse(UUID taskId);
 
     long countByBusinessIdAndIsDeleteFalse(UUID businessId);
 
@@ -31,12 +33,12 @@ public interface PmBugRepository extends JpaRepository<PmBug, UUID>, JpaSpecific
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
 
-    long countByProjectIdAndStatusNotInAndIsDeleteFalse(UUID projectId, java.util.Collection<String> closedStatuses);
+    long countByProjectIdAndStatusNotInAndIsDeleteFalse(UUID projectId, Collection<String> closedStatuses);
 
-    long countByProjectIdAndSeverityInAndStatusNotAndIsDeleteFalse(UUID projectId, java.util.Collection<String> severities, String status);
+    long countByProjectIdAndSeverityInAndStatusNotAndIsDeleteFalse(UUID projectId, Collection<String> severities, String status);
 
-    long countByBusinessIdAndStatusNotInAndIsDeleteFalse(UUID businessId, java.util.Collection<String> closedStatuses);
+    long countByBusinessIdAndStatusNotInAndIsDeleteFalse(UUID businessId, Collection<String> closedStatuses);
 
     long countByBusinessIdAndSeverityInAndStatusNotInAndIsDeleteFalse(
-            UUID businessId, java.util.Collection<String> severities, java.util.Collection<String> closedStatuses);
+            UUID businessId, Collection<String> severities, Collection<String> closedStatuses);
 }

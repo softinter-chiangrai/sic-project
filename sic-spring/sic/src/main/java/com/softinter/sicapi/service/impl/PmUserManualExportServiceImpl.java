@@ -28,6 +28,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.time.Instant;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -66,7 +68,7 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
                     .map(PmDelivery::getDeliveryCode).orElse("-");
         }
 
-        String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
+        String exportDate = DISPLAY_FORMATTER.format(Instant.now());
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("manualId", manualId != null ? manualId.toString() : "");
@@ -81,11 +83,11 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
         parameters.put("deliveryCode", deliveryCode);
         String attachmentNames = manual.getAttachmentGroupId() != null
                 ? uploadRepository.findAllByUploadGroupIdAndIsActiveTrueOrderByCreatedDateDesc(manual.getAttachmentGroupId())
-                        .stream().map(u -> com.softinter.sicapi.util.ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
+                        .stream().map(u -> ReportHelper.attachmentLabel(u.getFileName(), u.getFileSize())).collect(Collectors.joining(", "))
                 : "";
         parameters.put("attachmentNames", attachmentNames);
         parameters.put("lang", normalizedLang);
-        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? Locale.ENGLISH : new Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.time.LocalDate;
 
 @Slf4j
 @Service
@@ -71,7 +72,7 @@ public class DeliveryGeneratorService {
         DeliveryDraft draft = parseAiResponse(aiResponse);
 
         if (request.getDeliveryType() != null && !request.getDeliveryType().isBlank()) draft.setDeliveryType(request.getDeliveryType());
-        if (draft.getDeliveryDate() == null || draft.getDeliveryDate().isBlank()) draft.setDeliveryDate(java.time.LocalDate.now().plusDays(30).toString());
+        if (draft.getDeliveryDate() == null || draft.getDeliveryDate().isBlank()) draft.setDeliveryDate(LocalDate.now().plusDays(30).toString());
         if (draft.getChecklists() == null || draft.getChecklists().isEmpty()) {
             List<DeliveryDraft.DeliveryChecklistDraftItem> defaultChecklists = new ArrayList<>();
             defaultChecklists.add(DeliveryDraft.DeliveryChecklistDraftItem.builder()

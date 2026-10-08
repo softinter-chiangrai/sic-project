@@ -16,6 +16,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 @RestController
 @RequestMapping("/api/su/notifications")
@@ -34,10 +39,10 @@ public class NotificationController {
             @RequestParam(defaultValue = "15") int size,
             @RequestParam(required = false, defaultValue = "false") boolean unreadOnly) {
         String currentUserId = currentUserService.getUserId();
-        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(
-                page, size, org.springframework.data.domain.Sort.by("createdDate").descending()
+        Pageable pageable = PageRequest.of(
+                page, size, Sort.by("createdDate").descending()
         );
-        org.springframework.data.domain.Page<SuNotification> notifPage = unreadOnly
+        Page<SuNotification> notifPage = unreadOnly
                 ? notificationRepository.findByRecipientUserIdAndIsReadFalseAndIsDeleteFalse(currentUserId, pageable)
                 : notificationRepository.findByRecipientUserIdAndIsDeleteFalse(currentUserId, pageable);
 
@@ -46,7 +51,7 @@ public class NotificationController {
                 .map(this::toResponse)
                 .collect(Collectors.toList());
 
-        Map<String, Object> response = new java.util.HashMap<>();
+        Map<String, Object> response = new HashMap<>();
         response.put("items", items);
         response.put("page", notifPage.getNumber());
         response.put("size", notifPage.getSize());

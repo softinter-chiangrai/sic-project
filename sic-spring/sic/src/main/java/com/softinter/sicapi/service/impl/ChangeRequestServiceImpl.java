@@ -30,6 +30,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
+import com.softinter.sicapi.dto.request.ApprovalSubmitRequest;
+import com.softinter.sicapi.dto.response.ComboboxResponse;
+import com.softinter.sicapi.util.DocumentDiffHelper;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -55,7 +63,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private final TraceLinkService traceLinkService;
     private final PmApprovalRepository approvalRepository;
 
-    private static final java.util.Map<String, String> CR_STATUS_THAI_MAP = java.util.Map.of(
+    private static final Map<String, String> CR_STATUS_THAI_MAP = Map.of(
             "ร่าง", "DRAFT",
             "ส่งแล้ว", "SUBMITTED",
             "อนุมัติ", "APPROVED",
@@ -201,14 +209,14 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         // ✅ Auto Diff Detection
         List<String> changes = new ArrayList<>();
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รหัสคำขอ (CR Code)", cr.getCrCode(), request.getCrCode());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ชื่อคำขอ (Title)", cr.getTitle(), request.getTitle());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", cr.getDescription(), request.getDescription());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "สาเหตุ (Reason)", cr.getChangeReason(), request.getChangeReason());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", cr.getPriority(), request.getPriority());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "ระดับการเปลี่ยนแปลง (Change Level)", cr.getChangeLevel(), request.getChangeLevel());
-        com.softinter.sicapi.util.DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
-        String diffSummary = com.softinter.sicapi.util.DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
+        DocumentDiffHelper.checkChange(changes, "รหัสคำขอ (CR Code)", cr.getCrCode(), request.getCrCode());
+        DocumentDiffHelper.checkChange(changes, "ชื่อคำขอ (Title)", cr.getTitle(), request.getTitle());
+        DocumentDiffHelper.checkChange(changes, "รายละเอียด (Description)", cr.getDescription(), request.getDescription());
+        DocumentDiffHelper.checkChange(changes, "สาเหตุ (Reason)", cr.getChangeReason(), request.getChangeReason());
+        DocumentDiffHelper.checkChange(changes, "ความสำคัญ (Priority)", cr.getPriority(), request.getPriority());
+        DocumentDiffHelper.checkChange(changes, "ระดับการเปลี่ยนแปลง (Change Level)", cr.getChangeLevel(), request.getChangeLevel());
+        DocumentDiffHelper.checkChange(changes, "เป้าหมายเวอร์ชัน (Target Version)", cr.getTargetVersion(), request.getTargetVersion());
+        String diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคำขอเปลี่ยนแปลง " + (request.getTitle() != null ? request.getTitle() : cr.getTitle()));
 
         // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่กำลังรออนุมัติอยู่ (SUBMITTED)
         // ต้องยกเลิกคำขออนุมัติที่ค้างอยู่ และดึงกลับเป็น "DRAFT" เพื่อขออนุมัติใหม่
@@ -345,33 +353,16 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.trim().toLowerCase();
                 String searchPattern = "%" + rawKw + "%";
-                List<Predicate> orPreds = new ArrayList<>(List.of(
-                        cb.like(cb.lower(root.get("title")), searchPattern),
-                        cb.like(cb.lower(root.get("crCode")), searchPattern),
-                        cb.like(cb.lower(root.get("description")), searchPattern),
-                        cb.like(cb.lower(root.get("changeReason")), searchPattern),
-                        cb.like(cb.lower(root.get("requesterId")), searchPattern),
-                        cb.like(cb.lower(root.get("assigneeId")), searchPattern),
-                        cb.like(cb.lower(root.get("status")), searchPattern),
-                        cb.like(cb.lower(root.get("priority")), searchPattern)
-                ));
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, searchPattern, "title", "crCode", "description", "changeReason", "requesterId", "assigneeId", "status", "priority");
 
                 // ✅ Bilingual: สถานะ (ไทย ↔ อังกฤษ)
-                for (var entry : CR_STATUS_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("status")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", CR_STATUS_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: ความสำคัญ (ไทย ↔ อังกฤษ)
-                for (var entry : com.softinter.sicapi.util.PriorityKeywordSearchHelper.PRIORITY_THAI_MAP.entrySet()) {
-                    if (rawKw.contains(entry.getKey()) || entry.getKey().contains(rawKw)) {
-                        orPreds.add(cb.equal(cb.lower(root.get("priority")), entry.getValue().toLowerCase()));
-                    }
-                }
+                KeywordSearchHelper.addThaiMapPredicates(cb, root, "priority", KeywordSearchHelper.PRIORITY_THAI_MAP, rawKw, orPreds);
 
                 // ✅ Bilingual: สถานะการอนุมัติ
-                com.softinter.sicapi.util.ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
+                ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "CHANGE_REQUEST", rawKw, orPreds);
 
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
@@ -386,7 +377,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         };
 
         Page<PmChangeRequest> page = changeRequestRepository.findAll(spec, pageable);
-        java.util.Map<java.util.UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
                 "CHANGE_REQUEST", page.getContent().stream().map(PmChangeRequest::getId).toList());
         List<ChangeRequestResponse> data = page.getContent().stream()
                 .map(e -> {
@@ -432,7 +423,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         String docCode = cr.getCrCode() != null && !cr.getCrCode().isBlank()
                 ? cr.getCrCode()
         : "CR-" + cr.getId().toString().substring(0, 8).toUpperCase();
-        com.softinter.sicapi.dto.request.ApprovalSubmitRequest submitReq = new com.softinter.sicapi.dto.request.ApprovalSubmitRequest();
+        ApprovalSubmitRequest submitReq = new ApprovalSubmitRequest();
         submitReq.setDocumentType("CHANGE_REQUEST");
         submitReq.setDocumentId(cr.getId());
         submitReq.setDocumentCode(docCode);
@@ -674,7 +665,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<com.softinter.sicapi.dto.response.ComboboxResponse> getApprovedTargetCombobox(
+    public List<ComboboxResponse> getApprovedTargetCombobox(
             String targetType, UUID projectId, String keyword, UUID value) {
         if (targetType == null || targetType.isBlank()) {
             return List.of();
@@ -690,8 +681,8 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
 
         UUID businessId = currentUserService.getBusinessId();
         String kw = keyword == null ? "" : keyword.trim();
-        java.util.Set<UUID> seen = new java.util.HashSet<>();
-        List<com.softinter.sicapi.dto.response.ComboboxResponse> result = new ArrayList<>();
+        Set<UUID> seen = new HashSet<>();
+        List<ComboboxResponse> result = new ArrayList<>();
         for (PmApproval a : approvalRepository.findApprovedTargets(businessId, type, kw, projectId)) {
             if (a.getDocumentId() == null || !seen.add(a.getDocumentId())) continue;
             // ตรวจซ้ำด้วยกติกากลางของระบบ (สถานะเอกสารเองต้องเป็นอนุมัติแล้ว ไม่ใช่แค่มีคำขออนุมัติเก่า)
@@ -701,11 +692,11 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         return result;
     }
 
-    private com.softinter.sicapi.dto.response.ComboboxResponse toTargetOption(PmApproval a) {
+    private ComboboxResponse toTargetOption(PmApproval a) {
         String code = a.getDocumentCode() != null ? a.getDocumentCode() : "";
         String title = a.getDocumentTitle() != null ? a.getDocumentTitle() : "";
         String label = code.isBlank() ? title : (title.isBlank() ? code : code + " - " + title);
-        return new com.softinter.sicapi.dto.response.ComboboxResponse(a.getDocumentId().toString(), label);
+        return new ComboboxResponse(a.getDocumentId().toString(), label);
     }
 
     private String normalizeChangeLevel(String level) {

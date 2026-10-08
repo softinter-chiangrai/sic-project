@@ -27,6 +27,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.time.Instant;
+import java.util.Locale;
 
 @Slf4j
 @Service
@@ -48,7 +51,7 @@ public class PmUatExportServiceImpl implements PmUatExportService {
         String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
         log.info("Generating UAT Report PDF: projectId={}, businessId={}, testTypeFilter={}, scenarioId={}, lang={}", projectId, businessId, testTypeFilter, scenarioId, normalizedLang);
 
-        String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
+        String exportDate = DISPLAY_FORMATTER.format(Instant.now());
         String projectName = "-";
         String customerName = "-";
 
@@ -61,7 +64,7 @@ public class PmUatExportServiceImpl implements PmUatExportService {
 
         // Calculate statistics
         String filter = (testTypeFilter != null && !testTypeFilter.isBlank()) ? testTypeFilter.toUpperCase() : "UAT";
-        List<PmTestCase> allCases = new java.util.ArrayList<>();
+        List<PmTestCase> allCases = new ArrayList<>();
         if (projectId != null) {
             allCases.addAll(testCaseRepository.findByProjectIdAndIsDeleteFalse(projectId));
             List<PmTestScenario> scenarios = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(businessId, projectId);
@@ -132,7 +135,7 @@ public class PmUatExportServiceImpl implements PmUatExportService {
         parameters.put("pendingCount", String.valueOf(pending));
         parameters.put("passRate", passRate);
         parameters.put("lang", normalizedLang);
-        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? Locale.ENGLISH : new Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {

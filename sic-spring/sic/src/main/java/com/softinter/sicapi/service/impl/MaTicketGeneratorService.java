@@ -12,6 +12,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.List;
+import java.time.LocalDate;
 
 @Slf4j
 @Service
@@ -61,13 +63,13 @@ public class MaTicketGeneratorService {
         if (request.getTicketType() != null && !request.getTicketType().isBlank()) draft.setTicketType(request.getTicketType());
         if (request.getSeverity() != null && !request.getSeverity().isBlank()) draft.setSeverity(request.getSeverity());
 
-        java.time.LocalDate today = java.time.LocalDate.now();
+        LocalDate today = LocalDate.now();
         if (draft.getStartDate() == null || draft.getStartDate().isBlank()) draft.setStartDate(today.toString());
         if (draft.getStartTime() == null || draft.getStartTime().isBlank()) draft.setStartTime("09:00");
         if (draft.getEndDate() == null || draft.getEndDate().isBlank()) draft.setEndDate(today.plusDays(3).toString());
         if (draft.getEndTime() == null || draft.getEndTime().isBlank()) draft.setEndTime("18:00");
         AiMemberPicker.Member assignee = memberPicker.pick();
-        if (assignee != null) draft.setAssignedToIds(java.util.List.of(assignee.userId()));
+        if (assignee != null) draft.setAssignedToIds(List.of(assignee.userId()));
 
         return draft;
     }

@@ -17,6 +17,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.time.Instant;
+import java.util.Locale;
+import com.softinter.sicapi.util.ReportHelper;
 
 @Slf4j
 @Service
@@ -35,14 +38,14 @@ public class PmRequirementExportServiceImpl implements PmRequirementExportServic
         String normalizedLang = (lang != null && lang.equalsIgnoreCase("en")) ? "en" : "th";
         log.info("Exporting requirement PDF: id={}, businessId={}, lang={}", id, businessId, normalizedLang);
 
-        String exportDate = DISPLAY_FORMATTER.format(java.time.Instant.now());
+        String exportDate = DISPLAY_FORMATTER.format(Instant.now());
 
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("requirementId", id != null ? id.toString() : "");
         parameters.put("businessId", businessId != null ? businessId.toString() : "");
         parameters.put("exportDate", exportDate);
         parameters.put("lang", normalizedLang);
-        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? java.util.Locale.ENGLISH : new java.util.Locale("th", "TH"));
+        parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? Locale.ENGLISH : new Locale("th", "TH"));
 
         // 1. Try generating via external report-service
         try {
@@ -61,7 +64,7 @@ public class PmRequirementExportServiceImpl implements PmRequirementExportServic
 
             JasperReport jasperReport = JasperCompileManager.compileReport(is);
 
-            parameters.put("logoStream", com.softinter.sicapi.util.ReportHelper.getLogoInputStream());
+            parameters.put("logoStream", ReportHelper.getLogoInputStream());
 
             JasperPrint jasperPrint = JasperFillManager.fillReport(jasperReport, parameters, conn);
 

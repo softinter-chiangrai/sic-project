@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.UUID;
+import com.softinter.sicapi.dto.response.PmContractSummaryResponse;
 
 public interface PmCustomerContractService {
 
@@ -72,11 +73,11 @@ public interface PmCustomerContractService {
     }
 
     /** สายการต่ออายุทั้งหมดของสัญญานี้ เรียงจากฉบับแรกถึงฉบับล่าสุด */
-    java.util.List<PmCustomerContractResponse> getRenewalChain(UUID id);
+    List<PmCustomerContractResponse> getRenewalChain(UUID id);
 
     PmCustomerContractResponse getContract(UUID id);
 
-    com.softinter.sicapi.dto.response.PmContractSummaryResponse getContractSummary(UUID id);
+    PmContractSummaryResponse getContractSummary(UUID id);
 
     UUID saveContract(UUID businessId, PmCustomerContractRequest request);
 
