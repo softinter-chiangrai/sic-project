@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.List;
+import java.util.Collection;
 
 @Repository
 public interface PmUserManualRepository extends JpaRepository<PmUserManual, UUID>, JpaSpecificationExecutor<PmUserManual> {
@@ -25,4 +26,6 @@ public interface PmUserManualRepository extends JpaRepository<PmUserManual, UUID
 
     boolean existsByBusinessIdAndProjectIdAndManualCodeAndIsDeleteFalse(
             UUID businessId, UUID projectId, String manualCode);
+
+    List<PmUserManual> findByRelatedSpecIdInAndIsDeleteFalse(Collection<UUID> specIds);
 }

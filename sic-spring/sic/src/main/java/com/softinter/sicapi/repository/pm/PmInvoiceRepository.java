@@ -34,4 +34,6 @@ public interface PmInvoiceRepository extends JpaRepository<PmInvoice, UUID>, Jpa
     @Query("SELECT COALESCE(SUM(i.totalAmount - i.paidAmount), 0) FROM PmInvoice i " +
            "WHERE i.businessId = :businessId AND i.isDelete = false AND i.paymentStatus IN :statuses")
     BigDecimal sumOutstandingAmount(@Param("businessId") UUID businessId, @Param("statuses") Collection<PaymentStatus> statuses);
+
+    List<PmInvoice> findByDeliveryIdInAndIsDeleteFalse(Collection<UUID> deliveryIds);
 }

@@ -68,8 +68,11 @@
 		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000004" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Design Review Report" : "รายงานการตรวจสอบงานออกแบบ")]]></expression>
 		</element>
+		<element kind="staticText" uuid="d9e50009-0001-4001-8001-d3516a00000a" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[Design Review & Inspection Document]]></text>
+		</element>
 		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000005" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + $P{exportDate}]]></expression>
+			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
 		</element>
 		<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000006" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
 			<pen lineWidth="0.8"/>

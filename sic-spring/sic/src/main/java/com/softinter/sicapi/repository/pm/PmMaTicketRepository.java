@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -25,4 +26,6 @@ public interface PmMaTicketRepository extends JpaRepository<PmMaTicket, UUID>, J
     long countByBusinessIdAndStatusNotInAndIsDeleteFalse(UUID businessId, Collection<MaTicketStatus> closedStatuses);
 
     long countByProjectIdAndStatusNotInAndIsDeleteFalse(UUID projectId, Collection<MaTicketStatus> closedStatuses);
+
+    List<PmMaTicket> findByProjectIdInAndIsDeleteFalse(Collection<UUID> projectIds);
 }

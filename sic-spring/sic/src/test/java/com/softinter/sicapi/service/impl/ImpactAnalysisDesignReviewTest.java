@@ -183,6 +183,50 @@ class ImpactAnalysisDesignReviewTest {
         }
     }
 
+    @Test
+    void specificationChange_listsManualsDeliveriesInvoicesAndMaTicketsDerivedFromTheirOwnRelations() {
+        UUID targetSpec = UUID.randomUUID(), specA = UUID.randomUUID(), reqId = UUID.randomUUID(), projectId = UUID.randomUUID();
+        UUID manualId = UUID.randomUUID(), deliveryId = UUID.randomUUID(), invoiceId = UUID.randomUUID(), ticketId = UUID.randomUUID();
+
+        PmRequirement requirement = new PmRequirement();
+        requirement.setId(reqId);
+        requirement.setProjectId(projectId);
+        PmSpecification spec = new PmSpecification();
+        spec.setId(specA);
+        spec.setRequirement(requirement);
+        when(specRepo.findById(specA)).thenReturn(Optional.of(spec));
+        TraceLinkService.ImpactTraceResult traced = new TraceLinkService.ImpactTraceResult();
+        traced.setImpacted(new HashMap<>(java.util.Map.of("SPECIFICATION", new java.util.HashSet<>(List.of(specA)))));
+        when(traceLinkService.getImpactedItems(eq("SPECIFICATION"), eq(targetSpec))).thenReturn(traced);
+        project(projectId, UUID.randomUUID());
+
+        PmUserManual manual = new PmUserManual();
+        manual.setId(manualId);
+        manual.setManualCode("MAN-001");
+        when(manualRepo.findByRelatedSpecIdInAndIsDeleteFalse(any())).thenReturn(List.of(manual));
+        PmDeliveryItem di = item("SPECIFICATION", specA);
+        di.setDeliveryId(deliveryId);
+        PmDeliveryItem unrelated = item("SPECIFICATION", UUID.randomUUID()); // ชื่อไม่ตรงกับ Spec ที่กระทบ ต้องไม่นับ
+        unrelated.setDeliveryId(UUID.randomUUID());
+        when(deliveryItemRepo.findByItemIdInAndIsDeleteFalse(any())).thenReturn(List.of(di, unrelated));
+        PmDelivery delivery = new PmDelivery();
+        delivery.setId(deliveryId);
+        when(deliveryRepo.findAllById(any())).thenReturn(List.of(delivery));
+        PmInvoice invoice = new PmInvoice();
+        invoice.setId(invoiceId);
+        when(invoiceRepo.findByDeliveryIdInAndIsDeleteFalse(any())).thenReturn(List.of(invoice));
+        PmMaTicket ticket = new PmMaTicket();
+        ticket.setId(ticketId);
+        when(ticketRepo.findByProjectIdInAndIsDeleteFalse(any())).thenReturn(List.of(ticket));
+
+        ImpactAnalysisResponse result = service.previewImpact("SPECIFICATION", targetSpec);
+
+        assertArrayEquals(new UUID[] { manualId }, result.getImpactedManualIds());
+        assertArrayEquals(new UUID[] { deliveryId }, result.getImpactedDeliveryIds());
+        assertArrayEquals(new UUID[] { invoiceId }, result.getImpactedInvoiceIds());
+        assertArrayEquals(new UUID[] { ticketId }, result.getImpactedMaTicketIds());
+    }
+
     private static PmDeliveryItem item(String type, UUID id) {
         PmDeliveryItem i = new PmDeliveryItem();
         i.setItemType(type);

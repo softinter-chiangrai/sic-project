@@ -62,6 +62,14 @@ export interface ImpactAnalysis {
     impactedBugs?: ImpactNamedItem[];
     impactedDiagramIds?: string[];
     impactedDiagrams?: ImpactDiagramItem[];
+    impactedManualIds?: string[];
+    impactedManuals?: ImpactNamedItem[];
+    impactedDeliveryIds?: string[];
+    impactedDeliveries?: ImpactNamedItem[];
+    impactedInvoiceIds?: string[];
+    impactedInvoices?: ImpactNamedItem[];
+    impactedMaTicketIds?: string[];
+    impactedMaTickets?: ImpactNamedItem[];
     impactedTableNames?: string[];
     analysisStatus?: 'AUTO' | 'MANUAL';
     analyzedAt?: string;

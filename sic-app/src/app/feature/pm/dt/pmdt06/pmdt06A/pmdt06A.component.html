@@ -209,7 +209,7 @@
           @if (showImpactSection() && impactData(); as impact) {
             <div class="mt-3 space-y-3">
               <!-- สรุปผลกระทบ -->
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10 gap-2">
                 <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
                   <div class="text-xl font-bold text-blue-500 dark:text-blue-400">
                     {{ impact.impactedRequirementIds?.length || 0 }}
@@ -245,6 +245,30 @@
                     {{ impact.impactedBugIds?.length || 0 }}
                   </div>
                   <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_BUG' | translate }}</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-sky-500 dark:text-sky-400">
+                    {{ impact.impactedManualIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_MANUAL' | translate }}</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-teal-500 dark:text-teal-400">
+                    {{ impact.impactedDeliveryIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_DELIVERY' | translate }}</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-pink-500 dark:text-pink-400">
+                    {{ impact.impactedInvoiceIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_INVOICE' | translate }}</div>
+                </div>
+                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                  <div class="text-xl font-bold text-amber-500 dark:text-amber-400">
+                    {{ impact.impactedMaTicketIds?.length || 0 }}
+                  </div>
+                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_MA' | translate }}</div>
                 </div>
               </div>
 
@@ -347,7 +371,7 @@
                 </div>
               }
 
-              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length || impact.impactedTestCaseIds?.length || impact.impactedBugIds?.length) {
+              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length || impact.impactedTestCaseIds?.length || impact.impactedBugIds?.length || impact.impactedManualIds?.length || impact.impactedDeliveryIds?.length || impact.impactedInvoiceIds?.length || impact.impactedMaTicketIds?.length) {
                 <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
                   <p class="font-medium text-[var(--text-active)]">{{ 'PMDT06_IMPACTED_DOCS_LABEL' | translate }}</p>
                   <div class="flex flex-wrap gap-1 mt-1">
@@ -419,6 +443,27 @@
                       @for (id of impact.impactedBugIds; track id) {
                         <span (click)="openItemDetail('BUG', id)" class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">BUG: {{ id | slice:0:8 }}</span>
                       }
+                    }
+
+                    @for (x of impact.impactedManuals; track x.id) {
+                      <span class="select-none bg-sky-50 dark:bg-sky-900/20 px-2 py-0.5 rounded text-[0.6rem] text-sky-600 dark:text-sky-400">
+                        MANUAL: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      </span>
+                    }
+                    @for (x of impact.impactedDeliveries; track x.id) {
+                      <span class="select-none bg-teal-50 dark:bg-teal-900/20 px-2 py-0.5 rounded text-[0.6rem] text-teal-600 dark:text-teal-400">
+                        DELIVERY: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      </span>
+                    }
+                    @for (x of impact.impactedInvoices; track x.id) {
+                      <span class="select-none bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded text-[0.6rem] text-pink-600 dark:text-pink-400">
+                        INVOICE: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      </span>
+                    }
+                    @for (x of impact.impactedMaTickets; track x.id) {
+                      <span class="select-none bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">
+                        MA: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}
+                      </span>
                     }
                   </div>
                 </div>

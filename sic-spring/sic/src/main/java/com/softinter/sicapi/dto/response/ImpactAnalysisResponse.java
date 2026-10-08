@@ -28,6 +28,19 @@ public class ImpactAnalysisResponse {
     private UUID[] impactedBugIds;
     private List<ImpactItem> impactedBugs;
 
+    // เอกสารส่งมอบ/ดูแลที่ได้รับผลกระทบ หาจากความสัมพันธ์ในตัวเอกสารตอนอ่านผล (ไม่เก็บลง DB)
+    private UUID[] impactedManualIds;
+    private List<ImpactItem> impactedManuals;
+
+    private UUID[] impactedDeliveryIds;
+    private List<ImpactItem> impactedDeliveries;
+
+    private UUID[] impactedInvoiceIds;
+    private List<ImpactItem> impactedInvoices;
+
+    private UUID[] impactedMaTicketIds;
+    private List<ImpactItem> impactedMaTickets;
+
     // Upstream Traceability (Project & Customer)
     private UUID[] impactedProjectIds;
     private List<ProjectImpactItem> impactedProjects;

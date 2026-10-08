@@ -595,6 +595,89 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         log.info("Impact Analysis deleted: {}", id);
     }
 
+    private static Set<UUID> idSet(UUID[] ids) {
+        return ids == null ? new HashSet<>() : new HashSet<>(Arrays.asList(ids));
+    }
+
+    private static ImpactAnalysisResponse.ImpactItem item(UUID id, String code, String name) {
+        ImpactAnalysisResponse.ImpactItem item = new ImpactAnalysisResponse.ImpactItem();
+        item.setId(id);
+        item.setCode(code);
+        item.setName(name);
+        return item;
+    }
+
+    /**
+     * หาเอกสารส่งมอบ/ดูแลที่ได้รับผลกระทบจากเอกสารที่วิเคราะห์ได้แล้ว โดยอ่านความสัมพันธ์ในตัวเอกสารเอง (ไม่ต้องให้ผู้ใช้ผูกเพิ่ม)
+     * - User Manual: ผูก Specification ที่ได้รับผลกระทบ
+     * - Delivery: มี Requirement/Spec/Test Case/Diagram ที่ได้รับผลกระทบอยู่ในรายการส่งมอบ
+     * - Invoice: ออกจาก Delivery ที่ได้รับผลกระทบ
+     * - MA Ticket: ไม่มีความสัมพันธ์กับเอกสารระดับ Spec จึงนับทุกใบของโครงการที่ได้รับผลกระทบ
+     */
+    private void fillDerivedDocuments(ChangeImpactAnalysis entity, ImpactAnalysisResponse dto) {
+        Set<UUID> reqs = idSet(entity.getImpactedRequirementIds());
+        Set<UUID> specs = idSet(entity.getImpactedSpecIds());
+        Set<UUID> cases = idSet(entity.getImpactedTestCaseIds());
+        Set<UUID> diagrams = idSet(entity.getImpactedDiagramIds());
+        Set<UUID> projects = idSet(entity.getImpactedProjectIds());
+
+        List<ImpactAnalysisResponse.ImpactItem> manuals = new ArrayList<>();
+        if (!specs.isEmpty()) {
+            userManualRepository.findByRelatedSpecIdInAndIsDeleteFalse(specs)
+                    .forEach(m -> manuals.add(item(m.getId(), m.getManualCode(), m.getManualTitle())));
+        }
+
+        Set<UUID> deliveryIds = new HashSet<>();
+        Set<UUID> itemIds = new HashSet<>();
+        itemIds.addAll(reqs);
+        itemIds.addAll(specs);
+        itemIds.addAll(cases);
+        itemIds.addAll(diagrams);
+        if (!itemIds.isEmpty()) {
+            for (var di : deliveryItemRepository.findByItemIdInAndIsDeleteFalse(itemIds)) {
+                if (di.getItemType() == null) continue;
+                boolean hit = switch (di.getItemType().toUpperCase()) {
+                    case "REQUIREMENT" -> reqs.contains(di.getItemId());
+                    case "SPECIFICATION" -> specs.contains(di.getItemId());
+                    case "TEST_CASE" -> cases.contains(di.getItemId());
+                    case "DIAGRAM" -> diagrams.contains(di.getItemId());
+                    default -> false;
+                };
+                if (hit) deliveryIds.add(di.getDeliveryId());
+            }
+        }
+        List<ImpactAnalysisResponse.ImpactItem> deliveries = new ArrayList<>();
+        Set<UUID> activeDeliveryIds = new HashSet<>();
+        if (!deliveryIds.isEmpty()) {
+            for (var d : deliveryRepository.findAllById(deliveryIds)) {
+                if (Boolean.TRUE.equals(d.getIsDelete())) continue;
+                activeDeliveryIds.add(d.getId());
+                deliveries.add(item(d.getId(), d.getDeliveryCode(), d.getDeliveryTitle()));
+            }
+        }
+
+        List<ImpactAnalysisResponse.ImpactItem> invoices = new ArrayList<>();
+        if (!activeDeliveryIds.isEmpty()) {
+            invoiceRepository.findByDeliveryIdInAndIsDeleteFalse(activeDeliveryIds)
+                    .forEach(i -> invoices.add(item(i.getId(), i.getInvoiceNo(), i.getRemark())));
+        }
+
+        List<ImpactAnalysisResponse.ImpactItem> tickets = new ArrayList<>();
+        if (!projects.isEmpty()) {
+            maTicketRepository.findByProjectIdInAndIsDeleteFalse(projects)
+                    .forEach(t -> tickets.add(item(t.getId(), t.getTicketNo(), t.getTitle())));
+        }
+
+        dto.setImpactedManuals(manuals);
+        dto.setImpactedManualIds(manuals.stream().map(ImpactAnalysisResponse.ImpactItem::getId).toArray(UUID[]::new));
+        dto.setImpactedDeliveries(deliveries);
+        dto.setImpactedDeliveryIds(deliveries.stream().map(ImpactAnalysisResponse.ImpactItem::getId).toArray(UUID[]::new));
+        dto.setImpactedInvoices(invoices);
+        dto.setImpactedInvoiceIds(invoices.stream().map(ImpactAnalysisResponse.ImpactItem::getId).toArray(UUID[]::new));
+        dto.setImpactedMaTickets(tickets);
+        dto.setImpactedMaTicketIds(tickets.stream().map(ImpactAnalysisResponse.ImpactItem::getId).toArray(UUID[]::new));
+    }
+
     private ImpactAnalysisResponse toResponse(ChangeImpactAnalysis entity) {
         ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
         
@@ -653,6 +736,8 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             }
             dto.setImpactedDiagrams(diagramItems);
         }
+
+        fillDerivedDocuments(entity, dto);
 
         dto.setImpactedTaskIds(entity.getImpactedTaskIds());
         if (entity.getImpactedTaskIds() != null && entity.getImpactedTaskIds().length > 0) {
