@@ -87,7 +87,10 @@
         <i class="bi bi-arrow-left"></i> {{ 'PMDT19A_BTN_CANCEL' | translate }}
       </sic-button>
       <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()">
-        <i class="bi bi-check-lg"></i> {{ 'PMDT19A_BTN_SAVE' | translate }}
+        @if (!isSaving()) {
+          <i class="bi bi-check-lg"></i>
+        }
+        {{ 'PMDT19A_BTN_SAVE' | translate }}
       </sic-button>
     </div>
   </form>

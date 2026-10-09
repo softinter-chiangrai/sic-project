@@ -630,10 +630,7 @@
             <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_BACK_BTN' | translate }}</sic-button>
           } @else {
             <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_CANCEL_BTN' | translate }}</sic-button>
-            <sic-button (click)="save()" type="button" variant="solid" color="primary" [disabled]="isSaving">
-              @if (isSaving) {
-                <i class="bi bi-arrow-repeat animate-spin me-1"></i>
-              }
+            <sic-button (click)="save()" type="button" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving">
               {{ getSaveButtonLabel() }}
             </sic-button>
           }

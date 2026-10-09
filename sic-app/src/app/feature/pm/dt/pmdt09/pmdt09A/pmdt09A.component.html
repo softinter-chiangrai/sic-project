@@ -364,7 +364,10 @@
               </sic-button>
             } @else {
               <sic-button type="submit" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving || form.invalid">
-                <i class="bi bi-check-lg"></i> {{ isEdit ? ('PMDT09_SAVE_BTN' | translate) : ('PMDT09_CREATE_ITEM_BTN' | translate) }}
+                @if (!isSaving) {
+                  <i class="bi bi-check-lg"></i>
+                }
+                {{ isEdit ? ('PMDT09_SAVE_BTN' | translate) : ('PMDT09_CREATE_ITEM_BTN' | translate) }}
               </sic-button>
             }
           </div>

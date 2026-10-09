@@ -257,7 +257,10 @@
         </sic-button>
       } @else {
         <sic-button variant="solid" color="primary" [loading]="isSaving()" (click)="submit()">
-          <i class="bi bi-check-lg"></i> {{ 'PMDT17_SAVE_DATA_BUTTON' | translate }}
+          @if (!isSaving()) {
+            <i class="bi bi-check-lg"></i>
+          }
+          {{ 'PMDT17_SAVE_DATA_BUTTON' | translate }}
         </sic-button>
       }
     </div>

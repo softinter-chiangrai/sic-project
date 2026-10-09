@@ -122,10 +122,11 @@
         type="submit"
         variant="solid" color="primary"
         [block]="false"
+        [loading]="isSaving()"
         [disabled]="form.invalid || isSaving()"
       >
         @if (isSaving()) {
-          <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'BURT07A_SAVING_BTN' | translate }}
+          {{ 'BURT07A_SAVING_BTN' | translate }}
         } @else {
           <i class="bi bi-floppy"></i> {{ isEdit ? ('BURT07A_SAVE_EDIT_BTN' | translate) : ('BURT07A_CREATE_BTN' | translate) }}
         }

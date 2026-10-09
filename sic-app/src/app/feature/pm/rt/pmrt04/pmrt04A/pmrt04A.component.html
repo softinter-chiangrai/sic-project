@@ -334,15 +334,13 @@
             type="submit"
             variant="solid" color="primary"
             [block]="false"
+            [loading]="isSaving"
             [disabled]="isSaving || form.invalid"
           >
-            @if (isSaving) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-              {{ 'PMRT04A_SAVING' | translate }}
-            } @else {
+            @if (!isSaving) {
               <i class="bi bi-floppy"></i>
-              {{ (isEdit ? 'PMRT04A_SAVE_BUTTON' : 'PMRT04A_CREATE_BUTTON') | translate }}
             }
+            {{ (isSaving ? 'PMRT04A_SAVING' : (isEdit ? 'PMRT04A_SAVE_BUTTON' : 'PMRT04A_CREATE_BUTTON')) | translate }}
           </sic-button>
         }
       </div>

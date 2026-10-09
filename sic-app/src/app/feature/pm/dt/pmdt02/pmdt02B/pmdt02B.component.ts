@@ -22,6 +22,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 
 import { HolidayService } from '../../../../../core/services/holiday.service';
 import { signal, computed } from '@angular/core';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-pmdt02B',
@@ -57,6 +58,7 @@ export class Pmdt02BComponent implements OnInit {
   phaseId = '';
   wpId: string | null = null;
   isEdit = false;
+  isSaving = signal(false);
   data: WorkPackageResponse | null = null;
   apiGetComboboxMilestone = `${environment.apiBaseUrl}/api/pm/milestones/combobox`;
 
@@ -198,8 +200,11 @@ export class Pmdt02BComponent implements OnInit {
       ? this.wpService.updateWorkPackage(this.wpId, data)
       : this.wpService.createWorkPackage(data);
 
-    request.subscribe({
-      next: (res) => {
+    this.isSaving.set(true);
+    request
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (res) => {
         this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_WP_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_WP_SUCCESS_MSG'));
         this.router.navigate(['/feature/pm/phase', this.phaseId], {
           queryParams: { projectId: this.projectId },

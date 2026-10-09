@@ -265,8 +265,12 @@
                           <form [formGroup]="editForm" (ngSubmit)="submitEdit()">
                             <sic-input-area formControlName="content" [rows]="2" [required]="true"></sic-input-area>
                             <div class="flex justify-end gap-2 mt-2">
-                              <button type="button" (click)="cancelEdit()" class="px-3 py-1 rounded-full text-xs border border-[var(--border)] hover:bg-[var(--sidebar-hover)]">{{ 'PMDT08_CANCEL' | translate }}</button>
-                              <button type="submit" class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90" [disabled]="isSubmitting()">{{ 'PMDT08_SAVE' | translate }}</button>
+                              <button type="submit" class="px-3 py-1 rounded-full text-xs text-white bg-[var(--crm-primary)] hover:opacity-90 inline-flex items-center gap-1" [disabled]="isSubmitting()">
+                                @if (isSubmitting()) {
+                                  <i class="bi bi-arrow-repeat animate-spin"></i>
+                                }
+                                {{ 'PMDT08_SAVE' | translate }}
+                              </button>
                             </div>
                           </form>
                         </div>

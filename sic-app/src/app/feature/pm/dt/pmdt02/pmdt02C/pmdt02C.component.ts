@@ -22,6 +22,7 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { HolidayService } from '../../../../../core/services/holiday.service';
 import { SicButtonComponent } from "sic-ng";
 import { computed } from '@angular/core';
+import { finalize } from 'rxjs/operators';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
@@ -64,6 +65,7 @@ export class Pmdt02CComponent implements OnInit {
   apiGetComboboxWorkPackage = `${environment.apiBaseUrl}/api/pm/work-packages/combobox`;
   taskId: string | null = null;
   isEdit = false;
+  isSaving = signal(false);
   data: TaskResponse | null = null;
   assignedToApiUrl = '';
   linkedTestCases = signal<any[]>([]);
@@ -369,8 +371,11 @@ export class Pmdt02CComponent implements OnInit {
       ? this.taskService.updateTask(this.taskId, data)
       : this.taskService.createTask(data);
 
-    request.subscribe({
-      next: (res) => {
+    this.isSaving.set(true);
+    request
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (res) => {
         this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_TASK_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_TASK_SUCCESS_MSG'));
         if (this.returnUrl) {
           this.router.navigateByUrl(this.returnUrl);

@@ -201,7 +201,7 @@
       <div
         class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
       >
-        <sic-button [type]="'submit'" variant="solid" color="primary">{{ 'PROFILE_SAVE_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [loading]="isVerifying()" [disabled]="isVerifying()">{{ 'PROFILE_SAVE_BUTTON' | translate }}</sic-button>
       </div>
     </div>
   </form>
@@ -244,7 +244,7 @@
         <sic-button [type]="'button'" variant="outline" color="primary" (click)="back()">
           {{ 'PROFILE_BACK_BUTTON' | translate }}
         </sic-button>
-        <sic-button [type]="'submit'" variant="solid" color="primary"> {{ 'PROFILE_CONFIRM_BUTTON' | translate }} </sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [loading]="isVerifying()" [disabled]="isVerifying()"> {{ 'PROFILE_CONFIRM_BUTTON' | translate }} </sic-button>
       </div>
     </div>
   </form>

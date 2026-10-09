@@ -249,15 +249,13 @@
           <sic-button
             [type]="'submit'"
             variant="solid" color="primary"
+            [loading]="isSaving"
             [disabled]="isSaving || form.invalid || isCancelled"
           >
-            @if (isSaving) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-              {{ 'PMRT04B_SAVING' | translate }}
-            } @else {
+            @if (!isSaving) {
               <i class="bi bi-check-lg"></i>
-              {{ 'PMRT04B_CONFIRM_RENEWAL' | translate }}
             }
+            {{ isSaving ? ('PMRT04B_SAVING' | translate) : ('PMRT04B_CONFIRM_RENEWAL' | translate) }}
           </sic-button>
         </div>
       </div>

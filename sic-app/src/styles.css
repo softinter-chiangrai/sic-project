@@ -589,4 +589,64 @@ sic-gridpanel {
   border-color: color-mix(in srgb, var(--crm-primary, #10b981) 45%, var(--sic-color-border, var(--border))) !important;
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary, #10b981) 14%, transparent) !important;
 }
+
+/* ==========================================================================
+   Global Spinner & Loading Animation (Guaranteed Rotation across all screens/elements)
+   ========================================================================== */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@-webkit-keyframes spin {
+  from {
+    -webkit-transform: rotate(0deg);
+  }
+  to {
+    -webkit-transform: rotate(360deg);
+  }
+}
+
+/* Force inline-block and centered transform origin for all elements using animate-spin */
+.animate-spin,
+i.animate-spin,
+span.animate-spin,
+div.animate-spin,
+svg.animate-spin,
+.bi.animate-spin,
+[class*="animate-spin"] {
+  display: inline-block !important;
+  animation: spin 1s linear infinite !important;
+  -webkit-animation: spin 1s linear infinite !important;
+  transform-origin: 50% 50% !important;
+  -webkit-transform-origin: 50% 50% !important;
+  line-height: 1;
+}
+
+/* Dedicated spinner utilities & sic-button loader styling */
+.loading-spinner,
+.spinner-border,
+.sic-button__spinner {
+  display: inline-block !important;
+  animation: spin 0.75s linear infinite !important;
+  -webkit-animation: spin 0.75s linear infinite !important;
+  transform-origin: 50% 50% !important;
+  -webkit-transform-origin: 50% 50% !important;
+}
+
+/* Ensure spinning icons inside buttons / sic-button align neatly with text */
+button .animate-spin,
+sic-button .animate-spin,
+a .animate-spin,
+.btn .animate-spin {
+  display: inline-block !important;
+  vertical-align: middle !important;
+  flex-shrink: 0;
+}
+
+
 

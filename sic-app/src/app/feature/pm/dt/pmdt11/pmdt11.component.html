@@ -145,6 +145,7 @@
           [type]="'button'"
           variant="outline" color="primary"
           (click)="onBack()"
+          [disabled]="isSaving()"
         >
           <i class="bi bi-arrow-left"></i>
           {{ 'PMDT11_BACK_BTN' | translate }}
@@ -152,8 +153,12 @@
         <sic-button
           [type]="'submit'"
           variant="solid" color="primary"
+          [loading]="isSaving()"
+          [disabled]="isSaving()"
         >
-          <i class="bi bi-floppy"></i>
+          @if (!isSaving()) {
+            <i class="bi bi-floppy"></i>
+          }
           {{ 'PMDT11_SAVE_SCHEDULE_BTN' | translate }}
         </sic-button>
       </div>

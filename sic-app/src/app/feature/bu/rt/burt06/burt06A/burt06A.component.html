@@ -275,13 +275,13 @@
             type="submit"
             variant="solid" color="primary"
             [block]="false"
+            [loading]="isSaving()"
             [disabled]="form.invalid || isSaving()"
           >
-            @if (isSaving()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'BURT06A_SAVING_BTN' | translate }}
-            } @else {
-              <i class="bi bi-floppy"></i> {{ isEdit ? ('BURT06A_SAVE_EDIT_BTN' | translate) : ('BURT06A_CREATE_BTN' | translate) }}
+            @if (!isSaving()) {
+              <i class="bi bi-floppy"></i>
             }
+            {{ isSaving() ? ('BURT06A_SAVING_BTN' | translate) : (isEdit ? ('BURT06A_SAVE_EDIT_BTN' | translate) : ('BURT06A_CREATE_BTN' | translate)) }}
           </sic-button>
         </div>
       </form>

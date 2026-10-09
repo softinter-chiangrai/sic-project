@@ -1,9 +1,9 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
+import { Component, inject, Injectable, OnInit, ChangeDetectionStrategy, ChangeDetectorRef, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { Observable, of } from 'rxjs';
-import { delay } from 'rxjs/operators';
+import { delay, finalize } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { SicButtonComponent } from 'sic-ng';
@@ -123,6 +123,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   formData!: SicFromData<TaskScheduleModel>;
   taskId: string | null = null;
   isLoading = false;
+  isSaving = signal(false);
   taskCode = '';
   taskName = '';
 
@@ -185,8 +186,11 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
     data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
     data.state = SicEntityState.Modified;
 
-    this.service.updateSchedule(data).subscribe({
-      next: () => {
+    this.isSaving.set(true);
+    this.service.updateSchedule(data)
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: () => {
         this.isSaved = true;
         this.dialog.success(this.translate.instant('PMDT11_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT11_UPDATE_SUCCESS_MSG')).then(() => {
           this.formData.markAsPristine();

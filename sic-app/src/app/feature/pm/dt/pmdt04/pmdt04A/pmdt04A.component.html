@@ -27,6 +27,9 @@
     <div class="flex items-center gap-2 flex-wrap">
       <!-- Auto-save status -->
       <span class="auto-save-indicator" [class.saving]="getAutoSaveStatus() === 'saving'" [class.saved]="getAutoSaveStatus() === 'saved'">
+        @if (getAutoSaveStatus() === 'saving') {
+          <i class="bi bi-arrow-repeat animate-spin text-xs"></i>
+        }
         {{ getAutoSaveText() }}
       </span>
 
@@ -239,11 +242,10 @@
                 <sic-button
                   type="submit"
                   variant="solid" color="primary"
+                  [loading]="isSaving"
                   [disabled]="isSaving || form.invalid"
                 >
-                  @if (isSaving) {
-                    <i class="bi bi-arrow-repeat animate-spin"></i>
-                  } @else {
+                  @if (!isSaving) {
                     <i class="bi bi-floppy"></i>
                   }
                   {{ isSaving ? ('PMDT04_SAVING_TEXT' | translate) : (isEdit ? ('PMDT04_SAVE' | translate) : ('PMDT04_CREATE' | translate)) }}

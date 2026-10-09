@@ -162,8 +162,7 @@
         <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
           <i class="bi bi-arrow-left"></i> {{ 'PMDT04B_BACK_BTN' | translate }}
         </sic-button>
-        <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving || form.invalid">
-          @if (isSaving) { <i class="bi bi-arrow-repeat animate-spin"></i> }
+        <sic-button type="submit" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving || form.invalid">
           {{ isSaving ? ('PMDT04B_SAVING_BTN' | translate) : (isEdit ? ('PMDT04B_SAVE_BTN' | translate) : ('PMDT04B_CREATE_BTN' | translate)) }}
         </sic-button>
       </div>

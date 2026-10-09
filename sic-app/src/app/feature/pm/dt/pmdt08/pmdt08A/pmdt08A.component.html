@@ -101,10 +101,11 @@
         form="pmdt09aForm"
         variant="solid" color="primary"
         (click)="submitPost()"
+        [loading]="isSubmitting"
         [disabled]="isSubmitting || postForm.invalid"
       >
         @if (isSubmitting) {
-          <i class="bi bi-arrow-repeat animate-spin mr-1"></i> {{ 'PMDT08A_SAVING_BTN' | translate }}
+          {{ 'PMDT08A_SAVING_BTN' | translate }}
         } @else {
           <i class="bi bi-check2 mr-1"></i> {{ isEdit ? ('PMDT08A_SAVE_EDIT_BTN' | translate) : ('PMDT08A_POST_BTN' | translate) }}
         }

@@ -84,7 +84,7 @@ interface TraceEntityTypeDef {
 
         <div class="flex justify-end gap-2 border-t pt-4" style="border-color: var(--border);">
           <sic-button variant="outline" color="primary" size="sm" type="button" (click)="cancel()">{{ 'TRACE_LINK_PICKER_CANCEL_BUTTON' | translate }}</sic-button>
-          <sic-button variant="solid" color="primary" size="sm" type="submit" [disabled]="form.invalid || saving()">
+          <sic-button variant="solid" color="primary" size="sm" type="submit" [loading]="saving()" [disabled]="form.invalid || saving()">
             {{ saving() ? ('TRACE_LINK_PICKER_SAVING' | translate) : ('TRACE_LINK_PICKER_ADD_BUTTON' | translate) }}
           </sic-button>
         </div>

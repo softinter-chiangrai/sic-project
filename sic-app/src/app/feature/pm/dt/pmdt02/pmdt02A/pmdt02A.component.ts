@@ -22,6 +22,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 
 import { HolidayService } from '../../../../../core/services/holiday.service';
 import { signal, computed } from '@angular/core';
+import { finalize } from 'rxjs/operators';
 
 @Component({
   selector: 'app-pmdt02A',
@@ -57,6 +58,7 @@ export class Pmdt02AComponent implements OnInit {
   projectId = '';
   milestoneId: string | null = null;
   isEdit = false;
+  isSaving = signal(false);
   data: MilestoneResponse | null = null;
   apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
   apiGetComboboxPhase = `${environment.apiBaseUrl}/api/pm/phases/combobox`;
@@ -232,8 +234,11 @@ export class Pmdt02AComponent implements OnInit {
       ? this.milestoneService.updateMilestone(this.milestoneId, data)
       : this.milestoneService.createMilestone(data);
 
-    request.subscribe({
-      next: (res) => {
+    this.isSaving.set(true);
+    request
+      .pipe(finalize(() => this.isSaving.set(false)))
+      .subscribe({
+        next: (res) => {
         this.dialog.success(this.translate.instant('PMDT02_SUCCESS_TITLE'), this.isEdit ? this.translate.instant('PMDT02_UPDATE_MS_SUCCESS_MSG') : this.translate.instant('PMDT02_CREATE_MS_SUCCESS_MSG'));
         if (targetPhaseId) {
           this.router.navigate(['/feature/pm/phase', targetPhaseId], {

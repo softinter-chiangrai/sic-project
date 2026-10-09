@@ -50,10 +50,8 @@
       <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> {{ 'BURT04A_BACK_BTN' | translate }}
       </sic-button>
-      <sic-button type="submit" variant="solid" color="primary" [disabled]="isSaving()">
-        @if (isSaving()) {
-          <i class="bi bi-arrow-repeat animate-spin"></i>
-        } @else {
+      <sic-button type="submit" variant="solid" color="primary" [loading]="isSaving()" [disabled]="isSaving()">
+        @if (!isSaving()) {
           <i class="bi bi-floppy"></i>
         }
         {{ isSaving() ? ('BURT04A_SAVING_TEXT' | translate) : ('BURT04A_SAVE_BTN' | translate) }}

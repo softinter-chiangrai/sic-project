@@ -288,8 +288,11 @@
           <i class="bi bi-pencil-square"></i> {{ 'PMDT15_REQUEST_EDIT_BTN' | translate }}
         </sic-button>
       } @else {
-        <sic-button variant="solid" color="primary" (click)="onSubmit()" [disabled]="isSaving()">
-          <i class="bi bi-check-lg"></i> {{ (isSaving() ? 'PMDT15_SAVING_ELLIPSIS' : 'PMDT15_SAVE_MANUAL_BTN') | translate }}
+        <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()" [disabled]="isSaving()">
+          @if (!isSaving()) {
+            <i class="bi bi-check-lg"></i>
+          }
+          {{ (isSaving() ? 'PMDT15_SAVING_ELLIPSIS' : 'PMDT15_SAVE_MANUAL_BTN') | translate }}
         </sic-button>
       }
     </div>

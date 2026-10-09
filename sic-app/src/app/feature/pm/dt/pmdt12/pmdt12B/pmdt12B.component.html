@@ -160,11 +160,10 @@
           <sic-button
             variant="solid" color="primary"
             [type]="'submit'"
+            [loading]="isSaving()"
             [disabled]="isSaving()"
           >
-            @if (isSaving()) {
-              <i class="bi bi-arrow-repeat animate-spin"></i>
-            } @else {
+            @if (!isSaving()) {
               <i class="bi bi-floppy"></i>
             }
             {{ isSaving() ? ('PMDT12B_SAVING' | translate) : ('PMDT12B_SAVE_BUTTON' | translate) }}

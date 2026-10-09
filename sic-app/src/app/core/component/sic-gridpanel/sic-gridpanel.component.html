@@ -2,12 +2,16 @@
   <div #surface class="sic-gridpanel__surface">
     <div class="sic-gridpanel__toolbar">
       <div class="sic-gridpanel__toolbar-start">
-          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--primary sic-gridpanel__toolbar-button--icon" [disabled]="!canSaveChanges" (click)="saveChanges()" [attr.aria-label]="'GRIDPANEL_SAVE_LABEL' | translate" [tooltip]="saving ? ('GRIDPANEL_SAVING_LABEL' | translate) : ('GRIDPANEL_SAVE_LABEL' | translate)" tooltipPosition="bottom" [tooltipDisabled]="!canSaveChanges && !saving">
-            <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 4h11l3 3v13H5z"></path>
-              <path d="M8 4v6h8"></path>
-              <path d="M8 18v-5h8v5"></path>
-            </svg>
+          <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--primary sic-gridpanel__toolbar-button--icon" [disabled]="!canSaveChanges || saving" (click)="saveChanges()" [attr.aria-label]="'GRIDPANEL_SAVE_LABEL' | translate" [tooltip]="saving ? ('GRIDPANEL_SAVING_LABEL' | translate) : ('GRIDPANEL_SAVE_LABEL' | translate)" tooltipPosition="bottom" [tooltipDisabled]="!canSaveChanges && !saving">
+            @if (saving) {
+              <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            } @else {
+              <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 4h11l3 3v13H5z"></path>
+                <path d="M8 4v6h8"></path>
+                <path d="M8 18v-5h8v5"></path>
+              </svg>
+            }
           </button>
           <button type="button" class="sic-gridpanel__toolbar-button sic-gridpanel__toolbar-button--icon" [disabled]="isBusy" (click)="addRow()" [attr.aria-label]="'GRIDPANEL_ADD_ROW_LABEL' | translate" [tooltip]="'GRIDPANEL_ADD_ROW_LABEL' | translate" tooltipPosition="bottom" [tooltipDisabled]="isBusy">
             <svg class="sic-gridpanel__toolbar-icon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
