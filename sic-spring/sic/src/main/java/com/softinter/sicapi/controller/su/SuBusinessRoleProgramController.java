@@ -42,6 +42,7 @@ public class SuBusinessRoleProgramController {
     private final ProgramAccessService programAccessService;
 
     @GetMapping
+    @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
     @Operation(summary = "Get all business role programs")
     public ResponseEntity<List<BusinessRoleProgramResponse>> getAll(
             @RequestParam(required = false) UUID businessRoleId) {
@@ -92,6 +93,7 @@ public class SuBusinessRoleProgramController {
     }
 
     @GetMapping("/paging")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
     @Operation(summary = "Get business role programs with pagination")
     public ResponseEntity<PaginationResponse<BusinessRoleProgramResponse>> paging(
             @Valid @ModelAttribute BusinessRoleProgramPageRequest request) {
@@ -126,6 +128,7 @@ public class SuBusinessRoleProgramController {
     }
 
     @GetMapping("/lov")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
     @Operation(summary = "Get business role program LOV")
     public ResponseEntity<List<LovResponse>> lov(@RequestParam UUID businessRoleId) {
         List<LovResponse> lov = brpRepository.findActiveByBusinessRoleId(businessRoleId)

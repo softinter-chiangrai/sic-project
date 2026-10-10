@@ -107,6 +107,13 @@
             <version>${jasperreports.version}</version>
         </dependency>
 
+        <!-- compiles .jrxml in the JRE-only Docker runtime (no javac there) -->
+        <dependency>
+            <groupId>net.sf.jasperreports</groupId>
+            <artifactId>jasperreports-jdt</artifactId>
+            <version>${jasperreports.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>net.sf.jasperreports</groupId>
             <artifactId>jasperreports-fonts</artifactId>

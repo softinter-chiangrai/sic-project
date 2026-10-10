@@ -8,7 +8,7 @@ import { environment } from '../../../../../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class Pmdt04BService {
   private http = inject(HttpClient);
-  private baseUrl = `${environment.apiBaseUrl}/api/pm/requirements`;
+  private baseUrl = `${environment.apiBaseUrl}/api/pm/requirement`;
 
   getRequirementById(id: string): Observable<Pmdt04BModel> {
     return this.http.get<Pmdt04BModel>(`${this.baseUrl}/${id}`);

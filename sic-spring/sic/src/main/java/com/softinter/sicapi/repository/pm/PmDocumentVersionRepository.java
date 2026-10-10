@@ -15,6 +15,8 @@ import java.util.Optional;
 public interface PmDocumentVersionRepository extends JpaRepository<PmDocumentVersion, UUID> {
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(String documentType, UUID documentId);
 
+    List<PmDocumentVersion> findByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(String documentType, UUID documentId);
+
     @Query("SELECT v FROM PmDocumentVersion v WHERE v.documentType = :documentType "
             + "AND v.documentId IN :documentIds ORDER BY v.createdDate DESC")
     List<PmDocumentVersion> findByDocumentTypeAndDocumentIds(

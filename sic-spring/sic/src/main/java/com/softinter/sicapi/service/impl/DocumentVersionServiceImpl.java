@@ -37,7 +37,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     @Transactional(readOnly = true)
     public List<DocumentVersionResponse> getVersions(String documentType, UUID documentId) {
         return versionRepository
-                .findByDocumentTypeAndDocumentIdOrderByCreatedDateDesc(documentType, documentId)
+                .findByDocumentTypeAndDocumentIdAndIsDeleteFalseOrderByCreatedDateDesc(documentType, documentId) // soft-deleted versions are not history
                 .stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());

@@ -84,7 +84,7 @@ public class FileStorageServiceImpl implements FileStorageService {
             }
 
             FileCategory categoryEnum = FileCategory.valueOf(category.toUpperCase());
-            FileVisibility visibilityEnum = FileVisibility.valueOf(visibility.toUpperCase());
+            FileVisibility visibilityEnum = visibility == null ? FileVisibility.UPLOADER_ONLY : FileVisibility.valueOf(visibility.toUpperCase()); // param is optional
             String username = currentUserService.getUsername();
 
             SuUpload upload = new SuUpload();
@@ -481,15 +481,15 @@ public class FileStorageServiceImpl implements FileStorageService {
             throw new IllegalStateException("Upload has expired and cannot be activated");
         }
 
-        String currentUsername = currentUserService.getUsername();
-        if (!currentUsername.equals(upload.getCreatedBy())) {
+        // createdBy is filled by AuditorAwareImpl with the user id, not the username
+        if (!currentUserService.getUserId().equals(upload.getCreatedBy())) {
             throw new SecurityException("Only the uploader can activate this upload");
         }
 
         try {
             upload.setIsActive(true);
             upload.setTempExpiresAt(null);
-            upload.setUpdatedBy(currentUsername);
+            upload.setUpdatedBy(currentUserService.getUserId());
             uploadRepository.save(upload);
             log.info("Activated upload: id={}, groupId={}", uploadId, upload.getUploadGroupId());
         } catch (Exception e) {

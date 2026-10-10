@@ -126,5 +126,7 @@ export const routes: Routes = [
   {
     path: 'tutorial',
     loadComponent: () => import('sic-ng').then(m => m.TutorialPageComponent) 
-  }
+  },
+  // resolvers navigate to /not-found on load errors; without a catch-all that URL gave a blank page (NG04002)
+  { path: '**', redirectTo: '' },
 ];

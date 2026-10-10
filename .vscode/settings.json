@@ -1,6 +1,11 @@
 {
-  "cSpell.words": ["Ganttchart"],
+  "cSpell.words": [
+    "Ganttchart"
+  ],
   "java.autobuild.enabled": true,
   "java.configuration.updateBuildConfiguration": "automatic",
-  "compile-hero.disable-compile-files-on-did-save-code": true
+  "compile-hero.disable-compile-files-on-did-save-code": true,
+  "playwright.env": {
+    "E2E_KEEP": "1"
+  }
 }

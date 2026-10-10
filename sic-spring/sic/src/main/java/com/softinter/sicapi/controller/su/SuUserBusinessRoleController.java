@@ -45,8 +45,10 @@ import com.softinter.sicapi.exception.ResourceNotFoundException;
 public class SuUserBusinessRoleController {
 
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;
+    private final jakarta.persistence.EntityManager em;
 
     @GetMapping
+    @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
     @Operation(summary = "Get all user business roles")
     public ResponseEntity<List<UserBusinessRoleResponse>> getAll(
             @RequestParam(required = false) UUID userBusinessId) {
@@ -59,6 +61,7 @@ public class SuUserBusinessRoleController {
     }
 
     @GetMapping("/paging")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
     @Operation(summary = "Get user business roles with pagination")
     public ResponseEntity<PaginationResponse<UserBusinessRoleResponse>> paging(
             @Valid @ModelAttribute UserBusinessRolePageRequest request) {
@@ -91,6 +94,7 @@ public class SuUserBusinessRoleController {
     }
 
     @GetMapping("/lov")
+    @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
     @Operation(summary = "Get user business role LOV")
     public ResponseEntity<List<LovResponse>> lov() {
         List<LovResponse> lov = userBusinessRoleRepository.findAll()
@@ -112,7 +116,12 @@ public class SuUserBusinessRoleController {
             ubr = new SuUserBusinessRole();
         }
         ubr.setIsActive(request.isActive());
-        // TODO: ต้อง set userBusiness และ businessRole ด้วย (ยังไม่เห็นใน request body)
+        if (request.getUserBusinessId() != null) {
+            ubr.setUserBusiness(em.getReference(com.softinter.sicapi.entity.su.SuUserBusiness.class, request.getUserBusinessId()));
+        }
+        if (request.getBusinessRoleId() != null) {
+            ubr.setBusinessRole(em.getReference(com.softinter.sicapi.entity.su.SuBusinessRole.class, request.getBusinessRoleId()));
+        }
         userBusinessRoleRepository.save(ubr);
         return ResponseEntity.ok(ubr.getId());
     }

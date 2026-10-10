@@ -7,7 +7,10 @@
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
-    "serve:ssr:sic-app": "node dist/sic-app/server/server.mjs"
+    "serve:ssr:sic-app": "node dist/sic-app/server/server.mjs",
+    "e2e": "playwright test",
+    "e2e:down": "node --no-warnings e2e/infra/cli.cjs down",
+    "e2e:status": "node --no-warnings e2e/infra/cli.cjs status"
   },
   "prettier": {
     "printWidth": 100,

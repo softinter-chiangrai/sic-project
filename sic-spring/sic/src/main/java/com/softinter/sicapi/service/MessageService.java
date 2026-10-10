@@ -53,7 +53,6 @@ public class MessageService {
         entity.setMessageCode(request.getMessageCode());
         entity.setMessageEn(request.getMessageEn());
         entity.setMessageLocal(request.getMessageLocal());
-        entity.setIsActive(request.getIsActive());
 
         messageRepository.save(entity);
         return entity.getId();

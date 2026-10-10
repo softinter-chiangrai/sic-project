@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.persistence.criteria.Predicate;
@@ -33,6 +34,7 @@ public class SuUserBusinessController {
     private final SuUserBusinessRepository userBusinessRepository;
 
     @GetMapping
+    @Transactional(readOnly = true) // toResponse() reads lazy business
     @Operation(summary = "Get all user businesses")
     public ResponseEntity<List<UserBusinessResponse>> getAll(
             @RequestParam(required = false) String userId) {
@@ -49,6 +51,7 @@ public class SuUserBusinessController {
     }
 
     @GetMapping("/paging")
+    @Transactional(readOnly = true)
     @Operation(summary = "Get user businesses with pagination")
     public ResponseEntity<PaginationResponse<UserBusinessResponse>> paging(
             @Valid @ModelAttribute UserBusinessPageRequest request) {
