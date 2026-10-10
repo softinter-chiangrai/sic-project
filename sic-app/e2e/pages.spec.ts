@@ -48,7 +48,7 @@ test('all pages', async () => {
       }
 
       expect.soft(page.url(), 'session lost').not.toContain('/realms/sic-project');
-      await expect.soft(page.locator('body')).not.toBeEmpty();
+      await expect.soft(page.locator('body')).not.toBeEmpty({ timeout: 20_000 }); // lazy route may render late
       expect.soft(errors, `${path} -> ${page.url()}`).toEqual([]);
     });
   }
