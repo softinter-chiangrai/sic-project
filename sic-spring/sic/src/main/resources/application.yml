@@ -8,7 +8,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:54320/sic_app
     username: sic-app
-    password: SicApp2026
+    password: ${SIC_APP_DB_PASSWORD:}
     driver-class-name: org.postgresql.Driver
 
 # spring:
@@ -59,8 +59,8 @@ spring:
   mail:
     host: smtp.gmail.com
     port: 587
-    username: phurinsukman3@gmail.com
-    password: qeivnricakfexxzh
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
     properties:
       mail:
         smtp:
@@ -93,7 +93,7 @@ app:
       document-bucket: documents
       region: us-east-1
       access-key: seaweedfs
-      secret-key: seaweedfs-secret
+      secret-key: ${SEAWEEDFS_SECRET_KEY:}
       endpoint: http://localhost:8888
       path-style-access-enabled: true
 
@@ -114,14 +114,14 @@ app:
       max-tokens: 4096
 
   figma:
-    client-id: nHawYGgjLQRdiNyVylbvpw
-    client-secret: gRKO02QqgLYIsxrSL4txGeb7i2GXsYzu7FvInpTU
+    client-id: ${FIGMA_CLIENT_ID:}
+    client-secret: ${FIGMA_CLIENT_SECRET:}
     redirect-uri: http://localhost:4200/feature/pm/design-review
 
   report-service:
     enabled: true
     base-url: ${REPORT_SERVICE_URL:http://localhost:80}
-    access-token: ${REPORT_SERVICE_TOKEN:sw7vuLj4VcTyksKN9ZFNYDRmtu_O2uYk}
+    access-token: ${REPORT_SERVICE_TOKEN:}
     timeout-seconds: 30
     fallback-to-local: true
 

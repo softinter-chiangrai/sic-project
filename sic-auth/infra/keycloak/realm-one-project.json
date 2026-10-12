@@ -15,7 +15,7 @@
     "fromDisplayName": "SIC Project",
     "auth": "true",
     "user": "phurinsukman3@gmail.com",
-    "password": "qeivnricakfexxzh",
+    "password": "${MAIL_PASSWORD}",
     "starttls": "true",
     "ssl": "false"
   },

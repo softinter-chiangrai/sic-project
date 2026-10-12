@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "d8dff658-bc29-49df-af5f-dd4e29fbf5df",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\lovew\\Student\\Project-Main\\Java-intern\\sic-project\\.archify\\architecture-sic-system-20261012-070000\\candidate.json",
+  "output": "C:\\Users\\lovew\\Student\\Project-Main\\Java-intern\\sic-project\\.archify\\architecture-sic-system-20261012-070000\\sic-system.html",
+  "specification": {
+    "sha256": "c35367d72c9b5bb882407c8a6636c61458caa4bfef392b9477016c7d7dbc83b3",
+    "bytes": 4313
+  },
+  "artifact": {
+    "sha256": "52b8f9efadbef4583e7aa32693ae0d366131b3a44350837eef639a99028f237c",
+    "bytes": 763599
+  }
+}

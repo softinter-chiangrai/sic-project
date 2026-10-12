@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 public class ReportServiceProperties {
     private boolean enabled = true;
     private String baseUrl = "http://localhost:80";
-    private String accessToken = "sw7vuLj4VcTyksKN9ZFNYDRmtu_O2uYk";
+    private String accessToken = "";
     private int timeoutSeconds = 30;
     private boolean fallbackToLocal = true;
 }

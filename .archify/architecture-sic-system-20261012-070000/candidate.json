@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "SIC Project System Overview",
+    "output": ".archify/architecture-sic-system-20261012-070000/sic-system.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/softinter-chiangrai/sic-project",
+      "provider": "github",
+      "revision": "dcc6a45505ed2e640471acae0e655da505e923ab"
+    }
+  },
+  "components": [
+    { "id": "users", "type": "external", "label": "Users", "sublabel": "Browser", "pos": [40, 320], "size": [120, 60] },
+    {
+      "id": "app", "type": "frontend", "label": "sic-app", "sublabel": "Angular :4200", "pos": [250, 320], "size": [140, 60],
+      "sources": [{ "path": "docker-compose.yml", "line": 193, "end_line": 205 }, { "path": "sic-app/src/app/core/auth/auth.service.ts", "line": 1 }]
+    },
+    {
+      "id": "keycloak", "type": "security", "label": "sic-auth", "sublabel": "Keycloak :8080", "pos": [250, 150], "size": [140, 64], "tag": "realm sic-project",
+      "sources": [{ "path": "docker-compose.yml", "line": 29, "end_line": 60 }]
+    },
+    {
+      "id": "spring", "type": "backend", "label": "sic-spring", "sublabel": "Spring Boot API :5265", "pos": [520, 310], "size": [170, 80],
+      "sources": [{ "path": "docker-compose.yml", "line": 134, "end_line": 191 }, { "path": "sic-spring/sic/src/main/resources/application.yml", "line": 1, "end_line": 12 }]
+    },
+    {
+      "id": "report", "type": "backend", "label": "report-service", "sublabel": "JasperReports :8082", "pos": [520, 150], "size": [170, 64],
+      "sources": [{ "path": "docker-compose.yml", "line": 117, "end_line": 129 }, { "path": "sic-spring/sic/src/main/java/com/softinter/sicapi/config/ReportServiceProperties.java", "line": 8, "end_line": 11 }]
+    },
+    {
+      "id": "db", "type": "database", "label": "sic-database", "sublabel": "PostgreSQL 17", "pos": [820, 320], "size": [150, 60], "tag": "sic_app + sic_auth",
+      "sources": [{ "path": "docker-compose.yml", "line": 5, "end_line": 24 }, { "path": "sic-database/infra/postgres/init/01-init-databases.sql", "line": 1, "end_line": 26 }]
+    },
+    {
+      "id": "storage", "type": "cloud", "label": "sic-storage", "sublabel": "SeaweedFS S3 :8333", "pos": [520, 480], "size": [170, 64], "tag": "3 buckets",
+      "sources": [{ "path": "docker-compose.yml", "line": 65, "end_line": 112 }]
+    },
+    {
+      "id": "ai", "type": "external", "label": "AI APIs", "sublabel": "Claude / Gemini", "pos": [820, 490], "size": [150, 60],
+      "sources": [{ "path": "docker-compose.yml", "line": 173, "end_line": 181 }]
+    }
+  ],
+  "boundaries": [
+    { "kind": "region", "label": "Docker network: sic-network", "wraps": ["app", "keycloak", "spring", "report", "db", "storage"] }
+  ],
+  "connections": [
+    { "id": "users-app", "from": "users", "to": "app", "label": "HTTPS", "variant": "emphasis" },
+    { "id": "app-spring", "from": "app", "to": "spring", "label": "REST + JWT", "variant": "emphasis" },
+    { "id": "spring-db", "from": "spring", "to": "db", "label": "JDBC" },
+    { "id": "app-login", "from": "app", "to": "keycloak", "label": "OIDC login", "variant": "security", "fromSide": "top", "toSide": "bottom" },
+    { "id": "spring-verify", "from": "spring", "to": "keycloak", "label": "verify token", "variant": "security", "fromSide": "left", "toSide": "right" },
+    { "id": "spring-report", "from": "spring", "to": "report", "label": "export + token", "fromSide": "top", "toSide": "bottom" },
+    { "id": "spring-storage", "from": "spring", "to": "storage", "label": "S3 API", "variant": "dashed", "fromSide": "bottom", "toSide": "top" },
+    { "id": "spring-ai", "from": "spring", "to": "ai", "label": "chat API", "variant": "dashed", "fromSide": "right", "toSide": "top" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Front", "items": ["sic-app: Angular, features bu / pm / su / dashboard", "Auth through Keycloak realm sic-project"] },
+    { "dot": "emerald", "title": "Back", "items": ["sic-spring: REST controllers, Flyway migrations", "report-service: PDF/Excel export via JasperReports", "Calls AI providers when keys are set"] },
+    { "dot": "violet", "title": "Data", "items": ["One Postgres: sic_app (API) and sic_auth (Keycloak)", "SeaweedFS buckets: uploads, documents, public-files"] }
+  ]
+}
