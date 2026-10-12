@@ -100,7 +100,7 @@ public class PmUserManualController {
 
     @PostMapping("/save")
     @Operation(summary = "Save user manual")
-    public ResponseEntity<UUID> save(@RequestBody PmUserManualRequest request) {
+    public ResponseEntity<UUID> save(@jakarta.validation.Valid @RequestBody PmUserManualRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(manualService.save(request, businessId, userId));

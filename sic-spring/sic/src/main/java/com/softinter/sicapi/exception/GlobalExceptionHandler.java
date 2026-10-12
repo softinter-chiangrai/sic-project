@@ -17,6 +17,7 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.transaction.UnexpectedRollbackException;
 
 @Slf4j
@@ -56,6 +57,23 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponse> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
         return new ResponseEntity<>(new ErrorResponse(false, ex.getMessage(), HttpStatus.METHOD_NOT_ALLOWED.value()), HttpStatus.METHOD_NOT_ALLOWED);
+    }
+
+    // constraint violations: say what is wrong in plain words, never echo the SQL (kept in the log)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<ErrorResponse> handleDataIntegrity(DataIntegrityViolationException ex) {
+        String cause = ex.getMostSpecificCause() != null ? String.valueOf(ex.getMostSpecificCause().getMessage()) : "";
+        log.warn("Data integrity violation: {}", cause);
+        String msg = "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบข้อมูลที่กรอก";
+        java.util.regex.Matcher notNull = java.util.regex.Pattern.compile("null value in column \"([^\"]+)\"").matcher(cause);
+        if (notNull.find()) {
+            msg = "กรุณาระบุข้อมูลที่จำเป็น: " + notNull.group(1).replace('_', ' ');
+        } else if (cause.contains("duplicate key")) {
+            msg = "ข้อมูลนี้ซ้ำกับที่มีอยู่แล้ว";
+        } else if (cause.contains("foreign key")) {
+            msg = "ข้อมูลอ้างอิงไม่ถูกต้อง หรือยังถูกใช้งานอยู่";
+        }
+        return new ResponseEntity<>(new ErrorResponse(false, msg, HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(UnexpectedRollbackException.class)

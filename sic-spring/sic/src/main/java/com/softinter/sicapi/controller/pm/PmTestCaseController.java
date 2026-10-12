@@ -79,7 +79,7 @@ public class PmTestCaseController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<UUID> save(@RequestBody PmTestCaseRequest request) {
+    public ResponseEntity<UUID> save(@jakarta.validation.Valid @RequestBody PmTestCaseRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(testCaseService.save(request, businessId, userId));

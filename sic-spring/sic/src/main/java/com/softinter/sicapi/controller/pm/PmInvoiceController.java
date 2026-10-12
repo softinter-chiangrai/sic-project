@@ -92,7 +92,7 @@ public class PmInvoiceController {
 
     @PostMapping("/save")
     @Operation(summary = "Save invoice")
-    public ResponseEntity<UUID> save(@RequestBody PmInvoiceRequest request) {
+    public ResponseEntity<UUID> save(@jakarta.validation.Valid @RequestBody PmInvoiceRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(invoiceService.save(request, businessId, userId));

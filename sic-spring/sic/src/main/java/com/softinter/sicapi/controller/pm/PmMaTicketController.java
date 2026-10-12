@@ -94,7 +94,7 @@ public class PmMaTicketController {
 
     @PostMapping("/save")
     @Operation(summary = "Save MA ticket")
-    public ResponseEntity<UUID> save(@RequestBody PmMaTicketRequest request) {
+    public ResponseEntity<UUID> save(@jakarta.validation.Valid @RequestBody PmMaTicketRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(ticketService.save(request, businessId, userId));

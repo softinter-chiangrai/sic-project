@@ -1,5 +1,6 @@
 package com.softinter.sicapi.controller.su;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.entity.su.SuUserBusiness;
@@ -38,11 +39,11 @@ public class SuUserBusinessController {
     @Operation(summary = "Get all user businesses")
     public ResponseEntity<List<UserBusinessResponse>> getAll(
             @RequestParam(required = false) String userId) {
-        List<SuUserBusiness> list;
+        // tenant isolation: only members of the caller's current business, never other businesses
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        List<SuUserBusiness> list = businessId == null ? List.of() : userBusinessRepository.findByBusinessIdAndIsActiveTrue(businessId);
         if (userId != null) {
-            list = userBusinessRepository.findByUserIdAndIsActiveTrue(userId);
-        } else {
-            list = userBusinessRepository.findAll();
+            list = list.stream().filter((ub) -> userId.equals(ub.getUserId())).collect(Collectors.toList());
         }
         List<UserBusinessResponse> response = list.stream()
                 .map(this::toResponse)
@@ -60,6 +61,8 @@ public class SuUserBusinessController {
         Specification<SuUserBusiness> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("isDelete"), false));
+            UUID businessId = BusinessContextHolder.getBusinessId(); // tenant isolation
+            predicates.add(businessId == null ? cb.disjunction() : cb.equal(root.get("businessId"), businessId));
             if (request.getUserId() != null) {
                 predicates.add(cb.equal(root.get("userId"), request.getUserId()));
             }
@@ -92,8 +95,10 @@ public class SuUserBusinessController {
     @GetMapping("/lov")
     @Operation(summary = "Get user business LOV")
     public ResponseEntity<List<LovResponse>> lov(@RequestParam String userId) {
+        UUID businessId = BusinessContextHolder.getBusinessId(); // tenant isolation: not another business's members
         List<LovResponse> lov = userBusinessRepository.findByUserIdAndIsActiveTrue(userId)
                 .stream()
+                .filter((ub) -> ub.getBusinessId() != null && ub.getBusinessId().equals(businessId))
                 .map(ub -> new LovResponse(ub.getId(), ub.getUserId()))
                 .collect(Collectors.toList());
         return ResponseEntity.ok(lov);

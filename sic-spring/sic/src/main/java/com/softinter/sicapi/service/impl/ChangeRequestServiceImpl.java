@@ -73,6 +73,17 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             "ยกเลิก", "CANCELLED"
     );
 
+    /** pm_change_request.assignee_id is NOT NULL: take the explicit assignee, else the first of the assignee list, else refuse politely. */
+    private String resolveAssignee(ChangeRequestRequest request) {
+        if (request.getAssigneeId() != null && !request.getAssigneeId().isBlank()) {
+            return request.getAssigneeId();
+        }
+        if (request.getAssignees() != null && !request.getAssignees().isEmpty() && request.getAssignees().get(0).getUserId() != null) {
+            return request.getAssignees().get(0).getUserId();
+        }
+        throw new IllegalArgumentException("กรุณาเลือกผู้รับผิดชอบ (Assignee) ของ Change Request");
+    }
+
     @Override
     @Transactional
     public ChangeRequestResponse createChangeRequest(ChangeRequestRequest request) {
@@ -140,7 +151,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         cr.setStatus("DRAFT");
         cr.setChangeLevel(normalizeChangeLevel(request.getChangeLevel()));
         cr.setTargetVersion(resolveTargetVersion(request.getTargetType(), request.getTargetId(), request.getTargetVersion(), cr.getChangeLevel()));
-        cr.setAssigneeId(request.getAssigneeId());
+        cr.setAssigneeId(resolveAssignee(request));
         cr.setAttachmentGroupId(request.getAttachmentGroupId());
         cr.setCreatedBy(currentUserService.getUserId());
         cr.setCreatedDate(Instant.now());
@@ -265,7 +276,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             cr.setChangeLevel(normalizeChangeLevel(request.getChangeLevel()));
         }
         cr.setTargetVersion(resolveTargetVersion(cr.getTargetType(), cr.getTargetId(), request.getTargetVersion(), cr.getChangeLevel()));
-        cr.setAssigneeId(request.getAssigneeId());
+        cr.setAssigneeId(resolveAssignee(request));
         cr.setAttachmentGroupId(request.getAttachmentGroupId());
         cr.setUpdatedBy(currentUserService.getUserId());
         cr.setUpdatedDate(Instant.now());

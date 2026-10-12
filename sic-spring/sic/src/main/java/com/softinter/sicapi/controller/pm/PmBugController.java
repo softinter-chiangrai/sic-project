@@ -55,7 +55,7 @@ public class PmBugController {
     }
 
     @PostMapping("/save")
-    public ResponseEntity<UUID> save(@RequestBody PmBugRequest request) {
+    public ResponseEntity<UUID> save(@jakarta.validation.Valid @RequestBody PmBugRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(bugService.save(request, businessId, userId));

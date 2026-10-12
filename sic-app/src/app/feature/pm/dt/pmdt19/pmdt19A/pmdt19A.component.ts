@@ -87,6 +87,11 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
   }
 
   onSubmit(): void {
+    // documentId has no picker on this form: it arrives from the document that opened it (query string)
+    if (!this.formData.form.controls['documentId'].value) {
+      this.dialog.warn(this.translate.instant('PMDT19A_NO_DOC_TITLE'), this.translate.instant('PMDT19A_NO_DOC_MSG'));
+      return;
+    }
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
       this.dialog.warn(this.translate.instant('PMDT19A_WARN_TITLE'), this.translate.instant('PMDT19A_WARN_MSG'));

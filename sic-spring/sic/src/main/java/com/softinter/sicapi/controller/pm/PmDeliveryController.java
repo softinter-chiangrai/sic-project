@@ -106,7 +106,7 @@ public class PmDeliveryController {
 
     @PostMapping("/save")
     @Operation(summary = "Save delivery document")
-    public ResponseEntity<UUID> save(@RequestBody PmDeliveryRequest request) {
+    public ResponseEntity<UUID> save(@RequestBody PmDeliveryRequest request) /* no @Valid: the project may come from the chosen contract */ {
         UUID businessId = BusinessContextHolder.getBusinessId();
         String userId = currentUserService.getUserId();
         return ResponseEntity.ok(deliveryService.save(request, businessId, userId));

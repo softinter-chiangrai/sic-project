@@ -13,6 +13,8 @@ type Mod = {
   editPath: (id: string) => string;
   /** list endpoint used to find the record the UI just created */
   listApi: string | ((w: World) => Promise<string>);
+  /** custom listing when no single endpoint shows every record (e.g. children of whichever parent the form picked) */
+  listAll?: (w: World) => Promise<any[]>;
   delApi: (id: string) => string;
   /** pick the project first, then open the form from inside the app (the form reads the selection when it is created) */
   spa?: boolean;
@@ -35,8 +37,20 @@ const mods: Mod[] = [
   { name: 'project', newPath: '/feature/pm/project/new', listPath: '/feature/pm/project', editPath: (id) => `/feature/pm/project/${id}/edit`, listApi: '/api/pm/customer-projects', delApi: (id) => `/api/pm/customer-projects/${id}`, needs: (w) => w.customer() },
   { name: 'contract', newPath: '/feature/pm/contract/new', listPath: '/feature/pm/contract', editPath: (id) => `/feature/pm/contract/${id}/edit`, listApi: '/api/pm/contracts', delApi: (id) => `/api/pm/contracts/${id}`, needs: (w) => w.project() },
   { name: 'phase', newPath: '/feature/pm/phase/new', listPath: '/feature/pm/phase', editPath: (id) => `/feature/pm/phase/${id}/edit`, listApi: '/api/pm/phases', delApi: (id) => `/api/pm/phases/${id}`, needs: (w) => w.project() },
-  { name: 'milestone', newPath: '/feature/pm/milestone/new', listPath: '/feature/pm/phase', editPath: (id) => `/feature/pm/milestone/${id}/edit`, listApi: async (w) => `/api/pm/milestones/phase/${await w.phase()}`, delApi: (id) => `/api/pm/milestones/${id}`, needs: (w) => w.phase(), noGridDelete: 'milestones live inside the phase detail page, not in a grid' },
-  { name: 'work-package', newPath: '/feature/pm/work-package/new', listPath: '/feature/pm/phase', editPath: (id) => `/feature/pm/work-package/${id}/edit`, listApi: async (w) => `/api/pm/work-packages/milestone/${await w.milestone()}`, delApi: (id) => `/api/pm/work-packages/${id}`, needs: (w) => w.milestone(), noGridDelete: 'work packages live inside the phase detail page, not in a grid' },
+  { name: 'milestone', listAll: async (w) => {
+    const phases = rowsOf((await w.api.get('/api/pm/phases', { businessId: w.api.businessId! })).body);
+    const all: any[] = [];
+    for (const p of phases) all.push(...rowsOf((await w.api.get(`/api/pm/milestones/phase/${p.id}`)).body));
+    return all;
+  }, newPath: '/feature/pm/milestone/new', listPath: '/feature/pm/phase', editPath: (id) => `/feature/pm/milestone/${id}/edit`, listApi: async (w) => `/api/pm/milestones/phase/${await w.phase()}`, delApi: (id) => `/api/pm/milestones/${id}`, needs: (w) => w.phase(), noGridDelete: 'milestones live inside the phase detail page, not in a grid' },
+  { name: 'work-package', listAll: async (w) => {
+    const phases = rowsOf((await w.api.get('/api/pm/phases', { businessId: w.api.businessId! })).body);
+    const all: any[] = [];
+    for (const p of phases) {
+      for (const ms of rowsOf((await w.api.get(`/api/pm/milestones/phase/${p.id}`)).body)) all.push(...rowsOf((await w.api.get(`/api/pm/work-packages/milestone/${ms.id}`)).body));
+    }
+    return all;
+  }, newPath: '/feature/pm/work-package/new', listPath: '/feature/pm/phase', editPath: (id) => `/feature/pm/work-package/${id}/edit`, listApi: async (w) => `/api/pm/work-packages/milestone/${await w.milestone()}`, delApi: (id) => `/api/pm/work-packages/${id}`, needs: (w) => w.milestone(), noGridDelete: 'work packages live inside the phase detail page, not in a grid' },
   { name: 'task', newPath: '/feature/pm/task/new', listPath: '/feature/pm/task-board', editPath: (id) => `/feature/pm/task/${id}/edit`, listApi: '/api/pm/tasks/business', delApi: (id) => `/api/pm/tasks/${id}`, needs: (w) => w.workPackage(), noGridDelete: 'tasks are managed on the task board, not in a grid' },
   { name: 'requirement', newPath: '/feature/pm/requirement/new', listPath: '/feature/pm/requirement', editPath: (id) => `/feature/pm/requirement/${id}/edit`, listApi: '/api/pm/requirement', delApi: (id) => `/api/pm/requirement/${id}`, needs: (w) => w.project() },
   { name: 'change-request', values: { targetType: 'Specification', assigneeIds: '' }, // assignee is NOT NULL in the DB but optional in the form
@@ -83,6 +97,7 @@ function rowsOf(body: any): any[] {
 
 /** keyword narrows the search where the endpoint supports it (lists often return only the first 10 rows) */
 async function list(w: World, m: Mod, keyword?: string, byProject = true): Promise<any[]> {
+  if (m.listAll) return m.listAll(w);
   const path = typeof m.listApi === 'string' ? m.listApi : await m.listApi(w);
   const r = await w.api.get(path, { businessId: w.api.businessId!, page: m.page1 ? 1 : 0, size: 200, pageNumber: 1, pageSize: 200, ...(byProject ? { projectId: await w.project() } : {}), ...(keyword ? { keyword } : {}) });
   expect(r.status, `list ${path} ${JSON.stringify(r.body).slice(0, 200)}`).toBe(200);
@@ -199,7 +214,7 @@ for (const m of mods.filter((x) => !only.length || only.includes(x.name))) {
       await button!.evaluate((b) => (b as HTMLElement).click()); // DOM click: overlays (AI button) can cover the row actions
       await ui.page.getByRole('button', { name: 'Confirm' }).click();
       if (process.env['DEBUG_FORMS']) console.log('CONFIRMED_AT', new Date().toISOString());
-      await expect.poll(async () => [...(await list(w, m, marker || edited)), ...(await list(w, m)), ...(await list(w, m, undefined, false))].some((r) => r.id === id), { timeout: 40_000, message: `record still exists after delete: ${JSON.stringify((await list(w, m, undefined, false)).find((r) => r.id === id)).slice(0, 400)}` }).toBe(false);
+      await expect.poll(async () => [...(await list(w, m, marker || edited)), ...(await list(w, m)), ...(await list(w, m, undefined, false))].some((r) => r.id === id), { timeout: 40_000, message: 'record still exists after delete' }).toBe(false);
       id = '';
     });
   });

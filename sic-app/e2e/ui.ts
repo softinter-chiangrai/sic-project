@@ -36,8 +36,7 @@ export class Ui {
   async visit(path: string) {
     const { page } = this;
     this.errors = [];
-    await page.goto(path);
-    await page.waitForLoadState('networkidle');
+    await this.go(path);
     if (page.url().includes('/realms/sic-project')) {
       test.info().annotations.push({ type: 'relogin', description: path });
       await page.locator('input[name=username]').fill(process.env['E2E_USER']!);
@@ -45,9 +44,16 @@ export class Ui {
       await page.getByRole('button', { name: 'Sign In' }).click();
       await page.waitForURL((u) => u.origin === 'http://localhost:4200' && !u.pathname.startsWith('/auth'));
       this.errors = [];
-      await page.goto(path);
-      await page.waitForLoadState('networkidle');
+      await this.go(path);
     }
+  }
+
+  /** goto that survives the app redirecting to the login page / back while loading (navigation "aborted"). */
+  private async go(path: string) {
+    await this.page.goto(path).catch((e: Error) => {
+      if (!/ERR_ABORTED|frame was detached/.test(e.message)) throw e;
+    });
+    await this.page.waitForLoadState('networkidle').catch(() => {});
   }
 
   /** The page rendered something, kept the session and caused no JS error / 5xx. */

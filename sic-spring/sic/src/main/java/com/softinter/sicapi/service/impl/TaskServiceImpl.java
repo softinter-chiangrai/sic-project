@@ -59,6 +59,9 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @Transactional
     public TaskResponse createTask(TaskRequest request) {
+        if (request.getWorkPackageId() == null) {
+            throw new IllegalArgumentException("กรุณาเลือก Work Package ของงาน (เปิดฟอร์มจากงานหลักหรือเลือก Work Package)");
+        }
         PmWorkPackage wp = wpRepository.findById(request.getWorkPackageId())
                 .orElseThrow(() -> new ResourceNotFoundException("Work Package not found"));
 
