@@ -4,7 +4,7 @@
 import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';
 
-const E2E_DB = 'sic_app_e2e';
+const E2E_DB = process.env['E2E_DB'] ?? 'sic_app_e2e';
 // Optional second port: run the test backend next to one you started yourself on :5265 (it uses your real DB, so never reuse that one)
 const ALT_PORT = process.env['E2E_API_PORT'];
 const PORT = ALT_PORT ?? '5265';
@@ -21,7 +21,11 @@ const sh = (cmd: string, args: string[], env: Record<string, string> = {}) => {
 };
 const psql = (sql: string) => sh('docker', ['exec', 'sic-database', 'psql', '-U', 'administrator', '-d', 'postgres', '-tAc', sql]).trim();
 
-export function isUp() {
+export async function isUp() {
+  try {
+    const r = await fetch(`http://localhost:${PORT}/api/business/activation`);
+    if (r.status === 401 || r.status === 200) return true;
+  } catch {}
   try {
     return sh('docker', ['inspect', '-f', '{{range .Config.Env}}{{println .}}{{end}}', 'sic-spring-backend']).includes(`/${E2E_DB}`);
   } catch {
@@ -41,7 +45,7 @@ async function waitBackend() {
 }
 
 export async function up() {
-  if (isUp()) return;
+  if (await isUp()) return;
   if (!psql(`select 1 from pg_database where datname='${E2E_DB}'`)) psql(`CREATE DATABASE ${E2E_DB} OWNER "sic-app"`);
   sh(
     'docker',
@@ -61,7 +65,9 @@ export async function down() {
     execFileSync('docker', ['compose', 'up', '-d', 'sic-spring'], { cwd: root, env, stdio: 'ignore' }); // back to real DB
     await waitBackend();
   }
-  psql(`DROP DATABASE IF EXISTS ${E2E_DB} WITH (FORCE)`);
+  if (E2E_DB !== 'sic_app') {
+    psql(`DROP DATABASE IF EXISTS ${E2E_DB} WITH (FORCE)`);
+  }
 }
 
 /** Run SQL against the throwaway DB only (seeding what the API cannot, e.g. profile e-mail verification). */

@@ -58,55 +58,63 @@
         </div>
       }
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <sic-combobox
-          [label]="'PMDT17A_CONTRACT_LABEL' | translate"
-          [options]="contractOptions()"
-          [placeholder]="'PMDT17A_SELECT_CONTRACT_PLACEHOLDER' | translate"
-          valueField="value"
-          displayField="text"
-          [clearable]="true"
-          formControlName="contractId"
-          (selectionChanged)="onContractSelected($event)"
-        ></sic-combobox>
+      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+        <div class="md:col-span-4">
+          <sic-combobox
+            [label]="'PMDT17A_CONTRACT_LABEL' | translate"
+            [options]="contractOptions()"
+            [placeholder]="'PMDT17A_SELECT_CONTRACT_PLACEHOLDER' | translate"
+            valueField="value"
+            displayField="text"
+            [clearable]="true"
+            formControlName="contractId"
+            (selectionChanged)="onContractSelected($event)"
+          ></sic-combobox>
+        </div>
 
-        <sic-input
-          [label]="'PMDT17_TICKET_CODE_LABEL' | translate"
-          [placeholder]="'PMDT17_TICKET_CODE_PLACEHOLDER' | translate"
-          formControlName="ticketNo"
-        ></sic-input>
+        <div class="md:col-span-4">
+          <sic-input
+            [label]="'PMDT17_TICKET_CODE_LABEL' | translate"
+            [placeholder]="'PMDT17_TICKET_CODE_PLACEHOLDER' | translate"
+            formControlName="ticketNo"
+          ></sic-input>
+        </div>
 
-        <sic-combobox
-          [label]="'PMDT17_ISSUE_TYPE_LABEL' | translate"
-          [required]="true"
-          [items]="ticketTypeOptions"
-          valueField="value"
-          displayField="label"
-          formControlName="ticketType"
-        ></sic-combobox>
+        <div class="md:col-span-4">
+          <sic-combobox
+            [label]="'PMDT17_ISSUE_TYPE_LABEL' | translate"
+            [required]="true"
+            [items]="ticketTypeOptions"
+            valueField="value"
+            displayField="label"
+            formControlName="ticketType"
+          ></sic-combobox>
+        </div>
 
-        <sic-combobox
-          [label]="'PMDT17_SEVERITY_LABEL' | translate"
-          [required]="true"
-          [items]="severityOptions"
-          valueField="value"
-          displayField="label"
-          formControlName="severity"
-        ></sic-combobox>
-      </div>
+        <div class="md:col-span-4">
+          <sic-combobox
+            [label]="'PMDT17_SEVERITY_LABEL' | translate"
+            [required]="true"
+            [items]="severityOptions"
+            valueField="value"
+            displayField="label"
+            formControlName="severity"
+          ></sic-combobox>
+        </div>
 
-      <div>
-        <sic-combobox
-          [label]="'PMDT17_ASSIGNEE_LABEL' | translate"
-          [apiUrl]="apiMembersCombobox"
-          [params]="{ businessId: businessId }"
-          valueField="value"
-          textField="text"
-          [placeholder]="'PMDT17_ASSIGNEE_PLACEHOLDER' | translate"
-          [clearable]="true"
-          [multiple]="true"
-          formControlName="assignedToIds"
-        ></sic-combobox>
+        <div class="md:col-span-8">
+          <sic-combobox
+            [label]="'PMDT17_ASSIGNEE_LABEL' | translate"
+            [apiUrl]="apiMembersCombobox"
+            [params]="{ businessId: businessId }"
+            valueField="value"
+            textField="text"
+            [placeholder]="'PMDT17_ASSIGNEE_PLACEHOLDER' | translate"
+            [clearable]="true"
+            [multiple]="true"
+            formControlName="assignedToIds"
+          ></sic-combobox>
+        </div>
       </div>
     </div>
 

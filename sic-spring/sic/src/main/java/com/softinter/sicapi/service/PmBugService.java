@@ -16,4 +16,6 @@ public interface PmBugService {
     UUID save(PmBugRequest request, UUID businessId, String userId);
 
     void delete(UUID id, UUID businessId, String userId);
+
+    com.softinter.sicapi.dto.response.AiBugResolutionResponse analyzeBugResolution(com.softinter.sicapi.dto.request.AiBugResolutionRequest request, UUID businessId);
 }

@@ -54,7 +54,7 @@
       </h2>
 
       <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <div class="md:col-span-3">
+        <div class="md:col-span-4">
           <sic-combobox
             formControlName="customerId"
             [label]="'PMDT15_CUSTOMER_LABEL' | translate"
@@ -67,7 +67,7 @@
           </sic-combobox>
         </div>
 
-        <div class="md:col-span-3">
+        <div class="md:col-span-4">
           <sic-combobox
             formControlName="projectId"
             [label]="isProjectDerived() ? ('PMDT15_PROJECT_DERIVED_LABEL' | translate) : ('PMDT15_PROJECT_LABEL' | translate)"
@@ -80,6 +80,19 @@
             [required]="true"
             [disabled]="isProjectDerived()"
             (selectionChanged)="onProjectSelected($event)">
+          </sic-combobox>
+        </div>
+
+        <div class="md:col-span-4">
+          <sic-combobox
+            formControlName="deliveryId"
+            [label]="'PMDT15_DELIVERY_LABEL' | translate"
+            [options]="deliveryOptions()"
+            [placeholder]="'PMDT15_DELIVERY_PLACEHOLDER' | translate"
+            (selectionChanged)="onDeliverySelected($event)"
+            [clearable]="true"
+            valueField="value"
+            displayField="text">
           </sic-combobox>
         </div>
 
@@ -107,19 +120,6 @@
             [label]="'PMDT15_TITLE_FIELD_LABEL' | translate"
             [placeholder]="'PMDT15_TITLE_PLACEHOLDER' | translate">
           </sic-input>
-        </div>
-
-        <div class="md:col-span-6">
-          <sic-combobox
-            formControlName="deliveryId"
-            [label]="'PMDT15_DELIVERY_LABEL' | translate"
-            [options]="deliveryOptions()"
-            [placeholder]="'PMDT15_DELIVERY_PLACEHOLDER' | translate"
-            (selectionChanged)="onDeliverySelected($event)"
-            [clearable]="true"
-            valueField="value"
-            displayField="text">
-          </sic-combobox>
         </div>
 
         <!-- Attachments -->

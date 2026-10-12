@@ -37,6 +37,10 @@ public class PmBugServiceImpl implements PmBugService {
     private final PmTestCaseRepository testCaseRepository;
     private final AuditLogService auditLogService;
     private final TraceLinkService traceLinkService;
+    private final com.softinter.sicapi.service.PmAiProviderService aiProviderService;
+    private final com.fasterxml.jackson.databind.ObjectMapper objectMapper = new com.fasterxml.jackson.databind.ObjectMapper();
+
+    private static final java.util.regex.Pattern JSON_BLOCK_PATTERN = java.util.regex.Pattern.compile("```(?:json)?\\s*([\\s\\S]*?)```", java.util.regex.Pattern.MULTILINE);
 
     @Override
     @Transactional(readOnly = true)
@@ -237,5 +241,120 @@ public class PmBugServiceImpl implements PmBugService {
         res.setUpdatedDate(entity.getUpdatedDate());
         res.setRowVersion(entity.getRowVersion());
         return res;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public com.softinter.sicapi.dto.response.AiBugResolutionResponse analyzeBugResolution(
+            com.softinter.sicapi.dto.request.AiBugResolutionRequest request, UUID businessId) {
+
+        String lang = (request.getLang() != null && request.getLang().equalsIgnoreCase("en")) ? "en" : "th";
+        String title = request.getTitle();
+        String description = request.getDescription();
+        String stepsToReproduce = request.getStepsToReproduce();
+        String environment = request.getEnvironment();
+
+        // If bugId is supplied, fill missing fields from DB
+        if (request.getBugId() != null && businessId != null) {
+            PmBug existing = bugRepository.findByIdAndBusinessIdAndIsDeleteFalse(request.getBugId(), businessId).orElse(null);
+            if (existing != null) {
+                if (title == null || title.isBlank()) title = existing.getTitle();
+                if (description == null || description.isBlank()) description = existing.getDescription();
+                if (stepsToReproduce == null || stepsToReproduce.isBlank()) stepsToReproduce = existing.getStepsToReproduce();
+                if (environment == null || environment.isBlank()) environment = existing.getEnvironment();
+            }
+        }
+
+        if ((title == null || title.isBlank()) && (description == null || description.isBlank())) {
+            return com.softinter.sicapi.dto.response.AiBugResolutionResponse.builder()
+                    .rootCause(lang.equals("en") ? "Insufficient bug details provided." : "ข้อมูลข้อผิดพลาดไม่เพียงพอในการวิเคราะห์")
+                    .suggestedFix(lang.equals("en") ? "Please provide a title and steps to reproduce." : "กรุณาระบุหัวข้อข้อผิดพลาดและขั้นตอนการทำให้เกิดปัญหา")
+                    .recommendedSeverity("LOW")
+                    .confidenceScore(0)
+                    .lang(lang)
+                    .build();
+        }
+
+        String systemPrompt = lang.equals("en")
+                ? "You are a Principal Software Engineer and Debugging Specialist. Analyze the reported bug, determine the most likely root cause, propose an actionable technical fix with code/configuration examples, and provide regression verification steps. Output strictly valid JSON."
+                : "คุณคือ Principal Software Engineer และผู้เชี่ยวชาญด้านการ Debug ระบบ วิเคราะห์สาเหตุที่แท้จริงของ Bug (Root Cause), เสนอแนวทางแก้ไขโค้ด/คอนฟิกพร้อมตัวอย่าง, และแนวทางเขียน Test ป้องกันไม่ให้เกิดซ้ำ ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น";
+
+        String prompt = String.format("""
+            %s
+
+            === BUG REPORT INFORMATION ===
+            - **Title / Summary**: %s
+            - **Environment**: %s
+            - **Steps to Reproduce & Expected vs Actual**:
+            %s
+            - **Additional Description / Stacktrace**:
+            %s
+
+            === TASK REQUIREMENTS ===
+            Provide an in-depth analysis in **%s**:
+            1. **rootCause**: Clear technical explanation of why this bug occurred (e.g. race condition, unhandled null, type coercion, missing state update).
+            2. **suggestedFix**: Clear, numbered step-by-step developer guide on how to fix this issue.
+            3. **preventionTest**: Specific unit/integration/E2E test case recommendation to prevent future regressions.
+            4. **recommendedSeverity**: "LOW", "MEDIUM", "HIGH", or "CRITICAL".
+            5. **confidenceScore**: Integer between 0 and 100 representing confidence in this diagnosis.
+            6. **codeSnippet**: Clean code snippet or diff illustrating the fix.
+
+            === STRICT JSON OUTPUT FORMAT ===
+            ```json
+            {
+              "rootCause": "...",
+              "suggestedFix": "1. ...\\n2. ...",
+              "preventionTest": "...",
+              "recommendedSeverity": "HIGH",
+              "confidenceScore": 90,
+              "codeSnippet": "// Fix snippet here"
+            }
+            ```
+            Output ONLY the JSON block inside ```json ... ```.
+            """,
+            lang.equals("en") ? "Please analyze this bug report and provide a smart resolution." : "กรุณาวิเคราะห์สาเหตุของ Bug นี้และเสนอแนวทางแก้ไขเบื้องต้น",
+            title != null ? title : "N/A",
+            environment != null ? environment : "N/A",
+            stepsToReproduce != null ? stepsToReproduce : "N/A",
+            description != null ? description : "N/A",
+            lang.equals("en") ? "ENGLISH" : "THAI (ภาษาไทย)"
+        );
+
+        String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String extractedJson = extractJson(aiRawResponse);
+
+        if (extractedJson != null && !extractedJson.isBlank()) {
+            try {
+                com.softinter.sicapi.dto.response.AiBugResolutionResponse response =
+                        objectMapper.readValue(extractedJson, com.softinter.sicapi.dto.response.AiBugResolutionResponse.class);
+                response.setLang(lang);
+                return response;
+            } catch (Exception e) {
+                log.error("Failed to parse AI Bug resolution JSON: {}", e.getMessage());
+            }
+        }
+
+        return com.softinter.sicapi.dto.response.AiBugResolutionResponse.builder()
+                .rootCause(lang.equals("en") ? "Analyzed reported behavior: Potential logic or state mismatch." : "วิเคราะห์เบื้องต้น: อาจเกิดจากความผิดพลาดของ Logic หรือ State ข้อมูล")
+                .suggestedFix(aiRawResponse != null ? aiRawResponse : (lang.equals("en") ? "Review component logic and validate input constraints." : "ตรวจสอบ Logic และเงื่อนไขการส่งข้อมูล"))
+                .preventionTest(lang.equals("en") ? "Add unit test asserting edge case input." : "เพิ่ม Unit Test ทดสอบ Edge Cases")
+                .recommendedSeverity("MEDIUM")
+                .confidenceScore(60)
+                .lang(lang)
+                .build();
+    }
+
+    private String extractJson(String response) {
+        if (response == null) return null;
+        java.util.regex.Matcher matcher = JSON_BLOCK_PATTERN.matcher(response);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        int start = response.indexOf('{');
+        int end = response.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+            return response.substring(start, end + 1).trim();
+        }
+        return null;
     }
 }

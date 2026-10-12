@@ -1,5 +1,5 @@
-// src/app/feature/pm/dt/pmdt12/pmdt12C/pmdt12C.component.ts
 import { CommonModule } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, computed, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
@@ -12,6 +12,7 @@ import { CanComponentDeactivate } from '../../../../../core/guard/can-deactivate
 import { BusinessService } from '../../../../../core/services/business.service';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
+import { LanguageService } from '../../../../../core/services/language.service';
 import { TraceLinkService } from '../../../../../core/services/trace-link.service';
 import { PmTestCaseModel, PmTestScenarioModel } from '../pmdt12.model';
 import { Pmdt12Service } from '../pmdt12.service';
@@ -44,12 +45,19 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
   private businessService = inject(BusinessService);
   private traceLinkService = inject(TraceLinkService);
   private translate = inject(TranslateService);
+  private http = inject(HttpClient);
+  private languageService = inject(LanguageService);
 
   // ===== States =====
   isLoading = signal(true);
   isSubmitting = signal(false);
   isEdit = signal(false);
   taskId = signal<string | null>(null);
+
+  // AI Smart Bug Resolution States
+  isAnalyzingBug = signal(false);
+  aiBugResolution = signal<any | null>(null);
+  aiBugLang = signal<'th' | 'en'>(this.languageService.currentLang() === 'th' ? 'th' : 'en');
 
   // Traceability & Relationship signals
   projectId = signal<string | null>(null);
@@ -422,5 +430,66 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
     } else {
       this.router.navigate(['/feature/pm/test-management']);
     }
+  }
+
+  setAiBugLang(lang: 'th' | 'en'): void {
+    this.aiBugLang.set(lang);
+    if (this.aiBugResolution()) {
+      this.analyzeBugWithAi();
+    }
+  }
+
+  analyzeBugWithAi(): void {
+    const title = this.form.get('taskName')?.value || '';
+    const desc = this.form.get('description')?.value || '';
+
+    if (!title && !desc) {
+      this.dialog.warn(
+        this.translate.instant('COMMON_WARN_TITLE', { defaultValue: 'คำเตือน' }),
+        this.aiBugLang() === 'th'
+          ? 'กรุณาระบุชื่อข้อผิดพลาดหรือรายละเอียดก่อนให้ AI วิเคราะห์'
+          : 'Please enter bug title or description before requesting AI analysis'
+      );
+      return;
+    }
+
+    this.isAnalyzingBug.set(true);
+    const payload = {
+      title,
+      description: desc,
+      environment: 'Web / App',
+      lang: this.aiBugLang(),
+    };
+
+    this.http.post<any>(`${environment.apiBaseUrl}/api/pm/bugs/ai-smart-resolution`, payload).subscribe({
+      next: (res) => {
+        this.aiBugResolution.set(res);
+        this.isAnalyzingBug.set(false);
+      },
+      error: (err) => {
+        console.error('AI Bug resolution error:', err);
+        this.isAnalyzingBug.set(false);
+        this.dialog.error('AI Analysis Error', err.error?.message || err.message || 'Failed to analyze bug');
+      },
+    });
+  }
+
+  applyResolutionToDescription(): void {
+    const res = this.aiBugResolution();
+    if (!res) return;
+
+    const currentDesc = this.form.get('description')?.value || '';
+    const resolutionBlock = `\n\n--- [AI Smart Resolution (${res.lang ? res.lang.toUpperCase() : 'TH'})] ---\n` +
+      `[Root Cause]: ${res.rootCause}\n\n` +
+      `[Suggested Fix]:\n${res.suggestedFix}\n\n` +
+      (res.codeSnippet ? `[Code Fix Snippet]:\n${res.codeSnippet}\n\n` : '') +
+      `[Prevention Test]: ${res.preventionTest}\n`;
+
+    this.form.patchValue({ description: (currentDesc + resolutionBlock).trim() });
+    this.form.markAsDirty();
+    this.dialog.success(
+      this.translate.instant('COMMON_SUCCESS_TITLE', { defaultValue: 'สำเร็จ' }),
+      this.translate.instant('PMDT12_AI_APPLY_TO_DESC')
+    );
   }
 }

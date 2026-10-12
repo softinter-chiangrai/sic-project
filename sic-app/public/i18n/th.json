@@ -3023,7 +3023,7 @@
   "PMDT17_ATTACHMENTS_LABEL": "เอกสารแนบ",
   "PMDT15_CUSTOMER_LABEL": "ลูกค้า",
   "PMDT15_CUSTOMER_PLACEHOLDER": "ค้นหาและเลือกลูกค้า",
-  "PMDT15_PROJECT_DERIVED_LABEL": "โครงการ (ผูกอัตโนมัติ)",
+  "PMDT15_PROJECT_DERIVED_LABEL": "โครงการ",
   "PMDT15_PROJECT_LABEL": "โครงการ",
   "PMDT15_PROJECT_PLACEHOLDER": "ค้นหาและเลือกโครงการ",
   "PMDT15_PROMPT_STEP_LABEL": "คำสั่งเพิ่มเติม หรือโฟกัสเนื้อหาที่ต้องการ",

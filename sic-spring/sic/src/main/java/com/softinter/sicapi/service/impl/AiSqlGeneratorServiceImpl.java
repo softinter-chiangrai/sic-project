@@ -11,7 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softinter.sicapi.dto.request.AiDbValidationRequest;
 import com.softinter.sicapi.dto.request.AiGenerateSqlRequest;
+import com.softinter.sicapi.dto.response.AiDbValidationResponse;
 import com.softinter.sicapi.dto.response.AiGenerateSqlResponse;
 import com.softinter.sicapi.entity.pm.PmDiagramSqlHistory;
 import com.softinter.sicapi.repository.PmDiagramSqlHistoryRepository;
@@ -34,6 +36,7 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Pattern SQL_BLOCK_PATTERN = Pattern.compile("```(?:sql)?\\s*([\\s\\S]*?)```", Pattern.MULTILINE);
+    private static final Pattern JSON_BLOCK_PATTERN = Pattern.compile("```(?:json)?\\s*([\\s\\S]*?)```", Pattern.MULTILINE);
 
     @Override
     public String generateSqlWithAi(String xml, String vendor) {
@@ -281,6 +284,141 @@ public class AiSqlGeneratorServiceImpl implements AiSqlGeneratorService {
             return response.trim();
         }
 
+        return null;
+    }
+
+    @Override
+    public AiDbValidationResponse validateDbDesign(AiDbValidationRequest request) {
+        String lang = (request.getLang() != null && request.getLang().equalsIgnoreCase("en")) ? "en" : "th";
+        String vendor = (request.getVendor() != null && !request.getVendor().isBlank()) ? request.getVendor() : "postgresql";
+
+        ErXmlParserServiceImpl.DatabaseModel model;
+        try {
+            model = parser.parse(request.getXml());
+        } catch (Exception e) {
+            log.warn("Failed to parse ER XML for validation: {}", e.getMessage());
+            return AiDbValidationResponse.builder()
+                    .score(0)
+                    .grade("F")
+                    .lang(lang)
+                    .summary(lang.equals("en") ? "Invalid ER diagram XML structure." : "โครงสร้าง ER Diagram XML ไม่ถูกต้อง")
+                    .build();
+        }
+
+        if (model.tables == null || model.tables.isEmpty()) {
+            return AiDbValidationResponse.builder()
+                    .score(0)
+                    .grade("F")
+                    .lang(lang)
+                    .summary(lang.equals("en") ? "No database tables found in diagram." : "ไม่พบตารางฐานข้อมูลใน Diagram")
+                    .build();
+        }
+
+        String structureJson = buildSimplifiedJson(model);
+
+        String systemPrompt = lang.equals("en")
+                ? "You are a Principal Database Architect and Performance DBA. Analyze database schemas for Missing Indexes, Normalization issues (1NF-3NF, BCNF), and Data Type/Constraint risks. Output strictly valid JSON."
+                : "คุณคือ Principal Database Architect และ Performance DBA ผู้เชี่ยวชาญด้านการวิเคราะห์ความเสี่ยงโครงสร้างฐานข้อมูล (Missing Indexes, Normalization 1NF-3NF, Data Types และ Constraints) ตอบกลับเป็น JSON ที่ถูกต้องเท่านั้น";
+
+        String prompt = String.format("""
+            %s
+            Target Database Engine: **%s**
+            Page / Context Name: **%s**
+
+            === DATABASE STRUCTURE (JSON) ===
+            %s
+
+            === TASK REQUIREMENTS ===
+            Thoroughly inspect the database schema and provide an assessment in **%s**:
+            1. **Missing Indexes**: Foreign keys without indexes, high-cardinality search columns.
+            2. **Normalization Risks**: Violation of 1NF, 2NF, or 3NF (e.g., comma-separated values, transitive dependencies, unneeded denormalization).
+            3. **Type & Constraint Risks**: Inappropriate column types (e.g., VARCHAR(255) for enum/status, lack of NOT NULL, missing timestamps or default values).
+            4. **Overall Score**: Integer between 0 and 100.
+            5. **Grade**: Letter grade "A", "B", "C", "D", or "F".
+            6. **Executive Summary**: 2-3 concise sentences explaining the architectural health.
+            7. **Suggested Fix SQL**: Executable DDL statements (e.g. CREATE INDEX ..., ALTER TABLE ...) to remedy the highest priority risks.
+
+            === STRICT JSON OUTPUT FORMAT ===
+            ```json
+            {
+              "score": 85,
+              "grade": "B",
+              "summary": "...",
+              "missingIndexes": [
+                {
+                  "table": "orders",
+                  "column": "customer_id",
+                  "riskLevel": "HIGH",
+                  "issue": "...",
+                  "recommendation": "..."
+                }
+              ],
+              "normalizationRisks": [
+                {
+                  "table": "...",
+                  "column": "...",
+                  "riskLevel": "MEDIUM",
+                  "issue": "...",
+                  "recommendation": "..."
+                }
+              ],
+              "typeAndConstraintRisks": [
+                {
+                  "table": "...",
+                  "column": "...",
+                  "riskLevel": "LOW",
+                  "issue": "...",
+                  "recommendation": "..."
+                }
+              ],
+              "suggestedFixSql": "-- DDL SQL here"
+            }
+            ```
+            Output ONLY the JSON object inside ```json ... ``` codeblock.
+            """,
+            lang.equals("en") ? "Please perform a database design risk validation." : "กรุณาวิเคราะห์ความเสี่ยงของการออกแบบฐานข้อมูลนี้",
+            vendor,
+            request.getPageName() != null ? request.getPageName() : "ER Diagram",
+            structureJson,
+            lang.equals("en") ? "ENGLISH" : "THAI (ภาษาไทย)"
+        );
+
+        String aiRawResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request.getModel());
+        String extractedJson = extractJson(aiRawResponse);
+
+        if (extractedJson != null && !extractedJson.isBlank()) {
+            try {
+                AiDbValidationResponse response = objectMapper.readValue(extractedJson, AiDbValidationResponse.class);
+                response.setLang(lang);
+                return response;
+            } catch (Exception e) {
+                log.error("Failed to parse AI DB validation JSON: {}", e.getMessage());
+            }
+        }
+
+        // Fallback if parsing fails
+        return AiDbValidationResponse.builder()
+                .score(70)
+                .grade("C")
+                .lang(lang)
+                .summary(lang.equals("en")
+                        ? "Design reviewed. Review raw recommendations or re-validate."
+                        : "วิเคราะห์โครงสร้างแล้ว กรุณาตรวจสอบ Foreign Keys และการตั้ง Index เพิ่มเติม")
+                .suggestedFixSql(extractSql(aiRawResponse))
+                .build();
+    }
+
+    private String extractJson(String response) {
+        if (response == null) return null;
+        Matcher matcher = JSON_BLOCK_PATTERN.matcher(response);
+        if (matcher.find()) {
+            return matcher.group(1).trim();
+        }
+        int start = response.indexOf('{');
+        int end = response.lastIndexOf('}');
+        if (start >= 0 && end > start) {
+            return response.substring(start, end + 1).trim();
+        }
         return null;
     }
 }

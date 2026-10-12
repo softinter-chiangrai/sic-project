@@ -42,6 +42,26 @@ public class AiSqlGeneratorController {
         }
     }
 
+    @PostMapping("/validate-db-design")
+    public ResponseEntity<com.softinter.sicapi.dto.response.AiDbValidationResponse> validateDbDesign(
+            @RequestBody com.softinter.sicapi.dto.request.AiDbValidationRequest request) {
+        try {
+            log.info("Validating DB design with AI for page: {}, vendor: {}, lang: {}",
+                    request.getPageName(), request.getVendor(), request.getLang());
+            com.softinter.sicapi.dto.response.AiDbValidationResponse response = aiSqlGeneratorService.validateDbDesign(request);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            log.error("AI DB validation failed", e);
+            com.softinter.sicapi.dto.response.AiDbValidationResponse err = com.softinter.sicapi.dto.response.AiDbValidationResponse.builder()
+                    .score(0)
+                    .grade("F")
+                    .lang(request.getLang())
+                    .summary("Validation failed: " + e.getMessage())
+                    .build();
+            return ResponseEntity.internalServerError().body(err);
+        }
+    }
+
     @GetMapping("/sql-history/{tabId}")
     public ResponseEntity<List<PmDiagramSqlHistory>> getSqlHistory(@PathVariable String tabId) {
         try {

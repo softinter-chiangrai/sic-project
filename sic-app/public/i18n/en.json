@@ -2529,7 +2529,7 @@
   "PMDT12A_TASK_NOT_READY_TITLE": "The linked task is not in the required status",
   "PMDT12A_TASK_NOT_TESTING_MSG": "The test result cannot be saved",
   "PMDT12A_TESTER_LABEL": "Tester",
-  "PMDT12A_TEST_CASE_CODE_LABEL": "General information",
+  "PMDT12A_TEST_CASE_CODE_LABEL": "Test Case Code",
   "PMDT12A_TEST_CASE_DETAILS": "Test Case Details",
   "PMDT12A_TEST_CASE_NOT_FOUND_MSG": "Test case not found",
   "PMDT12A_TEST_CASE_TITLE_LABEL": "Test case title",

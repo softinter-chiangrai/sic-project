@@ -12,4 +12,6 @@ public interface AiSqlGeneratorService {
     AiGenerateSqlResponse processAndSaveSql(AiGenerateSqlRequest request);
 
     List<PmDiagramSqlHistory> getHistoryByTabId(String tabId);
+
+    com.softinter.sicapi.dto.response.AiDbValidationResponse validateDbDesign(com.softinter.sicapi.dto.request.AiDbValidationRequest request);
 }

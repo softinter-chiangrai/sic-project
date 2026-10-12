@@ -7,6 +7,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.lang.reflect.Method;
@@ -14,10 +15,13 @@ import java.lang.reflect.Method;
 @Aspect
 @Component
 @Slf4j
-@RequiredArgsConstructor
 public class AuditLogAspect {
 
     private final AuditLogService auditLogService;
+
+    public AuditLogAspect(@Lazy AuditLogService auditLogService) {
+        this.auditLogService = auditLogService;
+    }
 
     @Around("@annotation(auditLogAnnotation)")
     public Object logAudit(ProceedingJoinPoint joinPoint, AuditLog auditLogAnnotation) throws Throwable {

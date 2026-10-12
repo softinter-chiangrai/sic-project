@@ -61,6 +61,14 @@ public class PmBugController {
         return ResponseEntity.ok(bugService.save(request, businessId, userId));
     }
 
+    @PostMapping("/ai-smart-resolution")
+    public ResponseEntity<com.softinter.sicapi.dto.response.AiBugResolutionResponse> analyzeBugResolution(
+            @RequestBody com.softinter.sicapi.dto.request.AiBugResolutionRequest request) {
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        log.info("Analyzing bug resolution with AI. title: {}, lang: {}", request.getTitle(), request.getLang());
+        return ResponseEntity.ok(bugService.analyzeBugResolution(request, businessId));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         UUID businessId = BusinessContextHolder.getBusinessId();

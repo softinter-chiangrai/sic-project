@@ -87,6 +87,19 @@ export interface DiagramSqlHistoryItem {
               </span>
             }
           </button>
+          <button
+            type="button"
+            class="pb-2.5 text-sm font-medium transition-all relative flex items-center gap-1.5 cursor-pointer"
+            [ngClass]="
+              activeTab() === 'validate'
+                ? 'text-[var(--crm-primary)] font-semibold border-b-2 border-[var(--crm-primary)]'
+                : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'
+            "
+            (click)="activeTab.set('validate')"
+          >
+            <i class="bi bi-shield-check"></i>
+            {{ 'PMDT05_VALIDATE_DB_TAB' | translate }}
+          </button>
         </div>
       </div>
 
@@ -377,6 +390,248 @@ export interface DiagramSqlHistoryItem {
         </div>
       }
 
+      <!-- Tab: Validate DB Design -->
+      @if (activeTab() === 'validate') {
+        <div class="flex-1 overflow-y-auto p-5 space-y-5">
+          <!-- Selection & Language Header -->
+          <div class="p-4 rounded-xl border border-[var(--border)] bg-[var(--bg-muted)]/30 space-y-3">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <sic-combobox
+                  [label]="'PMDT05_SELECT_ER_PAGE_LABEL' | translate"
+                  [options]="pages()"
+                  valueField="id"
+                  textField="name"
+                  [ngModel]="selectedPageId"
+                  (selectionChanged)="onPageSelected($event)"
+                  [placeholder]="'PMDT05_SELECT_ER_PAGE_LABEL' | translate"
+                  [clearable]="false"
+                ></sic-combobox>
+              </div>
+
+              <div>
+                <sic-combobox
+                  [label]="'PMDT05_DB_VENDOR_LABEL' | translate"
+                  [options]="vendorOptions"
+                  valueField="value"
+                  textField="text"
+                  [(ngModel)]="vendor"
+                  [clearable]="false"
+                ></sic-combobox>
+              </div>
+
+              <div>
+                <sic-combobox
+                  [label]="'AI Model'"
+                  [options]="aiModels"
+                  valueField="value"
+                  textField="text"
+                  [(ngModel)]="selectedAiModel"
+                  [clearable]="false"
+                ></sic-combobox>
+              </div>
+            </div>
+
+            <!-- Action & Language Bar -->
+            <div class="flex items-center justify-between pt-2 border-t border-[var(--border)]">
+              <!-- Language Switcher -->
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-[var(--text-muted)] flex items-center gap-1">
+                  <i class="bi bi-translate"></i> Language:
+                </span>
+                <div class="inline-flex rounded-lg border border-[var(--border)] p-0.5 bg-[var(--bg)]">
+                  <button
+                    type="button"
+                    class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer"
+                    [ngClass]="validationLang() === 'th' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text)]'"
+                    (click)="setValidationLang('th')"
+                  >
+                    🇹🇭 ไทย
+                  </button>
+                  <button
+                    type="button"
+                    class="px-2.5 py-1 text-xs font-semibold rounded-md transition-all cursor-pointer"
+                    [ngClass]="validationLang() === 'en' ? 'bg-[var(--crm-primary)] text-white shadow-xs' : 'text-[var(--text-muted)] hover:text-[var(--text)]'"
+                    (click)="setValidationLang('en')"
+                  >
+                    🇬🇧 English
+                  </button>
+                </div>
+              </div>
+
+              <!-- Validate Button -->
+              <sic-button
+                variant="solid"
+                color="primary"
+                size="sm"
+                [disabled]="isValidating() || pages().length === 0"
+                (click)="validateDbDesign()"
+              >
+                @if (isValidating()) {
+                  <span class="inline-block animate-spin mr-1.5"><i class="bi bi-arrow-repeat"></i></span>
+                  {{ 'PMDT05_VALIDATING_DB' | translate }}
+                } @else {
+                  <i class="bi bi-shield-check mr-1.5"></i>
+                  {{ 'PMDT05_VALIDATE_DB_BTN' | translate }}
+                }
+              </sic-button>
+            </div>
+          </div>
+
+          <!-- Result Display -->
+          @if (isValidating()) {
+            <div class="flex flex-col items-center justify-center py-12 gap-3">
+              <div class="w-10 h-10 border-4 border-[var(--border)] border-t-[var(--crm-primary)] rounded-full animate-spin"></div>
+              <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT05_VALIDATING_DB' | translate }}</p>
+            </div>
+          } @else if (validationResult(); as res) {
+            <!-- Score & Summary Banner -->
+            <div class="p-5 rounded-2xl border border-[var(--border)] bg-gradient-to-br from-[var(--bg)] to-[var(--bg-muted)]/40 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div class="space-y-1">
+                <div class="flex items-center gap-2">
+                  <span class="text-xs font-bold uppercase tracking-wider text-[var(--text-muted)]">{{ 'PMDT05_VALIDATION_SCORE' | translate }}</span>
+                  <span
+                    class="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono"
+                    [ngClass]="{
+                      'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20': res.score >= 80,
+                      'bg-amber-500/10 text-amber-600 border border-amber-500/20': res.score >= 60 && res.score < 80,
+                      'bg-rose-500/10 text-rose-600 border border-rose-500/20': res.score < 60
+                    }"
+                  >
+                    Grade {{ res.grade }}
+                  </span>
+                </div>
+                <p class="text-sm text-[var(--text-active)] leading-relaxed font-medium">
+                  {{ res.summary }}
+                </p>
+              </div>
+
+              <div class="flex items-baseline gap-1 px-4 py-2 rounded-xl bg-[var(--bg)] border border-[var(--border)] shrink-0">
+                <span class="text-3xl font-extrabold font-mono" [ngClass]="{
+                  'text-emerald-500': res.score >= 80,
+                  'text-amber-500': res.score >= 60 && res.score < 80,
+                  'text-rose-500': res.score < 60
+                }">{{ res.score }}</span>
+                <span class="text-xs text-[var(--text-muted)] font-mono">/100</span>
+              </div>
+            </div>
+
+            <!-- Risk Categories -->
+            <div class="space-y-4">
+              <!-- 1. Missing Indexes -->
+              <div class="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--bg)]">
+                <div class="px-4 py-3 bg-[var(--bg-muted)]/40 border-b border-[var(--border)] flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)] flex items-center gap-2">
+                    <i class="bi bi-key-fill text-amber-500"></i>
+                    {{ 'PMDT05_MISSING_INDEXES' | translate }}
+                  </h4>
+                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full" [ngClass]="res.missingIndexes?.length > 0 ? 'bg-amber-500/10 text-amber-600' : 'bg-emerald-500/10 text-emerald-600'">
+                    {{ res.missingIndexes?.length || 0 }}
+                  </span>
+                </div>
+                <div class="p-3 space-y-2">
+                  @if (res.missingIndexes?.length > 0) {
+                    @for (item of res.missingIndexes; track $index) {
+                      <div class="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-muted)]/20 text-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-mono font-bold text-[var(--crm-primary)]">{{ item.table }}.{{ item.column }}</span>
+                          <span class="px-2 py-0.5 rounded text-[10px] font-bold" [ngClass]="item.riskLevel === 'HIGH' ? 'bg-rose-500/10 text-rose-600' : 'bg-amber-500/10 text-amber-600'">
+                            {{ item.riskLevel }}
+                          </span>
+                        </div>
+                        <p class="text-[var(--text-active)]">{{ item.issue }}</p>
+                        <p class="text-[var(--text-muted)] italic font-mono">{{ item.recommendation }}</p>
+                      </div>
+                    }
+                  } @else {
+                    <p class="text-xs text-[var(--text-muted)] py-2 text-center">{{ 'PMDT05_NO_RISKS_FOUND' | translate }}</p>
+                  }
+                </div>
+              </div>
+
+              <!-- 2. Normalization Risks -->
+              <div class="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--bg)]">
+                <div class="px-4 py-3 bg-[var(--bg-muted)]/40 border-b border-[var(--border)] flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)] flex items-center gap-2">
+                    <i class="bi bi-diagram-3-fill text-sky-500"></i>
+                    {{ 'PMDT05_NORMALIZATION_RISKS' | translate }}
+                  </h4>
+                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full" [ngClass]="res.normalizationRisks?.length > 0 ? 'bg-sky-500/10 text-sky-600' : 'bg-emerald-500/10 text-emerald-600'">
+                    {{ res.normalizationRisks?.length || 0 }}
+                  </span>
+                </div>
+                <div class="p-3 space-y-2">
+                  @if (res.normalizationRisks?.length > 0) {
+                    @for (item of res.normalizationRisks; track $index) {
+                      <div class="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-muted)]/20 text-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-mono font-bold text-sky-600 dark:text-sky-400">{{ item.table }}</span>
+                          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-500/10 text-sky-600">{{ item.riskLevel }}</span>
+                        </div>
+                        <p class="text-[var(--text-active)]">{{ item.issue }}</p>
+                        <p class="text-[var(--text-muted)] italic">{{ item.recommendation }}</p>
+                      </div>
+                    }
+                  } @else {
+                    <p class="text-xs text-[var(--text-muted)] py-2 text-center">{{ 'PMDT05_NO_RISKS_FOUND' | translate }}</p>
+                  }
+                </div>
+              </div>
+
+              <!-- 3. Types & Constraints -->
+              <div class="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--bg)]">
+                <div class="px-4 py-3 bg-[var(--bg-muted)]/40 border-b border-[var(--border)] flex items-center justify-between">
+                  <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)] flex items-center gap-2">
+                    <i class="bi bi-exclamation-triangle-fill text-indigo-500"></i>
+                    {{ 'PMDT05_TYPE_RISKS' | translate }}
+                  </h4>
+                  <span class="text-xs font-mono font-semibold px-2 py-0.5 rounded-full" [ngClass]="res.typeAndConstraintRisks?.length > 0 ? 'bg-indigo-500/10 text-indigo-600' : 'bg-emerald-500/10 text-emerald-600'">
+                    {{ res.typeAndConstraintRisks?.length || 0 }}
+                  </span>
+                </div>
+                <div class="p-3 space-y-2">
+                  @if (res.typeAndConstraintRisks?.length > 0) {
+                    @for (item of res.typeAndConstraintRisks; track $index) {
+                      <div class="p-3 rounded-lg border border-[var(--border)] bg-[var(--bg-muted)]/20 text-xs space-y-1">
+                        <div class="flex items-center justify-between">
+                          <span class="font-mono font-bold text-indigo-600 dark:text-indigo-400">{{ item.table }}.{{ item.column }}</span>
+                          <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/10 text-indigo-600">{{ item.riskLevel }}</span>
+                        </div>
+                        <p class="text-[var(--text-active)]">{{ item.issue }}</p>
+                        <p class="text-[var(--text-muted)] italic font-mono">{{ item.recommendation }}</p>
+                      </div>
+                    }
+                  } @else {
+                    <p class="text-xs text-[var(--text-muted)] py-2 text-center">{{ 'PMDT05_NO_RISKS_FOUND' | translate }}</p>
+                  }
+                </div>
+              </div>
+
+              <!-- 4. Suggested Fix SQL -->
+              @if (res.suggestedFixSql) {
+                <div class="border border-[var(--border)] rounded-xl overflow-hidden bg-[var(--bg)]">
+                  <div class="px-4 py-3 bg-[var(--bg-muted)]/40 border-b border-[var(--border)] flex items-center justify-between">
+                    <h4 class="text-xs font-bold uppercase tracking-wider text-[var(--text-active)] flex items-center gap-2">
+                      <i class="bi bi-code-slash text-emerald-500"></i>
+                      {{ 'PMDT05_SUGGESTED_FIX_SQL' | translate }}
+                    </h4>
+                    <button
+                      type="button"
+                      class="px-2.5 py-1 text-xs rounded-md bg-[var(--bg-muted)] hover:bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] font-semibold transition-all flex items-center gap-1 cursor-pointer"
+                      (click)="copyValidationSql()"
+                    >
+                      <i class="bi" [ngClass]="copiedValidationSql() ? 'bi-check-lg text-emerald-500' : 'bi-clipboard'"></i>
+                      <span>{{ (copiedValidationSql() ? 'PMDT05_SQL_COPIED' : 'PMDT05_COPY_SQL') | translate }}</span>
+                    </button>
+                  </div>
+                  <pre class="p-3.5 bg-[var(--bg-muted)]/30 text-xs font-mono text-[var(--text)] overflow-auto max-h-48 whitespace-pre-wrap select-all">{{ res.suggestedFixSql }}</pre>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      }
+
       <!-- Footer -->
       <div class="border-t px-5 py-3.5 flex justify-between items-center" style="border-color: var(--border);">
         <span class="text-xs text-[var(--text-muted)]">
@@ -397,7 +652,7 @@ export class SqlExportDialogComponent implements OnInit {
   @Input() xml: string = '';
   @Input() tabId: string = '';
 
-  activeTab = signal<'generate' | 'history'>('generate');
+  activeTab = signal<'generate' | 'history' | 'validate'>('generate');
   pages = signal<DiagramPage[]>([]);
   histories = signal<DiagramSqlHistoryItem[]>([]);
   selectedPageId: string | null = null;
@@ -409,6 +664,12 @@ export class SqlExportDialogComponent implements OnInit {
 
   selectedAiModel = DEFAULT_AI_MODEL;
   aiModels = AI_MODEL_OPTIONS;
+
+  // AI DB Validation Signals
+  isValidating = signal(false);
+  validationResult = signal<any | null>(null);
+  validationLang = signal<'th' | 'en'>('th');
+  copiedValidationSql = signal(false);
 
   genMode: 'FULL' | 'MIGRATION' = 'FULL';
   selectedBaseVersionId: string | null = null;
@@ -612,5 +873,57 @@ export class SqlExportDialogComponent implements OnInit {
 
   close() {
     this.dialogService.close();
+  }
+
+  validateDbDesign() {
+    if (!this.selectedPageId) {
+      this.dialogService.warn(this.translate.instant('PMDT05_NO_PAGE_SELECTED_TITLE'), this.translate.instant('PMDT05_SELECT_PAGE_MSG'));
+      return;
+    }
+
+    const selectedPage = this.pages().find((p) => p.id === this.selectedPageId);
+    if (!selectedPage) {
+      this.dialogService.warn(this.translate.instant('PMDT05_PAGE_NOT_FOUND_TITLE'), this.translate.instant('PMDT05_PAGE_NOT_EXIST_MSG'));
+      return;
+    }
+
+    this.isValidating.set(true);
+    const endpoint = `${environment.apiBaseUrl}/api/ai/validate-db-design`;
+    const payload = {
+      xml: selectedPage.xml,
+      vendor: this.vendor,
+      pageName: selectedPage.name,
+      tabId: this.tabId,
+      lang: this.validationLang(),
+      model: this.selectedAiModel,
+    };
+
+    this.http.post<any>(endpoint, payload).subscribe({
+      next: (res) => {
+        this.validationResult.set(res);
+        this.isValidating.set(false);
+      },
+      error: (err) => {
+        console.error('Validation error:', err);
+        this.isValidating.set(false);
+        const msg = err.error?.summary || err.message || 'Validation failed';
+        this.dialogService.error('Validation Error', msg);
+      },
+    });
+  }
+
+  setValidationLang(lang: 'th' | 'en') {
+    this.validationLang.set(lang);
+    if (this.validationResult()) {
+      this.validateDbDesign();
+    }
+  }
+
+  copyValidationSql() {
+    const sqlText = this.validationResult()?.suggestedFixSql;
+    if (!sqlText) return;
+    this.copyToClipboard(sqlText);
+    this.copiedValidationSql.set(true);
+    setTimeout(() => this.copiedValidationSql.set(false), 2000);
   }
 }

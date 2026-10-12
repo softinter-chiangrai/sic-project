@@ -67,6 +67,16 @@
         ></sic-combobox>
 
         <sic-combobox
+          [label]="'PMDT16A_LBL_CONTRACT' | translate"
+          [placeholder]="'PMDT16A_PH_CONTRACT' | translate"
+          [options]="contractOptions()"
+          valueField="value"
+          displayField="text"
+          [clearable]="true"
+          formControlName="contractId"
+        ></sic-combobox>
+
+        <sic-combobox
           [label]="'PMDT16A_LBL_BILLING_TYPE' | translate"
           [required]="true"
           [items]="billingTypeOptions"
@@ -92,16 +102,6 @@
           [required]="true"
           formControlName="dueDate"
         ></sic-datepicker>
-
-        <sic-combobox
-          [label]="'PMDT16A_LBL_CONTRACT' | translate"
-          [placeholder]="'PMDT16A_PH_CONTRACT' | translate"
-          [options]="contractOptions()"
-          valueField="value"
-          displayField="text"
-          [clearable]="true"
-          formControlName="contractId"
-        ></sic-combobox>
       </div>
     </div>
 
