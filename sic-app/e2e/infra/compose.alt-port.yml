@@ -1,0 +1,5 @@
+# Publishes the test backend on E2E_API_PORT instead of :5265 (the app itself still listens on 5265 inside the container).
+services:
+  sic-spring:
+    ports: !override
+      - "${E2E_API_PORT}:5265"

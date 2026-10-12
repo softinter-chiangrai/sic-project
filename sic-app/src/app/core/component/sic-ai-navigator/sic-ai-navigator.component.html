@@ -210,7 +210,14 @@
         </div>
 
         <!-- Message Bubble -->
-        <div class="ai-nav-bubble" *ngIf="msg.text">{{ msg.text }}</div>
+        <div class="ai-nav-bubble" *ngIf="msg.text">
+          <ng-container *ngIf="msg.i18nKey; else fallbackMsg">
+            {{ msg.i18nKey | translate }}
+          </ng-container>
+          <ng-template #fallbackMsg>
+            {{ isInitialWelcome(msg.text) ? ('AI_NAV_INITIAL_WELCOME' | translate) : msg.text }}
+          </ng-template>
+        </div>
 
         <!-- Route Suggestions -->
         <div class="ai-nav-routes" *ngIf="msg.routes?.length">

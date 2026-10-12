@@ -26,6 +26,7 @@ export interface AiNavigatorMessage {
   id?: string;
   role: 'user' | 'ai';
   text: string;
+  i18nKey?: string;
   routes?: AiRouteSuggestion[];
   attachments?: AiMessageAttachment[];
   timestamp?: string;
@@ -51,8 +52,10 @@ const STORAGE_KEY_SESSIONS = 'sic_ai_navigator_sessions_v1';
 const STORAGE_KEY_ACTIVE_ID = 'sic_ai_navigator_active_id_v1';
 const STORAGE_KEY_SELECTED_MODEL = 'sic_ai_navigator_model_v1';
 
-const INITIAL_WELCOME_TEXT =
+export const INITIAL_WELCOME_TEXT =
   'สวัสดีครับ ผมคือผู้ช่วย AI นำทางระบบ SIC ถามขั้นตอนการใช้งาน หรือบอกว่าอยากไปหน้าไหน/อยากสร้างข้อมูลอะไรได้เลยครับ';
+export const EN_WELCOME_TEXT =
+  'Hello! I am the SIC AI System Navigator. Ask about system workflows or tell me where you would like to go.';
 const NEW_SESSION_TITLE_FALLBACK = 'บทสนทนาใหม่';
 const DEFAULT_SESSION_TITLE_FALLBACK = 'บทสนทนา';
 const ATTACHMENT_TITLE_PREFIX_FALLBACK = 'แนบไฟล์: ';
@@ -69,6 +72,7 @@ function createDefaultSession(model: string, welcomeText: string, title: string)
       {
         role: 'ai',
         text: welcomeText,
+        i18nKey: 'AI_NAV_INITIAL_WELCOME',
         timestamp: now,
       },
     ],
@@ -326,7 +330,16 @@ export class AiNavigatorService {
   }
 
   private loadInitialSessions(): AiChatSession[] {
-    return readLocalStorageList<AiChatSession>(STORAGE_KEY_SESSIONS);
+    const list = readLocalStorageList<AiChatSession>(STORAGE_KEY_SESSIONS);
+    return list.map((session) => ({
+      ...session,
+      messages: (session.messages || []).map((m) => {
+        if (!m.i18nKey && (m.text === INITIAL_WELCOME_TEXT || m.text === EN_WELCOME_TEXT)) {
+          return { ...m, i18nKey: 'AI_NAV_INITIAL_WELCOME' };
+        }
+        return m;
+      }),
+    }));
   }
 
   private loadInitialActiveId(): string {

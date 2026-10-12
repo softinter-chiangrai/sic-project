@@ -13,7 +13,7 @@ export default defineConfig({
   retries: 1, // UI steps depend on a loaded dev machine; a real defect fails twice
   globalSetup: './e2e/global.setup.ts', // backend -> throwaway DB sic_app_e2e
   reporter: [['list'], ['html', { open: 'never' }]],
-  use: { actionTimeout: 15_000, baseURL: 'http://localhost:4200', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
+  use: { launchOptions: { args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream'] }, actionTimeout: 15_000, baseURL: 'http://localhost:4200', trace: 'retain-on-failure', screenshot: 'only-on-failure' },
   webServer: apiOnly ? undefined : { command: 'npm start', url: 'http://localhost:4200', reuseExistingServer: true, timeout: 300_000 },
   projects: [
     // api: no Angular dev server needed. ui/pages: log in through the app.

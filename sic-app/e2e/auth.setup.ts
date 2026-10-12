@@ -3,6 +3,7 @@ import * as crypto from 'node:crypto';
 import { test as setup, expect, type Page } from '@playwright/test';
 import { ensureSecondUser, SECOND_PASS, SECOND_USER } from './infra/keycloak';
 import { FIRST_TOKEN, SECOND_TOKEN } from './api';
+import { reroute } from './ui';
 
 const KC = 'http://localhost:8080/realms/sic-project/protocol/openid-connect';
 const REDIRECT = 'http://localhost:4200/auth/callback';
@@ -16,6 +17,7 @@ async function fillLogin(page: Page, user = process.env['E2E_USER']!, pass = pro
 // ---- UI session (needs the Angular dev server) ----
 setup('login via Keycloak', async ({ page }) => {
   setup.setTimeout(240_000); // cold Vite dev server re-optimizes deps and reloads
+  await reroute(page.context());
   await page.route((u) => u.hostname !== 'localhost', (r) => r.abort()); // external fonts/CDN can hang rendering
   await page.goto('/feature/dashboard');
   await page.waitForURL(/realms\/sic-project/);
@@ -25,6 +27,20 @@ setup('login via Keycloak', async ({ page }) => {
   await page.context().storageState({ path: 'e2e/.auth/user.json' });
   // oauth tokens live in sessionStorage, which storageState does not keep
   fs.writeFileSync('e2e/.auth/session.json', await page.evaluate(() => JSON.stringify(sessionStorage)));
+});
+
+// Second user in the browser (for two-window tests such as chat).
+setup('login second user via Keycloak', async ({ page }) => {
+  setup.setTimeout(240_000);
+  await ensureSecondUser();
+  await reroute(page.context());
+  await page.route((u) => u.hostname !== 'localhost', (r) => r.abort());
+  await page.goto('/feature/dashboard');
+  await page.waitForURL(/realms\/sic-project/);
+  await fillLogin(page, SECOND_USER, SECOND_PASS);
+  await page.waitForURL(/localhost:4200\/(?!auth)/);
+  await page.context().storageState({ path: 'e2e/.auth/user2.json' });
+  fs.writeFileSync('e2e/.auth/session2.json', await page.evaluate(() => JSON.stringify(sessionStorage)));
 });
 
 // ---- API session: Keycloak client has no password grant, so do the browser code flow (PKCE) by hand.

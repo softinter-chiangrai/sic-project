@@ -1,7 +1,9 @@
 import * as fs from 'node:fs';
 import { request, type APIRequestContext } from '@playwright/test';
 
-export const API = 'http://localhost:5265';
+// E2E_API_PORT lets the test backend run beside a backend you started yourself on :5265 (API tests only; the Angular app is built against :5265)
+export const API_PORT = process.env['E2E_API_PORT'] ?? '5265';
+export const API = `http://localhost:${API_PORT}`;
 const TOKEN_URL = 'http://localhost:8080/realms/sic-project/protocol/openid-connect/token';
 export const FIRST_TOKEN = 'e2e/.auth/api-token.json';
 export const SECOND_TOKEN = 'e2e/.auth/api-token-2.json';
@@ -22,6 +24,9 @@ async function token(file = FIRST_TOKEN): Promise<string> {
   cache.set(file, { access: j.access_token, exp: Date.now() + j.expires_in * 1000 });
   return j.access_token;
 }
+
+/** Access token of a test user (for clients that are not the REST helper, e.g. WebSocket). */
+export const accessToken = (file = FIRST_TOKEN) => token(file);
 
 /** Keycloak user id (JWT sub) of the test user. */
 export async function userId(file = FIRST_TOKEN): Promise<string> {

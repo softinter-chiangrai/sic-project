@@ -37,6 +37,7 @@ public class ChatController {
     private final SuChatGroupLogRepository chatGroupLogRepository;
     private final CurrentUserService currentUserService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final jakarta.persistence.EntityManager em;
 
     private final SuUserBusinessService userBusinessService;
     private final UserSessionTracker userSessionTracker;
@@ -75,6 +76,7 @@ public class ChatController {
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage());
         chatLog.setMessageType(request.getMessageType());
+        chatLog.setAttachment(attachmentRef(request.getAttachmentId()));
         chatLog.setBusinessId(businessId);
         chatLog.setIsRead(false);
         chatLog.setCreatedDate(Instant.now());
@@ -83,6 +85,20 @@ public class ChatController {
         ChatMessageResponse response = toChatMessageResponse(chatLog);
         messagingTemplate.convertAndSendToUser(request.getReceiverId(), "/queue/messages", response);
         return ResponseEntity.ok(response);
+    }
+
+    /** attachment_id is written through the relation; the plain UUID field is read-only (insertable=false), so setting only that stored nothing. */
+    private com.softinter.sicapi.entity.su.SuUpload attachmentRef(java.util.UUID id) {
+        return id == null ? null : em.getReference(com.softinter.sicapi.entity.su.SuUpload.class, id);
+    }
+
+    /** Group endpoints take a bare group id: refuse anyone who is not in that group (read, post, list, change). */
+    private void requireGroupMember(UUID groupId) {
+        String userId = currentUserService.getUserId();
+        boolean member = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId).stream().anyMatch((m) -> userId != null && userId.equals(m.getUserId()));
+        if (!member) {
+            throw new org.springframework.security.access.AccessDeniedException("คุณไม่ได้เป็นสมาชิกของกลุ่มนี้");
+        }
     }
 
     // ========== Chat Groups ==========
@@ -122,6 +138,7 @@ public class ChatController {
     @GetMapping("/group/{groupId}/history")
     @Operation(summary = "Get group chat history")
     public ResponseEntity<List<ChatGroupMessageResponse>> getGroupChatHistory(@PathVariable UUID groupId) {
+        requireGroupMember(groupId);
         List<ChatGroupMessageResponse> messages = chatGroupLogRepository
                 .findByGroupIdAndIsDeleteFalseOrderByCreatedDateAsc(groupId)
                 .stream()
@@ -189,6 +206,7 @@ public class ChatController {
     @PostMapping("/group/update")
     @Operation(summary = "Update chat group (rename and add/remove members)")
     public ResponseEntity<ChatGroupResponse> updateGroup(@RequestBody UpdateGroupRequest request) {
+        requireGroupMember(request.getGroupId());
         String currentUserId = currentUserService.getUserId();
         SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
@@ -255,6 +273,7 @@ public class ChatController {
     @PostMapping("/group/send")
     @Operation(summary = "Send group message")
     public ResponseEntity<ChatGroupMessageResponse> sendGroupMessage(@RequestBody GroupMessageRequest request) {
+        requireGroupMember(request.getGroupId());
         String currentUserId = currentUserService.getUserId();
         String currentUsername = currentUserService.getUsername();
 
@@ -272,6 +291,7 @@ public class ChatController {
         log.setSenderName(currentUsername);
         log.setMessage(request.getMessage());
         log.setMessageType(request.getMessageType());
+        log.setAttachment(attachmentRef(request.getAttachmentId()));
         log.setBusinessId(businessId);
         log.setCreatedDate(Instant.now());
         chatGroupLogRepository.save(log);
@@ -284,6 +304,7 @@ public class ChatController {
     @GetMapping("/group/{groupId}/members")
     @Operation(summary = "Get group members")
     public ResponseEntity<List<ChatMemberResponse>> getGroupMembers(@PathVariable UUID groupId) {
+        requireGroupMember(groupId);
         List<ChatMemberResponse> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId)
                 .stream()
                 .map(this::toMemberResponse)

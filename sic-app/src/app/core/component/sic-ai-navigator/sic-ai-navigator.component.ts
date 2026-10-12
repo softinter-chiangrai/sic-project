@@ -4,7 +4,14 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, AiModelOption } from '../../config/ai-models.config';
 import { AiModelsService } from '../../services/ai-models.service';
-import { AiChatSession, AiNavigatorMessage, AiNavigatorService, AiRouteSuggestion } from '../../services/ai-navigator.service';
+import {
+  AiChatSession,
+  AiNavigatorMessage,
+  AiNavigatorService,
+  AiRouteSuggestion,
+  INITIAL_WELCOME_TEXT,
+  EN_WELCOME_TEXT,
+} from '../../services/ai-navigator.service';
 import { AiProjectPipelineService } from '../../services/ai-project-pipeline.service';
 import { filesToAiAttachments } from '../../utils/ai-attachment.util';
 import { DialogService } from '../../services/dialog.service';
@@ -335,6 +342,10 @@ export class SicAiNavigatorComponent implements OnInit {
 
   trackMsg(index: number, msg: AiNavigatorMessage): string {
     return msg.id || (index + '-' + msg.role + '-' + (msg.timestamp || ''));
+  }
+
+  isInitialWelcome(text?: string): boolean {
+    return text === INITIAL_WELCOME_TEXT || text === EN_WELCOME_TEXT;
   }
 
   trackSession(_index: number, session: AiChatSession): string {

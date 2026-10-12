@@ -44,6 +44,7 @@ public class ChatWebSocketController {
     private final SuChatGroupLogRepository chatGroupLogRepository;
     private final SuChatGroupMemberRepository chatGroupMemberRepository;
     private final CurrentUserService currentUserService;
+    private final jakarta.persistence.EntityManager em;
     private final SuUserBusinessService userBusinessService;
 
     private String[] resolveUser(Principal principal) {
@@ -112,7 +113,7 @@ public class ChatWebSocketController {
         chatLog.setReceiverId(request.getReceiverId());
         chatLog.setMessage(request.getMessage() != null ? request.getMessage() : "");
         chatLog.setMessageType(request.getMessageType() != null ? request.getMessageType() : ChatMessageType.TEXT);
-        chatLog.setAttachmentId(request.getAttachmentId());
+        chatLog.setAttachment(attachmentRef(request.getAttachmentId()));
         chatLog.setIsRead(false);
         chatLog.setIsCancelled(false);
         chatLog.setCreatedDate(Instant.now());
@@ -140,6 +141,10 @@ public class ChatWebSocketController {
 
         SuChatGroup group = chatGroupRepository.findById(request.getGroupId())
                 .orElseThrow(() -> new RuntimeException("Group not found"));
+        if (!isMember(group.getId(), currentUserId)) {
+            log.warn("sendGroupMessage refused: {} is not a member of {}", currentUserId, group.getId());
+            return;
+        }
 
         UUID businessId = group.getBusinessId() != null ? group.getBusinessId() : resolveBusinessId(currentUserId);
 
@@ -150,7 +155,7 @@ public class ChatWebSocketController {
         logMsg.setSenderName(currentUsername);
         logMsg.setMessage(request.getMessage() != null ? request.getMessage() : "");
         logMsg.setMessageType(request.getMessageType() != null ? request.getMessageType() : ChatMessageType.TEXT);
-        logMsg.setAttachmentId(request.getAttachmentId());
+        logMsg.setAttachment(attachmentRef(request.getAttachmentId()));
         logMsg.setIsCancelled(false);
         logMsg.setCreatedDate(Instant.now());
 
@@ -250,12 +255,9 @@ public class ChatWebSocketController {
         String currentUserId = user[0];
         String currentUsername = user[1];
 
-        if (signal.getCallerId() == null || signal.getCallerId().isBlank()) {
-            signal.setCallerId(currentUserId);
-        }
-        if (signal.getCallerName() == null || signal.getCallerName().isBlank()) {
-            signal.setCallerName(currentUsername);
-        }
+        // never trust the identity in the payload: the receiver is told who really called
+        signal.setCallerId(currentUserId);
+        signal.setCallerName(currentUsername);
 
         String action = signal.getAction();
         log.info("📞 WebRTC Signal: action={}, callerId={}, targetUserId={}, groupId={}",
@@ -266,6 +268,10 @@ public class ChatWebSocketController {
                 // Group Call: Broadcast to all group members except caller
                 UUID groupId = UUID.fromString(signal.getGroupId());
                 List<SuChatGroupMember> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId);
+                if (members.stream().noneMatch((m) -> m.getUserId().equals(currentUserId))) {
+                    log.warn("group call refused: {} is not a member of {}", currentUserId, groupId);
+                    return;
+                }
                 for (SuChatGroupMember member : members) {
                     if (!member.getUserId().equals(currentUserId)) {
                         log.info("📞 Forwarding group call to user: {}", member.getUserId());
@@ -287,6 +293,9 @@ public class ChatWebSocketController {
                 try {
                     UUID groupId = UUID.fromString(signal.getGroupId());
                     List<SuChatGroupMember> members = chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId);
+                    if (members.stream().noneMatch((m) -> m.getUserId().equals(currentUserId))) {
+                        return; // only a member can end a group call
+                    }
                     for (SuChatGroupMember member : members) {
                         if (!member.getUserId().equals(currentUserId)) {
                             messagingTemplate.convertAndSendToUser(member.getUserId(), "/queue/call", signal);
@@ -312,6 +321,15 @@ public class ChatWebSocketController {
                 chatLogRepository.save(callLog);
             }
         }
+    }
+
+    /** attachment_id is written through the relation; the plain UUID field is read-only (insertable=false), so setting only that stored nothing. */
+    private com.softinter.sicapi.entity.su.SuUpload attachmentRef(java.util.UUID id) {
+        return id == null ? null : em.getReference(com.softinter.sicapi.entity.su.SuUpload.class, id);
+    }
+
+    private boolean isMember(UUID groupId, String userId) {
+        return userId != null && chatGroupMemberRepository.findByGroupIdAndIsDeleteFalse(groupId).stream().anyMatch((m) -> userId.equals(m.getUserId()));
     }
 
     private ChatMessageResponse toChatMessageResponse(SuChatLog logMsg) {

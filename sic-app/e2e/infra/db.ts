@@ -5,6 +5,9 @@ import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';
 
 const E2E_DB = 'sic_app_e2e';
+// Optional second port: run the test backend next to one you started yourself on :5265 (it uses your real DB, so never reuse that one)
+const ALT_PORT = process.env['E2E_API_PORT'];
+const PORT = ALT_PORT ?? '5265';
 const root = path.resolve(process.cwd(), '..'); // repo root (docker-compose.yml); always run from sic-app
 // spawnSync can fail transiently on Windows under memory pressure (UNKNOWN) -> retry
 const sh = (cmd: string, args: string[], env: Record<string, string> = {}) => {
@@ -29,7 +32,7 @@ export function isUp() {
 async function waitBackend() {
   for (let i = 0; i < 90; i++) {
     try {
-      const r = await fetch('http://localhost:5265/api/business/activation');
+      const r = await fetch(`http://localhost:${PORT}/api/business/activation`);
       if (r.status === 401) return; // up (auth required)
     } catch {}
     await new Promise((r) => setTimeout(r, 4000));
@@ -40,15 +43,24 @@ async function waitBackend() {
 export async function up() {
   if (isUp()) return;
   if (!psql(`select 1 from pg_database where datname='${E2E_DB}'`)) psql(`CREATE DATABASE ${E2E_DB} OWNER "sic-app"`);
-  sh('docker', ['compose', 'up', '-d', 'sic-spring'], { SIC_APP_DB_NAME: E2E_DB });
+  sh(
+    'docker',
+    ['compose', '-f', 'docker-compose.yml', ...(ALT_PORT ? ['-f', 'sic-app/e2e/infra/compose.alt-port.yml'] : []), 'up', '-d', 'sic-spring'],
+    { SIC_APP_DB_NAME: E2E_DB, ...(ALT_PORT ? { E2E_API_PORT: ALT_PORT } : {}) },
+  );
   await waitBackend();
 }
 
 export async function down() {
-  const env: NodeJS.ProcessEnv = { ...process.env };
-  delete env.SIC_APP_DB_NAME;
-  execFileSync('docker', ['compose', 'up', '-d', 'sic-spring'], { cwd: root, env, stdio: 'ignore' }); // back to real DB
-  await waitBackend();
+  if (ALT_PORT) {
+    // :5265 belongs to someone else here: just remove the test container (start the compose one yourself when you need it)
+    sh('docker', ['rm', '-f', 'sic-spring-backend']);
+  } else {
+    const env: NodeJS.ProcessEnv = { ...process.env };
+    delete env.SIC_APP_DB_NAME;
+    execFileSync('docker', ['compose', 'up', '-d', 'sic-spring'], { cwd: root, env, stdio: 'ignore' }); // back to real DB
+    await waitBackend();
+  }
   psql(`DROP DATABASE IF EXISTS ${E2E_DB} WITH (FORCE)`);
 }
 
