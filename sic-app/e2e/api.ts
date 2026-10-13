@@ -53,6 +53,15 @@ export class Api {
     return { status: r.status(), body };
   }
 
+  /** GET a binary response (PDF export): the other helpers decode the body as text, which would corrupt it */
+  async bytes(path: string, params?: Record<string, string | number>): Promise<{ status: number; data: Buffer }> {
+    this.ctx ??= await request.newContext({ baseURL: API });
+    const headers: Record<string, string> = { Authorization: `Bearer ${await token(this.tokenFile)}` };
+    if (this.businessId) headers['X-Business-Id'] = this.businessId;
+    const r = await this.ctx.fetch(path, { timeout: 120_000, method: 'GET', headers, params });
+    return { status: r.status(), data: await r.body() };
+  }
+
   /** multipart upload, e.g. upload('/api/storage/upload/image', { file: { name, mimeType, buffer } }) */
   upload = <T = any>(path: string, multipart: Record<string, string | { name: string; mimeType: string; buffer: Buffer }>) => this.call<T>('POST', path, { multipart });
   get = <T = any>(path: string, params?: Record<string, string | number>) => this.call<T>('GET', path, { params });
