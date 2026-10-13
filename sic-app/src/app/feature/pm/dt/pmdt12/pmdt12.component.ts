@@ -1026,19 +1026,31 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   }
 
   // ===== Badges & Utilities =====
+  isFailedTest(testCaseOrStatus?: PmTestCaseModel | string): boolean {
+    if (!testCaseOrStatus) return false;
+    const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus.testStatus;
+    const s = (status || '').toLowerCase().trim();
+    return s === 'fail' || s === 'failed';
+  }
+
   isWaitingRetest(testCaseOrStatus?: PmTestCaseModel | string): boolean {
     if (!testCaseOrStatus || typeof testCaseOrStatus === 'string') return false;
-    const s = (testCaseOrStatus.testStatus || '').toLowerCase();
-    const isFailed = s === 'fail' || s === 'failed';
-    return isFailed && !this.hasActiveBug(testCaseOrStatus);
+    const isFailed = this.isFailedTest(testCaseOrStatus);
+    if (!isFailed || this.hasActiveBug(testCaseOrStatus)) return false;
+    // Test case is only waiting for retest if bugs WERE created and are now all resolved
+    const allBugs = this.getBugsForTestCase(testCaseOrStatus);
+    return allBugs.length > 0;
   }
 
   getStatusClass(testCaseOrStatus?: PmTestCaseModel | string): string {
+    if (testCaseOrStatus && typeof testCaseOrStatus !== 'string' && this.hasActiveBug(testCaseOrStatus)) {
+      return 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-300 dark:border-rose-800';
+    }
     if (this.isWaitingRetest(testCaseOrStatus)) {
       return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300 border border-blue-200 dark:border-blue-800';
     }
     const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus?.testStatus;
-    const s = (status || '').toLowerCase();
+    const s = (status || '').toLowerCase().trim();
     switch (s) {
       case 'pass':
       case 'passed':
@@ -1055,11 +1067,14 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   }
 
   getStatusText(testCaseOrStatus?: PmTestCaseModel | string): string {
+    if (testCaseOrStatus && typeof testCaseOrStatus !== 'string' && this.hasActiveBug(testCaseOrStatus)) {
+      return 'พบ Bug';
+    }
     if (this.isWaitingRetest(testCaseOrStatus)) {
       return 'รอ Re-test';
     }
     const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus?.testStatus;
-    const s = (status || '').toLowerCase();
+    const s = (status || '').toLowerCase().trim();
     switch (s) {
       case 'pass':
       case 'passed':
@@ -1076,11 +1091,14 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   }
 
   getStatusIcon(testCaseOrStatus?: PmTestCaseModel | string): string {
+    if (testCaseOrStatus && typeof testCaseOrStatus !== 'string' && this.hasActiveBug(testCaseOrStatus)) {
+      return 'bi-bug-fill text-rose-500';
+    }
     if (this.isWaitingRetest(testCaseOrStatus)) {
       return 'bi-arrow-repeat text-blue-500';
     }
     const status = typeof testCaseOrStatus === 'string' ? testCaseOrStatus : testCaseOrStatus?.testStatus;
-    const s = (status || '').toLowerCase();
+    const s = (status || '').toLowerCase().trim();
     switch (s) {
       case 'pass':
       case 'passed':
@@ -1165,12 +1183,13 @@ export class Pmdt12Component implements OnInit, OnDestroy {
       return 'complete';
     }
 
-    // 3. If there are failed test cases but ALL bugs have been resolved, status is 'testing' (ready for re-test)
+    // 3. If there are failed test cases and bugs were created and all resolved -> status is 'testing' (ready for re-test)
     const anyFailed = relevantCases.some((c) => {
       const st = (c.testStatus || '').toLowerCase();
       return st === 'fail' || st === 'failed';
     });
-    if (anyFailed && !anyActiveBug) {
+    const hadAnyBugs = relevantCases.some((c) => this.getBugsForTestCase(c).length > 0);
+    if (anyFailed && hadAnyBugs && !anyActiveBug) {
       return 'testing';
     }
 

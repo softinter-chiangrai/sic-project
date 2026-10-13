@@ -477,6 +477,17 @@
                               </button>
                             }
                           }
+                          <!-- Bug Button: When test case is Failed and has NO active bugs yet -> allow opening Bug -->
+                          @if (isFailedTest(testCase) && !hasActiveBug(testCase)) {
+                            <button
+                              (click)="goToCreateBug(testCase, $event)"
+                              class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                              title="คลิกเพื่อเปิด Bug จากผลการทดสอบที่ไม่ผ่าน"
+                            >
+                              <i class="bi bi-bug-fill text-xs"></i>
+                              <span>เปิด Bug</span>
+                            </button>
+                          }
                           <!-- Bug Button & Badges when test case has Active Bugs -->
                           @if (hasActiveBug(testCase)) {
                             <button

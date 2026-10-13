@@ -2,7 +2,7 @@
   "cookies": [
     {
       "name": "AUTH_SESSION_ID",
-      "value": "N2Frc1F3bDdKU2dIZ2RTeVNSS1gtX2tFLkg4LWVXN1JrVzlGS2hKQXN0LU9FeHJYS0xJUHU2N0U3ak9sUnlfSG5MbkxnbkY2YVQ2SVhIQ25CT1h2SVJpdHJPd01FZUozSTBXVXEyUTdqRTJzeUxn",
+      "value": "NWxpOUhkZjI0Ul9VeU5MeVhXY0hra240Ll9jakNSd29hQ2djelBtV2gyMVhOU1lVVDd5cktnZjR6V05rS2E2ZVVIbXJuRlFCOGswS3paYXhNOUVXV0s0YlczOTI0UVBBdkwzcHBleF9fTXFUa1J3",
       "domain": "localhost",
       "path": "/realms/sic-project/",
       "expires": -1,
@@ -12,17 +12,17 @@
     },
     {
       "name": "KC_AUTH_SESSION_HASH",
-      "value": "\"Jh13Wot8wZ3ccqoGB6LGAq+7WCDPpm8kAvyB0aipkWrTmUsf21ukYi/jcYHptPz3\"",
+      "value": "5txGkSToyjzsO6Wvi4ehQHM781ULDxFjEUWc7EGDRDyZwlr+2L87gZZQMMnlHzeu",
       "domain": "localhost",
       "path": "/realms/sic-project/",
-      "expires": 1791860834.284753,
+      "expires": 1791864150.555911,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     },
     {
       "name": "KEYCLOAK_IDENTITY",
-      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTY0Nzk0ZS0wNmQ0LTQ0YjEtOGQxNS04NjJlYWIwNTJlZDEifQ.eyJleHAiOjE3OTE4OTY3NzUsImlhdCI6MTc5MTg2MDc3NSwianRpIjoiNTQ4MTU4YjQtOGM5Zi03Y2ZjLTUwY2ItYmZiZDliODU1NzZkIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9zaWMtcHJvamVjdCIsInN1YiI6IjQwMzA0NjI3LWUxZmQtNGNlYy1iOWRiLTIzMzRkNjk2MDgzMCIsInR5cCI6IlNlcmlhbGl6ZWQtSUQiLCJzaWQiOiI3YWtzUXdsN0pTZ0hnZFN5U1JLWC1fa0UiLCJzdGF0ZV9jaGVja2VyIjoid2wtRW5vR1ctTDhuRkdzX1d1RHVQM21XNERvaFpyUVNJWU14a01JV2k0byJ9.hzGfc2NE4nWrB1UjTqxoNGM9GvVEM47qeFqkO9YDQ-pj1eA-WvSQE1U8Ks8b2GusL9U-rmrrVltSbSBe6kpq5g",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTY0Nzk0ZS0wNmQ0LTQ0YjEtOGQxNS04NjJlYWIwNTJlZDEifQ.eyJleHAiOjE3OTE5MDAwOTUsImlhdCI6MTc5MTg2NDA5NSwianRpIjoiNjUyZGQ5YzMtMGI5NC1hNGNiLWE3OTgtMTg5OTdhYjU1YjUyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9zaWMtcHJvamVjdCIsInN1YiI6IjQwMzA0NjI3LWUxZmQtNGNlYy1iOWRiLTIzMzRkNjk2MDgzMCIsInR5cCI6IlNlcmlhbGl6ZWQtSUQiLCJzaWQiOiI1bGk5SGRmMjRSX1V5Tkx5WFdjSGtrbjQiLCJzdGF0ZV9jaGVja2VyIjoiUXRZbkppa29UT2ZZY3ZqNEg2VFE4Q1ZYR0N0Mjk1MHkyUVlyNFIzLTNZOCJ9.YbGH9skH9UQjmLG11ySp-7gguFxjstP7PU6dCw9z9t2T_8wtxdnSbhqOoupLQ3BPrHk-DTAan2i0PwqCXKa7Ng",
       "domain": "localhost",
       "path": "/realms/sic-project/",
       "expires": -1,
@@ -32,14 +32,36 @@
     },
     {
       "name": "KEYCLOAK_SESSION",
-      "value": "Jh13Wot8wZ3ccqoGB6LGAq-7WCDPpm8kAvyB0aipkWrTmUsf21ukYi_jcYHptPz3",
+      "value": "5txGkSToyjzsO6Wvi4ehQHM781ULDxFjEUWc7EGDRDyZwlr-2L87gZZQMMnlHzeu",
       "domain": "localhost",
       "path": "/realms/sic-project/",
-      "expires": 1791896775.55236,
+      "expires": 1791900096.266853,
       "httpOnly": false,
       "secure": true,
       "sameSite": "None"
     }
   ],
-  "origins": []
+  "origins": [
+    {
+      "origin": "http://localhost:4200",
+      "localStorage": [
+        {
+          "name": "sic_ai_navigator_sessions_v1",
+          "value": "[{\"id\":\"session_1791864109295_q1org\",\"title\":\"New Chat\",\"createdAt\":\"2026-10-13T04:01:49.293Z\",\"updatedAt\":\"2026-10-13T04:01:49.293Z\",\"model\":\"\",\"messages\":[{\"role\":\"ai\",\"text\":\"Hello! I am the SIC AI System Navigator. Ask about system workflows or tell me where you would like to go.\",\"i18nKey\":\"AI_NAV_INITIAL_WELCOME\",\"timestamp\":\"2026-10-13T04:01:49.293Z\"}]}]"
+        },
+        {
+          "name": "sic_ai_navigator_active_id_v1",
+          "value": "session_1791864109295_q1org"
+        },
+        {
+          "name": "expandedMenus",
+          "value": "[]"
+        },
+        {
+          "name": "businessId",
+          "value": "f21237c9-ef68-49f1-88d7-67ebe857b3e1"
+        }
+      ]
+    }
+  ]
 }

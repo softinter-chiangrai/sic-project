@@ -635,6 +635,22 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       state: isEditMode ? 3 : 4,
       taskStatus: rawVal.taskStatus || this.linkedTaskStatus() || undefined,
     };
+
+    const st = (data.testStatus || '').toLowerCase().trim();
+    if (this.isExecution() && (st === 'fail' || st === 'failed')) {
+      this.dialog.confirm(
+        'ผลการทดสอบไม่ผ่าน (Test Failed)',
+        'ผลการทดสอบไม่ผ่าน ต้องการสร้าง Bug Task และส่งกลับไปยังทีมพัฒนาเพื่อทำการแก้ไขทันทีหรือไม่?'
+      ).then((confirmed) => {
+        if (confirmed) {
+          this.createBugTaskAndSave(data);
+        } else {
+          this.saveExecution(data);
+        }
+      });
+      return;
+    }
+
     this.saveExecution(data);
   }
 

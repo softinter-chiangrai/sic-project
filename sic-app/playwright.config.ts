@@ -1,7 +1,11 @@
+import fs from 'node:fs';
 import process from 'node:process';
 import { defineConfig } from '@playwright/test';
 
-try { process.loadEnvFile('e2e/.env.local'); } catch {}
+const envLocal = fs.existsSync('e2e/.env.local') ? 'e2e/.env.local' : 'sic-app/e2e/.env.local';
+try {
+  process.loadEnvFile(envLocal);
+} catch {}
 
 // Angular dev server is only needed by UI projects; skip it when the CLI selects API-only projects.
 const selected = process.argv.flatMap((a, i, all) => (a.startsWith('--project=') ? [a.slice(10)] : a === '--project' ? [all[i + 1]] : []));

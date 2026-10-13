@@ -9,6 +9,9 @@ const KC = 'http://localhost:8080/realms/sic-project/protocol/openid-connect';
 const REDIRECT = 'http://localhost:4200/auth/callback';
 
 async function fillLogin(page: Page, user = process.env['E2E_USER']!, pass = process.env['E2E_PASS']!) {
+  if (!user || !pass) {
+    throw new Error('E2E_USER or E2E_PASS is not defined. Please check sic-app/e2e/.env.local');
+  }
   await page.locator('input[name=username]').fill(user);
   await page.locator('input[name=password]').fill(pass);
   await page.getByRole('button', { name: 'Sign In' }).click();

@@ -1,0 +1,67 @@
+{
+  "cookies": [
+    {
+      "name": "AUTH_SESSION_ID",
+      "value": "QkpfUTdOY2RHWU55VEdQbGFqRUJLN2ljLkh1NjNfcEVWVmNuMEJQVzNXUjdoNEF6bUp4ZFA1azZJYzhjX0JyRDF3TGhXenhkTnMtZWEwSjQzRHREWHVlZGNYR2V6c2VPYWo2U1dwQW54MEFHYjZB",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KC_AUTH_SESSION_HASH",
+      "value": "\"6POnk6zMtPqa33LoPT3JdlPDZczip0TvgnZEUhHvbGLlu/ipji//+Mgny4Yj7Gk1\"",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": 1791864099.782995,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KEYCLOAK_IDENTITY",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTY0Nzk0ZS0wNmQ0LTQ0YjEtOGQxNS04NjJlYWIwNTJlZDEifQ.eyJleHAiOjE3OTE5MDAwNDUsImlhdCI6MTc5MTg2NDA0NSwianRpIjoiMmE4Y2QwMDEtZjk3Mi04ZWIzLTgwY2ItMzMzZjBiZGM5YTliIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9zaWMtcHJvamVjdCIsInN1YiI6ImQ0ZmEzOGI5LWQ1MmMtNDBiZi1iMmIyLWQ3NWE1ZjBmMTQ0MSIsInR5cCI6IlNlcmlhbGl6ZWQtSUQiLCJzaWQiOiJCSl9RN05jZEdZTnlUR1BsYWpFQks3aWMiLCJzdGF0ZV9jaGVja2VyIjoiZHJkV05BeUgwbHBwdkQ5Y2tCTEwyQ2lyQ1d1amx0Q1BfZkpFWmlreEl3NCJ9.zijqXwuZk3TtFhdFOdZ3K5Vcp9GZKygjPexhj7Ge73YCkbmnc8VFOcwQDW7HJ5ryYREa2WGm0XDGYbJAuZq_Hg",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KEYCLOAK_SESSION",
+      "value": "6POnk6zMtPqa33LoPT3JdlPDZczip0TvgnZEUhHvbGLlu_ipji__-Mgny4Yj7Gk1",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": 1791900046.776255,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "http://localhost:4200",
+      "localStorage": [
+        {
+          "name": "sic_ai_navigator_sessions_v1",
+          "value": "[{\"id\":\"session_1791864058126_ktynw\",\"title\":\"New Chat\",\"createdAt\":\"2026-10-13T04:00:58.113Z\",\"updatedAt\":\"2026-10-13T04:00:58.113Z\",\"model\":\"\",\"messages\":[{\"role\":\"ai\",\"text\":\"Hello! I am the SIC AI System Navigator. Ask about system workflows or tell me where you would like to go.\",\"i18nKey\":\"AI_NAV_INITIAL_WELCOME\",\"timestamp\":\"2026-10-13T04:00:58.113Z\"}]}]"
+        },
+        {
+          "name": "sic_ai_navigator_active_id_v1",
+          "value": "session_1791864058126_ktynw"
+        },
+        {
+          "name": "expandedMenus",
+          "value": "[]"
+        },
+        {
+          "name": "businessId",
+          "value": "f21237c9-ef68-49f1-88d7-67ebe857b3e1"
+        }
+      ]
+    }
+  ]
+}
