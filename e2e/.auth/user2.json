@@ -1,0 +1,45 @@
+{
+  "cookies": [
+    {
+      "name": "AUTH_SESSION_ID",
+      "value": "N2Frc1F3bDdKU2dIZ2RTeVNSS1gtX2tFLkg4LWVXN1JrVzlGS2hKQXN0LU9FeHJYS0xJUHU2N0U3ak9sUnlfSG5MbkxnbkY2YVQ2SVhIQ25CT1h2SVJpdHJPd01FZUozSTBXVXEyUTdqRTJzeUxn",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KC_AUTH_SESSION_HASH",
+      "value": "\"Jh13Wot8wZ3ccqoGB6LGAq+7WCDPpm8kAvyB0aipkWrTmUsf21ukYi/jcYHptPz3\"",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": 1791860834.284753,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KEYCLOAK_IDENTITY",
+      "value": "eyJhbGciOiJIUzUxMiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJhMTY0Nzk0ZS0wNmQ0LTQ0YjEtOGQxNS04NjJlYWIwNTJlZDEifQ.eyJleHAiOjE3OTE4OTY3NzUsImlhdCI6MTc5MTg2MDc3NSwianRpIjoiNTQ4MTU4YjQtOGM5Zi03Y2ZjLTUwY2ItYmZiZDliODU1NzZkIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4MDgwL3JlYWxtcy9zaWMtcHJvamVjdCIsInN1YiI6IjQwMzA0NjI3LWUxZmQtNGNlYy1iOWRiLTIzMzRkNjk2MDgzMCIsInR5cCI6IlNlcmlhbGl6ZWQtSUQiLCJzaWQiOiI3YWtzUXdsN0pTZ0hnZFN5U1JLWC1fa0UiLCJzdGF0ZV9jaGVja2VyIjoid2wtRW5vR1ctTDhuRkdzX1d1RHVQM21XNERvaFpyUVNJWU14a01JV2k0byJ9.hzGfc2NE4nWrB1UjTqxoNGM9GvVEM47qeFqkO9YDQ-pj1eA-WvSQE1U8Ks8b2GusL9U-rmrrVltSbSBe6kpq5g",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "KEYCLOAK_SESSION",
+      "value": "Jh13Wot8wZ3ccqoGB6LGAq-7WCDPpm8kAvyB0aipkWrTmUsf21ukYi_jcYHptPz3",
+      "domain": "localhost",
+      "path": "/realms/sic-project/",
+      "expires": 1791896775.55236,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": []
+}

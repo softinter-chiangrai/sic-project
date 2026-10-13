@@ -1,3 +1,4 @@
+import process from 'node:process';
 import { defineConfig } from '@playwright/test';
 
 try { process.loadEnvFile('e2e/.env.local'); } catch {}
