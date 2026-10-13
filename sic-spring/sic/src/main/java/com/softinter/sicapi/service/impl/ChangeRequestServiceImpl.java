@@ -388,7 +388,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         };
 
         Page<PmChangeRequest> page = changeRequestRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "CHANGE_REQUEST", page.getContent().stream().map(PmChangeRequest::getId).toList());
         List<ChangeRequestResponse> data = page.getContent().stream()
                 .map(e -> {
@@ -727,19 +727,19 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
         switch (targetType.toUpperCase()) {
             case "REQUIREMENT":
                 return requirementRepository.findById(targetId)
-                        .map(r -> documentVersionService.bumpVersion(r.getVersion(), changeLevel))
+                        .map(r -> documentVersionService.bumpVersion(documentVersionService.getLatestVersionNo("REQUIREMENT", r.getId()), changeLevel))
                         .orElse("v1.1.0");
             case "SPECIFICATION":
                 return specificationRepository.findById(targetId)
-                        .map(s -> documentVersionService.bumpVersion(s.getVersion(), changeLevel))
+                        .map(s -> documentVersionService.bumpVersion(documentVersionService.getLatestVersionNo("SPECIFICATION", s.getId()), changeLevel))
                         .orElse("v1.1.0");
             case "DELIVERY":
                 return deliveryRepository.findById(targetId)
-                        .map(d -> documentVersionService.bumpVersion(d.getDeliveryVersion(), changeLevel))
+                        .map(d -> documentVersionService.bumpVersion(documentVersionService.getLatestVersionNo("DELIVERY", d.getId()), changeLevel))
                         .orElse("0.2.0");
             case "USER_MANUAL":
                 return userManualRepository.findById(targetId)
-                        .map(m -> documentVersionService.bumpVersion(m.getVersion(), changeLevel))
+                        .map(m -> documentVersionService.bumpVersion(documentVersionService.getLatestVersionNo("USER_MANUAL", m.getId()), changeLevel))
                         .orElse("0.2.0");
             case "DIAGRAM":
             default:

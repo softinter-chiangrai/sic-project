@@ -4650,5 +4650,25 @@
     }
   },
   "PMDT19A_NO_DOC_TITLE": "No document selected",
-  "PMDT19A_NO_DOC_MSG": "Open this form from the document itself (use its Document Version History button) so the version knows which document it belongs to."
+  "PMDT19A_NO_DOC_MSG": "Open this form from the document itself (use its Document Version History button) so the version knows which document it belongs to.",
+  "PMDT05_VALIDATE_DB_TAB": "Database Risk Validation (AI)",
+  "PMDT05_VALIDATE_DB_BTN": "Analyze Database Schema",
+  "PMDT05_VALIDATING_DB": "Analyzing database risks...",
+  "PMDT05_VALIDATION_SCORE": "Database Schema Health Score",
+  "PMDT05_MISSING_INDEXES": "Missing Index Analysis",
+  "PMDT05_NORMALIZATION_RISKS": "Database Normalization Risks (1NF-3NF)",
+  "PMDT05_TYPE_RISKS": "Data Types & Constraints Risks",
+  "PMDT05_SUGGESTED_FIX_SQL": "Recommended Fix SQL Script",
+  "PMDT05_NO_RISKS_FOUND": "No critical schema risks detected. Schema design is excellent!",
+  "PMDT05_COPY_SQL": "Copy SQL",
+  "PMDT05_SQL_COPIED": "SQL Script Copied",
+  "PMDT12_AI_RESOLUTION_BTN": "Smart AI Resolution",
+  "PMDT12_AI_RESOLVING": "Analyzing bug root cause...",
+  "PMDT12_AI_ROOT_CAUSE": "Identified Root Cause",
+  "PMDT12_AI_SUGGESTED_FIX": "Actionable Resolution Guide",
+  "PMDT12_AI_PREVENTION": "Prevention & Testing Recommendations",
+  "PMDT12_AI_APPLY_TO_DESC": "Apply Guide to Bug Description",
+  "PMDT12_AI_CONFIDENCE": "Analysis Confidence",
+  "PMDT12_AI_SEVERITY": "Suggested Bug Severity",
+  "COMMON_WARN_TITLE": "Warning Notice"
 }

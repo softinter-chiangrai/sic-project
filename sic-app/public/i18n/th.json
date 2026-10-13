@@ -4650,5 +4650,25 @@
     }
   },
   "PMDT19A_NO_DOC_TITLE": "ยังไม่ได้ระบุเอกสาร",
-  "PMDT19A_NO_DOC_MSG": "กรุณาเปิดฟอร์มนี้จากหน้าเอกสาร (ปุ่มประวัติเวอร์ชันเอกสาร) เพื่อให้ระบบทราบว่าเวอร์ชันนี้เป็นของเอกสารใด"
+  "PMDT19A_NO_DOC_MSG": "กรุณาเปิดฟอร์มนี้จากหน้าเอกสาร (ปุ่มประวัติเวอร์ชันเอกสาร) เพื่อให้ระบบทราบว่าเวอร์ชันนี้เป็นของเอกสารใด",
+  "PMDT05_VALIDATE_DB_TAB": "ตรวจสอบความเสี่ยง DB (AI Validation)",
+  "PMDT05_VALIDATE_DB_BTN": "วิเคราะห์โครงสร้างฐานข้อมูล",
+  "PMDT05_VALIDATING_DB": "กำลังวิเคราะห์ความเสี่ยง...",
+  "PMDT05_VALIDATION_SCORE": "คะแนนความสมบูรณ์ของโครงสร้าง",
+  "PMDT05_MISSING_INDEXES": "ความเสี่ยง Missing Indexes (ขาดการทำดัชนี)",
+  "PMDT05_NORMALIZATION_RISKS": "ความเสี่ยง Normalization (1NF-3NF)",
+  "PMDT05_TYPE_RISKS": "ความเสี่ยง Data Types & Constraints",
+  "PMDT05_SUGGESTED_FIX_SQL": "สคริปต์ SQL แก้ไขที่แนะนำ",
+  "PMDT05_NO_RISKS_FOUND": "ไม่พบความเสี่ยงสำคัญในโครงสร้างนี้ โครงสร้างดีเยี่ยม!",
+  "PMDT05_COPY_SQL": "คัดลอก SQL",
+  "PMDT05_SQL_COPIED": "คัดลอก SQL แล้ว",
+  "PMDT12_AI_RESOLUTION_BTN": "AI แนะนำวิธีแก้ (Smart Resolution)",
+  "PMDT12_AI_RESOLVING": "AI กำลังวิเคราะห์สาเหตุ...",
+  "PMDT12_AI_ROOT_CAUSE": "สาเหตุที่แท้จริง (Root Cause)",
+  "PMDT12_AI_SUGGESTED_FIX": "แนวทางแก้ไขที่แนะนำ (Actionable Fix)",
+  "PMDT12_AI_PREVENTION": "แนวทางทดสอบและป้องกัน (Prevention / Test)",
+  "PMDT12_AI_APPLY_TO_DESC": "นำแนวทางนี้ไปใส่ในรายละเอียด",
+  "PMDT12_AI_CONFIDENCE": "ความมั่นใจในการวิเคราะห์",
+  "PMDT12_AI_SEVERITY": "ระดับความรุนแรงที่แนะนำ",
+  "COMMON_WARN_TITLE": "คำเตือน"
 }

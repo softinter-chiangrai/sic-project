@@ -27,6 +27,7 @@
 	<parameter name="invoiceNo" class="java.lang.String">
 		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
 	</parameter>
+	<parameter name="docVersion" class="java.lang.String"/>
 	<parameter name="customerName" class="java.lang.String">
 		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
 	</parameter>
@@ -82,18 +83,18 @@
 	<!-- ========================================================
 	     TITLE BAND — Header + Customer/Project Metadata
 	     ======================================================== -->
-	<title height="240">
+	<title height="258">
 		<element kind="image" uuid="24299f9d-049b-4041-8b72-7f32a777820a" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
 			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
 		</element>
 		<element kind="staticText" uuid="a8eb16be-ae2f-4e7b-a4ed-9fa5e6434501" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
 			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
 		</element>
-		<element kind="textField" uuid="b03d3823-517b-4236-8a88-ec9cb72a84be" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+		<element kind="textField" uuid="b03d3823-517b-4236-8a88-ec9cb72a84be" x="230" y="-6" width="285" height="34" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Invoice / Billing Notice" : "ใบแจ้งหนี้ / ใบเรียกเก็บเงิน")]]></expression>
 		</element>
-		<element kind="staticText" uuid="50ec4588-ea8f-4214-bf1e-bbbdff969d51" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
-			<text><![CDATA[Invoice & Billing Notice]]></text>
+		<element kind="textField" uuid="50ec4588-ea8f-4214-bf1e-bbbdff969d51" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Invoice & Billing Notice" : "ใบแจ้งหนี้และการเรียกเก็บเงิน")]]></expression>
 		</element>
 		<element kind="textField" uuid="fea0972d-b101-4116-a57e-75667e0bc6d5" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
@@ -117,47 +118,53 @@
 		<element kind="line" uuid="98e26b37-cac2-44c3-87f4-d5ca29c91e18" x="0" y="136" width="515" height="1" forecolor="#CBD5E1">
 			<pen lineWidth="0.6"/>
 		</element>
-		<element kind="rectangle" uuid="3fa561f9-d41c-4e0d-947b-7a4607eea171" mode="Opaque" x="0" y="142" width="515" height="64" backcolor="#F8FAFC" radius="3">
+		<element kind="rectangle" uuid="3fa561f9-d41c-4e0d-947b-7a4607eea171" mode="Opaque" x="0" y="142" width="515" height="82" backcolor="#F8FAFC" radius="3">
 			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 		</element>
-		<element kind="textField" uuid="622d6511-c88f-46f0-9afb-fe089aa61184" x="10" y="146" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="622d6511-c88f-46f0-9afb-fe089aa61184" x="10" y="146" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Customer / Org:" : "ชื่อลูกค้า / องค์กร:")]]></expression>
 		</element>
-		<element kind="textField" uuid="dd741944-4c6c-46ad-8545-ddce2f50786b" x="110" y="146" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+		<element kind="textField" uuid="dd741944-4c6c-46ad-8545-ddce2f50786b" x="110" y="146" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{customerName} != null ? $P{customerName} : "-"]]></expression>
 		</element>
-		<element kind="textField" uuid="3b77a706-0e25-45ff-949a-091b928addf4" x="270" y="146" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="3b77a706-0e25-45ff-949a-091b928addf4" x="270" y="146" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="ca9e624a-9931-48b8-9781-8c657be7e4f4" x="358" y="146" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{projectName} != null ? $P{projectName} : "-"]]></expression>
 		</element>
-		<element kind="textField" uuid="39d900db-3dc6-4633-bed0-10468e9012c7" x="10" y="164" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="39d900db-3dc6-4633-bed0-10468e9012c7" x="10" y="164" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Contract No:" : "สัญญาอ้างอิง:")]]></expression>
 		</element>
 		<element kind="textField" uuid="5167a29d-1706-44c2-acf0-405b06a06050" x="110" y="164" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{contractNo} != null ? $P{contractNo} : "-"]]></expression>
 		</element>
-		<element kind="textField" uuid="41ceb0bc-93bd-4bf7-b92c-f92395274089" x="270" y="164" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="41ceb0bc-93bd-4bf7-b92c-f92395274089" x="270" y="164" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Billing Type:" : "ประเภทการเรียกเก็บ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="110d8e70-4855-47b2-ac95-c219791924f1" x="358" y="164" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{billingType} != null ? $P{billingType} : "-"]]></expression>
 		</element>
-		<element kind="textField" uuid="8530c028-526a-4c72-9e30-32115df487e9" x="10" y="182" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="8530c028-526a-4c72-9e30-32115df487e9" x="10" y="182" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date:" : "วันที่ออกใบแจ้งหนี้:")]]></expression>
 		</element>
 		<element kind="textField" uuid="a5110fc6-4e91-4f14-b08b-a04f0bcc8174" x="110" y="182" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{issueDate} != null ? $P{issueDate} : "-"]]></expression>
 		</element>
-		<element kind="textField" uuid="8f65da24-b6e2-477b-87bc-58dbe358f349" x="270" y="182" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="4d789164-db50-48b0-a0f3-d81461f04922" x="10" y="200" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+			</element>
+			<element kind="textField" uuid="8f4925f6-c019-471a-adc6-83f093acbdef" x="110" y="200" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$P{docVersion} != null ? $P{docVersion} : "-"]]></expression>
+			</element>
+		<element kind="textField" uuid="8f65da24-b6e2-477b-87bc-58dbe358f349" x="270" y="182" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Due Date:" : "กำหนดชำระ:")]]></expression>
 		</element>
-		<element kind="textField" uuid="9d46fe3d-39a1-4680-9e06-0b09b6693f2e" x="358" y="182" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+		<element kind="textField" uuid="9d46fe3d-39a1-4680-9e06-0b09b6693f2e" x="358" y="182" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{dueDate} != null ? $P{dueDate} : "-"]]></expression>
 		</element>
 
-		<element kind="textField" uuid="26da7f9f-b0e8-4bf8-9d18-17f65d45a4d1" x="0" y="216" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+		<element kind="textField" uuid="26da7f9f-b0e8-4bf8-9d18-17f65d45a4d1" x="0" y="234" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 			<expression><![CDATA[($P{lang}.equals("en") ? "2. Invoice Items" : "2. รายการสินค้า/บริการ (Invoice Items)")]]></expression>
 		</element>
 	</title>

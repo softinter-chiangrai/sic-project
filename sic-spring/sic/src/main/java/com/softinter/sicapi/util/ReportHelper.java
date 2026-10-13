@@ -28,7 +28,14 @@ public class ReportHelper {
     /**
      * Resolve and normalize language parameter ('th' or 'en')
      */
-    public static String resolveLang(String lang, String headerLang) {
+        /** First non-blank value, or "-" so a version/label cell is never empty in a PDF. */
+    public static String firstNonBlank(String first, String second) {
+        if (first != null && !first.isBlank()) return first.trim();
+        if (second != null && !second.isBlank()) return second.trim();
+        return "-";
+    }
+
+public static String resolveLang(String lang, String headerLang) {
         if (lang != null && !lang.trim().isEmpty()) {
             return lang.trim().equalsIgnoreCase("en") ? "en" : "th";
         }

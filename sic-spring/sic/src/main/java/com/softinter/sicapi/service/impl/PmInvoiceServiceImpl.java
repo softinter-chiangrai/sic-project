@@ -132,7 +132,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         };
 
         Page<PmInvoice> page = invoiceRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "INVOICE", page.getContent().stream().map(PmInvoice::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);

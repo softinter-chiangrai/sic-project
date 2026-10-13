@@ -71,11 +71,11 @@
 		<element kind="staticText" uuid="7cf41209-1a3b-489e-913a-7a561bc49a12" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
 			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
 		</element>
-		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="-6" width="285" height="34" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
 			<expression><![CDATA[($P{lang}.equals("en") ? "User Manual" : "คู่มือการใช้งานระบบ (User Manual)")]]></expression>
 		</element>
-		<element kind="staticText" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
-			<text><![CDATA[System User Manual & Documentation]]></text>
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "System User Manual & Documentation" : "คู่มือผู้ใช้และเอกสารประกอบระบบ")]]></expression>
 		</element>
 		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
@@ -104,27 +104,27 @@
 		</element>
 
 		<!-- Row 1: Code & Status -->
-		<element kind="textField" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" x="10" y="132" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" x="10" y="132" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Manual Code:" : "รหัสคู่มือ:")]]></expression>
 		</element>
-		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="110" y="132" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="110" y="132" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{manualCode}]]></expression>
 		</element>
-		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="270" y="132" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="270" y="132" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
 		</element>
-		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="358" y="132" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="358" y="132" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{status}]]></expression>
 		</element>
 
 		<!-- Row 2: Project & Manual Type -->
-		<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" x="10" y="154" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" x="10" y="154" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" x="110" y="154" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{projectName}]]></expression>
 		</element>
-		<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" x="270" y="154" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" x="270" y="154" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Manual Type:" : "ประเภทคู่มือ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" x="358" y="154" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -132,13 +132,13 @@
 		</element>
 
 		<!-- Row 3: Version & Linked Delivery -->
-		<element kind="textField" uuid="a1b2c3d4-1a2b-489e-913a-7a561bc49a12" x="10" y="176" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="a1b2c3d4-1a2b-489e-913a-7a561bc49a12" x="10" y="176" width="95" height="20" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน (Version):")]]></expression>
 		</element>
 		<element kind="textField" uuid="b2c3d4e5-1a2b-48ca-91b5-827a4192b0c5" x="110" y="176" width="145" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{version}]]></expression>
 		</element>
-		<element kind="textField" uuid="c3d4e5f6-1a2b-48a5-926f-47b2ae601b2a" x="270" y="176" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="c3d4e5f6-1a2b-48a5-926f-47b2ae601b2a" x="270" y="176" width="85" height="20" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Doc.:" : "เอกสารส่งมอบ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="d4e5f6a7-1a2b-47b2-913b-2a567c82a4c9" x="358" y="176" width="150" height="20" blankWhenNull="true" vTextAlign="Middle" style="Value">

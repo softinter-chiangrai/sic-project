@@ -38,6 +38,7 @@ import java.time.Instant;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.VersionKeywordSearchHelper;
 import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
 import java.util.Map;
 
@@ -94,7 +95,8 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
-                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "specificationCode", "title", "specificationType", "description", "status", "priority", "version");
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "specificationCode", "title", "specificationType", "description", "status", "priority");
+                VersionKeywordSearchHelper.addVersionPredicate(query, cb, root.get("id"), "SPECIFICATION", pattern, orPreds);
 
                 // ✅ Bilingual: สถานะ
                 KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", SPEC_STATUS_THAI_MAP, rawKw, orPreds);
@@ -207,7 +209,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             spec.setCreatedBy(userId);
             spec.setCreatedDate(Instant.now());
             spec.setIsDelete(false);
-            spec.setVersion("v1.0.0");
             spec.setStatus("Draft");
             spec.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
 
@@ -234,7 +235,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                         saved.getId(),
                         projIdForVersion,
                         saved.getSpecificationCode(),
-                        saved.getVersion() != null ? saved.getVersion() : "v1.0.0",
+                        "v1.0.0",
                         "สร้าง Specification เริ่มต้น (Initial specification)",
                         JsonSnapshotHelper.toJson(toResponse(saved)),
                         saved.getUploadGroupId(),
@@ -283,7 +284,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 throw new RuntimeException("ข้อมูลมีการเปลี่ยนแปลงโดยผู้อื่น กรุณารีเฟรชหน้าเว็บ");
             }
 
-            String oldVersion = spec.getVersion() != null ? spec.getVersion() : "v1.0.0";
+            String oldVersion = documentVersionService.getLatestVersionNo("SPECIFICATION", spec.getId());
             String oldStatus = spec.getStatus();
 
             // ✅ Auto Diff Detection
@@ -318,7 +319,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
 
             UUID projId = spec.getProject() != null ? spec.getProject().getId() : null;
             String newVersion = documentVersionService.keepVersion(oldVersion);
-            spec.setVersion(newVersion);
 
             // แก้ไขเอกสารจริง (มี field เปลี่ยนแปลง) ขณะที่เคยอนุมัติแล้ว หรือกำลังรออนุมัติอยู่
             // ต้องเปลี่ยนสถานะกลับเป็น "Changed" และยกเลิกคำขออนุมัติที่ค้างอยู่ (ถ้ามี) เพื่อขออนุมัติใหม่
@@ -450,9 +450,6 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         if (request.getStatus() != null) {
             entity.setStatus(request.getStatus());
         }
-        if (request.getVersion() != null) {
-            entity.setVersion(request.getVersion());
-        }
 
     }
 
@@ -463,7 +460,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
         response.setSpecificationCode(spec.getSpecificationCode());
         response.setSpecificationType(spec.getSpecificationType());
         response.setTitle(spec.getTitle());
-        response.setVersion(spec.getVersion());
+        response.setVersion(documentVersionService.getCurrentVersionNo("SPECIFICATION", spec.getId()));
         response.setStatus(spec.getStatus());
         response.setIsLocked(approvalService.isApproved("SPECIFICATION", spec.getId()));
         response.setPriority(spec.getPriority());

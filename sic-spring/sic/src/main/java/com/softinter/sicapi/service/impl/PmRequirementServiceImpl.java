@@ -154,7 +154,6 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setIsDelete(false);
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
-            requirement.setVersion("v1.0.0");
             if (request.getRequirementCode() == null || request.getRequirementCode().isBlank()) {
                 long count = requirementRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
                 String code;
@@ -182,7 +181,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                     saved.getId(),
                     saved.getProjectId(),
                     saved.getRequirementCode(),
-                    saved.getVersion() != null ? saved.getVersion() : "v1.0.0",
+                    "v1.0.0",
                     "สร้างข้อกำหนดเริ่มต้น (Initial requirement)",
                     JsonSnapshotHelper.toJson(toResponse(saved)),
                     finalUploadGroupId,
@@ -212,8 +211,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             }
 
             String oldStatus = requirement.getStatus();
-            String oldVersion = requirement.getVersion();
-            if (oldVersion == null) oldVersion = "v1.0.0";
+            String oldVersion = documentVersionService.getLatestVersionNo("REQUIREMENT", requirement.getId());
 
             // ✅ Auto Diff Detection
             List<String> changes = new ArrayList<>();
@@ -243,7 +241,6 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
             // Version increment logic
             String newVersion = documentVersionService.keepVersion(oldVersion);
-            requirement.setVersion(newVersion);
             requirement.setUploadGroupId(finalUploadGroupId);
 
             requirementRepository.save(requirement);
@@ -316,9 +313,6 @@ public class PmRequirementServiceImpl implements PmRequirementService {
         entity.setBusinessValue(request.getBusinessValue());
         entity.setAcceptanceCriteria(request.getAcceptanceCriteria());
         entity.setProjectId(request.getProjectId());
-        if (request.getVersion() != null) {
-            entity.setVersion(request.getVersion());
-        }
         if (request.getStatus() != null) {
             entity.setStatus(request.getStatus());
         }
@@ -356,7 +350,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                 .map(LocalizationHelper::getFullName)
                 .orElse(entity.getCreatedBy());
         response.setCreatedBy(createdByName);
-        response.setVersion(entity.getVersion());
+        response.setVersion(documentVersionService.getCurrentVersionNo("REQUIREMENT", entity.getId()));
         response.setStatus(entity.getStatus());
         response.setIsLocked(approvalService.isApproved("REQUIREMENT", entity.getId()));
         response.setIsActive(entity.getIsActive());

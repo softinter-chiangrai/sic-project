@@ -76,7 +76,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         };
 
         Page<PmTestCase> page = testCaseRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "TEST_CASE", page.getContent().stream().map(PmTestCase::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);

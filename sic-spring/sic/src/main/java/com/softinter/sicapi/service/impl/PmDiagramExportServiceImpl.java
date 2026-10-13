@@ -10,6 +10,7 @@ import com.softinter.sicapi.service.PmDiagramExportService;
 import com.softinter.sicapi.service.PmDiagramTabService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.repository.pm.PmDocumentVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
@@ -31,6 +32,7 @@ public class PmDiagramExportServiceImpl implements PmDiagramExportService {
 
     private final PmDiagramTabRepository tabRepository;
     private final PmDiagramTabService tabService;
+    private final PmDocumentVersionRepository documentVersionRepository;
     private final ReportServiceClient reportServiceClient;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
@@ -138,7 +140,7 @@ public class PmDiagramExportServiceImpl implements PmDiagramExportService {
         parameters.put("diagramType", orDash(tab.getDiagramType()));
         parameters.put("projectName", orDash(info.getProjectName()));
         parameters.put("requirementTitle", orDash(info.getRequirementTitle()));
-        parameters.put("version", orDash(info.getVersion()));
+        parameters.put("version", ReportHelper.firstNonBlank(documentVersionRepository.currentVersionLabel("DIAGRAM", tab.getId()), info.getVersion()));
         parameters.put("status", orDash(info.getApprovalStatus()));
         parameters.put("lang", normalizedLang);
         parameters.put(JRParameter.REPORT_LOCALE, "en".equals(normalizedLang) ? Locale.ENGLISH : new Locale("th", "TH"));

@@ -123,11 +123,11 @@
 		<element kind="staticText" uuid="7cf41209-1a3b-489e-913a-7a561bc49a12" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
 			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
 		</element>
-		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="-6" width="285" height="34" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery & Acceptance Document" : "เอกสารส่งมอบและตรวจรับงาน")]]></expression>
 		</element>
-		<element kind="staticText" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
-			<text><![CDATA[Delivery Acceptance & Handover Certificate]]></text>
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Acceptance & Handover Certificate" : "ใบรับรองการส่งมอบและตรวจรับงาน")]]></expression>
 		</element>
 		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
@@ -153,27 +153,27 @@
 		</element>
 
 		<!-- Row 1: Code & Status -->
-		<element kind="textField" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" x="10" y="110" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" x="10" y="110" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Code:" : "รหัสการส่งมอบ:")]]></expression>
 		</element>
-		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="110" y="110" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="110" y="110" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{deliveryCode}]]></expression>
 		</element>
-		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="270" y="110" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="270" y="110" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
 		</element>
-		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="358" y="110" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="358" y="110" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{status}]]></expression>
 		</element>
 
 		<!-- Row 2: Project & Contract -->
-		<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" x="10" y="130" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" x="10" y="130" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" x="110" y="130" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{projectName}]]></expression>
 		</element>
-		<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" x="270" y="130" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" x="270" y="130" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Contract No:" : "สัญญาอ้างอิง:")]]></expression>
 		</element>
 		<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" x="358" y="130" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -181,13 +181,13 @@
 		</element>
 
 		<!-- Row 3: Delivery Type & Version -->
-		<element kind="textField" uuid="c2d3e4f5-1a2b-48ca-91b5-827a4192b0c5" x="10" y="150" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="c2d3e4f5-1a2b-48ca-91b5-827a4192b0c5" x="10" y="150" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Type:" : "ประเภทการส่งมอบ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="d3e4f5a6-1a2b-48a5-926f-47b2ae601b2a" x="110" y="150" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{deliveryType}]]></expression>
 		</element>
-		<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" x="270" y="150" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" x="270" y="150" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
 		</element>
 		<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" x="358" y="150" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -195,13 +195,13 @@
 		</element>
 
 		<!-- Row 4: Delivery Date & Attachments -->
-		<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" x="10" y="170" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" x="10" y="170" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Date:" : "วันที่ส่งมอบ:")]]></expression>
 		</element>
 		<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" x="110" y="170" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 			<expression><![CDATA[$P{deliveryDate}]]></expression>
 		</element>
-		<element kind="textField" uuid="e4f5a6b7-1a2b-48ca-91b5-827a4192b0c5" x="270" y="170" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+		<element kind="textField" uuid="e4f5a6b7-1a2b-48ca-91b5-827a4192b0c5" x="270" y="170" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 			<printWhenExpression><![CDATA[$P{attachmentNames} != null && !$P{attachmentNames}.isEmpty()]]></printWhenExpression>
 			<expression><![CDATA[($P{lang}.equals("en") ? "Attachments:" : "ไฟล์แนบ:")]]></expression>
 		</element>

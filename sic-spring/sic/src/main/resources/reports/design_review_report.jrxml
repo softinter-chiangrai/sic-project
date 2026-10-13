@@ -16,6 +16,7 @@
 	<parameter name="logoStream" class="java.io.InputStream"><defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression></parameter>
 
 	<query language="sql"><![CDATA[SELECT
+            pm_current_version_label('DESIGN_REVIEW', r.id) AS "docVersion",
                 COALESCE(r.review_code, SUBSTRING(CAST(r.id AS text), 1, 8)) AS "reviewCode",
                 COALESCE(r.title, '-')                  AS "title",
                 COALESCE(p.project_code, '-')           AS "projectCode",
@@ -44,6 +45,7 @@
               AND r.id = CAST($P{designReviewId} AS uuid)
               AND ($P{businessId} IS NULL OR $P{businessId} = '' OR r.business_id = CAST(NULLIF($P{businessId}, '') AS uuid))]]></query>
 
+	<field name="docVersion" class="java.lang.String"/>
 	<field name="reviewCode" class="java.lang.String"/>
 	<field name="title" class="java.lang.String"/>
 	<field name="projectCode" class="java.lang.String"/>
@@ -65,11 +67,11 @@
 		<element kind="staticText" uuid="d9e50009-0001-4001-8001-d3516a000003" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
 			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
 		</element>
-		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000004" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000004" x="230" y="-6" width="285" height="34" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Design Review Report" : "รายงานการตรวจสอบงานออกแบบ")]]></expression>
 		</element>
-		<element kind="staticText" uuid="d9e50009-0001-4001-8001-d3516a00000a" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
-			<text><![CDATA[Design Review & Inspection Document]]></text>
+		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a00000a" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Design Review & Inspection Document" : "เอกสารตรวจสอบและประเมินงานออกแบบ")]]></expression>
 		</element>
 		<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000005" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
@@ -89,7 +91,7 @@
 	</title>
 
 	<detail>
-		<band height="410" splitType="Stretch">
+		<band height="430" splitType="Stretch">
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000010" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "1. General Information" : "1. ข้อมูลทั่วไป (General Information)")]]></expression>
 			</element>
@@ -98,27 +100,27 @@
 			</element>
 
 			<!-- Row 1: Project & Status -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000012" positionType="Float" x="10" y="34" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000012" positionType="Float" x="10" y="34" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000013" positionType="Float" x="110" y="34" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{projectCode} + " " + $F{projectName}]]></expression>
 			</element>
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000014" positionType="Float" x="270" y="34" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000014" positionType="Float" x="270" y="34" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
 			</element>
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000015" positionType="Float" x="370" y="34" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000015" positionType="Float" x="370" y="34" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{status}]]></expression>
 			</element>
 
 			<!-- Row 2: Reviewed item & Severity -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000016" positionType="Float" x="10" y="54" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000016" positionType="Float" x="10" y="54" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Reviewed Item:" : "รายการที่ตรวจ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000017" positionType="Float" x="110" y="54" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{reviewItemType}]]></expression>
 			</element>
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000018" positionType="Float" x="270" y="54" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000018" positionType="Float" x="270" y="54" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Severity:" : "ความรุนแรง:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000019" positionType="Float" x="370" y="54" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -126,13 +128,13 @@
 			</element>
 
 			<!-- Row 3: Reviewer & Assignee -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000020" positionType="Float" x="10" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000020" positionType="Float" x="10" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Reviewer:" : "ผู้ตรวจสอบ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000021" positionType="Float" x="110" y="74" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{reviewer}]]></expression>
 			</element>
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000022" positionType="Float" x="270" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000022" positionType="Float" x="270" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Assigned To:" : "ผู้รับผิดชอบ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000023" positionType="Float" x="370" y="74" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -140,7 +142,7 @@
 			</element>
 
 			<!-- Row 4: Due date -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000024" positionType="Float" x="10" y="94" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000024" positionType="Float" x="10" y="94" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Due Date:" : "กำหนดเสร็จ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000025" positionType="Float" x="110" y="94" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -148,32 +150,38 @@
 			</element>
 
 			<!-- Row 5: Design link -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000026" positionType="Float" x="10" y="114" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000026" positionType="Float" x="10" y="114" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Design Link:" : "ลิงก์งานออกแบบ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000027" positionType="Float" x="110" y="114" width="398" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{figmaUrl}]]></expression>
 			</element>
+			<element kind="textField" uuid="5d047263-a98b-44cc-8d5d-783262b3997a" positionType="Float" x="10" y="134" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+			</element>
+			<element kind="textField" uuid="9a33212d-f43e-4fad-8384-1973c7b59916" positionType="Float" x="110" y="134" width="145" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{docVersion} != null ? $F{docVersion} : "-"]]></expression>
+			</element>
 
 			<!-- Section 2: Description -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000028" positionType="Float" x="0" y="144" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000028" positionType="Float" x="0" y="164" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "2. Description" : "2. รายละเอียด (Description)")]]></expression>
 			</element>
-			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000029" positionType="Float" x="0" y="166" width="515" height="1" forecolor="#CBD5E1">
+			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000029" positionType="Float" x="0" y="186" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000030" positionType="Float" x="8" y="172" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000030" positionType="Float" x="8" y="192" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
 				<expression><![CDATA[com.softinter.sicapi.util.ReportHelper.htmlToPlainText($F{description})]]></expression>
 			</element>
 
 			<!-- Section 3: Review comments -->
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000031" positionType="Float" x="0" y="204" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000031" positionType="Float" x="0" y="224" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "3. Review Comments" : "3. ความเห็นการตรวจสอบ (Review Comments)")]]></expression>
 			</element>
-			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000032" positionType="Float" x="0" y="226" width="515" height="1" forecolor="#CBD5E1">
+			<element kind="line" uuid="d9e50009-0001-4001-8001-d3516a000032" positionType="Float" x="0" y="246" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000033" positionType="Float" x="8" y="232" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
+			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000033" positionType="Float" x="8" y="252" width="499" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ContentText">
 				<expression><![CDATA[$F{comments} != null ? $F{comments} : ($P{lang}.equals("en") ? "No comments." : "ไม่มีความเห็น")]]></expression>
 			</element>
 		</band>

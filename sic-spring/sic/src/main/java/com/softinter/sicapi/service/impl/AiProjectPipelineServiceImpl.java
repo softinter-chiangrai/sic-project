@@ -125,9 +125,15 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
             String raw = aiProviderService.generateRawResponse(userPrompt, systemPrompt, request.getModel(), request.getAttachments());
             JsonNode root = parseJsonRoot(raw);
             if (root != null) {
+                String desc = root.path("description").asText("");
+                if (desc.isBlank()) desc = root.path("projectDescription").asText("");
+                if (desc.isBlank()) desc = root.path("overview").asText("");
+                if (desc.isBlank() && request.getPrompt() != null) desc = "<p>" + request.getPrompt() + "</p>";
+                if (desc.isBlank()) desc = "<p>โครงการพัฒนาระบบบริหารจัดการครบวงจรเพื่อยกระดับประสิทธิภาพการทำงานขององค์กร</p>";
+
                 return AiProjectPipelinePreviewResponse.builder()
                         .projectName(root.path("projectName").asText(request.getProjectName() != null ? request.getProjectName() : "New AI Project"))
-                        .description(root.path("description").asText(""))
+                        .description(desc)
                         .estimatedDurationWeeks(root.path("estimatedDurationWeeks").asInt(request.getDurationWeeks() != null ? request.getDurationWeeks() : 12))
                         .previewRequirements(toList(root.path("requirements")))
                         .previewSpecifications(toList(root.path("specifications")))

@@ -389,7 +389,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         };
 
         Page<PmCustomerProject> page = projectRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "PROJECT", page.getContent().stream().map(PmCustomerProject::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);

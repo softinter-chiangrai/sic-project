@@ -109,16 +109,32 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
         if (matcher.find()) {
             jsonStr = matcher.group(1).trim();
         } else {
-            int start = raw.indexOf('[');
-            int end = raw.lastIndexOf(']');
-            if (start >= 0 && end > start) {
-                jsonStr = raw.substring(start, end + 1).trim();
+            Matcher objMatcher = Pattern.compile("```(?:json)?\\s*(\\{[\\s\\S]*?\\})\\s*```").matcher(raw);
+            if (objMatcher.find()) {
+                jsonStr = objMatcher.group(1).trim();
+            } else {
+                int start = raw.indexOf('[');
+                int end = raw.lastIndexOf(']');
+                if (start >= 0 && end > start) {
+                    jsonStr = raw.substring(start, end + 1).trim();
+                } else {
+                    int objStart = raw.indexOf('{');
+                    int objEnd = raw.lastIndexOf('}');
+                    if (objStart >= 0 && objEnd > objStart) {
+                        jsonStr = raw.substring(objStart, objEnd + 1).trim();
+                    }
+                }
             }
         }
 
         try {
             JsonNode root = objectMapper.readTree(jsonStr);
             if (!root.isArray()) {
+                for (String key : List.of("items", "requirements", "specifications", "tasks", "data", "list", "results")) {
+                    if (root.has(key) && root.get(key).isArray()) {
+                        return objectMapper.convertValue(root.get(key), new TypeReference<List<Map<String, Object>>>() {});
+                    }
+                }
                 return List.of();
             }
             return objectMapper.convertValue(root, new TypeReference<List<Map<String, Object>>>() {

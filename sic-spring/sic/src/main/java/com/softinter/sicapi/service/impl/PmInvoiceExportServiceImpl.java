@@ -32,6 +32,7 @@ import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.ReportHelper;
 import java.util.stream.Collectors;
 
+import com.softinter.sicapi.repository.pm.PmDocumentVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.JasperCompileManager;
@@ -53,6 +54,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
     private final PmCustomerContractRepository contractRepository;
     private final SuUploadRepository uploadRepository;
     private final DataSource dataSource;
+    private final PmDocumentVersionRepository documentVersionRepository;
     private final ReportServiceClient reportServiceClient;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
@@ -95,6 +97,7 @@ public class PmInvoiceExportServiceImpl implements PmInvoiceExportService {
         parameters.put("businessId", businessId != null ? businessId.toString() : "");
         parameters.put("exportDate", exportDate);
         parameters.put("invoiceNo", invoice.getInvoiceNo() != null ? invoice.getInvoiceNo() : "-");
+        parameters.put("docVersion", ReportHelper.firstNonBlank(documentVersionRepository.currentVersionLabel("INVOICE", invoiceId), null));
         parameters.put("customerName", customerName != null ? customerName : "-");
         parameters.put("projectName", projectName);
         parameters.put("contractNo", contractNo);

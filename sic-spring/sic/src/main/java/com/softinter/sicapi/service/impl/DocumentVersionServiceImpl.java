@@ -321,20 +321,6 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public Map<UUID, String> getLatestVersionMap(String documentType, Collection<UUID> documentIds) {
-        Map<UUID, String> result = new HashMap<>();
-        if (documentIds == null || documentIds.isEmpty()) {
-            return result;
-        }
-        // เรียงใหม่สุดก่อน จึงเก็บเฉพาะแถวแรกของแต่ละเอกสาร
-        for (PmDocumentVersion v : versionRepository.findByDocumentTypeAndDocumentIds(documentType, documentIds)) {
-            result.putIfAbsent(v.getDocumentId(), v.getVersionNo());
-        }
-        return result;
-    }
-
-    @Override
     public String keepVersion(String currentVersion) {
         return (currentVersion == null || currentVersion.isBlank()) ? "v1.0.0" : currentVersion;
     }
@@ -444,4 +430,26 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         response.setUpdatedDate(version.getUpdatedDate());
         return response;
     }
+    @Override
+    @Transactional(readOnly = true)
+    public String getCurrentVersionNo(String documentType, UUID documentId) {
+        String v = documentId == null ? null : versionRepository.currentVersionNo(documentType, documentId);
+        return (v == null || v.isBlank()) ? "v1.0.0" : v;
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Map<UUID, String> getCurrentVersionMap(String documentType, Collection<UUID> documentIds) {
+        Map<UUID, String> result = new HashMap<>();
+        if (documentIds == null || documentIds.isEmpty()) {
+            return result;
+        }
+        for (var row : versionRepository.currentVersionRows(documentType, documentIds)) {
+            if (row.getLabel() != null) {
+                result.put(UUID.fromString(row.getDocumentId()), row.getLabel());
+            }
+        }
+        return result;
+    }
+
 }

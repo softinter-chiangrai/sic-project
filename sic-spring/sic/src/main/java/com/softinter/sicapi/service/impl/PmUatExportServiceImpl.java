@@ -11,6 +11,7 @@ import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.PmUatExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.repository.pm.PmDocumentVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
@@ -41,6 +42,7 @@ public class PmUatExportServiceImpl implements PmUatExportService {
     private final PmCustomerRepository customerRepository;
     private final PmTestCaseRepository testCaseRepository;
     private final PmTestScenarioRepository scenarioRepository;
+    private final PmDocumentVersionRepository documentVersionRepository;
     private final ReportServiceClient reportServiceClient;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
@@ -123,6 +125,7 @@ public class PmUatExportServiceImpl implements PmUatExportService {
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("projectId", projectId != null ? projectId.toString() : "");
         parameters.put("scenarioId", scenarioId != null ? scenarioId.toString() : "");
+        parameters.put("docVersion", ReportHelper.firstNonBlank(documentVersionRepository.currentVersionLabel("TEST_SCENARIO", scenarioId), null));
         parameters.put("projectName", projectName);
         parameters.put("customerName", customerName);
         parameters.put("exportDate", exportDate);

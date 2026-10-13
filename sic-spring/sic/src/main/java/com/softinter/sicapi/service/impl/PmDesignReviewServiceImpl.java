@@ -114,7 +114,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         };
 
         Page<PmDesignReview> page = designReviewRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "DESIGN_REVIEW", page.getContent().stream().map(PmDesignReview::getId).toList());
         return page.map(e -> {
             var dto = this.mapToResponse(e);

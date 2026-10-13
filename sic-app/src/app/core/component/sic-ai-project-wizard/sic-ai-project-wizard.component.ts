@@ -157,6 +157,25 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     };
   }
 
+  get countIcons(): Record<string, string> {
+    return {
+      customer: 'bi-building',
+      project: 'bi-folder2-open',
+      contract: 'bi-file-earmark-text',
+      wbs: 'bi-diagram-3',
+      requirement: 'bi-card-checklist',
+      specification: 'bi-gear',
+      task: 'bi-check2-square',
+      test: 'bi-shield-check',
+      delivery: 'bi-truck',
+      manual: 'bi-book',
+      invoice: 'bi-receipt',
+      diagram: 'bi-bezier2',
+      design_review: 'bi-code-square',
+      ma: 'bi-tools',
+    };
+  }
+
   // Preview Data
   readonly previewData = signal<AiProjectPipelinePreviewResponse | null>(null);
 

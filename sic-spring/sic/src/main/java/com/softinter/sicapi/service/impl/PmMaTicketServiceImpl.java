@@ -137,7 +137,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
         };
 
         Page<PmMaTicket> page = ticketRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "MA_TICKET", page.getContent().stream().map(PmMaTicket::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);

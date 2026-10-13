@@ -10,6 +10,7 @@ import com.softinter.sicapi.repository.su.SuUploadRepository;
 import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.service.PmDeliveryExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
+import com.softinter.sicapi.repository.pm.PmDocumentVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
@@ -41,6 +42,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
     private final PmCustomerContractRepository contractRepository;
     private final SuUploadRepository uploadRepository;
     private final DataSource dataSource;
+    private final PmDocumentVersionRepository documentVersionRepository;
     private final ReportServiceClient reportServiceClient;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
@@ -79,7 +81,7 @@ public class PmDeliveryExportServiceImpl implements PmDeliveryExportService {
         parameters.put("projectName", projectName);
         parameters.put("contractNo", contractNo);
         parameters.put("deliveryType", delivery.getDeliveryType() != null ? delivery.getDeliveryType() : "FINAL");
-        parameters.put("deliveryVersion", delivery.getDeliveryVersion() != null ? delivery.getDeliveryVersion() : "1.0.0");
+        parameters.put("deliveryVersion", ReportHelper.firstNonBlank(documentVersionRepository.currentVersionLabel("DELIVERY", deliveryId), null));
         parameters.put("deliveryDate", deliveryDateStr);
         parameters.put("status", delivery.getStatus() != null ? delivery.getStatus() : "-");
         parameters.put("deliverySummary", delivery.getDeliverySummary());

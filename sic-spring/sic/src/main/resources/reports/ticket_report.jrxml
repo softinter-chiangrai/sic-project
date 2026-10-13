@@ -24,7 +24,8 @@
 		<defaultValueExpression><![CDATA[this.getClass().getResourceAsStream("/images/softinter_logo.png")]]></defaultValueExpression>
 	</parameter>
 
-	<query language="sql"><![CDATA[SELECT 
+	<query language="sql"><![CDATA[SELECT
+            pm_current_version_label('MA_TICKET', t.id) AS "docVersion", 
                 t.ticket_no                                          AS "ticketNo",
                 t.title                                              AS "title",
                 COALESCE(t.ticket_type, 'Incident')                  AS "ticketType",
@@ -48,6 +49,7 @@
             ORDER BY t.created_date DESC
             LIMIT 1;]]></query>
 
+	<field name="docVersion" class="java.lang.String"/>
 	<field name="ticketNo" class="java.lang.String"/>
 	<field name="title" class="java.lang.String"/>
 	<field name="projectName" class="java.lang.String"/>
@@ -72,11 +74,11 @@
 		<element kind="staticText" uuid="7cf41209-1a3b-489e-913a-7a561bc49a12" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
 			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
 		</element>
-		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="0" width="285" height="26" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="-6" width="285" height="34" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Ticket Report" : "รายงานใบแจ้งปัญหา (Ticket Report)")]]></expression>
 		</element>
-		<element kind="staticText" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
-			<text><![CDATA[Incident & Support Resolution Report]]></text>
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Incident & Support Resolution Report" : "รายงานการแก้ไขปัญหาและงานสนับสนุน")]]></expression>
 		</element>
 		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
 			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
@@ -130,7 +132,7 @@
 	</dataset>
 
 	<detail>
-		<band height="268" splitType="Stretch">
+		<band height="286" splitType="Stretch">
 			<!-- SECTION 1: ข้อมูล Ticket และโครงการ -->
 			<element kind="textField" uuid="09fa417b-5c2a-489e-b12a-3b567a14ce92" positionType="Float" x="0" y="6" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "1. Ticket & Project Metadata" : "1. ข้อมูลการแจ้งเรื่องและโครงการ (Ticket & Project Metadata)")]]></expression>
@@ -138,32 +140,32 @@
 			<element kind="line" uuid="7cf41209-4a3b-489e-913a-7a561bc49a12" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
-			<element kind="rectangle" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="100" backcolor="#F8FAFC" radius="3">
+			<element kind="rectangle" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="118" backcolor="#F8FAFC" radius="3">
 				<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 			</element>
 
 			<!-- Row 1: Code & Status -->
-			<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" positionType="Float" x="10" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" positionType="Float" x="10" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Ticket No.:" : "รหัส Ticket:")]]></expression>
 			</element>
-			<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" positionType="Float" x="105" y="38" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" positionType="Float" x="105" y="38" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{ticketNo} != null ? $F{ticketNo} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" positionType="Float" x="270" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" positionType="Float" x="270" y="38" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะงาน:")]]></expression>
 			</element>
-			<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" positionType="Float" x="365" y="38" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" positionType="Float" x="365" y="38" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{status} != null ? $F{status} : "-"]]></expression>
 			</element>
 
 			<!-- Row 2: Customer & Project -->
-			<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" positionType="Float" x="10" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" positionType="Float" x="10" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Customer / Org:" : "ลูกค้า / องค์กร:")]]></expression>
 			</element>
 			<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" positionType="Float" x="105" y="56" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" positionType="Float" x="270" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" positionType="Float" x="270" y="56" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" positionType="Float" x="365" y="56" width="143" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -171,27 +173,27 @@
 			</element>
 
 			<!-- Row 3: Type & Severity -->
-			<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" positionType="Float" x="10" y="74" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" positionType="Float" x="10" y="74" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภทงาน:")]]></expression>
 			</element>
 			<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" positionType="Float" x="105" y="74" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{ticketType} != null ? $F{ticketType} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" positionType="Float" x="270" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" positionType="Float" x="270" y="74" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Severity:" : "ระดับความรุนแรง:")]]></expression>
 			</element>
-			<element kind="textField" uuid="62d1a3c7-2b3a-48ca-91b5-827a4192b0c5" positionType="Float" x="370" y="74" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<element kind="textField" uuid="62d1a3c7-2b3a-48ca-91b5-827a4192b0c5" positionType="Float" x="370" y="74" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{severity} != null ? $F{severity} : "-"]]></expression>
 			</element>
 
 			<!-- Row 4: Reported By & Reported Date -->
-			<element kind="textField" uuid="b13e9a72-2b3a-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="92" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="b13e9a72-2b3a-48a5-926f-47b2ae601b2a" positionType="Float" x="10" y="92" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Reported By:" : "ผู้แจ้งเรื่อง:")]]></expression>
 			</element>
 			<element kind="textField" uuid="8ea6f8e7-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="105" y="92" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{reportedBy} != null ? $F{reportedBy} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="270" y="92" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="270" y="92" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Reported Date:" : "วันที่แจ้งเรื่อง:")]]></expression>
 			</element>
 			<element kind="textField" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" positionType="Float" x="370" y="92" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -199,13 +201,19 @@
 			</element>
 
 			<!-- Row 5: Assigned To & Resolved Date -->
-			<element kind="textField" uuid="3d2194c7-3c4b-47b2-843e-958a1b24ca02" positionType="Float" x="10" y="110" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="3d2194c7-3c4b-47b2-843e-958a1b24ca02" positionType="Float" x="10" y="110" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Assigned To:" : "ผู้รับผิดชอบ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="7cf41209-3c4b-489e-913a-7a561bc49a12" positionType="Float" x="105" y="110" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{assignedTo} != null ? $F{assignedTo} : "-"]]></expression>
 			</element>
-			<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" positionType="Float" x="270" y="110" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<element kind="textField" uuid="06af365f-7b25-4351-ba2f-dbcd3d3c82bc" positionType="Float" x="10" y="128" width="90" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+			</element>
+			<element kind="textField" uuid="2253230f-5bd1-44d1-9208-4bca18e762f4" positionType="Float" x="105" y="128" width="148" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{docVersion} != null ? $F{docVersion} : "-"]]></expression>
+			</element>
+			<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" positionType="Float" x="270" y="110" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Resolved Date:" : "วันที่แก้ไขเสร็จ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="b13e9a72-3c4b-48a5-926f-47b2ae601b2a" positionType="Float" x="370" y="110" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
@@ -213,14 +221,14 @@
 			</element>
 
 			<!-- SECTION 2: รายละเอียดปัญหา (Problem Description) -->
-			<element kind="textField" uuid="8ea6f8e7-4d5c-47b2-913b-2a567c82a4c9" positionType="Float" x="0" y="146" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<element kind="textField" uuid="8ea6f8e7-4d5c-47b2-913b-2a567c82a4c9" positionType="Float" x="0" y="164" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "2. Problem Description" : "2. รายละเอียดปัญหาและอาการที่พบ (Problem Description)")]]></expression>
 			</element>
-			<element kind="line" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" positionType="Float" x="0" y="168" width="515" height="1" forecolor="#CBD5E1">
+			<element kind="line" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" positionType="Float" x="0" y="186" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
 			<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
-				<element kind="component" uuid="c52af66c-f295-4816-bc74-f8b57a07e9e5" positionType="Float" x="0" y="176" width="515" height="20">
+				<element kind="component" uuid="c52af66c-f295-4816-bc74-f8b57a07e9e5" positionType="Float" x="0" y="194" width="515" height="20">
 					<component kind="list">
 						<datasetRun uuid="b89accd9-6f8e-4f32-b1ee-9989115296ca" subDataset="ContentBlocksDataset">
 							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details provided." : "ไม่มีรายละเอียดเพิ่มเติม"), "-", 513))]]></dataSourceExpression>
@@ -395,14 +403,14 @@
 				</element>
 
 			<!-- SECTION 3: สรุปผลการแก้ไขปัญหา (Resolution Summary) -->
-			<element kind="textField" uuid="3d2194c7-4d5c-47b2-843e-958a1b24ca02" positionType="Float" x="0" y="214" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<element kind="textField" uuid="3d2194c7-4d5c-47b2-843e-958a1b24ca02" positionType="Float" x="0" y="232" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
 				<expression><![CDATA[($P{lang}.equals("en") ? "3. Resolution & Action Taken" : "3. สรุปผลและแนวทางการแก้ไขปัญหา (Resolution & Action Taken)")]]></expression>
 			</element>
-			<element kind="line" uuid="7cf41209-4d5c-489e-913a-7a561bc49a12" positionType="Float" x="0" y="236" width="515" height="1" forecolor="#CBD5E1">
+			<element kind="line" uuid="7cf41209-4d5c-489e-913a-7a561bc49a12" positionType="Float" x="0" y="254" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
 			</element>
 			<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
-				<element kind="component" uuid="dc2a95ea-efe6-42d3-a764-9405e534d01e" positionType="Float" x="0" y="244" width="515" height="20">
+				<element kind="component" uuid="dc2a95ea-efe6-42d3-a764-9405e534d01e" positionType="Float" x="0" y="262" width="515" height="20">
 					<component kind="list">
 						<datasetRun uuid="479f581c-ab0c-4b57-98b0-2b8f1645ee8f" subDataset="ContentBlocksDataset">
 							<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.appendText(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{resolutionSummary} != null && !$F{resolutionSummary}.isBlank() ? $F{resolutionSummary} : ($P{lang}.equals("en") ? "Resolution is currently in progress." : "อยู่ระหว่างการดำเนินการแก้ไขปัญหา"), "-", 513), ($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})))]]></dataSourceExpression>

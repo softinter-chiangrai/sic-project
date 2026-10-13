@@ -963,7 +963,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 requirementRepository.findById(documentId).ifPresent(req -> {
                     req.setStatus("Changed");
                     String newVersion = nextVersionAfterChange("REQUIREMENT", req.getId(), changeLevel);
-                    req.setVersion(newVersion);
                     requirementRepository.save(req);
                     versionService.createVersion("REQUIREMENT", req.getId(), req.getProjectId(),
                             req.getRequirementCode(), newVersion, reason);
@@ -973,7 +972,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 specificationRepository.findById(documentId).ifPresent(spec -> {
                     spec.setStatus("Changed");
                     String newVersion = nextVersionAfterChange("SPECIFICATION", spec.getId(), changeLevel);
-                    spec.setVersion(newVersion);
                     specificationRepository.save(spec);
                     UUID specProjectId = spec.getProject() != null ? spec.getProject().getId() : null;
                     versionService.createVersion("SPECIFICATION", spec.getId(), specProjectId,
@@ -1004,10 +1002,7 @@ public class ApprovalServiceImpl implements ApprovalService {
                     del.setIsLocked(false);
                     del.setPmApprovedBy(null);
                     del.setPmApprovedDate(null);
-                    String newVersion = changeLevel == null
-                            ? versionService.keepVersion(del.getDeliveryVersion())
-                            : versionService.bumpVersion(del.getDeliveryVersion(), changeLevel);
-                    del.setDeliveryVersion(newVersion);
+                    String newVersion = nextVersionAfterChange("DELIVERY", del.getId(), changeLevel);
                     deliveryRepository.save(del);
                     String verNo = newVersion.startsWith("v") || newVersion.startsWith("V") ? newVersion : "v" + newVersion;
                     versionService.createVersion("DELIVERY", del.getId(), del.getProjectId(),
@@ -1037,10 +1032,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "MANUAL":
                 userManualRepository.findById(documentId).ifPresent(man -> {
                     man.setStatus("CHANGED");
-                    String newVersion = changeLevel == null
-                            ? versionService.keepVersion(man.getVersion())
-                            : versionService.bumpVersion(man.getVersion(), changeLevel);
-                    man.setVersion(newVersion);
+                    String newVersion = nextVersionAfterChange("USER_MANUAL", man.getId(), changeLevel);
                     userManualRepository.save(man);
                     versionService.createVersion("USER_MANUAL", man.getId(), man.getProjectId(),
                             man.getManualCode(), newVersion, reason);
@@ -1256,14 +1248,12 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "REQUIREMENT":
                 requirementRepository.findById(docId).ifPresent(req -> {
                     req.setStatus("Approved");
-                    req.setVersion(approvedVersion);
                     requirementRepository.save(req);
                 });
                 break;
             case "SPECIFICATION":
                 specificationRepository.findById(docId).ifPresent(spec -> {
                     spec.setStatus("Approved");
-                    spec.setVersion(approvedVersion);
                     specificationRepository.save(spec);
                 });
                 break;
@@ -1303,7 +1293,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 deliveryRepository.findById(docId).ifPresent(del -> {
                     del.setStatus("CONFIRMED");
                     del.setIsLocked(true);
-                    del.setDeliveryVersion(approvedVersion);
                     del.setPmApprovedBy(approval.getFinalApprover());
                     del.setPmApprovedDate(Instant.now());
                     deliveryRepository.save(del);
@@ -1326,7 +1315,6 @@ public class ApprovalServiceImpl implements ApprovalService {
             case "MANUAL":
                 userManualRepository.findById(docId).ifPresent(man -> {
                     man.setStatus("APPROVED");
-                    man.setVersion(approvedVersion);
                     userManualRepository.save(man);
                 });
                 break;

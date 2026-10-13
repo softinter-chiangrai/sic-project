@@ -213,7 +213,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         };
 
         Page<PmCustomerContract> page = contractRepository.findAll(spec, pageable);
-        Map<UUID, String> versions = documentVersionService.getLatestVersionMap(
+        Map<UUID, String> versions = documentVersionService.getCurrentVersionMap(
                 "CONTRACT", page.getContent().stream().map(PmCustomerContract::getId).toList());
         return page.map(e -> {
             var dto = this.toResponse(e);

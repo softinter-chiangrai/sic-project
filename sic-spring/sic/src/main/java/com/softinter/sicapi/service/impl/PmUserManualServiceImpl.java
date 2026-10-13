@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import com.softinter.sicapi.util.KeywordSearchHelper;
+import com.softinter.sicapi.util.VersionKeywordSearchHelper;
 import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
 import java.util.Map;
 
@@ -86,7 +87,8 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String rawKw = keyword.trim().toLowerCase();
                 String pattern = "%" + rawKw + "%";
-                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "manualCode", "manualTitle", "manualType", "version", "status");
+                List<Predicate> orPreds = KeywordSearchHelper.likeAny(cb, root, pattern, "manualCode", "manualTitle", "manualType", "status");
+                VersionKeywordSearchHelper.addVersionPredicate(query, cb, root.get("id"), "USER_MANUAL", pattern, orPreds);
 
                 // ✅ Bilingual: สถานะ
                 KeywordSearchHelper.addThaiMapPredicates(cb, root, "status", MANUAL_STATUS_THAI_MAP, rawKw, orPreds);
@@ -169,7 +171,6 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             List<String> changes = new ArrayList<>();
             DocumentDiffHelper.checkChange(changes, "ชื่อคู่มือ (Title)", entity.getManualTitle(), request.getManualTitle());
             DocumentDiffHelper.checkChange(changes, "ประเภทคู่มือ (Type)", entity.getManualType(), request.getManualType());
-            DocumentDiffHelper.checkChange(changes, "เวอร์ชัน (Version)", entity.getVersion(), request.getVersion());
             DocumentDiffHelper.checkChange(changes, "สถานะ (Status)", entity.getStatus(), request.getStatus());
             diffSummary = DocumentDiffHelper.buildDiffSummary(changes, "อัปเดตคู่มือ " + (request.getManualTitle() != null ? request.getManualTitle() : entity.getManualTitle()));
 
@@ -188,11 +189,6 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
 
-            String currentVer = entity.getVersion() != null ? entity.getVersion() : "1.0.0";
-            String newVer = documentVersionService.keepVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
-            String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
-            entity.setVersion(cleanVer);
-
             entity = manualRepository.save(entity);
 
             try {
@@ -207,7 +203,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         // Snapshot data
         String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
-        String targetVer = entity.getVersion() != null ? (entity.getVersion().startsWith("v") ? entity.getVersion() : "v" + entity.getVersion()) : "v1.0.0";
+        String targetVer = documentVersionService.getLatestVersionNo("USER_MANUAL", entity.getId());
 
         // ✅ Create document version
         documentVersionService.createVersion(
@@ -297,7 +293,6 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         entity.setManualCode(req.getManualCode());
         entity.setManualTitle(req.getManualTitle());
         entity.setManualType(req.getManualType() != null ? req.getManualType() : "USER");
-        entity.setVersion(req.getVersion() != null ? req.getVersion() : "1.0.0");
         entity.setRelatedSpecId(req.getRelatedSpecId());
         entity.setDeliveryId(req.getDeliveryId());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
@@ -321,7 +316,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
         res.setManualCode(entity.getManualCode());
         res.setManualTitle(entity.getManualTitle());
         res.setManualType(entity.getManualType());
-        res.setVersion(entity.getVersion());
+        res.setVersion(documentVersionService.getCurrentVersionNo("USER_MANUAL", entity.getId()));
         res.setRelatedSpecId(entity.getRelatedSpecId());
         res.setDeliveryId(entity.getDeliveryId());
         res.setStatus(entity.getStatus());

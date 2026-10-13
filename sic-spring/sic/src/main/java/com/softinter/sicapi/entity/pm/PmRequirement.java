@@ -44,10 +44,7 @@ public class PmRequirement extends BaseBusinessEntity {
     @Column(name = "acceptance_criteria", columnDefinition = "TEXT")
     private String acceptanceCriteria;
 
-    @Column(name = "version", length = 10)
-    private String version;
-
-    @Column(name = "status", length = 20)
+@Column(name = "status", length = 20)
     private String status;
 
     @Column(name = "is_active")

@@ -46,8 +46,6 @@ public interface DocumentVersionService {
      */
     String keepVersion(String currentVersion);
 
-    /** เวอร์ชันล่าสุดของเอกสารหลายรายการในคำสั่งเดียว (ใช้แสดงคอลัมน์ Version ในหน้า list) key = documentId */
-    Map<UUID, String> getLatestVersionMap(String documentType, Collection<UUID> documentIds);
 
     /**
      * bump เวอร์ชันแบบ semver (X.Y.Z) ตามระดับการเปลี่ยน: PATCH = Z+1, MINOR = Y+1 (Z=0), MAJOR = X+1 (Y=0, Z=0)
@@ -63,4 +61,10 @@ public interface DocumentVersionService {
      * จึงเป็นแหล่งอ้างอิงที่น่าเชื่อถือกว่าเมื่อจะนำไปคำนวณเวอร์ชันถัดไป (increment / promote)
      */
     String getLatestVersionNo(String documentType, UUID documentId);
+
+    /** เวอร์ชันปัจจุบันที่แสดงให้ผู้ใช้: ฉบับที่อนุมัติล่าสุด; ถ้ายังไม่เคยอนุมัติ = ฉบับร่างล่าสุด; ไม่มีเลย = v1.0.0 */
+    String getCurrentVersionNo(String documentType, UUID documentId);
+
+    /** getCurrentVersionNo ของหลายเอกสารในคำสั่งเดียว (หน้า list) key = documentId; เอกสารที่ไม่มีแถวเวอร์ชันไม่อยู่ใน map */
+    Map<UUID, String> getCurrentVersionMap(String documentType, Collection<UUID> documentIds);
 }

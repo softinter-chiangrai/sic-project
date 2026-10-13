@@ -189,7 +189,6 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setCreatedDate(Instant.now());
             entity.setIsDelete(false);
             entity.setIsLocked(false);
-            entity.setDeliveryVersion("1.0.0");
             if (request.getDeliveryCode() == null || request.getDeliveryCode().isBlank()) {
                 long count = deliveryRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
                 String code;
@@ -211,7 +210,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                     entity.getId(),
                     entity.getProjectId(),
                     entity.getDeliveryCode(),
-                    "v" + entity.getDeliveryVersion(),
+                    "v1.0.0",
                     "สร้างเอกสารส่งมอบงวดงาน (Initial delivery)",
                     JsonSnapshotHelper.toJson(toResponse(entity))
             );
@@ -272,17 +271,12 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
 
-            String currentVer = entity.getDeliveryVersion() != null ? entity.getDeliveryVersion() : "1.0.0";
-            String newVer = documentVersionService.keepVersion(currentVer.startsWith("v") ? currentVer : "v" + currentVer);
-            String cleanVer = newVer.startsWith("v") ? newVer.substring(1) : newVer;
-            entity.setDeliveryVersion(cleanVer);
-
             entity = deliveryRepository.save(entity);
 
             // Snapshot data for versioning
             String snapshotJson = JsonSnapshotHelper.toJson(toResponse(entity));
 
-            String nextVersion = "v" + cleanVer;
+            String nextVersion = documentVersionService.getLatestVersionNo("DELIVERY", entity.getId());
             documentVersionService.createVersion(
                     "DELIVERY",
                     entity.getId(),
@@ -534,7 +528,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 delivery.getId(),
                 delivery.getProjectId(),
                 delivery.getDeliveryCode(),
-                "v" + delivery.getDeliveryVersion() + "-ACCEPTED",
+                documentVersionService.getLatestVersionNo("DELIVERY", delivery.getId()) + "-ACCEPTED",
                 "ลูกค้าลงนามตรวจรับงานเรียบร้อยโดย " + signedBy
         );
 
@@ -656,7 +650,6 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         entity.setContractId(req.getContractId());
         entity.setMilestoneId(req.getMilestoneId());
         entity.setDeliveryDate(req.getDeliveryDate());
-        entity.setDeliveryVersion(req.getDeliveryVersion() != null ? req.getDeliveryVersion() : "1.0.0");
         entity.setReleaseNote(req.getReleaseNote());
         entity.setDeliverySummary(req.getDeliverySummary());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "DRAFT");
@@ -701,7 +694,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         res.setContractId(entity.getContractId());
         res.setMilestoneId(entity.getMilestoneId());
         res.setDeliveryDate(entity.getDeliveryDate());
-        res.setDeliveryVersion(entity.getDeliveryVersion());
+        res.setDeliveryVersion(documentVersionService.getCurrentVersionNo("DELIVERY", entity.getId()));
         res.setReleaseNote(entity.getReleaseNote());
         res.setDeliverySummary(entity.getDeliverySummary());
         res.setStatus(entity.getStatus());

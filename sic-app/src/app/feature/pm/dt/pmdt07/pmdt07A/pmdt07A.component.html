@@ -342,33 +342,6 @@
                             </sic-combobox>
                         </div>
 
-                        <!-- Requirement Selection (Optional) -->
-                        <div>
-                            <sic-combobox
-                                [label]="'PMDT07_AI_REF_REQ_LABEL' | translate"
-                                [apiUrl]="service.apiGetComboboxRequirement"
-                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                                [placeholder]="'PMDT07_AI_REF_REQ_PLACEHOLDER' | translate"
-                                [(ngModel)]="aiAssistRequirementId"
-                                [clearable]="true">
-                            </sic-combobox>
-                        </div>
-
-                        <!-- Diagram Selection (Multiple) -->
-                        <div>
-                            <sic-combobox
-                                [label]="'PMDT07_AI_REF_DIAGRAM_LABEL' | translate"
-                                [apiUrl]="service.apiGetComboboxDiagram"
-                                [params]="{ projectId: form.get('projectId')?.value || customerState.getProjectId() }"
-                                valueField="id"
-                                textField="name"
-                                [placeholder]="'PMDT07_AI_REF_DIAGRAM_PLACEHOLDER' | translate"
-                                [(ngModel)]="aiAssistDiagramIds"
-                                [multiple]="true"
-                                [clearable]="true">
-                            </sic-combobox>
-                        </div>
-
                         <div>
                             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
                                 {{ 'PMDT07_AI_PROMPT_LABEL' | translate }}

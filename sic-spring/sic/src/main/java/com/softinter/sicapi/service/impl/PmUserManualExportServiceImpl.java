@@ -11,6 +11,7 @@ import com.softinter.sicapi.entity.su.SuUpload;
 import com.softinter.sicapi.service.PmUserManualExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.ReportHelper;
+import com.softinter.sicapi.repository.pm.PmDocumentVersionRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
@@ -41,6 +42,7 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
     private final PmDeliveryRepository deliveryRepository;
     private final SuUploadRepository uploadRepository;
     private final DataSource dataSource;
+    private final PmDocumentVersionRepository documentVersionRepository;
     private final ReportServiceClient reportServiceClient;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
@@ -78,7 +80,7 @@ public class PmUserManualExportServiceImpl implements PmUserManualExportService 
         parameters.put("manualTitle", manual.getManualTitle() != null ? manual.getManualTitle() : "-");
         parameters.put("projectName", projectName);
         parameters.put("manualType", getManualTypeLabel(manual.getManualType()));
-        parameters.put("version", manual.getVersion() != null ? manual.getVersion() : "1.0.0");
+        parameters.put("version", ReportHelper.firstNonBlank(documentVersionRepository.currentVersionLabel("USER_MANUAL", manualId), null));
         parameters.put("status", manual.getStatus() != null ? manual.getStatus() : "-");
         parameters.put("deliveryCode", deliveryCode);
         String attachmentNames = manual.getAttachmentGroupId() != null

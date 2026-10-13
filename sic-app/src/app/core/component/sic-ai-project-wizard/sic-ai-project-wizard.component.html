@@ -284,11 +284,14 @@
     <h3 class="success-title">{{ 'AIWIZARD_SUCCESS_TITLE' | translate }}</h3>
     <p class="success-desc">{{ 'AIWIZARD_SUCCESS_DESC_PREFIX' | translate }} <span class="badge-draft">{{ 'AIWIZARD_DRAFT_BADGE' | translate }}</span> {{ 'AIWIZARD_SUCCESS_DESC_SUFFIX' | translate }}</p>
 
-    <div class="summary-stat-grid">
+    <div class="summary-stat-grid summary-stat-vertical">
       <ng-container *ngFor="let entry of createdCounts() | keyvalue">
         <div class="stat-card" *ngIf="entry.value">
+          <div class="stat-card-info">
+            <i class="bi" [ngClass]="countIcons[entry.key] || 'bi-check2-circle'"></i>
+            <span class="stat-lbl">{{ countLabels[entry.key] || entry.key }}</span>
+          </div>
           <span class="stat-num">{{ entry.value }}</span>
-          <span class="stat-lbl">{{ countLabels[entry.key] || entry.key }}</span>
         </div>
       </ng-container>
     </div>

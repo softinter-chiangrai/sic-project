@@ -25,10 +25,7 @@ public class PmUserManual extends BaseBusinessEntity {
     @Column(name = "manual_type", length = 50)
     private String manualType = "USER"; // USER, ADMIN, INSTALLATION, OPERATION, TROUBLESHOOT
 
-    @Column(name = "version", length = 20)
-    private String version = "1.0.0";
-
-    @Column(name = "related_spec_id")
+@Column(name = "related_spec_id")
     private UUID relatedSpecId;
 
     @Column(name = "delivery_id")
