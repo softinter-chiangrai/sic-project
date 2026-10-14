@@ -200,3 +200,31 @@ test.describe('every report with long and awkward content', () => {
     });
   }
 });
+
+// A table wider than the grid in every report that prints rich text: all cells present, first column repeated per slice.
+test.describe('wide table in every report', () => {
+  for (const report of RICH_REPORTS) {
+    test(report.name, async () => {
+      const t = uid();
+      const html = Object.fromEntries(
+        report.fields.map((f, i) => {
+          const head = Array.from({ length: 9 }, (_, c) => `WH${i}x${c}${t}`);
+          const rows = Array.from({ length: 3 }, (_, r) => Array.from({ length: 9 }, (_, c) => `WC${i}x${r}x${c}${t}`));
+          return [f, `<p>wide${f}${t}</p>${table(rows, head)}`];
+        }),
+      );
+      const doc = await report.create(w, html);
+      const res = await w.api.bytes(doc.path, { lang: 'th', ...doc.params });
+      expect(res.status, `${report.name} export`).toBe(200);
+      const pdf = probe(res.data);
+      const count = (needle: string) => pdf.text.replace(/\s+/g, '').split(needle).length - 1;
+      for (const [i] of report.fields.entries()) {
+        const cells = [`WH${i}x0${t}`, `WH${i}x8${t}`, ...[0, 1, 2].flatMap((r) => [`WC${i}x${r}x0${t}`, `WC${i}x${r}x4${t}`, `WC${i}x${r}x8${t}`])];
+        const lost = missing(pdf, cells);
+        expect.soft(lost, `${report.name} field ${i}: lost ${lost.join(', ')}`).toEqual([]);
+        expect.soft(count(`WH${i}x0${t}`), `${report.name} field ${i}: first column should repeat in each of the 2 slices`).toBe(2);
+        expect.soft(count(`WC${i}x1x8${t}`), `${report.name} field ${i}: a data cell printed more than once`).toBe(1);
+      }
+    });
+  }
+});
