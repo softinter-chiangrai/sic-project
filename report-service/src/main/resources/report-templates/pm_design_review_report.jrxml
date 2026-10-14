@@ -102,7 +102,7 @@
 
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป สลับกันตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="7f887867-ba22-403a-8185-042b06583e85">
+	<dataset name="RichBlocksDataset" uuid="6e8200cd-42fa-4917-898f-aaff5eb4586e">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -238,7 +238,7 @@
 						<!-- Text + inline images in original order (real List component, unlimited rows) -->
 			<element kind="component" uuid="86083e37-a70f-4ae6-a9d1-f0436ddec527" positionType="Float" x="0" y="192" width="515" height="20">
 				<component kind="list">
-					<datasetRun uuid="c27ade93-a38f-4c33-bfd1-50fc4d85fa42" subDataset="RichBlocksDataset">
+					<datasetRun uuid="d53fa38d-2784-469f-a228-99f914a7fe2e" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[$P{lang}.equals("en") ? "No additional details provided." : "ไม่มีรายละเอียดเพิ่มเติม"]]></expression></parameter>

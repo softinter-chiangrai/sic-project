@@ -91,3 +91,45 @@ test('the exported PDF shows the new columns', async () => {
   const text = probe(pdf.data).text;
   for (const t of ['ลำดับที่', 'รหัสสินค้า', 'ราคา/หน่วย', 'ส่วนลด', 'SKU-001', 'Widget', 'Net Total', 'บาท']) expect(hasText(text, t), t).toBe(true);
 });
+
+test('the AI draft fills code, quantity, unit price and discount of the rows (AI answer faked in the browser)', async () => {
+  await ui.page.route('**/api/pm/invoices/generate/draft', (route) => route.fulfill({
+    status: 200, contentType: 'application/json',
+    body: JSON.stringify({
+      invoiceTitle: 'AI draft', billingType: 'MILESTONE', vatRate: 7, remark: '<p>ai remark</p>',
+      items: [{ itemCode: 'AI-001', itemDescription: 'AI item', quantity: 2, unitPrice: 1000, discount: 100, amount: 1900 },
+              { itemCode: 'AI-002', itemDescription: 'AI second', quantity: 1, unitPrice: 500, discount: 0, amount: 500 }],
+    }),
+  }));
+  await ui.page.evaluate(() => localStorage.setItem('app-lang', 'en'));
+  await ui.visit(`/feature/pm/invoice/${invoiceId}/edit`);
+  await ui.expectHealthy('/feature/pm/invoice/:id/edit');
+  await ui.page.locator('button').filter({ has: ui.page.locator('i.bi-stars') }).first().click();
+  await ui.page.getByRole('button', { name: /Generate Invoice with AI/ }).click();
+  await expect(rows()).toHaveCount(2, { timeout: 30_000 });
+  const first = rows().first();
+  await expect(first.locator('input[type=text]').first()).toHaveValue('AI-001');
+  await expect(first.getByTestId('item-qty')).toHaveValue('2');
+  await expect(first.getByTestId('item-unit-price')).toHaveValue('1000');
+  await expect(first.getByTestId('item-discount')).toHaveValue('100');
+  await expect(first.getByTestId('item-amount')).toHaveValue('1900');
+  await expect(rows().nth(1).locator('input[type=text]').first()).toHaveValue('AI-002');
+  await expect(ui.page.locator('sic-input-number[formcontrolname="subtotalAmount"] input')).toHaveValue(/2,?400/);
+  await ui.page.unroute('**/api/pm/invoices/generate/draft');
+});
+
+for (const [lang, headers] of [
+  ['en', ['Code', 'Qty', 'Unit Price', 'Discount', 'Amount']],
+  ['th', ['รหัสสินค้า', 'จำนวน', 'ราคา/หน่วย', 'ส่วนลด', 'ยอดเงิน']],
+] as const) {
+  test(`switching the system language to ${lang} changes the item columns`, async () => {
+    await ui.page.evaluate((l) => localStorage.setItem('app-lang', l), lang);
+    await ui.visit(`/feature/pm/invoice/${invoiceId}/edit`);
+    await ui.expectHealthy('/feature/pm/invoice/:id/edit');
+    const head = ui.page.locator('table thead').first();
+    for (const h of headers) await expect(head, h).toContainText(h, { timeout: 30_000 });
+    // and the other language is gone
+    const other = lang === 'en' ? 'รหัสสินค้า' : 'Unit Price';
+    await expect(head).not.toContainText(other);
+  });
+}

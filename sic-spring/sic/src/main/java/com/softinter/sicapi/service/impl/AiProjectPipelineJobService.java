@@ -1078,7 +1078,7 @@ public class AiProjectPipelineJobService {
                         {
                           "deliveryRef": 1,
                           "items": [
-                            { "itemName": "ชื่อรายการบริการ/ส่งมอบ", "description": "คำอธิบายงานแบบกระชับ", "amount": 100000.0 }
+                            { "itemCode": "รหัสรายการสั้นๆ เช่น SVC-001", "itemName": "ชื่อรายการบริการ/ส่งมอบ", "description": "คำอธิบายงานแบบกระชับ", "quantity": 1, "unitPrice": 100000.0, "discount": 0, "amount": 100000.0 }
                           ]
                         }
                       ]
@@ -1094,6 +1094,11 @@ public class AiProjectPipelineJobService {
                         PmInvoiceItemRequest ir = new PmInvoiceItemRequest();
                         ir.setItemName(cut(txt(it, "itemName"), 255));
                         ir.setDescription(cut(cleanHtmlText(txt(it, "description")), 255));
+                        ir.setItemCode(cut(txt(it, "itemCode"), 50));
+                        if (it.path("quantity").isNumber()) ir.setQuantity(it.path("quantity").decimalValue());
+                        if (it.path("unitPrice").isNumber()) ir.setUnitPrice(it.path("unitPrice").decimalValue());
+                        ir.setDiscount(it.path("discount").isNumber() ? it.path("discount").decimalValue() : BigDecimal.ZERO);
+                        // amount = quantity x unit price - discount (the invoice service recomputes it when both are present)
                         ir.setAmount(it.path("amount").isNumber() ? it.path("amount").decimalValue() : BigDecimal.ZERO);
                         ir.setSortOrder(order++);
                         ir.setState(STATE_ADDED);

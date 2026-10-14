@@ -199,7 +199,7 @@
 			<expression><![CDATA[($P{lang}.equals("en") ? "Invoice No:" : "เลขที่ใบแจ้งหนี้:")]]></expression>
 		</element>
 		<element kind="textField" uuid="955c81c2-5f70-4e1e-8ad0-7b4faa13f95f" x="95" y="76" width="410" height="22" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
-			<expression><![CDATA[($P{invoiceNo} != null ? $P{invoiceNo} : "-") + " [" + ($P{lang}.equals("en") ? "Payment Status: " : "สถานะการชำระ: ") + ($P{paymentStatus} != null ? $P{paymentStatus} : "UNPAID") + "]"]]></expression>
+			<expression><![CDATA[($P{invoiceNo} != null ? $P{invoiceNo} : "-") + " [" + ($P{lang}.equals("en") ? "Payment Status: " : "สถานะการชำระ: ") + (java.util.Map.of("UNPAID", ($P{lang}.equals("en") ? "Unpaid" : "ยังไม่ชำระ"), "PARTIAL", ($P{lang}.equals("en") ? "Partially paid" : "ชำระบางส่วน"), "PAID", ($P{lang}.equals("en") ? "Paid" : "ชำระแล้ว"), "OVERDUE", ($P{lang}.equals("en") ? "Overdue" : "เกินกำหนดชำระ"), "CANCELLED", ($P{lang}.equals("en") ? "Cancelled" : "ยกเลิก")).getOrDefault(String.valueOf(($P{paymentStatus} != null ? $P{paymentStatus} : "UNPAID")).toUpperCase(), String.valueOf($P{paymentStatus} != null ? $P{paymentStatus} : "UNPAID"))) + "]"]]></expression>
 		</element>
 <element kind="component" uuid="863716a8-0e8a-4917-95aa-6ec643a9df7c" positionType="Float" x="0" y="110" width="515" height="116">
 <component kind="list">
@@ -271,7 +271,7 @@
 <expression><![CDATA[($P{lang}.equals("en") ? "Billing Type:" : "ประเภทเรียกเก็บ:")]]></expression>
 </element>
 <element kind="textField" uuid="c6b6bca2-8a8e-4690-9ed6-7a98abb6b953" x="368" y="258" width="140" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
-<expression><![CDATA[$P{billingType} != null ? $P{billingType} : "-"]]></expression>
+<expression><![CDATA[$P{billingType} != null ? java.util.Map.of("FIXED_PRICE", ($P{lang}.equals("en") ? "Fixed price" : "ราคาคงที่"), "MILESTONE", ($P{lang}.equals("en") ? "Milestone" : "ตามงวดงาน"), "MONTHLY", ($P{lang}.equals("en") ? "Monthly" : "รายเดือน"), "MA", ($P{lang}.equals("en") ? "Maintenance (MA)" : "บำรุงรักษา (MA)"), "CHANGE_REQUEST", ($P{lang}.equals("en") ? "Change request" : "เปลี่ยนแปลงขอบเขตงาน")).getOrDefault(String.valueOf($P{billingType}).toUpperCase(), String.valueOf($P{billingType})) : "-"]]></expression>
 </element>
 <element kind="textField" uuid="168cac22-ab1e-4bba-b579-51dee1e65583" x="10" y="276" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
 <expression><![CDATA[($P{lang}.equals("en") ? "Issue Date:" : "วันที่ออกใบแจ้งหนี้:")]]></expression>

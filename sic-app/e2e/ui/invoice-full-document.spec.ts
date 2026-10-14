@@ -136,3 +136,13 @@ function findOpenPdf(): string {
   const v = fs.readdirSync(dir).sort().pop()!;
   return path.join(dir, v, `openpdf-${v}.jar`);
 }
+
+test('the document follows the language: status, billing type and amount in words in Thai and in English', async () => {
+  const th = pdfPage((await w.api.bytes(`/api/pm/invoices/${invoiceId}/export-pdf`, { lang: 'th' })).data, 0);
+  for (const t of ['ผู้ออกเอกสาร', 'ยังไม่ชำระ', 'ตามงวดงาน', 'บาทถ้วน']) expect(hasText(th, t), `Thai export lacks: ${t}`).toBe(true);
+  for (const t of ['UNPAID', 'MILESTONE']) expect(hasText(th, t), `Thai export still shows the raw code ${t}`).toBe(false);
+
+  const en = pdfPage((await w.api.bytes(`/api/pm/invoices/${invoiceId}/export-pdf`, { lang: 'en' })).data, 0);
+  for (const t of ['Issued by', 'Bill to', 'Unpaid', 'Milestone', 'Baht Only', 'Two Hundred Sixty-Five Thousand Three Hundred Sixty', 'Softinter Co., Ltd.']) expect(hasText(en, t), `English export lacks: ${t}`).toBe(true);
+  for (const t of ['ยังไม่ชำระ', 'ตามงวดงาน', 'UNPAID', 'MILESTONE']) expect(hasText(en, t), `English export still shows: ${t}`).toBe(false);
+});

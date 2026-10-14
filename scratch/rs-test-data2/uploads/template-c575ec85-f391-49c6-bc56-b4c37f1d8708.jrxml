@@ -110,7 +110,7 @@
 
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป สลับกันตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="45121515-1e93-4b3e-a479-b82f00282a19">
+	<dataset name="RichBlocksDataset" uuid="3ea7eefc-26db-4a04-993e-5e7d143637fc">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -242,7 +242,7 @@
 						<!-- Text + inline images in original order (real List component, unlimited rows) -->
 			<element kind="component" uuid="d3a10003-3001-3001-3001-a1b2c3d4e5f6" positionType="Float" x="0" y="154" width="515" height="20">
 				<component kind="list">
-					<datasetRun uuid="2f7ee1fd-cee6-4233-971f-f7bd8c3f3ea1" subDataset="RichBlocksDataset">
+					<datasetRun uuid="d5b9c53b-d48a-43d1-b5d6-30354060c334" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[$P{lang}.equals("en") ? "No additional details provided." : "ไม่มีรายละเอียดเพิ่มเติม"]]></expression></parameter>
@@ -430,7 +430,7 @@
 						<!-- Text + inline images in original order (real List component, unlimited rows) -->
 			<element kind="component" uuid="d3a10004-3001-3001-3001-a1b2c3d4e5f6" positionType="Float" x="0" y="220" width="515" height="20">
 				<component kind="list">
-					<datasetRun uuid="8365d7a1-c91d-40df-8263-4017c6f632ee" subDataset="RichBlocksDataset">
+					<datasetRun uuid="93ae7f3b-89c9-4b93-9d9f-27428401d429" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{acceptanceCriteria}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[$P{lang}.equals("en") ? "No additional acceptance criteria provided." : "ไม่มีเงื่อนไขการยอมรับเพิ่มเติม"]]></expression></parameter>

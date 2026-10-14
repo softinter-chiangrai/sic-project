@@ -26,9 +26,11 @@ public class InvoiceDraft {
     @NoArgsConstructor
     @AllArgsConstructor
     public static class InvoiceItemDraftItem {
+        private String itemCode;
         private String itemDescription;
         private Integer quantity;
         private BigDecimal unitPrice;
+        private BigDecimal discount;
         private BigDecimal amount;
     }
 }

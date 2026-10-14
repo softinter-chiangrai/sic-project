@@ -276,10 +276,12 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
         id: undefined,
         itemNo: idx + 1,
         itemName: it.itemDescription || it.itemName || it.name || this.translate.instant('PMDT16A_DEFAULT_ITEM_NAME', { n: idx + 1 }),
+        itemCode: it.itemCode || '',
         description: it.description || '',
         quantity: it.quantity || 1,
         unitPrice: it.unitPrice || it.amount || 0,
-        amount: it.amount || ((it.quantity || 1) * (it.unitPrice || 0)),
+        discount: it.discount || 0,
+        amount: Math.round((((it.quantity || 1) * (it.unitPrice || it.amount || 0)) - (it.discount || 0)) * 100) / 100,
         state: SicEntityState.Added,
       }));
       this.items.set(newItems);

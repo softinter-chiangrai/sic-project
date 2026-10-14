@@ -59,14 +59,17 @@ public class InvoiceGeneratorService {
                     "dueDate": "yyyy-MM-dd payment due date, usually 30 days after issueDate",
                     "items": [
                         {
+                            "itemCode": "Short item code (e.g. SVC-001, LIC-010)",
                             "itemDescription": "Description of work/deliverable (e.g. ค่าพัฒนาและออกแบบระบบ Phase 1)",
                             "quantity": 1,
                             "unitPrice": 100000.0,
+                            "discount": 0,
                             "amount": 100000.0
                         }
                     ],
                     "remark": "Short terms/payment conditions in HTML (<p>, <ul>, <li>), keep it concise"
                 }
+                4b. For every item: amount = quantity x unitPrice - discount (discount is an amount in THB, 0 when there is none).
                 5. "items" MUST contain at least 1 line item with a non-zero amount (split into several lines when the prompt/contract implies it). Never return an empty items array.
                 6. Ensure professional tone. If prompt in Thai, respond in Thai.
                 """;
