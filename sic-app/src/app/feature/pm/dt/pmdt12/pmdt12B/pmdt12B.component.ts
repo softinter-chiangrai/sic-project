@@ -24,6 +24,7 @@ import { resolveProjectId } from '../../../../../core/utils/resolve-context.util
 import { Pmdt12BPageData } from './pmdt12B.resolver';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -109,6 +110,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   previewHistoryId = signal<string | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiAssistOverwrite = signal(false);
 
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
@@ -232,11 +234,22 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiAssistPrompt(),
+      [
+        { label: 'ชื่อฉากทัศน์เดิม (Scenario Name)', value: currentName },
+        { label: 'รหัสฉากทัศน์เดิม (Scenario Code)', value: this.formData.form.get('scenarioCode')?.value },
+        { label: 'รายละเอียดเดิม (Description)', value: this.formData.form.get('description')?.value },
+        { label: 'ระดับความสำคัญเดิม (Priority)', value: this.formData.form.get('priority')?.value },
+      ],
+      this.aiAssistOverwrite(),
+    );
+
     this.service.generateDraft({
       projectId: pId || undefined,
       taskId: selectedTaskId || undefined,
       scenarioName: currentName || undefined,
-      prompt: this.aiAssistPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiAssistModel() || undefined,
       attachments,
     }).subscribe({
@@ -293,6 +306,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
       ['id'],
       { priority: this.priorityApiUrl },
       this.aiHttp,
+      this.aiAssistOverwrite(),
     );
 
     if (draft.taskId && draft.taskId !== this.formData.form.get('taskId')?.value) {

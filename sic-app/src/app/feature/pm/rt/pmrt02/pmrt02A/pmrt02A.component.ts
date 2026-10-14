@@ -27,6 +27,7 @@ import { Pmrt02AModel, Pmrt02APageData, ProjectModel } from './pmrt02A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -95,6 +96,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiOverwrite = signal(false);
 
   aiModels = AI_MODEL_OPTIONS;
 
@@ -412,11 +414,22 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiPrompt(),
+      [
+        { label: 'ชื่อโครงการเดิม', value: currentName },
+        { label: 'รายละเอียดโครงการเดิม', value: this.form?.get('description')?.value },
+        { label: 'วันที่เริ่มเดิม', value: this.form?.get('startDate')?.value },
+        { label: 'วันที่สิ้นสุดเดิม', value: this.form?.get('plannedEndDate')?.value },
+      ],
+      this.aiOverwrite(),
+    );
+
     this.projectService.generateDraft({
       customerId: customerId || undefined,
       projectCode: currentCode || undefined,
       projectName: currentName || undefined,
-      prompt: this.aiPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,
     }).subscribe({
@@ -469,8 +482,10 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
         priority: draft.priority,
         budgetManday: draft.budgetManday,
       },
-      ['id'],
+      this.projectId ? ['id', 'projectCode'] : ['id'],
       { status: this.statusOptions },
+      undefined,
+      this.aiOverwrite(),
     );
   }
 

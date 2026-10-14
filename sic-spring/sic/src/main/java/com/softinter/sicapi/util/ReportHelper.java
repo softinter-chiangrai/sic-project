@@ -197,20 +197,13 @@ public static String resolveLang(String lang, String headerLang) {
         if (html == null || html.isBlank()) return rows;
 
         Matcher tableMatcher = Pattern.compile("(?is)<table[^>]*>(.*?)</table>").matcher(html);
-        Pattern rowPattern = Pattern.compile("(?is)<tr[^>]*>(.*?)</tr>");
-        Pattern cellPattern = Pattern.compile("(?is)<t[dh][^>]*>(.*?)</t[dh]>");
-
         while (tableMatcher.find()) {
-            Matcher rowMatcher = rowPattern.matcher(tableMatcher.group(1));
-            while (rowMatcher.find()) {
-                Matcher cellMatcher = cellPattern.matcher(rowMatcher.group(1));
-                List<String> cells = new ArrayList<>();
-                while (cellMatcher.find()) {
-                    cells.add(stripTagsAndEntities(cellMatcher.group(1)).trim());
-                }
-                if (!cells.isEmpty()) {
-                    rows.add(new TableRow(cells));
-                }
+            List<List<String>> cellRows = new ArrayList<>();
+            for (ParsedRow r : parseTable(tableMatcher.group(1), MAX_IMAGE_WIDTH)) {
+                if (!r.cells.isEmpty()) cellRows.add(r.cells);
+            }
+            for (List<List<String>> slice : sliceColumns(cellRows)) {
+                for (List<String> cells : slice) rows.add(new TableRow(cells));
             }
         }
         return rows;
@@ -296,30 +289,90 @@ public static String resolveLang(String lang, String headerLang) {
         }
     }
 
-    /**
-     * A table becomes one block per row (text cells, up to 6 columns). A picture inside a cell cannot be drawn inside
-     * the text grid, so it is printed right after its row instead of being dropped; a row with only pictures prints just them.
-     */
-    private static void addTableBlocks(List<ContentBlock> blocks, String tableHtml, int maxWidth) {
+    /** One table row of a rich-text table: the text of each cell (tags stripped) and the pictures that were inside the cells. */
+    private static final class ParsedRow {
+        final List<String> cells = new ArrayList<>();
+        final List<ContentBlock> pictures = new ArrayList<>();
+    }
+
+    private static List<ParsedRow> parseTable(String tableHtml, int maxWidth) {
         Pattern rowPattern = Pattern.compile("(?is)<tr[^>]*>(.*?)</tr>");
         Pattern cellPattern = Pattern.compile("(?is)<t[dh][^>]*>(.*?)</t[dh]>");
         Pattern imgPattern = Pattern.compile("(?is)<img\\b[^>]*>");
+        List<ParsedRow> rows = new ArrayList<>();
         Matcher rowMatcher = rowPattern.matcher(tableHtml);
         while (rowMatcher.find()) {
             String rowHtml = rowMatcher.group(1);
+            ParsedRow row = new ParsedRow();
             Matcher cellMatcher = cellPattern.matcher(rowHtml);
-            List<String> cells = new ArrayList<>();
-            while (cellMatcher.find()) cells.add(stripTagsAndEntities(cellMatcher.group(1)).trim());
-            List<ContentBlock> pictures = new ArrayList<>();
+            while (cellMatcher.find()) row.cells.add(stripTagsAndEntities(cellMatcher.group(1)).trim());
             Matcher img = imgPattern.matcher(rowHtml);
             while (img.find()) {
                 ContentBlock b = imageBlock(img.group(), maxWidth);
-                if (b != null) pictures.add(b);
+                if (b != null) row.pictures.add(b);
             }
-            boolean hasText = cells.stream().anyMatch(c -> !c.isEmpty());
-            if (!cells.isEmpty() && (hasText || pictures.isEmpty())) blocks.add(ContentBlock.table(new TableRow(cells)));
-            blocks.addAll(pictures);
+            if (!row.cells.isEmpty() || !row.pictures.isEmpty()) rows.add(row);
         }
+        return rows;
+    }
+
+    /** Most columns one grid line of the report templates can hold. */
+    static final int GRID_COLUMNS = 6;
+
+    /**
+     * A table wider than the grid is cut into column slices that are printed one under the other. Every slice repeats the
+     * first column (it identifies the row) and holds at most GRID_COLUMNS - 1 further columns, spread evenly, so each
+     * row can still be followed and no column is lost. A table that fits the grid comes back as one slice, unchanged.
+     */
+    static List<List<List<String>>> sliceColumns(List<List<String>> rows) {
+        int columns = rows.stream().mapToInt(List::size).max().orElse(0);
+        List<List<List<String>>> slices = new ArrayList<>();
+        if (columns <= GRID_COLUMNS) {
+            slices.add(rows);
+            return slices;
+        }
+        int dataColumns = columns - 1;
+        int perSlice = GRID_COLUMNS - 1;
+        int sliceCount = (dataColumns + perSlice - 1) / perSlice;
+        int width = (dataColumns + sliceCount - 1) / sliceCount;
+        for (int from = 1; from < columns; from += width) {
+            int to = Math.min(columns, from + width);
+            List<List<String>> slice = new ArrayList<>();
+            for (List<String> row : rows) {
+                List<String> cells = new ArrayList<>();
+                cells.add(row.isEmpty() ? "" : row.get(0));
+                for (int c = from; c < to; c++) cells.add(c < row.size() ? row.get(c) : "");
+                slice.add(cells);
+            }
+            slices.add(slice);
+        }
+        return slices;
+    }
+
+    /**
+     * A table becomes text rows (the report grid) in document order. A picture inside a cell cannot be drawn inside the
+     * text grid, so it is printed right after its row (after the whole table when the table is wider than the grid)
+     * instead of being dropped; a row that holds only pictures prints just them.
+     */
+    private static void addTableBlocks(List<ContentBlock> blocks, String tableHtml, int maxWidth) {
+        List<ParsedRow> rows = parseTable(tableHtml, maxWidth);
+        List<List<String>> cellRows = new ArrayList<>();
+        for (ParsedRow r : rows) cellRows.add(r.cells);
+        List<List<List<String>>> slices = sliceColumns(cellRows);
+        boolean sliced = slices.size() > 1;
+        if (!sliced) {
+            for (ParsedRow r : rows) {
+                boolean hasText = r.cells.stream().anyMatch(c -> !c.isEmpty());
+                if (!r.cells.isEmpty() && (hasText || r.pictures.isEmpty())) blocks.add(ContentBlock.table(new TableRow(r.cells)));
+                blocks.addAll(r.pictures);
+            }
+            return;
+        }
+        for (int s = 0; s < slices.size(); s++) {
+            if (s > 0) blocks.add(ContentBlock.text(" ")); // small gap between slices
+            for (List<String> cells : slices.get(s)) blocks.add(ContentBlock.table(new TableRow(cells)));
+        }
+        for (ParsedRow r : rows) blocks.addAll(r.pictures);
     }
 
     /**

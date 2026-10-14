@@ -1,4 +1,6 @@
 {
+  "AI_OVERWRITE_LABEL": "Edit & refine existing content",
+  "AI_OVERWRITE_HINT": "AI will use existing form content as the baseline to edit, refine, or append rather than generating from scratch",
   "AI_BATCH_APPEND_HINT": "Saving only adds new data - existing data is never overwritten",
   "AI_BATCH_ATTACH_FILE": "Attach file / image",
   "AI_BATCH_CALL_ERROR": "An error occurred while calling AI",

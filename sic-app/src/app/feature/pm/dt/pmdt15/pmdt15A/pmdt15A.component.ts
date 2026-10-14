@@ -29,6 +29,7 @@ import { PmUserManualModel, PmUserManualSectionModel } from './pmdt15A.model';
 import { Pmdt15APageData } from './pmdt15A.resolver';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -146,6 +147,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   previewHistoryId = signal<string | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiOverwrite = signal(false);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -396,13 +398,28 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const sectionSummaries = this.sections()
+      .filter((s) => s.sectionTitle)
+      .map((s) => `${s.sectionTitle}: ${s.content || ''}`)
+      .join('\n');
+
+    const effectivePrompt = buildRefinePrompt(
+      this.aiPrompt(),
+      [
+        { label: 'ชื่อคู่มือเดิม (Manual Title)', value: currentTitle },
+        { label: 'เวอร์ชันเดิม (Version)', value: this.formData.form.get('version')?.value },
+        { label: 'เนื้อหาหัวข้อเดิม (Existing Sections)', value: sectionSummaries },
+      ],
+      this.aiOverwrite(),
+    );
+
     this.service.generateDraft({
       projectId: projId || undefined,
       manualTitle: currentTitle || undefined,
       manualType: this.aiManualType(),
       requirementIds: reqIds.length > 0 ? reqIds : undefined,
       specificationIds: specIds.length > 0 ? specIds : undefined,
-      prompt: this.aiPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,
     }).pipe(
@@ -465,6 +482,8 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         },
         ['id'],
         { manualType: this.typeOptions },
+        undefined,
+        this.aiOverwrite(),
       );
     }
 

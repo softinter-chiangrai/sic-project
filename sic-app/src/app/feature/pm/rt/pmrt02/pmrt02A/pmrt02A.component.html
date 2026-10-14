@@ -336,26 +336,36 @@
       </div>
 
       <!-- Tabs Navigation -->
-      <div class="flex border-b border-[var(--border)] bg-[var(--bg)] px-6 pt-2 gap-4 flex-shrink-0">
-        <button
-          type="button"
-          (click)="aiActiveTab.set('generate')"
-          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
-          <i class="bi bi-magic"></i>
-          {{ 'PMRT02A_TAB_GENERATE' | translate }}
-        </button>
-        <button
-          type="button"
-          (click)="aiActiveTab.set('history')"
-          [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
-          <i class="bi bi-clock-history"></i>
-          {{ 'PMRT02A_TAB_HISTORY' | translate }}
-          @if (aiHistories().length > 0) {
-            <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-[var(--crm-primary)]/20 text-[var(--crm-primary)] font-bold">
-              {{ aiHistories().length }}
-            </span>
-          }
-        </button>
+      <div class="flex items-center justify-between border-b border-[var(--border)] bg-[var(--bg)] px-6 pt-2 flex-shrink-0">
+        <div class="flex gap-4">
+          <button
+            type="button"
+            (click)="aiActiveTab.set('generate')"
+            [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'generate' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
+            <i class="bi bi-magic"></i>
+            {{ 'PMRT02A_TAB_GENERATE' | translate }}
+          </button>
+          <button
+            type="button"
+            (click)="aiActiveTab.set('history')"
+            [class]="'pb-2.5 text-xs font-semibold flex items-center gap-2 border-b-2 transition-all cursor-pointer ' + (aiActiveTab() === 'history' ? 'border-[var(--crm-primary)] text-[var(--crm-primary)]' : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-active)]')">
+            <i class="bi bi-clock-history"></i>
+            {{ 'PMRT02A_TAB_HISTORY' | translate }}
+            @if (aiHistories().length > 0) {
+              <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-[var(--crm-primary)]/20 text-[var(--crm-primary)] font-bold">
+                {{ aiHistories().length }}
+              </span>
+            }
+          </button>
+        </div>
+        <label class="pb-2.5 flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-active)] cursor-pointer select-none transition-colors" [title]="'AI_OVERWRITE_HINT' | translate">
+          <input
+            type="checkbox"
+            [ngModel]="aiOverwrite()"
+            (ngModelChange)="aiOverwrite.set($event)"
+            class="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)] cursor-pointer" />
+          <span>{{ 'AI_OVERWRITE_LABEL' | translate }}</span>
+        </label>
       </div>
 
       <!-- TAB 1: GENERATE -->

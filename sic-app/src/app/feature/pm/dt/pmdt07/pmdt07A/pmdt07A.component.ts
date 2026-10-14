@@ -39,6 +39,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -193,6 +194,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     aiHistories: any[] = [];
     aiCurrentDraft: any = null;
     aiCurrentVersionNo: number | null = null;
+    aiAssistOverwrite = false;
     previewHistoryId: string | null = null;
     copiedId: string | null = null;
     aiAttachedFiles = signal<File[]>([]);
@@ -357,13 +359,24 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             attachments = await filesToAiAttachments(this.aiAttachedFiles());
         }
 
+        const effectivePrompt = buildRefinePrompt(
+            this.aiAssistPrompt,
+            [
+                { label: 'หัวข้อ Spec เดิม (Title)', value: this.form.value.title },
+                { label: 'รายละเอียดเดิม (Description)', value: this.form.value.description },
+                { label: 'ประเภท Spec เดิม', value: this.form.value.specificationType },
+                { label: 'Mandays เดิม', value: this.form.value.estimatedManday },
+            ],
+            this.aiAssistOverwrite,
+        );
+
         this.service.generateDraft({
             projectId: projectId || undefined,
             requirementId: requirementId || undefined,
             diagramIds: diagramIds.length > 0 ? diagramIds : undefined,
             diagramId: diagramIds.length === 1 ? diagramIds[0] : undefined,
             specificationType: specType,
-            prompt: this.aiAssistPrompt || undefined,
+            prompt: effectivePrompt || undefined,
             model: this.aiAssistModel || undefined,
             attachments,
         }).pipe(finalize(() => {
@@ -444,6 +457,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 specificationType: this.specificationTypeOptions,
             },
             this.http,
+            this.aiAssistOverwrite,
         );
         this.form.markAsDirty();
     }

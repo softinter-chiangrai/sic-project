@@ -31,6 +31,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -131,6 +132,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiOverwrite = signal(false);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -193,11 +195,23 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiPrompt(),
+      [
+        { label: 'หมายเหตุเดิม (Remark/Notes)', value: this.formData.form.get('remark')?.value },
+        { label: 'ประเภทการวางบิลเดิม', value: this.formData.form.get('billingType')?.value },
+        { label: 'อัตราภาษีเดิม (VAT Rate)', value: this.formData.form.get('vatRate')?.value },
+        { label: 'วันที่ออกใบแจ้งหนี้เดิม', value: this.formData.form.get('issueDate')?.value },
+        { label: 'วันครบกำหนดเดิม', value: this.formData.form.get('dueDate')?.value },
+      ],
+      this.aiOverwrite(),
+    );
+
     this.service.generateDraft({
       projectId: projId || undefined,
       contractId: contractId || undefined,
       invoiceType: this.aiBillingType() || undefined,
-      prompt: this.aiPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,
     }).subscribe({
@@ -253,6 +267,8 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       },
       ['id'],
       { billingType: this.billingTypeOptions },
+      undefined,
+      this.aiOverwrite(),
     );
 
     if (draft.items && Array.isArray(draft.items) && draft.items.length > 0) {

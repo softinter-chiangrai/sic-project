@@ -60,6 +60,7 @@ import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Pmdt04AForm } from './pmdt04A.form';
 import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -206,6 +207,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   aiHistories: any[] = [];
   aiCurrentDraft: any = null;
   aiCurrentVersionNo: number | null = null;
+  aiAssistOverwrite = false;
   previewHistoryId: string | null = null;
   copiedId: string | null = null;
   aiAttachedFiles = signal<File[]>([]);
@@ -291,11 +293,23 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiAssistPrompt,
+      [
+        { label: 'หัวข้อเดิม (Title)', value: formVal.title },
+        { label: 'รายละเอียดเดิม (Description)', value: formVal.description },
+        { label: 'เกณฑ์การยอมรับเดิม (Acceptance Criteria)', value: formVal.acceptanceCriteria },
+        { label: 'คุณค่าทางธุรกิจเดิม (Business Value)', value: formVal.businessValue },
+        { label: 'แหล่งที่มาเดิม (Source)', value: formVal.source },
+      ],
+      this.aiAssistOverwrite,
+    );
+
     this.service.generateAiDraft({
       projectId: projectId || undefined,
       title: this.aiAssistTitle || formVal.title || undefined,
       requirementType: this.aiAssistType || formVal.requirementType || undefined,
-      prompt: this.aiAssistPrompt || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiAssistModel || undefined,
       attachments,
     }).pipe(finalize(() => {
@@ -372,12 +386,13 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         priority: draft.priority || 'MEDIUM',
         requirementType: draft.requirementType || 'FUNCTIONAL',
       },
-      ['id'],
+      this.reqId ? ['id', 'requirementCode'] : ['id'],
       {
         requirementType: this.service.apiGetLovRequirementType,
         priority: this.service.apiGetLovPriority,
       },
       this.http,
+      this.aiAssistOverwrite,
     );
     this.cdr.markForCheck();
   }

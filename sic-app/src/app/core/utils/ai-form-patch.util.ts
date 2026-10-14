@@ -58,6 +58,7 @@ export function matchAiComboOption(raw: unknown, options: AiComboOption[]): any 
  * @param combos ฟิลด์ที่เป็น combobox: ระบุแหล่งตัวเลือก (อาร์เรย์หรือ URL) เพื่อแปลงค่าที่ AI ตอบให้เป็น value ที่ใช้จริง
  *               ถ้าแปลงไม่ได้จะข้ามฟิลด์นั้น (ไม่กรอกค่าที่ไม่มีในตัวเลือก)
  * @param http   จำเป็นเมื่อ combos มีแหล่งตัวเลือกแบบ URL
+ * @param overwrite หากเป็น true จะอนุญาตให้เขียนทับข้อมูลเดิมในฟอร์ม (ยกเว้น restrictedFields)
  */
 export function smartPatchFormAiDraft(
   form: FormGroup,
@@ -65,13 +66,14 @@ export function smartPatchFormAiDraft(
   restrictedFields: string[] = ['id'],
   combos: Record<string, AiComboSource> = {},
   http?: HttpClient,
+  overwrite: boolean = false,
 ): void {
   if (!draft) return;
 
   const canFill = (key: string): boolean => {
     if (restrictedFields.includes(key)) return false;
     const control = form.get(key);
-    return !!control && isEmpty(control.value);
+    return !!control && (overwrite || isEmpty(control.value));
   };
 
   const hasValue = (v: unknown) => v !== null && v !== undefined && String(v).trim() !== '';

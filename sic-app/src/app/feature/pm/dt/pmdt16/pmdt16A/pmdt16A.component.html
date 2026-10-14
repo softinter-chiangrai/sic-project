@@ -397,34 +397,44 @@
         </div>
 
         <!-- Tab Navigation Buttons -->
-        <div class="flex items-center gap-2 border-t border-[var(--border)]/50 pt-2.5">
-          <button
-            type="button"
-            (click)="aiAssistTab.set('generate')"
-            [class]="'px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ' +
-              (aiAssistTab() === 'generate'
-                ? 'bg-[var(--crm-primary)] text-white shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
-          >
-            <i class="bi bi-lightning-charge-fill text-xs"></i>
-            <span>{{ 'PMDT16A_TAB_GENERATE' | translate }}</span>
-          </button>
-          <button
-            type="button"
-            (click)="aiAssistTab.set('history'); loadAiHistory()"
-            [class]="'px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ' +
-              (aiAssistTab() === 'history'
-                ? 'bg-[var(--crm-primary)] text-white shadow-sm'
-                : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
-          >
-            <i class="bi bi-clock-history text-xs"></i>
-            <span>{{ 'PMDT16A_TAB_HISTORY' | translate }}</span>
-            @if (aiHistories().length > 0) {
-              <span class="px-1.5 py-0.2 text-[10px] rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] font-bold ml-0.5">
-                {{ aiHistories().length }}
-              </span>
-            }
-          </button>
+        <div class="flex items-center justify-between border-t border-[var(--border)]/50 pt-2.5">
+          <div class="flex items-center gap-2">
+            <button
+              type="button"
+              (click)="aiAssistTab.set('generate')"
+              [class]="'px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ' +
+                (aiAssistTab() === 'generate'
+                  ? 'bg-[var(--crm-primary)] text-white shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
+            >
+              <i class="bi bi-lightning-charge-fill text-xs"></i>
+              <span>{{ 'PMDT16A_TAB_GENERATE' | translate }}</span>
+            </button>
+            <button
+              type="button"
+              (click)="aiAssistTab.set('history'); loadAiHistory()"
+              [class]="'px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-2 transition-all cursor-pointer ' +
+                (aiAssistTab() === 'history'
+                  ? 'bg-[var(--crm-primary)] text-white shadow-sm'
+                  : 'text-[var(--text-muted)] hover:text-[var(--text-active)] hover:bg-[var(--sidebar-hover)]')"
+            >
+              <i class="bi bi-clock-history text-xs"></i>
+              <span>{{ 'PMDT16A_TAB_HISTORY' | translate }}</span>
+              @if (aiHistories().length > 0) {
+                <span class="px-1.5 py-0.2 text-[10px] rounded-full bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] font-bold ml-0.5">
+                  {{ aiHistories().length }}
+                </span>
+              }
+            </button>
+          </div>
+          <label class="flex items-center gap-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-active)] cursor-pointer select-none transition-colors" [title]="'AI_OVERWRITE_HINT' | translate">
+            <input
+              type="checkbox"
+              [ngModel]="aiOverwrite()"
+              (ngModelChange)="aiOverwrite.set($event)"
+              class="w-3.5 h-3.5 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)] cursor-pointer" />
+            <span>{{ 'AI_OVERWRITE_LABEL' | translate }}</span>
+          </label>
         </div>
       </div>
 

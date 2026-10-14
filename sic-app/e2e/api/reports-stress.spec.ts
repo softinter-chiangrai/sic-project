@@ -44,12 +44,43 @@ test.describe('tables', () => {
     expect(lost, `cell text cut off: ${lost.join(', ')}`).toEqual([]);
   });
 
-  test('a table with more than 6 columns keeps every column', async () => {
+  // A table wider than the 6-column grid is cut into column slices printed one under the other; each slice repeats the
+  // first column (it names the row) and the header row, so a row can still be followed across the slices.
+  const occurrences = (text: string, needle: string) => text.replace(/\s+/g, '').split(needle).length - 1;
+
+  test('a table with more than 6 columns keeps every column, and the first column repeats in each slice', async () => {
     const t = uid();
+    const head = Array.from({ length: 9 }, (_, c) => `H${c}${t}`);
     const rows = Array.from({ length: 4 }, (_, r) => Array.from({ length: 9 }, (_, c) => `C${r}x${c}${t}`));
-    const { pdf } = await requirement(table(rows));
-    const lost = missing(pdf, rows.flat());
+    const { pdf } = await requirement(table(rows, head));
+    const lost = missing(pdf, [...head, ...rows.flat()]);
     expect(lost, `columns beyond the 6th are lost: ${lost.slice(0, 6).join(', ')}`).toEqual([]);
+    // 9 columns = 2 slices: the key column (first cell of every row, and of the header) is printed in both
+    for (const key of [head[0], ...rows.map((r) => r[0])]) {
+      expect(occurrences(pdf.text, key), `${key}: the first column should repeat in each of the 2 slices`).toBe(2);
+    }
+    // the other cells are printed exactly once
+    for (const cell of [head[8], rows[3][8], rows[0][4]]) expect(occurrences(pdf.text, cell), `${cell} printed more than once`).toBe(1);
+  });
+
+  test('a 16-column table is cut into 3 slices, every cell present, key column in each', async () => {
+    const t = uid();
+    const head = Array.from({ length: 16 }, (_, c) => `K${c}${t}`);
+    const rows = Array.from({ length: 5 }, (_, r) => Array.from({ length: 16 }, (_, c) => `V${r}x${c}${t}`));
+    const { pdf } = await requirement(`<p>wide${t}</p>${table(rows, head)}<p>after${t}</p>`);
+    expect(missing(pdf, [`wide${t}`, `after${t}`, ...head, ...rows.flat()])).toEqual([]);
+    expect(occurrences(pdf.text, head[0]), '15 data columns = 3 slices of 5').toBe(3);
+    expect(occurrences(pdf.text, rows[2][0])).toBe(3);
+  });
+
+  test('a long wide table (60 rows x 8 columns) over several pages keeps every row in both slices', async () => {
+    const t = uid();
+    const rows = Array.from({ length: 60 }, (_, r) => Array.from({ length: 8 }, (_, c) => `W${r}x${c}${t}`));
+    const { pdf } = await requirement(table(rows, Array.from({ length: 8 }, (_, c) => `HD${c}${t}`)));
+    expect(pdf.pageCount).toBeGreaterThan(2);
+    const lost = missing(pdf, rows.flat());
+    expect(lost, `${lost.length} cells missing, e.g. ${lost.slice(0, 4).join(', ')}`).toEqual([]);
+    expect(occurrences(pdf.text, rows[59][0]), 'last row key must appear in both slices').toBe(2);
   });
 
   test('empty cells, merged-looking rows and a one-column table do not break the page', async () => {

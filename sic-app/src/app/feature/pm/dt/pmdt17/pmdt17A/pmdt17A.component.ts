@@ -27,6 +27,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -130,6 +131,7 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiOverwrite = signal(false);
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
@@ -203,12 +205,24 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiPrompt(),
+      [
+        { label: 'หัวข้อปัญหาเดิม (Title)', value: currentTitle },
+        { label: 'รายละเอียดปัญหาเดิม (Description)', value: this.formData.form.get('description')?.value },
+        { label: 'สรุปการแก้ไขเดิม (Resolution)', value: this.formData.form.get('resolutionSummary')?.value },
+        { label: 'ประเภท Ticket เดิม', value: this.formData.form.get('ticketType')?.value },
+        { label: 'ความรุนแรงเดิม (Severity)', value: this.formData.form.get('severity')?.value },
+      ],
+      this.aiOverwrite(),
+    );
+
     this.service.generateDraft({
       projectId: projId || undefined,
       title: currentTitle || undefined,
       ticketType: this.aiTicketType() || undefined,
       priority: this.aiPriority() || undefined,
-      prompt: this.aiPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,
     }).subscribe({
@@ -272,6 +286,8 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       },
       ['id'],
       { ticketType: this.ticketTypeOptions, severity: this.severityOptions },
+      undefined,
+      this.aiOverwrite(),
     );
   }
 

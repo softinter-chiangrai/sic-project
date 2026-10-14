@@ -40,6 +40,7 @@ import { Pmrt04AService, ContractSummary } from './pmrt04A.service';
 import { SicEntitySummaryComponent, EntitySummaryCard } from '../../../../../core/component/sic-entity-summary/sic-entity-summary.component';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -168,6 +169,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiOverwrite = signal(false);
 
   aiModels = AI_MODEL_OPTIONS;
 
@@ -710,13 +712,25 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiPrompt(),
+      [
+        { label: 'ขอบเขตงานเดิม (Scope Summary)', value: this.form?.get('scopeSummary')?.value },
+        { label: 'เงื่อนไขการชำระเงินเดิม (Payment Terms)', value: this.form?.get('paymentTerms')?.value },
+        { label: 'มูลค่าสัญญาเดิม', value: currentVal },
+        { label: 'วันที่เริ่มเดิม', value: this.form?.get('startDate')?.value },
+        { label: 'วันที่สิ้นสุดเดิม', value: this.form?.get('endDate')?.value },
+      ],
+      this.aiOverwrite(),
+    );
+
     this.service.generateDraft({
       projectId: this.projectId || this.form?.get('projectId')?.value || undefined,
       customerId: this.customerId || this.form?.get('customerId')?.value || undefined,
       contractNo: currentNo || undefined,
       contractType: this.aiContractType() || this.form?.get('contractType')?.value || undefined,
       contractValue: currentVal ? Number(currentVal) : undefined,
-      prompt: this.aiPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,
     }).subscribe({
@@ -770,9 +784,10 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         endDate: draft.endDate,
         signStatus: draft.signStatus,
       },
-      ['id'],
+      this.contractId ? ['id', 'contractNo'] : ['id'],
       { contractType: this.service.getLovContractType() },
       this.aiHttp,
+      this.aiOverwrite(),
     );
   }
 

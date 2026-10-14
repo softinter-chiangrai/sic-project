@@ -28,6 +28,7 @@ import { apiBaseUrl } from '../../../../../core/config/api.config';
 import { ApprovalFlow } from '../../pmdt03/approval.model';
 import { AiHistoryService, AiHistoryItem } from '../../../../../core/services/ai-history.service';
 import { smartPatchFormAiDraft } from '../../../../../core/utils/ai-form-patch.util';
+import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.util';
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
@@ -121,6 +122,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   aiCurrentVersionNo = signal<number | null>(null);
   copiedId = signal<string | null>(null);
   aiAttachedFiles = signal<File[]>([]);
+  aiOverwrite = signal(false);
 
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
@@ -181,10 +183,22 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       attachments = await filesToAiAttachments(this.aiAttachedFiles());
     }
 
+    const effectivePrompt = buildRefinePrompt(
+      this.aiPrompt(),
+      [
+        { label: 'ชื่องานส่งมอบเดิม (Title)', value: currentTitle },
+        { label: 'สรุปการส่งมอบเดิม (Summary)', value: this.formData.form.get('deliverySummary')?.value },
+        { label: 'Release Note เดิม', value: this.formData.form.get('releaseNote')?.value },
+        { label: 'เวอร์ชันส่งมอบเดิม (Version)', value: this.formData.form.get('deliveryVersion')?.value },
+        { label: 'วันที่ส่งมอบเดิม', value: this.formData.form.get('deliveryDate')?.value },
+      ],
+      this.aiOverwrite(),
+    );
+
     this.service.generateDraft({
       projectId: projId || undefined,
       deliveryName: currentTitle || undefined,
-      prompt: this.aiPrompt() || undefined,
+      prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,
     }).subscribe({
@@ -235,6 +249,8 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       },
       ['id'],
       { deliveryType: this.typeOptions },
+      undefined,
+      this.aiOverwrite(),
     );
 
     const rawChecklists = (draft.checklists && draft.checklists.length > 0)
