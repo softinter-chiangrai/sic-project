@@ -219,27 +219,35 @@ public class ReportTemplateService {
 			throw new IllegalArgumentException("JRXML file is required.");
 		}
 
-		String originalFileName = file.getOriginalFilename() == null ? "template.jrxml" : file.getOriginalFilename().trim();
+		try {
+			return uploadJrxml(file.getOriginalFilename(), file.getBytes());
+		} catch (IOException exception) {
+			throw new IllegalArgumentException("Unable to read the uploaded JRXML file.");
+		}
+	}
+
+	public ReportTemplateUploadResponse uploadJrxml(String fileName, byte[] jrxml) {
+		String originalFileName = fileName == null ? "template.jrxml" : fileName.trim();
 		if (!originalFileName.toLowerCase(Locale.ROOT).endsWith(".jrxml")) {
 			throw new IllegalArgumentException("Only .jrxml files can be uploaded.");
 		}
 
-		try {
-			CompiledTemplateArtifact compiledTemplate = compileTemplate(originalFileName, file.getBytes());
-			String uploadToken = UUID.randomUUID().toString();
-			LocalDateTime uploadedAt = LocalDateTime.now();
-			UploadedTemplateAsset stagedUpload = stageUpload(uploadToken, compiledTemplate, uploadedAt);
-			ZoneId displayZoneId = timeDisplayService.currentDisplayZoneId();
+		CompiledTemplateArtifact compiledTemplate = compileTemplate(originalFileName, jrxml);
+		String uploadToken = UUID.randomUUID().toString();
+		LocalDateTime uploadedAt = LocalDateTime.now();
+		UploadedTemplateAsset stagedUpload = stageUpload(uploadToken, compiledTemplate, uploadedAt);
+		ZoneId displayZoneId = timeDisplayService.currentDisplayZoneId();
 
-			return new ReportTemplateUploadResponse(
-				stagedUpload.uploadToken(),
-				stagedUpload.originalFileName(),
-				stagedUpload.parameters(),
-				formatDateTime(stagedUpload.uploadedAt(), displayZoneId)
-			);
-		} catch (IOException exception) {
-			throw new IllegalArgumentException("Unable to read the uploaded JRXML file.");
-		}
+		return new ReportTemplateUploadResponse(
+			stagedUpload.uploadToken(),
+			stagedUpload.originalFileName(),
+			stagedUpload.parameters(),
+			formatDateTime(stagedUpload.uploadedAt(), displayZoneId)
+		);
+	}
+
+	public boolean existsByCode(String templateCode) {
+		return repository.existsByTemplateCodeIgnoreCase(normalizeTemplateCode(lookupCode(templateCode)));
 	}
 
 	@Transactional(readOnly = true)
@@ -274,7 +282,7 @@ public class ReportTemplateService {
 
 	@Transactional(readOnly = true)
 	public ExecutedTemplate executeTemplateByCode(String templateCode, Map<String, Object> rawParameters) {
-		String normalizedTemplateCode = normalizeTemplateCode(templateCode);
+		String normalizedTemplateCode = normalizeTemplateCode(lookupCode(templateCode));
 		if (normalizedTemplateCode.isBlank()) {
 			throw new IllegalArgumentException("Template code is required.");
 		}
@@ -309,7 +317,7 @@ public class ReportTemplateService {
 			return new TemplateRef(template.getId(), template.getTemplateName());
 		}
 
-		String normalizedTemplateCode = normalizeTemplateCode(templateCode);
+		String normalizedTemplateCode = normalizeTemplateCode(lookupCode(templateCode));
 		if (normalizedTemplateCode.isBlank()) {
 			throw new IllegalArgumentException("Report id or template code is required.");
 		}
@@ -941,6 +949,11 @@ public class ReportTemplateService {
 		}
 
 		return value.trim();
+	}
+
+	/** Callers such as the SIC backend send snake_case codes (pm_requirement_report); stored codes are letters and digits only. */
+	private String lookupCode(String value) {
+		return value == null ? null : value.replace("_", "");
 	}
 
 	private String normalizeTemplateCode(String value) {
