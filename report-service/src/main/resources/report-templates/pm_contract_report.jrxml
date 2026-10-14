@@ -89,7 +89,7 @@
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="354c368f-175c-4648-bfc8-90efe75ede7b">
+	<dataset name="RichBlocksDataset" uuid="8e37e6dc-0698-487e-87d6-119879b26dd4">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -230,7 +230,7 @@
 			</element>
 			<element kind="component" uuid="43e181bf-0a39-4abc-81e1-eb20e337c721" positionType="Float" x="0" y="212" width="515" height="18">
 				<component kind="list">
-					<datasetRun uuid="366bc9b3-9f8b-4782-abc0-f72b6d524d0a" subDataset="RichBlocksDataset">
+					<datasetRun uuid="f80c3e00-aab6-4e89-a4ce-d2ac83aa7a37" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{paymentTerms} != null && !$F{paymentTerms}.isBlank() ? $F{paymentTerms} : ($P{lang}.equals("en") ? "Per standard agreement" : "ตามข้อตกลงมาตรฐาน")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
@@ -414,7 +414,7 @@
 			<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="c5d3c372-853e-4ae7-8bb2-63115ad7433a" positionType="Float" x="0" y="264" width="515" height="20">
 					<component kind="list">
-						<datasetRun uuid="9ef03431-fbee-4626-96a0-c083b41533eb" subDataset="RichBlocksDataset">
+						<datasetRun uuid="b8323b84-1de7-4f33-af93-046617e12bf6" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{scopeSummary} != null && !$F{scopeSummary}.isBlank() ? $F{scopeSummary} : ($P{lang}.equals("en") ? "No additional scope details provided" : "ไม่มีรายละเอียดขอบเขตงานเพิ่มเติม")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>

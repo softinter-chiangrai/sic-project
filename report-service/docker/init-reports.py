@@ -101,7 +101,7 @@ else:
 
 # 4. Check / Upload Templates
 existing_templates = session.get(f"{BASE_URL}/api/report-templates").json()
-existing_codes = {t.get("templateCode", "").upper() for t in existing_templates}
+existing_ids = {t.get("templateCode", "").upper(): t["id"] for t in existing_templates}
 
 files = sorted(list(TEMPLATES_DIR.glob("*.jrxml")))
 print(f"Checking {len(files)} JRXML templates...")
@@ -109,10 +109,9 @@ print(f"Checking {len(files)} JRXML templates...")
 for file_path in files:
     base_name = file_path.stem
     code = base_name.replace("_", "").upper()
-    if code in existing_codes:
-        continue
+    template_id = existing_ids.get(code)   # already registered: upload the bundled file again as a new version of it
 
-    print(f"Uploading template {code} ({file_path.name})...")
+    print(f"{'Updating' if template_id else 'Uploading'} template {code} ({file_path.name})...")
     with open(file_path, "rb") as f:
         upload_res = session.post(
             f"{BASE_URL}/api/report-templates/upload",
@@ -131,7 +130,12 @@ for file_path in files:
         "dataSourceId": ds_id,
         "uploadToken": upload_token
     }
-    save_res = session.post(f"{BASE_URL}/api/report-templates", json=save_payload, headers=headers)
+    if template_id:
+        current = session.get(f"{BASE_URL}/api/report-templates/{template_id}").json()
+        save_payload["dataSourceId"] = current.get("dataSourceId") or ds_id
+        save_res = session.put(f"{BASE_URL}/api/report-templates/{template_id}", json=save_payload, headers=headers)
+    else:
+        save_res = session.post(f"{BASE_URL}/api/report-templates", json=save_payload, headers=headers)
     if save_res.status_code == 200:
         print(f"Successfully registered template {code}")
     else:

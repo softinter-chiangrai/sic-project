@@ -128,8 +128,6 @@ services:
       REPORT_SERVICE_TOKEN: ${REPORT_SERVICE_TOKEN:?set in .env}
       ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
-      JAVA_TOOL_OPTIONS: "-Dreport.bundled-templates.seed=true"
-      SPRING_APPLICATION_JSON: '{"report":{"bundled-templates":{"seed":"true"}}}'
     volumes:
       - ./report-service/data:/app/data
     networks:

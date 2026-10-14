@@ -1,0 +1,45 @@
+# Throwaway report-service for the standalone-template test: current code, own H2 data, SIC e2e database, no fallback in the backend.
+services:
+  sic-report-service-test:
+    container_name: sic-report-service-test
+    build:
+      context: ./report-service
+      dockerfile: ./docker/Dockerfile
+    ports:
+      - "8083:80"
+    environment:
+      SPRING_PROFILES_ACTIVE: production
+      REPORT_SERVICE_TOKEN: ${REPORT_SERVICE_TOKEN}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+    volumes:
+      - ./scratch/rs-test-data2:/app/data
+    networks:
+      - sic-network
+  sic-report-service-test-init:
+    image: python:3.12-alpine
+    container_name: sic-report-service-test-init
+    depends_on:
+      - sic-report-service-test
+    environment:
+      REPORT_SERVICE_URL: http://sic-report-service-test:80
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      REPORT_SERVICE_TOKEN: ${REPORT_SERVICE_TOKEN}
+      POSTGRES_HOST: sic-database
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: sic_app_e2e
+      POSTGRES_USER: administrator
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      TEMPLATES_DIR: /templates
+    volumes:
+      - ./report-service/docker/init-reports.py:/init-reports.py:ro
+      - ./report-service/src/main/resources/report-templates:/templates:ro
+    entrypoint: /bin/sh -c "pip install --no-cache-dir requests > /dev/null 2>&1; python /init-reports.py"
+    restart: "no"
+    networks:
+      - sic-network
+  sic-spring:
+    environment:
+      REPORT_SERVICE_URL: http://sic-report-service-test:80
+      APP_REPORT_SERVICE_FALLBACK_TO_LOCAL: "false"

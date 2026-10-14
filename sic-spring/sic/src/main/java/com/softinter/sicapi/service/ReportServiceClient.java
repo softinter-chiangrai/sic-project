@@ -64,8 +64,9 @@ public class ReportServiceClient {
         log.info("Requesting report generation from Report Service: templateCode={}, format={}, url={}",
                 templateCode, format, baseUrl + "/api/reports/generate");
 
+        String normalizedCode = templateCode != null ? templateCode.replace("_", "").toUpperCase() : "";
         Map<String, Object> requestBody = Map.of(
-                "templateCode", templateCode,
+                "templateCode", normalizedCode,
                 "parameters", parameters != null ? parameters : Map.of(),
                 "format", format != null ? format.toLowerCase() : "pdf"
         );
