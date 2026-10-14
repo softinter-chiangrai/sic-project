@@ -150,13 +150,16 @@ test.describe('WebP and SVG', () => {
     });
   }
 
-  // Known gap: the picture is dropped without any message. Marked test.fail(): documents the gap and flags itself once it is fixed
-  // (decoding WebP needs an ImageIO plugin in the backend; SVG needs rasterising).
-  for (const format of ['webp', 'svg'] as const) {
-    test.fail(`${format}: the picture itself is printed`, async () => {
-      const pdf = await exportRequirement(`<p>${format} picture</p>${img(format, 140, 70)}`);
-      const size = format === 'webp' ? '1x1' : '140x70'; // the sample WebP is 1x1
-      expect(drawn(pdf, size), `${format} picture is missing from the PDF (${where(pdf)})`).toBeTruthy();
-    });
-  }
+  // WebP is decoded by the backend (imageio-webp) and printed as PNG.
+  test('webp: the picture itself is printed', async () => {
+    const pdf = await exportRequirement(`<p>webp picture</p>${img('webp', 140, 70)}`);
+    expect(drawn(pdf, '1x1'), `webp picture is missing from the PDF (${where(pdf)})`).toBeTruthy(); // the sample WebP is 1x1
+  });
+
+  // Known gap: SVG is vector, ImageIO cannot read it, and the picture is dropped without any message.
+  // Marked test.fail(): documents the gap and flags itself once it is fixed. (The editor itself turns an SVG file into PNG.)
+  test.fail('svg: the picture itself is printed', async () => {
+    const pdf = await exportRequirement(`<p>svg picture</p>${img('svg', 140, 70)}`);
+    expect(drawn(pdf, '140x70'), `svg picture is missing from the PDF (${where(pdf)})`).toBeTruthy();
+  });
 });

@@ -39,7 +39,8 @@ for (const report of RICH_REPORTS.filter((r) => r.ui)) {
     await editor.fillCell(1, 0, `Body${t}`);
     await save(ui.page);
 
-    const html = String(data((await w.api.get(report.ui!.get(doc.id!))).body)[report.ui!.field] ?? '');
+    const body = (await w.api.get(report.ui!.get(doc.id!))).body;
+    const html = report.ui!.read ? report.ui!.read(body) : String(data(body)[report.ui!.field] ?? '');
     expect(html, `${report.name}.${report.ui!.field}: the picture was not saved`).toContain('<img');
     expect(html, `${report.name}.${report.ui!.field}: the table was not saved`).toContain('<table');
 

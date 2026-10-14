@@ -11,7 +11,7 @@ export type RichReport = {
   fields: string[];
   create: (w: World, html: Record<string, string>) => Promise<{ path: string; params?: Record<string, string | number>; id?: string }>;
   /** how the browser reaches the same document: its edit page, and the API read that returns the stored rich HTML */
-  ui?: { edit: (id: string) => string; get: (id: string) => string; field: string };
+  ui?: { edit: (id: string) => string; get: (id: string) => string; field: string; /** pick the stored HTML out of the API body when it is not a plain top-level field */ read?: (body: any) => string };
 };
 
 const contractLov = async (w: World) => ({
@@ -84,6 +84,7 @@ export const RICH_REPORTS: RichReport[] = [
   },
   {
     name: 'user manual', fields: ['content'],
+    ui: { edit: (id) => `/feature/pm/manual/${id}/edit`, get: (id) => `/api/pm/manual/${id}`, field: 'sections[0].content', read: (b) => String(((b.data ?? b).sections ?? [])[0]?.content ?? '') },
     create: async (w, h) => {
       const section = { sectionCode: 'S1', sectionTitle: 'Rich section', content: h['content'], sortOrder: 1, state: 4 };
       const id = await w.make('/api/pm/manual/save', { projectId: await w.project(), manualCode: mock('M'), manualTitle: 'Rich manual', state: 4, sections: [section] }, '/api/pm/manual/{id}');
@@ -111,6 +112,7 @@ export const RICH_REPORTS: RichReport[] = [
   },
   {
     name: 'project report',
+    ui: { edit: (id) => `/feature/pm/project/${id}/edit`, get: (id) => `/api/pm/customer-projects/${id}`, field: 'description' },
     fields: ['projectDescription', 'requirementDescription', 'requirementAcceptance', 'requirementBusinessValue', 'contractPaymentTerms', 'contractScope', 'deliverySummary', 'deliveryReleaseNote', 'invoiceRemark', 'ticketDescription', 'ticketResolution', 'specificationDescription', 'designReviewDescription', 'manualContent'],
     create: async (w, h) => {
       const customerId = await w.customer();

@@ -94,8 +94,8 @@ test.describe('upload', () => {
     expect(await stored(id)).not.toContain('<img');
   });
 
-  // Known gap: Chromium encodes WebP, the editor keeps the file's own type, and the backend cannot read WebP -> picture dropped.
-  test.fail('a WebP picked in the editor is printed', async () => {
+  // Chromium encodes WebP and the editor keeps the file's own type; the backend decodes WebP and prints it as PNG.
+  test('a WebP picked in the editor is printed', async () => {
     const { id, editor } = await open();
     await editor.addImage(await webpFile(ui.page, 321, 131));
     await save(ui.page);
@@ -191,8 +191,8 @@ test.describe('table', () => {
     expect(pictures(p).some((x) => x.size === '331x141'), `picture missing (${where(p)})`).toBeTruthy();
   });
 
-  // Known gap: ReportHelper.extractContentBlocks keeps only the text of table cells, so a picture inside a cell is dropped.
-  test.fail('a picture placed inside a table cell is printed', async () => {
+  // The text grid cannot hold a picture inside a cell, so it is printed right after its row.
+  test('a picture placed inside a table cell is printed (after its row)', async () => {
     const { id, editor } = await open();
     const t = uid();
     await editor.insertTable();

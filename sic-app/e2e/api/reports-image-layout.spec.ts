@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { World } from './world';
 import { mock } from '../api';
-import { PAGE, picture, probe, type Placed, type Probe } from './rich';
+import { PAGE, hasText, picture, probe, type Placed, type Probe } from './rich';
 import { RICH_REPORTS } from './rich-docs';
 
 // How pictures from the Tiptap editor are laid out in the exported PDF: the width set in the editor is honoured,
@@ -130,11 +130,15 @@ test.describe('every report keeps pictures inside the margins', () => {
   }
 });
 
-test.describe('known gap', () => {
-  // ReportHelper.extractContentBlocks turns a <table> into text rows (strips every tag in the cells), so a picture placed
-  // inside a table cell is dropped from the PDF. Marked test.fail(): it documents the gap, and will flag itself when fixed.
-  test.fail('a picture inside a table cell is printed', async () => {
-    const pdf = await exportRequirement(`<p>before</p><table><tbody><tr><td><p>CellWithPic</p>${picture(77, 33)}</td><td><p>Other</p></td></tr></tbody></table><p>after</p>`);
-    expect(pdf.placed.some((p) => p.size === '77x33'), 'picture inside the table cell is missing from the PDF').toBeTruthy();
+test.describe('picture inside a table cell', () => {
+  // The text grid of the templates cannot hold a picture inside a cell, so the picture is printed right after its row
+  // (before this it was dropped). It must be there, inside the margins, and below the text of its row.
+  test('is printed after its row, inside the margins', async () => {
+    const t = Math.random().toString(36).slice(2, 6);
+    const pdf = await exportRequirement(`<p>before</p><table><tbody><tr><td><p>CellWithPic${t}</p>${picture(77, 33)}</td><td><p>Other${t}</p></td></tr><tr><td><p>NextRow${t}</p></td><td><p>x</p></td></tr></tbody></table><p>after</p>`);
+    const p = find(pdf, '77x33');
+    inside(p, 'picture from a table cell');
+    near(p.w, 77, 'width');
+    expect(hasText(pdf.text, `CellWithPic${t}`) && hasText(pdf.text, `NextRow${t}`), 'cell text lost').toBeTruthy();
   });
 });

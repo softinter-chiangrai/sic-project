@@ -23,6 +23,10 @@ public class ReportHelper {
 
     private static final String LOGO_PATH = "images/softinter_logo.png";
 
+    static {
+        ImageIO.scanForPlugins(); // picks up the WebP reader (imageio-webp) even inside the Spring Boot fat jar
+    }
+
     private ReportHelper() {}
 
     /**
@@ -176,7 +180,7 @@ public static String resolveLang(String lang, String headerLang) {
         Matcher m = Pattern.compile("data:image/[^;\"']+;base64,([A-Za-z0-9+/=]+)").matcher(html);
         while (m.find()) {
             try {
-                images.add(Base64.getDecoder().decode(m.group(1)));
+                images.add(pdfSafe(Base64.getDecoder().decode(m.group(1))));
             } catch (IllegalArgumentException e) {
                 log.warn("Skipping malformed base64 image in report content: {}", e.getMessage());
             }
@@ -252,6 +256,73 @@ public static String resolveLang(String lang, String headerLang) {
     }
 
     /**
+     * WebP is what Chromium writes when the user picks a WebP file in the editor, and neither Jasper nor the PDF
+     * writer can read it: decode it (TwelveMonkeys imageio-webp) and hand over a PNG. Other types pass through.
+     */
+    static byte[] pdfSafe(byte[] src) {
+        boolean webp = src != null && src.length > 12
+                && src[0] == 'R' && src[1] == 'I' && src[2] == 'F' && src[3] == 'F'
+                && src[8] == 'W' && src[9] == 'E' && src[10] == 'B' && src[11] == 'P';
+        if (!webp) return src;
+        try {
+            BufferedImage img = ImageIO.read(new ByteArrayInputStream(src));
+            if (img == null) {
+                log.warn("WebP picture in report content could not be decoded: no WebP reader on the classpath");
+                return src;
+            }
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ImageIO.write(img, "png", bos);
+            return bos.toByteArray();
+        } catch (Exception e) {
+            log.warn("WebP picture in report content could not be converted: {}", e.getMessage());
+            return src;
+        }
+    }
+
+    /** One <img> tag from tiptap -> an image block (width and alignment read from the tag); null when it has no inline data. */
+    private static ContentBlock imageBlock(String imgTag, int maxWidth) {
+        Matcher src = Pattern.compile("data:image/[^;\"']+;base64,([A-Za-z0-9+/=]+)").matcher(imgTag);
+        if (!src.find()) return null;
+        try {
+            Matcher w = Pattern.compile("(?i)\\swidth=\"(\\d+)\"").matcher(imgTag);
+            int width = w.find() ? Integer.parseInt(w.group(1)) : 0;
+            // tiptap stores the alignment as text-align (style) or data-align
+            Matcher al = Pattern.compile("(?i)(?:text-align:\\s*|data-align=\"?)(left|center|right)").matcher(imgTag);
+            return ContentBlock.image(scaled(pdfSafe(Base64.getDecoder().decode(src.group(1))), width, maxWidth),
+                    al.find() ? al.group(1).toLowerCase() : "left");
+        } catch (IllegalArgumentException e) {
+            log.warn("Skipping malformed base64 image in report content: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * A table becomes one block per row (text cells, up to 6 columns). A picture inside a cell cannot be drawn inside
+     * the text grid, so it is printed right after its row instead of being dropped; a row with only pictures prints just them.
+     */
+    private static void addTableBlocks(List<ContentBlock> blocks, String tableHtml, int maxWidth) {
+        Pattern rowPattern = Pattern.compile("(?is)<tr[^>]*>(.*?)</tr>");
+        Pattern cellPattern = Pattern.compile("(?is)<t[dh][^>]*>(.*?)</t[dh]>");
+        Pattern imgPattern = Pattern.compile("(?is)<img\\b[^>]*>");
+        Matcher rowMatcher = rowPattern.matcher(tableHtml);
+        while (rowMatcher.find()) {
+            String rowHtml = rowMatcher.group(1);
+            Matcher cellMatcher = cellPattern.matcher(rowHtml);
+            List<String> cells = new ArrayList<>();
+            while (cellMatcher.find()) cells.add(stripTagsAndEntities(cellMatcher.group(1)).trim());
+            List<ContentBlock> pictures = new ArrayList<>();
+            Matcher img = imgPattern.matcher(rowHtml);
+            while (img.find()) {
+                ContentBlock b = imageBlock(img.group(), maxWidth);
+                if (b != null) pictures.add(b);
+            }
+            boolean hasText = cells.stream().anyMatch(c -> !c.isEmpty());
+            if (!cells.isEmpty() && (hasText || pictures.isEmpty())) blocks.add(ContentBlock.table(new TableRow(cells)));
+            blocks.addAll(pictures);
+        }
+    }
+
+    /**
      * แตก HTML ของ tiptap เป็นบล็อกเรียงตามลำดับจริง: ข้อความ, รูป, ข้อความ, ... เพื่อให้รูปอยู่ตำแหน่งเดิม
      * และขนาดตาม attr width ที่ตั้งใน editor (ถ้าไม่มี = ขนาดจริงของไฟล์) ไม่มีเนื้อหาเลย → ใช้ fallback
      */
@@ -271,21 +342,11 @@ public static String resolveLang(String lang, String headerLang) {
             last = token.end();
             String part = token.group();
             if (part.regionMatches(true, 0, "<table", 0, 6)) {
-                for (TableRow row : extractTableRows(part)) blocks.add(ContentBlock.table(row));
+                addTableBlocks(blocks, part, maxWidth);
                 continue;
             }
-            Matcher src = Pattern.compile("data:image/[^;\"']+;base64,([A-Za-z0-9+/=]+)").matcher(part);
-            if (!src.find()) continue;
-            try {
-                Matcher w = Pattern.compile("(?i)\\swidth=\"(\\d+)\"").matcher(part);
-                int width = w.find() ? Integer.parseInt(w.group(1)) : 0;
-                // tiptap เก็บการจัดตำแหน่งเป็น text-align (style) หรือ data-align
-                Matcher al = Pattern.compile("(?i)(?:text-align:\\s*|data-align=\"?)(left|center|right)").matcher(part);
-                blocks.add(ContentBlock.image(scaled(Base64.getDecoder().decode(src.group(1)), width, maxWidth),
-                        al.find() ? al.group(1).toLowerCase() : "left"));
-            } catch (IllegalArgumentException e) {
-                log.warn("Skipping malformed base64 image in report content: {}", e.getMessage());
-            }
+            ContentBlock image = imageBlock(part, maxWidth);
+            if (image != null) blocks.add(image);
         }
         addTextBlock(blocks, source.substring(last));
         if (blocks.isEmpty() && fallback != null && !fallback.isEmpty()) blocks.add(ContentBlock.text(fallback));
