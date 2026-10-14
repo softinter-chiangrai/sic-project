@@ -126,6 +126,40 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: production
       REPORT_SERVICE_TOKEN: ${REPORT_SERVICE_TOKEN:?set in .env}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-admin}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin}
+      JAVA_TOOL_OPTIONS: "-Dreport.bundled-templates.seed=true"
+      SPRING_APPLICATION_JSON: '{"report":{"bundled-templates":{"seed":"true"}}}'
+    volumes:
+      - ./report-service/data:/app/data
+    networks:
+      - sic-network
+
+  sic-report-service-init:
+    image: python:3.12-alpine
+    container_name: sic-report-service-init
+    depends_on:
+      - sic-report-service
+    environment:
+      REPORT_SERVICE_URL: http://sic-report-service:80
+      ADMIN_USERNAME: ${ADMIN_USERNAME:-sarankon}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-sarankon}
+      REPORT_SERVICE_TOKEN: ${REPORT_SERVICE_TOKEN:?set in .env}
+      POSTGRES_HOST: sic-database
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: ${SIC_APP_DB_NAME:-sic_app}
+      POSTGRES_USER: ${POSTGRES_USER:-administrator}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+      TEMPLATES_DIR: /templates
+    volumes:
+      - ./report-service/docker/init-reports.py:/init-reports.py:ro
+      - ./report-service/src/main/resources/report-templates:/templates:ro
+    entrypoint: >
+      /bin/sh -c "
+      pip install --no-cache-dir requests > /dev/null 2>&1;
+      python /init-reports.py;
+      "
+    restart: "no"
     networks:
       - sic-network
 
