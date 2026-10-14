@@ -820,14 +820,8 @@
 				<expression><![CDATA[$F{totalBugs}]]></expression>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0002-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "5. Contracts" : "5. สัญญา (Contracts)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0002-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0002-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0002-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0002-0004-0004-0004-a1b2c3d4e5f6" subDataset="ContractsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -838,17 +832,43 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="96" width="515">
-						<element kind="textField" uuid="e00e0002-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="170" width="515">
+						<element kind="textField" uuid="e00e0002-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "5. Contracts" : "5. สัญญา (Contracts)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0002-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="6e4f06d5-9fa8-47e7-a00f-b57204c13100" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0002-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{contractNo} + "]  " + $F{contractType} + " • " + $F{signStatus}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0002-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Value: " : "มูลค่า: ") + $F{contractValue} + "   " + ($P{lang}.equals("en") ? "Period: " : "ระยะเวลา: ") + $F{period} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="8c8f5438-1e0e-4a3c-84e6-1338687bb76a" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Value:" : "มูลค่า:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0002-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="5497f9bb-268d-42c4-bff6-e61f775e7f67" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{contractValue} != null && !String.valueOf($F{contractValue}).isBlank() ? String.valueOf($F{contractValue}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="385d2f92-ee77-4aee-a91f-f5fb767e8009" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Period:" : "ระยะเวลา:")]]></expression>
+						</element>
+						<element kind="textField" uuid="3d8c8d18-bcd1-4cb3-bb92-9532c7c3bbbb" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{period} != null && !String.valueOf($F{period}).isBlank() ? String.valueOf($F{period}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="333b4014-80b5-40c5-a7f4-29be679da7ae" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="a8379a23-c742-4e8a-b84f-12310588baaa" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0002-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{paymentTerms} == null || $F{paymentTerms}.isBlank()) ? null : ($P{lang}.equals("en") ? "Payment Terms:" : "เงื่อนไขการชำระเงิน:")]]></expression>
 						</element>
-						<element kind="component" uuid="43e181bf-0a39-4abc-81e1-eb20e337c721" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="43e181bf-0a39-4abc-81e1-eb20e337c721" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="c5515350-3519-4067-9ffc-13cf15bcd6af" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{paymentTerms}, "", 513))]]></dataSourceExpression>
@@ -1021,10 +1041,10 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="textField" uuid="e00e0002-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="e00e0002-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="132" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{scopeSummary} == null || $F{scopeSummary}.isBlank()) ? null : ($P{lang}.equals("en") ? "Scope Summary:" : "ขอบเขตงาน:")]]></expression>
 						</element>
-						<element kind="component" uuid="1776b8c4-6a34-4c63-887d-fb01493e84c7" positionType="Float" x="0" y="72" width="515" height="14">
+						<element kind="component" uuid="1776b8c4-6a34-4c63-887d-fb01493e84c7" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="2fa2a0c0-7bea-4984-85f7-5369616272b3" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{scopeSummary}, "", 513))]]></dataSourceExpression>
@@ -1197,21 +1217,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0002-0011-0011-0011-a1b2c3d4e5f6" positionType="Float" x="0" y="86" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0005-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "6. WBS / Phases" : "6. โครงสร้างงาน (WBS / Phase)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0005-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0005-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0005-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0005-0004-0004-0004-a1b2c3d4e5f6" subDataset="PhasesDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -1222,17 +1233,43 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="68" width="515">
-						<element kind="textField" uuid="e00e0005-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="142" width="515">
+						<element kind="textField" uuid="e00e0005-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "6. WBS / Phases" : "6. โครงสร้างงาน (WBS / Phase)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0005-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="c35f10fd-ed78-41c7-bc9e-324cda54efbe" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0005-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{name}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0005-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Period: " : "ช่วงเวลา: ") + $F{period} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Progress: " : "ความคืบหน้า: ") + $F{progress}]]></expression>
+						<element kind="textField" uuid="ec027d36-8b6c-4d79-9273-74a009cce44b" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Period:" : "ช่วงเวลา:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0005-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="f3de3079-02db-4def-aba1-8c9b5332eb38" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{period} != null && !String.valueOf($F{period}).isBlank() ? String.valueOf($F{period}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="2a332130-4a1a-4916-ae97-00d3cbeed948" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="54232b1f-5d13-4a85-b1ff-bde4031a598f" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="b4ec68d8-4aac-4514-8a65-d8ffeb259d1a" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Progress:" : "ความคืบหน้า:")]]></expression>
+						</element>
+						<element kind="textField" uuid="56d9903a-fe7b-4d7d-8950-f1663f3f5dfd" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{progress} != null && !String.valueOf($F{progress}).isBlank() ? String.valueOf($F{progress}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0005-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{description} == null || $F{description}.isBlank()) ? null : ($P{lang}.equals("en") ? "Description:" : "รายละเอียด:")]]></expression>
 						</element>
-						<element kind="component" uuid="444eb287-6565-455e-8071-64101f1d1e5e" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="444eb287-6565-455e-8071-64101f1d1e5e" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="d2b10c18-c252-4578-9c13-84c304a3a777" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description}, "", 513))]]></dataSourceExpression>
@@ -1405,21 +1442,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0005-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0003-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "7. Requirements" : "7. ความต้องการ (Requirements)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0003-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0003-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0003-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0003-0004-0004-0004-a1b2c3d4e5f6" subDataset="RequirementsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -1430,17 +1458,49 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="124" width="515">
-						<element kind="textField" uuid="e00e0003-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="198" width="515">
+						<element kind="textField" uuid="e00e0003-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "7. Requirements" : "7. ความต้องการ (Requirements)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0003-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="49663fd4-063d-4639-b3da-e86e8ca9a3a5" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0003-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0003-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Type: " : "ประเภท: ") + $F{type} + "   " + ($P{lang}.equals("en") ? "Priority: " : "ความสำคัญ: ") + $F{priority} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="3417143d-65ff-46dd-8460-e6ab52374fcf" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภท:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0003-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="de197c7d-d439-4872-93cb-69dcc3206ef2" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{type} != null && !String.valueOf($F{type}).isBlank() ? String.valueOf($F{type}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="39690938-72dd-4c4b-b233-221f4c176d49" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Priority:" : "ความสำคัญ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="bbb76966-abf9-4f1a-9799-d20ad81d4540" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{priority} != null && !String.valueOf($F{priority}).isBlank() ? String.valueOf($F{priority}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="0343a799-999a-4430-9fd1-8b4e02cd98df" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="eef303c0-c230-4d2c-a004-27ce16490583" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="095b4847-9a82-4009-a712-79123c5a1ed3" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="a4960d02-0434-43e8-8945-04cbda27088e" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0003-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{description} == null || $F{description}.isBlank()) ? null : ($P{lang}.equals("en") ? "Description:" : "รายละเอียด:")]]></expression>
 						</element>
-						<element kind="component" uuid="6958efa2-e323-46d6-a573-3408889ec92a" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="6958efa2-e323-46d6-a573-3408889ec92a" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="dd2953ef-fc42-4e13-ada9-e5a7ac31ddfd" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description}, "", 513))]]></dataSourceExpression>
@@ -1613,10 +1673,10 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="textField" uuid="e00e0003-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="e00e0003-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="132" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{businessValue} == null || $F{businessValue}.isBlank()) ? null : ($P{lang}.equals("en") ? "Business Value:" : "คุณค่าทางธุรกิจ:")]]></expression>
 						</element>
-						<element kind="component" uuid="20f831b2-fd60-4aaf-97ca-08b66ca800e0" positionType="Float" x="0" y="72" width="515" height="14">
+						<element kind="component" uuid="20f831b2-fd60-4aaf-97ca-08b66ca800e0" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="cd49eefa-2aab-4c36-8fe5-2a430f444726" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{businessValue}, "", 513))]]></dataSourceExpression>
@@ -1789,10 +1849,10 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="textField" uuid="e00e0003-0011-0011-0011-a1b2c3d4e5f6" positionType="Float" x="0" y="86" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="e00e0003-0011-0011-0011-a1b2c3d4e5f6" positionType="Float" x="0" y="160" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{acceptanceCriteria} == null || $F{acceptanceCriteria}.isBlank()) ? null : ($P{lang}.equals("en") ? "Acceptance Criteria:" : "เกณฑ์การยอมรับ:")]]></expression>
 						</element>
-						<element kind="component" uuid="18df7b9b-f2a1-4cac-b634-8e7a2af07e6b" positionType="Float" x="0" y="100" width="515" height="14">
+						<element kind="component" uuid="18df7b9b-f2a1-4cac-b634-8e7a2af07e6b" positionType="Float" x="0" y="174" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="bca6911d-b1c1-46e2-82c2-2bedaa29c01a" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{acceptanceCriteria}, "", 513))]]></dataSourceExpression>
@@ -1965,9 +2025,6 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0003-0013-0013-0013-a1b2c3d4e5f6" positionType="Float" x="0" y="114" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
@@ -2010,14 +2067,8 @@
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0004-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "9. Specifications" : "9. ข้อกำหนดเชิงเทคนิค (Specifications)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0004-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0004-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0004-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0004-0004-0004-0004-a1b2c3d4e5f6" subDataset="SpecificationsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -2028,17 +2079,49 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="68" width="515">
-						<element kind="textField" uuid="e00e0004-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="142" width="515">
+						<element kind="textField" uuid="e00e0004-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "9. Specifications" : "9. ข้อกำหนดเชิงเทคนิค (Specifications)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0004-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="84c314aa-6aa4-40ee-9fb9-7ccaea78767c" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0004-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0004-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Type: " : "ประเภท: ") + $F{type} + "   " + ($P{lang}.equals("en") ? "Priority: " : "ความสำคัญ: ") + $F{priority} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="a9b98a73-982f-4741-b6df-760c8f9d1b0c" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภท:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0004-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="65e18d32-553f-48f9-829e-9fbc7f6ec859" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{type} != null && !String.valueOf($F{type}).isBlank() ? String.valueOf($F{type}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="2dcf9dca-ccb7-4b5b-a488-61abcf3c2780" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Priority:" : "ความสำคัญ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="8feb5a33-e1d5-44be-a25c-4ccd21b70f9e" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{priority} != null && !String.valueOf($F{priority}).isBlank() ? String.valueOf($F{priority}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="6a3fa307-2732-41bc-8d23-6e8e35a93403" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="6a88025b-4310-4069-b353-4297bd8ffcb1" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="2b150352-1d9e-4150-831f-3b9ec48a1ac6" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="a9c1ef2e-652a-4c02-a9e4-abc6928b6104" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0004-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{description} == null || $F{description}.isBlank()) ? null : ($P{lang}.equals("en") ? "Description:" : "รายละเอียด:")]]></expression>
 						</element>
-						<element kind="component" uuid="6bc4e934-1d86-436e-bd4f-fef7c49195ee" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="6bc4e934-1d86-436e-bd4f-fef7c49195ee" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="bdd8c078-d772-4821-a0ad-9bf3ab8f8bf1" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description}, "", 513))]]></dataSourceExpression>
@@ -2211,21 +2294,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0004-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0012-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "10. Design Reviews" : "10. การตรวจทานแบบ (Design Reviews)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0012-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0012-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0012-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0012-0004-0004-0004-a1b2c3d4e5f6" subDataset="DesignReviewsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -2236,17 +2310,61 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="68" width="515">
-						<element kind="textField" uuid="e00e0012-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="160" width="515">
+						<element kind="textField" uuid="e00e0012-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "10. Design Reviews" : "10. การตรวจทานแบบ (Design Reviews)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0012-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="ae6f5080-bceb-4a9c-ba1b-b928d15c8b5a" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="82" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0012-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0012-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Target: " : "เป้าหมาย: ") + $F{targetType} + "   " + ($P{lang}.equals("en") ? "Severity: " : "ความรุนแรง: ") + $F{severity} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Assigned: " : "ผู้รับผิดชอบ: ") + $F{assignedTo} + "   " + ($P{lang}.equals("en") ? "Due: " : "กำหนดเสร็จ: ") + $F{dueDate} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="89d92dba-c9e6-4ded-aef4-130daff81bf0" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Target:" : "เป้าหมาย:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0012-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="f59237a4-96ec-4094-b21d-f86045adf104" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{targetType} != null && !String.valueOf($F{targetType}).isBlank() ? String.valueOf($F{targetType}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="8081caa1-c31f-42b5-b8d6-3fc4d70f203b" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Severity:" : "ความรุนแรง:")]]></expression>
+						</element>
+						<element kind="textField" uuid="5f7f2cba-80c7-46c2-8d62-ce2d41733b33" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{severity} != null && !String.valueOf($F{severity}).isBlank() ? String.valueOf($F{severity}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="9683ecfc-4746-49be-9bf3-0bd3de933790" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="06f5067c-35c6-41e3-8bd4-4d53bcbe5c3d" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="c157fbae-1f80-41e6-a06e-9e56d12bcdf4" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Assigned:" : "ผู้รับผิดชอบ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="a856f8f4-e692-4950-8afd-470602e3a19f" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{assignedTo} != null && !String.valueOf($F{assignedTo}).isBlank() ? String.valueOf($F{assignedTo}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="8df1d575-b37f-4d30-8720-12240c3d83a5" positionType="Float" x="10" y="94" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Due:" : "กำหนดเสร็จ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="d10d92dd-73e8-4e85-a4a6-65c718546058" positionType="Float" x="105" y="94" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{dueDate} != null && !String.valueOf($F{dueDate}).isBlank() ? String.valueOf($F{dueDate}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="856ae819-77c9-4423-a129-24405d63ec63" positionType="Float" x="270" y="94" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="071b0731-c3f1-481d-ada2-4e727e004f81" positionType="Float" x="360" y="94" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0012-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="122" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{description} == null || $F{description}.isBlank()) ? null : ($P{lang}.equals("en") ? "Description:" : "รายละเอียด:")]]></expression>
 						</element>
-						<element kind="component" uuid="70521ec0-7c35-4233-98e1-1a642ce4f876" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="70521ec0-7c35-4233-98e1-1a642ce4f876" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="b00b9040-9691-4355-b5e8-e822e89fc334" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description}, "", 513))]]></dataSourceExpression>
@@ -2419,21 +2537,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0012-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00d0011-b000-b000-b000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "11. User Manuals" : "11. คู่มือการใช้งาน (User Manuals)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00d0011-b001-b001-b001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00d0011-b007-b007-b007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00d0011-b007-b007-b007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00d0011-b008-b008-b008-a1b2c3d4e5f6" subDataset="UserManualsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -2444,14 +2553,40 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="50" width="515">
-						<element kind="textField" uuid="e00d0011-b009-b009-b009-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="128" width="515">
+						<element kind="textField" uuid="e00d0011-b000-b000-b000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "11. User Manuals" : "11. คู่มือการใช้งาน (User Manuals)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00d0011-b001-b001-b001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="1af3dc13-8f18-40b7-a1c3-3373d5b5b22f" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00d0011-b009-b009-b009-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00d0011-b011-b011-b011-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Type: " : "ประเภท: ") + $F{type} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{version} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status}]]></expression>
+						<element kind="textField" uuid="d5e24009-1743-4f87-8b9f-cf42270cd283" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภท:")]]></expression>
 						</element>
-						<element kind="component" uuid="e00d0011-b040-b040-b040-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="30" width="515" height="14">
+						<element kind="textField" uuid="cae95355-1cd5-496d-a329-f36077e59667" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{type} != null && !String.valueOf($F{type}).isBlank() ? String.valueOf($F{type}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="2ef03595-ce13-455a-8b54-80f21e88b028" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="8647fcfa-b03e-4471-bb31-e29a8ccbcd98" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{version} != null && !String.valueOf($F{version}).isBlank() ? String.valueOf($F{version}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="6e86f083-a2bb-4f9f-a524-9b9e08b9361c" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="57817ae3-31a0-44a6-9371-1437b9715f39" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="component" uuid="e00d0011-b040-b040-b040-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="104" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="e00d0011-b041-b041-b041-a1b2c3d4e5f6" subDataset="UserManualSectionsDataset">
 									<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -2639,21 +2774,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00d0011-b022-b022-b022-a1b2c3d4e5f6" positionType="Float" x="0" y="44" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0006-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "12. Deliveries" : "12. การส่งมอบ (Deliveries)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0006-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0006-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0006-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0006-0004-0004-0004-a1b2c3d4e5f6" subDataset="DeliveriesDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -2664,17 +2790,49 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="96" width="515">
-						<element kind="textField" uuid="e00e0006-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="170" width="515">
+						<element kind="textField" uuid="e00e0006-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "12. Deliveries" : "12. การส่งมอบ (Deliveries)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0006-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="5466ad23-3ebc-4632-8d26-8301aafd761d" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0006-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0006-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Type: " : "ประเภท: ") + $F{type} + "   " + ($P{lang}.equals("en") ? "Date: " : "วันที่: ") + $F{date} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{deliveryVersion}]]></expression>
+						<element kind="textField" uuid="49f45f76-ecc4-4fec-9deb-fa3e065ffb4b" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภท:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0006-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="6555977c-c307-457e-8528-3e375acbb333" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{type} != null && !String.valueOf($F{type}).isBlank() ? String.valueOf($F{type}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="49e36a9f-828d-41ac-9059-b767873e01c0" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Date:" : "วันที่:")]]></expression>
+						</element>
+						<element kind="textField" uuid="61ff7c9c-2987-4615-94b2-890b42ea8518" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{date} != null && !String.valueOf($F{date}).isBlank() ? String.valueOf($F{date}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="3d4c8a94-fdb2-407c-82bb-7d0d057a8707" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="2e28178d-9b48-4300-8843-8ba9d88659a2" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="069a76f7-f56c-4fa3-aca0-9f4a9820bf83" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="4bd97ff8-fe45-4ef5-a7d3-5167bccae632" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{deliveryVersion} != null && !String.valueOf($F{deliveryVersion}).isBlank() ? String.valueOf($F{deliveryVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0006-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{deliverySummary} == null || $F{deliverySummary}.isBlank()) ? null : ($P{lang}.equals("en") ? "Summary:" : "สรุปการส่งมอบ:")]]></expression>
 						</element>
-						<element kind="component" uuid="4bdc49c1-8799-4138-8a64-0bc9cd0893dd" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="4bdc49c1-8799-4138-8a64-0bc9cd0893dd" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="55e2c2fa-6b09-4805-98a9-d40688b595da" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{deliverySummary}, "", 513))]]></dataSourceExpression>
@@ -2847,10 +3005,10 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="textField" uuid="e00e0006-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="e00e0006-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="132" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{releaseNote} == null || $F{releaseNote}.isBlank()) ? null : ($P{lang}.equals("en") ? "Release Note:" : "หมายเหตุการปล่อยเวอร์ชัน:")]]></expression>
 						</element>
-						<element kind="component" uuid="8e9bb813-52c5-46da-90cc-61a465a5f04a" positionType="Float" x="0" y="72" width="515" height="14">
+						<element kind="component" uuid="8e9bb813-52c5-46da-90cc-61a465a5f04a" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="ad9fd1e4-0a14-41e2-a243-a58aecbdbb42" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{releaseNote}, "", 513))]]></dataSourceExpression>
@@ -3023,21 +3181,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0006-0011-0011-0011-a1b2c3d4e5f6" positionType="Float" x="0" y="86" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0007-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "13. Invoices" : "13. ใบแจ้งหนี้ (Invoices)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0007-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0007-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0007-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0007-0004-0004-0004-a1b2c3d4e5f6" subDataset="InvoicesDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -3048,17 +3197,61 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="68" width="515">
-						<element kind="textField" uuid="e00e0007-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="160" width="515">
+						<element kind="textField" uuid="e00e0007-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "13. Invoices" : "13. ใบแจ้งหนี้ (Invoices)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0007-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="d90c5f94-c672-40bf-9bdf-164d9706fe5e" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="82" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0007-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{invoiceNo} + "]  " + ($P{lang}.equals("en") ? "Total: " : "ยอดรวม: ") + $F{totalAmount}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0007-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออก: ") + $F{issueDate} + "   " + ($P{lang}.equals("en") ? "Due: " : "ครบกำหนด: ") + $F{dueDate} + "   " + ($P{lang}.equals("en") ? "Payment: " : "สถานะการจ่าย: ") + $F{paymentStatus} + "   " + ($P{lang}.equals("en") ? "Billing: " : "ประเภทเรียกเก็บ: ") + $F{billingType} + "   " + ($P{lang}.equals("en") ? "Subtotal: " : "ก่อนภาษี: ") + $F{subtotalAmount} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="251e015c-d678-4fc5-be3c-654b0f760fec" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date:" : "วันที่ออก:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0007-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="be114607-1d5e-45a6-a791-b8368a68eb87" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{issueDate} != null && !String.valueOf($F{issueDate}).isBlank() ? String.valueOf($F{issueDate}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="f996ff40-185f-43eb-888f-1046d35a7524" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Due:" : "ครบกำหนด:")]]></expression>
+						</element>
+						<element kind="textField" uuid="b12b3c6b-73ca-410a-87ae-4edf8903bf4a" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{dueDate} != null && !String.valueOf($F{dueDate}).isBlank() ? String.valueOf($F{dueDate}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e9dfaf52-95ce-4664-bed3-b6b63442f042" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Payment:" : "สถานะการจ่าย:")]]></expression>
+						</element>
+						<element kind="textField" uuid="a7c7bc9a-bfa9-4a37-9702-43895148d49f" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{paymentStatus} != null && !String.valueOf($F{paymentStatus}).isBlank() ? String.valueOf($F{paymentStatus}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="0ba1f3b0-8dbc-4792-9859-b04f3dff8c2c" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Billing:" : "ประเภทเรียกเก็บ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="9212adc6-91ba-49f7-a7d8-047efac07a33" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{billingType} != null && !String.valueOf($F{billingType}).isBlank() ? String.valueOf($F{billingType}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="7e264676-c542-4acf-a954-a24780d6e6a2" positionType="Float" x="10" y="94" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Subtotal:" : "ก่อนภาษี:")]]></expression>
+						</element>
+						<element kind="textField" uuid="f5b94b26-326c-42e1-b70d-54bb7b451658" positionType="Float" x="105" y="94" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{subtotalAmount} != null && !String.valueOf($F{subtotalAmount}).isBlank() ? String.valueOf($F{subtotalAmount}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="9272d592-5a56-4c24-bb82-b75e594605d6" positionType="Float" x="270" y="94" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="12dff5c2-aab7-4315-b28e-2dd2990ecf9a" positionType="Float" x="360" y="94" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0007-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="122" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{remark} == null || $F{remark}.isBlank()) ? null : ($P{lang}.equals("en") ? "Remark:" : "หมายเหตุ:")]]></expression>
 						</element>
-						<element kind="component" uuid="d0ee951e-f1d6-49c0-ac1b-30e4480afec5" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="d0ee951e-f1d6-49c0-ac1b-30e4480afec5" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="59e08642-12b4-4150-a316-cc0cea7c0407" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{remark}, "", 513))]]></dataSourceExpression>
@@ -3231,21 +3424,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0007-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0009-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "14. MA Tickets" : "14. ตั๋วแจ้งปัญหา MA (MA Tickets)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0009-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0009-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0009-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0009-0004-0004-0004-a1b2c3d4e5f6" subDataset="MaTicketsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -3256,17 +3440,49 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="96" width="515">
-						<element kind="textField" uuid="e00e0009-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="170" width="515">
+						<element kind="textField" uuid="e00e0009-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "14. MA Tickets" : "14. ตั๋วแจ้งปัญหา MA (MA Tickets)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0009-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="70605e20-d43d-4cea-bc47-a568a1a4409f" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0009-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{ticketNo} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0009-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Type: " : "ประเภท: ") + $F{type} + "   " + ($P{lang}.equals("en") ? "Severity: " : "ความรุนแรง: ") + $F{severity} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="dfda9684-fae5-40c3-88b6-a101267e0019" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Type:" : "ประเภท:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0009-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="4fe91ab0-e72d-4d14-9faf-e558a574d8dd" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{type} != null && !String.valueOf($F{type}).isBlank() ? String.valueOf($F{type}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="af52dc7c-b62e-44f0-a2b8-d14d4fca49c6" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Severity:" : "ความรุนแรง:")]]></expression>
+						</element>
+						<element kind="textField" uuid="0c78a44b-a573-435d-962c-e2b624032c00" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{severity} != null && !String.valueOf($F{severity}).isBlank() ? String.valueOf($F{severity}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="719ddb58-2b50-4645-af8f-21ea42a9aab6" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="9b723020-c67f-4fe9-b20c-ad9ed8ba2f26" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="06cff6ff-be8a-4131-99ff-176801b8efb4" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="14c24541-a9dd-4e4d-995f-d12a7aeeaa10" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0009-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{description} == null || $F{description}.isBlank()) ? null : ($P{lang}.equals("en") ? "Description:" : "รายละเอียด:")]]></expression>
 						</element>
-						<element kind="component" uuid="c056bf7c-4b8e-498c-a471-2d1069004633" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="c056bf7c-4b8e-498c-a471-2d1069004633" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="12fab3f1-8506-4282-95fa-d6b86002aaf4" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description}, "", 513))]]></dataSourceExpression>
@@ -3439,10 +3655,10 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="textField" uuid="e00e0009-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="e00e0009-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="132" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{resolutionSummary} == null || $F{resolutionSummary}.isBlank()) ? null : ($P{lang}.equals("en") ? "Resolution:" : "สรุปการแก้ไข:")]]></expression>
 						</element>
-						<element kind="component" uuid="079920a9-604c-4d6f-a1aa-b174349318ee" positionType="Float" x="0" y="72" width="515" height="14">
+						<element kind="component" uuid="079920a9-604c-4d6f-a1aa-b174349318ee" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="7247c58c-4ea4-46b8-8f62-f88237ac68b7" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{resolutionSummary}, "", 513))]]></dataSourceExpression>
@@ -3615,21 +3831,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0009-0011-0011-0011-a1b2c3d4e5f6" positionType="Float" x="0" y="86" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0008-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "15. Change Requests" : "15. คำขอเปลี่ยนแปลง (Change Requests)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0008-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0008-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0008-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0008-0004-0004-0004-a1b2c3d4e5f6" subDataset="ChangeRequestsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -3640,17 +3847,55 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="68" width="515">
-						<element kind="textField" uuid="e00e0008-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="160" width="515">
+						<element kind="textField" uuid="e00e0008-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "15. Change Requests" : "15. คำขอเปลี่ยนแปลง (Change Requests)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0008-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="0dba40a9-c434-4c4b-950e-0a017b3f8b2c" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="82" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0008-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0008-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Priority: " : "ความสำคัญ: ") + $F{priority} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status} + "   " + ($P{lang}.equals("en") ? "Level: " : "ระดับ: ") + $F{level} + "   " + ($P{lang}.equals("en") ? "Reason: " : "เหตุผล: ") + $F{changeReason} + "   " + ($P{lang}.equals("en") ? "Version: " : "เวอร์ชัน: ") + $F{docVersion}]]></expression>
+						<element kind="textField" uuid="72132972-e09c-4822-8b2b-b7b660d93496" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Priority:" : "ความสำคัญ:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0008-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="78ad2509-9b2f-45d0-9c3e-258ea6bf46b1" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{priority} != null && !String.valueOf($F{priority}).isBlank() ? String.valueOf($F{priority}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="6025a5fa-5292-464f-b5a7-756513581f95" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="871c5eb5-421c-4e80-a3b0-b3fa4d9b4bb2" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="46667daa-6c91-45c9-97a9-8fe1fde842cc" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Level:" : "ระดับ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="8162354f-e57c-43bf-9d17-0450a2796f55" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{level} != null && !String.valueOf($F{level}).isBlank() ? String.valueOf($F{level}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="29c0d237-ed98-4437-9147-0496eeda40ac" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Reason:" : "เหตุผล:")]]></expression>
+						</element>
+						<element kind="textField" uuid="17a5f18d-df3e-4b03-a6dc-ff98396366d0" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{changeReason} != null && !String.valueOf($F{changeReason}).isBlank() ? String.valueOf($F{changeReason}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="3c84795f-bf76-4c85-9ac9-86ef8fd2d090" positionType="Float" x="10" y="94" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+						</element>
+						<element kind="textField" uuid="4b8b5829-bd4d-4a80-849a-5499d09e2470" positionType="Float" x="105" y="94" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{docVersion} != null && !String.valueOf($F{docVersion}).isBlank() ? String.valueOf($F{docVersion}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0008-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="122" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{description} == null || $F{description}.isBlank()) ? null : ($P{lang}.equals("en") ? "Description:" : "รายละเอียด:")]]></expression>
 						</element>
-						<element kind="component" uuid="e51a02f5-0506-44cc-a636-51fd768574c0" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="e51a02f5-0506-44cc-a636-51fd768574c0" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="213dcb85-0242-4ab7-a787-e8a19157a6b1" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{description}, "", 513))]]></dataSourceExpression>
@@ -3823,21 +4068,12 @@
 								</contents>
 							</component>
 						</element>
-						<element kind="line" uuid="e00e0008-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
-						</element>
 					</contents>
 				</component>
 			</element>
 		</band>
-		<band height="54" splitType="Stretch">
-			<element kind="textField" uuid="e00e0010-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "16. MA Renewals" : "16. ต่ออายุ MA (MA Renewals)")]]></expression>
-			</element>
-			<element kind="line" uuid="e00e0010-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1">
-				<pen lineWidth="0.6"/>
-			</element>
-			<element kind="component" uuid="e00e0010-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="34" width="515" height="16">
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="e00e0010-0003-0003-0003-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00e0010-0004-0004-0004-a1b2c3d4e5f6" subDataset="MaRenewalsDataset">
 						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
@@ -3848,17 +4084,37 @@
 							<expression><![CDATA[$P{lang}]]></expression>
 						</parameter>
 					</datasetRun>
-					<contents height="68" width="515">
-						<element kind="textField" uuid="e00e0010-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+					<contents height="124" width="515">
+						<element kind="textField" uuid="e00e0010-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "16. MA Renewals" : "16. ต่ออายุ MA (MA Renewals)")]]></expression>
+			</element>
+						<element kind="line" uuid="e00e0010-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+				<pen lineWidth="0.6"/>
+			</element>
+						<element kind="rectangle" uuid="0c868f1f-b992-4685-bd95-8ab964f90425" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="46" backcolor="#F8FAFC" radius="3">
+							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="e00e0010-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{renewalNo} + "]  " + ($P{lang}.equals("en") ? "Amount: " : "มูลค่า: ") + $F{amount}]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0010-0006-0006-0006-a1b2c3d4e5f6" positionType="Float" x="0" y="16" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Period: " : "ช่วงเวลา: ") + $F{period} + "   " + ($P{lang}.equals("en") ? "Status: " : "สถานะ: ") + $F{status}]]></expression>
+						<element kind="textField" uuid="4ecbcd27-af81-476f-8617-0cb0e542a678" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Period:" : "ช่วงเวลา:")]]></expression>
 						</element>
-						<element kind="textField" uuid="e00e0010-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="30" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
+						<element kind="textField" uuid="e78ab2bf-d5f5-4007-aaec-d548e4b09722" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{period} != null && !String.valueOf($F{period}).isBlank() ? String.valueOf($F{period}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="67c25d30-ee30-478a-b6d8-9ae5c7a406ae" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+						</element>
+						<element kind="textField" uuid="0cedf917-9324-48c9-afe0-0e42ff9fcbb6" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="e00e0010-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="86" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">
 							<expression><![CDATA[($F{remark} == null || $F{remark}.isBlank()) ? null : ($P{lang}.equals("en") ? "Remark:" : "หมายเหตุ:")]]></expression>
 						</element>
-						<element kind="component" uuid="beb911b1-ec78-4d89-81bf-3355fae00dff" positionType="Float" x="0" y="44" width="515" height="14">
+						<element kind="component" uuid="beb911b1-ec78-4d89-81bf-3355fae00dff" positionType="Float" x="0" y="100" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="d25e08d0-297f-42b8-8b26-e16ad36d1546" subDataset="ContentBlocksDataset">
 									<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($F{remark}, "", 513))]]></dataSourceExpression>
@@ -4030,9 +4286,6 @@
 									</element>
 								</contents>
 							</component>
-						</element>
-						<element kind="line" uuid="e00e0010-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="0" y="58" width="515" height="1" forecolor="#E2E8F0">
-							<pen lineWidth="0.5"/>
 						</element>
 					</contents>
 				</component>

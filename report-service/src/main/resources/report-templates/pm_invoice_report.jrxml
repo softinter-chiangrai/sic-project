@@ -190,7 +190,7 @@
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="5ed7177d-ce49-4278-9023-9e9c3d89de85">
+	<dataset name="RichBlocksDataset" uuid="12e3f19a-1c2a-4f16-b549-278cc2ee0647">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -328,7 +328,7 @@
 		<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="5395d222-b28d-4440-9d85-93ecb83e6823" positionType="Float" x="0" y="118" width="515" height="20">
 					<component kind="list">
-						<datasetRun uuid="a5a87759-d82d-47a6-ae0e-dc07f3aea31c" subDataset="RichBlocksDataset">
+						<datasetRun uuid="d5ce4a7e-9593-4971-bf80-38aea0961c48" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$P{remark} != null && !$P{remark}.isBlank() ? $P{remark} : ($P{lang}.equals("en") ? "Please transfer payment to Softinter Co., Ltd.'s company account and submit proof of payment to receive a receipt." : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[($P{attachmentNames} == null || $P{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $P{attachmentNames})]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
