@@ -418,7 +418,8 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   }
 
   private recalcSubtotalFromItems(): void {
-    const subtotal = this.items().reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
+    // a row removed in the form stays in the list as Deleted until Save: it must not count
+    const subtotal = this.items().filter((item) => item.state !== SicEntityState.Deleted).reduce((sum, item) => sum + (Number(item.amount) || 0), 0);
     this.formData.form.get('subtotalAmount')?.setValue(subtotal);
   }
 
@@ -453,17 +454,28 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     }
   }
 
+  /** quantity x unit price - discount, when the row has both quantity and unit price (otherwise the typed amount stands) */
+  hasPricing(item: PmInvoiceItemModel): boolean {
+    return item.quantity != null && item.unitPrice != null;
+  }
+
   onItemFieldChange(index: number, field: string, value: any): void {
     if (this.isView()) return;
     const list = [...this.items()];
-    if (list[index]) {
-      (list[index] as any)[field] = field === 'amount' ? (Number(value) || 0) : value;
-      if (list[index].state !== SicEntityState.Added) {
-        list[index].state = SicEntityState.Modified;
+    const item = list[index];
+    if (item) {
+      const numeric = ['amount', 'quantity', 'unitPrice', 'discount'];
+      const typed = numeric.includes(field) ? (value === '' || value == null ? null : Number(value)) : value;
+      (item as any)[field] = field === 'amount' ? (typed ?? 0) : typed;
+      if (['quantity', 'unitPrice', 'discount'].includes(field) && this.hasPricing(item)) {
+        item.amount = Math.round(((item.quantity as number) * (item.unitPrice as number) - (Number(item.discount) || 0)) * 100) / 100;
+      }
+      if (item.state !== SicEntityState.Added) {
+        item.state = SicEntityState.Modified;
       }
       this.items.set(list);
       this.formData.markAsDirty();
-      if (field === 'amount') {
+      if (numeric.includes(field)) {
         this.recalcSubtotalFromItems();
       }
     }

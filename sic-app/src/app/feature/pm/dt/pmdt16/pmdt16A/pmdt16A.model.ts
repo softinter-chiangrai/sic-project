@@ -4,7 +4,11 @@ export interface PmInvoiceItemModel {
   id?: string;
   invoiceId?: string;
   itemName: string;
+  itemCode?: string;
   description?: string;
+  quantity?: number | null;
+  unitPrice?: number | null;
+  discount?: number | null;
   amount: number;
   sortOrder?: number;
   state?: SicEntityState | null;

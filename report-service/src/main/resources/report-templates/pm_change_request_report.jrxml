@@ -126,7 +126,7 @@
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="c1a91ece-072d-4578-abd0-69ffb918fb97">
+	<dataset name="RichBlocksDataset" uuid="bcffa892-3931-4bc3-859e-6700736cb025">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -287,7 +287,7 @@
 			<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="aa1740c8-6733-4579-bc1d-f89581158e58" positionType="Float" x="0" y="208" width="515" height="20">
 					<component kind="list">
-						<datasetRun uuid="b7f5c20e-4183-4b42-8031-042cb4b7614f" subDataset="RichBlocksDataset">
+						<datasetRun uuid="9c9a3bad-7b5d-44b9-8afe-68c33fcaa818" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details" : "ไม่มีรายละเอียดเพิ่มเติม")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>

@@ -23,6 +23,10 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import org.springframework.format.annotation.DateTimeFormat;
+import com.softinter.sicapi.service.impl.ContractLifecycleService;
 import com.softinter.sicapi.dto.response.PaginationResponse;
 import com.softinter.sicapi.util.PaginationUtil;
 import com.softinter.sicapi.dto.response.ContractDraft;
@@ -47,6 +51,17 @@ public class PmCustomerContractController {
     private final BusinessAccessService businessAccessService;
     private final ApprovalService approvalService;
     private final ContractGeneratorService contractGeneratorService;
+    private final ContractLifecycleService lifecycleService;
+
+    @PostMapping("/run-lifecycle")
+    @Operation(summary = "รันงานรอบวันของสัญญา: ตรวจสอบสัญญาใกล้หมดอายุ และสร้างฉบับต่ออายุอัตโนมัติ")
+    public ResponseEntity<Map<String, Object>> runLifecycle(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+    ) {
+        LocalDate targetDate = date != null ? date : LocalDate.now(ZoneId.of("Asia/Bangkok"));
+        lifecycleService.runDaily(targetDate);
+        return ResponseEntity.ok(Map.of("status", "SUCCESS", "date", targetDate.toString()));
+    }
 
     @PostMapping("/generate/draft")
     @Operation(summary = "Generate contract draft with AI")

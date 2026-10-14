@@ -168,7 +168,9 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                 .collect(Collectors.toList());
         if (!activeItems.isEmpty()) {
             BigDecimal itemsSubtotal = activeItems.stream()
-                    .map(it -> it.getAmount() != null ? it.getAmount() : BigDecimal.ZERO)
+                    .map(it -> (it.getQuantity() != null && it.getUnitPrice() != null)
+                            ? it.getQuantity().multiply(it.getUnitPrice()).subtract(it.getDiscount() != null ? it.getDiscount() : BigDecimal.ZERO).setScale(2, RoundingMode.HALF_UP)
+                            : (it.getAmount() != null ? it.getAmount() : BigDecimal.ZERO))
                     .reduce(BigDecimal.ZERO, BigDecimal::add);
             request.setSubtotalAmount(itemsSubtotal);
         }
@@ -324,8 +326,16 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
 
     private void mapItemRequestToEntity(PmInvoiceItemRequest req, PmInvoiceItem entity) {
         entity.setItemName(req.getItemName());
+        entity.setItemCode(req.getItemCode());
         entity.setDescription(req.getDescription());
-        entity.setAmount(req.getAmount() != null ? req.getAmount() : BigDecimal.ZERO);
+        entity.setQuantity(req.getQuantity());
+        entity.setUnitPrice(req.getUnitPrice());
+        entity.setDiscount(req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO);
+        // amount = quantity x unit price - discount when the row has them, otherwise the amount typed in
+        BigDecimal computed = (req.getQuantity() != null && req.getUnitPrice() != null)
+                ? req.getQuantity().multiply(req.getUnitPrice()).subtract(entity.getDiscount()).setScale(2, RoundingMode.HALF_UP)
+                : null;
+        entity.setAmount(computed != null ? computed : (req.getAmount() != null ? req.getAmount() : BigDecimal.ZERO));
         entity.setSortOrder(req.getSortOrder() != null ? req.getSortOrder() : 0);
     }
 
@@ -334,7 +344,11 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
         res.setId(entity.getId());
         res.setInvoiceId(entity.getInvoiceId());
         res.setItemName(entity.getItemName());
+        res.setItemCode(entity.getItemCode());
         res.setDescription(entity.getDescription());
+        res.setQuantity(entity.getQuantity());
+        res.setUnitPrice(entity.getUnitPrice());
+        res.setDiscount(entity.getDiscount());
         res.setAmount(entity.getAmount());
         res.setSortOrder(entity.getSortOrder());
         res.setRowVersion(entity.getRowVersion());

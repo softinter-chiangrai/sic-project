@@ -10,7 +10,7 @@
 	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
 	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="1913031c-15cf-497b-a7e3-92ecdc25ad9d">
+	<dataset name="RichBlocksDataset" uuid="423a996d-95d0-4cd3-aa81-a95383bf50c6">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -582,7 +582,7 @@
 			</element>
 			<element kind="component" uuid="c962e15c-dafb-41bd-9f80-0718eb907345" positionType="Float" x="0" y="36" width="515" height="20">
 				<component kind="list">
-					<datasetRun uuid="7fbfbf3c-8968-44ec-bae8-9b466cbec4ab" subDataset="RichBlocksDataset">
+					<datasetRun uuid="d314dd94-d3a5-4739-ac4f-684cb263116f" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description} != null && !$F{description}.isBlank() ? $F{description} : ($P{lang}.equals("en") ? "No additional details" : "ไม่มีรายละเอียดเพิ่มเติม")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
@@ -909,7 +909,7 @@
 						</element>
 						<element kind="component" uuid="43e181bf-0a39-4abc-81e1-eb20e337c721" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="35a9575a-a3d9-4073-af50-3f82eee852d0" subDataset="RichBlocksDataset">
+								<datasetRun uuid="7fe6af5a-6eb9-4db7-a420-01ee0eb6b818" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{paymentTerms}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -1089,7 +1089,7 @@
 						</element>
 						<element kind="component" uuid="1776b8c4-6a34-4c63-887d-fb01493e84c7" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="244e54f0-cca5-4786-bce4-f1bf8e1c53cd" subDataset="RichBlocksDataset">
+								<datasetRun uuid="499391aa-8449-44f1-97e8-4b364c75a92d" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{scopeSummary}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -1318,7 +1318,7 @@
 						</element>
 						<element kind="component" uuid="444eb287-6565-455e-8071-64101f1d1e5e" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="4469e625-e934-42aa-aa5a-80ce30ac973f" subDataset="RichBlocksDataset">
+								<datasetRun uuid="008326be-5031-4657-8042-8a6eb12d1038" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -1553,7 +1553,7 @@
 						</element>
 						<element kind="component" uuid="6958efa2-e323-46d6-a573-3408889ec92a" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="ebb03e22-4e62-4e48-b185-43c3bc4e0cc5" subDataset="RichBlocksDataset">
+								<datasetRun uuid="a1759952-c835-4981-8a9a-442f1bb1b261" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -1733,7 +1733,7 @@
 						</element>
 						<element kind="component" uuid="20f831b2-fd60-4aaf-97ca-08b66ca800e0" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="f23e1ecb-d7b5-42fc-a50e-7d8f5fe49630" subDataset="RichBlocksDataset">
+								<datasetRun uuid="42fcba41-aa3d-4453-9dab-46797581e4d2" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{businessValue}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -1913,7 +1913,7 @@
 						</element>
 						<element kind="component" uuid="18df7b9b-f2a1-4cac-b634-8e7a2af07e6b" positionType="Float" x="0" y="174" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="bd88c5a2-b176-47cb-807d-54d41cd05238" subDataset="RichBlocksDataset">
+								<datasetRun uuid="581e3523-f99a-45fa-b6a5-6293d9e97bda" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{acceptanceCriteria}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -2186,7 +2186,7 @@
 						</element>
 						<element kind="component" uuid="6bc4e934-1d86-436e-bd4f-fef7c49195ee" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="471fa8d0-3daa-48c0-b4e9-4c692fe4743e" subDataset="RichBlocksDataset">
+								<datasetRun uuid="c3d600be-bf53-4820-b164-f9cd8df0db35" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -2433,7 +2433,7 @@
 						</element>
 						<element kind="component" uuid="70521ec0-7c35-4233-98e1-1a642ce4f876" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="43f06392-e45f-45e9-a1f6-5114a4a6bac8" subDataset="RichBlocksDataset">
+								<datasetRun uuid="e3c9a1e9-e739-4ab5-93f9-e600aa766827" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -2671,7 +2671,7 @@
 									</element>
 									<element kind="component" uuid="d654c5dc-3cc8-4539-969c-4e59639a0e9b" positionType="Float" x="0" y="14" width="515" height="14">
 										<component kind="list">
-											<datasetRun uuid="f8508ec5-e055-426c-90b5-f856fbf12856" subDataset="RichBlocksDataset">
+											<datasetRun uuid="a15fa856-5ed2-4b9f-9a5e-90274f8f22ef" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{content}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -2909,7 +2909,7 @@
 						</element>
 						<element kind="component" uuid="4bdc49c1-8799-4138-8a64-0bc9cd0893dd" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="65732c52-9f96-4664-a6f5-8661e6cd9012" subDataset="RichBlocksDataset">
+								<datasetRun uuid="8ec27683-656a-4c6e-89ce-6a841179bd25" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{deliverySummary}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -3089,7 +3089,7 @@
 						</element>
 						<element kind="component" uuid="8e9bb813-52c5-46da-90cc-61a465a5f04a" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="84f6aed9-043e-4d7e-b4b9-cd3fbd65c119" subDataset="RichBlocksDataset">
+								<datasetRun uuid="a194fedb-2ebe-43ae-b92f-6eb8c2e0efa9" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{releaseNote}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -3336,7 +3336,7 @@
 						</element>
 						<element kind="component" uuid="d0ee951e-f1d6-49c0-ac1b-30e4480afec5" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="487d389f-56ee-4584-9770-2ec26fac3b1e" subDataset="RichBlocksDataset">
+								<datasetRun uuid="a7ec964c-6036-4dee-95d2-2697d509eb8b" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{remark}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -3571,7 +3571,7 @@
 						</element>
 						<element kind="component" uuid="c056bf7c-4b8e-498c-a471-2d1069004633" positionType="Float" x="0" y="118" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="fe0c595d-7871-4e7d-a5d2-37d2047aa58a" subDataset="RichBlocksDataset">
+								<datasetRun uuid="ff7e8bc5-cdfa-4df2-9be8-9bdb69bd1c74" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -3751,7 +3751,7 @@
 						</element>
 						<element kind="component" uuid="079920a9-604c-4d6f-a1aa-b174349318ee" positionType="Float" x="0" y="146" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="4fc6a0a5-27f7-43fd-a1f0-1cd07ff36b12" subDataset="RichBlocksDataset">
+								<datasetRun uuid="01efd041-2347-4062-ba25-6d36868c832f" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{resolutionSummary}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -3992,7 +3992,7 @@
 						</element>
 						<element kind="component" uuid="e51a02f5-0506-44cc-a636-51fd768574c0" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="8df64c6a-e864-4424-aefe-cccb4eae967c" subDataset="RichBlocksDataset">
+								<datasetRun uuid="f0ee6b07-fb5e-4192-af81-86eb3f666bc4" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
@@ -4215,7 +4215,7 @@
 						</element>
 						<element kind="component" uuid="beb911b1-ec78-4d89-81bf-3355fae00dff" positionType="Float" x="0" y="100" width="515" height="14">
 							<component kind="list">
-								<datasetRun uuid="a27affbe-393f-4269-a773-b1fd52c601b9" subDataset="RichBlocksDataset">
+								<datasetRun uuid="4d731ba4-f07d-4268-9870-d0f15f303be8" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{remark}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>

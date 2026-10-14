@@ -28,7 +28,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class ContractLifecycleService {
 
-    static final Set<Integer> REMINDER_DAYS = Set.of(90, 60, 30, 7);
+    static final Set<Integer> REMINDER_DAYS = Set.of(90, 60, 30, 7, 0);
     static final int MAX_LOOKAHEAD_DAYS = 90;
     static final int AUTO_RENEW_DAYS = 30;
     private static final Set<String> CLOSED = Set.of(ContractLifecycle.RENEWAL_STATUS_RENEWED, ContractLifecycle.RENEWAL_STATUS_CANCELLED);
@@ -40,7 +40,7 @@ public class ContractLifecycleService {
     @Transactional
     public void runDaily(LocalDate today) {
         List<PmCustomerContract> expiring = contractRepository.findExpiringContracts(
-                today, today.plusDays(MAX_LOOKAHEAD_DAYS), CLOSED);
+                today.minusDays(7), today.plusDays(MAX_LOOKAHEAD_DAYS), CLOSED);
         for (PmCustomerContract c : expiring) {
             try {
                 process(c, today);
@@ -55,8 +55,16 @@ public class ContractLifecycleService {
         int days = (int) ChronoUnit.DAYS.between(today, c.getEndDate());
 
         if (REMINDER_DAYS.contains(days)) {
-            notify(c, "สัญญา " + c.getContractNo() + " ใกล้หมดอายุ",
-                    "สัญญา " + c.getContractNo() + " จะหมดอายุในอีก " + days + " วัน (" + c.getEndDate() + ")", c.getId());
+            String title = days == 0
+                    ? "สัญญา " + c.getContractNo() + " หมดอายุวันนี้"
+                    : "สัญญา " + c.getContractNo() + " ใกล้หมดอายุ";
+            String msg = days == 0
+                    ? "สัญญา " + c.getContractNo() + " หมดอายุในวันนี้ (" + c.getEndDate() + ") กรุณาดำเนินการต่อสัญญา"
+                    : "สัญญา " + c.getContractNo() + " จะหมดอายุในอีก " + days + " วัน (" + c.getEndDate() + ")";
+            notify(c, title, msg, c.getId());
+        } else if (days < 0 && days >= -7) {
+            notify(c, "สัญญา " + c.getContractNo() + " เกินกำหนดระยะเวลา (หมดอายุแล้ว)",
+                    "สัญญา " + c.getContractNo() + " เกินกำหนดระยะเวลาตามสัญญาแล้ว " + Math.abs(days) + " วัน (" + c.getEndDate() + ")", c.getId());
         }
 
         if (Boolean.TRUE.equals(c.getAutoRenew()) && days <= AUTO_RENEW_DAYS && !hasActiveRenewal(c)) {

@@ -87,7 +87,7 @@
          SUB-DATASETS FOR RICH TEXT CONTENT (HTML / Tables / Images)
          ======================================================== -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="3bbba656-0858-40a8-a3f3-eae7698bae20">
+	<dataset name="RichBlocksDataset" uuid="57e06424-b376-41a3-a94a-0f8726e6a1b8">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -255,7 +255,7 @@
 		<!-- Delivery Summary Rich Text Content -->
 		<element kind="component" uuid="1b0bd38e-5444-4f6b-98c8-bf7858623554" positionType="Float" x="0" y="230" width="515" height="18">
 			<component kind="list">
-				<datasetRun uuid="4c490e62-57e5-4d15-8a21-e3aeee3305ef" subDataset="RichBlocksDataset">
+				<datasetRun uuid="5aa5504c-72a3-4e85-99cf-443d3a64765c" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$P{deliverySummary} != null && !$P{deliverySummary}.isBlank() ? $P{deliverySummary} : ($P{lang}.equals("en") ? "Delivery completed as per requirements." : "ส่งมอบงานตามข้อกำหนดเรียบร้อย")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
@@ -441,7 +441,7 @@
 		<!-- Release Notes Rich Text Content -->
 		<element kind="component" uuid="b8c9d0e1-4567-4f6b-98c8-bf7858623555" positionType="Float" x="0" y="284" width="515" height="18">
 			<component kind="list">
-				<datasetRun uuid="71637b8e-edbd-4c7e-a066-f0659e5352fd" subDataset="RichBlocksDataset">
+				<datasetRun uuid="fae30a92-d612-4d26-9a36-b99a69759d2d" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$P{releaseNote} != null && !$P{releaseNote}.isBlank() ? $P{releaseNote} : ($P{lang}.equals("en") ? "No release notes recorded." : "ไม่มีบันทึกรายการแก้ไขเพิ่มเติม")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>

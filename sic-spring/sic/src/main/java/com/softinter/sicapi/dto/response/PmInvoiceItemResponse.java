@@ -10,7 +10,11 @@ public class PmInvoiceItemResponse {
     private UUID id;
     private UUID invoiceId;
     private String itemName;
+    private String itemCode;
     private String description;
+    private BigDecimal quantity;
+    private BigDecimal unitPrice;
+    private BigDecimal discount;
     private BigDecimal amount;
     private Integer sortOrder;
     private Integer rowVersion;

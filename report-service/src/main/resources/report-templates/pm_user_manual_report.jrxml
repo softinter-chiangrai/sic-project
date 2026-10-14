@@ -165,7 +165,7 @@
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="1643657e-4070-4721-b068-03bcaccc8c02">
+	<dataset name="RichBlocksDataset" uuid="ce398401-3966-415f-a9fd-47502214ae6e">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -241,7 +241,7 @@
 			<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="3dc8cdc4-e008-4192-ab20-067f3f0bf775" positionType="Float" x="8" y="32" width="498" height="20">
 					<component kind="list">
-						<datasetRun uuid="5bc6761c-3923-4bf1-b6a9-6ec2abc20360" subDataset="RichBlocksDataset">
+						<datasetRun uuid="1d1f0a75-29f4-4046-bbfb-3436d850b30a" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{content} != null && !$F{content}.isBlank() ? $F{content} : ($P{lang}.equals("en") ? "No content provided." : "ไม่มีรายละเอียดเนื้อหา")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>

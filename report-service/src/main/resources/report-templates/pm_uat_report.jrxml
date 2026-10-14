@@ -95,7 +95,7 @@
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML &lt;table&gt; ใน actualResult) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="0527844e-5ef6-48ff-8bf4-50e2ff4b57f5">
+	<dataset name="RichBlocksDataset" uuid="2cafbed3-9af1-4740-b917-e12b893f9fc5">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -322,7 +322,7 @@
 				<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="678e2f2d-7298-4aed-aa90-9010d25737e2" positionType="Float" x="4" y="53" width="507" height="20">
 					<component kind="list">
-						<datasetRun uuid="4dfa0986-335e-4e38-9e5f-c8549d54ed38" subDataset="RichBlocksDataset">
+						<datasetRun uuid="3b873ef4-f40a-483c-acba-c4dedf5e2207" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{testStep}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
@@ -505,7 +505,7 @@
 				<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="dde937e7-1e01-4ef3-817c-a94336af0266" positionType="Float" x="4" y="98" width="507" height="20">
 					<component kind="list">
-						<datasetRun uuid="73fc5b57-4bb8-401e-9082-94d981f67bfc" subDataset="RichBlocksDataset">
+						<datasetRun uuid="c14f9860-c951-4a85-9791-e052971c2e4e" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{expectedResult}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
@@ -688,7 +688,7 @@
 				<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
 				<element kind="component" uuid="9a01e854-703f-462c-a6bb-23ea67d6a0d2" positionType="Float" x="4" y="143" width="507" height="20">
 					<component kind="list">
-						<datasetRun uuid="79c0b9ea-0908-46fc-a4c3-ab320f4eadd0" subDataset="RichBlocksDataset">
+						<datasetRun uuid="23cd0e2b-d7c2-4eda-ba4e-c670960f860d" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$F{actualResult}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[($F{attachmentNames} == null || $F{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $F{attachmentNames})]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>

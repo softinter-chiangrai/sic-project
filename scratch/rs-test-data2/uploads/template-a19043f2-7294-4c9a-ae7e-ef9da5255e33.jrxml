@@ -68,22 +68,112 @@
 		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
 	</parameter>
 
-	<query language="sql"><![CDATA[SELECT
-                COALESCE(item.item_name, '-')                                     AS "itemName",
-                COALESCE(item.description, '')                                    AS "itemDescription",
-                COALESCE(TO_CHAR(item.amount, 'FM999,999,999,990.00'), '0.00')    AS "itemAmount"
-            FROM pm_invoice_item item
-            WHERE item.is_delete = false
-              AND ($P{invoiceId} IS NULL OR $P{invoiceId} = '' OR item.invoice_id = CAST($P{invoiceId} AS uuid))
-            ORDER BY item.sort_order ASC, item.created_date ASC;]]></query>
+	<query language="sql"><![CDATA[WITH items AS (
+                SELECT row_number() OVER (ORDER BY item.sort_order ASC, item.created_date ASC) AS rn, item.*
+                  FROM pm_invoice_item item
+                 WHERE item.is_delete = false
+                   AND ($P{invoiceId} IS NULL OR $P{invoiceId} = '' OR item.invoice_id = CAST($P{invoiceId} AS uuid))
+            )
+            SELECT ord, "itemNo", "itemCode", "itemName", "itemDescription", "quantity", "unitPrice", "discount", "itemAmount" FROM (
+                SELECT rn AS ord,
+                       rn::text                                                                           AS "itemNo",
+                       COALESCE(item_code, '')                                                            AS "itemCode",
+                       COALESCE(item_name, '-')                                                           AS "itemName",
+                       COALESCE(description, '')                                                          AS "itemDescription",
+                       trim_scale(COALESCE(quantity, 1))::text                                            AS "quantity",
+                       TO_CHAR(COALESCE(unit_price, amount, 0), 'FM999,999,999,990.00')                   AS "unitPrice",
+                       CASE WHEN COALESCE(discount, 0) = 0 THEN '-' ELSE TO_CHAR(discount, 'FM999,999,999,990.00') END AS "discount",
+                       TO_CHAR(COALESCE(amount, 0), 'FM999,999,999,990.00')                               AS "itemAmount"
+                  FROM items
+                UNION ALL
+                -- blank rows so the table always fills the page like a printed invoice form
+                SELECT 100000 + g, '', '', '', '', '', '', '', ''
+                  FROM generate_series(1, GREATEST(0, 6 - (SELECT count(*) FROM items))) g
+            ) rows
+            ORDER BY ord]]></query>
+	<field name="ord" class="java.lang.Long"/>
+	<field name="itemNo" class="java.lang.String"/>
+	<field name="itemCode" class="java.lang.String"/>
 	<field name="itemName" class="java.lang.String"/>
 	<field name="itemDescription" class="java.lang.String"/>
+	<field name="quantity" class="java.lang.String"/>
+	<field name="unitPrice" class="java.lang.String"/>
+	<field name="discount" class="java.lang.String"/>
 	<field name="itemAmount" class="java.lang.String"/>
 
 	<!-- ========================================================
 	     TITLE BAND — Header + Customer/Project Metadata
 	     ======================================================== -->
-	<title height="258">
+	<group name="InvoiceTotals">
+		<expression><![CDATA["all"]]></expression>
+		<groupFooter>
+			<band height="102">
+<element kind="frame" uuid="9ff42e0a-d06a-497d-aa15-2d708e0bc5d0" positionType="Float" x="0" y="0" width="515" height="102">
+<element kind="rectangle" uuid="fd5e5e6b-47b1-4ab5-b240-6c931f895641" x="0" y="0" width="320" height="102">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="textField" uuid="0ce02adc-3455-4441-8853-782d7ce982c3" x="10" y="8" width="300" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "(Amount in words)" : "(จำนวนเงินเป็นตัวหนังสือ)")]]></expression>
+</element>
+<element kind="component" uuid="1df1ed56-be33-49fb-9e2e-3b7bcd7a8fa3" positionType="Float" x="10" y="34" width="300" height="60">
+<component kind="list">
+<datasetRun uuid="ee2e83d8-4a52-4770-a08a-cfeeba9b42a4" subDataset="HeaderDataset">
+<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+<parameter name="invoiceId">
+<expression><![CDATA[$P{invoiceId}]]></expression>
+</parameter>
+<parameter name="lang">
+<expression><![CDATA[$P{lang}]]></expression>
+</parameter>
+</datasetRun>
+<contents height="40" width="300">
+<element kind="textField" uuid="6997a9cd-b522-40a0-a184-985f46a87a16" x="0" y="0" width="300" height="40" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="ValueBold">
+<expression><![CDATA[$F{totalInWords} != null ? $F{totalInWords} : ""]]></expression>
+</element>
+</contents>
+</component>
+</element>
+<element kind="rectangle" uuid="430ba75b-535f-4ce0-9f0a-6fb1ac51a599" x="320" y="0" width="115" height="34">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="rectangle" uuid="7a66d056-78ad-45d7-97a2-2494731fa4fb" x="435" y="0" width="80" height="34">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="textField" uuid="e9dc0a6e-6588-45bc-b25b-0a308cde9c89" x="325" y="0" width="108" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Value">
+<expression><![CDATA["รวมเงิน\n" + "Sub Total"]]></expression>
+</element>
+<element kind="textField" uuid="96b74050-fee5-4d8b-8a65-293254a14d9a" x="437" y="0" width="74" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{subtotalAmount} != null ? $P{subtotalAmount} : "0.00"]]></expression>
+</element>
+<element kind="rectangle" uuid="6b2e6e99-945a-466e-9e96-dcb1cf480fd2" x="320" y="34" width="115" height="34">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="rectangle" uuid="e75488df-940c-497a-a3fa-d48d64b09778" x="435" y="34" width="80" height="34">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="textField" uuid="6644a477-571e-44f9-b04a-9e42005695b1" x="325" y="34" width="108" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Value">
+<expression><![CDATA["ภาษีมูลค่าเพิ่ม\n" + "Vat " + ($P{vatRate} != null ? $P{vatRate} : "7") + " %"]]></expression>
+</element>
+<element kind="textField" uuid="4edb83b9-9fb5-4b88-a990-57c03bcc7c7c" x="437" y="34" width="74" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{vatAmount} != null ? $P{vatAmount} : "0.00"]]></expression>
+</element>
+<element kind="rectangle" uuid="6d43046f-73cd-491e-a256-6fd7a0a0fa9c" x="320" y="68" width="115" height="34">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="rectangle" uuid="0258f9ac-a558-436f-a92c-16258708d656" x="435" y="68" width="80" height="34">
+<pen lineWidth="0.5" lineColor="#6B7280"/>
+</element>
+<element kind="textField" uuid="e32845f8-d692-4c20-8e77-c38752a85c6f" x="325" y="68" width="108" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="true" style="ValueBold">
+<expression><![CDATA["จำนวนเงินทั้งสิ้น\n" + "Net Total"]]></expression>
+</element>
+<element kind="textField" uuid="85a49e5f-3ee9-47c8-add3-b62ecd5ef34e" x="437" y="68" width="74" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle" style="ValueBold">
+<expression><![CDATA[$P{totalAmount} != null ? $P{totalAmount} : "0.00"]]></expression>
+</element>
+</element>
+			</band>
+		</groupFooter>
+	</group>
+	<title height="320">
 		<element kind="image" uuid="24299f9d-049b-4041-8b72-7f32a777820a" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
 			<expression><![CDATA[(new java.io.ByteArrayInputStream(java.util.Base64.getDecoder().decode("iVBORw0KGgoAAAANSUhEUgAAAaUAAACPCAYAAABaksRKAAAAAXNSR0IB2cksfwAAAAlwSFlzAAALEwAACxMBAJqcGAAAJydJREFUeJztXQe0JUW1LXKOiiAqWUCCBFFA8DOAZHww5CxJhQFERMIAFkFQQZokQVBhQAYeUVCSgDDkIEFJQx6GKDkH4Qv/7Km+//WrW919qrs63Dtnr7XXzLvdfepU3b69u6pOnVJKIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQtBKRnom4OnE/4qXEO4gPEp8mvkx8j/gZ8U3ik8TbiVcQzyL+hrgzcaGmqyEQCASCXkSk5ybuEovKA7HghOCLxDHEHYjzNF1NgUAgELQRkZ6SuArxKOJ9xE8DClEWr5nUAxMI+gw6OmI+4t7ES4gPE98lvkm8l3gYcS5PW9uV8OVnxH8THyKuW9SOIB3UrnPH3/VbxIuJn2/ap95EpNcmnh0Pu9UhQmm8m7hS080hEJQFPYxmIZ5I/Jj4WYKPEJ8gfhr//Q5x+ww7axBPJz4en/9aQX++Z/nxEVFGKQKD2vSvVjtf2LRPvYNIL0U8mvhCYGF5lXgt8VziccQD47mkDYnrELcm7k4cTTyDeJfDBoYL2W+QAkGbQA+ipWPh6TyYXiJuBaFKnDNH3IN6PT7nDOJUDltHWw+5oqJ0qGUHXLNMPQXdoDZ9wWrjp5r2qf2I9J7x0FwIAfqQeJsyQQybEOcv4dfSxH2It8S2XyfuFLDmAkHloIfQMsS3Ew8liM6XMs6fk3hb562aOIV1fHQgUdpQekrVg9r0cqudL2jap/bCBCw8G0iILiCOrNDXLxB/SHxEIcpPIOgBYH4onrNJPpTWY1w3I/Ev8fm/to4FEaXYFuaUxhFvIK5T1I4gHfGc0oVxO58vc0o2Ij0FcUvioyWF6GNlQru3UwgLr7cO3yVq4iz5JwsEzYEeQKdZAnKZx7VTEq+Kr1si8XkwURIImkWk1yPeH6BXdLxqQ9h2pKdv2gWBIA0YonPM2azsaePLxD2tzw7MEiX6+3PElYizhaiHZXsm4teI3yYuRJw2gM3ZY39ThzQd10xLXIE4IuaSAfyYAuKfN4RJx6cjLkpchfhV4gxly578EOnFideXFKO3iEcS52y6OgJBLyAOWkiKxyv2/FBBu05Ron+/QbzROnYWMfPlLZ7D2px4KgQt5ZxlidcSXyXeQnwjto+IwbHERTLsfyseuurwuvjzVYk3W/7eSfxKhq2pib8ivhef/zJxfPz/54gnaBNW3+HWKXYWJ/6YeHD894LEexJ+nG5/V/T3wvHwG0L4b9ImWKVzPiLsvpHTzkvFZR6YdV5/I9KfI55WUowQEo5oueBvXQJBP0N3hwJfH8hulyhpE8n3iaNnBt6UYmdj4n16KBT9M1cvgT47PD72JHHe+LMp4gds57r/JQ6klLOu5c9/iJtZ5Sb5sksc0SNBGybOuzVx7KgUW5c72u6ZxPFrtOntvOS4dmTiul21CeXHWqPFrTZMXjPK4fcf9PB5xSvc32w/I9JTE3+qyq8xOl9JGLZAUAj08HnUemCdF8iuLUqfxA+97YizEQ9yPGC7hrfos20d581jnbNK4hhEaVbr+GOJ4+i9zO0oxxYlCNjT8YP+88RNHX7s7LBzjnXOFoljs1vH0GPCsN5Slo2TrfOwaPh54tl6KBS/wz3ia+aLfcZn6CHOZ9m8KnENhHYZ6/g4y+5kJkqRXi5AEMMzxLVq8XdwYAXirPknCgS9BXr4fGg9jM4MZNcWpf9qa+hImwW4yXN2ddhxicEXrXOOsI4fah3/G6McW5TADaxzbrWOn2odn9Nh46vWOS8njiEEv+uFmj471mFnt/gY5rXejT9D+3V6hTtZ559t2fyddfyX1vFrJl9RivQo4kclI+p+SZyuUj8hQoMDpxDfJH5G/Gml5QkEDUCb1EHJh9E5gezaovSe45zHrHO04xyOKP3IOv4z6/iV1vGjHOWs7yhnIeuci6zjl1jHv+mwMad1zhPW8a0cvtiihF7mNInjixF/Qlwg8dlaOYJp977Ot45PhqIU6ZmJF5fsHd1LXCK/sJIYHNiI+HIsRh0uWnm5AkHN0MMnzsHBQHbtkHCXKD1inXO44xyOKE1F/DXxOm0CN6axjl9hXX+soxyOKF1gHb/MOv4Vhig9bh3f0eGLLUrPpTSzfR3Wc91IPER3D2HaomT7PpmJUqSXIU4oIUafEH8xaR6qagwOnGqJERjkhyoQtA26ew7k9kB2i4jSoY5zNssTpZTyZ46vvVqbocPk9ZHj/BCihMCKJ61zFrHOsXumyzt8iaxzns2rb0obTBfXCwlW/2PZtIMr7CHOPhYlkx6oTO/ocWJmGGMwDA6c6RCk54gSSCHoS+juND6YpwixrqeIKP3ccY6XKGkz54JJfQx5/YO4ie4O6XaJ0gZlRSk+ZzvrnF0Txxaxjt2dUgdblF5Iq2/K9UvEvmK+EIEs3yeeJ6JkouvOLSFG2H7iRFXX4tPBgaMcgnQvcYGU85cnbks8iHg68SriuJjXEs8nnkw8hLgOUcLVbUR6BmWS3Y6OoyjviANY3rfuhVuVyVM4oLCEQBAM2qypecp6IG2Qf+UwG2vjAU2cKfFZEVE62HEOS5TQ49BmbVLnnFGJYzda1x/nuD6IKMXnjdJDPROEwq+pTRqfPyeuRXqmOVKut0XpJdd5jusWiL+HznXI9j5lfOwsy+ZfrGv7XJTM2qPbSgjS25MeVnVhcOD7lhhdTFzfOmd94mHEy4ivOgSMw4eJxxP/p7a6tRGR3ox4ZYn740KFRLiCIIh7E8kHEuaZWAtotVmwimgwhCzPlfi8iCiNdpyzeZ4oaZO54f3E8Wus43a4c2U9pcS5mF+amDgXw3bouWFu57s5bWqL0itZ58fXYB3Tq4lrHukIUnx8jGXT7ild27+iZLaWKJNAFaHiC9fm7+DAyrFgvEjcOfH5bMRViAcTJxYUoSy+RoxSe2L9CDO3WOZlxeZYYu78giAf9BAatB5Kv2Bcs5weWnC5rnWsiCgd4DgnU5S0yb030Tq+v2WjVlHSZh5ngjYLYFfMa0fH9bYo5eYNdNTxD9bxyVSUIr2RY+jFh9jJtb7EqYMDI4nvEh8iLkPcnHg48cEMMXmWeDdxQkCBuoS4bG31bgKR3pj4QUqvB/OOGyizZxXSRD3ncc+8Qvxa09XrdWiT8ftf1oMJWRJceyVNr83aoM5izT0c5xQRpf0c52yRI0pfdBw/KnEck/3jreMuUbLn1gqJEn22Y+J4oVQ9DlF6k3GNvd7s/MQxBGD8PUeUrus/UTLZGcq89R5Zq79GfDqi8FIBIXmAeA5RE9cirkvcgTiaeB7xlQI2zyWm5tTqWUT6B47ve2KmmET6Eo97ByI2Y4016ktoE7Fm95iQTQCT99jeAolXdyA+2xEa7VhnE9sqIkr7Os7JEyX0lOzoOgyVjdRmLsfeJwg83lFOKFF6LXEc4d+HWfy5Nlkq0Mucxr4+tmGL0jvub2zYNfa8IAI9sKB2hDYphOy62XNKfSZKkd63pCBtUqOvc6jjD9LqxANupv+/S3x+0ps6MDiwCHFt4p7x0NrVxKeYgnL7sOE/Y29p4r6xnQ89xKl/Fuqa4AT7+36NmJ9tOdLjPO6hrsgtQTHED3R7PU2SyESAhKOpiY8LitI+jnMyRSk+5+wMXzHZf731WSU9JW16kGl+uAjx3N3hiy1KXW3nuObQjHKw6PdP1md93FMyW4QXFSMM56xek5/zE09WQ8OLE5TZkC9/7ZOZX/oh8SKVH+SAuaLfEle0bMyp3CHnabxF9fp8U6SXT/neu4ZpUq6fPe5Rce6lqyuuzWQFbYZ8sBstEpoiMzcSt54Ri0Rur5TO2UabCLNz4+td4d6Y5xiXYNfLKX22pO7ubcxsnTN9LIIYfkSv6b1YQJaNjyMR6qXaRKBBpLqCqOizlS1fxjnET1vHu0Z3tFkX5SNM4JqWjd2tcq6xy3GUO0V83V3aJGXFDr1XdWzTv3tpE5kHAT9JW5nJ6e/trTbeJq/MdqKcICER67dq8HFRZeYtOuVClLomVNkYHJiCuCVxPENYEG23q3X96vHnHGFCiqM1yjZBY4j0+JTvnj/UFulvMu+nKyusiUDAgjZzWHaKpTyOadrv/kCkdy4hSC8r7J9UrX9zEc8g/m+iXKyb+kKwMgYHtic+yRAX9K72s64dFfeqOOJ0UDCf60Kkj0n57q8qYGsU457qypsmENQNEph9tdmTCpF3WL+1moOr6+Frli7PtyzIhhGkTwsKEsLFF6jYv0PU8ChAiODalZQ1ODA1cRfiMwxxwTmbJK6dnXgC8RPGtYjQ643dIyM9b3DxMItr02y+qGQvLUHD0GZDwI7Q7MA4v5OS6Jg6/OtfRHqLEj2kJxRngru4b2uo7hx72M22niwAgwO7K7PeKU9g7lDI8jB03YLK5Nz7KOc6hKrPX0tdyiDSp2TcA85dNpl2b3DYe1ph7kogaBjaJETtiNKejPMRTIK9jzK3NhdkIdLLquLbTmBRbNfmWoH8mkcNnzf6LB622z//4sBAb2ZwYH/iGwxxukch0g6iZK5Fz+kHxLsyroHotTebgQlOyLoPMlezM+xvRzwsJnrs/r3HSM9H3KmUH267CxJX9WBv9HybAIJheizMH+ISD919FgcaYHuJrnWX2mwJj8ARhNYv5bIl4AAr580wSVFB+nxFfq2runevxXBds6l8zH5MRxLfY84b3ROL2TeIcxCXIh5HfNRx7jsK2SbaCPeapCRXa9pF8uEeheUA4e1Gnr+Lr+YbnQxhdgRox73iCRKZOeIoPaRq+kCbBcaPx1F0N2qTIBV55nbTARLfTr7AhnqRvr+gID1UiSBFesr45rXnthDx1Z4FqMgwPjhwGnPeyBaeO4ljiBc4xA1DfZs3Xb0uRPrGnPuh2ZeFSJ8a+/FBBbZFlMoi0usl2qd3I09jaLPoeAVtFssiKSsrp6AgD5E+r6AgPUhMXWBXwh8MEf3NUR7egGcJXl4IYJPAwYFLPYUpj58Si4e3hwYWJuffE99p0L9tEn6IKLUNZlj1rUT7rJl/kWDyQ6QPKihIyJQQfg4p0osRn3KUhy0P2r/v0eDASsRrAgoTskW0Q4iHv+W2q6dkFvJ+mPDj/QrKEFEqCrONyb+s9qlnYb2gh2D2uikiSO8Ql6zIn3cc5X1YSXlVYnBgOYUdbQcHPiggRPcrk2Mv3JqrEIj04a0UJbwcdc+Hiii1CZG+1NE+IkqCBDAPFOlXCwjSx5U8eEwOtU9Syqw3mWtomE0AjyHeZM0d4f+PxL0hzEvtodocEo5UP20bvov0FMRbHH7I8F1bEOm9U9pHhu8ECUT6uoK9pC0r8GVkTpmyG2kb0L1GrPmeUqSPSvFDekptAF5S0ttHekqCGMVz2h1egS/fyynzpuBlCvxheiRpPdlmRCn7PhZRahrYusRk6hdREmTAJDD90PPHBV5cgS9rM8o9P9+QoHKYLOyc+6QeUTLZPbL8EFFqEiZS84mc9hFRmuwR6WmVCeP2FaTbFdYyhfVlFuK/GWWPC1quoBhMhoJ2iBKGc/PnQ0WUmkSk/8xoHxGlyR4mdYuvID2lqpjTifRvPHxYMHj5Aj+YzBrNixLWxXWHFosotQmRPonZPiJKkzVMGiHfvHZvV/LDMr2k9z38eJI4fXA/BHxEeuPGRckMCT3E9EOi75qA2U6G2z4SfZdEpJcijshhH91Tkf6T5w8KCU+ryU2VHiKaxXGqrdkcJgcg+3eTomQWVT/pcb/0lihFejOWzXL+o5f5dWU2VgybGswsjr3Es31ElJKI9OWMNjulgN0vKzP8DlGbOf+COmCyf/uKwL4V+YIoLlfGBg6R1aGafZOaAPadivSmyoQ1Yw1Q1hzbvcTfKxNxFnZH3/y3M/BXzO/ox0x7NmfP8A+ZJFyLqvPoU37+Q7rXRCnSCxNHK2y82J3U+LO4Te8i/ow4q5ft4eXgofdAge9nH4/vJ/ymoXhAQxixU7VZ3DvB8u89ZTLXYB4e26pg+uPbwf0Y8ucyRpudzLSFdZ/Yo+wN6/oPJtnAnmiNItJ3et4sV1foS9a6BS4vab5RC8Kkwzne8QMowr8Qd1BltwAo70cIuucXIv2TmsofyWin3hClSG+gzEuMj694AP9W+c4fR3oFZbL2V/39jPHyK9/nwRK+YFrjNIUpkZAI0VOK9EoqP+oRfE2FfrllI9KbezY43tbT31rL+/PTQDcpFP/XqoqEsFXA7MXjSrUSgviRHKuK5gas/oHCYbco8XtnIdj7omR6RteXbIeJbL8jvZbymxsuwzHstkz3F8E6NwX0CUtr8LsL8wwyL5l5ZZ6acb3vs/UF1UhiArNzp4+jq1bsT5k3FBfxhnd0sBsjNNCLifQvif/JqAO248CbF4a+kN0Cb7p7KBOhiC7928y2QAZmzNdN5eljHQ+VPK5u+VRXD6nD3hYlbEMfri0Qbr9Yjr9fq/n7GcNuy25fESDj2nUgFDFEtkFh/4b8LN5TMr3cIr7/rrTfnpXcytPBQ2rw6dGKbgy8tRyn2rTXkplcfC7D51Mn/bjz7UxP3I34OLMtME8wn4efhzHIGe8Gz2Las7mA5RMCK8alkOPHBxnXu5j/MtZGUcJckJkzCv17ek5lzTOZxdRpbfkCs4y7PL6fA9ltOdxPBHW85CgbmSbGENcnLqEwyhDpqeN/l4g/HxvfR9w2w1xN8Sjhoj0l/yC2JB8v7G/BSt7n4dyNNflUNMiBS6TCwQTfCrXUJ72e+2f4OKGwf/k7v3aI3tWGAeuzE7PcOhbPZgl9h49WUG67RAmT/34Rib48t2A7ncq0X214s/uexaahGFnhRaFFejbiCR5ths1SiwWNFOkpGWEt9z3XBr+AAjzAwk7apft1T4U/IpvIRLFRLfUaXsesH+U/Jt3o5eyvosywZV798QNEZN+UAerUa6I0voJy2yNKJrrKlVcOw+PoVY9QiIoz5yK1GOZTjmG2XZLLFGgnrigt4m2b74Prfn1dIZKzmD2s07Mj2dKInp3fELopw6+nZL7Pss/IFwq1RyHwh1vAbWr06+8BGtKXiET6Xk31OznDD/QSw6wTwBwMv/4XBiiv10TpkQrKbYcoYZi9+xiGmvKHrs3CdZ/hnrEF2okrSgt72+aVv5oy6yyTZWHLnW+UtIu53v8y63ZmAfv8kPDuZMR4GRkRH8NL6z+Zfo4p1SYelUOk16dMp8o/sPx8O9rzhx2S6KWFG9LqrtueOeWvEri8TT3qfnbJsnpNlB6uoNzmRckMTSf/xvyNf7qeSJ/DLA/RdX7zJHxRWsjb7/yy51HuHs3egewf4PH97+hpmzd8h9/Y0N+Y89o6xd65DHvLBmgVVuW4kRhYGFZuKMnft2U8f9hVEGGhYd/S8nsu5UQhvVyfHILFf5i9J0oPVVBuG0QpSQwFF8vMYKJCX2eWs7Gnba4ohc9p6Y6yC7fuEsNy3bscpxHLa/iCzuspQbhei/+PaNvsxbxmgXKarR1LtoYHhpzOYzNpPniLu6omQrSPUCGyn5tdfF0RPknOE6DlXGUjMu9Zj3r7zxGYcnpNlB6soNw2iVL5UF7s6Mwr6zhPu1xRWqB0HYaX+yNHGRjGWzpwOa7h0zT+zMMup6eUJC+7hAnfR07CTiTjharWHaLz95np0H/MM5yPP/Rs/CqJdVzrlKzPFTllVNNLGip/C4/63l2wjF4TpQcqKLctorRHoPosxSzvDk+7XFGaP0g9TJmYsnAt5A2/H5vJw8j9rpDeaSamXU6gQ4e7BK9XZTBjjnkVQlqQeofthvuI/Hec7QfqJMbY/RO+8jJmVP9W4tf73KKA/V4TpX9VUG4bROn0wHWayCjzJU+bXFHir6XLL/PqlDKqyZVp8nBy74NNmDb/yrR3WyV1qgTmYZ83jASWX31c3ld0KTlhzXUSY8UredYjb6HgWxW1oO3HHh719I9M6z1R+mcF5VYpStx0YCcFrhPn7RxBU1N72OSKUpiF7uk9Psy5TBukjO4y7YCTLP6eaZMrStUFawUHxhjzKxR+W/OiwBqiesTGhxBKXjQTbxiy2AJEX5iJa59M2n4vJr0nSvdXUG4bekqhRYkbKMNPgMwXpS8HqkNa6rLwQ3dDZfpE4U1k2uTNKfUUTHLArAp95HVz1QET+++TyqMu5g+58VImjaqhFTv++ITbX+Fpu9dE6d4Kyu3HntJoZrn56bCGbHJFqfyzyCShTbP/o9L208v1faFelGGT01MKv/6uUuQvmPpV0y46YcLEH/P8kqsmwmXT11FgIR7PTti1Sdnt+HWP+iH6kJ8OpfdE6Z4Kym1DT+nEwHUaxSyXv80BX5TKZ5HJXqyOuo2oiLt63gv5mSR4Q6k3l26z2hDpaVT2amMsKCu+kVfVMKHNv/P8oqvmXRn+HsG0Ud02IG6/fLLCb+lht9dE6R8VlNuPPSVuJOzKHja5olR+mUSkX2nBc4LDnRh14fSUbirdZrUBN012ZfZq2kUWzCZV3BQZdXCfFD85m6i9X3PrcYZwkzzNw26viVKx0PfsckWUeDa5ojR3Sd+5Ie1tYH6W8z4Upb0yKvJU0+55AQlETdebmwCxSr6o7ISmZhtlTg6sJxpou1U86sZfy9N7opTeyy1erogSzyZXlL5Q0ve699wqw/wFyH0oSlm5rHZu2r1CwK6I7RjS29Dyaz3mdeHf1nntxq8b32avidKdFZQrosSzyRWlYjslD5WT9RDHzgdVzScVYfamifn16UlRGp9SCbzp89cYtBFmtTZEl5uhNzRPtPzhbjvczCI33tBih7ztA3pPlPyyEPDKFVHi2eSKUrG8fUPluLbuGGKvoQ9FKS0reG/MJXFgFtxe4PlgCME7LD84WTPAZiJlzO6v3LqtwbTZa6J0ewXliijxbHJF6XMl/J6ZYd8/Q0uT6CtRQm4ldwVeJc7QtHvBEenliDd4PiDK8CWrfK4whp/X4LVPVmZgm+609902e02UwvdSRZS4NrmiNGcJv+dn2A+/NUaV6DNR+lJKBX7ZtGuVItJrKb+hqqJ82Sr3z8zrHmuoXdbxqNvuTJu9Jkq3VlCuiBLPJleU5ijh9woM+98tbL8J9JkouUIjMZwXLuFhmxHprYhPej4wfDjeKo+bzdcvkWW49uAu7AUPYNrsNVG6pYJyRZR4NrmiVHwNn9nePc/+DwvbbwJ9JkrfcTh/XdNu1Qqz+daOym/xKJcXWWVdwrzuw4baYhGPuu3PtNlrohR+Pk9EiWuTK0rFdyqI9DYM+1Fh+02gz0RpfYfz+SuI+xVm//o3PR8gWfyxZf9P7Gubqf9cHnXj5ebrPVEK/+MVUeLa5IpS8QwzkR7JsH99YftNoM9EaU3LcQzdFY9s6QeY3WDHej5E0jivZZsbfQeG3fWSV/cpPfzblmmz10RpXAXliijxbHJFqXh0nHt0yOarhe03gT4TpeUsx8MvHKwaZh4Ei8z42Yh5drETr8924TYvcdjkZlYGtw9aHy74/vESxvaeKN1YQbkiSjybXFGauYTf3BRDXy9cRt3oM1FawHL8lKZdYgEJGSP9a2U247Ibf5zC/vZlV32bchYi/tvzgdLhsg57W3tcX/+4tkluy/WPlxSz90TphgrKFVHi2eSKEm+bcHcZ8zLLGF24jLrRZ6I0m+V4fXv4FIXpbXzIvLHGev0o3OWt6PlAAf+QYmtZDxt/L+V3EfDnlF7ON/b/NntNlMK3u4gS1yZXlGYs6TunjPDZ4qtCX4kSUPeDoQxM78hXIMArFIb5ipd7mkdZ2FbenQbFzNlwNyZ8u7C/RcGPvrvMw2aviVL4SW4RJa5NriiVW9gf6YeZ5fTGIto+FKVHEo4v2bQ7qYBvxQQpSWwb3D2sll/2Vkz7yKmVPRYd6Ws9/F2raHMVAm9hIejelsNts9dEKfySCBElrk2uKE1f0nduOceWKicETEZz7FR9SMY5fSdKZyQcb++i2Uif4PnDzuKlCkEe/LK5iVTzRQRh4nw/653j463hAL/sYbPXROnaCsoVUeLZ5IrFdCV9597nGNUonj2iLLAVutnpGb4cnHFe34nS9gnHy+1TUiUifZ/nD5vDu4jfV1lvXmbzQM4c1g7MeqSldnLxxVDNx/TtSIZPfhkPek+U/lZBuSJKPJtcUZq2pO/cYAfwN6XKKu7jDMQHE36kb2zYh6KUjMDjbUfQBCJ9j+cP24d4I7pKYZfHSH9PmRDzLYgXMq5F8lpexuyhutzo4duKFbWoyy9Obj6/xdW9J0oSfccrtzej74bK+pfH98EfVQmF4dlfLso5t89ECRj6sRYPBqgaiGirTpSK8k5lL5Dl1WVLjzLGVtCaaX7l5QF8X/kOnbRLlCY28uMVUeLa5C4uL57Rwd9/8AlVJjO5v28/t8rPngfvU1H6Rez4hvknNwST2btpEUrymJL14a5/wgaFC4RpxEx/7DVrLh5VwG6bROkphh/3VVCuiBLPJnfe+EsB/J9Rudc5phEvoNXvs2RSnSXLPZVxTV+K0jzxwy89wqMNiPRDnj/uKnidwgRk+brs4lFm9QEPkd4vxwdkt/APxW2XKHHunxcqKFdEiWeTu+Rj+UB18P1eMMfzxSBlu/2xnwlvKE6gRV+KEmDGMC9u2o1MRHptz5soJPGWvVHg+tzPLBsROOUzVGT7cmuOD+sVtNsmUbqT6UvYDS5FlLg2D2La3DxQHRYs8BzAVEfYlGbGl5MdZW3JvLZvRWl1ZSbtp2jalUxE+rgCN1IZXk/ctKK6LKP42Snyu/HF/VhCmWS8aWUPlrDdJlG6nOnLiMDliijxbO7KtBkuBVekDyvwTEBglA5UPjLGuF5O+dMDvH3a7gjib+1AuC9CoNuMSE9NvL3AjeTDVybdFNg6ufr6/IDpE0SjmiSREJ30cvGiUnypQLtEiZuZw+8FINKHq6wILRElrk3XVjouTvT0dSOFobH04+MLPicQOMPrzXSXicSw56TY9Vsrh9RY+b42s5t1aZju7KFNu5ELk6PtiYI3kovYQ+ky4r7EbzVQH1fX3UXMiZRbzd5dNlIL/TelvI9Lt0e7RGlPj3uCJ8SR/mN8/jMZ54go8WzO79FG3K1Tku3jjmJDxvtyzw+kFsNL7GIZfsxEXJW4l8JGkum2HlC+O+siT1++j+952WwVTCbrcovT6oBZhFo28AFC1I4U9ZjP4/n8+8Dljssoa8cA9tskSit53Bv4oafP42FeAUMiQ+evnnGuiBLf7mtMu3iR/HaGnVnV8HVP2YtgI31iyWdJhxjae14ZccHI06OKv3Ho+Mx7zu23Tz7NMAEijQBzDL0Ak+U866HK4fmKuw1DtXWZJvaF4/MfJ92M5ctMy+CAnhPvTTS/jPaIkvHHZ48sPCCxDQqGWrCtBzIBrOb4ng7IKVNEiW+Xu4C2w7MmlWE254QQYX+1X6jh4jaOUe5Uyi8vZWg+rYpE9pn7kVtGM9kpgqFsevg6wcu8kMV3FEKi24BIH8/0GaHpZXbg3CLD9sYB69M2Udon8MPEvU3J8DJFlPh2Fwv8/WBBOC9/HTYPLP+SW4RId1Zs7ZV5DnDLQVDVgoXKaQXMzqv8xJtNI9I/UtjuodzNgXUI6zRdFQVRMBnH8/xFmHr6sJHbNn54v0mx95b3QyS/vLaJEnqkoeYj0WPKj1YVUfK1fVKg7we/j/SccenlXxSofA6LZSI3qdCK9OwwUrBCoTJbATPnwv+BNA10f00G8LI3CqL7vttwXRZW5g2K4+/VxN1U1luQSfAIMbo3xcZYVcXCwLaJkvFpvQD3iE/IroiSn+3ZlYmALfsb9hekIR+OCnCPZBH124DpCwK7sEEottBBurXnA5SPdakYLVm8cBs1AtMQLxK/2bQrXuD/UPOIBaXNbnxowo19fMZkKd70IEDHEs9W5o3qo5Tzkeg2fcK4vP/tEyXjV9bwZRYnEEd6liWi5G//q4qXq9AmJv3902G5fcDLy4MFfMgi8kdibRQvqazpEYUsP48/D9J2lSLSm8XO8jd2awqR/ooyqUreCPxFIRJrZxV6pT+/Xp9TWKzHy3LNJRYFb1eD7+0UJePbdxR/zRseTlsXLEdEqVgZ6CGcyyzn9fg3MlvAWnb82FDxo2PTiGcS1sn5rfkTUUrB0ErrG1QbxyNNslbOquayREAEooOai040K8B/pUyoqa/v+GHtoOrcuKzNojTkIybXj4zvIcw34W37n8QLlEl9479b8XD7VYrSZkybJ5aqQ3e5HVF6TxlBwFqdZxQWaRoBRw/8tiC/FWToNjuwYoj53vj7mUC8UpkRgXUD1IjjB9YaIcM/pgiwpXpaQte34jbA/TNKtWXZSd/BLCztNPoVjT5EjD9I0bNf/COo802iw7uVWYz5+QbbAEMcmxD3UFj0bIYFwP2JZyozZIeeQHObN5pkvyMYDP+G2xag/c26Ji7bv05QYGDmahdSGAI36bqaGU2ZbIHhnuEPZrwNVZMXrrtsdOW3iR+2ZSdBQ/Oq2Lfym4+Vb6flFHZPNX7d3AqfBAKBoDIg6KF7LyCsWEZUCLJ4F4946S4HYd5nKH427TYQgrCTqjqrd3d7jVTD05eEHa4RCASC1sKsbM9KAohJvZuIpyuzWHFdNXyoZu34IbqtMmPTOOdghRQ61W57niTmWLBQFbnfsCZrjDKRMSHLQEg3IuAwGb1w4O9gFmUmYMfEdemUiQVy2wQtSyAQCHoC5mEbMiKsDj4QC2H32K+ZyETCxLxtwYsSYo0V2GcpE+qNniAEG8ELmEtAPr+ZY1868xBIFjmgTO8LKW9+q7A7anovbaG6bwOBQCBoD0xOsCMULwNBU8Tw4hmTHv78eq2jTI45boLIJonIpzAbnwkEAkFfwPQykFUg9GKzMkSI72YB6raaMnNmoYf3yhJhy+g9zRrgGxQIBII+hdk3BA/x0ItY8zhBmXVEm6oyyUrT64XwTwyjYZ1C2Tx7RYnh0qNVFVsyCwQCQd/DBBFAKF6s4AGNBWwIEcfurfUvaDUp87GKvOrMwhCiE1SV6YAEAoFgsgOyjiOrdaR3jx+yWJF9VywuyHOV7FlhG24EHGAFNybwMb+DhaG7ENdUbVxsiV1aI723MtuLI6CCu7lXkqgzFidHsdjWvxOuQCAQCPoUZsgPK71XU8PD4vH3CsqkuEGIvcwLCQQCgUAgEAgEAoFAIBAIBAKBQCAQCAQCgUAgEAgEAoFAIBAIBAKBQCAQCNqI/wNAxDb+B1j9ugAAAABJRU5ErkJggg==")))]]></expression>
 		</element>
@@ -111,77 +201,126 @@
 		<element kind="textField" uuid="955c81c2-5f70-4e1e-8ad0-7b4faa13f95f" x="95" y="76" width="410" height="22" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
 			<expression><![CDATA[($P{invoiceNo} != null ? $P{invoiceNo} : "-") + " [" + ($P{lang}.equals("en") ? "Payment Status: " : "สถานะการชำระ: ") + ($P{paymentStatus} != null ? $P{paymentStatus} : "UNPAID") + "]"]]></expression>
 		</element>
-
-		<element kind="textField" uuid="ac79ee64-f337-4007-90dd-a3a8d7d0b843" x="0" y="114" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-			<expression><![CDATA[($P{lang}.equals("en") ? "1. Customer & Project Metadata" : "1. ข้อมูลลูกค้าและโครงการ (Customer & Project Metadata)")]]></expression>
-		</element>
-		<element kind="line" uuid="98e26b37-cac2-44c3-87f4-d5ca29c91e18" x="0" y="136" width="515" height="1" forecolor="#CBD5E1">
-			<pen lineWidth="0.6"/>
-		</element>
-		<element kind="rectangle" uuid="3fa561f9-d41c-4e0d-947b-7a4607eea171" mode="Opaque" x="0" y="142" width="515" height="82" backcolor="#F8FAFC" radius="3">
-			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
-		</element>
-		<element kind="textField" uuid="622d6511-c88f-46f0-9afb-fe089aa61184" x="10" y="146" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Customer / Org:" : "ชื่อลูกค้า / องค์กร:")]]></expression>
-		</element>
-		<element kind="textField" uuid="dd741944-4c6c-46ad-8545-ddce2f50786b" x="110" y="146" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-			<expression><![CDATA[$P{customerName} != null ? $P{customerName} : "-"]]></expression>
-		</element>
-		<element kind="textField" uuid="3b77a706-0e25-45ff-949a-091b928addf4" x="270" y="146" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
-		</element>
-		<element kind="textField" uuid="ca9e624a-9931-48b8-9781-8c657be7e4f4" x="358" y="146" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-			<expression><![CDATA[$P{projectName} != null ? $P{projectName} : "-"]]></expression>
-		</element>
-		<element kind="textField" uuid="39d900db-3dc6-4633-bed0-10468e9012c7" x="10" y="164" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Contract No:" : "สัญญาอ้างอิง:")]]></expression>
-		</element>
-		<element kind="textField" uuid="5167a29d-1706-44c2-acf0-405b06a06050" x="110" y="164" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-			<expression><![CDATA[$P{contractNo} != null ? $P{contractNo} : "-"]]></expression>
-		</element>
-		<element kind="textField" uuid="41ceb0bc-93bd-4bf7-b92c-f92395274089" x="270" y="164" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Billing Type:" : "ประเภทการเรียกเก็บ:")]]></expression>
-		</element>
-		<element kind="textField" uuid="110d8e70-4855-47b2-ac95-c219791924f1" x="358" y="164" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-			<expression><![CDATA[$P{billingType} != null ? $P{billingType} : "-"]]></expression>
-		</element>
-		<element kind="textField" uuid="8530c028-526a-4c72-9e30-32115df487e9" x="10" y="182" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date:" : "วันที่ออกใบแจ้งหนี้:")]]></expression>
-		</element>
-		<element kind="textField" uuid="a5110fc6-4e91-4f14-b08b-a04f0bcc8174" x="110" y="182" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-			<expression><![CDATA[$P{issueDate} != null ? $P{issueDate} : "-"]]></expression>
-		</element>
-			<element kind="textField" uuid="4d789164-db50-48b0-a0f3-d81461f04922" x="10" y="200" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-				<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
-			</element>
-			<element kind="textField" uuid="8f4925f6-c019-471a-adc6-83f093acbdef" x="110" y="200" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-				<expression><![CDATA[$P{docVersion} != null ? $P{docVersion} : "-"]]></expression>
-			</element>
-		<element kind="textField" uuid="8f65da24-b6e2-477b-87bc-58dbe358f349" x="270" y="182" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Due Date:" : "กำหนดชำระ:")]]></expression>
-		</element>
-		<element kind="textField" uuid="9d46fe3d-39a1-4680-9e06-0b09b6693f2e" x="358" y="182" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
-			<expression><![CDATA[$P{dueDate} != null ? $P{dueDate} : "-"]]></expression>
-		</element>
-
-		<element kind="textField" uuid="26da7f9f-b0e8-4bf8-9d18-17f65d45a4d1" x="0" y="234" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-			<expression><![CDATA[($P{lang}.equals("en") ? "2. Invoice Items" : "2. รายการสินค้า/บริการ (Invoice Items)")]]></expression>
-		</element>
+<element kind="component" uuid="863716a8-0e8a-4917-95aa-6ec643a9df7c" positionType="Float" x="0" y="110" width="515" height="116">
+<component kind="list">
+<datasetRun uuid="30c9b95f-c6a7-4315-add4-d26744021713" subDataset="HeaderDataset">
+<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+<parameter name="invoiceId">
+<expression><![CDATA[$P{invoiceId}]]></expression>
+</parameter>
+<parameter name="lang">
+<expression><![CDATA[$P{lang}]]></expression>
+</parameter>
+</datasetRun>
+<contents height="116" width="515">
+<element kind="rectangle" uuid="e458c1ac-1b92-44de-b982-4858f8dfc8a1" x="0" y="0" width="250" height="116" mode="Opaque" backcolor="#F8FAFC" radius="3">
+<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+</element>
+<element kind="textField" uuid="479853f5-51b2-4055-adf0-480694e1352f" x="10" y="4" width="230" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="true" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Issued by" : "ผู้ออกเอกสาร (Issued by)")]]></expression>
+</element>
+<element kind="textField" uuid="72c3bf13-3302-4a69-9095-b3ab6666067c" x="10" y="20" width="230" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="ValueBold">
+<expression><![CDATA[$F{issuerName} != null ? $F{issuerName} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="15c651ab-6f98-4687-a64f-efb689017c17" x="10" y="36" width="230" height="48" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="Value">
+<expression><![CDATA[$F{issuerAddress} != null ? $F{issuerAddress} : ""]]></expression>
+</element>
+<element kind="textField" uuid="4fb35f8c-47b6-4ace-a530-5e26425da114" x="10" y="84" width="230" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[($P{lang}.equals("en") ? "Tax ID: " : "เลขประจำตัวผู้เสียภาษี: ") + ($F{issuerTaxId} != null ? $F{issuerTaxId} : "-") + ($F{issuerBranch} != null ? "   " + ($P{lang}.equals("en") ? "Branch: " : "สาขา: ") + $F{issuerBranch} : "")]]></expression>
+</element>
+<element kind="textField" uuid="cdb7bb63-ae50-4b9f-9ef9-055c4274dd7e" x="10" y="100" width="230" height="14" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$F{issuerPhone} != null && !$F{issuerPhone}.isBlank() ? ($P{lang}.equals("en") ? "Tel: " : "โทร: ") + $F{issuerPhone} : ""]]></expression>
+</element>
+<element kind="rectangle" uuid="e8fbf736-281e-4496-a2d1-013d47179fac" x="265" y="0" width="250" height="116" mode="Opaque" backcolor="#F8FAFC" radius="3">
+<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+</element>
+<element kind="textField" uuid="8c51fbbb-2ab3-4e85-acab-40168add7f2e" x="275" y="4" width="230" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="true" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Bill to" : "ผู้รับเอกสาร (Bill to)")]]></expression>
+</element>
+<element kind="textField" uuid="ce1655b6-40b9-4a3e-a11c-629dfc8aa625" x="275" y="20" width="230" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="ValueBold">
+<expression><![CDATA[$F{customerName} != null ? $F{customerName} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="caddcff1-f6f7-4473-b26f-8972b55377ca" x="275" y="36" width="230" height="48" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="Value">
+<expression><![CDATA[$F{customerAddress} != null ? $F{customerAddress} : ""]]></expression>
+</element>
+<element kind="textField" uuid="c59ad6ea-e9a8-4723-aca5-5fcc4bd5bfee" x="275" y="84" width="230" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[($P{lang}.equals("en") ? "Tax ID: " : "เลขประจำตัวผู้เสียภาษี: ") + ($F{customerTaxId} != null ? $F{customerTaxId} : "-") + ($F{customerBranch} != null ? "   " + ($P{lang}.equals("en") ? "Branch: " : "สาขา: ") + $F{customerBranch} : "")]]></expression>
+</element>
+<element kind="textField" uuid="fdb04532-e213-4f24-8c82-dcfb315d731d" x="275" y="100" width="230" height="14" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$F{customerPhone} != null && !$F{customerPhone}.isBlank() ? ($P{lang}.equals("en") ? "Tel: " : "โทร: ") + $F{customerPhone} : ""]]></expression>
+</element>
+</contents>
+</component>
+</element>
+<element kind="rectangle" uuid="c3f81b31-ea17-49a8-b710-dbe881363f38" x="0" y="236" width="515" height="80" mode="Opaque" backcolor="#F8FAFC" radius="3">
+<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+</element>
+<element kind="textField" uuid="41eb608b-dec2-4038-bb57-2062c27a3c30" x="10" y="240" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
+</element>
+<element kind="textField" uuid="b107726e-3b74-4d7d-ae18-3a7fac743a13" x="110" y="240" width="395" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{projectName} != null ? $P{projectName} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="731e3caa-1c02-46d7-bf39-7cbdcc707727" x="10" y="258" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Contract No:" : "เลขที่สัญญา:")]]></expression>
+</element>
+<element kind="textField" uuid="0ae7ca41-7ed0-43ff-b27a-a3f924695b3c" x="110" y="258" width="145" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{contractNo} != null ? $P{contractNo} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="1dbaa167-9c62-4eff-ba42-b338e6018219" x="270" y="258" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Billing Type:" : "ประเภทเรียกเก็บ:")]]></expression>
+</element>
+<element kind="textField" uuid="c6b6bca2-8a8e-4690-9ed6-7a98abb6b953" x="368" y="258" width="140" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{billingType} != null ? $P{billingType} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="168cac22-ab1e-4bba-b579-51dee1e65583" x="10" y="276" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date:" : "วันที่ออกใบแจ้งหนี้:")]]></expression>
+</element>
+<element kind="textField" uuid="c966e809-2da8-4940-a382-cd22a0aa81f6" x="110" y="276" width="145" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{issueDate} != null ? $P{issueDate} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="8d13f997-2a6d-441a-84a8-cb0a9802aa67" x="270" y="276" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Due Date:" : "กำหนดชำระ:")]]></expression>
+</element>
+<element kind="textField" uuid="a2f027ce-689f-461b-8316-4e0a48630109" x="368" y="276" width="140" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{dueDate} != null ? $P{dueDate} : "-"]]></expression>
+</element>
+<element kind="textField" uuid="f72cea0d-68cc-4a2b-aa73-5cc3824a6907" x="10" y="294" width="95" height="18" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" bold="false" style="Label">
+<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+</element>
+<element kind="textField" uuid="b77ab08a-0c1c-48f6-9e3c-9bd9b073dd51" x="110" y="294" width="145" height="18" textAdjust="CutText" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Middle" style="Value">
+<expression><![CDATA[$P{docVersion} != null ? $P{docVersion} : "-"]]></expression>
+</element>
 	</title>
 
 	<!-- ========================================================
 	     COLUMN HEADER FOR INVOICE ITEMS TABLE
 	     ======================================================== -->
-	<columnHeader height="24">
-		<element kind="rectangle" uuid="ef4ffa82-cf37-463a-a6f0-4e56ef930016" x="0" y="0" width="515" height="24" radius="2" style="TableHeader">
-			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
-		</element>
-		<element kind="textField" uuid="b5dbe102-5ea9-42cb-8fbd-7f461fe2cb7f" x="10" y="0" width="300" height="22" blankWhenNull="true" vTextAlign="Bottom" style="TableHeader">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Description" : "รายการ (Description)")]]></expression>
-		</element>
-		<element kind="textField" uuid="c257dcc3-809e-4be9-9141-8765768ba35d" x="320" y="0" width="185" height="22" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="TableHeader">
-			<expression><![CDATA[($P{lang}.equals("en") ? "Amount (THB)" : "จำนวนเงิน (บาท)")]]></expression>
-		</element>
+	<columnHeader height="34">
+<element kind="rectangle" uuid="0746e667-7b2b-48e3-9a32-28a87d7c0b8f" x="0" y="0" width="515" height="34" mode="Opaque" backcolor="#1F2937" radius="3">
+<pen lineWidth="0.5" lineColor="#1F2937"/>
+</element>
+<element kind="textField" uuid="45114093-3f53-4523-bd15-7b1e68e8231c" x="2" y="0" width="32" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["ลำดับที่\nNo."]]></expression>
+</element>
+<element kind="textField" uuid="3c64212d-a99d-461e-b0b4-b523dd0fa8dc" x="38" y="0" width="68" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["รหัสสินค้า\nCode Number"]]></expression>
+</element>
+<element kind="textField" uuid="e46b1b74-e061-4c3d-96ec-3f03d2995465" x="110" y="0" width="183" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["รายการ\nDescription"]]></expression>
+</element>
+<element kind="textField" uuid="2246acd7-5e95-46a1-a954-8c1f5bc52097" x="297" y="0" width="46" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["จำนวน\nQuantity"]]></expression>
+</element>
+<element kind="textField" uuid="d93cf740-e6d2-4577-9332-744939b27843" x="347" y="0" width="58" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["ราคา/หน่วย\nUnit Price"]]></expression>
+</element>
+<element kind="textField" uuid="91009c17-d530-4c0e-bc96-dd5f1a772759" x="409" y="0" width="46" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["ส่วนลด\nDiscount"]]></expression>
+</element>
+<element kind="textField" uuid="5490b32b-a460-4c04-b3ec-cdbf13827a58" x="459" y="0" width="54" height="34" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" forecolor="#FFFFFF" style="ValueBold">
+<expression><![CDATA["จำนวนเงิน\nAmount"]]></expression>
+</element>
 	</columnHeader>
 
 	<!-- ========================================================
@@ -189,8 +328,25 @@
 	     ======================================================== -->
 	<!-- Sub-dataset ให้ List component ของตาราง (จาก HTML <table> ใน rich text field) วนแบบไม่จำกัดแถว -->
 	<!-- Sub-dataset ให้ List component ของเนื้อหาเรียงลำดับ (ข้อความ/รูป/ตาราง ตามต้นฉบับ) -->
+	<!-- issuer, customer and amount in words of the invoice (SQL function pm_invoice_header) -->
+	<dataset name="HeaderDataset" uuid="bacfcf64-f376-49f5-a212-bfc9cf0a9f7b">
+		<parameter name="invoiceId" class="java.lang.String"/>
+		<parameter name="lang" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT * FROM pm_invoice_header(CAST(NULLIF($P{invoiceId}, '') AS uuid), $P{lang})]]></query>
+		<field name="issuerName" class="java.lang.String"/>
+		<field name="issuerAddress" class="java.lang.String"/>
+		<field name="issuerTaxId" class="java.lang.String"/>
+		<field name="issuerBranch" class="java.lang.String"/>
+		<field name="issuerPhone" class="java.lang.String"/>
+		<field name="customerName" class="java.lang.String"/>
+		<field name="customerAddress" class="java.lang.String"/>
+		<field name="customerTaxId" class="java.lang.String"/>
+		<field name="customerBranch" class="java.lang.String"/>
+		<field name="customerPhone" class="java.lang.String"/>
+		<field name="totalInWords" class="java.lang.String"/>
+	</dataset>
 	<!-- Blocks of a rich-text field, computed by the database function pm_rich_blocks (no Java helper needed) -->
-	<dataset name="RichBlocksDataset" uuid="12e3f19a-1c2a-4f16-b549-278cc2ee0647">
+	<dataset name="RichBlocksDataset" uuid="a02957dd-c1eb-4851-a6a9-42eedd0899d6">
 		<parameter name="html" class="java.lang.String"/>
 		<parameter name="extra" class="java.lang.String"/>
 		<parameter name="fallback" class="java.lang.String"/>
@@ -253,19 +409,56 @@
 	</dataset>
 
 	<detail>
-		<band height="28" splitType="Stretch">
-			<element kind="rectangle" uuid="ba7628c0-9ef0-4847-9f64-805dc121fe29" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="515" height="28" backcolor="#FFFFFF">
-				<pen lineWidth="0.4" lineColor="#E2E8F0"/>
-			</element>
-			<element kind="textField" uuid="fb29b2de-6e6c-4296-8d8a-590a558fd6dc" positionType="Float" x="10" y="2" width="300" height="16" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="ValueBold">
-				<expression><![CDATA[$F{itemName}]]></expression>
-			</element>
-			<element kind="textField" uuid="0be1a5b4-9a11-4a44-9f4c-3f0e8fca1a11" positionType="Float" x="10" y="16" width="300" height="12" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Top" style="FooterText">
-				<expression><![CDATA[$F{itemDescription} != null && !$F{itemDescription}.isBlank() ? $F{itemDescription} : ""]]></expression>
-			</element>
-			<element kind="textField" uuid="479f765a-c605-4eab-af0b-6bed3d6bf0fd" positionType="Float" x="320" y="2" width="185" height="20" blankWhenNull="true" hTextAlign="Right" vTextAlign="Top" style="Value">
-				<expression><![CDATA[$F{itemAmount}]]></expression>
-			</element>
+		<band height="22" splitType="Stretch">
+<element kind="textField" uuid="238ab7b2-ff37-4e01-8484-e56dd87c091c" x="0" y="0" width="36" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Center" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{itemNo}]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
+<element kind="textField" uuid="0b5bce48-7dcd-48e7-9456-882cfa2301ff" x="36" y="0" width="72" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{itemCode}]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
+<element kind="textField" uuid="c7d170f6-f990-464d-b63d-2276cdfc31d5" x="108" y="0" width="187" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{itemName} + ($F{itemDescription} != null && !$F{itemDescription}.isEmpty() ? "\n" + $F{itemDescription} : "")]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
+<element kind="textField" uuid="eab778a9-b79d-450b-bb49-e3b42472f573" x="295" y="0" width="50" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{quantity}]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
+<element kind="textField" uuid="51928a8a-ee4a-44c7-93de-4b0e5bd2c8d2" x="345" y="0" width="62" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{unitPrice}]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
+<element kind="textField" uuid="ac3cd6d3-3285-4fed-8289-fd9d4a5ab3e7" x="407" y="0" width="50" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{discount}]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
+<element kind="textField" uuid="f0195014-94f2-4fa6-b68d-a1115af9bfa7" x="457" y="0" width="58" height="22" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Right" vTextAlign="Top" stretchType="ContainerHeight" style="Value">
+<expression><![CDATA[$F{itemAmount}]]></expression>
+<box padding="3">
+<leftPen lineWidth="0.5" lineColor="#6B7280"/>
+<rightPen lineWidth="0.5" lineColor="#6B7280"/>
+</box>
+</element>
 		</band>
 	</detail>
 
@@ -287,48 +480,19 @@
 	<!-- ========================================================
 	     SUMMARY BAND — Financial Totals, Payment Terms & Signatures
 	     ======================================================== -->
-	<summary height="332" splitType="Stretch">
+	<summary height="254" splitType="Stretch">
 		<!-- Invoice totals: directly under the items table, same columns, so items and totals read as one table (kept together in an atomic frame) -->
-		<element kind="frame" uuid="d3a1000a-5002-5002-5002-a1b2c3d4e5f6" positionType="Float" x="0" y="0" width="515" height="78">
-			<element kind="rectangle" uuid="81496ba9-2116-4485-9876-8cb0dc674f23" x="0" y="0" width="515" height="24" backcolor="#FFFFFF">
-				<pen lineWidth="0.4" lineColor="#E2E8F0"/>
-			</element>
-			<element kind="textField" uuid="0663e8d1-c234-4cb0-9fa8-1e9cffc14933" x="10" y="2" width="300" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
-				<expression><![CDATA[($P{lang}.equals("en") ? "Subtotal (Before Tax)" : "มูลค่าบริการก่อนภาษี (Subtotal)")]]></expression>
-			</element>
-			<element kind="textField" uuid="798d6c8b-7aa9-4ca1-ad7e-8e5512ef1cbd" x="320" y="2" width="185" height="20" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="Value">
-				<expression><![CDATA[$P{subtotalAmount} != null ? $P{subtotalAmount} : "0.00"]]></expression>
-			</element>
-			<element kind="rectangle" uuid="4166087d-4d95-4071-8c3e-b0ce97b651ff" x="0" y="24" width="515" height="24" backcolor="#FFFFFF">
-				<pen lineWidth="0.4" lineColor="#E2E8F0"/>
-			</element>
-			<element kind="textField" uuid="3f7c3682-7b2f-4269-92fa-19e5009074ec" x="10" y="26" width="300" height="20" blankWhenNull="true" vTextAlign="Bottom" style="Value">
-				<expression><![CDATA[($P{lang}.equals("en") ? "VAT (" : "ภาษีมูลค่าเพิ่ม (VAT ") + ($P{vatRate} != null ? $P{vatRate} : "7.00") + "%):"]]></expression>
-			</element>
-			<element kind="textField" uuid="a155436f-c0fe-4028-a4d5-72063ea672bd" x="320" y="26" width="185" height="20" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="Value">
-				<expression><![CDATA[$P{vatAmount} != null ? $P{vatAmount} : "0.00"]]></expression>
-			</element>
-			<element kind="rectangle" uuid="11b76c60-e97a-422f-a2e3-f39e15a338c2" x="0" y="48" width="515" height="28" backcolor="#F8FAFC">
-				<pen lineWidth="0.6" lineColor="#CBD5E1"/>
-			</element>
-			<element kind="textField" uuid="90eab52b-da50-4323-9732-68b042a4d4a1" x="10" y="50" width="300" height="24" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
-				<expression><![CDATA[($P{lang}.equals("en") ? "Total Net Amount" : "จำนวนเงินรวมทั้งสิ้น (Total Net Amount)")]]></expression>
-			</element>
-			<element kind="textField" uuid="7c8b89e6-18c7-4886-9f5e-2ee633176b6a" x="320" y="50" width="185" height="24" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle" style="ValueBold">
-				<expression><![CDATA[$P{totalAmount} != null ? $P{totalAmount} : "0.00"]]></expression>
-			</element>
+		
+		<element kind="textField" uuid="0b27473c-d7c0-4472-aa9e-7e4cdd7c8e35" positionType="Float" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "1. Payment Terms & Remarks" : "1. เงื่อนไขการชำระเงินและหมายเหตุ (Payment Terms & Remarks)")]]></expression>
 		</element>
-
-		<element kind="textField" uuid="0b27473c-d7c0-4472-aa9e-7e4cdd7c8e35" positionType="Float" x="0" y="88" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-			<expression><![CDATA[($P{lang}.equals("en") ? "3. Payment Terms & Remarks" : "3. เงื่อนไขการชำระเงินและหมายเหตุ (Payment Terms & Remarks)")]]></expression>
-		</element>
-		<element kind="line" uuid="e8c20ada-9f98-4ba3-9e41-8f9239d83483" positionType="Float" x="0" y="110" width="515" height="1" forecolor="#CBD5E1">
+		<element kind="line" uuid="e8c20ada-9f98-4ba3-9e41-8f9239d83483" positionType="Float" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
 			<pen lineWidth="0.6"/>
 		</element>
 		<!-- Text + inline images + tables in original order (real List component, unlimited rows) -->
-				<element kind="component" uuid="5395d222-b28d-4440-9d85-93ecb83e6823" positionType="Float" x="0" y="118" width="515" height="20">
+				<element kind="component" uuid="5395d222-b28d-4440-9d85-93ecb83e6823" positionType="Float" x="0" y="40" width="515" height="20">
 					<component kind="list">
-						<datasetRun uuid="d5ce4a7e-9593-4971-bf80-38aea0961c48" subDataset="RichBlocksDataset">
+						<datasetRun uuid="d4842fc9-16be-4020-b5f4-7417fea2e28a" subDataset="RichBlocksDataset">
 						<parameter name="html"><expression><![CDATA[$P{remark} != null && !$P{remark}.isBlank() ? $P{remark} : ($P{lang}.equals("en") ? "Please transfer payment to Softinter Co., Ltd.'s company account and submit proof of payment to receive a receipt." : "กรุณาโอนเงินเข้าบัญชีบริษัท ซอฟต์อินเตอร์ จำกัด และส่งหลักฐานการชำระเงินเพื่อออกใบเสร็จรับเงิน")]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[($P{attachmentNames} == null || $P{attachmentNames}.isEmpty()) ? null : (($P{lang}.equals("en") ? "Attachments: " : "ไฟล์แนบ: ") + $P{attachmentNames})]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA["-"]]></expression></parameter>
@@ -506,9 +670,9 @@
 
 
 		<!-- Section 5: Authorized Signature (Wrapped in atomic Frame to keep signatures together on page break) -->
-		<element kind="frame" uuid="d3a1000a-5001-5001-5001-a1b2c3d4e5f6" positionType="Float" x="0" y="152" width="515" height="175">
+		<element kind="frame" uuid="d3a1000a-5001-5001-5001-a1b2c3d4e5f6" positionType="Float" x="0" y="74" width="515" height="175">
 			<element kind="textField" uuid="26c3e188-d287-4409-ada5-061284aa2c3c" x="0" y="0" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-				<expression><![CDATA[($P{lang}.equals("en") ? "4. Authorized Signature" : "4. การลงนามผู้ออกเอกสาร (Authorized Signature)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "2. Authorized Signature" : "2. การลงนามผู้ออกเอกสาร (Authorized Signature)")]]></expression>
 			</element>
 			<element kind="line" uuid="7ea045e2-8a08-4088-8a39-c72320f329f8" x="0" y="22" width="515" height="1" forecolor="#CBD5E1">
 				<pen lineWidth="0.6"/>
