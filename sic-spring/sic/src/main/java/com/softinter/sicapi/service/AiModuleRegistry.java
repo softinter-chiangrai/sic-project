@@ -57,6 +57,14 @@ public class AiModuleRegistry {
                 .build());
 
         register(ModuleDef.builder()
+                .moduleType("PHASE")
+                .label("ระยะโครงการ (Phase)")
+                .listRoute("/feature/pm/phase")
+                .createRoute("/feature/pm/phase/new")
+                .schemaDescription("{ \"phaseName\": string, \"description\": string, \"startDate\": \"YYYY-MM-DD\"|null, \"endDate\": \"YYYY-MM-DD\"|null, \"color\": \"#3B82F6\"|\"#10B981\"|\"#8B5CF6\"|\"#F59E0B\"|\"#EC4899\"|\"#06B6D4\" }")
+                .build());
+
+        register(ModuleDef.builder()
                 .moduleType("REQUIREMENT")
                 .label("ความต้องการ (Requirement)")
                 .listRoute("/feature/pm/requirement")

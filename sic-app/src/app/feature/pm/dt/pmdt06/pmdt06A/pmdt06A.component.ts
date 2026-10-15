@@ -36,6 +36,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 
 @Component({
     selector: 'app-pmdt06a',
@@ -811,6 +812,8 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             return;
         }
 
+        const pdfWindow = openPdfWindow();
+
         this.isLoading = true;
         const url = `${this.baseUrl}/${id}/export-pdf`;
         const lang = this.languageService.getCurrentLanguage();
@@ -819,18 +822,9 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 this.isLoading = false;
             }))
             .subscribe({
-                next: (blob) => {
-                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-                    const pdfUrl = URL.createObjectURL(pdfBlob);
-                    const printWindow = window.open(pdfUrl, '_blank');
-                    if (!printWindow) {
-                        const a = document.createElement('a');
-                        a.href = pdfUrl;
-                        a.target = '_blank';
-                        a.click();
-                    }
-                },
+                next: (blob) => pdfWindow.show(blob, id),
                 error: (err) => {
+                    pdfWindow.close();
                     console.error('Print change request error:', err);
                     this.dialog.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT06_PRINT_FAIL_MSG'));
                 },

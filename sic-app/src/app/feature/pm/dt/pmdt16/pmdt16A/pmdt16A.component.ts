@@ -37,6 +37,7 @@ import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.u
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
+import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt16a',
@@ -644,25 +645,17 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       return;
     }
 
+    const pdfWindow = openPdfWindow();
+
     this.isPrinting.set(true);
     const url = `${apiBaseUrl}/api/pm/invoices/${invoiceId}/export-pdf`;
     const lang = this.languageService.getCurrentLanguage();
     this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isPrinting.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.download = `invoice-${this.formData?.form?.controls['invoiceNo']?.value || invoiceId}.pdf`;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, `invoice-${this.formData?.form?.controls['invoiceNo']?.value || invoiceId}`),
         error: (err) => {
+            pdfWindow.close();
           console.error('Export invoice PDF error:', err);
           this.dialog.error(this.translate.instant('PMDT16A_EXPORT_FAIL_TITLE'), this.translate.instant('PMDT16A_EXPORT_FAIL_MSG') + ' ' + (err?.error?.message || err?.message || ''));
         },

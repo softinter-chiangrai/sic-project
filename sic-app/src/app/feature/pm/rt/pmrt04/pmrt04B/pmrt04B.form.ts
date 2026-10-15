@@ -63,7 +63,7 @@ export class Pmrt04BForm {
     const newEndDate = new Date(newStartDate);
     newEndDate.setFullYear(newEndDate.getFullYear() + 1);
 
-    const contractNo = suggestedContractNo || Pmrt04BForm.computeRenewalContractNo(original.contractNo, takenContractNos);
+    const contractNo = `${original.contractNo}-[สร้างอัตโนมัติ]`;
 
     return {
       newContractNo: contractNo,

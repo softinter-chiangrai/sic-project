@@ -3,9 +3,14 @@ package com.softinter.sicapi.service.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
+import java.time.LocalDate;
 import java.util.stream.Collectors;
+import com.softinter.sicapi.dto.response.DocumentVersionResponse;
+import com.softinter.sicapi.util.ContractLifecycle;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -47,6 +52,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
 import com.softinter.sicapi.util.ContractNoHelper;
 import com.softinter.sicapi.util.LanguageUtils;
+import com.softinter.sicapi.util.DateRangeValidator;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Set;
@@ -348,7 +354,9 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             contract.setBusinessId(businessId);
             contract.setIsDelete(false);
 
-            if (request.getContractNo() == null || request.getContractNo().isBlank()) {
+            if (request.getContractNo() == null || request.getContractNo().isBlank()
+                    || request.getContractNo().contains("[สร้างอัตโนมัติ]")
+                    || request.getContractNo().contains("[Auto")) {
                 if (request.getParentContractId() != null) {
                     var parent = contractRepository.findById(request.getParentContractId()).orElse(null);
                     String baseNo = (parent != null) ? parent.getContractNo() : "CTR";
@@ -367,7 +375,16 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 }
             } else if (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
                     businessId, request.getProjectId(), request.getContractNo())) {
-                throw new RuntimeException("เลขที่สัญญานี้มีอยู่แล้วในโครงการนี้: " + request.getContractNo());
+                if (request.getParentContractId() != null) {
+                    var parent = contractRepository.findById(request.getParentContractId()).orElse(null);
+                    String baseNo = (parent != null) ? parent.getContractNo() : request.getContractNo();
+                    String code = ContractNoHelper.nextAvailableRenewalNo(baseNo,
+                            candidate -> contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+                                    businessId, request.getProjectId(), candidate));
+                    request.setContractNo(code);
+                } else {
+                    throw new RuntimeException("เลขที่สัญญานี้มีอยู่แล้วในโครงการนี้: " + request.getContractNo());
+                }
             }
         }
 
@@ -399,6 +416,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             }
         }
 
+        DateRangeValidator.check(contract.getStartDate(), contract.getEndDate());
         contract = contractRepository.save(contract);
 
         // ✅ ถ้าเป็นการสร้างสัญญาใหม่จากการต่อสัญญา (มี parentContractId) ให้อัปเดตสัญญาเดิมเป็น "ต่อแล้ว"

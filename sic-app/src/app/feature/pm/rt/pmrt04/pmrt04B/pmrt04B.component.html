@@ -98,6 +98,7 @@
                 type="text"
                 formControlName="newContractNo"
                 [required]="true"
+                [readonly]="true"
                 [placeholder]="'PMRT04B_NEW_CONTRACT_NO_PLACEHOLDER' | translate"
               ></sic-input>
               @if (form.get('newContractNo')?.touched && form.get('newContractNo')?.invalid) {

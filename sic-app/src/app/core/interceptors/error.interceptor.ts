@@ -2,6 +2,7 @@ import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, throwError } from 'rxjs';
 import { AuthService } from '../auth/auth.service';
+import { NotificationService } from '../services/notification.service';
 import { environment } from '../../../environments/environment';
 import { recordServerError } from '../services/server-error-tracker';
 
@@ -19,6 +20,7 @@ export function extractErrorMessage(err: HttpErrorResponse, fallback: string): s
 
 export const errorInterceptor: HttpInterceptorFn = (req, next) => {
   const authService = inject(AuthService);
+  const notificationService = inject(NotificationService);
   const isSicApiRequest = req.url.startsWith(environment.apiBaseUrl);
 
   return next(req).pipe(
@@ -27,6 +29,17 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
         if (authService.isLoggedIn()) {
           authService.logout();
         }
+      }
+      if (err instanceof HttpErrorResponse && isSicApiRequest && err.status === 403) {
+        notificationService.handleIncomingNotification({
+          id: 'sec-403-' + Date.now(),
+          recipientUserId: authService.getUserId() || '',
+          title: 'สิทธิ์การใช้งานถูกจำกัด',
+          message: 'คุณไม่มีสิทธิ์ในการเข้าถึงหรือดำเนินการนี้ ระบบได้ทำการอัปเดตสิทธิ์ล่าสุดให้แล้ว',
+          type: 'PERMISSION_CHANGED',
+          read: false,
+          createdDate: new Date(),
+        });
       }
       if (err instanceof HttpErrorResponse && isSicApiRequest) {
         recordServerError(err.status, err.error);

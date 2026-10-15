@@ -1,6 +1,7 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToForm } from '../../../../../core/types/form.type';
 import { PmMaTicketModel } from './pmdt17A.model';
+import { endNotBeforeStart } from '../../../../../core/validator/date-range.validator';
 
 export class Pmdt17AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmMaTicketModel>> {
@@ -25,6 +26,6 @@ export class Pmdt17AForm {
       isActive: fb.control(true),
       state: fb.control(null),
       rowVersion: fb.control(null),
-    });
+    }, { validators: endNotBeforeStart('startDate', 'endDate', 'startTime', 'endTime') });
   }
 }

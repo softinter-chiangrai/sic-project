@@ -1,19 +1,20 @@
-// src/app/feature/pm/dt/pmdt01/pmdt01.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { forkJoin, finalize } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { PhaseModel } from './pmdt01.model';
 import { Pmdt01Service } from './pmdt01.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [CommonModule, SicStripHtmlPipe, TranslateModule],
+  imports: [CommonModule, SicStripHtmlPipe, TranslateModule, SicAiBatchModalComponent],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {
@@ -29,6 +30,17 @@ export class Pmdt01Component implements OnInit {
   projectId = signal<string>('');
   phases = signal<PhaseModel[]>([]);
   isLoading = signal(false);
+
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'phaseName', label: 'ชื่อ Phase (Phase Name)', type: 'text' },
+    { key: 'description', label: 'รายละเอียด (Description)', type: 'textarea' },
+    { key: 'startDate', label: 'วันเริ่มต้น (Start Date)', type: 'date' },
+    { key: 'endDate', label: 'วันสิ้นสุด (End Date)', type: 'date' },
+    { key: 'color', label: 'สี (Color)', type: 'text' },
+  ];
 
   // ===== Navbar context filter (client-side) =====
   // Always load ALL phases of ALL projects; the navbar project-context selection filters what's shown.
@@ -149,5 +161,51 @@ export class Pmdt01Component implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+
+  // ===== AI Batch Create Handlers =====
+  resolveProjectId(): string | null {
+    if (this.projectId()) return this.projectId();
+    const navIds = this.customerState.currentSelectedProjectIds();
+    if (navIds && navIds.length > 0) return navIds[0];
+    const navProj = this.customerState.currentProjectId();
+    if (navProj) return navProj;
+    const list = this.phases();
+    if (list && list.length > 0 && list[0].projectId) return list[0].projectId;
+    return null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    if (!rows.length) return;
+    const projId = this.resolveProjectId();
+    if (!projId) {
+      this.dialog.error('ไม่พบโครงการ', 'กรุณาเลือกโครงการก่อนสร้าง Phase');
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const saveRequests = rows.map((row) =>
+      this.phaseService.createPhase({
+        projectId: projId,
+        phaseName: row['phaseName'],
+        description: row['description'],
+        startDate: row['startDate'],
+        endDate: row['endDate'],
+        color: row['color'] || '#3B82F6',
+      })
+    );
+
+    forkJoin(saveRequests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.loadPhases();
+        },
+        error: (err) => {
+          console.error('AI batch save failed', err);
+          this.dialog.error('บันทึก Phase ไม่สำเร็จ', err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+        },
+      });
   }
 }

@@ -42,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.softinter.sicapi.util.KeywordSearchHelper;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.util.DateRangeValidator;
 
 @Slf4j
 @Service
@@ -82,6 +83,8 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         project.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
         project.setAttachmentGroupId(request.getAttachmentGroupId());
 
+        DateRangeValidator.check(project.getStartDate(), project.getPlannedEndDate());
+        DateRangeValidator.check(project.getStartDate(), project.getActualEndDate());
         project = projectRepository.saveAndFlush(project);
 
         PmCustomerProjectResponse response = toResponse(project);
@@ -148,6 +151,8 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
         }
         project.setAttachmentGroupId(request.getAttachmentGroupId());
 
+        DateRangeValidator.check(project.getStartDate(), project.getPlannedEndDate());
+        DateRangeValidator.check(project.getStartDate(), project.getActualEndDate());
         project = projectRepository.save(project);
 
         // ✅ Dynamic Increment Version

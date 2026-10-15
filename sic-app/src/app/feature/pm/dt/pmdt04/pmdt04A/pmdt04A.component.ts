@@ -64,6 +64,7 @@ import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.ut
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
@@ -768,6 +769,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       return;
     }
 
+    const pdfWindow = openPdfWindow();
     this.isSaving = true;
 
     try {
@@ -792,16 +794,9 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       }
 
       const blob = await this.exportService.exportWithJasper(id, 'pdf');
-      const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-      const pdfUrl = window.URL.createObjectURL(pdfBlob);
-      const printWindow = window.open(pdfUrl, '_blank');
-      if (!printWindow) {
-        const a = document.createElement('a');
-        a.href = pdfUrl;
-        a.target = '_blank';
-        a.click();
-      }
+      pdfWindow.show(blob, this.form.get('requirementCode')?.value || id);
     } catch (error: any) {
+      pdfWindow.close();
       console.error('Export error:', error);
       this.dialog.error(this.translate.instant('PMDT04_EXPORT_FAIL_TITLE'), this.translate.instant('PMDT04_JASPER_FAIL_MSG'));
     } finally {

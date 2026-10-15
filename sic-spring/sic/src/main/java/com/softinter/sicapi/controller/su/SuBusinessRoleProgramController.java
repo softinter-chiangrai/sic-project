@@ -40,6 +40,7 @@ public class SuBusinessRoleProgramController {
     private final SuBusinessRoleRepository businessRoleRepository;
     private final SuProgramRepository programRepository;
     private final ProgramAccessService programAccessService;
+    private final com.softinter.sicapi.service.ApprovalNotificationService notificationService;
 
     @GetMapping
     @org.springframework.transaction.annotation.Transactional(readOnly = true) // response mapping reads lazy relations (open-in-view is off)
@@ -177,6 +178,16 @@ public class SuBusinessRoleProgramController {
         }
         brpRepository.save(brp);
         programAccessService.removeAllAccessCache();
+
+        UUID bId = brp.getBusinessRole() != null ? brp.getBusinessRole().getBusinessId() : null;
+        notificationService.broadcastSecurityEvent(
+                bId,
+                "PERMISSION_CHANGED",
+                "อัปเดตสิทธิ์การใช้งาน",
+                "สิทธิ์การใช้งานของคุณมีการเปลี่ยนแปลง ระบบได้อัปเดตสิทธิ์ให้เรียบร้อยแล้ว",
+                null
+        );
+
         return ResponseEntity.ok(brp.getId());
     }
 
@@ -246,6 +257,16 @@ public class SuBusinessRoleProgramController {
             brpRepository.save(brp);
         }
         programAccessService.removeAllAccessCache();
+
+        UUID bIdBulk = role != null ? role.getBusinessId() : null;
+        notificationService.broadcastSecurityEvent(
+                bIdBulk,
+                "PERMISSION_CHANGED",
+                "อัปเดตสิทธิ์การใช้งาน",
+                "สิทธิ์การใช้งานของคุณมีการเปลี่ยนแปลง ระบบได้อัปเดตสิทธิ์ให้เรียบร้อยแล้ว",
+                null
+        );
+
         return ResponseEntity.ok().build();
     }
 

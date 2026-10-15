@@ -140,6 +140,7 @@
             <input
               type="date"
               formControlName="endDate"
+              [min]="form.get('startDate')?.value"
               class="w-full h-[2.9rem] px-3.5 py-2.5 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all"
             />
           </div>

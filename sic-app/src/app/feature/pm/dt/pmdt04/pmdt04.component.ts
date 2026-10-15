@@ -21,6 +21,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt04',
@@ -240,25 +241,16 @@ export class Pmdt04Component implements OnInit {
       return;
     }
 
+    const pdfWindow = openPdfWindow();
     this.isLoading.set(true);
     const url = `${environment.apiBaseUrl}/api/pm/requirement/${req.id}/export?format=pdf`;
     const lang = this.languageService.getCurrentLanguage();
     this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            // Fallback กรณีถูกบล็อก Popup
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, req.requirementCode || req.id!),
         error: (err) => {
+          pdfWindow.close();
           console.error('Print requirement error:', err);
           this.dialog.error(this.translate.instant('PMDT04_PRINT_FAIL_TITLE'), this.translate.instant('PMDT04_JASPER_FAIL_MSG'));
         },

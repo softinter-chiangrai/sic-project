@@ -139,11 +139,20 @@ public class ApprovalServiceImpl implements ApprovalService {
             version = versionService.getLatestVersionNo(request.getDocumentType(), request.getDocumentId());
         }
 
+        String resolvedDocCode = request.getDocumentCode();
+        if (resolvedDocCode == null || resolvedDocCode.isBlank() || resolvedDocCode.contains("[สร้างอัตโนมัติ]") || resolvedDocCode.contains("[Auto")) {
+            if ("CONTRACT".equalsIgnoreCase(request.getDocumentType()) && request.getDocumentId() != null) {
+                resolvedDocCode = customerContractRepository.findById(request.getDocumentId())
+                        .map(c -> c.getContractNo())
+                        .orElse(request.getDocumentCode());
+            }
+        }
+
         PmApproval approval = new PmApproval();
         approval.setBusinessId(currentUserService.getBusinessId());
         approval.setDocumentType(request.getDocumentType());
         approval.setDocumentId(request.getDocumentId());
-        approval.setDocumentCode(request.getDocumentCode());
+        approval.setDocumentCode(resolvedDocCode);
         approval.setDocumentTitle(request.getDocumentTitle());
         approval.setVersion(version);
         approval.setRequestedBy(userId);

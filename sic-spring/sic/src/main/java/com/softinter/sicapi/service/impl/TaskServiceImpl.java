@@ -37,6 +37,7 @@ import com.softinter.sicapi.exception.ResourceNotFoundException;
 import com.softinter.sicapi.util.DocumentDiffHelper;
 import com.softinter.sicapi.service.DocumentVersionService;
 import com.softinter.sicapi.util.JsonSnapshotHelper;
+import com.softinter.sicapi.util.DateRangeValidator;
 
 @Service
 @RequiredArgsConstructor
@@ -89,13 +90,15 @@ public class TaskServiceImpl implements TaskService {
         task.setActualManday(request.getActualManday() != null ? request.getActualManday() : 0);
         task.setPriority(request.getPriority());
         task.setStatus(request.getStatus() != null ? request.getStatus() : "Todo");
-        task.setColor(request.getColor());
+        task.setColor(request.getColor() != null && !request.getColor().isBlank() ? request.getColor() : (wp.getColor() != null ? wp.getColor() : "#3B82F6"));
 
         if (request.getSpecificationId() != null) {
             specificationRepository.findById(request.getSpecificationId())
                     .ifPresent(task::setSpecification);
         }
 
+        DateRangeValidator.check(task.getStartDate(), task.getEndDate());
+        DateRangeValidator.check(task.getActualStart(), task.getActualEnd());
         task = taskRepository.save(task);
 
         // บันทึกผู้รับผิดชอบร่วม
@@ -177,6 +180,8 @@ public class TaskServiceImpl implements TaskService {
             }
         }
 
+        DateRangeValidator.check(task.getStartDate(), task.getEndDate());
+        DateRangeValidator.check(task.getActualStart(), task.getActualEnd());
         task = taskRepository.save(task);
 
         // ✅ อัปเดตผู้รับผิดชอบร่วม: ลบเก่า แล้วเพิ่มใหม่

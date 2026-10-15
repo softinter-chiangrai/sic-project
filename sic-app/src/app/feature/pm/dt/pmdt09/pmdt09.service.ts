@@ -5,6 +5,7 @@ import { environment } from '../../../../../environments/environment';
 import { DesignReview, ReviewComment } from './pmdt09.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { LanguageService } from '../../../../core/services/language.service';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 
 @Injectable({ providedIn: 'root' })
@@ -31,19 +32,12 @@ export class Pmdt09Service {
     return this.http.get<PaginationResponse<DesignReview>>(this.baseUrl, { params: httpParams });
   }
 
-  /** ดึงรายงาน PDF แล้วเปิดแท็บใหม่เพื่อพิมพ์ */
+  /** ดึงรายงาน PDF แล้วเปิดแท็บใหม่เพื่อพิมพ์ (เรียกตอนคลิก: แท็บถูกเปิดทันทีก่อนส่ง request) */
   printPdf(id: string): Observable<Blob> {
+    const pdfWindow = openPdfWindow();
     const lang = this.languageService.getCurrentLanguage();
     return this.http.get(`${this.baseUrl}/${id}/export-pdf`, { params: { lang }, responseType: 'blob' }).pipe(
-      tap((blob) => {
-        const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-        if (!window.open(url, '_blank')) {
-          const a = document.createElement('a');
-          a.href = url;
-          a.target = '_blank';
-          a.click();
-        }
-      }),
+      tap({ next: (blob) => pdfWindow.show(blob, `design-review-${id}`), error: () => pdfWindow.close() }),
     );
   }
 

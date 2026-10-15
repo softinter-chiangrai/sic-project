@@ -2,6 +2,7 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ContractModel } from './pmrt04A.model';
 import { ToForm } from '../../../../../core/types/form.type';
+import { endNotBeforeStart } from '../../../../../core/validator/date-range.validator';
 
 export class Pmrt04AForm {
   static createForm(fb: FormBuilder, model?: ContractModel | null): FormGroup<ToForm<ContractModel>> {
@@ -30,7 +31,7 @@ export class Pmrt04AForm {
       rowVersion: fb.control(model?.rowVersion ?? null),
       createdAt: fb.control(model?.createdAt ?? null),
       updatedAt: fb.control(model?.updatedAt ?? null),
-    });
+    }, { validators: endNotBeforeStart('startDate', 'endDate') });
   }
 }
 

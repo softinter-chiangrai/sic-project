@@ -16,6 +16,7 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { SicFromData } from '../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../core/model/sic-entity-state';
 import { ToForm } from '../../../../core/types/form.type';
+import { endNotBeforeStart } from '../../../../core/validator/date-range.validator';
 
 // ===== Model =====
 export interface TaskScheduleModel {
@@ -57,7 +58,7 @@ class Pmdt11Form {
       attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
-    });
+    }, { validators: [endNotBeforeStart('startDate', 'endDate'), endNotBeforeStart('actualStart', 'actualEnd')] });
   }
 }
 

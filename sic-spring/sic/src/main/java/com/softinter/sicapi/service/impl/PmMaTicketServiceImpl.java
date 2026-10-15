@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
 import com.softinter.sicapi.util.KeywordSearchHelper;
 import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
 import com.softinter.sicapi.util.ContractLifecycle;
+import com.softinter.sicapi.util.DateRangeValidator;
 import java.time.LocalDate;
 import java.util.Map;
 import jakarta.persistence.criteria.Predicate;
@@ -184,6 +185,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
                 throw new RuntimeException("รหัสตั๋ว MA นี้มีอยู่แล้วในโครงการนี้: " + entity.getTicketNo());
             }
             calculateSlaDates(entity);
+            DateRangeValidator.check(entity.getStartDate(), entity.getStartTime(), entity.getEndDate(), entity.getEndTime());
             entity = ticketRepository.save(entity);
             saveAssignees(entity, request.getAssignedToIds());
 
@@ -229,6 +231,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
 
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
+            DateRangeValidator.check(entity.getStartDate(), entity.getStartTime(), entity.getEndDate(), entity.getEndTime());
             entity = ticketRepository.save(entity);
             ticketAssigneeRepository.deleteByMaTicketId(entity.getId());
             saveAssignees(entity, request.getAssignedToIds());

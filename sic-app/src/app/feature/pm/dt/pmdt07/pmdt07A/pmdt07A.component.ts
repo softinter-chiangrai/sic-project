@@ -43,6 +43,7 @@ import { buildRefinePrompt } from '../../../../../core/utils/ai-prompt-refine.ut
 import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/utils/ai-attachment.util';
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
+import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -837,6 +838,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             return;
         }
 
+        const pdfWindow = openPdfWindow();
+
         this.isLoading = true;
         const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
         const printLang = this.languageService.getCurrentLanguage();
@@ -846,18 +849,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.cdr.markForCheck();
             }))
             .subscribe({
-                next: (blob) => {
-                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-                    const pdfUrl = URL.createObjectURL(pdfBlob);
-                    const printWindow = window.open(pdfUrl, '_blank');
-                    if (!printWindow) {
-                        const a = document.createElement('a');
-                        a.href = pdfUrl;
-                        a.target = '_blank';
-                        a.click();
-                    }
-                },
+                next: (blob) => pdfWindow.show(blob, id),
                 error: (err) => {
+                    pdfWindow.close();
                     console.error('Print specification error:', err);
                     this.dialog.error(this.translate.instant('PMDT07_PRINT_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
                 },
@@ -872,6 +866,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             return;
         }
 
+        const pdfWindow = openPdfWindow();
+
         this.isLoading = true;
         const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
         const lang = this.languageService.getCurrentLanguage();
@@ -881,18 +877,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                 this.cdr.markForCheck();
             }))
             .subscribe({
-                next: (blob) => {
-                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-                    const pdfUrl = URL.createObjectURL(pdfBlob);
-                    const printWindow = window.open(pdfUrl, '_blank');
-                    if (!printWindow) {
-                        const a = document.createElement('a');
-                        a.href = pdfUrl;
-                        a.target = '_blank';
-                        a.click();
-                    }
-                },
+                next: (blob) => pdfWindow.show(blob, id),
                 error: (err) => {
+                    pdfWindow.close();
                     console.error('Export specification error:', err);
                     this.dialog.error(this.translate.instant('PMDT07_OPEN_DOC_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
                 },

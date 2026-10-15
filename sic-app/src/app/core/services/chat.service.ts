@@ -782,6 +782,39 @@ export class ChatService {
       }
     });
 
+    // 4.1 Broadcast Security Events (Role / Permission changes)
+    this.stompClient.subscribe('/topic/security-events', (msg) => {
+      try {
+        const event = JSON.parse(msg.body);
+        const myUserId = this.auth.getUserId();
+        if (event.type === 'ROLE_CHANGED') {
+          if (!event.recipientUserId || event.recipientUserId === myUserId) {
+            this.notificationSvc.handleIncomingNotification({
+              id: 'sec-' + Date.now(),
+              recipientUserId: myUserId || '',
+              title: event.title || 'บทบาทของคุณถูกเปลี่ยนแปลง',
+              message: event.message || 'บทบาทของผู้ใช้งานมีการเปลี่ยนแปลง กรุณาเข้าสู่ระบบใหม่อีกครั้ง',
+              type: 'ROLE_CHANGED',
+              read: false,
+              createdDate: new Date(),
+            });
+          }
+        } else if (event.type === 'PERMISSION_CHANGED') {
+          this.notificationSvc.handleIncomingNotification({
+            id: 'sec-' + Date.now(),
+            recipientUserId: myUserId || '',
+            title: event.title || 'อัปเดตสิทธิ์การใช้งาน',
+            message: event.message || 'สิทธิ์การใช้งานของคุณมีการเปลี่ยนแปลง ระบบได้อัปเดตสิทธิ์ให้เรียบร้อยแล้ว',
+            type: 'PERMISSION_CHANGED',
+            read: false,
+            createdDate: new Date(),
+          });
+        }
+      } catch (err) {
+        console.error('[ChatService] Error parsing security event:', err);
+      }
+    });
+
     // 5. User Online/Offline Status
     this.stompClient.subscribe('/topic/user-status', (msg) => {
       try {

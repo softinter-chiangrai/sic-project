@@ -142,6 +142,10 @@ public class AiProjectPipelineJobService {
             "Change Request Contract", "Extension Contract");
     private static final Set<String> DELIVERY_TYPES = Set.of("FINAL", "PARTIAL", "MILESTONE");
     private static final Set<String> MANUAL_TYPES = Set.of("USER", "ADMIN", "INSTALLATION", "OPERATION", "TROUBLESHOOT");
+    private static final List<String> PALETTE = List.of(
+            "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899",
+            "#06B6D4", "#F97316", "#6366F1", "#14B8A6", "#EF4444"
+    );
 
     // ===================== job model =====================
 
@@ -601,6 +605,7 @@ public class AiProjectPipelineJobService {
         JsonNode root = ask(c, """
                 You are a Senior Project Manager. Build the work breakdown structure: Phase -> Milestone -> Work Package.
                 Limits: 3-5 phases, max 2 milestones per phase, max 2 work packages per milestone. Fill EVERY field.
+                Assign a DISTINCT modern hex color to each phase (choose from: #3B82F6, #10B981, #8B5CF6, #F59E0B, #EC4899, #06B6D4, #F97316, #6366F1).
                 Weeks are 1-based within the project duration. Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "phases": [ { "phaseName": "...", "description": "...", "weekStart": 1, "weekEnd": 3, "color": "#3B82F6",
                     "milestones": [ { "milestoneName": "...", "description": "...", "weekDue": 3,
@@ -608,6 +613,7 @@ public class AiProjectPipelineJobService {
                 """, projectContext(c) + "\nระยะเวลา: " + c.weeks + " สัปดาห์", false);
 
         int total = 0;
+        int phaseIdx = 0;
         for (JsonNode ph : arr(root, "phases")) {
             PhaseRequest pq = new PhaseRequest();
             pq.setProjectId(c.projectId);
@@ -615,7 +621,12 @@ public class AiProjectPipelineJobService {
             pq.setDescription(txt(ph, "description"));
             pq.setStartDate(weekStart(c, ph.path("weekStart").asInt(1)));
             pq.setEndDate(weekEnd(c, ph.path("weekEnd").asInt(c.weeks)));
-            pq.setColor(firstNonBlank(txt(ph, "color"), "#3B82F6"));
+            String phaseColor = txt(ph, "color");
+            if (phaseColor == null || phaseColor.isBlank() || (phaseIdx > 0 && "#3B82F6".equalsIgnoreCase(phaseColor))) {
+                phaseColor = PALETTE.get(phaseIdx % PALETTE.size());
+            }
+            pq.setColor(phaseColor);
+            phaseIdx++;
             pq.setOwner(randomName(c));
             PhaseResponse phase = phaseService.createPhase(pq);
             c.phases.add(new Ref(phase.getId(), pq.getPhaseName()));
@@ -629,7 +640,7 @@ public class AiProjectPipelineJobService {
                 mq.setMilestoneName(cut(txt(ms, "milestoneName"), 255));
                 mq.setDescription(txt(ms, "description"));
                 mq.setDueDate(weekEnd(c, ms.path("weekDue").asInt(pq.getEndDate() != null ? c.weeks : 1)));
-                mq.setColor(pq.getColor());
+                mq.setColor(firstNonBlank(txt(ms, "color"), pq.getColor()));
                 MilestoneResponse milestone = milestoneService.createMilestone(mq);
                 c.milestones.add(new Ref(milestone.getId(), mq.getMilestoneName()));
                 step.rec("Milestone", mq.getMilestoneName(), "Phase", pq.getPhaseName(), "กำหนดส่ง", "" + mq.getDueDate(),
@@ -643,7 +654,7 @@ public class AiProjectPipelineJobService {
                     wq.setDescription(txt(wp, "description"));
                     wq.setStartDate(weekStart(c, wp.path("weekStart").asInt(1)));
                     wq.setEndDate(weekEnd(c, wp.path("weekEnd").asInt(2)));
-                    wq.setColor(pq.getColor());
+                    wq.setColor(firstNonBlank(txt(wp, "color"), mq.getColor()));
                     WorkPackageResponse saved = workPackageService.createWorkPackage(wq);
                     c.workPackages.add(new Ref(saved.getId(), wq.getPackageName()));
                     step.rec("Work Package", wq.getPackageName(), "Milestone", mq.getMilestoneName(),
@@ -740,9 +751,10 @@ public class AiProjectPipelineJobService {
         JsonNode root = ask(c, """
                 You are a Delivery Manager. Break the work into implementation tasks (max 12), each linked to one work package and, if relevant, one specification by number.
                 Fill EVERY field. priority is one of: Critical | High | Medium | Low. Weeks are 1-based within the project duration.
+                Assign a distinct modern hex color to each task (choose from: #3B82F6, #10B981, #8B5CF6, #F59E0B, #EC4899, #06B6D4, #F97316, #6366F1, #14B8A6, #EF4444).
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "tasks": [ { "workPackageRef": 1, "specificationRef": 1, "taskName": "...", "description": "...", "estimateManday": 3,
-                    "weekStart": 1, "durationDays": 5, "priority": "High" } ] }
+                    "weekStart": 1, "durationDays": 5, "priority": "High", "color": "#10B981" } ] }
                 """, projectContext(c) + "\n\nWork Packages:\n" + numbered(c.workPackages) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         int idx = 1;
@@ -759,7 +771,13 @@ public class AiProjectPipelineJobService {
                 tq.setAssigneeIds(List.of(assignee.userId()));
                 tq.setAssignedTo(assignee.userId());
             }
-            tq.setColor(c.wpColors.get(wp.id()));
+            String taskColor = txt(n, "color");
+            if (taskColor == null || taskColor.isBlank()) {
+                taskColor = PALETTE.get((idx - 1) % PALETTE.size());
+            } else if (idx > 1 && "#3B82F6".equalsIgnoreCase(taskColor)) {
+                taskColor = PALETTE.get((idx - 1) % PALETTE.size());
+            }
+            tq.setColor(taskColor);
             tq.setTaskCode(String.format("TSK-%03d", idx++));
             tq.setTaskName(cut(txt(n, "taskName"), 255));
             tq.setDescription(txt(n, "description"));

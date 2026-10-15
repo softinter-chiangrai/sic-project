@@ -10,13 +10,25 @@
       </h1>
       <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT01_SUBTITLE' | translate }}</p>
     </div>
-    <button
-      (click)="openCreatePhase()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
-    >
-      <i class="bi bi-plus-lg"></i>
-      {{ 'PMDT01_ADD_PHASE' | translate }}
-    </button>
+    <div class="flex items-center gap-2.5">
+      <button
+        type="button"
+        (click)="showAiBatchModal.set(true)"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
+        [title]="'AI_BATCH_CREATE_BUTTON' | translate"
+      >
+        <i class="bi bi-stars text-base"></i>
+        <span>{{ 'AI_BATCH_CREATE_BUTTON' | translate }}</span>
+      </button>
+
+      <button
+        (click)="openCreatePhase()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
+      >
+        <i class="bi bi-plus-lg"></i>
+        {{ 'PMDT01_ADD_PHASE' | translate }}
+      </button>
+    </div>
   </div>
 
   <!-- Loading -->
@@ -96,6 +108,16 @@
     }
   }
 
-
+  <!-- ===== AI BATCH GENERATE MODAL ===== -->
+  <sic-ai-batch-modal
+    moduleType="PHASE"
+    [moduleLabel]="'ระยะโครงการ (Phase)'"
+    [fields]="aiBatchFields"
+    [visible]="showAiBatchModal()"
+    [projectId]="resolveProjectId()"
+    [saving]="aiBatchSaving()"
+    (closed)="showAiBatchModal.set(false)"
+    (saved)="onAiBatchSaved($event)"
+  ></sic-ai-batch-modal>
 
 </div>

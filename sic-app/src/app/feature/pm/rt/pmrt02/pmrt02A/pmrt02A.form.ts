@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 import { Pmrt02AModel } from './pmrt02A.model';
 import { ToForm } from '../../../../../core/types/form.type';
+import { endNotBeforeStart } from '../../../../../core/validator/date-range.validator';
 
 export class Pmrt02AForm {
   static createForm(fb: FormBuilder, model?: Pmrt02AModel | null): FormGroup<ToForm<Pmrt02AModel>> {
@@ -31,6 +32,6 @@ export class Pmrt02AForm {
       createdAt: fb.control(model?.createdAt ?? null),
       state: fb.control(null),
       rowVersion: fb.control(model?.rowVersion ?? null),
-    });
+    }, { validators: endNotBeforeStart('startDate', 'plannedEndDate') });
   }
 }

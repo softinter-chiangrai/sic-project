@@ -102,6 +102,16 @@ public class PhaseController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @PostMapping("/phases")
+    public ResponseEntity<PhaseResponse> createPhaseDirect(@RequestBody PhaseRequest request) {
+        if (request.getProjectId() == null) {
+            throw new IllegalArgumentException("projectId is required to create a phase");
+        }
+        log.info("Creating new phase direct for project ID: {}", request.getProjectId());
+        PhaseResponse created = phaseService.createPhase(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
     @PutMapping("/phases/{phaseId}")
     public ResponseEntity<PhaseResponse> updatePhase(
             @PathVariable UUID phaseId,

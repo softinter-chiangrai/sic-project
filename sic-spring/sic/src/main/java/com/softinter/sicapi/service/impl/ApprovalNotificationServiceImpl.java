@@ -133,6 +133,30 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
         sendNotification(recipientUserId, "system", "ระบบ", title, message, type, linkUrl, businessId);
     }
 
+    @Override
+    @Transactional
+    public void broadcastSecurityEvent(UUID businessId, String type, String title, String message, String recipientUserId) {
+        log.info("📢 Broadcasting security event: type={}, businessId={}, recipient={}", type, businessId, recipientUserId);
+
+        // 1. ส่ง Notification ตรงถึง User เฉพาะตัวถ้ามีการระบุ
+        if (recipientUserId != null && !recipientUserId.isBlank()) {
+            notifyUser(businessId, recipientUserId, title, message, type, null);
+        }
+
+        // 2. Broadcast ไปยัง STOMP topic กลาง เพื่อให้ browser client ทุกเครื่องที่เชื่อมต่อ sync ทันที
+        try {
+            java.util.Map<String, Object> payload = new java.util.HashMap<>();
+            payload.put("type", type);
+            payload.put("businessId", businessId != null ? businessId.toString() : null);
+            payload.put("recipientUserId", recipientUserId);
+            payload.put("title", title);
+            payload.put("message", message);
+            messagingTemplate.convertAndSend("/topic/security-events", (Object) payload);
+        } catch (Exception e) {
+            log.warn("Failed to broadcast security event via websocket: {}", e.getMessage());
+        }
+    }
+
     private void sendNotification(String recipientUserId, String senderId, String senderName, String title, String message, String type, String linkUrl, UUID businessId) {
         if (recipientUserId == null || recipientUserId.isBlank()) return;
 

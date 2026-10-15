@@ -21,6 +21,7 @@ import com.softinter.sicapi.service.AuditLogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.util.DateRangeValidator;
 
 @Service
 @RequiredArgsConstructor
@@ -68,6 +69,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         }
         wp.setBusinessId(bId);
 
+        DateRangeValidator.check(wp.getStartDate(), wp.getEndDate());
         wp = wpRepository.save(wp);
 
         try {
@@ -96,6 +98,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
             wp.setStatus(request.getStatus());
         }
 
+        DateRangeValidator.check(wp.getStartDate(), wp.getEndDate());
         wp = wpRepository.save(wp);
 
         try {

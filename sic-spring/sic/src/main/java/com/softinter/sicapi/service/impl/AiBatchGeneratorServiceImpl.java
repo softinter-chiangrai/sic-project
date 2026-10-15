@@ -57,6 +57,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
             String raw = aiProviderService.generateRawResponse(userPrompt, systemPrompt, request);
             List<Map<String, Object>> items = parseItems(raw);
             if ("TEST_CASE".equals(def.getModuleType())) fillTestCaseDefaults(items);
+            if ("PHASE".equals(def.getModuleType())) fillPhaseDefaults(items);
             return AiBatchGenerateResponse.builder()
                     .moduleType(def.getModuleType())
                     .items(items)
@@ -80,6 +81,21 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
             if (tester != null) item.putIfAbsent("tester", tester.name());
             item.putIfAbsent("testDate", testDate);
             item.putIfAbsent("testType", "SIT");
+        }
+    }
+
+    /** Phase ที่ AI สร้างเป็นชุด: เติมวันที่ต่อเนื่องกันและสลับสี Palette */
+    private void fillPhaseDefaults(List<Map<String, Object>> items) {
+        LocalDate current = LocalDate.now();
+        int idx = 0;
+        String[] colors = {"#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899", "#06B6D4", "#F97316", "#6366F1"};
+        for (Map<String, Object> item : items) {
+            item.putIfAbsent("startDate", current.toString());
+            LocalDate end = current.plusWeeks(3);
+            item.putIfAbsent("endDate", end.toString());
+            item.putIfAbsent("color", colors[idx % colors.length]);
+            current = end.plusDays(1);
+            idx++;
         }
     }
 

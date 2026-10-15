@@ -1,4 +1,5 @@
 {
+  "VALIDATION_END_BEFORE_START": "End date/time must not be earlier than the start date/time",
   "AI_OVERWRITE_LABEL": "Edit & refine existing content",
   "AI_OVERWRITE_HINT": "AI will use existing form content as the baseline to edit, refine, or append rather than generating from scratch",
   "AI_BATCH_APPEND_HINT": "Saving only adds new data - existing data is never overwritten",
@@ -4033,7 +4034,7 @@
   "PMRT04B_LOAD_APPROVAL_FLOW_FAILED_MSG": "Unable to load Approval Flow for CONTRACT",
   "PMRT04B_LOAD_FAILED_TITLE": "Failed to load data",
   "PMRT04B_NEW_CONTRACT_INFO_TITLE": "New Contract Information",
-  "PMRT04B_NEW_CONTRACT_NO_HINT": "* The system auto-generates a default value (-R1, -R2...). You can edit the contract number to match the actual document",
+  "PMRT04B_NEW_CONTRACT_NO_HINT": "* The system will automatically compute and assign the official contract number in the database upon saving",
   "PMRT04B_NEW_CONTRACT_NO_LABEL": "Contract No. (New)",
   "PMRT04B_NEW_CONTRACT_NO_PLACEHOLDER": "Enter new contract number, e.g. CTR-001-R1",
   "PMRT04B_NEW_CONTRACT_NO_REQUIRED": "Please enter the new contract number",

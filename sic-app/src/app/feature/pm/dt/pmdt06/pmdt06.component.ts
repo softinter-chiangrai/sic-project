@@ -26,6 +26,7 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt06',
@@ -293,22 +294,14 @@ export class Pmdt06Component implements OnInit {
 
   exportPdf(id: string) {
     if (!id) return;
+    const pdfWindow = openPdfWindow();
     this.isLoading.set(true);
     this.crService.exportPdf(id)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, id),
         error: (err) => {
+            pdfWindow.close();
           console.error('Print change request error:', err);
           this.dialog.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT06_PRINT_FAIL_MSG'));
         },

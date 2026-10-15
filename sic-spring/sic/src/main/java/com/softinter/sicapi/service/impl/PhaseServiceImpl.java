@@ -38,6 +38,7 @@ import com.softinter.sicapi.util.LocalizationHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.softinter.sicapi.exception.ResourceNotFoundException;
+import com.softinter.sicapi.util.DateRangeValidator;
 
 @Service
 @RequiredArgsConstructor
@@ -114,6 +115,7 @@ public class PhaseServiceImpl implements PhaseService {
             phase.setDependency(dep);
         }
 
+        DateRangeValidator.check(phase.getStartDate(), phase.getEndDate());
         phase = phaseRepository.save(phase);
 
         try {
@@ -149,6 +151,7 @@ public class PhaseServiceImpl implements PhaseService {
             phase.setDependency(dep);
         }
 
+        DateRangeValidator.check(phase.getStartDate(), phase.getEndDate());
         phase = phaseRepository.save(phase);
         updatePhaseProgress(phase);
 

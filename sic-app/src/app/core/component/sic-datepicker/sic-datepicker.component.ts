@@ -25,6 +25,7 @@ import { DateTimeUtil, type CalendarEra } from '../../utils/datetime.util';
 import { SicValidator } from '../../validator/sic.validator';
 import type { Subscription } from 'rxjs';
 import { TranslateService } from '@ngx-translate/core';
+import { END_BEFORE_START } from '../../validator/date-range.validator';
 
 @Component({
   selector: 'sic-datepicker',
@@ -141,7 +142,7 @@ export class SicDatepickerComponent implements ControlValueAccessor, AfterViewIn
   }
 
   get errorMessage(): string | null {
-    return this.validator.getErrorMessage(this.control, this.errorMessages);
+    return this.validator.getErrorMessage(this.control, { [END_BEFORE_START]: this.translate.instant('VALIDATION_END_BEFORE_START'), ...this.errorMessages });
   }
 
   get isRequired(): boolean {

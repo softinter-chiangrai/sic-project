@@ -165,8 +165,8 @@ export class NotificationService {
     this.unreadCount$.next(this.unreadCount$.getValue() + 1);
     this.newNotificationReceived$.next(notification);
 
-    // Show toast with clickable linkUrl and title
-    if (notification.message || notification.title) {
+    // Show toast with clickable linkUrl and title (ROLE_CHANGED uses full modal dialog instead)
+    if (notification.type !== 'ROLE_CHANGED' && (notification.message || notification.title)) {
       this.toastService.show(notification.message || '', {
         title: notification.title,
         type: 'info',

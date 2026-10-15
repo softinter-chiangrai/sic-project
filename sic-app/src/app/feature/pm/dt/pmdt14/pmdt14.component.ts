@@ -21,6 +21,7 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt14',
@@ -243,24 +244,17 @@ export class Pmdt14Component implements OnInit {
       return;
     }
 
+    const pdfWindow = openPdfWindow();
+
     this.isLoading.set(true);
     const url = `${environment.apiBaseUrl}/api/pm/delivery/${item.id}/export-pdf`;
     const lang = this.languageService.getCurrentLanguage();
     this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, item.id!),
         error: (err) => {
+            pdfWindow.close();
           console.error('Print delivery error:', err);
           this.dialog.error(this.translate.instant('PMDT14_PRINT_ERROR_TITLE'), this.translate.instant('PMDT14_JASPER_ERROR'));
         },

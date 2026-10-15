@@ -19,6 +19,7 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
     selector: 'app-pmdt07',
@@ -246,24 +247,17 @@ export class Pmdt07Component implements OnInit {
             return;
         }
 
+        const pdfWindow = openPdfWindow();
+
         this.isLoading.set(true);
         const url = `${environment.apiBaseUrl}/api/pm/specifications/${spec.id}/export-pdf`;
         const lang = this.languageService.getCurrentLanguage();
         this.http.get(url, { params: { lang }, responseType: 'blob' })
             .pipe(finalize(() => this.isLoading.set(false)))
             .subscribe({
-                next: (blob) => {
-                    const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-                    const pdfUrl = URL.createObjectURL(pdfBlob);
-                    const printWindow = window.open(pdfUrl, '_blank');
-                    if (!printWindow) {
-                        const a = document.createElement('a');
-                        a.href = pdfUrl;
-                        a.target = '_blank';
-                        a.click();
-                    }
-                },
+                next: (blob) => pdfWindow.show(blob, spec.id!),
                 error: (err) => {
+                    pdfWindow.close();
                     console.error('Print specification error:', err);
                     this.dialog.error(this.translate.instant('PMDT07_PRINT_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
                 },

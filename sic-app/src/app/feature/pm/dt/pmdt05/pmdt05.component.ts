@@ -34,6 +34,7 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { TraceLinkService, TraceRelationshipType } from '../../../../core/services/trace-link.service';
 import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
 import { PmCustomerProject } from '../../rt/pmrt02/pmrt02.model';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt05',
@@ -728,6 +729,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   async exportPdf(): Promise<void> {
     const id = this.currentTabId;
     if (!id) return;
+    const pdfWindow = openPdfWindow();
     const tab = this.tabs().find((t) => t.id === id);
     const xml = this.lastSavedXml || tab?.graphData?.xml || '';
     const pagesInfo = this.parsePagesFromXml(xml);
@@ -760,17 +762,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     this.diagramService.exportPdf(id, singleImage, capturedPages.length > 1 ? capturedPages : undefined).subscribe({
-      next: (blob) => {
-        const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-        if (!window.open(url, '_blank')) {
-          const a = document.createElement('a');
-          a.href = url;
-          a.target = '_blank';
-          a.click();
-        }
+      next: (blob) => pdfWindow.show(blob, tab?.name || id),
+      error: () => {
+        pdfWindow.close();
+        this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR'));
       },
-      error: () =>
-        this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR')),
     });
   }
 
@@ -875,6 +871,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     const allTabs = this.tabs();
     if (allTabs.length === 0) return;
 
+    const pdfWindow = openPdfWindow();
     const originalTabId = this.currentTabId;
 
     // หาแท็บอื่นที่ยังไม่มีรูปภาพ PNG ใน DB (ไม่รวมแท็บที่เปิดอยู่ ซึ่ง Draw.io จะ capture สดได้เลย)
@@ -946,22 +943,16 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       }
 
       this.diagramService.exportAllPdf(projId, currentTabId, firstPng).subscribe({
-        next: (blob) => {
-          const url = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
-          if (!window.open(url, '_blank')) {
-            const a = document.createElement('a');
-            a.href = url;
-            a.target = '_blank';
-            a.click();
-          }
-        },
-        error: () =>
+        next: (blob) => pdfWindow.show(blob, `diagrams-${projId}`),
+        error: () => {
+          pdfWindow.close();
           this.dialogService.error(
             this.translate.instant('PMDT06_PRINT_FAIL_TITLE'),
             this.translate.instant('PMDT05_GENERIC_ERROR')
-          ),
+          );
+        },
       });
-    });
+    }).catch(() => pdfWindow.close());
   }
 
 

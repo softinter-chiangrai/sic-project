@@ -14,4 +14,7 @@ public interface ApprovalNotificationService {
 
     /** แจ้งเตือนผู้ใช้โดยตรง (ระบบเป็นผู้ส่ง) ใช้กับงานตั้งเวลา เช่น เตือนสัญญาใกล้หมดอายุ */
     void notifyUser(UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl);
+
+    /** แจ้งเตือนเหตุการณ์ความปลอดภัย (Role เปลี่ยน หรือ Permission เปลี่ยน) ทั้งตรงตัวผู้ใช้และผ่าน WebSocket broadcast */
+    void broadcastSecurityEvent(UUID businessId, String type, String title, String message, String recipientUserId);
 }

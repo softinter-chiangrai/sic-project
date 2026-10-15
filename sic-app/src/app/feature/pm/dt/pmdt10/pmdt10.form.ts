@@ -1,6 +1,7 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { TaskModel } from './pmdt10.model';
 import { ToForm } from '../../../../core/types/form.type';
+import { endNotBeforeStart } from '../../../../core/validator/date-range.validator';
 
 export class Pmdt10Form {
   static createForm(fb: FormBuilder): FormGroup<ToForm<TaskModel>> {
@@ -26,6 +27,6 @@ export class Pmdt10Form {
       attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
-    });
+    }, { validators: endNotBeforeStart('startDate', 'endDate', 'startTime', 'endTime') });
   }
 }

@@ -30,6 +30,7 @@ import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmrt04',
@@ -578,29 +579,16 @@ export class Pmrt04Component implements OnInit {
       return;
     }
 
-    // เปิดแท็บใหม่ทันทีตอนคลิกเพื่อป้องกัน Popup Blocker
-    const printWindow = window.open('about:blank', '_blank');
+    const pdfWindow = openPdfWindow();
 
     this.isLoading.set(true);
     this.contractService
       .exportContractPdf(contract.id)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          if (printWindow) {
-            printWindow.location.href = pdfUrl;
-          } else {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.download = `contract-${contract.contractNo || contract.id}.pdf`;
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, `contract-${contract.contractNo || contract.id}`),
         error: (error) => {
-          printWindow?.close();
+          pdfWindow.close();
           console.error('Export contract PDF error:', error);
           this.dialog.error(
             this.translate.instant('PMRT04_EXPORT_PDF_ERROR_TITLE'),

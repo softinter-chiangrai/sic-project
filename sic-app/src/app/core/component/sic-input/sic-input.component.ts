@@ -14,6 +14,8 @@ import {
 } from '@angular/forms';
 import { NgxMaskDirective } from 'ngx-mask';
 import { SicValidator } from '../../validator/sic.validator';
+import { TranslateService } from '@ngx-translate/core';
+import { END_BEFORE_START } from '../../validator/date-range.validator';
 
 @Component({
   selector: 'sic-input',
@@ -62,6 +64,7 @@ export class SicInputComponent implements ControlValueAccessor {
   constructor(
     private readonly injector: Injector,
     private readonly validator: SicValidator,
+    private readonly translate: TranslateService,
   ) {}
 
   ngOnInit(): void {
@@ -81,7 +84,7 @@ export class SicInputComponent implements ControlValueAccessor {
   }
 
   get errorMessage(): string | null {
-    return this.validator.getErrorMessage(this.control, this.errorMessages);
+    return this.validator.getErrorMessage(this.control, { [END_BEFORE_START]: this.translate.instant('VALIDATION_END_BEFORE_START'), ...this.errorMessages });
   }
 
   get isRequired(): boolean {

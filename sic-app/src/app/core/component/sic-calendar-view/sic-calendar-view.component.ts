@@ -667,7 +667,7 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
           color: cItem.color || '#8b5cf6',
           icon: cItem.icon || '📌',
           isCustom: true,
-          rawObject: cItem,
+          rawObject: { ...cItem, type: 'holiday' },
         });
       }
     });
@@ -863,20 +863,25 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
         });
         break;
       case 'holiday':
+      case 'event':
         if (item.isCustom && item.rawObject) {
-          const isLeave = Boolean(item.rawObject.leaveType || item.id.startsWith('leave_') || item.id.startsWith('leave-'));
+          const isLeave = item.rawObject.type === 'leave'
+            || item.id?.startsWith('leave_')
+            || item.id?.startsWith('leave-')
+            || item.rawObject.id?.startsWith('leave_')
+            || item.rawObject.id?.startsWith('leave-');
           this.customItemForm = {
-            id: item.rawObject.id || '',
+            id: item.rawObject.id || item.id || '',
             type: isLeave ? 'leave' : 'holiday',
             date: item.rawObject.startDate || item.rawObject.date || this.selectedCalendarDate(),
             endDate: item.rawObject.endDate || item.rawObject.date || this.selectedCalendarDate(),
-            title: item.rawObject.title || item.rawObject.userName || '',
+            title: isLeave ? '' : (item.rawObject.title || ''),
             description: item.rawObject.description || item.rawObject.remark || '',
             icon: item.rawObject.icon || (isLeave ? '🏖️' : '📌'),
             color: item.rawObject.color || (isLeave ? '#ec4899' : '#8b5cf6'),
-            leaveType: item.rawObject.leaveType || 'vacation',
-            userId: item.rawObject.userId || (isLeave ? this.currentUserId : ''),
-            userName: item.rawObject.userName || item.rawObject.title || (isLeave ? this.currentUserName : ''),
+            leaveType: isLeave ? (item.rawObject.leaveType || 'vacation') : 'vacation',
+            userId: isLeave ? (item.rawObject.userId || this.currentUserId) : '',
+            userName: isLeave ? (item.rawObject.userName || this.currentUserName) : '',
           };
           this.showCustomItemModal.set(true);
         }
@@ -979,13 +984,30 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
     const currentItems = this.rawCustomItems();
     if (this.customItemForm.id) {
       const updated = currentItems.map((item) =>
-        item.id === this.customItemForm.id ? { ...this.customItemForm } : item
+        item.id === this.customItemForm.id
+          ? {
+              id: this.customItemForm.id,
+              type: 'holiday',
+              date: this.customItemForm.date,
+              endDate: this.customItemForm.endDate || this.customItemForm.date,
+              title: this.customItemForm.title,
+              description: this.customItemForm.description,
+              icon: this.customItemForm.icon || '📌',
+              color: this.customItemForm.color || '#8b5cf6',
+            }
+          : item
       );
       this.saveCustomItems(updated);
     } else {
       const newItem = {
-        ...this.customItemForm,
         id: `custom_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+        type: 'holiday',
+        date: this.customItemForm.date,
+        endDate: this.customItemForm.endDate || this.customItemForm.date,
+        title: this.customItemForm.title,
+        description: this.customItemForm.description,
+        icon: this.customItemForm.icon || '📌',
+        color: this.customItemForm.color || '#8b5cf6',
       };
       this.saveCustomItems([...currentItems, newItem]);
     }

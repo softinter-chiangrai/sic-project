@@ -30,6 +30,7 @@ import { environment } from '../../../../../environments/environment';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt12',
@@ -811,23 +812,15 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   exportUatReport(testType: string = 'UAT') {
     const projectId = this.getResolvedProjectId();
 
+    const pdfWindow = openPdfWindow();
+
     this.isExportingUat.set(true);
     this.service.exportUatReport(projectId || undefined, testType)
       .pipe(finalize(() => this.isExportingUat.set(false)))
       .subscribe({
-        next: (blob: Blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            // Fallback กรณีถูกบล็อก Popup
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, `uat-${testType}`),
         error: (err) => {
+            pdfWindow.close();
           console.error('Error exporting UAT report:', err);
           this.dialog.error(this.translate.instant('PMDT12_PRINT_FAILED_TITLE'), this.translate.instant('PMDT12_PRINT_FAILED_MSG'));
         }
@@ -861,23 +854,14 @@ export class Pmdt12Component implements OnInit, OnDestroy {
     const projectId = scenario.projectId || this.getResolvedProjectId();
 
     const testType = scenario.testType || 'UAT';
+    const pdfWindow = openPdfWindow();
     this.isExportingUat.set(true);
     this.service.exportUatReport(projectId || undefined, testType, scenario.id)
       .pipe(finalize(() => this.isExportingUat.set(false)))
       .subscribe({
-        next: (blob: Blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            // Fallback กรณีถูกบล็อก Popup
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, `uat-${testType}`),
         error: (err) => {
+            pdfWindow.close();
           console.error('Error exporting Scenario report:', err);
           this.dialog.error(this.translate.instant('PMDT12_PRINT_FAILED_TITLE'), this.translate.instant('PMDT12_PRINT_FAILED_MSG'));
         }

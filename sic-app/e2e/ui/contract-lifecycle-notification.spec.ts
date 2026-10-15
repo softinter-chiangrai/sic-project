@@ -166,4 +166,46 @@ test.describe('Contract Lifecycle & Notification System (UI)', () => {
     }
   });
 
+  test('4. Renewal Form UI: ช่องเลขที่สัญญาเป็น Read-only และแสดง [สร้างอัตโนมัติ]', async () => {
+    test.setTimeout(180_000);
+
+    const contractType = firstOf((await w.api.get('/api/pm/contracts/lov-contract-type')).body);
+    const ctNo = mock('UI_RO_REN');
+
+    // สร้างสัญญาหลัก
+    const id = await w.make(
+      '/api/pm/contracts/save',
+      {
+        contractNo: ctNo,
+        contractType,
+        signStatus: 'Signed',
+        customerId: await w.customer(),
+        projectId: await w.project(),
+        startDate: inDays(-365),
+        endDate: inDays(0),
+        contractValue: 50000,
+        autoRenew: false,
+      },
+      '/api/pm/contracts/{id}',
+    );
+
+    // เปิดหน้าฟอร์มต่อสัญญา
+    await ui.visit(`/feature/pm/contract/renew/${id}`);
+
+    // รอหน้าโหลดข้อมูลเสร็จ
+    await expect(ui.page.locator('h1')).toContainText(/ต่ออายุสัญญา|Renew/i, { timeout: 15_000 });
+
+    // ตรวจสอบช่องเลขที่สัญญาใหม่ (newContractNo)
+    const newContractInput = ui.page.locator('input[formcontrolname="newContractNo"], sic-input[formcontrolname="newContractNo"] input').first();
+    await expect(newContractInput).toBeVisible({ timeout: 10_000 });
+
+    // ตรวจสอบว่าเป็น Read-only
+    await expect(newContractInput).toHaveAttribute('readonly', '', { timeout: 5_000 });
+
+    // ตรวจสอบว่าแสดงค่าเป็น [สร้างอัตโนมัติ]
+    const val = await newContractInput.inputValue();
+    expect(val).toBe(`${ctNo}-[สร้างอัตโนมัติ]`);
+  });
+
 });
+

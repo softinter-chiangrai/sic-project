@@ -23,7 +23,10 @@ export class Pmdt01Service {
   }
 
   createPhase(phase: Partial<PhaseModel>): Observable<PhaseModel> {
-    return this.http.post<PhaseModel>(`${this.baseUrl}/projects/${phase.projectId}/phases`, phase);
+    if (phase.projectId) {
+      return this.http.post<PhaseModel>(`${this.baseUrl}/projects/${phase.projectId}/phases`, phase);
+    }
+    return this.http.post<PhaseModel>(`${this.baseUrl}/phases`, phase);
   }
 
   updatePhase(id: string, phase: Partial<PhaseModel>): Observable<PhaseModel> {

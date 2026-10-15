@@ -1,5 +1,6 @@
 // src/app/feature/pm/dt/pmdt12/pmdt12C/pmdt12C.form.ts
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { endNotBeforeStart } from '../../../../../core/validator/date-range.validator';
 
 export function createBugForm(fb: FormBuilder): FormGroup {
   return fb.group({
@@ -20,5 +21,5 @@ export function createBugForm(fb: FormBuilder): FormGroup {
     projectId: [null],
     workPackageId: [null],
     specificationId: [null],
-  });
+  }, { validators: endNotBeforeStart('startDate', 'endDate') });
 }

@@ -20,6 +20,7 @@ import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MaContractsComponent } from './ma-contracts/ma-contracts.component';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt17',
@@ -448,24 +449,17 @@ export class Pmdt17Component implements OnInit {
       return;
     }
 
+    const pdfWindow = openPdfWindow();
+
     this.isLoading.set(true);
     const url = `${apiBaseUrl}/api/pm/ma-tickets/${item.id}/export-pdf`;
     const lang = this.languageService.getCurrentLanguage();
     this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, item.id),
         error: (err) => {
+            pdfWindow.close();
           console.error('Print ticket error:', err);
           this.dialog.error(
             this.translate.instant('PMDT17_PRINT_DOC_FAILED_TITLE'),

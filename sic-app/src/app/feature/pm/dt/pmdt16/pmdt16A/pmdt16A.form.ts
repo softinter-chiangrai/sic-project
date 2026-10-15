@@ -1,6 +1,7 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ToForm } from '../../../../../core/types/form.type';
 import { PmInvoiceModel } from './pmdt16A.model';
+import { endNotBeforeStart } from '../../../../../core/validator/date-range.validator';
 
 export class Pmdt16AForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<PmInvoiceModel>> {
@@ -27,6 +28,6 @@ export class Pmdt16AForm {
       isActive: fb.control(true),
       state: fb.control(null),
       rowVersion: fb.control(null),
-    });
+    }, { validators: endNotBeforeStart('issueDate', 'dueDate') });
   }
 }

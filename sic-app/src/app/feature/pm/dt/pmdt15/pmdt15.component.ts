@@ -17,6 +17,7 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmdt15',
@@ -230,25 +231,17 @@ export class Pmdt15Component implements OnInit {
       return;
     }
 
+    const pdfWindow = openPdfWindow();
+
     this.isLoading.set(true);
     const url = `${apiBaseUrl}/api/pm/manual/${item.id}/export-pdf`;
     const lang = this.languageService.getCurrentLanguage();
     this.http.get(url, { params: { lang }, responseType: 'blob' })
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.download = `user-manual-${item.manualCode || item.id}.pdf`;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, `user-manual-${item.manualCode || item.id}`),
         error: (err) => {
+            pdfWindow.close();
           console.error('Print user manual error:', err);
           this.dialog.error(this.translate.instant('PMDT15_PRINT_ERROR_TITLE'), this.translate.instant('PMDT15_JASPER_ERROR_PREFIX') + (err?.error?.message || err?.message || ''));
         },

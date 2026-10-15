@@ -41,6 +41,10 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
+    private static final String[] TASK_COLORS = {
+            "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899",
+            "#06B6D4", "#F97316", "#6366F1", "#14B8A6", "#EF4444"
+    };
 
     @Override
     public AiProjectPipelinePreviewResponse generatePreview(AiProjectPipelineRequest request, UUID businessId) {
@@ -80,7 +84,8 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
                       "description": "Implementation details",
                       "estimateManday": 3,
                       "weekOffset": 1,
-                      "durationDays": 5
+                      "durationDays": 5,
+                      "color": "#10B981"
                     }
                   ],
                   "phases": [
@@ -262,7 +267,7 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
             for (Map<String, Object> taskData : plan.getPreviewTasks()) {
                 PmTask task = new PmTask();
                 task.setBusinessId(businessId);
-                task.setTaskCode(String.format("TSK-%03d", taskIdx++));
+                task.setTaskCode(String.format("TSK-%03d", taskIdx));
                 task.setTaskName(String.valueOf(taskData.getOrDefault("taskName", "Task " + taskIdx)));
                 task.setDescription(String.valueOf(taskData.getOrDefault("description", "")));
                 int offset = getInt(taskData.get("weekOffset"), 1);
@@ -270,10 +275,16 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
                 task.setStartDate(startDate.plusWeeks(offset - 1));
                 task.setEndDate(task.getStartDate().plusDays(duration));
                 task.setEstimateManday(getInt(taskData.get("estimateManday"), 3));
+                String taskColor = String.valueOf(taskData.getOrDefault("color", ""));
+                if (taskColor.isBlank() || "null".equalsIgnoreCase(taskColor)) {
+                    taskColor = TASK_COLORS[(taskIdx - 1) % TASK_COLORS.length];
+                }
+                task.setColor(taskColor);
                 if (!savedSpecs.isEmpty()) {
                     task.setSpecification(savedSpecs.get((taskIdx - 1) % savedSpecs.size()));
                 }
                 taskRepository.save(task);
+                taskIdx++;
             }
             counts.put("tasks", plan.getPreviewTasks().size());
         }
@@ -389,10 +400,10 @@ public class AiProjectPipelineServiceImpl implements AiProjectPipelineService {
                         Map.of("title", "โมดูล Executive Dashboard & Export", "specificationType", "SYSTEM_DESIGN", "priority", "MEDIUM")
                 ))
                 .previewTasks(List.of(
-                        Map.of("taskName", "ออกแบบ Database Schema & Entities", "estimateManday", 3, "weekOffset", 1, "durationDays", 5),
-                        Map.of("taskName", "พัฒนา REST APIs & Business Logic", "estimateManday", 8, "weekOffset", 2, "durationDays", 10),
-                        Map.of("taskName", "พัฒนา User Interface & Dashboard", "estimateManday", 6, "weekOffset", 4, "durationDays", 10),
-                        Map.of("taskName", "ทดสอบระบบและทำ UAT", "estimateManday", 4, "weekOffset", 8, "durationDays", 5)
+                        Map.of("taskName", "ออกแบบ Database Schema & Entities", "estimateManday", 3, "weekOffset", 1, "durationDays", 5, "color", "#3B82F6"),
+                        Map.of("taskName", "พัฒนา REST APIs & Business Logic", "estimateManday", 8, "weekOffset", 2, "durationDays", 10, "color", "#10B981"),
+                        Map.of("taskName", "พัฒนา User Interface & Dashboard", "estimateManday", 6, "weekOffset", 4, "durationDays", 10, "color", "#8B5CF6"),
+                        Map.of("taskName", "ทดสอบระบบและทำ UAT", "estimateManday", 4, "weekOffset", 8, "durationDays", 5, "color", "#F59E0B")
                 ))
                 .previewPhases(List.of(
                         Map.of("phaseName", "Phase 1: Planning & Architecture", "weekStart", 1, "weekEnd", 3, "color", "#3B82F6"),

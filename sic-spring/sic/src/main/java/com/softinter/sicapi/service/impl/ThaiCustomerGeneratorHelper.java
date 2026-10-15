@@ -14,6 +14,7 @@ import com.softinter.sicapi.entity.db.DbCountry;
 import com.softinter.sicapi.entity.db.DbDistrict;
 import com.softinter.sicapi.entity.db.DbProvince;
 import com.softinter.sicapi.entity.db.DbSubDistrict;
+import com.softinter.sicapi.entity.db.DbTitle;
 import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.repository.db.DbCountryRepository;
 import com.softinter.sicapi.repository.db.DbDistrictRepository;

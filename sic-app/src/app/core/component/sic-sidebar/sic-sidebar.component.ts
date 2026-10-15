@@ -136,6 +136,18 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
     this.notificationSvc.notifications$.subscribe(n => this.notifications.set(n));
     this.notificationSvc.unreadCount$.subscribe(c => this.unreadNotificationCount.set(c));
 
+    this.notificationSvc.newNotificationReceived$.subscribe(async (n) => {
+      if (n.type === 'ROLE_CHANGED') {
+        await this.dialog.warn(
+          n.title || 'บทบาทของคุณถูกเปลี่ยนแปลง',
+          n.message || 'บทบาทของผู้ใช้งานมีการเปลี่ยนแปลง กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+        );
+        this.authService.logout();
+      } else if (n.type === 'PERMISSION_CHANGED') {
+        this.reloadMenuPermissions();
+      }
+    });
+
     this.routerSubscription = this.router.events
       .pipe(filter((event) => event instanceof NavigationEnd))
       .subscribe((event) => {
@@ -182,13 +194,19 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   loadInfomations(): void {
     this.service.getProfile().subscribe((profile) => (this.profile = profile));
     this.service.getBusiness().subscribe((business) => (this.business = business));
+    this.reloadMenuPermissions();
+  }
 
-    this.service.getMenu().subscribe((menu) => {
-      this.rawMenuItems = menu;
-      this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
-      this.autoExpand();
-      this.updateBreadcrumbs();
-      this.updateActionFlags();
+  reloadMenuPermissions(): void {
+    this.service.getMenu().subscribe({
+      next: (menu) => {
+        this.rawMenuItems = menu;
+        this.mainMenu.set([this.DASHBOARD_ITEM, ...menu.map((item) => this.mapMenuItem(item))]);
+        this.autoExpand();
+        this.updateBreadcrumbs();
+        this.updateActionFlags();
+      },
+      error: (err) => console.warn('[SicSidebar] Background menu refresh error:', err),
     });
   }
 

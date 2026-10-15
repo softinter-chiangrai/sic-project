@@ -24,6 +24,7 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 import { AiProjectPipelineService } from '../../../../core/services/ai-project-pipeline.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 
 @Component({
   selector: 'app-pmrt02',
@@ -326,6 +327,8 @@ export class Pmrt02Component implements OnInit {
       return;
     }
 
+    const pdfWindow = openPdfWindow();
+
     this.isLoading.set(true);
     // diagram ที่ AI สร้างมายังไม่มีรูป: render ให้ก่อน เพื่อให้รายงานมีรูปโดยไม่ต้องเปิดหน้า diagram
     from(this.diagramService.ensureProjectImages(project.id).catch(() => 0))
@@ -334,18 +337,9 @@ export class Pmrt02Component implements OnInit {
         finalize(() => this.isLoading.set(false)),
       )
       .subscribe({
-        next: (blob) => {
-          const pdfBlob = new Blob([blob], { type: 'application/pdf' });
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
-            const a = document.createElement('a');
-            a.href = pdfUrl;
-            a.target = '_blank';
-            a.click();
-          }
-        },
+        next: (blob) => pdfWindow.show(blob, project.projectCode || project.id!),
         error: (err) => {
+          pdfWindow.close();
           console.error('Print project error:', err);
           this.dialog.error(this.translate.instant('PMRT02_PRINT_ERROR_TITLE'), this.translate.instant('PMRT02_PRINT_ERROR_MSG'));
         },

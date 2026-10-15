@@ -52,6 +52,10 @@ public class AiPhaseWbsService {
     private final ObjectMapper objectMapper = new ObjectMapper();
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
     private static final Set<String> PRIORITIES = Set.of("Critical", "High", "Medium", "Low");
+    private static final String[] TASK_COLORS = {
+            "#3B82F6", "#10B981", "#8B5CF6", "#F59E0B", "#EC4899",
+            "#06B6D4", "#F97316", "#6366F1", "#14B8A6", "#EF4444"
+    };
 
     public AiPhaseWbsResponse generate(AiPhaseWbsRequest request) {
         PhaseResponse phase = phaseService.getPhaseById(request.getPhaseId());
@@ -114,7 +118,11 @@ public class AiPhaseWbsService {
                     tq.setEndDate(clamp(date(t, "endDate", start.plusDays(3)), start, phaseEnd));
                     tq.setEstimateManday(Math.max(1, t.path("estimateManday").asInt(2)));
                     tq.setPriority(pick(text(t, "priority"), PRIORITIES, "Medium"));
-                    tq.setColor(mq.getColor());
+                    String taskColor = text(t, "color");
+                    if (taskColor == null || taskColor.isBlank() || "#3B82F6".equalsIgnoreCase(taskColor)) {
+                        taskColor = TASK_COLORS[taskCount % TASK_COLORS.length];
+                    }
+                    tq.setColor(taskColor);
                     AiMemberPicker.Member assignee = memberPicker.pick();
                     if (assignee != null) {
                         tq.setAssigneeIds(List.of(assignee.userId()));
@@ -136,11 +144,12 @@ public class AiPhaseWbsService {
                 Limits: max 3 milestones, max 2 work packages per milestone, max 3 tasks per work package.
                 Do NOT repeat anything that already exists in the phase. Fill EVERY field. All dates use yyyy-MM-dd and MUST be within the phase date range.
                 priority is one of: Critical | High | Medium | Low.
+                Assign distinct modern hex colors to milestones and tasks (choose from: #3B82F6, #10B981, #8B5CF6, #F59E0B, #EC4899, #06B6D4, #F97316, #6366F1, #14B8A6, #EF4444).
                 Respond ONLY with valid JSON in a ```json block, in the same language as the phase/user request:
                 { "milestones": [ { "milestoneName": "...", "description": "...", "dueDate": "yyyy-MM-dd", "color": "#3B82F6",
                     "workPackages": [ { "packageName": "...", "description": "...", "startDate": "yyyy-MM-dd", "endDate": "yyyy-MM-dd",
                         "tasks": [ { "taskName": "...", "description": "...", "startDate": "yyyy-MM-dd", "endDate": "yyyy-MM-dd",
-                            "estimateManday": 2, "priority": "Medium" } ] } ] } ] }
+                            "estimateManday": 2, "priority": "Medium", "color": "#10B981" } ] } ] } ] }
                 """;
 
         StringBuilder user = new StringBuilder();

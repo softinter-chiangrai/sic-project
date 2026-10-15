@@ -44,6 +44,7 @@ import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
 import java.util.Map;
 import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
+import com.softinter.sicapi.util.DateRangeValidator;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import jakarta.persistence.criteria.Subquery;
@@ -198,6 +199,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
                     businessId, entity.getProjectId(), entity.getInvoiceNo())) {
                 throw new RuntimeException("เลขที่ใบแจ้งหนี้นี้มีอยู่แล้วในโครงการนี้: " + entity.getInvoiceNo());
             }
+            DateRangeValidator.check(entity.getIssueDate(), entity.getDueDate());
             entity = invoiceRepository.save(entity);
             saveInvoiceItems(entity.getId(), request.getItems(), userId);
             logInvoiceAudit("CREATE_INVOICE", entity);
@@ -232,6 +234,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
 
             entity.setUpdatedBy(userId);
             entity.setUpdatedDate(Instant.now());
+            DateRangeValidator.check(entity.getIssueDate(), entity.getDueDate());
             entity = invoiceRepository.save(entity);
             saveInvoiceItems(entity.getId(), request.getItems(), userId);
             logInvoiceAudit("UPDATE_INVOICE", entity);

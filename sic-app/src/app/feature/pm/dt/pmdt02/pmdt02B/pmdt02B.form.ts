@@ -2,6 +2,7 @@
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { WorkPackageModel } from './pmdt02B.model';
 import { ToForm } from '../../../../../core/types/form.type';
+import { endNotBeforeStart } from '../../../../../core/validator/date-range.validator';
 
 export class Pmdt02BForm {
   static createForm(fb: FormBuilder): FormGroup<ToForm<WorkPackageModel>> {
@@ -19,6 +20,6 @@ export class Pmdt02BForm {
       attachmentGroupId: fb.control(null),
       state: fb.control(null),
       rowVersion: fb.control(null),
-    });
+    }, { validators: endNotBeforeStart('startDate', 'endDate', 'startTime', 'endTime') });
   }
 }

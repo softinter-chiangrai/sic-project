@@ -43,6 +43,7 @@ public class SuUserBusinessMemberServiceImpl implements SuUserBusinessMemberServ
     private final CurrentUserService currentUserService;
     private final SuProfileRepository profileRepository;
     private final AuditLogService auditLogService;
+    private final com.softinter.sicapi.service.ApprovalNotificationService notificationService;
 
     @Override
     @Transactional(readOnly = true)
@@ -178,6 +179,16 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
             userBusiness.setUpdatedBy(currentUserService.getUserId());
             userBusiness.setUpdatedDate(Instant.now());
             userBusiness = userBusinessRepository.save(userBusiness);
+
+            if (!isActive) {
+                notificationService.broadcastSecurityEvent(
+                        userBusiness.getBusinessId(),
+                        "ROLE_CHANGED",
+                        "สถานะการใช้งานของคุณถูกระงับ",
+                        "บัญชีผู้ใช้งานของคุณในธุรกิจนี้ถูกปิดการใช้งาน กรุณาเข้าสู่ระบบใหม่อีกครั้ง",
+                        userBusiness.getUserId()
+                );
+            }
         }
 
         if (roleIds != null && !roleIds.isEmpty()) {
@@ -213,6 +224,14 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
                 userRole.setCreatedDate(Instant.now());
                 userBusinessRoleRepository.save(userRole);
             }
+
+            notificationService.broadcastSecurityEvent(
+                    userBusiness.getBusinessId(),
+                    "ROLE_CHANGED",
+                    "บทบาทของคุณถูกเปลี่ยนแปลง",
+                    "บทบาทของผู้ใช้งานมีการเปลี่ยนแปลงโดยผู้ดูแลระบบ กรุณาเข้าสู่ระบบใหม่อีกครั้ง",
+                    userBusiness.getUserId()
+            );
         }
 
         try {
