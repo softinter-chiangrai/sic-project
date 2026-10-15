@@ -45,9 +45,7 @@ import com.softinter.sicapi.util.ApprovalKeywordSearchHelper;
 import java.util.ArrayDeque;
 import java.time.temporal.ChronoUnit;
 import java.util.Comparator;
-import com.softinter.sicapi.util.ContractLifecycle;
-import com.softinter.sicapi.dto.response.DocumentVersionResponse;
-import java.util.HashSet;
+import com.softinter.sicapi.util.ContractNoHelper;
 import com.softinter.sicapi.util.LanguageUtils;
 import java.time.LocalDate;
 import java.util.Map;
@@ -250,6 +248,16 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         return chain;
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public String getNextRenewalNo(UUID businessId, UUID contractId) {
+        PmCustomerContract contract = contractRepository.findById(contractId)
+                .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + contractId));
+        return ContractNoHelper.nextAvailableRenewalNo(contract.getContractNo(),
+                candidate -> contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+                        businessId, contract.getProjectId(), candidate));
+    }
+
     /** ฉบับต่ออายุถูกยกเลิก/ลบ: ถ้าสัญญาเดิมไม่เหลือฉบับต่ออายุที่ใช้งานอยู่ ให้เอาสถานะ "ต่อแล้ว" ออก */
     private void releaseParentIfNoActiveRenewal(PmCustomerContract renewal) {
         if (renewal.getParentContractId() == null) return;
@@ -341,13 +349,22 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             contract.setIsDelete(false);
 
             if (request.getContractNo() == null || request.getContractNo().isBlank()) {
-                long count = contractRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
-                String code;
-                do {
-                    code = "CTR-" + String.format("%03d", count++);
-                } while (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
-                        businessId, request.getProjectId(), code));
-                request.setContractNo(code);
+                if (request.getParentContractId() != null) {
+                    var parent = contractRepository.findById(request.getParentContractId()).orElse(null);
+                    String baseNo = (parent != null) ? parent.getContractNo() : "CTR";
+                    String code = ContractNoHelper.nextAvailableRenewalNo(baseNo,
+                            candidate -> contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+                                    businessId, request.getProjectId(), candidate));
+                    request.setContractNo(code);
+                } else {
+                    long count = contractRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
+                    String code;
+                    do {
+                        code = "CTR-" + String.format("%03d", count++);
+                    } while (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
+                            businessId, request.getProjectId(), code));
+                    request.setContractNo(code);
+                }
             } else if (contractRepository.existsByBusinessIdAndProjectIdAndContractNoAndIsDeleteFalse(
                     businessId, request.getProjectId(), request.getContractNo())) {
                 throw new RuntimeException("เลขที่สัญญานี้มีอยู่แล้วในโครงการนี้: " + request.getContractNo());

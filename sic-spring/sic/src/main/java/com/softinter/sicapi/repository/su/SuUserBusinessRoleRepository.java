@@ -52,4 +52,12 @@ List<SuUserBusinessRole> findByUserBusinessIdAndIsActiveTrue(@Param("userBusines
            "AND ubr.businessRole.roleCode = :roleCode " +
            "AND ubr.businessRole.isActive = true")
     List<String> findUserIdsByBusinessIdAndRoleCode(@Param("businessId") UUID businessId, @Param("roleCode") String roleCode);
+
+    @Query("SELECT COUNT(DISTINCT ubr.userBusiness.userId) FROM SuUserBusinessRole ubr " +
+           "WHERE ubr.isActive = true AND ubr.isDelete = false " +
+           "AND ubr.userBusiness.isActive = true AND ubr.userBusiness.isDelete = false " +
+           "AND ubr.userBusiness.business.id = :businessId " +
+           "AND ubr.businessRole.roleCode = :roleCode " +
+           "AND ubr.businessRole.isActive = true AND ubr.businessRole.isDelete = false")
+    long countActiveUsersByBusinessIdAndRoleCode(@Param("businessId") UUID businessId, @Param("roleCode") String roleCode);
 }

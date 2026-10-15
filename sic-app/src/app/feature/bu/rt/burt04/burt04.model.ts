@@ -25,6 +25,7 @@ export interface TeamMember {
   roleNames?: string[];
   isActive: boolean;
   isDefault: boolean;
+  isCurrentUser?: boolean;
   createdDate: string;
 }
 
@@ -52,4 +53,5 @@ export interface MemberWithUI extends TeamMember {
   userEmail: string;
   roleNames: string[];
   isDefault: boolean;
+  isCurrentUser: boolean;
 }

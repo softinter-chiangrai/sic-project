@@ -13,6 +13,7 @@ import { Burt04PageData, MemberWithUI, TeamMember } from './burt04.model';
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { AuthService } from '../../../../core/auth/auth.service';
 
 @Component({
   selector: 'app-burt04',
@@ -27,6 +28,7 @@ export class Burt04AComponent implements OnInit {
   private burt04Service = inject(burt04Service);
   private dialog = inject(DialogService);
   private translate = inject(TranslateService);
+  private authService = inject(AuthService);
 
   businessId = '';
 
@@ -107,13 +109,25 @@ export class Burt04AComponent implements OnInit {
       .subscribe({
         next: (res) => {
           const membersList = res?.data || [];
-          const mapped: MemberWithUI[] = membersList.map((m) => ({
-            ...m,
-            userName: m.userName || m.userId,
-            userEmail: m.userEmail || '',
-            roleNames: m.roleNames || [], // ✅ ใช้ roleNames array จาก API
-            isDefault: m.isDefault || false,
-          }));
+          const currentUserId = this.authService.getUserId();
+          const currentEmail = this.authService.getIdentityClaims()?.email?.toLowerCase();
+
+          const mapped: MemberWithUI[] = membersList.map((m) => {
+            const isCurrentUser = Boolean(
+              m.isCurrentUser ?? (
+                (currentUserId && m.userId === currentUserId) ||
+                (currentEmail && m.userEmail && m.userEmail.toLowerCase() === currentEmail)
+              )
+            );
+            return {
+              ...m,
+              userName: m.userName || m.userId,
+              userEmail: m.userEmail || '',
+              roleNames: m.roleNames || [],
+              isDefault: isCurrentUser,
+              isCurrentUser: isCurrentUser,
+            };
+          });
           this.members.set(mapped);
 
           // filter/sort ภายในหน้าที่ดึงมา (ตาม logic เดิม — server ไม่รองรับ filter/sort param)
@@ -135,6 +149,10 @@ export class Burt04AComponent implements OnInit {
           const by = (request.sortField ?? this.sortBy()) as keyof MemberWithUI;
           const desc = request.sortDescending;
           list = [...list].sort((a, b) => {
+            // ✅ บัญชีเราอยู่บนสุดเสมอ
+            if (a.isCurrentUser && !b.isCurrentUser) return -1;
+            if (!a.isCurrentUser && b.isCurrentUser) return 1;
+
             const va = String(a[by] ?? '');
             const vb = String(b[by] ?? '');
             return desc ? vb.localeCompare(va) : va.localeCompare(vb);
@@ -178,19 +196,27 @@ export class Burt04AComponent implements OnInit {
     });
   }
 
-  removeMember(id: string, grid: SicGridPanelComponent) {
+  removeMember(member: MemberWithUI, grid: SicGridPanelComponent) {
+    if (member.isCurrentUser) {
+      this.dialog.warn(
+        this.translate.instant('BURT04_ERROR_TITLE'),
+        this.translate.instant('BURT04_CANNOT_REMOVE_SELF_MSG')
+      );
+      return;
+    }
+
     this.dialog
       .confirm(this.translate.instant('BURT04_CONFIRM_REMOVE_TITLE'), this.translate.instant('BURT04_CONFIRM_REMOVE_MSG'))
       .then((confirmed) => {
         if (confirmed) {
-          this.burt04Service.deleteMember(id).subscribe({
+          this.burt04Service.deleteMember(member.id).subscribe({
             next: () => {
               this.dialog.success(this.translate.instant('BURT04_REMOVE_SUCCESS_TITLE'), this.translate.instant('BURT04_REMOVE_SUCCESS_MSG'));
               grid.reload();
             },
             error: (err) => {
               console.error('Delete error', err);
-              this.dialog.error(this.translate.instant('BURT04_REMOVE_FAILED_TITLE'), this.translate.instant('BURT04_REMOVE_FAILED_MSG'));
+              this.dialog.error(this.translate.instant('BURT04_REMOVE_FAILED_TITLE'), err.error?.message || this.translate.instant('BURT04_REMOVE_FAILED_MSG'));
             },
           });
         }

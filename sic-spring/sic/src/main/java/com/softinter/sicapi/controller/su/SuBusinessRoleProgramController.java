@@ -158,6 +158,13 @@ public class SuBusinessRoleProgramController {
                 brp.setProgram(program);
             }
         }
+        // Guard: ป้องกันไม่ให้ถอดสิทธิ์โปรแกรมจัดการระบบพื้นฐาน (BURT04, BURT05) ออกจากบทบาท ADMIN
+        boolean isAdminRole = brp.getBusinessRole() != null && "ADMIN".equalsIgnoreCase(brp.getBusinessRole().getRoleCode());
+        boolean isCriticalProg = brp.getProgram() != null && java.util.Set.of("BURT04", "BURT05").contains(brp.getProgram().getProgramCode());
+        if (isAdminRole && isCriticalProg && !request.isActive()) {
+            throw new IllegalArgumentException("ไม่สามารถปิดสิทธิ์เข้าถึงโปรแกรมจัดการระบบพื้นฐาน (" + brp.getProgram().getProgramCode() + ") ของบทบาทผู้ดูแลระบบ (ADMIN) ได้");
+        }
+
         brp.setIsActive(request.isActive());
         brp.setAdd(request.isAdd());
         brp.setBack(request.isBack());
@@ -190,6 +197,9 @@ public class SuBusinessRoleProgramController {
                 .filter(x -> x.getProgram() != null)
                 .collect(Collectors.toMap(x -> x.getProgram().getId(), x -> x, (a, b) -> a));
 
+        // Guard: ป้องกันไม่ให้ถอดสิทธิ์โปรแกรมจัดการระบบพื้นฐาน (BURT04, BURT05) ออกจากบทบาท ADMIN
+        java.util.Set<String> criticalProgramCodes = java.util.Set.of("BURT04", "BURT05");
+
         for (SaveBusinessRoleProgramRequest req : request.getModules()) {
             SuBusinessRoleProgram brp = null;
             if (req.getId() != null) {
@@ -215,6 +225,14 @@ public class SuBusinessRoleProgramController {
                 brp.setProgram(program);
                 existingMap.put(req.getProgramId(), brp);
             }
+
+            // ถ้าเป็นบทบาท ADMIN และเป็นโปรแกรมสำคัญพื้นฐาน ห้ามปิดการใช้งาน
+            boolean isAdminRole = brp.getBusinessRole() != null && "ADMIN".equalsIgnoreCase(brp.getBusinessRole().getRoleCode());
+            boolean isCriticalProg = brp.getProgram() != null && criticalProgramCodes.contains(brp.getProgram().getProgramCode());
+            if (isAdminRole && isCriticalProg && !req.isActive()) {
+                throw new IllegalArgumentException("ไม่สามารถปิดสิทธิ์เข้าถึงโปรแกรมจัดการระบบพื้นฐาน (" + brp.getProgram().getProgramCode() + ") ของบทบาทผู้ดูแลระบบ (ADMIN) ได้");
+            }
+
             brp.setIsActive(req.isActive());
             brp.setAdd(req.isAdd());
             brp.setBack(req.isBack());
@@ -236,6 +254,13 @@ public class SuBusinessRoleProgramController {
     public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
         SuBusinessRoleProgram brp = brpRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Business role program not found"));
+
+        boolean isAdminRole = brp.getBusinessRole() != null && "ADMIN".equalsIgnoreCase(brp.getBusinessRole().getRoleCode());
+        boolean isCriticalProg = brp.getProgram() != null && java.util.Set.of("BURT04", "BURT05").contains(brp.getProgram().getProgramCode());
+        if (isAdminRole && isCriticalProg) {
+            throw new IllegalArgumentException("ไม่สามารถลบสิทธิ์เข้าถึงโปรแกรมจัดการระบบพื้นฐาน (" + brp.getProgram().getProgramCode() + ") ของบทบาทผู้ดูแลระบบ (ADMIN) ได้");
+        }
+
         brp.setIsDelete(true);
         brp.setIsActive(false);
         brpRepository.save(brp);

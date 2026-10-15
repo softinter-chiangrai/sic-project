@@ -466,6 +466,19 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       modules: this.modules(),
     };
 
+    if (this.roleCode === 'ADMIN') {
+      const missingCritical = data.modules.some(
+        (m) => (m.moduleCode === 'BURT04' || m.moduleCode === 'BURT05') && !m.isActive
+      );
+      if (missingCritical) {
+        this.dialog.warn(
+          this.translate.instant('BURT02A_ERROR_TITLE'),
+          'ไม่สามารถถอดสิทธิ์โปรแกรมจัดการระบบพื้นฐาน (BURT04, BURT05) ออกจากบทบาทผู้ดูแลระบบ (ADMIN) ได้'
+        );
+        return;
+      }
+    }
+
     this.service
       .saveRolePermissions(data)
       .pipe(

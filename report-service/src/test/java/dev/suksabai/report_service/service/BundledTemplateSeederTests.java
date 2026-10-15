@@ -39,6 +39,23 @@ class BundledTemplateSeederTests {
 		}
 	}
 
+	@Autowired
+	private BundledTemplateSeeder seeder;
+
+	@Test
+	void aSeededTemplateFollowsItsBundledFileOnTheNextStart() throws Exception {
+		byte[] bundled = new org.springframework.core.io.ClassPathResource("report-templates/pm_diagram_report.jrxml").getContentAsByteArray();
+		var existing = service.getTemplate(service.findTemplateSummary(null, "pm_diagram_report").id());
+		byte[] stale = new String(bundled, java.nio.charset.StandardCharsets.UTF_8).replace("</jasperReport>", "<!-- old -->\n</jasperReport>")
+			.getBytes(java.nio.charset.StandardCharsets.UTF_8);
+		service.update(existing.id(), new ReportTemplateService.ReportTemplateSaveRequest(existing.templateCode(), existing.templateName(),
+			existing.description(), existing.dataSourceId(), service.uploadJrxml("pm_diagram_report.jrxml", stale).uploadToken()));
+
+		seeder.run(null);
+
+		assertTrue(java.util.Arrays.equals(bundled, service.downloadJrxml(existing.id(), null).content()));
+	}
+
 	@Test
 	void aSeededTemplateGeneratesWithoutAnyJavaHelper() {
 		// the diagram report has no SQL, so it runs without a data source

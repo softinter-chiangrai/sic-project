@@ -8,8 +8,8 @@ export class BusinessJoinService {
   private readonly http = inject(HttpClient);
   private readonly base = environment.apiBaseUrl + '/api/business';
 
-  join(token: string): Observable<void> {
-    return this.http.post<void>(`${this.base}/join`, { token });
+  join(token: string): Observable<{ businessId?: string; businessName?: string; message?: string }> {
+    return this.http.post<{ businessId?: string; businessName?: string; message?: string }>(`${this.base}/join`, { token });
   }
 
   getMyBusinesses(): Observable<{ id: string; name: string; code: string }[]> {

@@ -162,7 +162,18 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
         SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
 
+        // ตรวจสอบว่าผู้ใช้ปัจจุบันมีบทบาท ADMIN อยู่เดิมหรือไม่
+        List<SuUserBusinessRole> currentRoles = userBusinessRoleRepository.findByUserBusinessIdAndIsActiveTrue(userBusinessId);
+        boolean wasAdmin = currentRoles.stream()
+                .anyMatch(r -> r.getBusinessRole() != null && "ADMIN".equalsIgnoreCase(r.getBusinessRole().getRoleCode()));
+
         if (isActive != null) {
+            if (!isActive && wasAdmin) {
+                long adminCount = userBusinessRoleRepository.countActiveUsersByBusinessIdAndRoleCode(userBusiness.getBusinessId(), "ADMIN");
+                if (adminCount <= 1) {
+                    throw new IllegalArgumentException("ไม่สามารถปิดการใช้งานผู้ดูแลระบบ (Admin) คนสุดท้ายของธุรกิจได้");
+                }
+            }
             userBusiness.setIsActive(isActive);
             userBusiness.setUpdatedBy(currentUserService.getUserId());
             userBusiness.setUpdatedDate(Instant.now());
@@ -170,14 +181,29 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
         }
 
         if (roleIds != null && !roleIds.isEmpty()) {
+            List<SuBusinessRole> targetRoles = new ArrayList<>();
+            for (UUID roleId : roleIds) {
+                SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, userBusiness.getBusinessId())
+                        .orElseThrow(() -> new IllegalArgumentException("Role not found in this business: " + roleId));
+                targetRoles.add(role);
+            }
+
+            boolean willBeAdmin = targetRoles.stream()
+                    .anyMatch(r -> "ADMIN".equalsIgnoreCase(r.getRoleCode()));
+
+            // ป้องกัน Last Admin ถอดบทบาท ADMIN ของตนเองออก
+            if (wasAdmin && !willBeAdmin) {
+                long adminCount = userBusinessRoleRepository.countActiveUsersByBusinessIdAndRoleCode(userBusiness.getBusinessId(), "ADMIN");
+                if (adminCount <= 1) {
+                    throw new IllegalArgumentException("ไม่สามารถเปลี่ยนบทบาทของผู้ดูแลระบบ (Admin) คนสุดท้ายของธุรกิจได้");
+                }
+            }
+
             // ลบบทบาทเก่าทั้งหมด
             userBusinessRoleRepository.deleteByUserBusinessId(userBusinessId);
 
             // เพิ่มบทบาทใหม่ทั้งหมด
-            for (UUID roleId : roleIds) {
-                SuBusinessRole role = businessRoleRepository.findByIdAndBusinessId(roleId, userBusiness.getBusinessId())
-                        .orElseThrow(() -> new IllegalArgumentException("Role not found in this business: " + roleId));
-
+            for (SuBusinessRole role : targetRoles) {
                 SuUserBusinessRole userRole = new SuUserBusinessRole();
                 userRole.setUserBusiness(userBusiness);
                 userRole.setBusinessRole(role);
@@ -205,6 +231,21 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
     public void removeMember(UUID userBusinessId) {
         SuUserBusiness userBusiness = userBusinessRepository.findById(userBusinessId)
                 .orElseThrow(() -> new IllegalArgumentException("Member not found"));
+
+        String currentUserId = currentUserService.getUserId();
+        if (currentUserId != null && currentUserId.equals(userBusiness.getUserId())) {
+            throw new IllegalArgumentException("ไม่สามารถลบบัญชีของตัวเองออกจากธุรกิจได้");
+        }
+
+        List<SuUserBusinessRole> currentRoles = userBusinessRoleRepository.findByUserBusinessIdAndIsActiveTrue(userBusinessId);
+        boolean wasAdmin = currentRoles.stream()
+                .anyMatch(r -> r.getBusinessRole() != null && "ADMIN".equalsIgnoreCase(r.getBusinessRole().getRoleCode()));
+        if (wasAdmin) {
+            long adminCount = userBusinessRoleRepository.countActiveUsersByBusinessIdAndRoleCode(userBusiness.getBusinessId(), "ADMIN");
+            if (adminCount <= 1) {
+                throw new IllegalArgumentException("ไม่สามารถลบผู้ดูแลระบบ (Admin) คนสุดท้ายของธุรกิจได้");
+            }
+        }
 
         userBusiness.setIsActive(false);
         userBusiness.setIsDelete(true);
@@ -260,6 +301,9 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
             }
         }
 
+        String currentUserId = currentUserService.getUserId();
+        boolean isCurrentUser = currentUserId != null && currentUserId.equals(ub.getUserId());
+
         return SuUserBusinessMemberResponse.builder()
                 .id(ub.getId())
                 .businessId(ub.getBusinessId())
@@ -270,6 +314,7 @@ public PaginationResponse<LovResponse> getComboboxMembers(UUID businessId, Strin
                 .roleNames(roleNames)
                 .isActive(ub.getIsActive())
                 .isDefault(ub.getIsDefault())
+                .isCurrentUser(isCurrentUser)
                 .createdDate(ub.getCreatedDate())
                 .build();
     }

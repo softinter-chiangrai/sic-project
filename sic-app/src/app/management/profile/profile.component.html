@@ -199,9 +199,22 @@
 
       <!-- Submit -->
       <div
-        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex justify-end gap-3 mt-5"
+        class="col-span-11 col-start-1 md:col-span-4 md:col-start-2 lg:col-span-2 lg:col-start-3 flex flex-col items-end gap-2 mt-5"
       >
-        <sic-button [type]="'submit'" variant="solid" color="primary" [loading]="isVerifying()" [disabled]="isVerifying()">{{ 'PROFILE_SAVE_BUTTON' | translate }}</sic-button>
+        <sic-button [type]="'submit'" variant="solid" color="primary" [loading]="isVerifying()" [disabled]="isVerifying()">
+          @if (isSendingEmail()) {
+            {{ 'PROFILE_SENDING_EMAIL' | translate }}
+          } @else {
+            {{ 'PROFILE_SAVE_BUTTON' | translate }}
+          }
+        </sic-button>
+
+        @if (isSendingEmail()) {
+          <p class="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1.5 animate-pulse mt-1">
+            <i class="bi bi-arrow-repeat animate-spin"></i>
+            {{ 'PROFILE_SENDING_EMAIL_HINT' | translate }}
+          </p>
+        }
       </div>
     </div>
   </form>
@@ -232,11 +245,21 @@
             ></sic-input>
           </div>
           <div class="shrink-0">
-            <sic-button [type]="'button'" variant="outline" color="primary" (click)="resend()">
-              {{ 'PROFILE_RESEND_BUTTON' | translate }}
+            <sic-button [type]="'button'" variant="outline" color="primary" [loading]="isSendingEmail()" [disabled]="isSendingEmail()" (click)="resend()">
+              @if (isSendingEmail()) {
+                {{ 'PROFILE_SENDING_EMAIL' | translate }}
+              } @else {
+                {{ 'PROFILE_RESEND_BUTTON' | translate }}
+              }
             </sic-button>
           </div>
         </div>
+        @if (isSendingEmail()) {
+          <p class="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1.5 animate-pulse mt-2">
+            <i class="bi bi-arrow-repeat animate-spin"></i>
+            {{ 'PROFILE_SENDING_EMAIL_HINT' | translate }}
+          </p>
+        }
       </div>
       <div
         class="col-span-6 md:col-span-4 md:col-start-2 lg:col-span-4 lg:col-start-2 flex justify-end gap-3 mt-4"

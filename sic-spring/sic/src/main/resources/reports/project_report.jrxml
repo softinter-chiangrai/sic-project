@@ -79,7 +79,14 @@
                 COALESCE(sign_status, '-')                                        AS "signStatus",
                 COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') || ' - ' || COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-') AS "period",
                 payment_terms                                                      AS "paymentTerms",
-                scope_summary                                                       AS "scopeSummary"
+                scope_summary                                                       AS "scopeSummary",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Renewal Status: ' ELSE 'สถานะการต่ออายุ: ' END || renewal_status,
+                    CASE WHEN $P{lang} = 'en' THEN 'Auto Renew: ' ELSE 'ต่ออายุอัตโนมัติ: ' END || CASE WHEN auto_renew THEN (CASE WHEN $P{lang} = 'en' THEN 'Yes' ELSE 'ใช่' END) WHEN NOT auto_renew THEN (CASE WHEN $P{lang} = 'en' THEN 'No' ELSE 'ไม่ใช่' END) END,
+                    CASE WHEN $P{lang} = 'en' THEN 'Parent Contract: ' ELSE 'สัญญาหลัก: ' END || (SELECT pc.contract_no FROM pm_customer_contract pc WHERE pc.id = pm_customer_contract.parent_contract_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Created: ' ELSE 'สร้างเมื่อ: ' END || TO_CHAR(created_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI') || ' (' || COALESCE(pm_user_name(created_by, $P{lang}), '-') || ')',
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id)
+                ) AS "details"
             FROM pm_customer_contract
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY created_date ASC]]></query>
@@ -91,6 +98,7 @@
 		<field name="period" class="java.lang.String"/>
 		<field name="paymentTerms" class="java.lang.String"/>
 		<field name="scopeSummary" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="RequirementsDataset" uuid="e00c0002-0002-0002-0002-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -104,7 +112,12 @@
                 COALESCE(status, '-')                 AS "status",
                 description                            AS "description",
                 business_value                          AS "businessValue",
-                acceptance_criteria                      AS "acceptanceCriteria"
+                acceptance_criteria                      AS "acceptanceCriteria",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Source: ' ELSE 'แหล่งที่มา: ' END || NULLIF(source, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Created: ' ELSE 'สร้างเมื่อ: ' END || TO_CHAR(created_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI') || ' (' || COALESCE(pm_user_name(created_by, $P{lang}), '-') || ')',
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(upload_group_id)
+                ) AS "details"
             FROM pm_requirement
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY requirement_code ASC]]></query>
@@ -117,6 +130,7 @@
 		<field name="description" class="java.lang.String"/>
 		<field name="businessValue" class="java.lang.String"/>
 		<field name="acceptanceCriteria" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="SpecificationsDataset" uuid="e00c0003-0003-0003-0003-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -128,7 +142,14 @@
                 COALESCE(specification_type, '-')     AS "type",
                 COALESCE(priority, '-')                AS "priority",
                 COALESCE(status, '-')                  AS "status",
-                description                              AS "description"
+                description                              AS "description",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Requirement: ' ELSE 'ความต้องการ: ' END || (SELECT CONCAT_WS(' ', '[' || r.requirement_code || ']', r.title) FROM pm_requirement r WHERE r.id = pm_specification.requirement_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Owner: ' ELSE 'ผู้รับผิดชอบ: ' END || pm_user_name(owner, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'Estimated Manday: ' ELSE 'ประมาณการ Manday: ' END || estimated_manday,
+                    CASE WHEN $P{lang} = 'en' THEN 'Created: ' ELSE 'สร้างเมื่อ: ' END || TO_CHAR(created_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI') || ' (' || COALESCE(pm_user_name(created_by, $P{lang}), '-') || ')',
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(upload_group_id)
+                ) AS "details"
             FROM pm_specification
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY specification_code ASC]]></query>
@@ -139,6 +160,7 @@
 		<field name="priority" class="java.lang.String"/>
 		<field name="status" class="java.lang.String"/>
 		<field name="description" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="PhasesDataset" uuid="e00c0004-0004-0004-0004-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -150,7 +172,11 @@
                 COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-')   AS "endDate",
                 COALESCE(status, '-')                 AS "status",
                 CONCAT(COALESCE(progress, 0), '%')    AS "progress",
-                description                             AS "description"
+                description                             AS "description",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Owner: ' ELSE 'ผู้รับผิดชอบ: ' END || pm_user_name(owner, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'Depends On: ' ELSE 'ขึ้นกับ: ' END || (SELECT CONCAT_WS(' ', '[' || d.phase_code || ']', d.phase_name) FROM pm_phase d WHERE d.id = pm_phase.dependency)
+                ) AS "details"
             FROM pm_phase
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY start_date ASC NULLS LAST]]></query>
@@ -161,6 +187,7 @@
 		<field name="status" class="java.lang.String"/>
 		<field name="progress" class="java.lang.String"/>
 		<field name="description" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="DeliveriesDataset" uuid="e00c0005-0005-0005-0005-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -173,7 +200,27 @@
                 COALESCE(status, '-')                    AS "status",
                 delivery_summary                           AS "deliverySummary",
                 release_note                                AS "releaseNote",
-                COALESCE(pm_current_version_label('DELIVERY', pm_delivery.id), '-')               AS "deliveryVersion"
+                COALESCE(pm_current_version_label('DELIVERY', pm_delivery.id), '-')               AS "deliveryVersion",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Contract: ' ELSE 'สัญญา: ' END || (SELECT c.contract_no FROM pm_customer_contract c WHERE c.id = pm_delivery.contract_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Milestone: ' ELSE 'งวดงาน: ' END || (SELECT CONCAT_WS(' ', '[' || ph.phase_code || ']', ph.phase_name) FROM pm_phase ph WHERE ph.id = pm_delivery.milestone_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Released Version: ' ELSE 'เวอร์ชันที่ส่งมอบ: ' END || NULLIF(released_version, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Delivery Status: ' ELSE 'สถานะการส่งมอบ: ' END || NULLIF(delivery_status, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'PM Approved: ' ELSE 'PM อนุมัติ: ' END || NULLIF(CONCAT_WS(' ', pm_user_name(pm_approved_by, $P{lang}), TO_CHAR(pm_approved_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Customer Signed: ' ELSE 'ลูกค้าลงนาม: ' END || NULLIF(CONCAT_WS(' ', customer_signed_by, TO_CHAR(customer_signed_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Locked: ' ELSE 'ล็อกเอกสาร: ' END || CASE WHEN is_locked THEN (CASE WHEN $P{lang} = 'en' THEN 'Yes' ELSE 'ใช่' END) END,
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id),
+                    (SELECT (CASE WHEN $P{lang} = 'en' THEN 'Delivered Items:' ELSE 'รายการที่ส่งมอบ:' END) || E'\n' || STRING_AGG(
+                            '  • ' || CONCAT_WS(' ', '[' || COALESCE(it.item_type, '-') || ']', it.item_code, it.item_title) || ' - ' || COALESCE(it.item_status, '-') || COALESCE(' (' || NULLIF(it.remark, '') || ')', ''),
+                            E'\n' ORDER BY it.sort_order NULLS LAST, it.created_date)
+                       FROM pm_delivery_item it WHERE it.delivery_id = pm_delivery.id AND it.is_delete = false),
+                    (SELECT (CASE WHEN $P{lang} = 'en' THEN 'Checklist:' ELSE 'รายการตรวจสอบ:' END) || E'\n' || STRING_AGG(
+                            '  ' || CASE WHEN chk.is_checked THEN '[x] ' ELSE '[ ] ' END || CONCAT_WS(' ', '[' || NULLIF(chk.item_category, '') || ']', COALESCE(NULLIF(chk.item_name, ''), chk.checklist_name))
+                            || COALESCE(' - ' || pm_user_name(chk.checked_by, $P{lang}), '') || COALESCE(' ' || TO_CHAR(COALESCE(chk.checked_at, chk.checked_date) AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY'), '')
+                            || COALESCE(' (' || NULLIF(chk.remark, '') || ')', ''),
+                            E'\n' ORDER BY chk.sort_order NULLS LAST, chk.created_date)
+                       FROM pm_delivery_checklist chk WHERE chk.delivery_id = pm_delivery.id AND chk.is_delete = false)
+                ) AS "details"
             FROM pm_delivery
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY delivery_date ASC NULLS LAST]]></query>
@@ -185,6 +232,7 @@
 		<field name="deliverySummary" class="java.lang.String"/>
 		<field name="deliveryVersion" class="java.lang.String"/>
 		<field name="releaseNote" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="InvoicesDataset" uuid="e00c0006-0006-0006-0006-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -198,7 +246,27 @@
                 COALESCE(TO_CHAR(due_date, 'DD/MM/YYYY'), '-')                AS "dueDate",
                 remark                                                          AS "remark",
                 COALESCE(billing_type, '-')                                      AS "billingType",
-                COALESCE(TO_CHAR(subtotal_amount, 'FM999,999,990.00'), '0.00')   AS "subtotalAmount"
+                COALESCE(TO_CHAR(subtotal_amount, 'FM999,999,990.00'), '0.00')   AS "subtotalAmount",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Contract: ' ELSE 'สัญญา: ' END || (SELECT c.contract_no FROM pm_customer_contract c WHERE c.id = pm_invoice.contract_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Delivery: ' ELSE 'การส่งมอบ: ' END || (SELECT CONCAT_WS(' ', '[' || d.delivery_code || ']', d.delivery_title) FROM pm_delivery d WHERE d.id = pm_invoice.delivery_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Milestone: ' ELSE 'งวดงาน: ' END || COALESCE((SELECT CONCAT_WS(' ', '[' || ph.phase_code || ']', ph.phase_name) FROM pm_phase ph WHERE ph.id = pm_invoice.milestone_id), NULLIF(milestone, '')),
+                    CASE WHEN $P{lang} = 'en' THEN 'Amount: ' ELSE 'จำนวนเงิน: ' END || TO_CHAR(amount, 'FM999,999,990.00'),
+                    CASE WHEN $P{lang} = 'en' THEN 'VAT: ' ELSE 'ภาษีมูลค่าเพิ่ม: ' END || NULLIF(CONCAT_WS(' ', TO_CHAR(COALESCE(vat_amount, vat), 'FM999,999,990.00'), '(' || TO_CHAR(vat_rate, 'FM990.##') || '%)'), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Paid Amount: ' ELSE 'ชำระแล้ว: ' END || TO_CHAR(paid_amount, 'FM999,999,990.00'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Payment Date: ' ELSE 'วันที่ชำระ: ' END || TO_CHAR(payment_date, 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Approval Status: ' ELSE 'สถานะอนุมัติ: ' END || NULLIF(approval_status, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id),
+                    (SELECT (CASE WHEN $P{lang} = 'en' THEN 'Items:' ELSE 'รายการ:' END) || E'\n' || STRING_AGG(
+                            '  ' || ii.rn || '. ' || CONCAT_WS(' ', '[' || NULLIF(ii.item_code, '') || ']', COALESCE(NULLIF(ii.item_name, ''), ii.description))
+                            || ' : ' || TO_CHAR(COALESCE(ii.quantity, 0), 'FM999,999,990.##') || ' x ' || TO_CHAR(COALESCE(ii.unit_price, 0), 'FM999,999,990.00')
+                            || COALESCE(' - ' || (CASE WHEN $P{lang} = 'en' THEN 'Discount ' ELSE 'ส่วนลด ' END) || TO_CHAR(NULLIF(ii.discount, 0), 'FM999,999,990.00'), '')
+                            || ' = ' || TO_CHAR(COALESCE(ii.amount, ii.total_price, 0), 'FM999,999,990.00')
+                            || CASE WHEN NULLIF(ii.item_name, '') IS NOT NULL AND NULLIF(ii.description, '') IS NOT NULL THEN E'\n     ' || pm_html_to_text(ii.description) ELSE '' END,
+                            E'\n' ORDER BY ii.rn)
+                       FROM (SELECT x.*, ROW_NUMBER() OVER (ORDER BY x.sort_order NULLS LAST, x.created_date) AS rn
+                               FROM pm_invoice_item x WHERE x.invoice_id = pm_invoice.id AND x.is_delete = false) ii)
+                ) AS "details"
             FROM pm_invoice
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY COALESCE(issue_date, invoice_date) ASC NULLS LAST]]></query>
@@ -211,6 +279,7 @@
 		<field name="billingType" class="java.lang.String"/>
 		<field name="subtotalAmount" class="java.lang.String"/>
 		<field name="remark" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="ChangeRequestsDataset" uuid="e00c0007-0007-0007-0007-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -223,7 +292,20 @@
                 COALESCE(status, '-')         AS "status",
                 COALESCE(change_level, '-')    AS "level",
                 description                     AS "description",
-                COALESCE(change_reason, '-')     AS "changeReason"
+                COALESCE(change_reason, '-')     AS "changeReason",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Target: ' ELSE 'เอกสารที่เปลี่ยนแปลง: ' END || NULLIF(CONCAT_WS(' ', target_type, COALESCE(
+                        (SELECT '[' || r.requirement_code || '] ' || r.title FROM pm_requirement r WHERE r.id = pm_change_request.target_id),
+                        (SELECT '[' || s.specification_code || '] ' || s.title FROM pm_specification s WHERE s.id = pm_change_request.target_id),
+                        (SELECT '[' || dg.diagram_code || '] ' || dg.name FROM pm_diagram dg WHERE dg.id = pm_change_request.target_id))), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Target Version: ' ELSE 'เวอร์ชันเป้าหมาย: ' END || NULLIF(target_version, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Requester: ' ELSE 'ผู้ขอ: ' END || pm_user_name(requester_id, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'Assignee: ' ELSE 'ผู้รับผิดชอบ: ' END || pm_user_name(assignee_id, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'Approved: ' ELSE 'อนุมัติ: ' END || NULLIF(CONCAT_WS(' ', pm_user_name(approved_by, $P{lang}), TO_CHAR(approved_at, 'DD/MM/YYYY HH24:MI')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Implemented: ' ELSE 'ดำเนินการแล้ว: ' END || TO_CHAR(implemented_at, 'DD/MM/YYYY HH24:MI'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Created: ' ELSE 'สร้างเมื่อ: ' END || TO_CHAR(created_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id)
+                ) AS "details"
             FROM pm_change_request
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY created_date ASC]]></query>
@@ -235,6 +317,7 @@
 		<field name="level" class="java.lang.String"/>
 		<field name="description" class="java.lang.String"/>
 		<field name="changeReason" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="MaTicketsDataset" uuid="e00c0008-0008-0008-0008-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -247,7 +330,19 @@
                 COALESCE(severity, '-')     AS "severity",
                 COALESCE(status, '-')        AS "status",
                 description                   AS "description",
-                resolution_summary              AS "resolutionSummary"
+                resolution_summary              AS "resolutionSummary",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Contract: ' ELSE 'สัญญา: ' END || (SELECT c.contract_no FROM pm_customer_contract c WHERE c.id = pm_ma_ticket.contract_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Reported By: ' ELSE 'ผู้แจ้ง: ' END || NULLIF(CONCAT_WS(' ', pm_user_name(reported_by, $P{lang}), TO_CHAR(reported_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Assigned To: ' ELSE 'ผู้รับผิดชอบ: ' END || pm_user_name(assigned_to, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'SLA: ' ELSE 'SLA: ' END || sla_hours || CASE WHEN $P{lang} = 'en' THEN ' hours' ELSE ' ชั่วโมง' END,
+                    CASE WHEN $P{lang} = 'en' THEN 'Target Response: ' ELSE 'กำหนดตอบรับ: ' END || TO_CHAR(target_response_date, 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Target Resolve: ' ELSE 'กำหนดแก้ไขเสร็จ: ' END || TO_CHAR(COALESCE(target_resolve_date, due_date), 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Work Period: ' ELSE 'ช่วงเวลาดำเนินการ: ' END || NULLIF(CONCAT_WS(' - ', NULLIF(CONCAT_WS(' ', TO_CHAR(start_date, 'DD/MM/YYYY'), NULLIF(start_time, '')), ''), NULLIF(CONCAT_WS(' ', TO_CHAR(end_date, 'DD/MM/YYYY'), NULLIF(end_time, '')), '')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Resolved: ' ELSE 'แก้ไขเสร็จ: ' END || TO_CHAR(resolved_date, 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Closed: ' ELSE 'ปิดงาน: ' END || TO_CHAR(closed_date, 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id)
+                ) AS "details"
             FROM pm_ma_ticket
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY created_date ASC]]></query>
@@ -259,6 +354,7 @@
 		<field name="status" class="java.lang.String"/>
 		<field name="description" class="java.lang.String"/>
 		<field name="resolutionSummary" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="MaRenewalsDataset" uuid="e00c0009-0009-0009-0009-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -268,7 +364,14 @@
                 COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') || ' -> ' || COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-') AS "period",
                 COALESCE(TO_CHAR(contract_value, 'FM999,999,990.00'), '0.00') AS "amount",
                 COALESCE(renewal_status, sign_status, '-') AS "status",
-                scope_summary AS "remark"
+                scope_summary AS "remark",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Renewed From: ' ELSE 'ต่ออายุจากสัญญา: ' END || (SELECT pc.contract_no FROM pm_customer_contract pc WHERE pc.id = pm_customer_contract.parent_contract_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Sign Status: ' ELSE 'สถานะการลงนาม: ' END || NULLIF(sign_status, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Auto Renew: ' ELSE 'ต่ออายุอัตโนมัติ: ' END || CASE WHEN auto_renew THEN (CASE WHEN $P{lang} = 'en' THEN 'Yes' ELSE 'ใช่' END) WHEN NOT auto_renew THEN (CASE WHEN $P{lang} = 'en' THEN 'No' ELSE 'ไม่ใช่' END) END,
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id)
+                ) AS "details",
+                NULLIF(CONCAT(scope_summary, '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Payment Terms:' ELSE 'เงื่อนไขการชำระเงิน:' END) || '</p>' || NULLIF(payment_terms, '')), '') AS "remarkHtml"
             FROM pm_customer_contract
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
               AND contract_type = 'Maintenance Contract' AND parent_contract_id IS NOT NULL
@@ -278,6 +381,8 @@
 		<field name="amount" class="java.lang.String"/>
 		<field name="status" class="java.lang.String"/>
 		<field name="remark" class="java.lang.String"/>
+		<field name="remarkHtml" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="UserManualsDataset" uuid="e00c0010-0010-0010-0010-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -288,7 +393,12 @@
                 COALESCE(manual_title, '-')  AS "title",
                 COALESCE(manual_type, '-')    AS "type",
                 COALESCE(pm_current_version_label('USER_MANUAL', pm_user_manual.id), '-')         AS "version",
-                COALESCE(status, '-')           AS "status"
+                COALESCE(status, '-')           AS "status",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Delivery: ' ELSE 'การส่งมอบ: ' END || (SELECT CONCAT_WS(' ', '[' || d.delivery_code || ']', d.delivery_title) FROM pm_delivery d WHERE d.id = pm_user_manual.delivery_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Related Specification: ' ELSE 'ข้อกำหนดที่เกี่ยวข้อง: ' END || (SELECT CONCAT_WS(' ', '[' || s.specification_code || ']', s.title) FROM pm_specification s WHERE s.id = pm_user_manual.related_spec_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(attachment_group_id)
+                ) AS "details"
             FROM pm_user_manual
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY created_date ASC]]></query>
@@ -298,14 +408,21 @@
 		<field name="type" class="java.lang.String"/>
 		<field name="version" class="java.lang.String"/>
 		<field name="status" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
 	</dataset>
 	<dataset name="UserManualSectionsDataset" uuid="e00c0014-0014-0014-0014-a1b2c3d4e5f6">
 		<parameter name="manualId" class="java.lang.String"/>
 		<query language="sql"><![CDATA[SELECT
                 COALESCE(section_title, '-') AS "sectionTitle",
                 content                         AS "content"
-            FROM pm_user_manual_section
-            WHERE manual_id = CAST($P{manualId} AS uuid) AND is_delete = false
+            FROM (SELECT section_title, content, sort_order
+                    FROM pm_user_manual_section
+                   WHERE manual_id = CAST($P{manualId} AS uuid) AND is_delete = false
+                  UNION ALL
+                  SELECT manual_title, content, 0
+                    FROM pm_user_manual m
+                   WHERE m.id = CAST($P{manualId} AS uuid) AND NULLIF(m.content, '') IS NOT NULL
+                     AND NOT EXISTS (SELECT 1 FROM pm_user_manual_section ms WHERE ms.manual_id = m.id AND ms.is_delete = false)) sec
             ORDER BY sort_order ASC]]></query>
 		<field name="sectionTitle" class="java.lang.String"/>
 		<field name="content" class="java.lang.String"/>
@@ -322,7 +439,20 @@
                 COALESCE(status, '-')                AS "status",
                 description                            AS "description",
                 COALESCE(assigned_to, '-')               AS "assignedTo",
-                COALESCE(TO_CHAR(due_date, 'DD/MM/YYYY'), '-') AS "dueDate"
+                COALESCE(TO_CHAR(due_date, 'DD/MM/YYYY'), '-') AS "dueDate",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Review Item: ' ELSE 'รายการที่ตรวจทาน: ' END || COALESCE(
+                        (SELECT '[' || s.specification_code || '] ' || s.title FROM pm_specification s WHERE s.id = pm_design_review.review_item_id),
+                        (SELECT '[' || dg.diagram_code || '] ' || dg.name FROM pm_diagram dg WHERE dg.id = pm_design_review.review_item_id)),
+                    CASE WHEN $P{lang} = 'en' THEN 'Reviewer: ' ELSE 'ผู้ตรวจทาน: ' END || pm_user_name(reviewer, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'Figma: ' ELSE 'Figma: ' END || NULLIF(figma_url, '')
+                ) AS "details",
+                NULLIF(CONCAT(description,
+                    (SELECT '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Comments:' ELSE 'ความคิดเห็น:' END) || '</p>' || STRING_AGG(
+                            '<p>• ' || TO_CHAR(c.created_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI') || ' | ' || COALESCE(pm_user_name(c.created_by, $P{lang}), '-')
+                            || ' [' || COALESCE(c.comment_type, '-') || ' / ' || COALESCE(c.severity, '-') || ' / ' || COALESCE(c.status, '-') || ']:</p>' || COALESCE(c.comment_text, ''),
+                            '' ORDER BY c.created_date)
+                       FROM pm_review_comment c WHERE c.review_id = pm_design_review.id AND c.is_delete = false)), '') AS "descriptionHtml"
             FROM pm_design_review
             WHERE project_id = CAST($P{projectId} AS uuid) AND is_delete = false
             ORDER BY created_date ASC]]></query>
@@ -335,6 +465,72 @@
 		<field name="description" class="java.lang.String"/>
 		<field name="assignedTo" class="java.lang.String"/>
 		<field name="dueDate" class="java.lang.String"/>
+		<field name="descriptionHtml" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
+	</dataset>
+	<dataset name="TestCasesDataset" uuid="e00c0015-0015-0015-0015-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<parameter name="lang" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(tc.test_case_code, '-')                       AS "code",
+                COALESCE(NULLIF(tc.title, ''), '-')                     AS "title",
+                COALESCE(tc.test_status, '-')                           AS "status",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Scenario: ' ELSE 'สถานการณ์ทดสอบ: ' END || COALESCE(CONCAT_WS(' ', '[' || ts.scenario_code || ']', ts.scenario_name), NULLIF(tc.scenario_name, '')),
+                    CASE WHEN $P{lang} = 'en' THEN 'Test Type: ' ELSE 'ประเภทการทดสอบ: ' END || NULLIF(COALESCE(tc.test_type, ts.test_type), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Priority: ' ELSE 'ความสำคัญ: ' END || NULLIF(tc.priority, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Tester: ' ELSE 'ผู้ทดสอบ: ' END || NULLIF(CONCAT_WS(' ', pm_user_name(tc.tester, $P{lang}), TO_CHAR(tc.test_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY HH24:MI')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Related Requirement: ' ELSE 'ความต้องการที่เกี่ยวข้อง: ' END || NULLIF(tc.related_requirement, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Related Specification: ' ELSE 'ข้อกำหนดที่เกี่ยวข้อง: ' END || NULLIF(tc.related_spec, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Related Task: ' ELSE 'งานที่เกี่ยวข้อง: ' END || NULLIF(tc.related_task, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(tc.attachment_group_id)
+                )                                                         AS "details",
+                NULLIF(CONCAT(
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Scenario Detail:' ELSE 'รายละเอียดสถานการณ์:' END) || '</p>' || NULLIF(ts.description, ''),
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Prerequisite:' ELSE 'เงื่อนไขก่อนทดสอบ:' END) || '</p>' || NULLIF(ts.prerequisite, ''),
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Test Steps:' ELSE 'ขั้นตอนการทดสอบ:' END) || '</p>' || NULLIF(tc.test_step, ''),
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Expected Result:' ELSE 'ผลที่คาดหวัง:' END) || '</p>' || NULLIF(tc.expected_result, ''),
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Actual Result:' ELSE 'ผลการทดสอบจริง:' END) || '</p>' || NULLIF(tc.actual_result, '')), '') AS "content"
+            FROM pm_test_case tc
+            LEFT JOIN pm_test_scenario ts ON ts.id = tc.scenario_id AND ts.is_delete = false
+            WHERE tc.project_id = CAST($P{projectId} AS uuid) AND tc.is_delete = false
+            ORDER BY ts.scenario_code ASC NULLS LAST, tc.test_case_code ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
+		<field name="content" class="java.lang.String"/>
+	</dataset>
+	<dataset name="BugsDataset" uuid="e00c0016-0016-0016-0016-a1b2c3d4e5f6">
+		<parameter name="projectId" class="java.lang.String"/>
+		<parameter name="lang" class="java.lang.String"/>
+		<query language="sql"><![CDATA[SELECT
+                COALESCE(b.bug_code, '-')                               AS "code",
+                COALESCE(NULLIF(b.title, ''), '-')                      AS "title",
+                COALESCE(b.status, '-')                                 AS "status",
+                CONCAT_WS(E'\n',
+                    CASE WHEN $P{lang} = 'en' THEN 'Severity / Priority: ' ELSE 'ความรุนแรง / ความสำคัญ: ' END || NULLIF(CONCAT_WS(' / ', NULLIF(b.severity, ''), NULLIF(b.priority, '')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Issue Type: ' ELSE 'ประเภทปัญหา: ' END || NULLIF(b.issue_type, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Test Case: ' ELSE 'กรณีทดสอบ: ' END || (SELECT CONCAT_WS(' ', '[' || tc.test_case_code || ']', tc.title) FROM pm_test_case tc WHERE tc.id = b.test_case_id),
+                    CASE WHEN $P{lang} = 'en' THEN 'Related Specification: ' ELSE 'ข้อกำหนดที่เกี่ยวข้อง: ' END || NULLIF(b.related_spec, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Environment: ' ELSE 'สภาพแวดล้อม: ' END || NULLIF(b.environment, ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Found By: ' ELSE 'ผู้พบ: ' END || NULLIF(CONCAT_WS(' ', pm_user_name(b.found_by, $P{lang}), TO_CHAR(b.found_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY')), ''),
+                    CASE WHEN $P{lang} = 'en' THEN 'Assigned To: ' ELSE 'ผู้รับผิดชอบ: ' END || pm_user_name(b.assigned_to, $P{lang}),
+                    CASE WHEN $P{lang} = 'en' THEN 'Fix Due: ' ELSE 'กำหนดแก้ไข: ' END || TO_CHAR(b.fix_due_date, 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Fixed: ' ELSE 'แก้ไขเสร็จ: ' END || TO_CHAR(b.fixed_date AT TIME ZONE 'Asia/Bangkok', 'DD/MM/YYYY'),
+                    CASE WHEN $P{lang} = 'en' THEN 'Attachments: ' ELSE 'ไฟล์แนบ: ' END || pm_attachment_names(b.attachment_group_id)
+                )                                                         AS "details",
+                NULLIF(CONCAT(
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Description:' ELSE 'รายละเอียด:' END) || '</p>' || NULLIF(b.description, ''),
+                    '<p>' || (CASE WHEN $P{lang} = 'en' THEN 'Steps to Reproduce:' ELSE 'ขั้นตอนการเกิดปัญหา:' END) || '</p>' || NULLIF(b.steps_to_reproduce, '')), '') AS "content"
+            FROM pm_bug b
+            WHERE b.project_id = CAST($P{projectId} AS uuid) AND b.is_delete = false
+            ORDER BY b.bug_code ASC NULLS LAST, b.created_date ASC]]></query>
+		<field name="code" class="java.lang.String"/>
+		<field name="title" class="java.lang.String"/>
+		<field name="status" class="java.lang.String"/>
+		<field name="details" class="java.lang.String"/>
+		<field name="content" class="java.lang.String"/>
 	</dataset>
 	<dataset name="DiagramsDataset" uuid="e00c0012-0012-0012-0012-a1b2c3d4e5f6">
 		<parameter name="projectId" class="java.lang.String"/>
@@ -885,6 +1081,10 @@
 						<element kind="rectangle" uuid="6e4f06d5-9fa8-47e7-a00f-b57204c13100" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 						</element>
+						<element kind="textField" uuid="875dcd34-1f98-47b8-8c38-6668a927cca5" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
+						</element>
 						<element kind="textField" uuid="e00e0002-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{contractNo} + "]  " + $F{contractType} + " • " + $F{signStatus}]]></expression>
 						</element>
@@ -1294,6 +1494,10 @@
 						<element kind="rectangle" uuid="c35f10fd-ed78-41c7-bc9e-324cda54efbe" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 						</element>
+						<element kind="textField" uuid="b671d7d3-a961-4369-87c9-8b52a5fb9b65" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
+						</element>
 						<element kind="textField" uuid="e00e0005-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{name}]]></expression>
 						</element>
@@ -1528,6 +1732,10 @@
 			</element>
 						<element kind="rectangle" uuid="49663fd4-063d-4639-b3da-e86e8ca9a3a5" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="3a2220af-d854-4d30-b4ef-861944d5e7fe" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0003-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
@@ -2162,6 +2370,10 @@
 						<element kind="rectangle" uuid="84c314aa-6aa4-40ee-9fb9-7ccaea78767c" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 						</element>
+						<element kind="textField" uuid="e4d9089c-1d63-4351-bedb-e7811d6d9162" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
+						</element>
 						<element kind="textField" uuid="e00e0004-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
@@ -2397,6 +2609,10 @@
 						<element kind="rectangle" uuid="ae6f5080-bceb-4a9c-ba1b-b928d15c8b5a" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="82" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
 						</element>
+						<element kind="textField" uuid="ce26ae35-dd23-4440-bf44-2bf953735b25" positionType="Float" x="10" y="118" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
+						</element>
 						<element kind="textField" uuid="e00e0012-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
 						</element>
@@ -2442,7 +2658,7 @@
 						<element kind="component" uuid="70521ec0-7c35-4233-98e1-1a642ce4f876" positionType="Float" x="0" y="136" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="5172c5e1-154d-4b71-a120-122dc89c6858" subDataset="RichBlocksDataset">
-						<parameter name="html"><expression><![CDATA[$F{description}]]></expression></parameter>
+						<parameter name="html"><expression><![CDATA[$F{descriptionHtml}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
 						<parameter name="maxWidth"><expression><![CDATA[513]]></expression></parameter>
@@ -2621,6 +2837,430 @@
 			</element>
 		</band>
 		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="4bf6c529-609b-49a8-a08f-31edb13ed5fc" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="c5d8ff4b-6b40-4c10-b46d-84979e5bf38e" subDataset="TestCasesDataset">
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<parameter name="lang">
+							<expression><![CDATA[$P{lang}]]></expression>
+						</parameter>
+					</datasetRun>
+					<contents height="80" width="515">
+						<element kind="textField" uuid="ba3d447f-c9b7-44d6-9149-801606f3cc03" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" vTextAlign="Bottom" style="SectionHeading">
+							<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+							<expression><![CDATA[($P{lang}.equals("en") ? "11. Test Cases (UAT)" : "11. กรณีทดสอบ (Test Cases (UAT))")]]></expression>
+						</element>
+						<element kind="line" uuid="c4cdae2c-c714-4c97-a9f9-cea07bd276cb" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+							<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+							<pen lineWidth="0.6"/>
+						</element>
+						<element kind="textField" uuid="5b832de5-b217-4a4c-88d3-00b0a44a3960" positionType="Float" x="0" y="34" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+							<expression><![CDATA["[" + $F{code} + "]  " + $F{title} + "  •  " + $F{status}]]></expression>
+						</element>
+						<element kind="textField" uuid="0a450932-fbc8-470e-8415-e0ed01fbe590" positionType="Float" x="10" y="52" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
+						</element>
+<element kind="component" uuid="2ee0bb38-2c6f-48a7-bc6e-68c4dba79f54" positionType="Float" x="0" y="60" width="515" height="14">
+							<component kind="list">
+								<datasetRun uuid="69dc98ba-811a-4619-a5fd-1982d82b8cca" subDataset="RichBlocksDataset">
+						<parameter name="html"><expression><![CDATA[$F{content}]]></expression></parameter>
+						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
+						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
+						<parameter name="maxWidth"><expression><![CDATA[513]]></expression></parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+								<contents height="16" width="515">
+									<element kind="textField" uuid="59e22f74-5480-40f0-8f97-655b2c3dd97f" x="0" y="0" width="515" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+										<printWhenExpression><![CDATA[$F{text} != null]]></printWhenExpression>
+										<paragraph lineSpacing="1_1_2"/>
+										<expression><![CDATA[$F{text}]]></expression>
+									</element>
+									<element kind="image" uuid="f2ce2fcf-411d-4ce3-8dd7-65e62d88708a" x="0" y="0" width="515" height="4" scaleImage="RealHeight" onErrorType="Blank" hImageAlign="Left">
+										<printWhenExpression><![CDATA[$V{imageRenderable} != null && "left".equals($F{align})]]></printWhenExpression>
+										<expression><![CDATA[$V{imageRenderable}]]></expression>
+									</element>
+									<element kind="image" uuid="6a8a7666-4756-45b0-b0e1-df3ff8239c04" x="0" y="0" width="515" height="4" scaleImage="RealHeight" onErrorType="Blank" hImageAlign="Center">
+										<printWhenExpression><![CDATA[$V{imageRenderable} != null && "center".equals($F{align})]]></printWhenExpression>
+										<expression><![CDATA[$V{imageRenderable}]]></expression>
+									</element>
+									<element kind="image" uuid="864a157b-5dcc-4af3-b5cf-3c362e76bb6d" x="0" y="0" width="515" height="4" scaleImage="RealHeight" onErrorType="Blank" hImageAlign="Right">
+										<printWhenExpression><![CDATA[$V{imageRenderable} != null && "right".equals($F{align})]]></printWhenExpression>
+										<expression><![CDATA[$V{imageRenderable}]]></expression>
+									</element>
+									<element kind="textField" uuid="e4f5bac3-951f-4efc-9324-52bc30c0aed3" stretchType="ContainerHeight" x="0" y="0" width="507" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 1]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="5baf0715-572a-426e-8136-935d5a30c690" stretchType="ContainerHeight" x="0" y="0" width="254" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="75e67f6b-869b-47be-bde4-4e1b4f75533c" stretchType="ContainerHeight" x="254" y="0" width="253" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="a2ff7d5b-3d8a-4043-958f-bf39515d30b0" stretchType="ContainerHeight" x="0" y="0" width="169" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="1790f14b-c9ed-4150-b92a-9d620ef79903" stretchType="ContainerHeight" x="169" y="0" width="169" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="4c7a1607-623b-4bc0-8875-ea6724e57b3b" stretchType="ContainerHeight" x="338" y="0" width="169" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="0a2050d1-2b0f-4f41-9a8a-a97f50a91385" stretchType="ContainerHeight" x="0" y="0" width="127" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="e20a051b-83bf-4cdc-9bbe-bdeb189a3a9e" stretchType="ContainerHeight" x="127" y="0" width="127" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="28123c7a-9ff6-4460-9c27-b598f475f364" stretchType="ContainerHeight" x="254" y="0" width="126" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="4bcd081c-83ff-4e6c-bbca-4a0e6a58e888" stretchType="ContainerHeight" x="380" y="0" width="127" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c4}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="1f918251-7e3b-40ff-a5a6-2fdb258f4eb9" stretchType="ContainerHeight" x="0" y="0" width="101" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="e93f625f-08ea-452f-a988-703a8e3cb676" stretchType="ContainerHeight" x="101" y="0" width="102" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="3fda4be3-7c2f-4e93-890f-40aec61d9ebe" stretchType="ContainerHeight" x="203" y="0" width="101" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="8dcc9e8d-4ad0-4bea-a3c1-e87c84631bf2" stretchType="ContainerHeight" x="304" y="0" width="102" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c4}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="76a99aed-9cde-4c66-8140-31aaeabd9905" stretchType="ContainerHeight" x="406" y="0" width="101" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c5}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="7cd538b3-e769-4b5d-bf52-6cedd214648e" stretchType="ContainerHeight" x="0" y="0" width="85" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="68a7bad2-4d9a-482e-b8fe-ca9165b1ff43" stretchType="ContainerHeight" x="85" y="0" width="84" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="030f6807-4a30-4003-925f-c661b493b3eb" stretchType="ContainerHeight" x="169" y="0" width="85" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="eeee1c0f-0e1a-4302-a827-76ac89230e20" stretchType="ContainerHeight" x="254" y="0" width="84" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c4}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="a106f5b6-0b97-4622-8e59-8711114f019a" stretchType="ContainerHeight" x="338" y="0" width="85" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c5}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="8239249c-6ed2-4cef-b2e7-6de2f54e4a65" stretchType="ContainerHeight" x="423" y="0" width="84" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c6}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+								</contents>
+							</component>
+						</element>
+						<element kind="line" uuid="6a675401-a33a-494b-9a70-aa465e6997cf" positionType="Float" x="0" y="76" width="515" height="1" forecolor="#E2E8F0">
+							<pen lineWidth="0.5"/>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+		<band height="16" splitType="Stretch">
+			<element kind="component" uuid="261fbc8e-8727-42db-b813-5fbdc9b62de5" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
+				<component kind="list">
+					<datasetRun uuid="502c5726-1910-452a-92ec-eaab23152bee" subDataset="BugsDataset">
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+						<parameter name="projectId">
+							<expression><![CDATA[$P{projectId}]]></expression>
+						</parameter>
+						<parameter name="lang">
+							<expression><![CDATA[$P{lang}]]></expression>
+						</parameter>
+					</datasetRun>
+					<contents height="80" width="515">
+						<element kind="textField" uuid="26b07d49-6bcc-4b28-8637-d75743a899af" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" vTextAlign="Bottom" style="SectionHeading">
+							<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+							<expression><![CDATA[($P{lang}.equals("en") ? "12. Bugs" : "12. ข้อบกพร่อง (Bugs)")]]></expression>
+						</element>
+						<element kind="line" uuid="36154562-893f-470e-b1f4-66a72433c3f0" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
+							<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
+							<pen lineWidth="0.6"/>
+						</element>
+						<element kind="textField" uuid="5b23fd68-faaf-4531-be7d-a67310799111" positionType="Float" x="0" y="34" width="515" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
+							<expression><![CDATA["[" + $F{code} + "]  " + $F{title} + "  •  " + $F{status}]]></expression>
+						</element>
+						<element kind="textField" uuid="9ca2040c-bdc7-44af-ad49-f15b4a8c036a" positionType="Float" x="10" y="52" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
+						</element>
+<element kind="component" uuid="866751a9-6b93-4bfa-9e9d-51838790323b" positionType="Float" x="0" y="60" width="515" height="14">
+							<component kind="list">
+								<datasetRun uuid="4dc243ab-f083-4eb0-8cad-f90d6d4003a9" subDataset="RichBlocksDataset">
+						<parameter name="html"><expression><![CDATA[$F{content}]]></expression></parameter>
+						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
+						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
+						<parameter name="maxWidth"><expression><![CDATA[513]]></expression></parameter>
+						<connectionExpression><![CDATA[$P{REPORT_CONNECTION}]]></connectionExpression>
+					</datasetRun>
+								<contents height="16" width="515">
+									<element kind="textField" uuid="7d93919b-74fc-4841-9a55-2406f5c8e0cc" x="0" y="0" width="515" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+										<printWhenExpression><![CDATA[$F{text} != null]]></printWhenExpression>
+										<paragraph lineSpacing="1_1_2"/>
+										<expression><![CDATA[$F{text}]]></expression>
+									</element>
+									<element kind="image" uuid="52e4114d-2c19-43dd-8c47-6b6c8ac008ea" x="0" y="0" width="515" height="4" scaleImage="RealHeight" onErrorType="Blank" hImageAlign="Left">
+										<printWhenExpression><![CDATA[$V{imageRenderable} != null && "left".equals($F{align})]]></printWhenExpression>
+										<expression><![CDATA[$V{imageRenderable}]]></expression>
+									</element>
+									<element kind="image" uuid="b58e8b04-a22a-438d-9614-7e4b30534a0e" x="0" y="0" width="515" height="4" scaleImage="RealHeight" onErrorType="Blank" hImageAlign="Center">
+										<printWhenExpression><![CDATA[$V{imageRenderable} != null && "center".equals($F{align})]]></printWhenExpression>
+										<expression><![CDATA[$V{imageRenderable}]]></expression>
+									</element>
+									<element kind="image" uuid="205d4f24-cfa7-4ffe-9bc8-5b706d3d5907" x="0" y="0" width="515" height="4" scaleImage="RealHeight" onErrorType="Blank" hImageAlign="Right">
+										<printWhenExpression><![CDATA[$V{imageRenderable} != null && "right".equals($F{align})]]></printWhenExpression>
+										<expression><![CDATA[$V{imageRenderable}]]></expression>
+									</element>
+									<element kind="textField" uuid="b2e70f19-96e2-4e3f-884b-73a6f55ec622" stretchType="ContainerHeight" x="0" y="0" width="507" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 1]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="060c50b8-ccaf-4e90-a252-e2a907e90c8f" stretchType="ContainerHeight" x="0" y="0" width="254" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="32a7f216-ff8b-4480-a949-7b57847dc9b2" stretchType="ContainerHeight" x="254" y="0" width="253" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="17c51fb6-56fb-4e41-bba2-95079b876e9c" stretchType="ContainerHeight" x="0" y="0" width="169" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="edd4c010-4dd6-4922-886c-39dca4ec8cef" stretchType="ContainerHeight" x="169" y="0" width="169" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="fc62facb-ac1a-4702-a77e-7f3eee592a5e" stretchType="ContainerHeight" x="338" y="0" width="169" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="d3d1728b-dc72-4b61-8dfc-3d5ba6e98f14" stretchType="ContainerHeight" x="0" y="0" width="127" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="d7e0b9d5-1c9d-458b-b555-730d1363daa9" stretchType="ContainerHeight" x="127" y="0" width="127" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="875f6e23-473c-45fe-9e3d-af87eb035968" stretchType="ContainerHeight" x="254" y="0" width="126" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="78e7f6a6-e8ea-443d-88be-9e857164f6dd" stretchType="ContainerHeight" x="380" y="0" width="127" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+										<expression><![CDATA[$F{c4}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="31c5f9e7-b5a2-45bf-b5f6-87bba9d5b74e" stretchType="ContainerHeight" x="0" y="0" width="101" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="83ebbe49-382c-443e-8285-c17919f1b234" stretchType="ContainerHeight" x="101" y="0" width="102" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="f828988a-1d19-465b-9ae7-44f5a0ead29b" stretchType="ContainerHeight" x="203" y="0" width="101" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="aa1b4411-dd44-4287-9ad8-49644f7f481d" stretchType="ContainerHeight" x="304" y="0" width="102" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c4}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="d7bb6c8d-d56a-445d-8951-cf97a91f6014" stretchType="ContainerHeight" x="406" y="0" width="101" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+										<expression><![CDATA[$F{c5}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="6669e1c5-077d-4b09-a67e-64471603b927" stretchType="ContainerHeight" x="0" y="0" width="85" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c1}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="e93d8a28-6249-433c-b000-5821276ac4c9" stretchType="ContainerHeight" x="85" y="0" width="84" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c2}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="c946cd30-9418-4912-9d1f-8e5d13cf289d" stretchType="ContainerHeight" x="169" y="0" width="85" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c3}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="5e40bf17-6944-4295-9ea2-605ad40864c3" stretchType="ContainerHeight" x="254" y="0" width="84" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c4}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="6d45a579-90ec-4a5d-bb0c-9b0774f0d3b6" stretchType="ContainerHeight" x="338" y="0" width="85" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c5}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+									<element kind="textField" uuid="a444d05d-e1eb-41c5-9f45-4ab86c213e35" stretchType="ContainerHeight" x="423" y="0" width="84" height="16" markup="none" textAdjust="StretchHeight" blankWhenNull="true" style="ContentText">
+										<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+										<expression><![CDATA[$F{c6}]]></expression>
+										<box padding="2" style="ContentText">
+											<pen lineWidth="0.4" lineColor="#94A3B8"/>
+										</box>
+									</element>
+								</contents>
+							</component>
+						</element>
+						<element kind="line" uuid="7e3ad0b8-b63b-4221-8587-2c906e55490b" positionType="Float" x="0" y="76" width="515" height="1" forecolor="#E2E8F0">
+							<pen lineWidth="0.5"/>
+						</element>
+					</contents>
+				</component>
+			</element>
+		</band>
+		<band height="16" splitType="Stretch">
 			<element kind="component" uuid="e00d0011-b007-b007-b007-a1b2c3d4e5f6" positionType="Float" stretchType="ContainerHeight" x="0" y="0" width="515" height="16">
 				<component kind="list">
 					<datasetRun uuid="e00d0011-b008-b008-b008-a1b2c3d4e5f6" subDataset="UserManualsDataset">
@@ -2635,7 +3275,7 @@
 					<contents height="128" width="515">
 						<element kind="textField" uuid="e00d0011-b000-b000-b000-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
-				<expression><![CDATA[($P{lang}.equals("en") ? "11. User Manuals" : "11. คู่มือการใช้งาน (User Manuals)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "13. User Manuals" : "13. คู่มือการใช้งาน (User Manuals)")]]></expression>
 			</element>
 						<element kind="line" uuid="e00d0011-b001-b001-b001-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
@@ -2643,6 +3283,10 @@
 			</element>
 						<element kind="rectangle" uuid="1af3dc13-8f18-40b7-a1c3-3373d5b5b22f" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="fe02284b-4463-4969-987c-0a5bd496691e" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00d0011-b009-b009-b009-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
@@ -2876,7 +3520,7 @@
 					<contents height="170" width="515">
 						<element kind="textField" uuid="e00e0006-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
-				<expression><![CDATA[($P{lang}.equals("en") ? "12. Deliveries" : "12. การส่งมอบ (Deliveries)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "14. Deliveries" : "14. การส่งมอบ (Deliveries)")]]></expression>
 			</element>
 						<element kind="line" uuid="e00e0006-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
@@ -2884,6 +3528,10 @@
 			</element>
 						<element kind="rectangle" uuid="5466ad23-3ebc-4632-8d26-8301aafd761d" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="6880075e-a75b-4c87-8758-eaa54b1bacc6" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0006-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
@@ -3291,7 +3939,7 @@
 					<contents height="160" width="515">
 						<element kind="textField" uuid="e00e0007-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
-				<expression><![CDATA[($P{lang}.equals("en") ? "13. Invoices" : "13. ใบแจ้งหนี้ (Invoices)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "15. Invoices" : "15. ใบแจ้งหนี้ (Invoices)")]]></expression>
 			</element>
 						<element kind="line" uuid="e00e0007-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
@@ -3299,6 +3947,10 @@
 			</element>
 						<element kind="rectangle" uuid="d90c5f94-c672-40bf-9bdf-164d9706fe5e" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="82" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="6abf5881-75d9-49cb-95d3-ea208bd952b6" positionType="Float" x="10" y="118" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0007-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{invoiceNo} + "]  " + ($P{lang}.equals("en") ? "Total: " : "ยอดรวม: ") + $F{totalAmount}]]></expression>
@@ -3538,7 +4190,7 @@
 					<contents height="170" width="515">
 						<element kind="textField" uuid="e00e0009-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
-				<expression><![CDATA[($P{lang}.equals("en") ? "14. MA Tickets" : "14. ตั๋วแจ้งปัญหา MA (MA Tickets)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "16. MA Tickets" : "16. ตั๋วแจ้งปัญหา MA (MA Tickets)")]]></expression>
 			</element>
 						<element kind="line" uuid="e00e0009-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
@@ -3546,6 +4198,10 @@
 			</element>
 						<element kind="rectangle" uuid="70605e20-d43d-4cea-bc47-a568a1a4409f" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="64" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="57e99a13-e0a4-4f22-9eda-a8f286d6c909" positionType="Float" x="10" y="100" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0009-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{ticketNo} + "]  " + $F{title}]]></expression>
@@ -3953,7 +4609,7 @@
 					<contents height="160" width="515">
 						<element kind="textField" uuid="e00e0008-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
-				<expression><![CDATA[($P{lang}.equals("en") ? "15. Change Requests" : "15. คำขอเปลี่ยนแปลง (Change Requests)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "17. Change Requests" : "17. คำขอเปลี่ยนแปลง (Change Requests)")]]></expression>
 			</element>
 						<element kind="line" uuid="e00e0008-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
@@ -3961,6 +4617,10 @@
 			</element>
 						<element kind="rectangle" uuid="0dba40a9-c434-4c4b-950e-0a017b3f8b2c" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="82" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="c0df5b11-7f5f-4886-ac65-6e88143a4f9b" positionType="Float" x="10" y="118" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0008-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{title}]]></expression>
@@ -4194,7 +4854,7 @@
 					<contents height="124" width="515">
 						<element kind="textField" uuid="e00e0010-0001-0001-0001-a1b2c3d4e5f6" positionType="Float" x="0" y="6" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
-				<expression><![CDATA[($P{lang}.equals("en") ? "16. MA Renewals" : "16. ต่ออายุ MA (MA Renewals)")]]></expression>
+				<expression><![CDATA[($P{lang}.equals("en") ? "18. MA Renewals" : "18. ต่ออายุ MA (MA Renewals)")]]></expression>
 			</element>
 						<element kind="line" uuid="e00e0010-0002-0002-0002-a1b2c3d4e5f6" positionType="Float" x="0" y="28" width="515" height="1" forecolor="#CBD5E1" removeLineWhenBlank="true">
 				<printWhenExpression><![CDATA[$V{REPORT_COUNT} == 1]]></printWhenExpression>
@@ -4202,6 +4862,10 @@
 			</element>
 						<element kind="rectangle" uuid="0c868f1f-b992-4685-bd95-8ab964f90425" positionType="Float" mode="Opaque" x="0" y="34" width="515" height="46" backcolor="#F8FAFC" radius="3">
 							<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+						</element>
+						<element kind="textField" uuid="f729c219-ce79-4104-8536-9a653d3b8d31" positionType="Float" x="10" y="82" width="495" height="2" textAdjust="StretchHeight" blankWhenNull="true" removeLineWhenBlank="true" style="ContentText">
+							<printWhenExpression><![CDATA[$F{details} != null && !$F{details}.isBlank()]]></printWhenExpression>
+							<expression><![CDATA[$F{details}]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0010-0005-0005-0005-a1b2c3d4e5f6" positionType="Float" x="10" y="38" width="495" height="16" textAdjust="StretchHeight" blankWhenNull="true" style="ValueBold">
 							<expression><![CDATA["[" + $F{renewalNo} + "]  " + ($P{lang}.equals("en") ? "Amount: " : "มูลค่า: ") + $F{amount}]]></expression>
@@ -4224,7 +4888,7 @@
 						<element kind="component" uuid="beb911b1-ec78-4d89-81bf-3355fae00dff" positionType="Float" x="0" y="100" width="515" height="14">
 							<component kind="list">
 								<datasetRun uuid="c6f02bcd-dca5-477d-b018-0b6d54bab40f" subDataset="RichBlocksDataset">
-						<parameter name="html"><expression><![CDATA[$F{remark}]]></expression></parameter>
+						<parameter name="html"><expression><![CDATA[$F{remarkHtml}]]></expression></parameter>
 						<parameter name="extra"><expression><![CDATA[null]]></expression></parameter>
 						<parameter name="fallback"><expression><![CDATA[""]]></expression></parameter>
 						<parameter name="maxWidth"><expression><![CDATA[513]]></expression></parameter>
@@ -4416,7 +5080,7 @@
 	</pageFooter>
 	<summary height="190" splitType="Prevent">
 		<element kind="textField" uuid="8ea6f8e7-5e6d-47b2-913b-2a567c82a4c9" x="0" y="10" width="515" height="22" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
-			<expression><![CDATA[($P{lang}.equals("en") ? "17. Sign-off & Approvals" : "17. การลงนามอนุมัติและรับรอง (Sign-off & Approvals)")]]></expression>
+			<expression><![CDATA[($P{lang}.equals("en") ? "19. Sign-off & Approvals" : "19. การลงนามอนุมัติและรับรอง (Sign-off & Approvals)")]]></expression>
 		</element>
 		<element kind="line" uuid="4b2a5c1a-5e6d-4b92-bca8-e5659858df34" x="0" y="32" width="515" height="1" forecolor="#CBD5E1">
 			<pen lineWidth="0.6"/>

@@ -8,12 +8,12 @@ export class SicValidator {
   /**
    * Check if error should be displayed based on control state and touched status
    */
-  shouldShowError(control: AbstractControl | null, touched: boolean): boolean {
+  shouldShowError(control: AbstractControl | null, touched?: boolean): boolean {
     if (!control) {
       return false;
     }
 
-    return control.invalid && (control.touched || control.dirty || touched);
+    return control.invalid && (control.touched || control.dirty);
   }
   
    isRequired(control: AbstractControl | null): boolean {

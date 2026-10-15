@@ -63,7 +63,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   isPermissionMode = signal(false);
   programId = signal<string | null>(null);
   roles = signal<any[]>([]);
-  rolePermissions = signal<{ roleId: string; roleName: string; level: string }[]>([]);
+  rolePermissions = signal<{ roleId: string; roleCode?: string; roleName: string; level: string }[]>([]);
   permissionLevels = this.service.getPermissionLevels();
   programs = signal<Program[]>([]);
 
@@ -148,6 +148,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
               }
               return {
                 roleId: role.id,
+                roleCode: role.roleCode,
                 roleName: role.roleName || role.roleNameEn || role.roleCode,
                 level: level,
               };
@@ -366,6 +367,18 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   }
 
   updateRolePermission(roleId: string, level: any) {
+    const currentCode = this.programForm.get('programCode')?.value;
+    const isCriticalProg = currentCode === 'BURT04' || currentCode === 'BURT05';
+    const targetRole = this.rolePermissions().find((rp) => rp.roleId === roleId);
+
+    if (isCriticalProg && targetRole?.roleCode === 'ADMIN' && (level === 'None' || !level)) {
+      this.dialog.warn(
+        this.translate.instant('BURT05A_SAVE_PERMISSIONS_ERROR_TITLE'),
+        'ไม่สามารถถอดสิทธิ์โปรแกรมจัดการระบบพื้นฐานออกจากบทบาทผู้ดูแลระบบ (ADMIN) ได้'
+      );
+      return;
+    }
+
     this.rolePermissions.update((list) =>
       list.map((rp) => (rp.roleId === roleId ? { ...rp, level: String(level || 'None') } : rp)),
     );

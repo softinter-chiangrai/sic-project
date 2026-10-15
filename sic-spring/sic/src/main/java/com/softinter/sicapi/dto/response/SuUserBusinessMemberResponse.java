@@ -23,6 +23,7 @@ public class SuUserBusinessMemberResponse {
     private List<String> roleNames;
     private Boolean isActive;
     private Boolean isDefault;
+    private Boolean isCurrentUser;
     private Instant createdDate;
     private UUID roleId;
 }

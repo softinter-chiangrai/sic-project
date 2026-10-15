@@ -26,8 +26,21 @@ export const pmrt04BResolver: ResolveFn<Pmrt04BPageData> = async (route) => {
       return { renewalData: new SicFromData<Pmrt04BModel>(Pmrt04BForm.createForm(fb)), originalContract: null };
     }
 
-    const form = Pmrt04BForm.createForm(fb);
-    form.patchValue(Pmrt04BForm.buildDefaults(original));
+    // หาเลขสัญญาถัดไปที่ไม่ซ้ำ (เช่น ถ้า -R1 ถูกใช้/ยกเลิกไปแล้ว จะได้ -R2)
+    let nextContractNo: string | undefined;
+    try {
+      const nextRes = await lastValueFrom(service.getNextRenewalNo(id));
+      if (nextRes?.nextContractNo) {
+        nextContractNo = nextRes.nextContractNo;
+      }
+    } catch {
+      const chain = await lastValueFrom(service.getRenewalChain(id)).catch(() => []);
+      const taken = (chain || []).map((c) => c.contractNo);
+      nextContractNo = Pmrt04BForm.computeRenewalContractNo(original.contractNo, taken);
+    }
+
+    const form = Pmrt04BForm.createForm(fb, original);
+    form.patchValue(Pmrt04BForm.buildDefaults(original, nextContractNo));
 
     return {
       renewalData: new SicFromData<Pmrt04BModel>(form, form.getRawValue() as Pmrt04BModel),

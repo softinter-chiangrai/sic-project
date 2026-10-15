@@ -47,6 +47,7 @@ export class Profile implements OnInit {
 
   readonly showProfile = signal(true);
   isVerifying = signal(false);
+  readonly isSendingEmail = signal(false);
 
   // ✅ เก็บค่าเริ่มต้นของทุกฟิลด์ที่ต้องตรวจสอบ
   private originalEmail: string = '';
@@ -122,13 +123,18 @@ export class Profile implements OnInit {
   }
 
   verifyEmail(): void {
-    if (
-      this.formProfileData.formGroup.get('email')?.dirty &&
-      this.formProfileData.formGroup.get('email')?.valid
-    ) {
-      const email = this.formProfileData.formGroup.get('email')?.value;
-      if (email) {
-        this.service.sendVerifyToken(email).subscribe({
+    const email = this.formProfileData.formGroup.get('email')?.value;
+    if (email && this.formProfileData.formGroup.get('email')?.valid) {
+      this.isVerifying.set(true);
+      this.isSendingEmail.set(true);
+      this.service.sendVerifyToken(email)
+        .pipe(
+          finalize(() => {
+            this.isVerifying.set(false);
+            this.isSendingEmail.set(false);
+          })
+        )
+        .subscribe({
           next: (generateVerifyToken: EmailVerifyModel) => {
             this.showProfile.set(false);
             this.formVerifyData.formGroup.patchValue({
@@ -142,29 +148,36 @@ export class Profile implements OnInit {
             );
           },
           error: (error) => {
-            this.dialog.error(this.translate.instant('PROFILE_SEND_EMAIL_FAIL_TITLE'), error?.message || this.translate.instant('PROFILE_SEND_EMAIL_FAIL_MSG'));
+            this.dialog.error(
+              this.translate.instant('PROFILE_SEND_EMAIL_FAIL_TITLE'),
+              error?.message || this.translate.instant('PROFILE_SEND_EMAIL_FAIL_MSG'),
+            );
           },
         });
-      }
+    } else {
+      this.isVerifying.set(false);
     }
   }
 
   resend() {
     const email = this.formProfileData.formGroup.get('email')?.value;
     if (email) {
-      this.service.sendVerifyToken(email).subscribe({
-        next: (generateVerifyToken: EmailVerifyModel) => {
-          this.formVerifyData.formGroup.patchValue({
-            referenceNumber: generateVerifyToken.referenceNumber,
-            verifyToken: generateVerifyToken.verifyToken,
-            recipient: generateVerifyToken.recipient,
-          });
-          this.dialog.success(this.translate.instant('PROFILE_RESEND_SUCCESS_TITLE'), this.translate.instant('PROFILE_RESEND_SUCCESS_MSG'));
-        },
-        error: (error) => {
-          this.dialog.error(this.translate.instant('PROFILE_RESEND_FAIL_TITLE'), error?.message || this.translate.instant('PROFILE_RESEND_FAIL_MSG'));
-        },
-      });
+      this.isSendingEmail.set(true);
+      this.service.sendVerifyToken(email)
+        .pipe(finalize(() => this.isSendingEmail.set(false)))
+        .subscribe({
+          next: (generateVerifyToken: EmailVerifyModel) => {
+            this.formVerifyData.formGroup.patchValue({
+              referenceNumber: generateVerifyToken.referenceNumber,
+              verifyToken: generateVerifyToken.verifyToken,
+              recipient: generateVerifyToken.recipient,
+            });
+            this.dialog.success(this.translate.instant('PROFILE_RESEND_SUCCESS_TITLE'), this.translate.instant('PROFILE_RESEND_SUCCESS_MSG'));
+          },
+          error: (error) => {
+            this.dialog.error(this.translate.instant('PROFILE_RESEND_FAIL_TITLE'), error?.message || this.translate.instant('PROFILE_RESEND_FAIL_MSG'));
+          },
+        });
     }
   }
 
@@ -275,9 +288,12 @@ export class Profile implements OnInit {
       return;
     }
 
+    this.isVerifying.set(true);
+
     // ✅ ตรวจสอบความซ้ำของทุกฟิลด์ที่เปลี่ยนแปลง
     const isAllValid = await this.checkDuplicates();
     if (!isAllValid) {
+      this.isVerifying.set(false);
       return;
     }
 

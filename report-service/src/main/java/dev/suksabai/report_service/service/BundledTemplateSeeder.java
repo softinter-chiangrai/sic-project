@@ -12,18 +12,21 @@ import org.springframework.core.io.Resource;
 import org.springframework.core.io.support.PathMatchingResourcePatternResolver;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
 import java.util.Locale;
 
 /**
  * Loads the SIC report templates bundled in classpath:report-templates/*.jrxml (they need no Java helper, only the SQL functions of the
  * SIC database migration V20261014090000) so the SIC backend finds them by code (pm_requirement_report = PMREQUIREMENTREPORT).
- * Opt-in: report.bundled-templates.seed=true. Templates that already exist are never touched.
+ * Opt-in: report.bundled-templates.seed=true. A seeded template is replaced when its bundled file changes, unless an admin changed its
+ * description in the UI (then it is treated as customised and never touched).
  * They run SQL against the SIC database: set report.bundled-templates.data-source-id, or leave it empty when exactly one data source exists.
  */
 @Component
 @ConditionalOnProperty(name = "report.bundled-templates.seed", havingValue = "true")
 public class BundledTemplateSeeder implements ApplicationRunner {
 	private static final Logger logger = LoggerFactory.getLogger(BundledTemplateSeeder.class);
+	private static final String BUNDLED_DESCRIPTION = "Bundled SIC template (no Java helper)";
 
 	private final ReportTemplateService templates;
 	private final DataSourceConfigRepository dataSources;
@@ -53,13 +56,24 @@ public class BundledTemplateSeeder implements ApplicationRunner {
 			String fileName = resource.getFilename();
 			String baseName = fileName.substring(0, fileName.length() - ".jrxml".length());
 			String code = baseName.replace("_", "").toUpperCase(Locale.ROOT);
-			if (templates.existsByCode(code)) {
-				continue;
-			}
+			byte[] jrxml = resource.getContentAsByteArray();
 			try {
-				var upload = templates.uploadJrxml(fileName, resource.getContentAsByteArray());
-				templates.create(new ReportTemplateSaveRequest(code, baseName, "Bundled SIC template (no Java helper)", dataSourceId, upload.uploadToken()));
-				logger.info("Seeded report template {} from {}", code, fileName);
+				if (!templates.existsByCode(code)) {
+					var upload = templates.uploadJrxml(fileName, jrxml);
+					templates.create(new ReportTemplateSaveRequest(code, baseName, BUNDLED_DESCRIPTION, dataSourceId, upload.uploadToken()));
+					logger.info("Seeded report template {} from {}", code, fileName);
+					continue;
+				}
+				// a bundled template follows its file; one an admin re-described in the UI is left alone
+				var existing = templates.getTemplate(templates.findTemplateSummary(null, code).id());
+				if (!BUNDLED_DESCRIPTION.equals(existing.description())
+					|| Arrays.equals(jrxml, templates.downloadJrxml(existing.id(), null).content())) {
+					continue;
+				}
+				var upload = templates.uploadJrxml(fileName, jrxml);
+				templates.update(existing.id(), new ReportTemplateSaveRequest(
+					existing.templateCode(), existing.templateName(), existing.description(), existing.dataSourceId(), upload.uploadToken()));
+				logger.info("Updated report template {} from {}", code, fileName);
 			} catch (RuntimeException exception) {
 				logger.error("Could not seed report template {}: {}", code, exception.getMessage());
 			}

@@ -13,6 +13,7 @@ import { SicButtonComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { ToForm } from '../../../core/types/form.type';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { BusinessService } from '../../../core/services/business.service';
 
 @Component({
   selector: 'app-business-join',
@@ -31,6 +32,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly service = inject(BusinessJoinService);
+  readonly businessService = inject(BusinessService);
   readonly dialog = inject(DialogService);
   readonly router = inject(Router);
   readonly translate = inject(TranslateService);
@@ -78,11 +80,14 @@ export class BusinessJoinComponent implements OnInit, CanComponentDeactivate {
     this.service.join(this.tokenForm.value.token!)
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: async () => {
+        next: async (res) => {
           this.isSaved = true;
           this.tokenForm.markAsPristine();
+          if (res?.businessId) {
+            this.businessService.setCurrentBusinessId(res.businessId);
+          }
           await this.dialog.success(this.translate.instant('BUSINESS_JOIN_SUCCESS_TITLE'), this.translate.instant('BUSINESS_JOIN_SUCCESS_MSG'));
-          this.router.navigate(['/management/business']);
+          this.router.navigate(['/feature/dashboard']);
         },
         error: async (err) => {
           const msg = err?.error?.detail ?? err?.error?.message ?? this.translate.instant('BUSINESS_JOIN_FAIL_MSG');

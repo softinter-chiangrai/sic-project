@@ -75,6 +75,9 @@ public interface PmCustomerContractService {
     /** สายการต่ออายุทั้งหมดของสัญญานี้ เรียงจากฉบับแรกถึงฉบับล่าสุด */
     List<PmCustomerContractResponse> getRenewalChain(UUID id);
 
+    /** หาเลขที่สัญญาถัดไปสำหรับการต่ออายุ โดยข้ามเลขที่ถูกใช้ไปแล้ว */
+    String getNextRenewalNo(UUID businessId, UUID contractId);
+
     PmCustomerContractResponse getContract(UUID id);
 
     PmContractSummaryResponse getContractSummary(UUID id);

@@ -340,6 +340,15 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
             }
 
             const renewalNo = Pmrt04BForm.computeRenewalContractNo(parent.contractNo);
+            if (parent.id) {
+              this.service.getNextRenewalNo(parent.id).subscribe({
+                next: (res: { nextContractNo: string }) => {
+                  if (res?.nextContractNo) {
+                    this.formData.patchValue({ contractNo: res.nextContractNo });
+                  }
+                },
+              });
+            }
 
             this.formData.patchValue({
               contractNo: renewalNo || undefined,

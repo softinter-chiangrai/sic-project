@@ -81,7 +81,7 @@ public class PmCustomerContractController {
         byte[] pdfBytes = exportService.exportContractPdf(id, businessId, finalLang);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
-                .header("Content-Disposition", "attachment; filename=\"contract-" + id + ".pdf\"")
+                .header("Content-Disposition", "inline; filename=\"contract-" + id + ".pdf\"")
                 .body(pdfBytes);
     }
 
@@ -125,6 +125,14 @@ public class PmCustomerContractController {
     @Operation(summary = "ดึงสายการต่ออายุของสัญญา")
     public ResponseEntity<List<PmCustomerContractResponse>> getRenewalChain(@PathVariable UUID id) {
         return ResponseEntity.ok(contractService.getRenewalChain(id));
+    }
+
+    @GetMapping("/{id}/next-renewal-no")
+    @Operation(summary = "หาเลขที่สัญญาถัดไปสำหรับการต่ออายุ โดยข้ามเลขที่ถูกใช้ไปแล้ว")
+    public ResponseEntity<Map<String, String>> getNextRenewalNo(@PathVariable UUID id) {
+        UUID businessId = businessAccessService.getBusinessId();
+        String nextNo = contractService.getNextRenewalNo(businessId, id);
+        return ResponseEntity.ok(Map.of("nextContractNo", nextNo));
     }
 
     // ===== ดึงข้อมูลสัญญาเดี่ยว =====

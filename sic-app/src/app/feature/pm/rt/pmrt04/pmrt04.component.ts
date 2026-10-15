@@ -578,6 +578,9 @@ export class Pmrt04Component implements OnInit {
       return;
     }
 
+    // เปิดแท็บใหม่ทันทีตอนคลิกเพื่อป้องกัน Popup Blocker
+    const printWindow = window.open('about:blank', '_blank');
+
     this.isLoading.set(true);
     this.contractService
       .exportContractPdf(contract.id)
@@ -586,8 +589,9 @@ export class Pmrt04Component implements OnInit {
         next: (blob) => {
           const pdfBlob = new Blob([blob], { type: 'application/pdf' });
           const pdfUrl = URL.createObjectURL(pdfBlob);
-          const printWindow = window.open(pdfUrl, '_blank');
-          if (!printWindow) {
+          if (printWindow) {
+            printWindow.location.href = pdfUrl;
+          } else {
             const a = document.createElement('a');
             a.href = pdfUrl;
             a.target = '_blank';
@@ -596,6 +600,7 @@ export class Pmrt04Component implements OnInit {
           }
         },
         error: (error) => {
+          printWindow?.close();
           console.error('Export contract PDF error:', error);
           this.dialog.error(
             this.translate.instant('PMRT04_EXPORT_PDF_ERROR_TITLE'),

@@ -114,11 +114,17 @@
                 [label]="'PMRT04B_NEW_START_DATE_LABEL' | translate"
                 formControlName="newStartDate"
                 [required]="true"
+                [min]="minStartDate"
                 [placeholder]="'PMRT04B_NEW_START_DATE_PLACEHOLDER' | translate"
                 dateFormat="DD/MM/YYYY"
               ></sic-datepicker>
               @if (form.get('newStartDate')?.touched && form.get('newStartDate')?.invalid) {
                 <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMRT04B_NEW_START_DATE_REQUIRED' | translate }}</p>
+              }
+              @if (form.hasError('startDateBeforeOriginalEnd')) {
+                <p class="text-xs text-[var(--crm-danger)] mt-1">
+                  {{ 'PMRT04B_START_DATE_BEFORE_ORIGINAL_END' | translate: { date: formatDate(originalContract.endDate) } }}
+                </p>
               }
             </div>
 
@@ -128,6 +134,7 @@
                 [label]="'PMRT04B_NEW_END_DATE_LABEL' | translate"
                 formControlName="newEndDate"
                 [required]="true"
+                [min]="minEndDate"
                 [placeholder]="'PMRT04B_NEW_END_DATE_PLACEHOLDER' | translate"
                 dateFormat="DD/MM/YYYY"
               ></sic-datepicker>

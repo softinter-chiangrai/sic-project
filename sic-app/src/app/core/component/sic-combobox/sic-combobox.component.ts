@@ -329,6 +329,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
       this.selectedText = '';
       this.inputText = '';
       this.activeIndex = -1;
+      this.touched = false;
       return;
     }
 

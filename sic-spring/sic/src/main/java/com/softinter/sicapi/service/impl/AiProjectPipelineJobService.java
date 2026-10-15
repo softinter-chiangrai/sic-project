@@ -465,7 +465,7 @@ public class AiProjectPipelineJobService {
                 {
                   "customerName": "organization/client company name in Thailand if mentioned or implied in the prompt, else realistic Thai company name (e.g. บริษัท สยามนวัตกรรม ดิจิทัล จำกัด)",
                   "customerNameEn": "company name in English (e.g. Siam Digital Innovation Co., Ltd.)",
-                  "contactPerson": "realistic Thai executive contact name with title (e.g. คุณสมชาย วิจิตรศิลป์)"
+                  "contactPerson": "realistic Thai executive contact name with title/prefix (e.g. นายสมชาย วิศิษฏ์ วิจิตรศิลป์)"
                 }
                 """, "รายละเอียดโครงการ: " + firstNonBlank(c.req.getPrompt(), c.req.getProjectName()), true);
 

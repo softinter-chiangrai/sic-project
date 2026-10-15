@@ -37,11 +37,13 @@ public class ThaiCustomerGeneratorHelper {
     private final DbProvinceRepository provinceRepository;
     private final DbDistrictRepository districtRepository;
     private final DbSubDistrictRepository subDistrictRepository;
+    private final com.softinter.sicapi.repository.db.DbTitleRepository titleRepository;
 
     private static final UUID THAILAND_ID = UUID.fromString("019e255b-4900-7001-b2de-4da92722fa88");
 
     private record ThaiCompanyTemplate(String local, String en) {}
-    private record ThaiContactTemplate(String firstLocal, String lastLocal, String firstEn, String lastEn) {}
+    private record ThaiContactTemplate(String titleLocal, String firstLocal, String middleLocal, String lastLocal,
+                                      String titleEn, String firstEn, String middleEn, String lastEn) {}
     private record ThaiStreetTemplate(String local, String en) {}
 
     private static final List<ThaiCompanyTemplate> DEFAULT_COMPANIES = List.of(
@@ -58,16 +60,16 @@ public class ThaiCustomerGeneratorHelper {
     );
 
     private static final List<ThaiContactTemplate> DEFAULT_CONTACTS = List.of(
-            new ThaiContactTemplate("สมชาย", "วิจิตรศิลป์", "Somchai", "Vijitsilp"),
-            new ThaiContactTemplate("กิตติศักดิ์", "พงศ์ไพโรจน์", "Kittisak", "Pongpairoj"),
-            new ThaiContactTemplate("วิภาวรรณ", "เจริญสุข", "Wipawan", "Charoensuk"),
-            new ThaiContactTemplate("ธนกร", "รัตนสัจจา", "Thanakorn", "Rattanasajja"),
-            new ThaiContactTemplate("นพดล", "เกียรติไพบูลย์", "Noppadol", "Kiatpaiboon"),
-            new ThaiContactTemplate("ชัญญา", "ศรีสวัสดิ์", "Chanya", "Srisawat"),
-            new ThaiContactTemplate("ประวิทย์", "วงศ์สว่าง", "Prawit", "Wongsawang"),
-            new ThaiContactTemplate("ศศิธร", "มงคลกุล", "Sasithorn", "Mongkolkul"),
-            new ThaiContactTemplate("อนุชา", "ประเสริฐยิ่ง", "Anucha", "Prasertying"),
-            new ThaiContactTemplate("พิมลพรรณ", "สุขสมบูรณ์", "Pimonpan", "Suksomboon")
+            new ThaiContactTemplate("นาย", "สมชาย", "วิศิษฏ์", "วิจิตรศิลป์", "Mr.", "Somchai", "Visit", "Vijitsilp"),
+            new ThaiContactTemplate("นาย", "กิตติศักดิ์", "นฤเบศร์", "พงศ์ไพโรจน์", "Mr.", "Kittisak", "Narubes", "Pongpairoj"),
+            new ThaiContactTemplate("นางสาว", "วิภาวรรณ", "กมลทิพย์", "เจริญสุข", "Ms.", "Wipawan", "Kamolthip", "Charoensuk"),
+            new ThaiContactTemplate("นาย", "ธนกร", "ปวริศ", "รัตนสัจจา", "Mr.", "Thanakorn", "Pawaris", "Rattanasajja"),
+            new ThaiContactTemplate("นาย", "นพดล", "ศิริชัย", "เกียรติไพบูลย์", "Mr.", "Noppadol", "Sirichai", "Kiatpaiboon"),
+            new ThaiContactTemplate("นางสาว", "ชัญญา", "พิชญาภรณ์", "ศรีสวัสดิ์", "Ms.", "Chanya", "Pitchayaporn", "Srisawat"),
+            new ThaiContactTemplate("นาย", "ประวิทย์", "โสภณ", "วงศ์สว่าง", "Mr.", "Prawit", "Sophon", "Wongsawang"),
+            new ThaiContactTemplate("นาง", "ศศิธร", "วรรณิศา", "มงคลกุล", "Mrs.", "Sasithorn", "Wannisa", "Mongkolkul"),
+            new ThaiContactTemplate("นาย", "อนุชา", "ดนัย", "ประเสริฐยิ่ง", "Mr.", "Anucha", "Danai", "Prasertying"),
+            new ThaiContactTemplate("นางสาว", "พิมลพรรณ", "ณัฐธิดา", "สุขสมบูรณ์", "Ms.", "Pimonpan", "Natthida", "Suksomboon")
     );
 
     private static final List<ThaiStreetTemplate> DEFAULT_STREETS = List.of(
@@ -124,22 +126,68 @@ public class ThaiCustomerGeneratorHelper {
             customer.setBranchCode("00000");
         }
 
-        // 6. Contact Person & Names
+        // 6. Contact Person, Title & Names
         ThaiContactTemplate contactTpl = DEFAULT_CONTACTS.get(rnd.nextInt(DEFAULT_CONTACTS.size()));
+        String contactPrefixLocal = contactTpl.titleLocal();
+        String contactPrefixEn = contactTpl.titleEn();
+
         if (preferredContact != null && !preferredContact.isBlank() && !preferredContact.equals("null")) {
             customer.setContactPerson(preferredContact.trim());
-            String cleaned = preferredContact.replace("คุณ", "").replace("นาย", "").replace("นางสาว", "").replace("นาง", "").trim();
+            String raw = preferredContact.trim();
+            if (raw.startsWith("นาย")) {
+                contactPrefixLocal = "นาย";
+                contactPrefixEn = "Mr.";
+            } else if (raw.startsWith("นางสาว") || raw.startsWith("น.ส.")) {
+                contactPrefixLocal = "นางสาว";
+                contactPrefixEn = "Ms.";
+            } else if (raw.startsWith("นาง")) {
+                contactPrefixLocal = "นาง";
+                contactPrefixEn = "Mrs.";
+            }
+
+            String cleaned = raw.replaceAll("^(คุณ|นาย|นางสาว|น\\.ส\\.|นาง|ดร\\.|Mr\\.|Mrs\\.|Ms\\.)\\s*", "").trim();
             String[] parts = cleaned.split("\\s+");
-            customer.setFirstNameLocal(parts.length > 0 ? parts[0] : contactTpl.firstLocal());
-            customer.setLastNameLocal(parts.length > 1 ? parts[1] : contactTpl.lastLocal());
+            if (parts.length >= 3) {
+                customer.setFirstNameLocal(parts[0]);
+                customer.setMiddleNameLocal(parts[1]);
+                customer.setLastNameLocal(parts[2]);
+            } else if (parts.length == 2) {
+                customer.setFirstNameLocal(parts[0]);
+                customer.setMiddleNameLocal(contactTpl.middleLocal());
+                customer.setLastNameLocal(parts[1]);
+            } else if (parts.length == 1 && !parts[0].isBlank()) {
+                customer.setFirstNameLocal(parts[0]);
+                customer.setMiddleNameLocal(contactTpl.middleLocal());
+                customer.setLastNameLocal(contactTpl.lastLocal());
+            } else {
+                customer.setFirstNameLocal(contactTpl.firstLocal());
+                customer.setMiddleNameLocal(contactTpl.middleLocal());
+                customer.setLastNameLocal(contactTpl.lastLocal());
+            }
             customer.setFirstNameEn(contactTpl.firstEn());
+            customer.setMiddleNameEn(contactTpl.middleEn());
             customer.setLastNameEn(contactTpl.lastEn());
         } else {
-            customer.setContactPerson("คุณ" + contactTpl.firstLocal() + " " + contactTpl.lastLocal());
+            customer.setContactPerson(contactPrefixLocal + " " + contactTpl.firstLocal() + " " + contactTpl.middleLocal() + " " + contactTpl.lastLocal());
             customer.setFirstNameLocal(contactTpl.firstLocal());
+            customer.setMiddleNameLocal(contactTpl.middleLocal());
             customer.setLastNameLocal(contactTpl.lastLocal());
             customer.setFirstNameEn(contactTpl.firstEn());
+            customer.setMiddleNameEn(contactTpl.middleEn());
             customer.setLastNameEn(contactTpl.lastEn());
+        }
+
+        // Title entity lookup
+        if (customer.getTitle() == null && customer.getTitleId() == null) {
+            final String targetPrefix = contactPrefixLocal;
+            DbTitle matchedTitle = titleRepository.findByPersonTypeAndIsActiveTrue("INDIVIDUAL").stream()
+                    .filter(t -> t.getPrefixNameLocal() != null && t.getPrefixNameLocal().equalsIgnoreCase(targetPrefix)
+                              || t.getPrefixShortNameLocal() != null && t.getPrefixShortNameLocal().equalsIgnoreCase(targetPrefix))
+                    .findFirst()
+                    .orElseGet(() -> titleRepository.findByPersonTypeAndIsActiveTrue("INDIVIDUAL").stream().findFirst().orElse(null));
+            if (matchedTitle != null) {
+                customer.setTitle(matchedTitle);
+            }
         }
 
         // 7. Phone Number & Line ID & Email
@@ -236,11 +284,14 @@ public class ThaiCustomerGeneratorHelper {
         if (customer == null) return;
         boolean needsEnrich = customer.getAddressLocal() == null || customer.getAddressLocal().isBlank()
                 || customer.getTaxId() == null || customer.getTaxId().isBlank()
-                || customer.getPhoneNumber() == null || customer.getPhoneNumber().isBlank();
+                || customer.getPhoneNumber() == null || customer.getPhoneNumber().isBlank()
+                || (customer.getTitle() == null && customer.getTitleId() == null)
+                || customer.getMiddleNameLocal() == null || customer.getMiddleNameLocal().isBlank()
+                || customer.getMiddleNameEn() == null || customer.getMiddleNameEn().isBlank();
         if (needsEnrich) {
             populateFullThaiCustomer(customer, customer.getCompanyNameLocal(), customer.getCompanyNameEn(), customer.getContactPerson());
             customerRepository.save(customer);
-            log.info("Enriched existing customer '{}' with full Thai contact & address info", customer.getCustomerCode());
+            log.info("Enriched existing customer '{}' with full Thai contact, title & address info", customer.getCustomerCode());
         }
     }
 

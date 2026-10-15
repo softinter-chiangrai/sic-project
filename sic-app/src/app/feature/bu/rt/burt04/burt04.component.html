@@ -86,7 +86,7 @@
           </div>
           <div class="min-w-0 flex-1 truncate" [title]="r.userName">
             <span class="font-medium text-[var(--text-active)] truncate">{{ r.userName }}</span>
-            @if (r.isDefault) {
+            @if (r.isCurrentUser) {
               <span class="ml-1 text-xs text-[var(--crm-primary)] font-medium shrink-0">{{ 'BURT04_DEFAULT_TAG' | translate }}</span>
             }
           </div>
@@ -140,13 +140,15 @@
             <i class="bi" [class.bi-check-circle-fill]="r.isActive" [class.bi-x-circle]="!r.isActive"></i>
           </button>
           <!-- Remove -->
-          <button
-            (click)="removeMember(r.id, grid)"
-            class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
-            [title]="'BURT04_REMOVE_TITLE' | translate"
-          >
-            <i class="bi bi-person-dash"></i>
-          </button>
+          @if (!r.isCurrentUser) {
+            <button
+              (click)="removeMember(r, grid)"
+              class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
+              [title]="'BURT04_REMOVE_TITLE' | translate"
+            >
+              <i class="bi bi-person-dash"></i>
+            </button>
+          }
         </div>
       </ng-template>
     </sic-gridpanel>

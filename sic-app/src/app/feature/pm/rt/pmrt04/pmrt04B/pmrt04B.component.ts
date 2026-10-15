@@ -27,6 +27,7 @@ import { Pmrt04AService } from '../pmrt04A/pmrt04A.service';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
+import { Pmrt04BForm } from './pmrt04B.form';
 import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
 
 
@@ -108,6 +109,12 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
     this.contractId = this.route.snapshot.paramMap.get('id');
     this.resolveCustomerAndProjectNames(this.originalContract);
 
+    if (this.originalContract && this.form) {
+      this.form.setValidators(Pmrt04BForm.dateRangeValidator(this.originalContract));
+      this.form.updateValueAndValidity({ emitEvent: false });
+    }
+    this.initDateAutoCalculation();
+
     this.loadFlows();
 
     // เผื่อผู้ใช้เข้ามาพร้อม query param projectId อื่น (เช่น deep link) — override ชื่อโครงการที่เดาไว้
@@ -116,6 +123,39 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       if (qProjectId) {
         this.fetchProjectName(qProjectId);
       }
+    });
+  }
+
+  get minStartDate(): string | null {
+    if (!this.originalContract?.endDate) return null;
+    const end = this.originalContract.endDate;
+    return typeof end === 'string' ? end : end.toISOString().split('T')[0];
+  }
+
+  get minEndDate(): string | null {
+    const start = this.form?.get('newStartDate')?.value;
+    if (!start) return this.minStartDate;
+    return typeof start === 'string' ? start : start.toISOString().split('T')[0];
+  }
+
+  private initDateAutoCalculation(): void {
+    this.form.get('newStartDate')?.valueChanges.subscribe((newStart) => {
+      if (!newStart) return;
+      const startDate = new Date(newStart);
+      if (isNaN(startDate.getTime())) return;
+
+      const currentEnd = this.form.get('newEndDate')?.value;
+      const endDate = currentEnd ? new Date(currentEnd) : null;
+
+      // ถ้ายังไม่มีวันสิ้นสุด หรือวันสิ้นสุดน้อยกว่าหรือเท่ากับวันเริ่มใหม่ ให้คำนวณวันสิ้นสุดใหม่ (+1 ปี)
+      if (!endDate || isNaN(endDate.getTime()) || endDate <= startDate) {
+        const nextYear = new Date(startDate);
+        nextYear.setFullYear(nextYear.getFullYear() + 1);
+        const endIso = nextYear.toISOString().split('T')[0];
+        this.form.get('newEndDate')?.setValue(endIso, { emitEvent: false });
+      }
+      this.form.updateValueAndValidity({ emitEvent: false });
+      this.cdr.detectChanges();
     });
   }
 
@@ -138,15 +178,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
           console.warn(this.translate.instant('PMRT04B_LOAD_APPROVAL_FLOW_FAILED_MSG'));
         },
       });
-  }
-
-  dateRangeValidator(group: FormGroup): { [key: string]: any } | null {
-    const start = group.get('newStartDate')?.value;
-    const end = group.get('newEndDate')?.value;
-    if (start && end && new Date(start) >= new Date(end)) {
-      return { endDateInvalid: this.translate.instant('PMRT04B_END_DATE_MUST_BE_AFTER_START') };
-    }
-    return null;
   }
 
   private resolveCustomerAndProjectNames(contract: ContractModel): void {
@@ -245,6 +276,21 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   submit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      const original = this.originalContract;
+      if (this.form.hasError('startDateBeforeOriginalEnd') && original?.endDate) {
+        this.dialog.warn(
+          this.translate.instant('PMRT04B_FORM_INVALID_TITLE'),
+          this.translate.instant('PMRT04B_START_DATE_BEFORE_ORIGINAL_END', { date: this.formatDate(original.endDate) })
+        );
+        return;
+      }
+      if (this.form.hasError('endDateInvalid')) {
+        this.dialog.warn(
+          this.translate.instant('PMRT04B_FORM_INVALID_TITLE'),
+          this.translate.instant('PMRT04B_END_DATE_MUST_BE_AFTER_START')
+        );
+        return;
+      }
       this.dialog.warn(this.translate.instant('PMRT04B_FORM_INVALID_TITLE'), this.translate.instant('PMRT04B_FORM_INVALID_MSG'));
       return;
     }
