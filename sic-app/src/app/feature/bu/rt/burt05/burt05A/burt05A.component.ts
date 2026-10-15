@@ -20,6 +20,7 @@ import { SicEntityState } from '../../../../../core/model/sic-entity-state';
 import { Burt05AForm } from './burt05A.form';
 import { Burt05AModel, Burt05APageData } from './burt05A.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-burt05A',
@@ -257,7 +258,7 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
   saveProgram() {
     if (this.programForm.invalid) {
       this.programForm.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('BURT05A_FORM_INCOMPLETE_TITLE'), this.translate.instant('BURT05A_FORM_INCOMPLETE_MSG'));
+      this.dialog.warn(this.translate.instant('BURT05A_FORM_INCOMPLETE_TITLE'), withInvalidFields(this.translate.instant('BURT05A_FORM_INCOMPLETE_MSG'), this.programForm, this.translate));
       return;
     }
 

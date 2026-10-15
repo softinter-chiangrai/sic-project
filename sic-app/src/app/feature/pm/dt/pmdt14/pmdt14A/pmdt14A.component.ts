@@ -34,6 +34,7 @@ import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.u
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt14a',
@@ -543,7 +544,7 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     this.formData.form.markAllAsTouched();
     if (this.formData.invalid) {
-      this.dialog.warn(this.translate.instant('PMDT14_FILL_DATA_TITLE'), this.translate.instant('PMDT14_CHECK_FORM_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT14_FILL_DATA_TITLE'), withInvalidFields(this.translate.instant('PMDT14_CHECK_FORM_MSG'), this.formData, this.translate));
       return;
     }
 

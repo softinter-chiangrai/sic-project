@@ -15,6 +15,7 @@ import { SicFromData } from '../../core/model/sic-from-data';
 import { DialogService } from '../../core/services/dialog.service';
 import { EmailVerifyModel, ProfileFormData, ProfileModel } from './profile.model';
 import { ProfileService } from './profile.service';
+import { withInvalidFields } from '../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-profile',
@@ -279,7 +280,7 @@ export class Profile implements OnInit {
     this.formProfileData.markAllAsTouched();
 
     if (this.formProfileData.invalid) {
-      this.dialog.warn(this.translate.instant('PROFILE_FORM_INCOMPLETE_TITLE'), this.translate.instant('PROFILE_FORM_INCOMPLETE_MSG'));
+      this.dialog.warn(this.translate.instant('PROFILE_FORM_INCOMPLETE_TITLE'), withInvalidFields(this.translate.instant('PROFILE_FORM_INCOMPLETE_MSG'), this.formProfileData, this.translate));
       return;
     }
 
@@ -316,7 +317,7 @@ export class Profile implements OnInit {
 
     this.formVerifyData.markAllAsTouched();
     if (this.formVerifyData.invalid) {
-      this.dialog.warn(this.translate.instant('PROFILE_FORM_INCOMPLETE_TITLE'), this.translate.instant('PROFILE_VERIFY_CODE_INVALID_MSG'));
+      this.dialog.warn(this.translate.instant('PROFILE_FORM_INCOMPLETE_TITLE'), withInvalidFields(this.translate.instant('PROFILE_VERIFY_CODE_INVALID_MSG'), this.formVerifyData, this.translate));
       return;
     }
 

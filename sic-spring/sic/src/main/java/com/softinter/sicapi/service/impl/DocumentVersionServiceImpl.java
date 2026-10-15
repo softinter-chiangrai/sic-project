@@ -281,7 +281,7 @@ public class DocumentVersionServiceImpl implements DocumentVersionService {
         }
         version.setProjectId(projectId);
         version.setBusinessId(bizId);
-        version.setDocumentCode(documentCode);
+        version.setDocumentCode(documentCode != null && documentCode.length() > 100 ? documentCode.substring(0, 100) : documentCode);
         version.setVersionNo(versionNo);
         version.setChangeSummary(changeSummary);
         version.setPreviousVersionId(previousVersionId);

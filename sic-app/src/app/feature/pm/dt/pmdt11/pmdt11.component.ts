@@ -17,6 +17,7 @@ import { SicFromData } from '../../../../core/model/sic-from-data';
 import { SicEntityState } from '../../../../core/model/sic-entity-state';
 import { ToForm } from '../../../../core/types/form.type';
 import { endNotBeforeStart } from '../../../../core/validator/date-range.validator';
+import { withInvalidFields } from '../../../../core/utils/invalid-fields.util';
 
 // ===== Model =====
 export interface TaskScheduleModel {
@@ -179,7 +180,7 @@ export class Pmdt11Component implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT11_FORM_INVALID_TITLE'), this.translate.instant('PMDT11_FILL_FORM_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT11_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('PMDT11_FILL_FORM_MSG'), this.formData, this.translate));
       return;
     }
 

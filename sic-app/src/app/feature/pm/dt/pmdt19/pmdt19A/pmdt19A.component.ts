@@ -20,6 +20,7 @@ import { DocumentVersionModel, Pmdt19APageData } from './pmdt19A.model';
 import { resolveProjectId } from '../../../../../core/utils/resolve-context.util';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt19a',
@@ -94,7 +95,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
     }
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT19A_WARN_TITLE'), this.translate.instant('PMDT19A_WARN_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT19A_WARN_TITLE'), withInvalidFields(this.translate.instant('PMDT19A_WARN_MSG'), this.formData, this.translate));
       return;
     }
 

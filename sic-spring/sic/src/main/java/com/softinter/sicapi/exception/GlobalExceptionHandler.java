@@ -66,14 +66,55 @@ public class GlobalExceptionHandler {
         log.warn("Data integrity violation: {}", cause);
         String msg = "ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบข้อมูลที่กรอก";
         java.util.regex.Matcher notNull = java.util.regex.Pattern.compile("null value in column \"([^\"]+)\"").matcher(cause);
+        java.util.regex.Matcher tooLong = java.util.regex.Pattern.compile("value too long for type character varying\\((\\d+)\\)").matcher(cause);
         if (notNull.find()) {
-            msg = "กรุณาระบุข้อมูลที่จำเป็น: " + notNull.group(1).replace('_', ' ');
+            msg = "กรุณาระบุข้อมูลที่จำเป็น: " + fieldLabel(notNull.group(1));
+        } else if (tooLong.find()) {
+            msg = "มีข้อความบางช่องยาวเกินกำหนด (ไม่เกิน " + tooLong.group(1) + " ตัวอักษร) กรุณาตรวจสอบข้อมูลที่กรอก";
+        } else if (cause.contains("numeric field overflow") || cause.contains("out of range")) {
+            msg = "มีตัวเลขบางช่องมีค่ามากเกินกำหนด กรุณาตรวจสอบข้อมูลที่กรอก";
         } else if (cause.contains("duplicate key")) {
             msg = "ข้อมูลนี้ซ้ำกับที่มีอยู่แล้ว";
         } else if (cause.contains("foreign key")) {
             msg = "ข้อมูลอ้างอิงไม่ถูกต้อง หรือยังถูกใช้งานอยู่";
         }
         return new ResponseEntity<>(new ErrorResponse(false, msg, HttpStatus.BAD_REQUEST.value()), HttpStatus.BAD_REQUEST);
+    }
+
+    // the words a user sees next to the field for the columns most forms require; others fall back to "column name"
+    private static final Map<String, String> FIELD_LABELS = Map.ofEntries(
+            Map.entry("project_id", "โครงการ"),
+            Map.entry("customer_id", "ลูกค้า"),
+            Map.entry("phase_id", "Phase"),
+            Map.entry("milestone_id", "Milestone"),
+            Map.entry("work_package_id", "Work Package"),
+            Map.entry("assignee_id", "ผู้รับผิดชอบ"),
+            Map.entry("requester_id", "ผู้ขอ"),
+            Map.entry("target_type", "ประเภทเอกสารที่เปลี่ยนแปลง"),
+            Map.entry("target_id", "เอกสารที่เปลี่ยนแปลง"),
+            Map.entry("title", "หัวข้อ"),
+            Map.entry("company_name_en", "ชื่อบริษัท (อังกฤษ)"),
+            Map.entry("company_name_local", "ชื่อบริษัท (ไทย)"),
+            Map.entry("project_name", "ชื่อโครงการ"),
+            Map.entry("phase_name", "ชื่อ Phase"),
+            Map.entry("milestone_name", "ชื่อ Milestone"),
+            Map.entry("package_name", "ชื่อ Work Package"),
+            Map.entry("task_name", "ชื่องาน"),
+            Map.entry("scenario_name", "ชื่อสถานการณ์ทดสอบ"),
+            Map.entry("plan_name", "ชื่อแผนทดสอบ"),
+            Map.entry("test_type", "ประเภทการทดสอบ"),
+            Map.entry("test_step", "ขั้นตอนการทดสอบ"),
+            Map.entry("expected_result", "ผลที่คาดหวัง"),
+            Map.entry("specification_type", "ประเภทข้อกำหนด"),
+            Map.entry("diagram_type", "ประเภทแผนภาพ"),
+            Map.entry("severity", "ความรุนแรง"),
+            Map.entry("priority", "ความสำคัญ"),
+            Map.entry("section_title", "หัวข้อ"),
+            Map.entry("document_name", "ชื่อเอกสาร"),
+            Map.entry("document_type", "ประเภทเอกสาร"));
+
+    static String fieldLabel(String column) {
+        return FIELD_LABELS.getOrDefault(column, column.replace('_', ' '));
     }
 
     @ExceptionHandler(UnexpectedRollbackException.class)

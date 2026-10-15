@@ -134,9 +134,11 @@ public class ApprovalServiceImpl implements ApprovalService {
             throw new IllegalStateException("กระบวนการอนุมัติยังไม่ได้กำหนดขั้นตอนการอนุมัติ (No Steps Defined)");
         }
 
-        String version = request.getVersion();
+        // the version being approved is the newest one of the document (e.g. the draft a Change Request just made), not the one the
+        // screen shows: screens show the last APPROVED version, so taking request.getVersion() re-approved the old version
+        String version = versionService.getLatestVersionNo(request.getDocumentType(), request.getDocumentId());
         if (version == null || version.isBlank()) {
-            version = versionService.getLatestVersionNo(request.getDocumentType(), request.getDocumentId());
+            version = request.getVersion();
         }
 
         String resolvedDocCode = request.getDocumentCode();

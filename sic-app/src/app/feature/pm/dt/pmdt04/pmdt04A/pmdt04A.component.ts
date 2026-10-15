@@ -65,6 +65,7 @@ import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/u
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 // ===== Service =====
 @Injectable({ providedIn: 'root' })
@@ -871,7 +872,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     if (this.isSaving) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT04_INVALID_FORM_TITLE'), this.translate.instant('PMDT04_FILL_VALID_FIELDS_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT04_INVALID_FORM_TITLE'), withInvalidFields(this.translate.instant('PMDT04_FILL_VALID_FIELDS_MSG'), this.formData, this.translate));
       return;
     }
 

@@ -16,6 +16,7 @@ import { burt04Service } from '../burt04.service';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { Burt04AModel, Burt04APageData } from './burt04A.model';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-burt04A',
@@ -88,7 +89,7 @@ export class Burt04AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('BURT04A_INCOMPLETE_FORM_TITLE'), this.translate.instant('BURT04A_ROLE_REQUIRED_MSG'));
+      this.dialog.warn(this.translate.instant('BURT04A_INCOMPLETE_FORM_TITLE'), withInvalidFields(this.translate.instant('BURT04A_ROLE_REQUIRED_MSG'), this.formData, this.translate));
       return;
     }
 

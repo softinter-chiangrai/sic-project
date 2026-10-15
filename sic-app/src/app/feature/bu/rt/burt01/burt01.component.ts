@@ -20,6 +20,7 @@ import { ISidebarAction } from '../../../../core/component/sic-sidebar/sic-sideb
 import { BaseActionComponent } from '../../../../core/component/sic-sidebar/base-action/base-action.component';
 import { finalize } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { withInvalidFields } from '../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-burt01',
@@ -92,7 +93,7 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
   submit() {
     this.formData.markAllAsTouched();
     if (this.formData.invalid) {
-      this.dialog.warn(this.translate.instant('BURT01_INVALID_FORM_TITLE'), this.translate.instant('BURT01_INVALID_FORM_MSG'));
+      this.dialog.warn(this.translate.instant('BURT01_INVALID_FORM_TITLE'), withInvalidFields(this.translate.instant('BURT01_INVALID_FORM_MSG'), this.formData, this.translate));
     } else if (this.formData.isNotChanged) {
       this.dialog.warn(this.translate.instant('BURT01_NO_CHANGES_TITLE'), this.translate.instant('BURT01_NO_CHANGES_MSG'));
     } else {

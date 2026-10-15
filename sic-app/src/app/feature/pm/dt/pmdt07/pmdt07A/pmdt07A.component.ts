@@ -44,6 +44,7 @@ import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/u
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
     selector: 'app-pmdt07a',
@@ -863,7 +864,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         if (this.isSaving) return;
         if (this.form.invalid) {
             this.form.markAllAsTouched();
-            this.dialog.warn(this.translate.instant('PMDT07_FORM_INVALID_TITLE'), this.translate.instant('PMDT07_FILL_ALL_FIELDS_MSG'));
+            this.dialog.warn(this.translate.instant('PMDT07_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('PMDT07_FILL_ALL_FIELDS_MSG'), this.form, this.translate));
             return;
         }
 

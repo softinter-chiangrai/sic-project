@@ -37,6 +37,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
     selector: 'app-pmdt06a',
@@ -124,7 +125,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         changeLevel: ['MINOR', Validators.required],
         targetVersion: [null],
         assigneeId: [null],
-        assigneeIds: [[]],
+        assigneeIds: [[], Validators.required],
         approvalFlowId: [null],
         attachmentGroupId: [null],
         rowVersion: [null],
@@ -679,7 +680,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         if (this.isSaving) return;
         if (this.form.invalid) {
             this.form.markAllAsTouched();
-            this.dialog.warn(this.translate.instant('PMDT06_FORM_INVALID_TITLE'), this.translate.instant('PMDT06_FILL_ALL_FIELDS_MSG'));
+            this.dialog.warn(this.translate.instant('PMDT06_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('PMDT06_FILL_ALL_FIELDS_MSG'), this.form, this.translate));
             return;
         }
 

@@ -1,4 +1,6 @@
 {
+  "FIELD_PROJECT_ID": "Project (choose it in the top bar)",
+  "FIELD_CUSTOMER_ID": "Customer (choose it in the top bar)",
   "VALIDATION_INVALID_DATE_TITLE": "Invalid date",
   "VALIDATION_END_BEFORE_START": "End date/time must not be earlier than the start date/time",
   "AI_OVERWRITE_LABEL": "Edit & refine existing content",

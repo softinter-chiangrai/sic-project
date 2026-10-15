@@ -608,7 +608,8 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         }
 
         if (tab.getId() != null) {
-            dto.setVersion(getCurrentVersion(tab));
+            // same rule as every other document screen: the newest version, whatever its status
+            dto.setVersion(documentVersionService.getCurrentVersionNo("DIAGRAM", tab.getId()));
             dto.setVersionCount(versionRepository.countByDiagramIdAndIsDeleteFalse(tab.getId()));
             try {
                 var status = approvalService.getCurrentStatus("DIAGRAM", tab.getId());

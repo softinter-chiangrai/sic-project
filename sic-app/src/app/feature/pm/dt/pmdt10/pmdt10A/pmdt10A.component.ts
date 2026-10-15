@@ -15,6 +15,7 @@ import { SicColorpickerComponent } from 'sic-ng';
 import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tiptap-editor/sic-tiptap-editor.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt10a',
@@ -157,7 +158,7 @@ export class Pmdt10AComponent implements OnInit {
     if (this.isSaving) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT10_INCOMPLETE_DATA_TITLE'), this.translate.instant('PMDT10_INCOMPLETE_DATA_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT10_INCOMPLETE_DATA_TITLE'), withInvalidFields(this.translate.instant('PMDT10_INCOMPLETE_DATA_MSG'), this.form, this.translate));
       return;
     }
 

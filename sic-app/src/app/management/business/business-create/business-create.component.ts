@@ -16,6 +16,7 @@ import { SicInputPhoneComponent } from 'sic-ng';
 import { CanComponentDeactivate } from '../../../core/guard/can-deactivate.guard';
 import { DialogService } from '../../../core/services/dialog.service';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { withInvalidFields } from '../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-business-create',
@@ -97,7 +98,7 @@ export class BusinessCreateComponent implements OnInit, CanComponentDeactivate {
   submit(){
     this.formBusinessData.markAllAsTouched();
     if (this.formBusinessData.invalid) {
-      this.dialog.warn(this.translate.instant('BUSINESS_CREATE_INVALID_FORM_TITLE'), this.translate.instant('BUSINESS_CREATE_INVALID_FORM_MSG'));
+      this.dialog.warn(this.translate.instant('BUSINESS_CREATE_INVALID_FORM_TITLE'), withInvalidFields(this.translate.instant('BUSINESS_CREATE_INVALID_FORM_MSG'), this.formBusinessData, this.translate));
     } else {
       const data = this.formBusinessData.value;
       this.isSaving.set(true);

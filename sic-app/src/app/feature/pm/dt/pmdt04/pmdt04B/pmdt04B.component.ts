@@ -22,6 +22,7 @@ import { ApprovalService } from '../../pmdt03/approval.service';
 import { Requirement } from './pmdt04B.model';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt04b',
@@ -221,7 +222,7 @@ export class Pmdt04BComponent implements OnInit {
     if (this.isSaving) return;
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT04B_FORM_INVALID_TITLE'), this.translate.instant('PMDT04B_FORM_INVALID_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT04B_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('PMDT04B_FORM_INVALID_MSG'), this.form, this.translate));
       return;
     }
 

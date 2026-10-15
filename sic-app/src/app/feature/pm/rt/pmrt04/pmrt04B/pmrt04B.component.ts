@@ -29,6 +29,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { DateTimeUtil } from '../../../../../core/utils/datetime.util';
 import { Pmrt04BForm } from './pmrt04B.form';
 import { Pmrt04BModel, Pmrt04BPageData } from './pmrt04B.model';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 
 @Component({
@@ -280,18 +281,16 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       if (this.form.hasError('startDateBeforeOriginalEnd') && original?.endDate) {
         this.dialog.warn(
           this.translate.instant('PMRT04B_FORM_INVALID_TITLE'),
-          this.translate.instant('PMRT04B_START_DATE_BEFORE_ORIGINAL_END', { date: this.formatDate(original.endDate) })
-        );
+          withInvalidFields(this.translate.instant('PMRT04B_START_DATE_BEFORE_ORIGINAL_END', { date: this.formatDate(original.endDate) }), this.form, this.translate));
         return;
       }
       if (this.form.hasError('endDateInvalid')) {
         this.dialog.warn(
           this.translate.instant('PMRT04B_FORM_INVALID_TITLE'),
-          this.translate.instant('PMRT04B_END_DATE_MUST_BE_AFTER_START')
-        );
+          withInvalidFields(this.translate.instant('PMRT04B_END_DATE_MUST_BE_AFTER_START'), this.form, this.translate));
         return;
       }
-      this.dialog.warn(this.translate.instant('PMRT04B_FORM_INVALID_TITLE'), this.translate.instant('PMRT04B_FORM_INVALID_MSG'));
+      this.dialog.warn(this.translate.instant('PMRT04B_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('PMRT04B_FORM_INVALID_MSG'), this.form, this.translate));
       return;
     }
 

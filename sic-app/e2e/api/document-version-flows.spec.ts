@@ -3,7 +3,8 @@ import { World, today } from './world';
 import { mock, userId } from '../api';
 
 // Version behaviour across the real workflows: change request -> new draft revision, approval of each versioned document.
-// The version shown is always the latest APPROVED one, so a draft revision opened by a change request must not replace it.
+// Screens show the NEWEST version (user's rule 2026-10-16), so the draft revision a change request opens is shown at once;
+// PDFs (pm_current_version_label) keep the latest APPROVED one.
 test.describe.configure({ mode: 'serial' });
 
 let w: World;
@@ -48,12 +49,14 @@ test.describe('change request opens a draft revision of an approved document', (
     ok(await w.api.post(`/api/pm/change-requests/${crId}/approve`), 'approve');
   });
 
-  test('the new revision is a draft row; the approved version is still the one shown', async () => {
+  test('the new revision is a draft row and is the version shown', async () => {
     const rows = await history('SPECIFICATION', specId);
     expect(rows.length).toBeGreaterThan(1);
     expect(rows.some((h) => h.approvalStatus !== 'APPROVED'), JSON.stringify(rows.map((h) => [h.versionNo, h.approvalStatus]))).toBeTruthy();
-    expect(data((await w.api.get(`/api/pm/specifications/${specId}`)).body).version).toBe(approvedNo);
-    // the document label used in PDFs is the same approved number, with no (Draft) suffix
+    const newest = rows[0].versionNo; // history is newest first
+    expect(newest).not.toBe(approvedNo);
+    expect(data((await w.api.get(`/api/pm/specifications/${specId}`)).body).version).toBe(newest);
+    // PDFs still print the approved number
     const label = await w.api.get(`/api/pm/specifications/${specId}/export-pdf`, { lang: 'en' });
     expect(label.status).toBe(200);
   });

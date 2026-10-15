@@ -15,6 +15,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { AiModelsService } from '../../../../../core/services/ai-models.service';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-burt07a',
@@ -75,7 +76,7 @@ export class Burt07AComponent implements OnInit, CanComponentDeactivate {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('BURT07A_FORM_INVALID_TITLE'), this.translate.instant('BURT07A_FORM_INVALID_MSG'));
+      this.dialog.warn(this.translate.instant('BURT07A_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('BURT07A_FORM_INVALID_MSG'), this.form, this.translate));
       return;
     }
 

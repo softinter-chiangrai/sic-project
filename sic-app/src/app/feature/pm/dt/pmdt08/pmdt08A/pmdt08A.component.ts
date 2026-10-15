@@ -11,6 +11,7 @@ import { SicTiptapEditorComponent } from '../../../../../core/component/sic-tipt
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt08a',
@@ -64,7 +65,7 @@ export class Pmdt08AComponent implements OnInit {
 
   submitPost(): void {
     if (this.postForm.invalid) {
-      this.dialog.warn(this.translate.instant('PMDT08A_FORM_INCOMPLETE_TITLE'), this.translate.instant('PMDT08A_FORM_INCOMPLETE_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT08A_FORM_INCOMPLETE_TITLE'), withInvalidFields(this.translate.instant('PMDT08A_FORM_INCOMPLETE_MSG'), this.postForm, this.translate));
       return;
     }
 

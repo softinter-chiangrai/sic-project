@@ -10,10 +10,12 @@ import {
   computed,
   effect,
   inject,
+  Injector,
   ChangeDetectionStrategy
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
+import { ControlValueAccessor, NG_VALUE_ACCESSOR, NgControl } from '@angular/forms';
+import { SicValidator } from '../../validator/sic.validator';
 import {
   AngularTiptapEditorComponent,
   ATE_DEFAULT_TOOLBAR_CONFIG,
@@ -43,6 +45,13 @@ export class SicTiptapEditorComponent implements ControlValueAccessor {
   @Input() label?: string;
   @Input() hint?: string;
   @Input() required = false;
+  private readonly injector = inject(Injector);
+  private readonly validator = inject(SicValidator);
+
+  /** the red * shows for [required] or a Validators.required on the bound control, like the other sic-* fields */
+  get isRequired(): boolean {
+    return this.required || this.validator.isRequired(this.injector.get(NgControl, null, { self: true })?.control ?? null);
+  }
 
   // === Inputs (Aliases & original inputs) ===
   @Input() set placeholder(value: string) {

@@ -18,6 +18,7 @@ import { PmTestCaseModel, PmTestScenarioModel } from '../pmdt12.model';
 import { Pmdt12Service } from '../pmdt12.service';
 import { createBugForm } from './pmdt12C.form';
 import { END_BEFORE_START } from '../../../../../core/validator/date-range.validator';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt12c',
@@ -335,10 +336,10 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       if (this.form.hasError(END_BEFORE_START)) {
-        this.dialog.warn(this.translate.instant('VALIDATION_INVALID_DATE_TITLE'), this.translate.instant('VALIDATION_END_BEFORE_START'));
+        this.dialog.warn(this.translate.instant('VALIDATION_INVALID_DATE_TITLE'), withInvalidFields(this.translate.instant('VALIDATION_END_BEFORE_START'), this.form, this.translate));
         return;
       }
-      this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลหัวข้อ Bug และรายละเอียดให้ครบถ้วน');
+      this.dialog.warn('ข้อมูลไม่ครบถ้วน', withInvalidFields('กรุณากรอกข้อมูลหัวข้อ Bug และรายละเอียดให้ครบถ้วน', this.form, this.translate));
       return;
     }
 

@@ -23,6 +23,7 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { HolidayService } from '../../../../../core/services/holiday.service';
 import { signal, computed } from '@angular/core';
 import { finalize } from 'rxjs/operators';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt02A',
@@ -215,7 +216,7 @@ export class Pmdt02AComponent implements OnInit {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.dialog.error(this.translate.instant('PMDT02_INVALID_DATA_TITLE'), this.translate.instant('PMDT02_FILL_ALL_FIELDS'));
+      this.dialog.error(this.translate.instant('PMDT02_INVALID_DATA_TITLE'), withInvalidFields(this.translate.instant('PMDT02_FILL_ALL_FIELDS'), this.form, this.translate));
       return;
     }
 

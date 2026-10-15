@@ -36,6 +36,7 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt15a',
@@ -681,7 +682,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     if (this.isLocked() || this.isSaving()) return;
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT15A_WARNING_TITLE'), this.translate.instant('PMDT15A_REQUIRED_FIELDS_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT15A_WARNING_TITLE'), withInvalidFields(this.translate.instant('PMDT15A_REQUIRED_FIELDS_MSG'), this.formData, this.translate));
       return;
     }
 

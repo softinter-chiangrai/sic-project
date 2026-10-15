@@ -45,6 +45,7 @@ import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/u
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmrt04a',
@@ -566,7 +567,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMRT04A_FORM_INVALID_TITLE'), this.translate.instant('PMRT04A_FORM_INVALID_MSG'));
+      this.dialog.warn(this.translate.instant('PMRT04A_FORM_INVALID_TITLE'), withInvalidFields(this.translate.instant('PMRT04A_FORM_INVALID_MSG'), this.form, this.translate));
       return;
     }
 

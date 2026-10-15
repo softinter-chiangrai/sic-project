@@ -19,6 +19,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { SicUploadComponent } from '../../../../core/component/sic-upload/sic-upload.component';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { AttachmentFile, Pmdt08PageData } from './pmdt08.model';
+import { withInvalidFields } from '../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt08',
@@ -361,7 +362,7 @@ export class Pmdt08Component implements OnInit {
     this.commentForm.markAllAsTouched();
 
     if (this.commentForm.invalid) {
-      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), this.translate.instant('PMDT08_COMMENT_TEXT_REQUIRED_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), withInvalidFields(this.translate.instant('PMDT08_COMMENT_TEXT_REQUIRED_MSG'), this.commentForm, this.translate));
       return;
     }
 
@@ -414,7 +415,7 @@ export class Pmdt08Component implements OnInit {
     this.replyForm.markAllAsTouched();
 
     if (this.replyForm.invalid) {
-      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), this.translate.instant('PMDT08_REPLY_TEXT_REQUIRED_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), withInvalidFields(this.translate.instant('PMDT08_REPLY_TEXT_REQUIRED_MSG'), this.replyForm, this.translate));
       return;
     }
 
@@ -503,7 +504,7 @@ export class Pmdt08Component implements OnInit {
 
   submitEdit(): void {
     if (this.editForm.invalid) {
-      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), this.translate.instant('PMDT08_TEXT_REQUIRED_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT08_PLEASE_ENTER_TEXT_TITLE'), withInvalidFields(this.translate.instant('PMDT08_TEXT_REQUIRED_MSG'), this.editForm, this.translate));
       return;
     }
     const commentId = this.editingCommentId();

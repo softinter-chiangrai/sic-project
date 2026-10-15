@@ -3,7 +3,7 @@ import { World, today } from '../api/world';
 import { mock } from '../api';
 import { Ui } from '../ui';
 
-// The version badge on a document's screen shows the latest APPROVED version, not a newer draft or rejected revision.
+// The version badge and the grid show the NEWEST version row whatever its status (user's rule 2026-10-16).
 test.describe.configure({ mode: 'serial' });
 
 let w: World;
@@ -47,21 +47,20 @@ for (const [name, route, key] of [
   ['delivery', '/feature/pm/delivery/:id/edit', 'delivery'],
   ['user manual', '/feature/pm/manual/:id/edit', 'manual'],
 ] as const) {
-  test(`${name}: the screen shows the approved version`, async () => {
+  test(`${name}: the screen shows the newest version`, async () => {
     await ui.visit(route.replace(':id', ids[key]));
     await ui.expectHealthy(route);
     await expect(badge()).toBeVisible({ timeout: 30_000 });
-    await expect(badge()).toContainText('v4.1.0');
-    await expect(badge()).not.toContainText('v4.2.0');
-    await expect(badge()).not.toContainText('v4.3.0');
+    await expect(badge()).toContainText('v4.3.0');
+    await expect(badge()).not.toContainText('v4.1.0');
   });
 }
 
-test('requirement list shows the approved version in the Version column', async () => {
+test('requirement list shows the newest version in the Version column', async () => {
   await ui.visit('/feature/pm/requirement');
   await ui.expectHealthy('/feature/pm/requirement');
   const row = ui.page.locator('tr, .sic-gridpanel__row').filter({ hasText: 'UI version req' }).first();
   await expect(row).toBeVisible({ timeout: 30_000 });
-  await expect(row).toContainText('v4.1.0');
-  await expect(row).not.toContainText('v4.3.0');
+  await expect(row).toContainText('v4.3.0');
+  await expect(row).not.toContainText('v4.1.0');
 });

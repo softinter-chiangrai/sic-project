@@ -38,6 +38,7 @@ class ApprovalModeTest {
     String currentUser;
     PmApprovalFlow flow;
     List<PmApprovalFlowStep> steps;
+    DocumentVersionService versionService;
 
     @BeforeEach
     void setUp() {
@@ -46,6 +47,7 @@ class ApprovalModeTest {
         PmApprovalFlowStepRepository stepRepo = Mockito.mock(PmApprovalFlowStepRepository.class);
         PmRequirementRepository reqRepo = Mockito.mock(PmRequirementRepository.class);
         CurrentUserService cu = Mockito.mock(CurrentUserService.class);
+        versionService = Mockito.mock(DocumentVersionService.class);
 
         when(cu.getUserId()).thenAnswer(i -> currentUser);
         when(cu.getUsername()).thenAnswer(i -> currentUser);
@@ -70,7 +72,7 @@ class ApprovalModeTest {
                 Mockito.mock(PmCustomerProjectRepository.class), Mockito.mock(PmDeliveryRepository.class),
                 Mockito.mock(PmInvoiceRepository.class), Mockito.mock(PmMaTicketRepository.class),
                 Mockito.mock(PmUserManualRepository.class),
-                Mockito.mock(DocumentVersionService.class), Mockito.mock(AuditLogService.class));
+                versionService, Mockito.mock(AuditLogService.class));
     }
 
     /** สร้าง flow ตามโหมด โดย approvers[i] คือผู้อนุมัติ step ที่ i+1 แล้วให้ requester ส่งคำขอ */
@@ -94,6 +96,28 @@ class ApprovalModeTest {
         req.setFlowId(flow.getId());
         currentUser = R;
         service.submitForApproval(req);
+    }
+
+    @Test
+    void theNewestVersionIsTheOneSubmittedNotTheOneTheScreenShows() {
+        // REQ-001: v1.0.0 approved, a Change Request made v3.0.0; the list still shows v1.0.0 and sends it with the request
+        when(versionService.getLatestVersionNo(any(), any())).thenReturn("v3.0.0");
+        flow = new PmApprovalFlow();
+        flow.setId(UUID.randomUUID());
+        flow.setApprovalMode(ApprovalMode.CHAIN);
+        steps = new ArrayList<>(List.of(new PmApprovalFlowStep()));
+        steps.get(0).setId(UUID.randomUUID());
+        steps.get(0).setFlow(flow);
+        steps.get(0).setStepOrder(1);
+        steps.get(0).setApproverUserId(A);
+        ApprovalSubmitRequest req = new ApprovalSubmitRequest();
+        req.setDocumentType("REQUIREMENT");
+        req.setDocumentId(UUID.randomUUID());
+        req.setFlowId(flow.getId());
+        req.setVersion("v1.0.0");
+        currentUser = R;
+        service.submitForApproval(req);
+        assertEquals("v3.0.0", saved.getVersion());
     }
 
     boolean can(String user) {

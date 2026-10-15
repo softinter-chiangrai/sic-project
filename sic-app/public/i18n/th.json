@@ -1,4 +1,6 @@
 {
+  "FIELD_PROJECT_ID": "โครงการ (เลือกที่แถบด้านบน)",
+  "FIELD_CUSTOMER_ID": "ลูกค้า (เลือกที่แถบด้านบน)",
   "VALIDATION_INVALID_DATE_TITLE": "วันที่ไม่ถูกต้อง",
   "VALIDATION_END_BEFORE_START": "วันที่/เวลาสิ้นสุดต้องไม่น้อยกว่าวันที่/เวลาเริ่มต้น",
   "AI_OVERWRITE_LABEL": "แก้ไข/ต่อเติมจากข้อมูลเดิม",

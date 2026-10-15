@@ -4,8 +4,8 @@ import { mock, userId } from '../api';
 import { sql } from '../infra/db';
 
 // The version of a document lives in pm_document_version only (no copy column on the document table).
-// "Current version" = latest APPROVED version, else the latest draft; never just the newest row,
-// because that can be an unapproved draft or a rejected revision.
+// Screens (API "version" field) show the NEWEST version row whatever its status (user's rule 2026-10-16).
+// PDFs keep pm_current_version / pm_current_version_label: latest APPROVED version, else the latest draft.
 test.describe.configure({ mode: 'serial' });
 
 let w: World;
@@ -56,17 +56,18 @@ test.describe('current version rule (requirement)', () => {
     expect(sql(`select pm_current_version_label('REQUIREMENT', '${reqId}')`)).toBe('v1.1.0 (Draft)');
   });
 
-  test('an approved version wins over a newer draft or rejected revision', async () => {
+  test('screens show the newest version even when it is a draft or rejected; PDFs keep the approved one', async () => {
     await addVersion('REQUIREMENT', reqId, 'v1.0.5', 'APPROVED');
     expect(await current()).toBe('v1.0.5');
     await addVersion('REQUIREMENT', reqId, 'v1.2.0', 'DRAFT');
+    expect(await current()).toBe('v1.2.0');
     await addVersion('REQUIREMENT', reqId, 'v1.3.0', 'REJECTED');
-    expect(await current()).toBe('v1.0.5'); // newest rows are draft / rejected: still the approved one
+    expect(await current()).toBe('v1.3.0'); // newest row, whatever its status
     expect(sql(`select pm_current_version('REQUIREMENT', '${reqId}')`)).toBe('v1.0.5');
     expect(sql(`select pm_current_version_label('REQUIREMENT', '${reqId}')`)).toBe('v1.0.5'); // approved: no suffix
   });
 
-  test('the latest approved version wins when there are several', async () => {
+  test('a newer approved version is shown', async () => {
     await addVersion('REQUIREMENT', reqId, 'v2.0.0', 'APPROVED');
     expect(await current()).toBe('v2.0.0');
   });
@@ -75,7 +76,7 @@ test.describe('current version rule (requirement)', () => {
     const rows = data((await w.api.get('/api/pm/document-versions', { documentType: 'REQUIREMENT', documentId: reqId })).body);
     const top = rows.find((r: any) => r.versionNo === 'v2.0.0');
     expect((await w.api.del(`/api/pm/document-versions/${top.id}`)).status).toBeLessThan(300);
-    expect(await current()).toBe('v1.0.5');
+    expect(await current()).toBe('v1.3.0'); // back to the newest row that is left
   });
 
   test('a document with no history row yields null in SQL (reports show "-")', () => {
@@ -103,9 +104,9 @@ test.describe('approval through the real flow', () => {
     const approved = hist.find((h: any) => h.approvalStatus === 'APPROVED');
     expect(await versionOf(`/api/pm/requirement/${id}`)).toBe(approved.versionNo);
 
-    // a draft revision created afterwards does not replace the approved version
+    // a draft revision created afterwards is what the screens show from then on
     await addVersion('REQUIREMENT', id, 'v9.9.9', 'DRAFT');
-    expect(await versionOf(`/api/pm/requirement/${id}`)).toBe(approved.versionNo);
+    expect(await versionOf(`/api/pm/requirement/${id}`)).toBe('v9.9.9');
   });
 });
 
@@ -115,7 +116,7 @@ test.describe('the other three documents read the same history', () => {
     expect(await versionOf(`/api/pm/specifications/${id}`)).toMatch(/^v\d+\.\d+\.\d+$/);
     await addVersion('SPECIFICATION', id, 'v3.0.0', 'APPROVED');
     await addVersion('SPECIFICATION', id, 'v3.1.0', 'DRAFT');
-    expect(await versionOf(`/api/pm/specifications/${id}`)).toBe('v3.0.0');
+    expect(await versionOf(`/api/pm/specifications/${id}`)).toBe('v3.1.0');
   });
 
   test('user manual', async () => {
@@ -125,7 +126,7 @@ test.describe('the other three documents read the same history', () => {
     expect(await versionOf(`/api/pm/manual/${id}`)).toBe('v1.0.0');
     await addVersion('USER_MANUAL', id, 'v1.4.0', 'APPROVED');
     await addVersion('USER_MANUAL', id, 'v1.5.0', 'DRAFT');
-    expect(await versionOf(`/api/pm/manual/${id}`)).toBe('v1.4.0');
+    expect(await versionOf(`/api/pm/manual/${id}`)).toBe('v1.5.0');
   });
 
   test('delivery (field deliveryVersion)', async () => {
@@ -134,7 +135,7 @@ test.describe('the other three documents read the same history', () => {
     expect(await versionOf(`/api/pm/delivery/${id}`, 'deliveryVersion')).toBe('v1.0.0');
     await addVersion('DELIVERY', id, 'v1.2.0', 'APPROVED');
     await addVersion('DELIVERY', id, 'v1.3.0', 'DRAFT');
-    expect(await versionOf(`/api/pm/delivery/${id}`, 'deliveryVersion')).toBe('v1.2.0');
+    expect(await versionOf(`/api/pm/delivery/${id}`, 'deliveryVersion')).toBe('v1.3.0');
   });
 
   test('a version sent in the request body is ignored (history is the only writer)', async () => {
@@ -145,7 +146,7 @@ test.describe('the other three documents read the same history', () => {
 });
 
 test.describe('list screens use the same rule', () => {
-  test('requirement paging shows the approved version, not the newest draft', async () => {
+  test('requirement paging shows the newest version, also when it is a draft', async () => {
     const projectId = await w.project();
     const id = await w.make('/api/pm/requirement/save', {
       requirementCode: mock('R'), title: 'List rule', description: 'd', projectId, state: 4, isActive: true,
@@ -155,7 +156,7 @@ test.describe('list screens use the same rule', () => {
     const rows = (await w.api.get('/api/pm/requirement', { page: 1, size: 100, projectId, keyword: 'List rule' })).body.data;
     const row = rows.find((r: any) => r.id === id);
     expect(row, JSON.stringify(rows).slice(0, 300)).toBeTruthy();
-    expect(row.version).toBe('v1.0.9');
+    expect(row.version).toBe('v1.1.9');
   });
 
   test('searching by version number finds the document (version search moved to the history table)', async () => {

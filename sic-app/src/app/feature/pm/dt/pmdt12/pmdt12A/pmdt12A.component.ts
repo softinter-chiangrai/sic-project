@@ -29,6 +29,7 @@ import { AiAttachmentPayload, filesToAiAttachments } from '../../../../../core/u
 import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.util';
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt12a',
@@ -616,7 +617,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     if (this.formData.invalid) {
       this.formData.markAllAsTouched();
-      this.dialog.warn(this.translate.instant('PMDT12A_INCOMPLETE_DATA_TITLE'), this.translate.instant('PMDT12A_INCOMPLETE_DATA_MSG'));
+      this.dialog.warn(this.translate.instant('PMDT12A_INCOMPLETE_DATA_TITLE'), withInvalidFields(this.translate.instant('PMDT12A_INCOMPLETE_DATA_MSG'), this.formData, this.translate));
       return;
     }
 

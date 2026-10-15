@@ -168,7 +168,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 "CHANGE_REQUEST",
                 cr.getId(),
                 cr.getProjectId(),
-                cr.getTitle(),
+                cr.getCrCode(),
                 "v1.0.0",
                 "สร้างคำขอเปลี่ยนแปลง (Initial change request)",
                 snapshotJson
@@ -294,7 +294,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 "CHANGE_REQUEST",
                 cr.getId(),
                 cr.getProjectId(),
-                cr.getTitle(),
+                cr.getCrCode(),
                 nextVersion,
                 diffSummary,
                 snapshotJson

@@ -25,6 +25,7 @@ import { Pmrt01AForm } from './pmrt01A.form';
 import { NavigationService } from '../../../../../core/services/navigation.service';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmrt01a',
@@ -162,7 +163,7 @@ export class Pmrt01AComponent implements OnInit, CanComponentDeactivate {
   submit() {
     this.formCustomerData.markAllAsTouched();
     if (this.formCustomerData.invalid) {
-      this.dialog.warn(this.translate.instant('PMRT01A_INVALID_FORM_TITLE'), this.translate.instant('PMRT01A_INVALID_FORM_MSG'));
+      this.dialog.warn(this.translate.instant('PMRT01A_INVALID_FORM_TITLE'), withInvalidFields(this.translate.instant('PMRT01A_INVALID_FORM_MSG'), this.formCustomerData, this.translate));
       return;
     }
 

@@ -26,6 +26,7 @@ import { finalize } from 'rxjs/operators';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
+import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
 
 @Component({
   selector: 'app-pmdt02C',
@@ -346,7 +347,7 @@ export class Pmdt02CComponent implements OnInit {
 
   onSubmit() {
     if (this.form.invalid) {
-      this.dialog.error(this.translate.instant('PMDT02_INVALID_DATA_TITLE'), this.translate.instant('PMDT02_FILL_ALL_FIELDS'));
+      this.dialog.error(this.translate.instant('PMDT02_INVALID_DATA_TITLE'), withInvalidFields(this.translate.instant('PMDT02_FILL_ALL_FIELDS'), this.form, this.translate));
       return;
     }
 
