@@ -253,6 +253,13 @@
     </div>
   </div>
 
+  <!-- ===== Change Request history of the open diagram (hidden when it has none) ===== -->
+  @if (currentTabId) {
+    <div class="flex-shrink-0 max-h-48 overflow-y-auto px-3 pt-2">
+      <sic-cr-history-panel targetType="DIAGRAM" [targetId]="currentTabId"></sic-cr-history-panel>
+    </div>
+  }
+
   <!-- ===== Draw.io Editor ===== -->
   <div class="flex-1 relative bg-[var(--bg,#f0f2f5)] min-h-0">
     @if (noProjectsAvailable()) {

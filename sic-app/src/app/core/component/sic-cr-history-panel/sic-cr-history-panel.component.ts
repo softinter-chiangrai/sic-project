@@ -19,6 +19,14 @@ interface CrHistoryRow {
   createdDate: string;
 }
 
+interface VersionRow {
+  id: string;
+  versionNo: string;
+  approvalStatus?: string;
+  createdDate?: string;
+  snapshotData?: string;
+}
+
 // ประวัติ Change Request ของเอกสารหนึ่งฉบับ (กรองด้วย targetType + targetId) — ซ่อนตัวเองเมื่อไม่มี CR
 @Component({
   selector: 'sic-cr-history-panel',
@@ -61,6 +69,18 @@ interface CrHistoryRow {
                   <td class="py-2 text-[var(--text)]">{{ statusLabel(r.status) }}</td>
                 </tr>
               }
+              @if (baseline(); as b) {
+                <tr class="border-t border-[var(--border)]">
+                  <td class="py-2 pr-3 font-mono text-[var(--text-muted)]">-</td>
+                  <td class="py-2 pr-3 text-[var(--text-muted)]">{{ 'CR_HISTORY_BASELINE' | translate }}</td>
+                  <td class="py-2 pr-3">
+                    <button type="button" class="font-mono text-[var(--crm-primary)] hover:underline cursor-pointer"
+                            (click)="openVersion(b.id, $event)">{{ b.versionNo }}</button>
+                  </td>
+                  <td class="py-2 pr-3 text-[var(--text)]">{{ b.createdDate | date: 'dd/MM/yyyy' }}</td>
+                  <td class="py-2 text-[var(--text)]">{{ statusLabel(b.approvalStatus || '') }}</td>
+                </tr>
+              }
             </tbody>
           </table>
         </div>
@@ -79,6 +99,8 @@ export class SicCrHistoryPanelComponent implements OnChanges {
   rows = signal<CrHistoryRow[]>([]);
   // crId -> id ของ document version ที่ตรงกับเวอร์ชันเป้าหมายของ CR (มีเฉพาะที่มีเวอร์ชันนั้นอยู่จริง)
   versionIds = signal<Record<string, string>>({});
+  // the version the document had before any Change Request (e.g. v1.0.0), so it can be opened from here too
+  baseline = signal<VersionRow | null>(null);
 
   ngOnChanges(): void {
     if (!this.targetType || !this.targetId) {
@@ -90,7 +112,7 @@ export class SicCrHistoryPanelComponent implements OnChanges {
     forkJoin({
       crs: this.http.get<PaginationResponse<CrHistoryRow>>(`${environment.apiBaseUrl}/api/pm/change-requests`, { params }),
       versions: this.http
-        .get<{ id: string; versionNo: string; snapshotData?: string }[]>(`${environment.apiBaseUrl}/api/pm/document-versions`, { params: vParams })
+        .get<VersionRow[]>(`${environment.apiBaseUrl}/api/pm/document-versions`, { params: vParams })
         .pipe(catchError(() => of([]))),
     }).subscribe({
       next: ({ crs, versions }) => {
@@ -103,6 +125,12 @@ export class SicCrHistoryPanelComponent implements OnChanges {
           if (v) ids[r.id] = v.id;
         }
         this.versionIds.set(ids);
+        // newest version that no CR made; prefer its approved row, then a row with saved content
+        const crVersions = new Set(rows.map((r) => norm(r.targetVersion)));
+        const own = versions.filter((x) => !crVersions.has(norm(x.versionNo)));
+        const ownNo = own[0]?.versionNo;
+        const same = own.filter((x) => x.versionNo === ownNo);
+        this.baseline.set(same.find((x) => x.approvalStatus === 'APPROVED') ?? same.find((x) => x.snapshotData) ?? same[0] ?? null);
         this.rows.set(rows);
       },
       error: () => this.rows.set([]),

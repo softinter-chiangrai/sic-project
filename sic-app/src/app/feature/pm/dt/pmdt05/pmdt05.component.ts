@@ -35,11 +35,12 @@ import { TraceLinkService, TraceRelationshipType } from '../../../../core/servic
 import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
 import { PmCustomerProject } from '../../rt/pmrt02/pmrt02.model';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicCrHistoryPanelComponent } from '../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 
 @Component({
   selector: 'app-pmdt05',
   standalone: true,
-  imports: [CommonModule, Pmdt05AComponent, TranslateModule],
+  imports: [CommonModule, Pmdt05AComponent, TranslateModule, SicCrHistoryPanelComponent],
   templateUrl: './pmdt05.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt05.component.css'],
