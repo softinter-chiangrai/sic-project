@@ -20,10 +20,12 @@ if ($procs) {
 
 # 2. Locate redhat.java cache folders in VS Code and Antigravity IDE
 $cachePaths = @(
-    "$env:APPDATA\Code\User\workspaceStorage",
-    "$env:APPDATA\Antigravity IDE\User\workspaceStorage",
-    "$env:APPDATA\Antigravity%20IDE\User\workspaceStorage"
+    "$env:APPDATA\Code\User\workspaceStorage"
 )
+Get-ChildItem -Path "$env:APPDATA" -Directory -Filter "*Antigravity*" -ErrorAction SilentlyContinue | ForEach-Object {
+    $ws = Join-Path $_.FullName "User\workspaceStorage"
+    if (Test-Path $ws) { $cachePaths += $ws }
+}
 
 $foundAny = $false
 
