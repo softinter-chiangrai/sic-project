@@ -201,7 +201,7 @@ services:
       APP_STORAGE_S3_DOCUMENT_BUCKET: ${APP_STORAGE_S3_DOCUMENT_BUCKET:-documents}
 
       # Report Service Configuration
-      REPORT_SERVICE_URL: ${REPORT_SERVICE_URL:-http://sic-report-service:80}
+      REPORT_SERVICE_URL: http://sic-report-service:80
       REPORT_SERVICE_TOKEN: ${REPORT_SERVICE_TOKEN:?set in .env}
 
       # Mail

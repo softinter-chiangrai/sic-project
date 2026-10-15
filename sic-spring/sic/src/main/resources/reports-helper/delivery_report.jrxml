@@ -1,0 +1,696 @@
+<!-- Created with Jaspersoft Studio version 7.0.6.final using JasperReports Library version 7.0.6-5d2a603fdc6b3db8f842a83383e594f41891534d  -->
+<jasperReport name="DeliveryReport" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="e5f6a7b8-c9d0-1234-efab-567890123456" whenNoDataType="AllSectionsNoDetail">
+	<property name="com.jaspersoft.studio.data.defaultdataadapter" value="SDLC"/>
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="SectionHeading" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<style name="Label" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Value" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="false"/>
+	<style name="ValueBold" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="TableHeader" mode="Opaque" forecolor="#1E293B" backcolor="#F1F5F9" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
+
+	<parameter name="deliveryId" class="java.lang.String"/>
+	<parameter name="lang" class="java.lang.String">
+		<defaultValueExpression><![CDATA["th"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="exportDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="businessName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["SOFTINTER CO., LTD."]]></defaultValueExpression>
+	</parameter>
+	<parameter name="logoStream" class="java.io.InputStream"/>
+	<parameter name="deliveryCode" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="deliveryTitle" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="projectName" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="contractNo" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="deliveryType" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="deliveryVersion" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="deliveryDate" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="status" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="deliverySummary" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="releaseNote" class="java.lang.String">
+		<defaultValueExpression><![CDATA["-"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="attachmentNames" class="java.lang.String">
+		<defaultValueExpression><![CDATA[""]]></defaultValueExpression>
+	</parameter>
+
+	<query language="sql"><![CDATA[SELECT 
+                CONCAT('DELIVERABLE (', COALESCE(it.item_type, 'ITEM'), ')') AS "category",
+                COALESCE(it.item_code, '-')                                 AS "code",
+                COALESCE(it.item_title, '-')                                AS "title",
+                COALESCE(it.item_status, 'DONE')                            AS "status",
+                COALESCE(it.remark, '')                                     AS "remark"
+            FROM pm_delivery_item it
+            WHERE it.is_delete = false
+              AND ($P{deliveryId} IS NULL OR $P{deliveryId} = '' OR it.delivery_id = CAST($P{deliveryId} AS uuid))
+            UNION ALL
+            SELECT 
+                CONCAT('CHECKLIST (', COALESCE(chk.item_category, 'GENERAL'), ')') AS "category",
+                '-'                                                         AS "code",
+                COALESCE(chk.item_name, '-')                                AS "title",
+                CASE WHEN chk.is_checked = true THEN 'PASS' ELSE 'PENDING' END AS "status",
+                COALESCE(chk.remark, '')                                    AS "remark"
+            FROM pm_delivery_checklist chk
+            WHERE chk.is_delete = false
+              AND ($P{deliveryId} IS NULL OR $P{deliveryId} = '' OR chk.delivery_id = CAST($P{deliveryId} AS uuid))
+            ORDER BY "category" ASC;]]></query>
+
+	<field name="category" class="java.lang.String"/>
+	<field name="code" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="status" class="java.lang.String"/>
+	<field name="remark" class="java.lang.String"/>
+
+	<!-- ========================================================
+         SUB-DATASETS FOR RICH TEXT CONTENT (HTML / Tables / Images)
+         ======================================================== -->
+	<dataset name="ContentBlocksDataset" uuid="d3a10003-d003-d003-d003-a1b2c3d4e5f6">
+		<field name="text" class="java.lang.String"/>
+		<field name="imageData" class="net.sf.jasperreports.renderers.Renderable"/>
+		<field name="align" class="java.lang.String"/>
+		<field name="tableRow" class="java.lang.Boolean"/>
+		<field name="cols" class="java.lang.Integer"/>
+		<field name="c1" class="java.lang.String"/>
+		<field name="c2" class="java.lang.String"/>
+		<field name="c3" class="java.lang.String"/>
+		<field name="c4" class="java.lang.String"/>
+		<field name="c5" class="java.lang.String"/>
+		<field name="c6" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="TableRowsDataset" uuid="d3a1000b-d001-d001-d001-a1b2c3d4e5f6">
+		<field name="c1" class="java.lang.String"/>
+		<field name="c2" class="java.lang.String"/>
+		<field name="c3" class="java.lang.String"/>
+		<field name="c4" class="java.lang.String"/>
+		<field name="c5" class="java.lang.String"/>
+		<field name="c6" class="java.lang.String"/>
+	</dataset>
+
+	<dataset name="ImageRowsDataset" uuid="d3a1000b-d002-d002-d002-a1b2c3d4e5f6">
+		<field name="imageData" class="java.io.InputStream"/>
+	</dataset>
+
+	<!-- ========================================================
+         TITLE BAND — Clean Minimal Header & Delivery Sections
+         ======================================================== -->
+	<title height="358" splitType="Stretch">
+		<element kind="image" uuid="1c0eb912-78d1-4be5-a4b5-9014674c12ab" x="0" y="0" width="105" height="38" scaleImage="RetainShape" onErrorType="Blank" vImageAlign="Middle">
+			<expression><![CDATA[($P{logoStream} != null ? $P{logoStream} : (this.getClass().getResourceAsStream("/images/softinter_logo.png") != null ? this.getClass().getResourceAsStream("/images/softinter_logo.png") : "../images/softinter_logo.png"))]]></expression>
+		</element>
+		<element kind="staticText" uuid="7cf41209-1a3b-489e-913a-7a561bc49a12" x="0" y="40" width="220" height="20" vTextAlign="Bottom" style="DocSubtitle">
+			<text><![CDATA[SOFTINTER CO., LTD.]]></text>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="230" y="-6" width="285" height="34" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery & Acceptance Document" : "เอกสารส่งมอบและตรวจรับงาน")]]></expression>
+		</element>
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="230" y="24" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="DocSubtitle">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Acceptance & Handover Certificate" : "ใบรับรองการส่งมอบและตรวจรับงาน")]]></expression>
+		</element>
+		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="230" y="44" width="285" height="18" blankWhenNull="true" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Issue Date: " : "วันที่ออกเอกสาร: ") + ($P{exportDate} != null ? $P{exportDate} : "-")]]></expression>
+		</element>
+		<element kind="line" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" x="0" y="68" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+
+		<!-- Header Banner Box -->
+		<element kind="rectangle" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" mode="Opaque" x="0" y="74" width="515" height="28" backcolor="#F8FAFC" radius="3">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" x="10" y="76" width="80" height="22" blankWhenNull="true" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Title:" : "หัวข้อการส่งมอบ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="35ab8e21-0a4c-47b2-843e-958a1b24ca02" x="95" y="76" width="410" height="22" blankWhenNull="true" vTextAlign="Middle" style="ValueBold">
+			<expression><![CDATA[($P{deliveryCode} != null ? "[" + $P{deliveryCode} + "] " : "") + ($P{deliveryTitle} != null ? $P{deliveryTitle} : "-")]]></expression>
+		</element>
+
+		<!-- Section 1 Info Grid Box -->
+		<element kind="rectangle" uuid="a1b2c3d4-5bca-47b2-913b-2a567c82a4c9" mode="Opaque" x="0" y="106" width="515" height="88" backcolor="#F8FAFC" radius="3">
+			<pen lineWidth="0.5" lineColor="#E2E8F0"/>
+		</element>
+
+		<!-- Row 1: Code & Status -->
+		<element kind="textField" uuid="8ea6f8e7-5bca-47b2-913b-2a567c82a4c9" x="10" y="110" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Code:" : "รหัสการส่งมอบ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-8c5e-4b92-bca8-e5659858df34" x="110" y="110" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{deliveryCode}]]></expression>
+		</element>
+		<element kind="textField" uuid="921ca47b-1b2a-48ca-913b-2a567c82a4c9" x="270" y="110" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="3d2194c7-1a2b-47b2-843e-958a1b24ca02" x="358" y="110" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{status}]]></expression>
+		</element>
+
+		<!-- Row 2: Project & Contract -->
+		<element kind="textField" uuid="7cf41209-1a2b-489e-913a-7a561bc49a12" x="10" y="130" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Project:" : "โครงการ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="62d1a3c7-1a2b-48ca-91b5-827a4192b0c5" x="110" y="130" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{projectName}]]></expression>
+		</element>
+		<element kind="textField" uuid="b13e9a72-1a2b-48a5-926f-47b2ae601b2a" x="270" y="130" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Contract No:" : "สัญญาอ้างอิง:")]]></expression>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-1a2b-47b2-913b-2a567c82a4c9" x="358" y="130" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{contractNo}]]></expression>
+		</element>
+
+		<!-- Row 3: Delivery Type & Version -->
+		<element kind="textField" uuid="c2d3e4f5-1a2b-48ca-91b5-827a4192b0c5" x="10" y="150" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Type:" : "ประเภทการส่งมอบ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="d3e4f5a6-1a2b-48a5-926f-47b2ae601b2a" x="110" y="150" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{deliveryType}]]></expression>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-1a2b-4b92-bca8-e5659858df34" x="270" y="150" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+		</element>
+		<element kind="textField" uuid="921ca47b-2b3a-48ca-913b-2a567c82a4c9" x="358" y="150" width="150" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{deliveryVersion}]]></expression>
+		</element>
+
+		<!-- Row 4: Delivery Date & Attachments -->
+		<element kind="textField" uuid="3d2194c7-2b3a-47b2-843e-958a1b24ca02" x="10" y="170" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Delivery Date:" : "วันที่ส่งมอบ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="7cf41209-2b3a-489e-913a-7a561bc49a12" x="110" y="170" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[$P{deliveryDate}]]></expression>
+		</element>
+		<element kind="textField" uuid="e4f5a6b7-1a2b-48ca-91b5-827a4192b0c5" x="270" y="170" width="85" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+			<printWhenExpression><![CDATA[$P{attachmentNames} != null && !$P{attachmentNames}.isEmpty()]]></printWhenExpression>
+			<expression><![CDATA[($P{lang}.equals("en") ? "Attachments:" : "ไฟล์แนบ:")]]></expression>
+		</element>
+		<element kind="textField" uuid="f5a6b7c8-1a2b-48a5-926f-47b2ae601b2a" x="358" y="170" width="150" height="18" blankWhenNull="true" textAdjust="StretchHeight" vTextAlign="Middle" style="FooterText">
+			<printWhenExpression><![CDATA[$P{attachmentNames} != null && !$P{attachmentNames}.isEmpty()]]></printWhenExpression>
+			<expression><![CDATA[$P{attachmentNames}]]></expression>
+		</element>
+
+		<!-- Delivery Summary (สรุปการส่งมอบ) Heading -->
+		<element kind="textField" uuid="62d1a3c7-2b3a-48ca-91b5-827a4192b0c5" positionType="Float" x="0" y="202" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "1. Delivery Summary" : "1. สรุปการส่งมอบ (Delivery Summary)")]]></expression>
+		</element>
+		<element kind="line" uuid="d1a10002-0001-4001-8001-000000000001" positionType="Float" x="0" y="224" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.6"/>
+		</element>
+		<!-- Delivery Summary Rich Text Content -->
+		<element kind="component" uuid="1b0bd38e-5444-4f6b-98c8-bf7858623554" positionType="Float" x="0" y="230" width="515" height="18">
+			<component kind="list">
+				<datasetRun uuid="7e97c2b2-cdae-47fd-9040-0d7769b8fa20" subDataset="ContentBlocksDataset">
+					<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($P{deliverySummary} != null && !$P{deliverySummary}.isBlank() ? $P{deliverySummary} : ($P{lang}.equals("en") ? "Delivery completed as per requirements." : "ส่งมอบงานตามข้อกำหนดเรียบร้อย"), "-", 513))]]></dataSourceExpression>
+				</datasetRun>
+				<contents height="16" width="515">
+					<element kind="textField" uuid="20566eea-f54d-4009-8c84-937421bdc97b" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+						<printWhenExpression><![CDATA[$F{text} != null]]></printWhenExpression>
+						<paragraph lineSpacing="Single" style="ContentText"/>
+						<expression><![CDATA[$F{text}]]></expression>
+					</element>
+					<element kind="image" uuid="72dc49b2-3c76-4937-9a2e-fed337299ac4" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Left" onErrorType="Blank">
+						<printWhenExpression><![CDATA[$F{imageData} != null && "left".equals($F{align})]]></printWhenExpression>
+						<expression><![CDATA[$F{imageData}]]></expression>
+					</element>
+					<element kind="image" uuid="2b6814ff-d133-497a-aa21-616f935c678b" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Center" onErrorType="Blank">
+						<printWhenExpression><![CDATA[$F{imageData} != null && "center".equals($F{align})]]></printWhenExpression>
+						<expression><![CDATA[$F{imageData}]]></expression>
+					</element>
+					<element kind="image" uuid="e9fec582-723a-4acf-bbfa-f8e78331ec56" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Right" onErrorType="Blank">
+						<printWhenExpression><![CDATA[$F{imageData} != null && "right".equals($F{align})]]></printWhenExpression>
+						<expression><![CDATA[$F{imageData}]]></expression>
+					</element>
+					<element kind="textField" uuid="6cfdc723-2e7e-4f03-942e-3ca41e53a848" x="0" y="0" width="507" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 1]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="c3b6d82f-f7b6-40c4-98fb-606a7d008647" x="0" y="0" width="254" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="5dbfef5f-55c5-4d1a-9a21-d0d7aa4f8746" x="254" y="0" width="253" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="f6ba19b2-1ef5-4874-bcbf-25b1066033b7" x="0" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="24a290d3-2f92-4456-acf7-ac8c8d599085" x="169" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="b65e6e01-73c8-4151-813e-e6c3352dcdbd" x="338" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="7fd75f2a-f3e3-4d07-9cf3-b3b75cc10411" x="0" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="ee3d5341-d304-427d-8a59-0ef268b71cfe" x="127" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="2d9a40c7-aacc-48ac-a875-3c61fef750e9" x="254" y="0" width="126" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="6140e6c7-d93a-498a-866e-9964b29001e2" x="380" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c4}]]></expression>
+					</element>
+					<element kind="textField" uuid="363445af-6481-4efb-98df-a528af385d1e" x="0" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="0ef29585-1b27-40f2-bd11-8a83913254d3" x="101" y="0" width="102" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="8bfca87a-3777-4fdb-9019-be8b6cd8571a" x="203" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="53899ac2-6861-4158-acfa-7e3e93a51ce0" x="304" y="0" width="102" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c4}]]></expression>
+					</element>
+					<element kind="textField" uuid="136298f6-98ad-4f24-a2d5-c2ab1b7e6087" x="406" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c5}]]></expression>
+					</element>
+					<element kind="textField" uuid="c1b38527-cbf3-481c-bd09-2dd89c229771" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="77cb0318-f962-49c6-9cce-87f9be2dbd77" x="85" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="e7193489-2280-4733-8e09-5e76fe803a92" x="169" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="9134e330-fcb5-4d0b-ac04-413d28caaccd" x="254" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c4}]]></expression>
+					</element>
+					<element kind="textField" uuid="6d176e30-f46a-4f50-b960-89ac72a572be" x="338" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c5}]]></expression>
+					</element>
+					<element kind="textField" uuid="f2519d80-4c29-49bd-897a-3952e7b8ea39" x="423" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c6}]]></expression>
+					</element>
+				</contents>
+			</component>
+		</element>
+
+		<!-- Release Notes & Key Features (รายการการแก้ไขและฟีเจอร์หลัก) Heading -->
+		<element kind="textField" uuid="a7b8c9d0-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="0" y="256" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "2. Release Notes & Key Features" : "2. รายการการแก้ไขและฟีเจอร์หลัก (Release Notes & Key Features)")]]></expression>
+		</element>
+		<element kind="line" uuid="d1a10002-0001-4001-8001-000000000002" positionType="Float" x="0" y="278" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.6"/>
+		</element>
+		<!-- Release Notes Rich Text Content -->
+		<element kind="component" uuid="b8c9d0e1-4567-4f6b-98c8-bf7858623555" positionType="Float" x="0" y="284" width="515" height="18">
+			<component kind="list">
+				<datasetRun uuid="8f08d3c3-debf-480e-a151-1e8870c90b31" subDataset="ContentBlocksDataset">
+					<dataSourceExpression><![CDATA[new net.sf.jasperreports.engine.data.JRBeanCollectionDataSource(com.softinter.sicapi.util.ReportHelper.extractContentBlocks($P{releaseNote} != null && !$P{releaseNote}.isBlank() ? $P{releaseNote} : ($P{lang}.equals("en") ? "No release notes recorded." : "ไม่มีบันทึกรายการแก้ไขเพิ่มเติม"), "-", 513))]]></dataSourceExpression>
+				</datasetRun>
+				<contents height="16" width="515">
+					<element kind="textField" uuid="21566eea-f54d-4009-8c84-937421bdc97c" x="0" y="0" width="515" height="16" textAdjust="StretchHeight" markup="none" blankWhenNull="true" hTextAlign="Left" vTextAlign="Top" style="ContentText">
+						<printWhenExpression><![CDATA[$F{text} != null]]></printWhenExpression>
+						<paragraph lineSpacing="Single" style="ContentText"/>
+						<expression><![CDATA[$F{text}]]></expression>
+					</element>
+					<element kind="image" uuid="73dc49b2-3c76-4937-9a2e-fed337299ac5" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Left" onErrorType="Blank">
+						<printWhenExpression><![CDATA[$F{imageData} != null && "left".equals($F{align})]]></printWhenExpression>
+						<expression><![CDATA[$F{imageData}]]></expression>
+					</element>
+					<element kind="image" uuid="2c6814ff-d133-497a-aa21-616f935c678c" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Center" onErrorType="Blank">
+						<printWhenExpression><![CDATA[$F{imageData} != null && "center".equals($F{align})]]></printWhenExpression>
+						<expression><![CDATA[$F{imageData}]]></expression>
+					</element>
+					<element kind="image" uuid="eafec582-723a-4acf-bbfa-f8e78331ec57" x="0" y="0" width="515" height="4" scaleImage="RealHeight" hImageAlign="Right" onErrorType="Blank">
+						<printWhenExpression><![CDATA[$F{imageData} != null && "right".equals($F{align})]]></printWhenExpression>
+						<expression><![CDATA[$F{imageData}]]></expression>
+					</element>
+					<element kind="textField" uuid="6dfdc723-2e7e-4f03-942e-3ca41e53a849" x="0" y="0" width="507" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 1]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="c4b6d82f-f7b6-40c4-98fb-606a7d008648" x="0" y="0" width="254" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="5ebfef5f-55c5-4d1a-9a21-d0d7aa4f8747" x="254" y="0" width="253" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 2]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="f7ba19b2-1ef5-4874-bcbf-25b1066033b8" x="0" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="25a290d3-2f92-4456-acf7-ac8c8d599086" x="169" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="b75e6e01-73c8-4151-813e-e6c3352dcdbe" x="338" y="0" width="169" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 3]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="70d75f2a-f3e3-4d07-9cf3-b3b75cc10412" x="0" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="ef3d5341-d304-427d-8a59-0ef268b71cff" x="127" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="2e9a40c7-aacc-48ac-a875-3c61fef750ea" x="254" y="0" width="126" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="6240e6c7-d93a-498a-866e-9964b29001e3" x="380" y="0" width="127" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 4]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c4}]]></expression>
+					</element>
+					<element kind="textField" uuid="373445af-6481-4efb-98df-a528af385d1f" x="0" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="0ff29585-1b27-40f2-bd11-8a83913254d4" x="101" y="0" width="102" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="8cfca87a-3777-4fdb-9019-be8b6cd8571b" x="203" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="54899ac2-6861-4158-acfa-7e3e93a51ce1" x="304" y="0" width="102" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c4}]]></expression>
+					</element>
+					<element kind="textField" uuid="146298f6-98ad-4f24-a2d5-c2ab1b7e6088" x="406" y="0" width="101" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 5]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c5}]]></expression>
+					</element>
+					<element kind="textField" uuid="c2b38527-cbf3-481c-bd09-2dd89c229772" x="0" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c1}]]></expression>
+					</element>
+					<element kind="textField" uuid="78cb0318-f962-49c6-9cce-87f9be2dbd78" x="85" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c2}]]></expression>
+					</element>
+					<element kind="textField" uuid="e8193489-2280-4733-8e09-5e76fe803a93" x="169" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c3}]]></expression>
+					</element>
+					<element kind="textField" uuid="9234e330-fcb5-4d0b-ac04-413d28caacce" x="254" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c4}]]></expression>
+					</element>
+					<element kind="textField" uuid="6e176e30-f46a-4f50-b960-89ac72a572bf" x="338" y="0" width="85" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c5}]]></expression>
+					</element>
+					<element kind="textField" uuid="f3519d80-4c29-49bd-897a-3952e7b8ea3a" x="423" y="0" width="84" height="16" textAdjust="StretchHeight" stretchType="ContainerHeight" markup="none" blankWhenNull="true" style="ContentText">
+						<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{tableRow}) && $F{cols} == 6]]></printWhenExpression>
+						<box padding="2">
+							<pen lineWidth="0.4" lineColor="#94A3B8"/>
+						</box>
+						<expression><![CDATA[$F{c6}]]></expression>
+					</element>
+				</contents>
+			</component>
+		</element>
+
+		<!-- Section 2 Header (Deliverables & Checklists) -->
+		<element kind="textField" uuid="8ea6f8e7-3c4b-47b2-913b-2a567c82a4c9" positionType="Float" x="0" y="310" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "3. Deliverables & Checklists" : "3. รายการส่งมอบและรายการตรวจสอบ (Deliverables & Checklists)")]]></expression>
+		</element>
+		<element kind="line" uuid="4b2a5c1a-3c4b-4b92-bca8-e5659858df34" positionType="Float" x="0" y="332" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.6"/>
+		</element>
+	</title>
+
+	<!-- ========================================================
+         COLUMN HEADER FOR DELIVERABLE ITEMS TABLE
+         ======================================================== -->
+	<columnHeader height="24">
+		<element kind="rectangle" uuid="921ca47b-3c4b-48ca-913b-2a567c82a4c9" x="0" y="0" width="515" height="24" radius="2" style="TableHeader">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="textField" uuid="3d2194c7-3c4b-47b2-843e-958a1b24ca02" x="6" y="0" width="95" height="22" blankWhenNull="true" vTextAlign="Bottom" style="TableHeader">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Category" : "หมวดหมู่")]]></expression>
+		</element>
+		<element kind="textField" uuid="7cf41209-3c4b-489e-913a-7a561bc49a12" x="105" y="0" width="80" height="22" blankWhenNull="true" vTextAlign="Bottom" style="TableHeader">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Ref. Code" : "รหัสอ้างอิง")]]></expression>
+		</element>
+		<element kind="textField" uuid="62d1a3c7-3c4b-48ca-91b5-827a4192b0c5" x="190" y="0" width="185" height="22" blankWhenNull="true" vTextAlign="Bottom" style="TableHeader">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Deliverable / Checklist Item" : "รายการงานที่ส่งมอบ / Checklist")]]></expression>
+		</element>
+		<element kind="textField" uuid="b13e9a72-3c4b-48a5-926f-47b2ae601b2a" x="380" y="0" width="65" height="22" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="TableHeader">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Result" : "ผลการตรวจ")]]></expression>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-4d5c-47b2-913b-2a567c82a4c9" x="450" y="0" width="60" height="22" blankWhenNull="true" vTextAlign="Bottom" style="TableHeader">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Remark" : "หมายเหตุ")]]></expression>
+		</element>
+	</columnHeader>
+
+	<!-- ========================================================
+         DETAIL BAND — Deliverable Items Rows
+         ======================================================== -->
+	<detail>
+		<band height="24" splitType="Stretch">
+			<element kind="rectangle" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" positionType="Float" stretchType="ElementGroupHeight" x="0" y="0" width="515" height="24" backcolor="#FFFFFF">
+				<pen lineWidth="0.4" lineColor="#E2E8F0"/>
+			</element>
+			<element kind="textField" uuid="921ca47b-4d5c-48ca-913b-2a567c82a4c9" positionType="Float" x="6" y="2" width="95" height="20" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{category}]]></expression>
+			</element>
+			<element kind="textField" uuid="3d2194c7-4d5c-47b2-843e-958a1b24ca02" positionType="Float" x="105" y="2" width="80" height="20" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="ValueBold">
+				<expression><![CDATA[$F{code}]]></expression>
+			</element>
+			<element kind="textField" uuid="7cf41209-4d5c-489e-913a-7a561bc49a12" positionType="Float" x="190" y="2" width="185" height="20" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{title}]]></expression>
+			</element>
+			<element kind="textField" uuid="62d1a3c7-4d5c-48ca-91b5-827a4192b0c5" positionType="Float" x="380" y="2" width="65" height="20" textAdjust="StretchHeight" blankWhenNull="true" hTextAlign="Center" vTextAlign="Bottom" style="ValueBold">
+				<expression><![CDATA[$F{status}]]></expression>
+			</element>
+			<element kind="textField" uuid="b13e9a72-4d5c-48a5-926f-47b2ae601b2a" positionType="Float" x="450" y="2" width="60" height="20" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Bottom" style="Value">
+				<expression><![CDATA[$F{remark}]]></expression>
+			</element>
+		</band>
+	</detail>
+
+	<!-- ========================================================
+         PAGE FOOTER
+         ======================================================== -->
+	<pageFooter height="30">
+		<element kind="line" uuid="8ea6f8e7-5e6d-47b2-913b-2a567c82a4c9" x="0" y="4" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+		<element kind="staticText" uuid="4b2a5c1a-5e6d-4b92-bca8-e5659858df34" x="0" y="8" width="350" height="18" vTextAlign="Bottom" style="FooterText">
+			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
+		</element>
+		<element kind="textField" uuid="921ca47b-5e6d-48ca-913b-2a567c82a4c9" x="380" y="8" width="135" height="18" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<expression><![CDATA[+ $V{PAGE_NUMBER}]]></expression>
+		</element>
+	</pageFooter>
+
+	<!-- ========================================================
+         SUMMARY BAND — Clean Sign-off Section
+         ======================================================== -->
+	<summary height="190" splitType="Prevent">
+		<element kind="textField" uuid="3d2194c7-5e6d-47b2-843e-958a1b24ca02" x="0" y="10" width="515" height="22" blankWhenNull="true" vTextAlign="Bottom" style="SectionHeading">
+			<expression><![CDATA[($P{lang}.equals("en") ? "4. Handover & Acceptance Sign-off" : "4. การลงนามรับรองการส่งมอบและตรวจรับ (Handover & Acceptance Sign-off)")]]></expression>
+		</element>
+		<element kind="line" uuid="7cf41209-5e6d-489e-913a-7a561bc49a12" x="0" y="32" width="515" height="1" forecolor="#E2E8F0">
+			<pen lineWidth="0.6"/>
+		</element>
+
+		<!-- Signatures: ผู้จัดทำ -->
+		<element kind="rectangle" uuid="62d1a3c7-5e6d-48ca-91b5-827a4192b0c5" mode="Opaque" x="0" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="textField" uuid="b13e9a72-5e6d-48a5-926f-47b2ae601b2a" x="10" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Prepared By" : "ผู้จัดทำ")]]></expression>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-6f7e-47b2-913b-2a567c82a4c9" x="10" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
+		</element>
+		<element kind="textField" uuid="4b2a5c1a-6f7e-4b92-bca8-e5659858df34" x="10" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Position: ....................................................." : "ตำแหน่ง: .....................................................")]]></expression>
+		</element>
+		<element kind="textField" uuid="921ca47b-6f7e-48ca-913b-2a567c82a4c9" x="10" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Date: ........ / ........ / ................" : "วันที่: ........ / ........ / ................")]]></expression>
+		</element>
+
+		<!-- Signatures: ผู้อนุมัติ -->
+		<element kind="rectangle" uuid="3d2194c7-6f7e-489e-913a-7a561bc49a12" mode="Opaque" x="270" y="40" width="245" height="140" backcolor="#FAFAFA" radius="3">
+			<pen lineWidth="0.5" lineColor="#CBD5E1"/>
+		</element>
+		<element kind="textField" uuid="7cf41209-6f7e-489e-913a-7a561bc49a12" x="280" y="48" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Label">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Approved By" : "ผู้อนุมัติ")]]></expression>
+		</element>
+		<element kind="textField" uuid="62d1a3c7-6f7e-48ca-91b5-827a4192b0c5" x="280" y="108" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA["(..................................................................)"]]></expression>
+		</element>
+		<element kind="textField" uuid="b13e9a72-6f7e-4a59-926f-47b2ae601b2a" x="280" y="130" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Position: ....................................................." : "ตำแหน่ง: .....................................................")]]></expression>
+		</element>
+		<element kind="textField" uuid="8ea6f8e7-7a8b-47b2-913b-2a567c82a4c9" x="280" y="152" width="225" height="20" blankWhenNull="true" hTextAlign="Center" vTextAlign="Middle" style="Value">
+			<expression><![CDATA[($P{lang}.equals("en") ? "Date: ........ / ........ / ................" : "วันที่: ........ / ........ / ................")]]></expression>
+		</element>
+	</summary>
+</jasperReport>
