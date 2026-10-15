@@ -65,11 +65,20 @@
                 COALESCE(tc.expected_result, '-') AS "expectedResult",
                 COALESCE(tc.actual_result, '-') AS "actualResult",
                 COALESCE(tc.test_status, 'Pending') AS "testStatus",
-                COALESCE(tc.tester, '-') AS "tester",
+                COALESCE(
+                    NULLIF(TRIM(CASE WHEN $P{lang} = 'en'
+                        THEN CONCAT(prof_tester.first_name_en, ' ', prof_tester.last_name_en)
+                        ELSE CONCAT(prof_tester.first_name_local, ' ', prof_tester.last_name_local) END), ''),
+                    NULLIF(TRIM(CONCAT(prof_tester.first_name_local, ' ', prof_tester.last_name_local)), ''),
+                    NULLIF(TRIM(CONCAT(prof_tester.first_name_en, ' ', prof_tester.last_name_en)), ''),
+                    tc.tester,
+                    '-'
+                ) AS "tester",
                 (SELECT STRING_AGG(su.file_name || ' (' || COALESCE(UPPER(substring(su.file_name from '\.([^.]+)$')) || ', ', '') || pg_size_pretty(su.file_size) || ')', ', ') FROM su_upload su
                     WHERE su.upload_group_id = tc.attachment_group_id AND su.is_active = true) AS "attachmentNames"
             FROM pm_test_case tc
             LEFT JOIN pm_test_scenario sc ON sc.id = tc.scenario_id AND sc.is_delete = false
+            LEFT JOIN su_profile prof_tester ON (prof_tester.user_id = tc.tester OR CAST(prof_tester.id AS VARCHAR) = tc.tester) AND prof_tester.is_delete = false
             WHERE tc.is_delete = false
               AND ($P{projectId} IS NULL OR $P{projectId} = '' OR tc.project_id = CAST($P{projectId} AS uuid) OR sc.project_id = CAST($P{projectId} AS uuid))
               AND ($P{scenarioId} IS NULL OR $P{scenarioId} = '' OR tc.scenario_id = CAST($P{scenarioId} AS uuid))

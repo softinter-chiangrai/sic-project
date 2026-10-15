@@ -11,7 +11,8 @@ setup('seed profile + business', async () => {
     const uid = await userId();
     sql(
       `INSERT INTO su_profile (id, created_date, updated_date, user_id, title_id, first_name_en, first_name_local, email)
-       VALUES (gen_random_uuid(), now(), now(), '${uid}', '${await first('/api/profile/combobox-title')}', 'E2E', 'E2E', 'e2e@example.test')`,
+       VALUES (gen_random_uuid(), now(), now(), '${uid}', '${await first('/api/profile/combobox-title')}', 'E2E', 'E2E', 'e2e@example.test')
+       ON CONFLICT (user_id) DO UPDATE SET title_id = EXCLUDED.title_id, first_name_en = EXCLUDED.first_name_en, first_name_local = EXCLUDED.first_name_local`,
     );
   }
 

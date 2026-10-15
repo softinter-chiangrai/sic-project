@@ -35,7 +35,15 @@
                 COALESCE(r.priority, '-')                     AS "priority",
                 COALESCE(r.business_value, '-')               AS "businessValue",
                 COALESCE(r.status, '-')                       AS "status",
-                COALESCE(r.created_by, '-')                   AS "createdBy",
+                COALESCE(
+                    NULLIF(TRIM(CASE WHEN $P{lang} = 'en'
+                        THEN CONCAT(prof.first_name_en, ' ', prof.last_name_en)
+                        ELSE CONCAT(prof.first_name_local, ' ', prof.last_name_local) END), ''),
+                    NULLIF(TRIM(CONCAT(prof.first_name_local, ' ', prof.last_name_local)), ''),
+                    NULLIF(TRIM(CONCAT(prof.first_name_en, ' ', prof.last_name_en)), ''),
+                    r.created_by,
+                    '-'
+                )                                             AS "createdBy",
                 TO_CHAR(r.created_date, 'DD/MM/YYYY HH24:MI') AS "createdDate",
                 COALESCE(r.description, 'ไม่มีรายละเอียดเพิ่มเติม')          AS "description",
                 COALESCE(r.acceptance_criteria, 'ไม่มีเงื่อนไขการยอมรับเพิ่มเติม') AS "acceptanceCriteria",
@@ -44,6 +52,7 @@
             FROM pm_requirement r
             LEFT JOIN pm_customer_project p ON r.project_id = p.id
             LEFT JOIN pm_customer c ON p.customer_id = c.id
+            LEFT JOIN su_profile prof ON (prof.user_id = r.created_by OR CAST(prof.id AS VARCHAR) = r.created_by) AND prof.is_delete = false
             WHERE r.is_delete = false
               AND ($P{requirementId} IS NULL OR $P{requirementId} = '' OR r.id = CAST($P{requirementId} AS uuid))
             ORDER BY r.created_date DESC

@@ -46,7 +46,7 @@
                             )
                             FROM unnest(string_to_array(s.owner, ',')) AS raw_u_id
                             CROSS JOIN LATERAL (SELECT TRIM(raw_u_id) AS u_id) l
-                            LEFT JOIN su_profile prof ON prof.user_id = l.u_id AND prof.is_delete = false
+                            LEFT JOIN su_profile prof ON (prof.user_id = l.u_id OR CAST(prof.id AS VARCHAR) = l.u_id) AND prof.is_delete = false
                             WHERE l.u_id <> ''
                         ),
                         ''

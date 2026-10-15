@@ -31,9 +31,25 @@
                 COALESCE(t.ticket_type, 'Incident')                  AS "ticketType",
                 COALESCE(t.severity, 'Medium')                       AS "severity",
                 COALESCE(t.status, 'Open')                           AS "status",
-                COALESCE(t.reported_by, '-')                         AS "reportedBy",
+                COALESCE(
+                    NULLIF(TRIM(CASE WHEN $P{lang} = 'en'
+                        THEN CONCAT(prof_rep.first_name_en, ' ', prof_rep.last_name_en)
+                        ELSE CONCAT(prof_rep.first_name_local, ' ', prof_rep.last_name_local) END), ''),
+                    NULLIF(TRIM(CONCAT(prof_rep.first_name_local, ' ', prof_rep.last_name_local)), ''),
+                    NULLIF(TRIM(CONCAT(prof_rep.first_name_en, ' ', prof_rep.last_name_en)), ''),
+                    t.reported_by,
+                    '-'
+                )                                                     AS "reportedBy",
                 COALESCE(TO_CHAR(t.reported_date, 'DD/MM/YYYY HH24:MI'), '-') AS "reportedDate",
-                COALESCE(t.assigned_to, '-')                         AS "assignedTo",
+                COALESCE(
+                    NULLIF(TRIM(CASE WHEN $P{lang} = 'en'
+                        THEN CONCAT(prof_asg.first_name_en, ' ', prof_asg.last_name_en)
+                        ELSE CONCAT(prof_asg.first_name_local, ' ', prof_asg.last_name_local) END), ''),
+                    NULLIF(TRIM(CONCAT(prof_asg.first_name_local, ' ', prof_asg.last_name_local)), ''),
+                    NULLIF(TRIM(CONCAT(prof_asg.first_name_en, ' ', prof_asg.last_name_en)), ''),
+                    t.assigned_to,
+                    '-'
+                )                                                     AS "assignedTo",
                 COALESCE(TO_CHAR(t.resolved_date, 'DD/MM/YYYY HH24:MI'), '-') AS "resolvedDate",
                 COALESCE(p.project_name, '-')                        AS "projectName",
                 COALESCE(CASE WHEN $P{lang} = 'en' THEN c.company_name_en ELSE c.company_name_local END, c.company_name_en, c.company_name_local, '-') AS "customerName",
@@ -44,6 +60,8 @@
             FROM pm_ma_ticket t
             LEFT JOIN pm_customer_project p ON t.project_id = p.id
             LEFT JOIN pm_customer c ON p.customer_id = c.id
+            LEFT JOIN su_profile prof_rep ON (prof_rep.user_id = t.reported_by OR CAST(prof_rep.id AS VARCHAR) = t.reported_by) AND prof_rep.is_delete = false
+            LEFT JOIN su_profile prof_asg ON (prof_asg.user_id = t.assigned_to OR CAST(prof_asg.id AS VARCHAR) = t.assigned_to) AND prof_asg.is_delete = false
             WHERE t.is_delete = false
               AND ($P{ticketId} IS NULL OR $P{ticketId} = '' OR t.id = CAST($P{ticketId} AS uuid))
             ORDER BY t.created_date DESC

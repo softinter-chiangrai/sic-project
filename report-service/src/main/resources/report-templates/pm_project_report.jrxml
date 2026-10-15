@@ -146,7 +146,8 @@
 		<query language="sql"><![CDATA[SELECT
                 COALESCE(phase_code, '-')            AS "code",
                 phase_name                            AS "name",
-                COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') || ' - ' || COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-') AS "period",
+                COALESCE(TO_CHAR(start_date, 'DD/MM/YYYY'), '-') AS "startDate",
+                COALESCE(TO_CHAR(end_date, 'DD/MM/YYYY'), '-')   AS "endDate",
                 COALESCE(status, '-')                 AS "status",
                 CONCAT(COALESCE(progress, 0), '%')    AS "progress",
                 description                             AS "description"
@@ -155,7 +156,8 @@
             ORDER BY start_date ASC NULLS LAST]]></query>
 		<field name="code" class="java.lang.String"/>
 		<field name="name" class="java.lang.String"/>
-		<field name="period" class="java.lang.String"/>
+		<field name="startDate" class="java.lang.String"/>
+		<field name="endDate" class="java.lang.String"/>
 		<field name="status" class="java.lang.String"/>
 		<field name="progress" class="java.lang.String"/>
 		<field name="description" class="java.lang.String"/>
@@ -1296,21 +1298,27 @@
 							<expression><![CDATA["[" + $F{code} + "]  " + $F{name}]]></expression>
 						</element>
 						<element kind="textField" uuid="ec027d36-8b6c-4d79-9273-74a009cce44b" positionType="Float" x="10" y="58" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Period:" : "ช่วงเวลา:")]]></expression>
+							<expression><![CDATA[($P{lang}.equals("en") ? "Start Date:" : "วันเริ่มต้น:")]]></expression>
 						</element>
 						<element kind="textField" uuid="f3de3079-02db-4def-aba1-8c9b5332eb38" positionType="Float" x="105" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
-							<expression><![CDATA[($F{period} != null && !String.valueOf($F{period}).isBlank() ? String.valueOf($F{period}) : "-")]]></expression>
+							<expression><![CDATA[($F{startDate} != null && !String.valueOf($F{startDate}).isBlank() ? String.valueOf($F{startDate}) : "-")]]></expression>
 						</element>
 						<element kind="textField" uuid="2a332130-4a1a-4916-ae97-00d3cbeed948" positionType="Float" x="270" y="58" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
+							<expression><![CDATA[($P{lang}.equals("en") ? "End Date:" : "วันสิ้นสุด:")]]></expression>
 						</element>
 						<element kind="textField" uuid="54232b1f-5d13-4a85-b1ff-bde4031a598f" positionType="Float" x="360" y="58" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
-							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+							<expression><![CDATA[($F{endDate} != null && !String.valueOf($F{endDate}).isBlank() ? String.valueOf($F{endDate}) : "-")]]></expression>
 						</element>
 						<element kind="textField" uuid="b4ec68d8-4aac-4514-8a65-d8ffeb259d1a" positionType="Float" x="10" y="76" width="90" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-							<expression><![CDATA[($P{lang}.equals("en") ? "Progress:" : "ความคืบหน้า:")]]></expression>
+							<expression><![CDATA[($P{lang}.equals("en") ? "Status:" : "สถานะ:")]]></expression>
 						</element>
 						<element kind="textField" uuid="56d9903a-fe7b-4d7d-8950-f1663f3f5dfd" positionType="Float" x="105" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
+							<expression><![CDATA[($F{status} != null && !String.valueOf($F{status}).isBlank() ? String.valueOf($F{status}) : "-")]]></expression>
+						</element>
+						<element kind="textField" uuid="7a1e0005-0008-0008-0008-a1b2c3d4e5f6" positionType="Float" x="270" y="76" width="85" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+							<expression><![CDATA[($P{lang}.equals("en") ? "Progress:" : "ความคืบหน้า:")]]></expression>
+						</element>
+						<element kind="textField" uuid="7a1e0005-0009-0009-0009-a1b2c3d4e5f6" positionType="Float" x="360" y="76" width="148" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
 							<expression><![CDATA[($F{progress} != null && !String.valueOf($F{progress}).isBlank() ? String.valueOf($F{progress}) : "-")]]></expression>
 						</element>
 						<element kind="textField" uuid="e00e0005-0007-0007-0007-a1b2c3d4e5f6" positionType="Float" x="0" y="104" width="515" height="14" textAdjust="StretchHeight" blankWhenNull="true" style="Label">

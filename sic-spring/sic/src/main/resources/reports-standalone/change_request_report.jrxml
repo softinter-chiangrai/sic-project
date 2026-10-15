@@ -66,8 +66,8 @@
             FROM pm_change_request cr
             LEFT JOIN pm_customer_project p ON cr.project_id = p.id
             LEFT JOIN pm_customer c ON p.customer_id = c.id
-            LEFT JOIN su_profile prof_req ON prof_req.user_id = cr.requester_id AND prof_req.is_delete = false
-            LEFT JOIN su_profile prof_app ON prof_app.user_id = cr.approved_by AND prof_app.is_delete = false
+            LEFT JOIN su_profile prof_req ON (prof_req.user_id = cr.requester_id OR CAST(prof_req.id AS VARCHAR) = cr.requester_id) AND prof_req.is_delete = false
+            LEFT JOIN su_profile prof_app ON (prof_app.user_id = cr.approved_by OR CAST(prof_app.id AS VARCHAR) = cr.approved_by) AND prof_app.is_delete = false
             WHERE cr.is_delete = false
               AND ($P{changeRequestId} IS NULL OR $P{changeRequestId} = '' OR cr.id = CAST($P{changeRequestId} AS uuid))
             ORDER BY cr.created_date DESC

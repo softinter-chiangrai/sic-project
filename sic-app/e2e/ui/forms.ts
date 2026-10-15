@@ -228,3 +228,29 @@ export async function deleteButtonFor(page: Page, text: string) {
   });
   return handle.asElement();
 }
+
+const SAY: [RegExp, string][] = [
+  [/desc|content|remark|reason|summary|note|detail|criteria|scope|comment/i, 'รายละเอียดครบถ้วนที่กรอกผ่านหน้าบ้านเพื่อทดสอบการออกรายงานเป็น PDF ภาษาไทย ตรวจสอบการขึ้นบรรทัดและการแสดงผลของข้อความยาว'],
+  [/title|name/i, 'ระบบจัดการคำสั่งซื้อออนไลน์ ระยะที่ 1'],
+];
+
+/** Fill EVERY visible, enabled control of the form (not only the required ones) with plausible Thai text; drop-downs take their first option. */
+export async function fillAll(page: Page, values: Record<string, string> = {}): Promise<Record<string, string>> {
+  const typed: Record<string, string> = {};
+  for (let pass = 0; pass < 2; pass++) {
+    const names = [...new Set(await page.locator('[formcontrolname]').evaluateAll((els) => els.map((e) => e.getAttribute('formcontrolname')!)))];
+    for (const name of names) {
+      if (typed[name] !== undefined) continue;
+      const host = page.locator(`[formcontrolname="${name}"]`).first();
+      const tag = await host.evaluate((e) => e.tagName.toLowerCase()).catch(() => '');
+      if (!tag || !(await host.isVisible())) continue;
+      const locked = await host.evaluate((e) => !!e.closest('[disabled], [readonly]') || !!e.querySelector('input[disabled], input[readonly], textarea[disabled]')).catch(() => false);
+      if (locked) continue;
+      const choose = /combobox|datepicker|radio|checkbox/.test(tag);
+      const value = values[name] ?? (choose ? undefined : SAY.find(([re]) => re.test(name))?.[1]);
+      const t = await fillControl(host, name, value).catch(() => null);
+      if (t !== null) typed[name] = t;
+    }
+  }
+  return { ...typed, ...(await fillRequired(page, values)) };
+}
