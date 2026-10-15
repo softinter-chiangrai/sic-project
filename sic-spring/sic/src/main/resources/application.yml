@@ -122,7 +122,7 @@ app:
     enabled: true
     base-url: ${REPORT_SERVICE_URL:http://localhost:80}
     access-token: ${REPORT_SERVICE_TOKEN:}
-    timeout-seconds: 30
+    timeout-seconds: ${REPORT_SERVICE_TIMEOUT_SECONDS:120} # big documents (project report) take longer than 30s to fill
     fallback-to-local: true
 
 

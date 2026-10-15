@@ -10,10 +10,10 @@ describe('SicValidator', () => {
       expect(v.shouldShowError(new FormControl('ok', Validators.required), true)).toBe(false);
     });
 
-    it('an invalid control stays quiet until it is touched, dirty, or the form was submitted', () => {
+    it('an invalid control stays quiet until the control itself is touched or dirty (submit = markAllAsTouched)', () => {
       const c = new FormControl('', Validators.required);
       expect(v.shouldShowError(c, false)).toBe(false);
-      expect(v.shouldShowError(c, true)).toBe(true);
+      expect(v.shouldShowError(c, true)).toBe(false); // the picker's own flag alone does not count (2dd69c50)
       c.markAsTouched();
       expect(v.shouldShowError(c, false)).toBe(true);
       const d = new FormControl('', Validators.required);

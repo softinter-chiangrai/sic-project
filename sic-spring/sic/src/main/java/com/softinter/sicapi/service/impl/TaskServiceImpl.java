@@ -90,7 +90,7 @@ public class TaskServiceImpl implements TaskService {
         task.setActualManday(request.getActualManday() != null ? request.getActualManday() : 0);
         task.setPriority(request.getPriority());
         task.setStatus(request.getStatus() != null ? request.getStatus() : "Todo");
-        task.setColor(request.getColor() != null && !request.getColor().isBlank() ? request.getColor() : (wp.getColor() != null ? wp.getColor() : "#3B82F6"));
+        task.setColor(request.getColor() != null && !request.getColor().isBlank() ? request.getColor() : null);
 
         if (request.getSpecificationId() != null) {
             specificationRepository.findById(request.getSpecificationId())

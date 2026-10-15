@@ -13,6 +13,6 @@ public class ReportServiceProperties {
     private boolean enabled = true;
     private String baseUrl = "http://localhost:80";
     private String accessToken = "";
-    private int timeoutSeconds = 30;
+    private int timeoutSeconds = 120;
     private boolean fallbackToLocal = true;
 }

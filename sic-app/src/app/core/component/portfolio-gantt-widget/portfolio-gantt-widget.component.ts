@@ -225,8 +225,10 @@ export class PortfolioGanttWidgetComponent {
     return '#3b82f6'; // Blue (In Progress / Default)
   }
 
-  getTaskColor(task: TaskResponse): string {
-    if (task.color) return task.color;
+  getTaskColor(task: TaskResponse, phaseColor?: string): string {
+    if (task.color && (!phaseColor || task.color.toLowerCase() !== phaseColor.toLowerCase())) {
+      return task.color;
+    }
     const s = (task.status || '').toLowerCase();
     if (s === 'done' || s === 'closed' || s === 'completed') return '#10b981';
     if (s === 'in progress') return '#3b82f6';
@@ -442,7 +444,7 @@ export class PortfolioGanttWidgetComponent {
           milestones.forEach((ms) => {
             const msRowId = `ms-${ms.id}`;
             const msDate = ms.dueDate && dayjs(ms.dueDate).isValid() ? dayjs(ms.dueDate).format('YYYY-MM-DD') : phStart;
-            const msColor = ms.color || '#f59e0b';
+            const msColor = (ms.color && ms.color.toLowerCase() !== phColor.toLowerCase()) ? ms.color : '#f59e0b';
             const workPackages = ms.workPackages || [];
             const hasWorkPackages = workPackages.length > 0;
             const msProgress = (ms.status || '').toLowerCase() === 'done' ? 100 : 0;
@@ -484,7 +486,7 @@ export class PortfolioGanttWidgetComponent {
               const wpRowId = `wp-${wp.id}`;
               const wpStart = wp.startDate && dayjs(wp.startDate).isValid() ? dayjs(wp.startDate).format('YYYY-MM-DD') : msDate;
               const wpEnd = wp.endDate && dayjs(wp.endDate).isValid() ? dayjs(wp.endDate).format('YYYY-MM-DD') : wpStart;
-              const wpColor = wp.color || '#8b5cf6';
+              const wpColor = (wp.color && wp.color.toLowerCase() !== phColor.toLowerCase()) ? wp.color : '#8b5cf6';
               const tasks = wp.tasks || [];
               const hasTasks = tasks.length > 0;
               const wpProgress = this.calcWpProgress(wp);
@@ -527,7 +529,7 @@ export class PortfolioGanttWidgetComponent {
                 const taskRowId = `task-${task.id}`;
                 const taskStart = task.startDate && dayjs(task.startDate).isValid() ? dayjs(task.startDate).format('YYYY-MM-DD') : wpStart;
                 const taskEnd = task.endDate && dayjs(task.endDate).isValid() ? dayjs(task.endDate).format('YYYY-MM-DD') : taskStart;
-                const taskColor = this.getTaskColor(task);
+                const taskColor = this.getTaskColor(task, phColor);
                 const taskProgress = this.calcTaskProgress(task);
 
                 rows.push({

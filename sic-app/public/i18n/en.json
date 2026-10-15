@@ -1,4 +1,5 @@
 {
+  "VALIDATION_INVALID_DATE_TITLE": "Invalid date",
   "VALIDATION_END_BEFORE_START": "End date/time must not be earlier than the start date/time",
   "AI_OVERWRITE_LABEL": "Edit & refine existing content",
   "AI_OVERWRITE_HINT": "AI will use existing form content as the baseline to edit, refine, or append rather than generating from scratch",

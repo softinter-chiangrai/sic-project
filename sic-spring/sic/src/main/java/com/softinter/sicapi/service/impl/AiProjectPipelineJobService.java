@@ -640,7 +640,7 @@ public class AiProjectPipelineJobService {
                 mq.setMilestoneName(cut(txt(ms, "milestoneName"), 255));
                 mq.setDescription(txt(ms, "description"));
                 mq.setDueDate(weekEnd(c, ms.path("weekDue").asInt(pq.getEndDate() != null ? c.weeks : 1)));
-                mq.setColor(firstNonBlank(txt(ms, "color"), pq.getColor()));
+                mq.setColor(firstNonBlank(txt(ms, "color"), "#F59E0B"));
                 MilestoneResponse milestone = milestoneService.createMilestone(mq);
                 c.milestones.add(new Ref(milestone.getId(), mq.getMilestoneName()));
                 step.rec("Milestone", mq.getMilestoneName(), "Phase", pq.getPhaseName(), "กำหนดส่ง", "" + mq.getDueDate(),
@@ -654,7 +654,7 @@ public class AiProjectPipelineJobService {
                     wq.setDescription(txt(wp, "description"));
                     wq.setStartDate(weekStart(c, wp.path("weekStart").asInt(1)));
                     wq.setEndDate(weekEnd(c, wp.path("weekEnd").asInt(2)));
-                    wq.setColor(firstNonBlank(txt(wp, "color"), mq.getColor()));
+                    wq.setColor(firstNonBlank(txt(wp, "color"), "#8B5CF6"));
                     WorkPackageResponse saved = workPackageService.createWorkPackage(wq);
                     c.workPackages.add(new Ref(saved.getId(), wq.getPackageName()));
                     step.rec("Work Package", wq.getPackageName(), "Milestone", mq.getMilestoneName(),

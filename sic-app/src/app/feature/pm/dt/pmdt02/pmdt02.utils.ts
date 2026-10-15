@@ -154,9 +154,14 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
   });
 
   // 2. Milestones, Work Packages, Tasks
+  const phaseColor = phase.color || '#4A90D9';
+
   phase.milestones?.forEach((ms) => {
     const msRowId = `ms-${ms.id}`;
     const hasWp = (ms.workPackages?.length || 0) > 0;
+    // Don't inherit phase color: use milestone custom color if distinct, otherwise default milestone orange
+    const msColor = (ms.color && ms.color.toLowerCase() !== phaseColor.toLowerCase()) ? ms.color : '#E67E22';
+
     rows.push({
       id: msRowId,
       label: ms.milestoneName,
@@ -166,7 +171,7 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
         label: ms.milestoneName,
         start: ms.dueDate,
         end: ms.dueDate,
-        color: ms.color || '#E67E22'
+        color: msColor
       }],
       data: {
         type: 'milestone',
@@ -177,7 +182,7 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
         parentId: phaseRowId,
         icon: '📌',
         hasChildren: hasWp,
-        color: ms.color || '#E67E22'
+        color: msColor
       }
     });
 
@@ -185,6 +190,9 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
       const wpRowId = `wp-${wp.id}`;
       const wpProgress = calculateWpProgress(wp) * 100; // แปลงเป็นเปอร์เซ็นต์
       const hasTasks = (wp.tasks?.length || 0) > 0;
+      // Don't inherit phase color: use WP custom color if distinct, otherwise default WP purple
+      const wpColor = (wp.color && wp.color.toLowerCase() !== phaseColor.toLowerCase()) ? wp.color : '#8E44AD';
+
       rows.push({
         id: wpRowId,
         label: wp.packageName,
@@ -194,7 +202,7 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
           label: wp.packageName,
           start: wp.startDate,
           end: wp.endDate,
-          color: wp.color || '#8E44AD'
+          color: wpColor
         }],
         data: {
           type: 'workpackage',
@@ -206,13 +214,17 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
           parentId: msRowId,
           icon: '📦',
           hasChildren: hasTasks,
-          color: wp.color || '#8E44AD'
+          color: wpColor
         }
       });
 
       wp.tasks?.forEach((task) => {
         const taskProgress = calculateTaskProgress(task) * 100; // แปลงเป็นเปอร์เซ็นต์
         const visuals = getTaskVisuals(task);
+        // If task has its own distinct color (not inherited from phase), use it; otherwise use status visual color
+        const taskColor = (task.color && task.color.toLowerCase() !== phaseColor.toLowerCase())
+          ? task.color
+          : visuals.color;
 
         // Collect assignees list with name and avatarUrl
         const assigneesList: TimelineAssignee[] = [];
@@ -264,7 +276,7 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
             label: task.taskName,
             start: task.startDate,
             end: task.endDate || task.startDate,
-            color: task.color || visuals.color,
+            color: taskColor,
             avatarUrl: firstAssignee
           }],
           data: {
@@ -278,7 +290,7 @@ export function buildTimelineItems(phase: PhaseResponse): SicCalendarTimelineRow
             parentId: wpRowId,
             icon: visuals.icon,
             hasChildren: false,
-            color: task.color || visuals.color,
+            color: taskColor,
             assignedTo: task.assignedTo,
             assignees: assigneesList
           }
@@ -302,24 +314,35 @@ function formatDateForDhtmlx(dateStr: string | undefined): string {
 
 // ===== Helper: ดึง Icon & Color ประจำ Task ตาม Status =====
 function getTaskVisuals(task: TaskResponse): { icon: string; color: string } {
-  if (task.color) {
-    return { icon: '🔹', color: task.color };
-  }
+  let statusColor = '#8b5cf6';
+  let icon = '📝';
   switch (task.status) {
     case 'Done':
     case 'Closed':
-      return { icon: '✅', color: '#22c55e' };
+      icon = '✅';
+      statusColor = '#22c55e';
+      break;
     case 'In Progress':
-      return { icon: '👥', color: '#3b82f6' };
+      icon = '👥';
+      statusColor = '#3b82f6';
+      break;
     case 'Waiting Review':
-      return { icon: '🔍', color: '#06b6d4' };
+      icon = '🔍';
+      statusColor = '#06b6d4';
+      break;
     case 'Waiting Fix':
-      return { icon: '🛠️', color: '#f59e0b' };
+      icon = '🛠️';
+      statusColor = '#f59e0b';
+      break;
     case 'Blocked':
-      return { icon: '⛔', color: '#ef4444' };
-    default:
-      return { icon: '📝', color: '#8b5cf6' };
+      icon = '⛔';
+      statusColor = '#ef4444';
+      break;
   }
+  return {
+    icon: task.color ? '🔹' : icon,
+    color: statusColor,
+  };
 }
 
 // ===== ฟังก์ชันสร้าง Events สำหรับ SicCalendar =====

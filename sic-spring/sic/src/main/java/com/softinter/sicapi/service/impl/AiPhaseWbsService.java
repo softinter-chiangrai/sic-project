@@ -82,7 +82,7 @@ public class AiPhaseWbsService {
             mq.setMilestoneName(cut(msName, 255));
             mq.setDescription(text(ms, "description"));
             mq.setDueDate(clamp(date(ms, "dueDate", phaseEnd), phaseStart, phaseEnd));
-            mq.setColor(firstNonBlank(text(ms, "color"), phase.getColor(), "#3B82F6"));
+            mq.setColor(firstNonBlank(text(ms, "color"), "#F59E0B"));
             MilestoneResponse milestone = milestoneService.createMilestone(mq);
             msCount++;
 
@@ -95,7 +95,7 @@ public class AiPhaseWbsService {
                 wq.setDescription(text(wp, "description"));
                 wq.setStartDate(clamp(date(wp, "startDate", phaseStart), phaseStart, phaseEnd));
                 wq.setEndDate(clamp(date(wp, "endDate", phaseEnd), wq.getStartDate(), phaseEnd));
-                wq.setColor(mq.getColor());
+                wq.setColor(firstNonBlank(text(wp, "color"), "#8B5CF6"));
                 WorkPackageResponse workPackage = workPackageService.createWorkPackage(wq);
                 wpCount++;
 

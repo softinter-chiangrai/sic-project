@@ -737,28 +737,35 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     let capturedPages: { pageIndex: number; pageId?: string; pageName: string; png: string }[] = [];
     let singleImage: string | null = null;
 
-    if (pagesInfo.length > 1) {
-      capturedPages = await this.captureAllPages(xml, 2);
-      singleImage = capturedPages[0]?.png || null;
-      if (tab && capturedPages.length > 0) {
-        try {
-          const updatedTab = {
-            ...tab,
-            graphData: { ...tab.graphData, xml, png: singleImage, pages: capturedPages },
-            state: 3,
-            rowVersion: this.currentDiagram?.rowVersion ?? tab.rowVersion ?? null,
-          };
-          this.diagramService.updateTab(updatedTab as any).subscribe({
-            next: (saved) => {
-              this.tabs.update((items) => items.map((i) => (i.id === saved.id ? saved : i)));
-            },
-          });
-        } catch (e) {
-          console.warn('[ExportPdf] Could not auto-save pages:', e);
+    try {
+      if (pagesInfo.length > 1) {
+        capturedPages = await this.captureAllPages(xml, 2);
+        singleImage = capturedPages[0]?.png || null;
+        if (tab && capturedPages.length > 0) {
+          try {
+            const updatedTab = {
+              ...tab,
+              graphData: { ...tab.graphData, xml, png: singleImage, pages: capturedPages },
+              state: 3,
+              rowVersion: this.currentDiagram?.rowVersion ?? tab.rowVersion ?? null,
+            };
+            this.diagramService.updateTab(updatedTab as any).subscribe({
+              next: (saved) => {
+                this.tabs.update((items) => items.map((i) => (i.id === saved.id ? saved : i)));
+              },
+            });
+          } catch (e) {
+            console.warn('[ExportPdf] Could not auto-save pages:', e);
+          }
         }
+      } else {
+        singleImage = await this.drawioService.exportPagePng(pagesInfo[0]?.pageId, 2, 3500);
       }
-    } else {
-      singleImage = await this.drawioService.exportPagePng(pagesInfo[0]?.pageId, 2, 3500);
+    } catch (e) {
+      // the diagram could not be captured: do not leave the waiting tab open
+      pdfWindow.close();
+      this.dialogService.error(this.translate.instant('PMDT06_PRINT_FAIL_TITLE'), this.translate.instant('PMDT05_GENERIC_ERROR'));
+      return;
     }
 
     this.diagramService.exportPdf(id, singleImage, capturedPages.length > 1 ? capturedPages : undefined).subscribe({

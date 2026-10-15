@@ -830,34 +830,6 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         return this.prepareSubmitData();
     }
 
-    // ===== Print =====
-    printSpecification(): void {
-        const id = this.specId || this.form.getRawValue().id;
-        if (!id) {
-            this.dialog.warn(this.translate.instant('PMDT07_NOT_SAVED_TITLE'), this.translate.instant('PMDT07_SAVE_BEFORE_PRINT_MSG'));
-            return;
-        }
-
-        const pdfWindow = openPdfWindow();
-
-        this.isLoading = true;
-        const url = `${this.apiBaseUrl}/api/pm/specifications/${id}/export-pdf`;
-        const printLang = this.languageService.getCurrentLanguage();
-        this.http.get(url, { params: { lang: printLang }, responseType: 'blob' })
-            .pipe(finalize(() => {
-                this.isLoading = false;
-                this.cdr.markForCheck();
-            }))
-            .subscribe({
-                next: (blob) => pdfWindow.show(blob, id),
-                error: (err) => {
-                    pdfWindow.close();
-                    console.error('Print specification error:', err);
-                    this.dialog.error(this.translate.instant('PMDT07_PRINT_FAIL_TITLE'), this.translate.instant('PMDT07_PRINT_FAIL_MSG'));
-                },
-            });
-    }
-
     // ===== Export (JasperReports PDF) =====
     exportSpecification(): void {
         const id = this.specId || this.form.getRawValue().id;

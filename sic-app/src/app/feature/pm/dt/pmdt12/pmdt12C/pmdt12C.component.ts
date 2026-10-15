@@ -17,6 +17,7 @@ import { TraceLinkService } from '../../../../../core/services/trace-link.servic
 import { PmTestCaseModel, PmTestScenarioModel } from '../pmdt12.model';
 import { Pmdt12Service } from '../pmdt12.service';
 import { createBugForm } from './pmdt12C.form';
+import { END_BEFORE_START } from '../../../../../core/validator/date-range.validator';
 
 @Component({
   selector: 'app-pmdt12c',
@@ -333,6 +334,10 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
   onSubmit(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      if (this.form.hasError(END_BEFORE_START)) {
+        this.dialog.warn(this.translate.instant('VALIDATION_INVALID_DATE_TITLE'), this.translate.instant('VALIDATION_END_BEFORE_START'));
+        return;
+      }
       this.dialog.warn('ข้อมูลไม่ครบถ้วน', 'กรุณากรอกข้อมูลหัวข้อ Bug และรายละเอียดให้ครบถ้วน');
       return;
     }
