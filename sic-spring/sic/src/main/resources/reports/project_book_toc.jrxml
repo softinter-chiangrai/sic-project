@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Table of contents of the project book (PmCustomerProjectExportServiceImpl). No SQL: the rows come from Java (title, page).
+     No page footer: the book stamps "page X / N" on every page after merging. -->
+<jasperReport name="ProjectBookToc" language="java" pageWidth="595" pageHeight="842" columnWidth="515" leftMargin="40" rightMargin="40" topMargin="40" bottomMargin="40" uuid="7b1d5c2e-4f3a-4d8e-9a61-2c0f5e7b9d41">
+	<style name="DocTitle" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="20.0" bold="true"/>
+	<style name="DocSubtitle" forecolor="#64748B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="Head" forecolor="#475569" fontName="TH Sarabun New" fontSize="13.0" bold="true"/>
+	<style name="Row" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="13.0"/>
+	<style name="RowGroup" forecolor="#1E293B" fontName="TH Sarabun New" fontSize="14.0" bold="true"/>
+	<parameter name="lang" class="java.lang.String">
+		<defaultValueExpression><![CDATA["th"]]></defaultValueExpression>
+	</parameter>
+	<parameter name="projectName" class="java.lang.String"/>
+	<field name="title" class="java.lang.String"/>
+	<field name="page" class="java.lang.String"/>
+	<field name="group" class="java.lang.Boolean"/>
+	<title height="70">
+		<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e01" x="0" y="0" width="515" height="30" vTextAlign="Bottom" style="DocTitle">
+			<expression><![CDATA[$P{lang}.equals("en") ? "Table of Contents" : "สารบัญ"]]></expression>
+		</element>
+		<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e02" x="0" y="30" width="515" height="20" textAdjust="StretchHeight" blankWhenNull="true" style="DocSubtitle">
+			<expression><![CDATA[$P{projectName}]]></expression>
+		</element>
+		<element kind="line" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e03" x="0" y="58" width="515" height="1" forecolor="#CBD5E1">
+			<pen lineWidth="0.8"/>
+		</element>
+	</title>
+	<columnHeader height="24">
+		<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e04" x="0" y="0" width="440" height="22" vTextAlign="Middle" style="Head">
+			<expression><![CDATA[$P{lang}.equals("en") ? "Document" : "เอกสาร"]]></expression>
+		</element>
+		<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e05" x="440" y="0" width="75" height="22" hTextAlign="Right" vTextAlign="Middle" style="Head">
+			<expression><![CDATA[$P{lang}.equals("en") ? "Page" : "หน้า"]]></expression>
+		</element>
+	</columnHeader>
+	<detail>
+		<band height="20" splitType="Prevent">
+			<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e06" x="0" y="0" width="440" height="20" textAdjust="StretchHeight" vTextAlign="Middle" style="Row">
+				<printWhenExpression><![CDATA[!Boolean.TRUE.equals($F{group})]]></printWhenExpression>
+				<paragraph leftIndent="14"/>
+				<expression><![CDATA[$F{title}]]></expression>
+			</element>
+			<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e07" x="0" y="0" width="440" height="20" textAdjust="StretchHeight" vTextAlign="Middle" style="RowGroup">
+				<printWhenExpression><![CDATA[Boolean.TRUE.equals($F{group})]]></printWhenExpression>
+				<expression><![CDATA[$F{title}]]></expression>
+			</element>
+			<element kind="textField" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e08" stretchType="ContainerHeight" x="440" y="0" width="75" height="20" blankWhenNull="true" hTextAlign="Right" vTextAlign="Middle" style="Row">
+				<expression><![CDATA[$F{page}]]></expression>
+			</element>
+			<element kind="line" uuid="0b3f2a71-6c1e-4d2a-8f0e-1a2b3c4d5e09" positionType="Float" x="0" y="19" width="515" height="1" forecolor="#E2E8F0">
+				<pen lineWidth="0.5"/>
+			</element>
+		</band>
+	</detail>
+</jasperReport>

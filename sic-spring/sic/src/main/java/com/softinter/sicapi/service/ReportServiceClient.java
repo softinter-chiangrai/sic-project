@@ -21,6 +21,23 @@ public class ReportServiceClient {
 
     private final ReportServiceProperties properties;
 
+    // ponytail: thread-bound flag instead of a parameter on every export service; fine while a book is built on one thread
+    private static final ThreadLocal<Boolean> BOOK_MODE = ThreadLocal.withInitial(() -> false);
+
+    /**
+     * Runs work (the project book) so that every report generated on this thread gets bookMode=true: the templates then leave
+     * out their own page number and the book prints its running number instead. The parameter is put into the caller's map,
+     * so the local Jasper fallback, which fills with the same map, sees it too.
+     */
+    public static <T> T inBookMode(java.util.concurrent.Callable<T> work) throws Exception {
+        BOOK_MODE.set(true);
+        try {
+            return work.call();
+        } finally {
+            BOOK_MODE.remove();
+        }
+    }
+
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class GenerateReportResponse {
@@ -42,6 +59,9 @@ public class ReportServiceClient {
      * @return Raw file bytes
      */
     public byte[] generateAndDownloadReport(String templateCode, Map<String, Object> parameters, String format) {
+        if (BOOK_MODE.get() && parameters != null) {
+            parameters.put("bookMode", Boolean.TRUE);
+        }
         if (!properties.isEnabled()) {
             throw new IllegalStateException("Report Service client is disabled in configuration.");
         }

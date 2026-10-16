@@ -13,3 +13,8 @@
   2. **Reuse:** Reuse existing helpers, components, queries, and utilities in this codebase.
   3. **Standard Library:** Prefer native language/framework features over new packages/abstractions.
   4. **Minimal Footprint:** Choose the smallest, cleanest working solution. Avoid unnecessary layers, wrappers, and boilerplate.
+
+## 3. Testing Policy (Playwright Only)
+- **Playwright Over Chrome Direct:** Always run tests via Playwright CLI (`npx playwright test ...`).
+- **No Direct Chrome Testing:** Do not launch or test through direct Chrome browser subagent to prevent slow execution.
+

@@ -53,6 +53,7 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 
 // Preview Component
 import { SicRequirementPreviewComponent } from './pmdt04-preview/pmdt04-preview.component';
+import { SicJasperLivePreviewComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-jasper-live-preview.component';
 
 import { Pmdt04APageData, RequirementModel } from './pmdt04A.model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
@@ -131,6 +132,7 @@ export class Pmdt04AService {
     SicComboboxComponent,
     SicInputComponent,
     SicRequirementPreviewComponent,
+    SicJasperLivePreviewComponent,
     SicTiptapEditorComponent,
     SicUploadComponent,
     TranslateModule,
@@ -182,6 +184,17 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   // ===== View Mode =====
   viewMode: 'edit' | 'split' | 'preview' = 'split';
+  // preview panel: the quick HTML preview, or the real Jasper PDF of the unsaved form (refreshed when typing pauses)
+  previewKind: 'html' | 'pdf' = 'html';
+
+  get previewPdfUrl(): string {
+    return `${environment.apiBaseUrl}/api/pm/requirement/preview-pdf?lang=${this.translate.currentLang || 'th'}`;
+  }
+
+  pdfPreviewBody(): any {
+    const v = this.form.getRawValue();
+    return { ...v, id: this.reqId || v.id || null, uploadGroupData: undefined };
+  }
 
   // ===== Auto-save =====
   private autoSaveSubscription: Subscription | null = null;

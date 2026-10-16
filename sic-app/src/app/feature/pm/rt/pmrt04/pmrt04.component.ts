@@ -122,12 +122,16 @@ export class Pmrt04Component implements OnInit {
     };
   });
 
-  readonly statusSelectOptions = [
-    { value: 'Draft', text: this.translate.instant('PMRT04_STATUS_OPT_DRAFT') },
-    { value: 'Sent', text: this.translate.instant('PMRT04_STATUS_SENT') },
-    { value: 'Signed', text: this.translate.instant('PMRT04_STATUS_SIGNED') },
-    { value: 'Expired', text: this.translate.instant('PMRT04_STATUS_EXPIRED') },
-  ];
+  statusSelectOptions = computed(() => {
+    this.languageService.currentLang();
+    return [
+      { value: 'Draft', text: this.translate.instant('PMRT04_STATUS_OPT_DRAFT') },
+      { value: 'Sent', text: this.translate.instant('PMRT04_STATUS_SENT') },
+      { value: 'Signed', text: this.translate.instant('PMRT04_STATUS_SIGNED') },
+      { value: 'Expired', text: this.translate.instant('PMRT04_STATUS_EXPIRED') },
+      { value: 'Cancelled', text: this.translate.instant('PMRT04_STATUS_CANCELLED') },
+    ];
+  });
 
   typeSelectOptions = computed(() => {
     return this.contractTypes().map((t) => ({ value: t, text: this.translate.instant(t) || t }));
@@ -615,10 +619,24 @@ export class Pmrt04Component implements OnInit {
     });
   }
 
+  canDeleteContract(contract: Contract): boolean {
+    if (!contract) return false;
+    // สัญญาที่ได้รับการอนุมัติแล้ว หรือลงนามแล้ว ลบไม่ได้ (ต้องใช้การยกเลิกสัญญาแทน)
+    return contract.approvalStatus !== 'APPROVED' && contract.signStatus !== 'Signed';
+  }
+
   // ✅ เพิ่ม method ลบสัญญา (อ้างอิงจาก pmrt01)
   deleteContract(contract: Contract, grid: SicGridPanelComponent) {
     if (!contract.id) {
       this.dialog.warn(this.translate.instant('PMRT04_NO_ID_TITLE'), this.translate.instant('PMRT04_NO_DELETE_MSG'));
+      return;
+    }
+
+    if (!this.canDeleteContract(contract)) {
+      this.dialog.warn(
+        this.translate.instant('PMRT04_DELETE_ERROR_TITLE'),
+        'เอกสารนี้ได้รับการอนุมัติแล้วและถูกล็อกไม่ให้ลบ'
+      );
       return;
     }
 
@@ -657,6 +675,7 @@ export class Pmrt04Component implements OnInit {
       Signed: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400',
       Changed: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400',
       Expired: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
+      Cancelled: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400',
     };
     return map[status] || map['Draft'];
   }
@@ -693,6 +712,7 @@ export class Pmrt04Component implements OnInit {
       Signed: this.translate.instant('PMRT04_STATUS_SIGNED'),
       Changed: this.translate.instant('PMRT04_STATUS_CHANGED'),
       Expired: this.translate.instant('PMRT04_STATUS_EXPIRED'),
+      Cancelled: this.translate.instant('PMRT04_STATUS_CANCELLED'),
     };
     return map[status] || status;
   }

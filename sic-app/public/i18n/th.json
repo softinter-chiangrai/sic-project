@@ -1,4 +1,8 @@
 {
+  "LIVE_PDF_TAB_QUICK": "ตัวอย่าง",
+  "LIVE_PDF_TAB_JASPER": "PDF จริง",
+  "LIVE_PDF_GENERATING": "กำลังสร้าง PDF…",
+  "LIVE_PDF_UPDATING": "กำลังอัปเดต…",
   "FIELD_PROJECT_ID": "โครงการ (เลือกที่แถบด้านบน)",
   "FIELD_CUSTOMER_ID": "ลูกค้า (เลือกที่แถบด้านบน)",
   "VALIDATION_INVALID_DATE_TITLE": "วันที่ไม่ถูกต้อง",

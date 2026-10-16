@@ -4,8 +4,8 @@ import { mock, userId } from '../api';
 import { sql } from '../infra/db';
 
 // The version of a document lives in pm_document_version only (no copy column on the document table).
-// Screens (API "version" field) show the NEWEST version row whatever its status (user's rule 2026-10-16).
-// PDFs keep pm_current_version / pm_current_version_label: latest APPROVED version, else the latest draft.
+// Screens (API "version" field) and PDFs show the NEWEST version row whatever its status (user's rule 2026-10-16):
+// pm_current_version gives the number, pm_current_version_label adds " (Draft)" / " (Rejected)" unless it is approved.
 test.describe.configure({ mode: 'serial' });
 
 let w: World;
@@ -56,20 +56,21 @@ test.describe('current version rule (requirement)', () => {
     expect(sql(`select pm_current_version_label('REQUIREMENT', '${reqId}')`)).toBe('v1.1.0 (Draft)');
   });
 
-  test('screens show the newest version even when it is a draft or rejected; PDFs keep the approved one', async () => {
+  test('screens and PDFs show the newest version even when it is a draft or rejected', async () => {
     await addVersion('REQUIREMENT', reqId, 'v1.0.5', 'APPROVED');
     expect(await current()).toBe('v1.0.5');
     await addVersion('REQUIREMENT', reqId, 'v1.2.0', 'DRAFT');
     expect(await current()).toBe('v1.2.0');
     await addVersion('REQUIREMENT', reqId, 'v1.3.0', 'REJECTED');
     expect(await current()).toBe('v1.3.0'); // newest row, whatever its status
-    expect(sql(`select pm_current_version('REQUIREMENT', '${reqId}')`)).toBe('v1.0.5');
-    expect(sql(`select pm_current_version_label('REQUIREMENT', '${reqId}')`)).toBe('v1.0.5'); // approved: no suffix
+    expect(sql(`select pm_current_version('REQUIREMENT', '${reqId}')`)).toBe('v1.3.0');
+    expect(sql(`select pm_current_version_label('REQUIREMENT', '${reqId}')`)).toBe('v1.3.0 (Rejected)');
   });
 
-  test('a newer approved version is shown', async () => {
+  test('a newer approved version is shown, with no suffix in PDFs', async () => {
     await addVersion('REQUIREMENT', reqId, 'v2.0.0', 'APPROVED');
     expect(await current()).toBe('v2.0.0');
+    expect(sql(`select pm_current_version_label('REQUIREMENT', '${reqId}')`)).toBe('v2.0.0');
   });
 
   test('deleted versions are ignored', async () => {

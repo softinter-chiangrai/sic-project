@@ -4,7 +4,7 @@ import { mock, userId } from '../api';
 
 // Version behaviour across the real workflows: change request -> new draft revision, approval of each versioned document.
 // Screens show the NEWEST version (user's rule 2026-10-16), so the draft revision a change request opens is shown at once;
-// PDFs (pm_current_version_label) keep the latest APPROVED one.
+// PDFs (pm_current_version_label) print the same number, labelled (Draft).
 test.describe.configure({ mode: 'serial' });
 
 let w: World;
@@ -56,7 +56,7 @@ test.describe('change request opens a draft revision of an approved document', (
     const newest = rows[0].versionNo; // history is newest first
     expect(newest).not.toBe(approvedNo);
     expect(data((await w.api.get(`/api/pm/specifications/${specId}`)).body).version).toBe(newest);
-    // PDFs still print the approved number
+    // PDFs print the same number
     const label = await w.api.get(`/api/pm/specifications/${specId}/export-pdf`, { lang: 'en' });
     expect(label.status).toBe(200);
   });

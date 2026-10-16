@@ -1,4 +1,8 @@
 {
+  "LIVE_PDF_TAB_QUICK": "Preview",
+  "LIVE_PDF_TAB_JASPER": "Real PDF",
+  "LIVE_PDF_GENERATING": "Generating PDF…",
+  "LIVE_PDF_UPDATING": "Updating…",
   "FIELD_PROJECT_ID": "Project (choose it in the top bar)",
   "FIELD_CUSTOMER_ID": "Customer (choose it in the top bar)",
   "VALIDATION_INVALID_DATE_TITLE": "Invalid date",

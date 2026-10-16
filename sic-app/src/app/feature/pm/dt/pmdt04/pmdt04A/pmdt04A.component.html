@@ -276,9 +276,24 @@
               <i class="bi bi-eye text-[var(--crm-primary)]"></i>
               {{ 'PMDT04_DOC_PREVIEW_HEADING' | translate }}
             </h3>
-            <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT04_AUTO_UPDATE_LABEL' | translate }}</span>
+            <div class="flex items-center gap-1 p-0.5 rounded-lg border border-[var(--border)] text-xs">
+              <button type="button" (click)="previewKind = 'html'"
+                      class="px-2.5 py-1 rounded-md transition-colors"
+                      [class]="previewKind === 'html' ? 'bg-[var(--crm-primary)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+                {{ 'LIVE_PDF_TAB_QUICK' | translate }}
+              </button>
+              <button type="button" (click)="previewKind = 'pdf'"
+                      class="px-2.5 py-1 rounded-md transition-colors flex items-center gap-1"
+                      [class]="previewKind === 'pdf' ? 'bg-[var(--crm-primary)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'">
+                <i class="bi bi-filetype-pdf"></i> {{ 'LIVE_PDF_TAB_JASPER' | translate }}
+              </button>
+            </div>
           </div>
-          <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
+          @if (previewKind === 'pdf') {
+            <sic-jasper-live-preview [url]="previewPdfUrl" [body]="pdfPreviewBody()"></sic-jasper-live-preview>
+          } @else {
+            <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
+          }
         </div>
       }
     </div>
@@ -577,4 +592,4 @@
       </div>
     </div>
   }
-</div>
+</div>

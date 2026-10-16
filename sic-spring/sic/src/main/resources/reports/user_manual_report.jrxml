@@ -10,6 +10,7 @@
 	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
 	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
 
+	<parameter name="bookMode" class="java.lang.Boolean"/>
 	<parameter name="manualId" class="java.lang.String"/>
 	<parameter name="lang" class="java.lang.String">
 		<defaultValueExpression><![CDATA["th"]]></defaultValueExpression>
@@ -430,6 +431,7 @@
 			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
 		</element>
 		<element kind="textField" uuid="4b2a5c1a-4d5c-4b92-bca8-e5659858df34" x="380" y="8" width="135" height="18" hTextAlign="Right" vTextAlign="Bottom" style="FooterText">
+			<printWhenExpression><![CDATA[!Boolean.TRUE.equals($P{bookMode})]]></printWhenExpression>
 			<expression><![CDATA[($P{lang}.equals("en") ? "Page " : "หน้า ") + $V{PAGE_NUMBER}]]></expression>
 		</element>
 	</pageFooter>

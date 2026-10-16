@@ -11,6 +11,7 @@
 	<style name="ContentText" forecolor="#334155" fontName="TH Sarabun New" fontSize="13.0"/>
 	<style name="FooterText" forecolor="#94A3B8" fontName="TH Sarabun New" fontSize="11.0"/>
 
+	<parameter name="bookMode" class="java.lang.Boolean"/>
 	<parameter name="invoiceId" class="java.lang.String"/>
 	<parameter name="lang" class="java.lang.String">
 		<defaultValueExpression><![CDATA["th"]]></defaultValueExpression>
@@ -473,6 +474,7 @@
 			<text><![CDATA[SOFTINTER CO., LTD. • SIC Enterprise Platform]]></text>
 		</element>
 		<element kind="textField" uuid="31eaa5cb-b8dd-4ab8-9b0e-4a1728cd8c2c" x="380" y="10" width="135" height="16" hTextAlign="Right" vTextAlign="Middle" style="FooterText">
+			<printWhenExpression><![CDATA[!Boolean.TRUE.equals($P{bookMode})]]></printWhenExpression>
 			<expression><![CDATA[+ $V{PAGE_NUMBER}]]></expression>
 		</element>
 	</pageFooter>

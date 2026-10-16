@@ -173,10 +173,19 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 ApprovalKeywordSearchHelper.addApprovalKeywordPredicates(
                         query, cb, root.get("id"), "CONTRACT", rawKw, orPreds);
 
+                if ("ยกเลิกสัญญา".toLowerCase().contains(rawKw) || "ยกเลิก".contains(rawKw) || "cancelled".contains(rawKw)) {
+                    orPreds.add(cb.equal(root.get("renewalStatus"), RENEWAL_STATUS_CANCELLED));
+                }
+
                 predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
             }
-            if (status != null && !status.isBlank() && !"all".equals(status)) {
-                predicates.add(cb.equal(root.get("signStatus"), status));
+            if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
+                if ("Cancelled".equalsIgnoreCase(status) || "ยกเลิก".equals(status) || "ยกเลิกสัญญา".equals(status)) {
+                    predicates.add(cb.equal(root.get("renewalStatus"), RENEWAL_STATUS_CANCELLED));
+                } else {
+                    predicates.add(cb.equal(root.get("signStatus"), status));
+                    predicates.add(cb.or(cb.isNull(root.get("renewalStatus")), cb.notEqual(root.get("renewalStatus"), RENEWAL_STATUS_CANCELLED)));
+                }
             }
             if (contractType != null && !contractType.isBlank() && !"all".equals(contractType)) {
                 predicates.add(cb.equal(root.get("contractType"), contractType));
