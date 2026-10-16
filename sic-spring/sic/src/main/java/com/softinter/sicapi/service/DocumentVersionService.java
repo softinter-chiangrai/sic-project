@@ -62,7 +62,7 @@ public interface DocumentVersionService {
      */
     String getLatestVersionNo(String documentType, UUID documentId);
 
-    /** เวอร์ชันที่แสดงบนหน้าจอ (grid/หน้ารายละเอียด): ฉบับใหม่สุดเสมอ ไม่ว่าสถานะใด (Draft/Approved/Rejected); ไม่มีเลย = v1.0.0 (PDF ใช้ pm_current_version_label แยก) */
+    /** เวอร์ชันที่แสดงบนหน้าจอ (grid/หน้ารายละเอียด): ฉบับใหม่สุดเสมอ ไม่ว่าสถานะใด (Draft/Approved/Rejected); ไม่มีเลย = v1.0.0 (รายงาน/PDF ใช้เลขเดียวกันผ่าน pm_current_version_label) */
     String getCurrentVersionNo(String documentType, UUID documentId);
 
     /** getCurrentVersionNo ของหลายเอกสารในคำสั่งเดียว (หน้า list) key = documentId; เอกสารที่ไม่มีแถวเวอร์ชันไม่อยู่ใน map */

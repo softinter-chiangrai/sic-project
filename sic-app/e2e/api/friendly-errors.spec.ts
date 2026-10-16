@@ -18,7 +18,7 @@ function expectFriendly(r: { status: number; body: unknown }, what: RegExp) {
 }
 
 test('delivery without a project is refused politely', async () => {
-  expectFriendly(await w.api.post('/api/pm/delivery/save', { deliveryCode: mock('D'), deliveryTitle: 'no project', state: 4 }), /project/i);
+  expectFriendly(await w.api.post('/api/pm/delivery/save', { deliveryCode: mock('D'), deliveryTitle: 'no project', state: 4 }), /project|โครงการ/i);
 });
 
 test('invoice without customer/project is refused politely', async () => {

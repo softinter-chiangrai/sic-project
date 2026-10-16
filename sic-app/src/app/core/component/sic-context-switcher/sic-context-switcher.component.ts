@@ -61,6 +61,24 @@ export class SicContextSwitcherComponent implements OnInit {
   readonly selectedProjectCount = this.customerState.selectedProjectCount;
   readonly currentSelectedProjects = this.customerState.currentSelectedProjects;
 
+  readonly displayProjectName = computed(() => {
+    const name = this.currentProjectName();
+    if (!name || this.isUuid(name)) {
+      const pid = this.currentProjectId();
+      if (pid) {
+        const found = this.matchingProjects().find((p) => p.id === pid);
+        if (found?.projectName) return found.projectName;
+      }
+      return this.translate.instant('CONTEXT_SWITCHER_LOADING_PROJECTS') || 'กำลังโหลด...';
+    }
+    return name;
+  });
+
+  isUuid(str?: string | null): boolean {
+    if (!str) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
+  }
+
   // Popover State
   readonly isOpen = signal(false);
 
@@ -490,11 +508,12 @@ export class SicContextSwitcherComponent implements OnInit {
         const sameSet = current.length === ids.length && ids.every((id) => current.includes(id));
         if (!sameSet) {
           this.customerState.setProjects(
-            ids.map((id) => ({ id, projectName: id, customerId: customerIdParam })),
+            ids.map((id) => ({ id, projectName: '', customerId: customerIdParam })),
           );
           ids.forEach((id) => {
             this.projectService.getProject(id).subscribe({
-              next: (proj) => {
+              next: (res: any) => {
+                const proj = res?.data || res;
                 if (proj?.projectName) {
                   this.customerState.updateProjectDetails(id, proj.projectName, proj.customerName, proj.customerId);
                 }
@@ -510,10 +529,11 @@ export class SicContextSwitcherComponent implements OnInit {
     if (projectIdParam) {
       const current = this.customerState.getSelectedProjectIds();
       if (!(current.length === 1 && current[0] === projectIdParam)) {
-        this.customerState.setProjects([{ id: projectIdParam, projectName: projectIdParam, customerId: customerIdParam }]);
+        this.customerState.setProjects([{ id: projectIdParam, projectName: '', customerId: customerIdParam }]);
       }
       this.projectService.getProject(projectIdParam).subscribe({
-        next: (proj) => {
+        next: (res: any) => {
+          const proj = res?.data || res;
           if (proj?.projectName) {
             this.customerState.updateProjectDetails(projectIdParam, proj.projectName, proj.customerName, proj.customerId);
           }

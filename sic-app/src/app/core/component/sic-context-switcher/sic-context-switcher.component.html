@@ -20,7 +20,7 @@
     <div class="min-w-0 flex-1 flex flex-col leading-tight">
       @if (selectedProjectCount() === 1) {
         <span class="truncate font-semibold text-[var(--text-active)] text-[0.82rem]">
-          {{ currentProjectName() || currentProjectId() }}
+          {{ displayProjectName() }}
         </span>
         <span class="truncate text-[0.68rem] text-[var(--text-muted)]">
           {{ currentCustomerName() || ('CONTEXT_SWITCHER_SELECTED_PROJECT' | translate) }}

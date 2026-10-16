@@ -19,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.persistence.criteria.Predicate;
@@ -140,6 +141,7 @@ public class SuBusinessRoleProgramController {
     }
 
     @PostMapping("/save")
+    @Transactional
     @Operation(summary = "Save business role program")
     public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleProgramRequest request) {
         SuBusinessRoleProgram brp;
@@ -192,6 +194,7 @@ public class SuBusinessRoleProgramController {
     }
 
     @PostMapping("/bulk-save")
+    @Transactional
     @Operation(summary = "Save all program permissions for a role")
     public ResponseEntity<Void> bulkSave(@Valid @RequestBody SaveRolePermissionsRequest request) {
         SuBusinessRole role = null;
@@ -271,6 +274,7 @@ public class SuBusinessRoleProgramController {
     }
 
     @DeleteMapping("/{id}")
+    @Transactional
     @Operation(summary = "Delete business role program")
     public ResponseEntity<Void> delete(@PathVariable UUID id, @RequestBody DeleteRequest request) {
         SuBusinessRoleProgram brp = brpRepository.findById(id)

@@ -8,12 +8,15 @@ describe('openPdfWindow', () => {
   });
   afterEach(() => vi.restoreAllMocks());
 
-  it('opens the tab at click time and shows the PDF in it later', () => {
-    const tab = { closed: false, location: { href: 'about:blank' }, close: vi.fn() };
+  it('opens the tab at click time with a loading page (not a blank one) and shows the PDF in it later', () => {
+    const tab = { closed: false, location: { href: 'about:blank' }, close: vi.fn(), document: { title: '', body: { innerHTML: '' } } };
     const open = vi.spyOn(window, 'open').mockReturnValue(tab as unknown as Window);
+    localStorage.setItem('app-lang', 'th');
 
     const pdf = openPdfWindow();
     expect(open).toHaveBeenCalledWith('about:blank', '_blank');
+    expect(tab.document.title).toBe('กำลังสร้างเอกสาร…');
+    expect(tab.document.body.innerHTML).toContain('กำลังสร้างเอกสาร…');
 
     pdf.show(blob, 'REQ-001');
     expect(tab.location.href).toBe('blob:pdf');

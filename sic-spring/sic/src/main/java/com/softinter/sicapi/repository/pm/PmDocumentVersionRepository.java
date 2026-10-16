@@ -42,24 +42,20 @@ List<PmDocumentVersion> findByDocumentTypeAndDocumentIdAndIsActiveTrueOrderByCre
     }
 
     /**
-     * Version shown on screens (grids, detail pages): the NEWEST version row of the document whatever its approval status
-     * (user's rule 2026-10-16), the same row getLatestVersionNo returns; null when the document has no version row.
-     * PDFs keep pm_current_version_label (last approved, else draft).
+     * Version shown on screens and in reports, decided once in the DB function pm_current_version: the NEWEST version row of
+     * the document whatever its approval status (user's rule 2026-10-16); null when the document has no version row.
      */
-    @Query(value = "SELECT v.version_no FROM pm_document_version v "
-            + "WHERE v.document_type = :documentType AND v.document_id = :documentId AND COALESCE(v.is_delete, false) = false "
-            + "ORDER BY v.created_date DESC LIMIT 1", nativeQuery = true)
+    @Query(value = "SELECT pm_current_version(:documentType, :documentId)", nativeQuery = true)
     String currentVersionNo(@Param("documentType") String documentType, @Param("documentId") UUID documentId);
 
-    /** Same version as currentVersionNo, suffixed " (Draft)" when the document was never approved; for PDF/report parameters. */
+    /** Same version as currentVersionNo, suffixed " (Draft)" / " (Rejected)" unless approved; for PDF/report parameters. */
     @Query(value = "SELECT pm_current_version_label(:documentType, :documentId)", nativeQuery = true)
     String currentVersionLabel(@Param("documentType") String documentType, @Param("documentId") UUID documentId);
 
     /** currentVersionNo of many documents in one query (grid pages). */
-    @Query(value = "SELECT DISTINCT ON (v.document_id) CAST(v.document_id AS text) AS documentId, v.version_no AS label "
-            + "FROM pm_document_version v "
-            + "WHERE v.document_type = :documentType AND v.document_id IN (:documentIds) AND COALESCE(v.is_delete, false) = false "
-            + "ORDER BY v.document_id, v.created_date DESC", nativeQuery = true)
+    @Query(value = "SELECT CAST(d.document_id AS text) AS documentId, pm_current_version(:documentType, d.document_id) AS label "
+            + "FROM (SELECT DISTINCT document_id FROM pm_document_version "
+            + "WHERE document_type = :documentType AND document_id IN (:documentIds)) d", nativeQuery = true)
     List<CurrentVersionRow> currentVersionRows(@Param("documentType") String documentType,
                                                @Param("documentIds") Collection<UUID> documentIds);
 }

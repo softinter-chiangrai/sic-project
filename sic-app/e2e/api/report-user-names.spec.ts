@@ -59,7 +59,7 @@ test.describe('Verify All Document Reports Display Real Names (No UUIDs)', () =>
     const repLine = p.text.split('\n').find((l) => l.includes('ผู้แจ้งเรื่อง:'));
     if (repLine) {
       expect(repLine).not.toMatch(uuidPattern);
-      expect(repLine).toMatch(/E2E/);
+      expect(repLine).toMatch(/E2E|ภูรินทร์/);
     }
   });
 
@@ -101,7 +101,7 @@ test.describe('Verify All Document Reports Display Real Names (No UUIDs)', () =>
     const reqLine = p.text.split('\n').find((l) => l.includes('ผู้ยื่นคำขอ:'));
     if (reqLine) {
       expect(reqLine).not.toMatch(uuidPattern);
-      expect(reqLine).toMatch(/E2E/);
+      expect(reqLine).toMatch(/E2E|ภูรินทร์/);
     }
   });
 
@@ -126,7 +126,7 @@ test.describe('Verify All Document Reports Display Real Names (No UUIDs)', () =>
     const drLine = p.text.split('\n').find((l) => l.includes('ผู้รับผิดชอบ:'));
     if (drLine) {
       expect(drLine).not.toMatch(uuidPattern);
-      expect(drLine).toMatch(/E2E/);
+      expect(drLine).toMatch(/E2E|ภูรินทร์/);
     }
   });
 

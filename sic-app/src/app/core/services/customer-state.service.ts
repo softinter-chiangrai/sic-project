@@ -55,12 +55,18 @@ export class CustomerStateService {
   // ===== Project & Multi-project =====
   setProject(id: string, name?: string): void {
     this.projectId.set(id);
-    if (name) this.projectName.set(name);
+    const validName = (name && !this.isUuid(name)) ? name : '';
+    this.projectName.set(validName);
     if (id) {
-      this.selectedProjects.set([{ id, projectName: name || id }]);
+      this.selectedProjects.set([{ id, projectName: validName }]);
     } else {
       this.selectedProjects.set([]);
     }
+  }
+
+  private isUuid(str?: string | null): boolean {
+    if (!str) return false;
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(str.trim());
   }
 
   setProjects(projects: SelectedProjectContext[]): void {

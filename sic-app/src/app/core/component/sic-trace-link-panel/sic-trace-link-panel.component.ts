@@ -80,8 +80,11 @@ export class SicTraceLinkPanelComponent implements OnChanges {
     }
     this.loading.set(true);
     const normalizedType = (this.entityType || '').toUpperCase().trim();
-    const diagramTypes = ['DFD', 'ER', 'FLOWCHART', 'SEQUENCE', 'CLASS', 'STATE', 'GANTT', 'MINDMAP', 'JOURNEY', 'PIE', 'C4', 'USE_CASE', 'USE CASE'];
-    const isDiag = diagramTypes.includes(normalizedType);
+    const diagramTypes = [
+      'DFD', 'ER', 'FLOWCHART', 'SEQUENCE', 'CLASS', 'STATE', 'GANTT', 'MINDMAP',
+      'JOURNEY', 'PIE', 'C4', 'USE_CASE', 'USE CASE', 'TIMELINE', 'GIT GRAPH', 'GIT_GRAPH', 'ARCHITECTURE'
+    ];
+    const isDiag = diagramTypes.includes(normalizedType) || normalizedType === 'DIAGRAM';
 
     forkJoin({
       asSource: this.traceLinkService.getLinksBySource(this.entityType, this.entityId).pipe(catchError(() => of([]))),
@@ -197,6 +200,10 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       case 'JOURNEY':
       case 'PIE':
       case 'C4':
+      case 'TIMELINE':
+      case 'GIT GRAPH':
+      case 'GIT_GRAPH':
+      case 'ARCHITECTURE':
         return this.http.get<any>(`${base}/api/diagram/tabs/${id}`).pipe(
           map((data) => {
             const code = data?.diagramCode || id.slice(0, 8);
@@ -364,6 +371,10 @@ export class SicTraceLinkPanelComponent implements OnChanges {
       case 'JOURNEY':
       case 'PIE':
       case 'C4':
+      case 'TIMELINE':
+      case 'GIT GRAPH':
+      case 'GIT_GRAPH':
+      case 'ARCHITECTURE':
         return `${base}/diagram?tabId=${id}`;
       case 'REQUIREMENT':
       case 'REQ':
