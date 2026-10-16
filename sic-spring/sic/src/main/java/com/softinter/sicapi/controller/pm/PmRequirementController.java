@@ -267,29 +267,6 @@ public class PmRequirementController {
     }
 
     /**
-     * Live preview: the real Jasper PDF of the values in the form, saved or not. Nothing is stored.
-     * POST /api/pm/requirement/preview-pdf?lang=th  (body: the form, same shape as save)
-     */
-    @PostMapping("/preview-pdf")
-    @Operation(summary = "Preview the requirement PDF of unsaved form values")
-    public ResponseEntity<byte[]> previewPdf(
-            @RequestBody PmRequirementRequest request,
-            @RequestParam(required = false) String lang,
-            @RequestHeader(value = "x-language-code", required = false) String headerLang) {
-        UUID businessId = BusinessContextHolder.getBusinessId();
-        if (businessId == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        byte[] pdf = requirementExportService.previewRequirementPdf(request, businessId, currentUserService.getUserId(),
-                ReportHelper.resolveLang(lang, headerLang));
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(org.springframework.http.ContentDisposition.inline().filename("preview.pdf").build());
-        headers.setCacheControl("no-store");
-        return ResponseEntity.ok().headers(headers).body(pdf);
-    }
-
-    /**
      * Export endpoint matching frontend's RequirementExportService call:
      * POST /api/pm/requirement/export  (body: { requirementId, format, data })
      */

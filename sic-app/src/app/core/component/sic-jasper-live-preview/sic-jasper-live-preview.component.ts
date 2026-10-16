@@ -4,12 +4,13 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, Component, DestroyRef, Input, OnChanges, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { environment } from '../../../../environments/environment';
 import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, from, tap, map } from 'rxjs';
 
 /**
- * The real Jasper PDF of a form while it is being edited: [body] is posted to [url] (a *-preview-pdf endpoint that fills the
- * report from the unsaved values and stores nothing) once typing pauses. The previous PDF stays on screen until the new one
+ * The real Jasper PDF of a form while it is being edited: [body] (the form, same shape as its save) is posted to
+ * /api/pm/live-preview/{kind}, which fills the report from the unsaved values and stores nothing, once typing pauses. The previous PDF stays on screen until the new one
  * is ready, so the view never flashes white.
  */
 @Component({
@@ -40,10 +41,12 @@ import { Subject, debounceTime, distinctUntilChanged, switchMap, catchError, fro
   `,
 })
 export class SicJasperLivePreviewComponent implements OnChanges {
-  @Input({ required: true }) url!: string;
+  /** requirement, specification, contract, design-review, change-request, ma-ticket, delivery, user-manual, invoice */
+  @Input({ required: true }) kind!: string;
   @Input() body: unknown;
 
   private http = inject(HttpClient);
+  private translate = inject(TranslateService);
   private sanitizer = inject(DomSanitizer);
   private changes = new Subject<string>();
   private objectUrl: string | null = null;
@@ -62,7 +65,10 @@ export class SicJasperLivePreviewComponent implements OnChanges {
         tap(() => this.loading.set(true)),
         // a newer change cancels the request still running
         switchMap((json) =>
-          this.http.post(this.url, JSON.parse(json), { responseType: 'blob' }).pipe(
+          this.http.post(`${environment.apiBaseUrl}/api/pm/live-preview/${this.kind}`, JSON.parse(json), {
+            params: { lang: this.translate.currentLang || 'th' },
+            responseType: 'blob',
+          }).pipe(
             map((blob) => ({ blob: blob as Blob | null, err: null as string | null })),
             catchError((e) => from(this.messageOf(e)).pipe(map((err) => ({ blob: null, err })))),
           ),

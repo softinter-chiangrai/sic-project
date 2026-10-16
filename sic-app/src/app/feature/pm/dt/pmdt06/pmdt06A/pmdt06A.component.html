@@ -613,6 +613,7 @@
                   {{ 'PMDT06_DELETE_BTN' | translate }}
                 </sic-button>
               }
+              <sic-live-pdf-button kind="change-request" [body]="pdfPreviewBody()"></sic-live-pdf-button>
               <button
                 type="button"
                 (click)="exportPdf()"

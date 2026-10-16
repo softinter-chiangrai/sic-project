@@ -37,11 +37,12 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
+import { SicLivePdfButtonComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-live-pdf-button.component';
 
 @Component({
   selector: 'app-pmdt15a',
   standalone: true,
-  imports: [
+  imports: [SicLivePdfButtonComponent, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -153,6 +154,11 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
 
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
+
+  /** the form as it would be saved, for the live Jasper PDF (sic-live-pdf-button) */
+  pdfPreviewBody(): any {
+    return { ...this.formData.form.getRawValue(), id: this.id() || this.formData.form.getRawValue().id || null, sections: this.sections() };
+  }
 
   ngOnInit(): void {
     const rawForm = Pmdt15AForm.createForm(this.fb);

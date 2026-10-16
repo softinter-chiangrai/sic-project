@@ -187,10 +187,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // preview panel: the quick HTML preview, or the real Jasper PDF of the unsaved form (refreshed when typing pauses)
   previewKind: 'html' | 'pdf' = 'html';
 
-  get previewPdfUrl(): string {
-    return `${environment.apiBaseUrl}/api/pm/requirement/preview-pdf?lang=${this.translate.currentLang || 'th'}`;
-  }
-
   pdfPreviewBody(): any {
     const v = this.form.getRawValue();
     return { ...v, id: this.reqId || v.id || null, uploadGroupData: undefined };

@@ -45,11 +45,13 @@ import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.u
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
+import { SicJasperLivePreviewComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-jasper-live-preview.component';
 
 @Component({
     selector: 'app-pmdt07a',
     standalone: true,
     imports: [
+        SicJasperLivePreviewComponent,
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
@@ -733,6 +735,14 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             return rawGroupId.uploadGroupId || rawGroupId.id || rawGroupId.uploadId || null;
         }
         return null;
+    }
+
+    // preview pane: the quick HTML preview, or the real Jasper PDF of the unsaved form (refreshed when typing pauses)
+    previewKind: 'html' | 'pdf' = 'html';
+
+    pdfPreviewBody(): any {
+        const data = this.prepareSubmitData();
+        return { ...data, id: this.specId || data.id || null };
     }
 
     private prepareSubmitData(): PmSpecificationModel {

@@ -35,11 +35,12 @@ import { SicAiAttachmentPickerComponent } from '../../../../../core/component/si
 import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-trace-link-panel/sic-trace-link-panel.component';
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
+import { SicLivePdfButtonComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-live-pdf-button.component';
 
 @Component({
   selector: 'app-pmdt14a',
   standalone: true,
-  imports: [
+  imports: [SicLivePdfButtonComponent, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -295,6 +296,11 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       this.copiedId.set(historyId || 'current');
       setTimeout(() => this.copiedId.set(null), 2000);
     });
+  }
+
+  /** the form as it would be saved, for the live Jasper PDF (sic-live-pdf-button) */
+  pdfPreviewBody(): any {
+    return { ...this.formData.form.getRawValue(), id: this.id() || this.formData.form.getRawValue().id || null, checklists: this.checklists() };
   }
 
   ngOnInit(): void {

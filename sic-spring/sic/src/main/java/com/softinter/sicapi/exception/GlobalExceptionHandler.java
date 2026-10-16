@@ -113,7 +113,7 @@ public class GlobalExceptionHandler {
             Map.entry("document_name", "ชื่อเอกสาร"),
             Map.entry("document_type", "ประเภทเอกสาร"));
 
-    static String fieldLabel(String column) {
+    public static String fieldLabel(String column) {
         return FIELD_LABELS.getOrDefault(column, column.replace('_', ' '));
     }
 

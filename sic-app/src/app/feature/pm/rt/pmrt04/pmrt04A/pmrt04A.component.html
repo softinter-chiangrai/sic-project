@@ -43,6 +43,7 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <sic-live-pdf-button kind="contract" [body]="pdfPreviewBody()"></sic-live-pdf-button>
         @if (!isView && !isLocked) {
           <button
             type="button"
@@ -637,4 +638,4 @@
 
     </div>
   </div>
-}
+}

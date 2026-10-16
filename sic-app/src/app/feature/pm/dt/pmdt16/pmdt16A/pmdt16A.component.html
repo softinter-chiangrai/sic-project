@@ -36,6 +36,7 @@
           <span>{{ 'PMDT16A_AI_GENERATE_BTN' | translate }}</span>
         </button>
       }
+      <sic-live-pdf-button kind="invoice" [body]="pdfPreviewBody()"></sic-live-pdf-button>
       @if (id()) {
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>

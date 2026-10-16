@@ -290,7 +290,7 @@
             </div>
           </div>
           @if (previewKind === 'pdf') {
-            <sic-jasper-live-preview [url]="previewPdfUrl" [body]="pdfPreviewBody()"></sic-jasper-live-preview>
+            <sic-jasper-live-preview kind="requirement" [body]="pdfPreviewBody()"></sic-jasper-live-preview>
           } @else {
             <sic-requirement-preview [data]="getPreviewData()"></sic-requirement-preview>
           }
