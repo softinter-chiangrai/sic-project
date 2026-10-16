@@ -22,6 +22,9 @@ export class SicButtonComponent {
   @Input() loading = false;
   @Input() fullWidth = false;
   @Input() iconOnly = false;
+  @Input() icon?: string;
+  @Input() text?: string;
+  @Input() label?: string;
 
   get buttonClass(): string {
     const classes = [

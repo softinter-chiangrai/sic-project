@@ -48,6 +48,10 @@ export class DialogService {
     return true;
   }
 
+  warning(title: string, description: string): Promise<boolean> {
+    return this.warn(title, description);
+  }
+
   async error(title: string, description: string): Promise<boolean> {
     // ถ้า request ที่เพิ่งล้มเหลวมีเหตุผลจาก backend (เช่น เอกสารถูกล็อก) ให้แสดงเหตุผลนั้น แทนข้อความทั่วไปของแต่ละหน้า
     const serverMessage = consumeRecentServerError();

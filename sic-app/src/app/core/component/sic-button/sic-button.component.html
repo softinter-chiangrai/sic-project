@@ -1,3 +1,7 @@
 <button [class]="buttonClass" [disabled]="disabled" [type]="type">
+  @if (icon) {
+    <i [class]="icon" class="mr-1"></i>
+  }
   <ng-content></ng-content>
+  {{ text || label || '' }}
 </button>

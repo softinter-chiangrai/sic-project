@@ -778,12 +778,15 @@ export class Pmdt10Component implements OnInit {
       this.service.createTask({
         workPackageId: wpId,
         taskName: row['taskName'] || 'New Task',
-        description: row['description'],
+        description: row['description'] || '',
         priority: row['priority'] || 'Medium',
         estimateManday: Number(row['estimateManday']) || 1,
         color: row['color'] || '#3B82F6',
         status: 'Todo',
-      })
+        taskCode: '',
+        startDate: '',
+        endDate: '',
+      } as any)
     );
 
     forkJoin(saveRequests)

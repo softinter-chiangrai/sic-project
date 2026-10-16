@@ -26,10 +26,12 @@
     <div class="flex items-center gap-2">
       <sic-button
         variant="outline"
-        icon="bi bi-stars"
-        [text]="'AI_BATCH_CREATE_BUTTON' | translate"
+        color="primary"
         (click)="showAiBatchModal.set(true)"
-      ></sic-button>
+      >
+        <i class="bi bi-stars mr-1" sicIconLeft></i>
+        {{ 'AI_BATCH_CREATE_BUTTON' | translate }}
+      </sic-button>
       <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"

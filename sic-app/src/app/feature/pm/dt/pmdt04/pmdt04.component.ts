@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, computed, effect, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -23,11 +23,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicAiBatchModalComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
@@ -48,6 +49,17 @@ export class Pmdt04Component implements OnInit {
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected isLoading = signal(false);
+
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'title', label: this.translate.instant('PMDT04_COL_NAME') || 'Requirement Title', type: 'text' },
+    { key: 'description', label: this.translate.instant('PMDT04_COL_DESC') || 'Description', type: 'textarea' },
+    { key: 'requirementType', label: this.translate.instant('PMDT04_COL_TYPE') || 'Type', type: 'text' },
+    { key: 'priority', label: this.translate.instant('PMDT04_COL_PRIORITY') || 'Priority', type: 'text' },
+    { key: 'source', label: this.translate.instant('PMDT04_COL_SOURCE') || 'Source', type: 'text' },
+  ];
 
   // Full unfiltered-by-project dataset, loaded once (all projects, backend projectId omitted).
   protected requirements = signal<RequirementItem[]>([]);
@@ -339,5 +351,56 @@ export class Pmdt04Component implements OnInit {
     } catch {
       return dateStr;
     }
+  }
+
+  resolveProjectId(): string | null {
+    const navIds = this.customerState.currentSelectedProjectIds();
+    if (navIds && navIds.length > 0) return navIds[0];
+    const navProj = this.customerState.currentProjectId();
+    if (navProj) return navProj;
+    const list = this.requirements();
+    if (list && list.length > 0 && list[0].projectId) return list[0].projectId;
+    return null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    if (!rows.length) return;
+    const projId = this.resolveProjectId();
+    if (!projId) {
+      this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'ข้อผิดพลาด', 'กรุณาเลือกโครงการก่อนสร้างข้อมูล');
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const saveRequests = rows.map((row) =>
+      this.http.post(`${environment.apiBaseUrl}/api/pm/requirement/save`, {
+        projectId: projId,
+        title: row['title'] || 'Untitled Requirement',
+        description: row['description'] || `<p>${row['title'] || ''}</p>`,
+        requirementType: row['requirementType'] || 'FUNCTIONAL',
+        priority: row['priority'] || 'Medium',
+        source: row['source'] || 'AI Generation',
+        status: 'Draft',
+        version: 'v1.0.0',
+        isActive: true,
+      })
+    );
+
+    forkJoin(saveRequests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.fetchAll();
+          this.dialog.success(
+            this.translate.instant('COMMON_SUCCESS_TITLE') || 'สำเร็จ',
+            this.translate.instant('PM_AI_BATCH_SUCCESS_DESC', { count: rows.length }) || `สร้าง ${rows.length} รายการเรียบร้อยแล้ว`
+          );
+        },
+        error: (err) => {
+          console.error('AI batch save failed', err);
+          this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'บันทึกไม่สำเร็จ', err.error?.message || err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+        },
+      });
   }
 }

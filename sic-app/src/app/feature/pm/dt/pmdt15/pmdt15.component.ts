@@ -315,7 +315,7 @@ export class Pmdt15Component implements OnInit {
     return status ? map[status.toUpperCase()] || status : '-';
   }
 
-  private resolveTargetProjectId(): string | null {
+  protected resolveTargetProjectId(): string | null {
     const ids = this.customerState.currentSelectedProjectIds();
     if (ids && ids.length > 0) return ids[0];
     if (this.projectId()) return this.projectId();
@@ -326,7 +326,7 @@ export class Pmdt15Component implements OnInit {
   onAiBatchSaved(rows: Record<string, any>[]): void {
     const projectId = this.resolveTargetProjectId();
     if (!projectId) {
-      this.dialog.warning(
+      this.dialog.warn(
         this.translate.instant('PM_AI_BATCH_NO_PROJECT_TITLE') || 'กรุณาเลือกโปรเจกต์',
         this.translate.instant('PM_AI_BATCH_NO_PROJECT_DESC') || 'กรุณาเลือกโปรเจกต์จากแถบด้านบนก่อนบันทึกรายการชุด',
       );

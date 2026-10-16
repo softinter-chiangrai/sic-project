@@ -14,6 +14,7 @@ import { CustomerStateService } from '../../../../../core/services/customer-stat
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../../core/services/language.service';
 import { TraceLinkService } from '../../../../../core/services/trace-link.service';
+import { AiHistoryService } from '../../../../../core/services/ai-history.service';
 import { PmTestCaseModel, PmTestScenarioModel } from '../pmdt12.model';
 import { Pmdt12Service } from '../pmdt12.service';
 import { createBugForm } from './pmdt12C.form';
@@ -49,6 +50,7 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
   private translate = inject(TranslateService);
   private http = inject(HttpClient);
   private languageService = inject(LanguageService);
+  private aiHistoryService = inject(AiHistoryService);
 
   // ===== States =====
   isLoading = signal(true);
@@ -471,6 +473,15 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
       next: (res) => {
         this.aiBugResolution.set(res);
         this.isAnalyzingBug.set(false);
+        this.aiHistoryService.addHistory(
+          'bug-resolution',
+          this.taskId() || this.parentTaskId() || 'new',
+          res,
+          `Bug: ${title}`,
+          'gemini-1.5-flash',
+          `AI Bug Resolution (${this.aiBugLang().toUpperCase()})`,
+          res.rootCause ? `Root Cause: ${res.rootCause}` : undefined
+        );
       },
       error: (err) => {
         console.error('AI Bug resolution error:', err);

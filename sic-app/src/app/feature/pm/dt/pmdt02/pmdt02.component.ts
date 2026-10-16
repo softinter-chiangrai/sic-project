@@ -7,6 +7,7 @@ import dayjs from '../../../../core/dayjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { AiModelsService } from '../../../../core/services/ai-models.service';
+import { AiHistoryService } from '../../../../core/services/ai-history.service';
 
 import type { PhaseResponse, CalendarItemDetail, PhasePageData } from './pmdt02.model';
 import type { MilestoneResponse } from './pmdt02A/pmdt02A.model';
@@ -85,6 +86,7 @@ export class Pmdt02Component implements OnInit {
   private businessService = inject(BusinessService);
   private authService = inject(AuthService);
   private sidebarService = inject(SicSidebarService);
+  private aiHistoryService = inject(AiHistoryService);
   private routerSub?: Subscription;
 
   memberApiUrl = '';
@@ -793,6 +795,15 @@ export class Pmdt02Component implements OnInit {
           this.dialog.warn(this.translate.instant('PMDT02_AI_WBS_EMPTY_TITLE'), res.message || this.translate.instant('PMDT02_AI_WBS_EMPTY_MSG'));
           return;
         }
+        this.aiHistoryService.addHistory(
+          'phase-wbs',
+          phaseId,
+          res,
+          this.aiWbsPrompt(),
+          this.aiWbsModel(),
+          `Phase WBS (${res.milestones} M, ${res.workPackages} WP, ${res.tasks} Tasks)`,
+          res.message
+        );
         this.showAiWbsModal.set(false);
         this.aiWbsPrompt.set('');
         this.aiWbsFiles.set([]);
