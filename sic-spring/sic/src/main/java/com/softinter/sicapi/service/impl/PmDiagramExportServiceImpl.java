@@ -83,7 +83,7 @@ public class PmDiagramExportServiceImpl implements PmDiagramExportService {
 
     @Override
     @Transactional(readOnly = true)
-    public byte[] exportAllDiagramsPdf(UUID projectId, UUID currentDiagramId, UUID businessId, String lang, String currentImageDataUri) {
+    public byte[] exportAllDiagramsPdf(UUID projectId, UUID currentDiagramId, UUID businessId, String lang, String currentImageDataUri, List<UUID> onlyTabIds) {
         String normalizedLang = "en".equalsIgnoreCase(lang) ? "en" : "th";
         log.info("Generating All Diagrams PDF: projectId={}, currentDiagramId={}, businessId={}, lang={}",
                 projectId, currentDiagramId, businessId, normalizedLang);
@@ -91,6 +91,9 @@ public class PmDiagramExportServiceImpl implements PmDiagramExportService {
         List<PmDiagramTab> tabs = tabRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(businessId, projectId);
         if (tabs.isEmpty()) {
             tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+        }
+        if (onlyTabIds != null && !onlyTabIds.isEmpty()) {
+            tabs = tabs.stream().filter(t -> onlyTabIds.contains(t.getId())).toList();
         }
         if (tabs.isEmpty()) {
             throw new RuntimeException("ไม่พบข้อมูลไดอะแกรมในโครงการนี้");

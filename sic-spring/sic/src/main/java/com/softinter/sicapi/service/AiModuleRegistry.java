@@ -69,7 +69,7 @@ public class AiModuleRegistry {
                 .label("ความต้องการ (Requirement)")
                 .listRoute("/feature/pm/requirement")
                 .createRoute("/feature/pm/requirement/new")
-                .schemaDescription("{ \"requirementName\": string, \"description\": string, \"priority\": \"High\"|\"Medium\"|\"Low\", \"category\": string|null }")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"requirementType\": \"FUNCTIONAL\"|\"NON_FUNCTIONAL\"|\"BUSINESS_RULE\", \"priority\": \"High\"|\"Medium\"|\"Low\", \"source\": string|null }")
                 .build());
 
         register(ModuleDef.builder()
@@ -93,7 +93,7 @@ public class AiModuleRegistry {
                 .label("Specification")
                 .listRoute("/feature/pm/specification")
                 .createRoute("/feature/pm/specification/new")
-                .schemaDescription("{ \"specName\": string, \"description\": string, \"version\": string|null }")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"specificationType\": \"UI Specification\"|\"API Specification\"|\"Business Rule Specification\", \"priority\": \"High\"|\"Medium\"|\"Low\", \"module\": string|null }")
                 .build());
 
         register(ModuleDef.builder()
@@ -101,7 +101,7 @@ public class AiModuleRegistry {
                 .label("คู่มือผู้ใช้งาน (User Manual)")
                 .listRoute("/feature/pm/manual")
                 .createRoute("/feature/pm/manual/new")
-                .schemaDescription("{ \"manualTitle\": string, \"description\": string }")
+                .schemaDescription("{ \"manualTitle\": string, \"manualType\": \"USER\"|\"ADMIN\"|\"API\", \"version\": \"1.0.0\" }")
                 .build());
 
         register(ModuleDef.builder()
@@ -109,7 +109,7 @@ public class AiModuleRegistry {
                 .label("การส่งมอบ (Delivery)")
                 .listRoute("/feature/pm/delivery")
                 .createRoute("/feature/pm/delivery/new")
-                .schemaDescription("{ \"deliveryName\": string, \"description\": string, \"deliveryDate\": null }")
+                .schemaDescription("{ \"deliveryTitle\": string, \"deliverySummary\": string, \"deliveryType\": \"FINAL\"|\"SPRINT\"|\"INTERIM\" }")
                 .build());
 
         register(ModuleDef.builder()
@@ -117,7 +117,7 @@ public class AiModuleRegistry {
                 .label("MA Ticket")
                 .listRoute("/feature/pm/ma-ticket")
                 .createRoute("/feature/pm/ma-ticket/new")
-                .schemaDescription("{ \"ticketTitle\": string, \"description\": string, \"priority\": \"High\"|\"Medium\"|\"Low\" }")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"severity\": \"CRITICAL\"|\"HIGH\"|\"MEDIUM\"|\"LOW\", \"ticketType\": \"BUG_SUPPORT\"|\"CR_SUPPORT\"|\"GENERAL_QUESTION\" }")
                 .build());
 
         register(ModuleDef.builder()
@@ -150,6 +150,46 @@ public class AiModuleRegistry {
                 .listRoute("/feature/bu/team")
                 .createRoute("/feature/bu/team")
                 .schemaDescription("{ \"teamName\": string, \"description\": string }")
+                .build());
+
+        register(ModuleDef.builder()
+                .moduleType("TASK")
+                .label("งาน (Task)")
+                .listRoute("/feature/pm/task-board")
+                .createRoute("/feature/pm/task/new")
+                .schemaDescription("{ \"taskName\": string, \"description\": string, \"priority\": \"Critical\"|\"High\"|\"Medium\"|\"Low\", \"estimateManday\": number, \"color\": \"#3B82F6\"|\"#10B981\"|\"#8B5CF6\"|\"#F59E0B\" }")
+                .build());
+
+        register(ModuleDef.builder()
+                .moduleType("CHANGE_REQUEST")
+                .label("คำขอเปลี่ยนแปลง (Change Request)")
+                .listRoute("/feature/pm/change-request")
+                .createRoute("/feature/pm/change-request/new")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"reason\": string, \"priority\": \"High\"|\"Medium\"|\"Low\", \"changeType\": \"Scope\"|\"Schedule\"|\"Cost\"|\"Design\" }")
+                .build());
+
+        register(ModuleDef.builder()
+                .moduleType("DESIGN_REVIEW")
+                .label("ทบทวนการออกแบบ (Design Review)")
+                .listRoute("/feature/pm/design-review")
+                .createRoute("/feature/pm/design-review/new")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"reviewType\": \"Architecture\"|\"UI/UX\"|\"Database\"|\"Security\"|\"Code Review\", \"priority\": \"High\"|\"Medium\"|\"Low\" }")
+                .build());
+
+        register(ModuleDef.builder()
+                .moduleType("MILESTONE")
+                .label("หมุดหมาย (Milestone)")
+                .listRoute("/feature/pm/phase")
+                .createRoute("/feature/pm/milestone/new")
+                .schemaDescription("{ \"milestoneName\": string, \"description\": string, \"dueDate\": \"YYYY-MM-DD\"|null, \"color\": \"#F59E0B\" }")
+                .build());
+
+        register(ModuleDef.builder()
+                .moduleType("WORK_PACKAGE")
+                .label("ชุดงาน (Work Package)")
+                .listRoute("/feature/pm/phase")
+                .createRoute("/feature/pm/work-package/new")
+                .schemaDescription("{ \"packageName\": string, \"description\": string, \"startDate\": \"YYYY-MM-DD\"|null, \"endDate\": \"YYYY-MM-DD\"|null, \"color\": \"#8B5CF6\" }")
                 .build());
     }
 

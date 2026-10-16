@@ -43,10 +43,18 @@ public final class PdfBook {
     /**
      * @param toc renders the table of contents from rows {title, page, group}; called twice (to learn its length, then with the
      *            real page numbers)
+     * @param head  pages before the table of contents (the project summary), or null
+     * @param tail  pages after the entries (the sign-off page), or null
      */
     public static byte[] build(byte[] head, List<Entry> entries, byte[] tail, String tailTitle,
                                Function<List<Map<String, ?>>, byte[]> toc, String lang) throws IOException {
-        int headPages = pages(head);
+        return build(head, entries, tail, tailTitle, toc, lang, true);
+    }
+
+    /** numberPages = false for a book that goes into another book: the outer book numbers all pages once */
+    public static byte[] build(byte[] head, List<Entry> entries, byte[] tail, String tailTitle,
+                               Function<List<Map<String, ?>>, byte[]> toc, String lang, boolean numberPages) throws IOException {
+        int headPages = head == null ? 0 : pages(head);
         byte[] tocPdf = toc.apply(rows(entries, tailTitle, tail, headPages, 1));
         int tocPages = pages(tocPdf);
         tocPdf = toc.apply(rows(entries, tailTitle, tail, headPages, tocPages));
@@ -60,7 +68,8 @@ public final class PdfBook {
         parts.add(tocPdf);
         entries.stream().filter(e -> e.pdf() != null).forEach(e -> parts.add(e.pdf()));
         parts.add(tail);
-        return stampPageNumbers(merge(parts), lang);
+        byte[] merged = merge(parts);
+        return numberPages ? stampPageNumbers(merged, lang) : merged;
     }
 
     private static List<Map<String, ?>> rows(List<Entry> entries, String tailTitle, byte[] tail, int headPages, int tocPages) throws IOException {
@@ -76,6 +85,28 @@ public final class PdfBook {
             rows.add(row(tailTitle, next, true));
         }
         return rows;
+    }
+
+    private static volatile net.sf.jasperreports.engine.JasperReport tocReport;
+
+    /** the table of contents as reports/project_book_toc.jrxml renders it, for build(..., toc, ...) */
+    public static Function<List<Map<String, ?>>, byte[]> jasperToc(String lang, String subtitle) {
+        return rows -> {
+            try {
+                if (tocReport == null) {
+                    try (InputStream is = new ClassPathResource("reports/project_book_toc.jrxml").getInputStream()) {
+                        tocReport = net.sf.jasperreports.engine.JasperCompileManager.compileReport(is);
+                    }
+                }
+                Map<String, Object> p = new java.util.HashMap<>();
+                p.put("lang", lang);
+                p.put("projectName", subtitle);
+                return net.sf.jasperreports.engine.JasperExportManager.exportReportToPdf(net.sf.jasperreports.engine.JasperFillManager.fillReport(
+                        tocReport, p, new net.sf.jasperreports.engine.data.JRMapCollectionDataSource(new ArrayList<>(rows))));
+            } catch (Exception e) {
+                throw new IllegalStateException("Could not render the table of contents: " + e.getMessage(), e);
+            }
+        };
     }
 
     private static Map<String, Object> row(String title, int page, boolean group) {

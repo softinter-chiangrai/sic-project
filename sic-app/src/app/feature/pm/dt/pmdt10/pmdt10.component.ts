@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { CdkDragDrop, DragDropModule, moveItemInArray, transferArrayItem } from '@angular/cdk/drag-drop';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { finalize, forkJoin } from 'rxjs';
 
 import {
   SicKanbanComponent,
@@ -14,10 +15,11 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { BusinessService } from '../../../../core/services/business.service';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { Pmdt10Service } from './pmdt10.service';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
-import { SicAvatarComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { SicAvatarComponent, SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 
 @Component({
@@ -29,11 +31,13 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     RouterModule,
     DragDropModule,
     SicAvatarComponent,
+    SicButtonComponent,
     SicComboboxComponent,
     SicKanbanComponent,
     SicGridPanelComponent,
     SicGridPanelTemplate,
     TranslateModule,
+    SicAiBatchModalComponent,
   ],
   templateUrl: './pmdt10.component.html',
   styleUrls: ['./pmdt10.component.css'],
@@ -59,6 +63,17 @@ export class Pmdt10Component implements OnInit {
   specifications = signal<SpecificationSummary[]>([]);
   workPackages = signal<WorkPackageOption[]>([]);
   businessMembers = signal<{ value: string; text: string }[]>([]);
+
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'taskName', label: this.translate.instant('PMDT10_TASK_NAME') || 'Task Name', type: 'text' },
+    { key: 'description', label: this.translate.instant('PMDT10_TASK_DESC') || 'Description', type: 'textarea' },
+    { key: 'priority', label: this.translate.instant('PMDT10_PRIORITY') || 'Priority', type: 'text' },
+    { key: 'estimateManday', label: this.translate.instant('PMDT10_MANDAY') || 'Est Manday', type: 'number' },
+    { key: 'color', label: 'Color', type: 'text' },
+  ];
 
   // Filter signals
   selectedSpecId = signal<string | null>(null);
@@ -731,5 +746,60 @@ export class Pmdt10Component implements OnInit {
     }
     if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) return rawUrl;
     return `http://localhost:5265${rawUrl}`;
+  }
+
+  resolveProjectId(): string | null {
+    if (this.projectId()) return this.projectId();
+    const navIds = this.customerState.currentSelectedProjectIds();
+    if (navIds && navIds.length > 0) return navIds[0];
+    const navProj = this.customerState.currentProjectId();
+    if (navProj) return navProj;
+    const list = this.allTasks();
+    if (list && list.length > 0 && list[0].projectId) return list[0].projectId;
+    return null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    if (!rows.length) return;
+    const wps = this.workPackages();
+    const selectedWpId = this.selectedWpId();
+    const wpId = selectedWpId || (wps.length > 0 ? wps[0].id : null);
+
+    if (!wpId) {
+      this.dialog.error(
+        this.translate.instant('COMMON_ERROR_TITLE') || 'ข้อผิดพลาด',
+        'ไม่พบ Work Package ในโครงการ กรุณาสร้าง Work Package ก่อนเพิ่ม Task'
+      );
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const saveRequests = rows.map((row) =>
+      this.service.createTask({
+        workPackageId: wpId,
+        taskName: row['taskName'] || 'New Task',
+        description: row['description'],
+        priority: row['priority'] || 'Medium',
+        estimateManday: Number(row['estimateManday']) || 1,
+        color: row['color'] || '#3B82F6',
+        status: 'Todo',
+      })
+    );
+
+    forkJoin(saveRequests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.loadProjectData(this.projectId());
+        },
+        error: (err) => {
+          console.error('AI batch save failed', err);
+          this.dialog.error(
+            this.translate.instant('COMMON_ERROR_TITLE') || 'บันทึกไม่สำเร็จ',
+            err.error?.message || err.message || 'เกิดข้อผิดพลาดในการบันทึก'
+          );
+        },
+      });
   }
 }

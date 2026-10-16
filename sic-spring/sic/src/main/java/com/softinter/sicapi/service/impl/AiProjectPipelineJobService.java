@@ -1172,19 +1172,32 @@ public class AiProjectPipelineJobService {
 
     private static final String MERMAID_RULES = """
             Respond ONLY with valid Mermaid code in a ```mermaid block, no other text. Node/entity labels in the same language as the project. Max 25 nodes / 15 entities.
-            flowchart types (DFD, Use Case, Flowchart): first line `flowchart TD`. Node ids are ASCII letters+digits only (E1, P2). Labels ALWAYS in double quotes.
-            Edges: `A --> B` or `A -->|"label"| B`. Do NOT use subgraph, style, classDef, click, or any other syntax.
-            Shapes: DFD external entity `E1["Name"]`, process `P1(("Name"))`, data store `D1[("Name")]`.
-            Use Case actor `A1(["Actor"])`, use case `U1(("Use case"))`. Flowchart start/end `S1(["Start"])`, step `T1["Step"]`, decision `D1{"Question?"}`.
-            ER: first line `erDiagram`; relation `CUSTOMER ||--o{ ORDER : places`; entity block `CUSTOMER {` + one attribute per line like `string id PK` + `}`. Entity names UPPERCASE, no spaces.
+            Flowchart diagrams (DFD, Use Case, Flowchart): first line `flowchart TD` (or `flowchart LR` for Use Case/DFD). Node ids are ASCII letters+digits only (E1, P1, UC1). Labels ALWAYS in double quotes.
+            Edges: `A --> B` or `A -->|"label"| B`. Do NOT use style, classDef, click, or unsupported syntax.
+            Standard Diagram Shapes & Notation Rules:
+            - DFD (Gane & Sarson standard):
+              * External Entity: MUST be a Rectangle `E1["Entity Name"]` (NEVER circle or round).
+              * Process: MUST be a Rounded Rectangle WITH process number `P1("1.0 Process Name")` or `P2("2.0 Process Name")` (NEVER plain circles).
+              * Data Store: MUST be a Cylinder `D1[("D1: Data Store Name")]`.
+              * Data Flows: Always label data on edges `-->|"Data flow name"|`. NEVER connect entity to entity directly; NEVER connect entity to datastore directly.
+            - Use Case (UML standard):
+              * System Boundary: Wrap all use cases inside `subgraph System ["System Name"] ... end`.
+              * Actor: Placed OUTSIDE the subgraph as `Actor1["👤 Actor Name"]` or `Actor1(["Actor Name"])`.
+              * Use Case: MUST be Oval / Stadium `UC1(["Use Case Name"])` (NEVER a circle `((...))` and NEVER a square).
+              * Association: `Actor1 --> UC1`. Include: `UC1 -.->|"<<include>>"| UC2`. Extend: `UC3 -.->|"<<extend>>"| UC1`.
+            - Flowchart (Process standard):
+              * Start/End: Stadium `S1(["Start"])`, `E1(["End"])`.
+              * Process / Step: Rectangle `T1["Step Description"]`.
+              * Decision: Diamond `D1{"Condition?"}` with `-->|"Yes"|` and `-->|"No"|` branches.
+            - ER: first line `erDiagram`; relation `CUSTOMER ||--o{ ORDER : places`; entity block `CUSTOMER {` + one attribute per line like `string id PK` + `}`. Entity names UPPERCASE, no spaces.
             """;
 
     // {type, name, instruction}: fixed system-level set, one AI call each (a single big call gets truncated).
     private static final String[][] DIAGRAM_SET = {
-            {"DFD", "DFD Level 0", "a DFD Level 0 (context diagram): the system as one process, all external entities and the main data flows in/out"},
-            {"DFD", "DFD Level 1", "a DFD Level 1: break the system into its main processes with data stores, external entities and every data flow between them"},
-            {"Use Case", "Use Case Diagram", "the use case diagram of the whole system: all actors and all main use cases with their relations"},
-            {"Flowchart", "Main Process Flowchart", "the flowchart of the single most important business process of the system, including decisions and alternative paths"},
+            {"DFD", "DFD Level 0", "a DFD Level 0 (context diagram): single central system process `P0(\"1.0 System Name\")`, external entities `E[\"...\"]`, data stores `D[(\"...\")]`, with labeled data flows in/out according to DFD rules"},
+            {"DFD", "DFD Level 1", "a DFD Level 1: break into numbered processes `P1(\"1.0 ...\")`, `P2(\"2.0 ...\")` with data stores `D[(\"...\")]` and external entities `E[\"...\"]`, all flows labeled with data names"},
+            {"Use Case", "Use Case Diagram", "a standard UML Use Case diagram: actors `A[\"👤 Name\"]` outside `subgraph System [\"System Name\"]`, use cases as ovals `UC([\"Name\"])` inside, with include/extend relationships"},
+            {"Flowchart", "Main Process Flowchart", "the flowchart of the single most important business process: start/end `([\"...\"])`, steps `[\"... \"]`, decision diamonds `{\"...?\"}` with Yes/No branches"},
             {"ER", "ER Diagram", "the ER diagram of the whole system: every entity across all requirements with key attributes and relations with cardinality"}};
 
     /**

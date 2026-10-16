@@ -13,7 +13,6 @@ public class PmSpecificationRequest {
     private Integer state;
     private Integer rowVersion;
 
-    @NotBlank(message = "รหัส Specification ห้ามว่าง")
     private String specificationCode;
 
     @NotBlank(message = "ชื่อเรื่องห้ามว่าง")

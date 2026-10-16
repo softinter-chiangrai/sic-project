@@ -3,6 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, ElementRef, injec
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { finalize, forkJoin } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -10,14 +11,18 @@ import { Pmdt09Service } from './pmdt09.service';
 import { DesignReview, ReviewComment, Pmdt09PageData } from './pmdt09.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { HttpClient } from '@angular/common/http';
+import { SicButtonComponent } from 'sic-ng';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent, SicButtonComponent, SicAiBatchModalComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -31,6 +36,7 @@ export class Pmdt09Component implements OnInit {
   private approvalService = inject(ApprovalService);
   private translate = inject(TranslateService);
   private customerState = inject(CustomerStateService);
+  private http = inject(HttpClient);
 
   @ViewChild('modalFigmaIframe') modalFigmaIframe?: ElementRef<HTMLIFrameElement>;
 
@@ -46,6 +52,16 @@ export class Pmdt09Component implements OnInit {
   protected sortBy = signal('reviewCode');
   protected sortDir = signal<'asc' | 'desc'>('asc');
   protected isLoading = signal(false);
+
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'title', label: this.translate.instant('PMDT09_TITLE') || 'Title', type: 'text' },
+    { key: 'description', label: this.translate.instant('PMDT09_DESCRIPTION') || 'Description', type: 'textarea' },
+    { key: 'severity', label: this.translate.instant('PMDT09_SEVERITY') || 'Severity', type: 'text' },
+    { key: 'reviewableType', label: 'Review Type', type: 'text' },
+  ];
 
   // ===== Card Comments Section State =====
   protected activeCommentCardId = signal<string | null>(null);
@@ -98,6 +114,21 @@ export class Pmdt09Component implements OnInit {
 
   // Client-side pagination over the filtered set (data is now fetched in one large
   // batch per loadData()/search/status change — see loadData()).
+  // reviews ticked for export (sic-bulk-export-bar)
+  protected selectedIds = signal<string[]>([]);
+  protected isSelected = (id?: string | null) => !!id && this.selectedIds().includes(id);
+  protected toggleSelected(id: string | null | undefined, checked: boolean): void {
+    if (!id) return;
+    this.selectedIds.update((ids) => (checked ? [...new Set([...ids, id])] : ids.filter((x) => x !== id)));
+  }
+  protected allOnPageSelected = computed(() => {
+    const page = this.paginatedReviews().map((r: any) => r.id).filter(Boolean);
+    return page.length > 0 && page.every((id: string) => this.selectedIds().includes(id));
+  });
+  protected toggleAllOnPage(checked: boolean): void {
+    this.paginatedReviews().forEach((r: any) => this.toggleSelected(r.id, checked));
+  }
+
   protected paginatedReviews = computed(() => {
     const all = this.filteredReviews();
     const start = (this.currentPage() - 1) * this.pageSize();
@@ -509,6 +540,51 @@ export class Pmdt09Component implements OnInit {
 
   isOverdue(dueDate: string): boolean {
     return new Date(dueDate) < new Date();
+  }
+
+  resolveProjectId(): string | null {
+    if (this.projectId()) return this.projectId();
+    const navIds = this.customerState.currentSelectedProjectIds();
+    if (navIds && navIds.length > 0) return navIds[0];
+    const navProj = this.customerState.currentProjectId();
+    if (navProj) return navProj;
+    const list = this.reviews();
+    if (list && list.length > 0 && list[0].projectId) return list[0].projectId;
+    return null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    if (!rows.length) return;
+    const projId = this.resolveProjectId();
+    if (!projId) {
+      this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'ข้อผิดพลาด', 'กรุณาเลือกโครงการก่อนสร้างข้อมูล');
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const saveRequests = rows.map((row) =>
+      this.http.post(`${environment.apiBaseUrl}/api/pm/design-reviews`, {
+        projectId: projId,
+        title: row['title'],
+        description: row['description'],
+        severity: row['severity'] || 'Medium',
+        reviewableType: row['reviewableType'] || 'UI/UX',
+        status: 'Open',
+      })
+    );
+
+    forkJoin(saveRequests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.loadData();
+        },
+        error: (err) => {
+          console.error('AI batch save failed', err);
+          this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'บันทึกไม่สำเร็จ', err.error?.message || err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+        },
+      });
   }
 }
 

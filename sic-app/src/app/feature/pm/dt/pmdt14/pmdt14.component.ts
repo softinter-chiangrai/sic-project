@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, effect, inject, OnInit, signal } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { environment } from '../../../../../environments/environment';
 
@@ -17,16 +17,18 @@ import { ApprovalService } from '../pmdt03/approval.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData, SicButtonComponent } from 'sic-ng';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -52,6 +54,15 @@ export class Pmdt14Component implements OnInit {
   filterStatus = signal('all');
   projectId = signal<string | null>(null);
 
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'deliveryTitle', label: this.translate.instant('PMDT14_COL_CODE_TITLE') || 'Title', type: 'text' },
+    { key: 'deliverySummary', label: this.translate.instant('PMDT14_COL_SUMMARY') || 'Summary', type: 'textarea' },
+    { key: 'deliveryType', label: this.translate.instant('PMDT14_COL_TYPE') || 'Type', type: 'text' },
+  ];
+
   // ===== Navbar context filter (client-side) =====
   // Always load ALL deliveries of ALL projects in one shot (lazy: false below makes the
   // grid paginate/sort the full set locally); the navbar project-context selection filters
@@ -63,7 +74,7 @@ export class Pmdt14Component implements OnInit {
 
   gridConfig: SicGridPanelConfig = {
     id: 'id',
-    selectable: false,
+    selectable: true, // ticked rows go to sic-bulk-export-bar
     showToolbar: false,
     lazy: false,
     pageSize: this.size(),
@@ -326,6 +337,58 @@ export class Pmdt14Component implements OnInit {
       CANCELLED: this.translate.instant('PMDT14_APPROVAL_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
+  }
+
+  private resolveTargetProjectId(): string | null {
+    const ids = this.customerState.currentSelectedProjectIds();
+    if (ids && ids.length > 0) return ids[0];
+    if (this.projectId()) return this.projectId();
+    const row = this.deliveries().find((d) => d.projectId);
+    return row ? (row.projectId as string) : null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    const projectId = this.resolveTargetProjectId();
+    if (!projectId) {
+      this.dialog.warning(
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_TITLE') || 'กรุณาเลือกโปรเจกต์',
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_DESC') || 'กรุณาเลือกโปรเจกต์จากแถบด้านบนก่อนบันทึกรายการชุด',
+      );
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const requests = rows.map((r) =>
+      this.service.save({
+        projectId,
+        deliveryTitle: r['deliveryTitle'] || r['deliveryName'] || 'Untitled Delivery',
+        deliverySummary: r['deliverySummary'] || r['description'] || '-',
+        deliveryType: (r['deliveryType'] || 'FINAL').toUpperCase(),
+      }),
+    );
+
+    forkJoin(requests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.dialog.success(
+            this.translate.instant('PM_AI_BATCH_SUCCESS_TITLE') || 'สร้างสำเร็จ',
+            (this.translate.instant('PM_AI_BATCH_SUCCESS_DESC') || 'สร้างรายการทั้งหมด {count} รายการเรียบร้อยแล้ว').replace('{count}', String(rows.length)),
+          );
+          const grid = this.gridRef();
+          if (grid) {
+            grid.reload();
+          }
+        },
+        error: (err) => {
+          console.error('Batch save delivery failed', err);
+          this.dialog.error(
+            this.translate.instant('PM_AI_BATCH_ERROR_TITLE') || 'บันทึกไม่สำเร็จ',
+            err?.error?.message || 'เกิดข้อผิดพลาดในการบันทึกรายการ',
+          );
+        },
+      });
   }
 }
 

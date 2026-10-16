@@ -23,14 +23,21 @@
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
         {{ totalElements() }} {{ 'PMDT15_ITEMS_SUFFIX' | translate }}
       </span>
+    <div class="flex items-center gap-2">
+      <sic-button
+        variant="outline"
+        icon="bi bi-stars"
+        [text]="'AI_BATCH_CREATE_BUTTON' | translate"
+        (click)="showAiBatchModal.set(true)"
+      ></sic-button>
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+      >
+        <i class="bi bi-plus-lg"></i>
+        {{ 'PMDT15_CREATE_BUTTON' | translate }}
+      </button>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i>
-      {{ 'PMDT15_CREATE_BUTTON' | translate }}
-    </button>
   </div>
 
   <!-- Filters & Search -->
@@ -76,6 +83,7 @@
   </div>
 
   <!-- GRID -->
+  <sic-bulk-export-bar [grid]="grid" kind="user-manual"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
     [config]="gridConfig"
@@ -141,4 +149,17 @@
         </sic-table-actions>
       </ng-template>
     </sic-gridpanel>
+
+  <!-- AI Batch Create Modal -->
+  <sic-ai-batch-modal
+    moduleType="USER_MANUAL"
+    [moduleLabel]="'PMDT15_PAGE_TITLE' | translate"
+    [fields]="aiBatchFields"
+    [visible]="showAiBatchModal()"
+    [projectId]="resolveTargetProjectId()"
+    [saving]="aiBatchSaving()"
+    (closed)="showAiBatchModal.set(false)"
+    (saved)="onAiBatchSaved($event)"
+  ></sic-ai-batch-modal>
+
 </div>

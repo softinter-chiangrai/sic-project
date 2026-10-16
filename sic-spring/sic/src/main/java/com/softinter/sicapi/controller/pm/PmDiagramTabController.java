@@ -98,26 +98,23 @@ public class PmDiagramTabController {
     @PostMapping("/export-all-pdf")
     public ResponseEntity<byte[]> exportAllPdf(
             @RequestParam UUID projectId,
-            @RequestBody(required = false) Map<String, String> body,
+            @RequestBody(required = false) ExportAllRequest body,
             @RequestParam(required = false) String lang,
             @RequestHeader(value = "x-language-code", required = false) String headerLang) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
-        UUID currentTabId = null;
-        if (body != null && body.get("currentTabId") != null && !body.get("currentTabId").isBlank()) {
-            try {
-                currentTabId = UUID.fromString(body.get("currentTabId"));
-            } catch (Exception ignored) {}
-        }
-        String currentImage = body != null ? body.get("image") : null;
-        byte[] pdf = exportService.exportAllDiagramsPdf(projectId, currentTabId, businessId,
-                ReportHelper.resolveLang(lang, headerLang), currentImage);
+        byte[] pdf = exportService.exportAllDiagramsPdf(projectId, body != null ? body.currentTabId() : null, businessId,
+                ReportHelper.resolveLang(lang, headerLang), body != null ? body.image() : null, body != null ? body.tabIds() : null);
         return ResponseEntity.ok()
                 .header("Content-Type", "application/pdf")
                 .header("Content-Disposition", "attachment; filename=\"diagrams-all-" + projectId + ".pdf\"")
                 .body(pdf);
+    }
+
+    /** tabIds = เฉพาะแท็บที่เลือก (ว่าง = ทุกแท็บ) */
+    public record ExportAllRequest(UUID currentTabId, String image, List<UUID> tabIds) {
     }
 
     @PostMapping("/{id}/create-revision")

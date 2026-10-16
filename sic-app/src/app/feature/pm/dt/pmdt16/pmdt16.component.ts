@@ -21,11 +21,12 @@ import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt16',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -79,7 +80,7 @@ export class Pmdt16Component implements OnInit {
     const visible = this.visibleColumns();
     return {
       id: 'id',
-      selectable: false,
+      selectable: true, // ticked rows go to sic-bulk-export-bar
       showToolbar: false,
       lazy: false,
       pageSize: this.pageSize(),

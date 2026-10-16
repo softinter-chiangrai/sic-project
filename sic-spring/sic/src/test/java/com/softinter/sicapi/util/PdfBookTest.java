@@ -62,4 +62,28 @@ class PdfBookTest {
         assertTrue(text.getTextFromPage(7).contains("req two 1"));
         assertTrue(text.getTextFromPage(7).contains("Page 7 / 8"));
     }
+
+    @Test
+    void selectedDocumentsMakeABookWithoutSummaryOrSignOff() throws Exception {
+        List<List<Map<String, ?>>> tocCalls = new ArrayList<>();
+        byte[] book = PdfBook.build(null,
+                List.of(new PdfBook.Entry("Invoices", true, null),
+                        new PdfBook.Entry("INV-1", false, pdf("inv one", 2)),
+                        new PdfBook.Entry("INV-2", false, pdf("inv two", 1))),
+                null, null,
+                rows -> {
+                    tocCalls.add(rows);
+                    try {
+                        return pdf("toc", 1);
+                    } catch (Exception e) {
+                        throw new IllegalStateException(e);
+                    }
+                }, "en");
+
+        assertEquals(4, PdfBook.pages(book)); // toc 1 + 2 + 1
+        List<Map<String, ?>> toc = tocCalls.get(tocCalls.size() - 1);
+        assertEquals(3, toc.size()); // no sign-off row
+        assertEquals("2", toc.get(1).get("page"));
+        assertEquals("4", toc.get(2).get("page"));
+    }
 }

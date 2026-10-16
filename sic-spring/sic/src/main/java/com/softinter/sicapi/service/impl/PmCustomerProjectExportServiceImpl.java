@@ -1,23 +1,14 @@
 package com.softinter.sicapi.service.impl;
 
-import com.softinter.sicapi.service.PmChangeRequestExportService;
-import com.softinter.sicapi.service.PmCustomerContractExportService;
 import com.softinter.sicapi.service.PmCustomerProjectExportService;
-import com.softinter.sicapi.service.PmDeliveryExportService;
 import com.softinter.sicapi.service.PmDiagramExportService;
-import com.softinter.sicapi.service.PmInvoiceExportService;
-import com.softinter.sicapi.service.PmMaTicketExportService;
-import com.softinter.sicapi.service.PmRequirementExportService;
-import com.softinter.sicapi.service.PmSpecificationExportService;
 import com.softinter.sicapi.service.PmUatExportService;
-import com.softinter.sicapi.service.PmUserManualExportService;
 import com.softinter.sicapi.service.ReportServiceClient;
 import com.softinter.sicapi.util.PdfBook;
 import com.softinter.sicapi.util.ReportHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.sf.jasperreports.engine.*;
-import net.sf.jasperreports.engine.data.JRMapCollectionDataSource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
@@ -36,7 +27,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
 
 /**
  * The project report is a book: the project summary (project_report.jrxml, part "head"), a table of contents, then every
@@ -50,23 +40,13 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
 
     private final DataSource dataSource;
     private final ReportServiceClient reportServiceClient;
-    private final PmCustomerContractExportService contractExport;
-    private final PmRequirementExportService requirementExport;
+    private final DocumentPdfExporters exporters;
     private final PmDiagramExportService diagramExport;
-    private final PmSpecificationExportService specificationExport;
-    private final PmDesignReviewExportService designReviewExport;
     private final PmUatExportService uatExport;
-    private final PmUserManualExportService userManualExport;
-    private final PmDeliveryExportService deliveryExport;
-    private final PmInvoiceExportService invoiceExport;
-    private final PmMaTicketExportService maTicketExport;
-    private final PmChangeRequestExportService changeRequestExport;
 
     private static final DateTimeFormatter DISPLAY_FORMATTER =
             DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
                              .withZone(ZoneId.of("Asia/Bangkok"));
-
-    private static volatile JasperReport tocReport;
 
     /** One kind of document in the book: heading, the rows (id, label) of the project, and how one of them is exported. */
     private record Chapter(String th, String en, String sql, Exporter export) {
@@ -81,39 +61,39 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
         return List.of(
                 new Chapter("สัญญา", "Contracts",
                         "SELECT id, contract_no FROM pm_customer_contract WHERE project_id = ? AND is_delete = false ORDER BY created_date",
-                        (id, p, b, l) -> contractExport.exportContractPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("contract", id, b, l)),
                 new Chapter("ความต้องการ (Requirements)", "Requirements",
                         "SELECT id, requirement_code || ' ' || COALESCE(title, '') FROM pm_requirement WHERE project_id = ? AND is_delete = false ORDER BY requirement_code",
-                        (id, p, b, l) -> requirementExport.exportRequirementPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("requirement", id, b, l)),
                 // all diagrams of the project are one report; the row only needs a count
                 new Chapter("แผนภาพ (Diagrams)", "Diagrams",
                         "SELECT ?::uuid, COUNT(*) || ' diagram(s)' FROM pm_diagram WHERE project_id = ?::uuid AND is_delete = false HAVING COUNT(*) > 0",
                         (id, p, b, l) -> diagramExport.exportAllDiagramsPdf(p, null, b, l, null)),
                 new Chapter("ข้อกำหนดเชิงเทคนิค (Specifications)", "Specifications",
                         "SELECT id, specification_code || ' ' || COALESCE(title, '') FROM pm_specification WHERE project_id = ? AND is_delete = false ORDER BY specification_code",
-                        (id, p, b, l) -> specificationExport.exportSpecificationPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("specification", id, b, l)),
                 new Chapter("การตรวจทานแบบ (Design Reviews)", "Design Reviews",
                         "SELECT id, COALESCE(review_code, '') || ' ' || COALESCE(title, '') FROM pm_design_review WHERE project_id = ? AND is_delete = false ORDER BY created_date",
-                        (id, p, b, l) -> designReviewExport.exportPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("design-review", id, b, l)),
                 // every test case of the project is one UAT report
                 new Chapter("ผลการทดสอบ (Test / UAT)", "Test Results (UAT)",
                         "SELECT ?::uuid, COUNT(*) || ' test case(s)' FROM pm_test_case WHERE project_id = ?::uuid AND is_delete = false HAVING COUNT(*) > 0",
                         (id, p, b, l) -> uatExport.exportUatReportPdf(p, b, "ALL", null, l)),
                 new Chapter("คู่มือการใช้งาน (User Manuals)", "User Manuals",
                         "SELECT id, COALESCE(manual_code, '') || ' ' || COALESCE(manual_title, '') FROM pm_user_manual WHERE project_id = ? AND is_delete = false ORDER BY created_date",
-                        (id, p, b, l) -> userManualExport.exportUserManualPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("user-manual", id, b, l)),
                 new Chapter("การส่งมอบ (Deliveries)", "Deliveries",
                         "SELECT id, COALESCE(delivery_code, '') || ' ' || COALESCE(delivery_title, '') FROM pm_delivery WHERE project_id = ? AND is_delete = false ORDER BY delivery_date NULLS LAST, created_date",
-                        (id, p, b, l) -> deliveryExport.exportDeliveryHandoverPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("delivery", id, b, l)),
                 new Chapter("ใบแจ้งหนี้ (Invoices)", "Invoices",
                         "SELECT id, invoice_no FROM pm_invoice WHERE project_id = ? AND is_delete = false ORDER BY COALESCE(issue_date, invoice_date) NULLS LAST, created_date",
-                        (id, p, b, l) -> invoiceExport.exportInvoicePdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("invoice", id, b, l)),
                 new Chapter("ตั๋วแจ้งปัญหา MA (MA Tickets)", "MA Tickets",
                         "SELECT id, COALESCE(ticket_no, '') || ' ' || COALESCE(title, '') FROM pm_ma_ticket WHERE project_id = ? AND is_delete = false ORDER BY created_date",
-                        (id, p, b, l) -> maTicketExport.exportTicketPdf(id, b, l)),
+                        (id, p, b, l) -> exporters.export("ma-ticket", id, b, l)),
                 new Chapter("คำขอเปลี่ยนแปลง (Change Requests)", "Change Requests",
                         "SELECT id, COALESCE(cr_code, '') || ' ' || COALESCE(title, '') FROM pm_change_request WHERE project_id = ? AND is_delete = false ORDER BY created_date",
-                        (id, p, b, l) -> changeRequestExport.exportChangeRequestPdf(id, l)));
+                        (id, p, b, l) -> exporters.export("change-request", id, b, l)));
     }
 
     @Override
@@ -122,14 +102,16 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
         boolean en = "en".equals(normalizedLang);
         log.info("Generating Project book: id={}, businessId={}, lang={}", id, businessId, normalizedLang);
         try {
-            return ReportServiceClient.inBookMode(() -> buildBook(id, businessId, normalizedLang, en));
+            // inside the selected-projects book, the outer book numbers the pages
+            boolean numberPages = !ReportServiceClient.isBookMode();
+            return ReportServiceClient.inBookMode(() -> buildBook(id, businessId, normalizedLang, en, numberPages));
         } catch (Exception e) {
             log.error("Failed to generate Project book for id={}: {}", id, e.getMessage(), e);
             throw new RuntimeException("Error generating Project PDF: " + e.getMessage(), e);
         }
     }
 
-    private byte[] buildBook(UUID id, UUID businessId, String normalizedLang, boolean en) throws Exception {
+    private byte[] buildBook(UUID id, UUID businessId, String normalizedLang, boolean en, boolean numberPages) throws Exception {
         byte[] head = summaryPdf(id, businessId, normalizedLang, "head");
         List<PdfBook.Entry> entries = new ArrayList<>();
         for (Chapter chapter : chapters()) {
@@ -151,7 +133,7 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
         byte[] tail = summaryPdf(id, businessId, normalizedLang, "tail");
         String projectName = projectName(id);
         return PdfBook.build(head, entries, tail, en ? "Sign-off & Approvals" : "การลงนามอนุมัติและรับรอง",
-                tocRenderer(normalizedLang, projectName), normalizedLang);
+                PdfBook.jasperToc(normalizedLang, projectName), normalizedLang, numberPages);
     }
 
     /** project_report.jrxml: part "head" = the project summary, "tail" = the sign-off page. Report-service first, local Jasper as fallback. */
@@ -205,22 +187,4 @@ public class PmCustomerProjectExportServiceImpl implements PmCustomerProjectExpo
         return r.isEmpty() ? "" : r.get(0)[1];
     }
 
-    private Function<List<Map<String, ?>>, byte[]> tocRenderer(String lang, String projectName) throws Exception {
-        if (tocReport == null) {
-            try (InputStream is = new ClassPathResource("reports/project_book_toc.jrxml").getInputStream()) {
-                tocReport = JasperCompileManager.compileReport(is);
-            }
-        }
-        return rows -> {
-            try {
-                Map<String, Object> p = new HashMap<>();
-                p.put("lang", lang);
-                p.put("projectName", projectName);
-                JasperPrint print = JasperFillManager.fillReport(tocReport, p, new JRMapCollectionDataSource(new ArrayList<>(rows)));
-                return JasperExportManager.exportReportToPdf(print);
-            } catch (JRException e) {
-                throw new IllegalStateException("Could not render the table of contents: " + e.getMessage(), e);
-            }
-        };
-    }
 }

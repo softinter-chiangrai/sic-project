@@ -31,11 +31,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt12',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule, SicAiBatchModalComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule, SicAiBatchModalComponent],
   templateUrl: './pmdt12.component.html',
   styleUrls: ['./pmdt12.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -209,6 +210,21 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   });
 
   // ===== Computed Groups =====
+  // scenarios ticked for export: each one is its UAT report (sic-bulk-export-bar, kind test-scenario)
+  protected selectedScenarioIds = signal<string[]>([]);
+  protected isScenarioSelected = (id?: string | null) => !!id && this.selectedScenarioIds().includes(id);
+  protected toggleScenario(id: string | null | undefined, checked: boolean): void {
+    if (!id) return;
+    this.selectedScenarioIds.update((ids) => (checked ? [...new Set([...ids, id])] : ids.filter((x) => x !== id)));
+  }
+  protected allScenariosSelected = computed(() => {
+    const ids = this.scenarioGroups().map((g: any) => g.scenario?.id).filter(Boolean);
+    return ids.length > 0 && ids.every((id: string) => this.selectedScenarioIds().includes(id));
+  });
+  protected toggleAllScenarios(checked: boolean): void {
+    this.scenarioGroups().forEach((g: any) => this.toggleScenario(g.scenario?.id, checked));
+  }
+
   protected scenarioGroups = computed(() => {
     const rawScenarios = this.filteredScenarios();
     const rawTestCases = this.filteredTestCases();
@@ -422,9 +438,13 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   }
 
   // ===== AI Batch Create =====
+  resolveProjectId(): string | null {
+    return resolveProjectId(this.route, this.customerState) || null;
+  }
+
   onAiBatchSaved(rows: Record<string, any>[]): void {
     if (!rows.length) return;
-    const projectId = resolveProjectId(this.route, this.customerState);
+    const projectId = this.resolveProjectId();
 
     this.aiBatchSaving.set(true);
     const saveRequests = rows.map((row) =>

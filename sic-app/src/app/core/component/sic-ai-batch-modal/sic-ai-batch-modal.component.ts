@@ -59,10 +59,22 @@ export class SicAiBatchModalComponent implements OnChanges {
   @Input() moduleLabel = '';
   @Input({ required: true }) fields: AiBatchFieldDef[] = [];
   @Input() visible = false;
+  @Input() set isOpen(val: boolean) {
+    this.visible = val;
+  }
+  get isOpen(): boolean {
+    return this.visible;
+  }
   @Input() projectId: string | null = null;
   @Input() initialPrompt = '';
   @Input() autoGenerate = false;
   @Input() saving = false;
+  @Input() set isSaving(val: boolean) {
+    this.saving = val;
+  }
+  get isSaving(): boolean {
+    return this.saving;
+  }
 
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<Record<string, any>[]>();
@@ -85,7 +97,8 @@ export class SicAiBatchModalComponent implements OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['visible'] && this.visible) {
+    const isNowVisible = (changes['visible'] || changes['isOpen']) && this.visible;
+    if (isNowVisible) {
       this.prompt.set(this.initialPrompt || '');
       this.rows.set([]);
       this.errorMessage.set(null);
@@ -101,11 +114,19 @@ export class SicAiBatchModalComponent implements OnChanges {
   }
 
   loadHistories(): void {
-    const list = this.aiHistoryService.getHistories<Record<string, any>[]>(
+    const primary = this.aiHistoryService.getHistories<Record<string, any>[]>(
       this.moduleType || 'batch',
       this.projectId || 'all'
     );
-    this.histories.set(list || []);
+    if ((!primary || !primary.length) && this.projectId && this.projectId !== 'all') {
+      const allHistories = this.aiHistoryService.getHistories<Record<string, any>[]>(
+        this.moduleType || 'batch',
+        'all'
+      );
+      this.histories.set(allHistories || []);
+      return;
+    }
+    this.histories.set(primary || []);
   }
 
   onModelChange(val: any): void {
@@ -149,7 +170,7 @@ export class SicAiBatchModalComponent implements OnChanges {
 
           // Save to AI history
           const summary = `${items.length} ${this.translate.instant('AI_BATCH_ITEMS_COUNT', { count: items.length }) || 'items'}`;
-          const title = `${this.moduleLabel || 'Batch'} (${summary})`;
+          const title = `${this.moduleLabel || this.moduleType || 'Batch'} (${summary})`;
           this.aiHistoryService.addHistory<Record<string, any>[]>(
             this.moduleType || 'batch',
             this.projectId || 'all',

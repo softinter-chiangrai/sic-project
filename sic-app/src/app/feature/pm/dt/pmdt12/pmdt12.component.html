@@ -210,6 +210,13 @@
 
   <!-- ===== ACCORDION LIST ===== -->
   @if (!isLoading()) {
+    <sic-bulk-export-bar kind="test-scenario" [ids]="selectedScenarioIds()" (cleared)="selectedScenarioIds.set([])"></sic-bulk-export-bar>
+    @if (scenarioGroups().length > 0) {
+      <label class="inline-flex items-center gap-2 mb-3 text-xs text-[var(--text-muted)] cursor-pointer select-none">
+        <input type="checkbox" class="w-4 h-4 accent-[var(--crm-primary)]" [checked]="allScenariosSelected()" (change)="toggleAllScenarios($any($event.target).checked)" />
+        {{ 'BULK_EXPORT_SELECT_PAGE' | translate }}
+      </label>
+    }
     <div class="space-y-4">
       @for (group of scenarioGroups(); track (group.scenario?.id || 'unassigned')) {
         <!-- ACCORDION CARD -->
@@ -222,6 +229,10 @@
           >
             <!-- Left info -->
             <div class="flex items-center gap-3 flex-1 min-w-[280px]">
+              @if (group.scenario?.id) {
+                <input type="checkbox" class="w-4 h-4 accent-[var(--crm-primary)] cursor-pointer" (click)="$event.stopPropagation()"
+                       [checked]="isScenarioSelected(group.scenario.id)" (change)="toggleScenario(group.scenario.id, $any($event.target).checked)" />
+              }
               <!-- Expand Icon -->
               <span class="w-6 h-6 rounded-md flex items-center justify-center bg-[var(--sidebar)] border border-[var(--border)] text-xs text-[var(--text-muted)]">
                 <i class="bi" [class.bi-chevron-down]="isExpanded(group.scenario?.id)" [class.bi-chevron-right]="!isExpanded(group.scenario?.id)"></i>
@@ -599,10 +610,11 @@
   moduleLabel="Test Case"
   [fields]="aiBatchFields"
   [visible]="showAiBatchModal()"
+  [projectId]="resolveProjectId()"
   [initialPrompt]="aiBatchInitialPrompt()"
   [autoGenerate]="aiBatchAutoGenerate()"
   [saving]="aiBatchSaving()"
   (closed)="showAiBatchModal.set(false)"
   (saved)="onAiBatchSaved($event)"
 ></sic-ai-batch-modal>
-
+

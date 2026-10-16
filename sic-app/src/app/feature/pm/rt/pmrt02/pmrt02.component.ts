@@ -25,11 +25,12 @@ import { AiProjectPipelineService } from '../../../../core/services/ai-project-p
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmrt02',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmrt02.component.html',
   styleUrl: './pmrt02.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -68,7 +69,7 @@ export class Pmrt02Component implements OnInit {
 
   gridConfig: SicGridPanelConfig = {
     id: 'id',
-    selectable: false,
+    selectable: true, // ticked rows go to sic-bulk-export-bar
     showToolbar: false,
     defaultSortField: 'projectCode',
     pageSize: this.pageSize(),

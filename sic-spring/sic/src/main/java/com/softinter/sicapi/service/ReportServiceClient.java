@@ -29,12 +29,18 @@ public class ReportServiceClient {
      * out their own page number and the book prints its running number instead. The parameter is put into the caller's map,
      * so the local Jasper fallback, which fills with the same map, sees it too.
      */
+    /** true while a book is being built on this thread (see inBookMode) */
+    public static boolean isBookMode() {
+        return BOOK_MODE.get();
+    }
+
     public static <T> T inBookMode(java.util.concurrent.Callable<T> work) throws Exception {
+        boolean outer = BOOK_MODE.get(); // a book inside a book keeps the flag for the rest of the outer one
         BOOK_MODE.set(true);
         try {
             return work.call();
         } finally {
-            BOOK_MODE.remove();
+            if (!outer) BOOK_MODE.remove();
         }
     }
 

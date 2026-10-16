@@ -22,11 +22,12 @@ import { SicTableActionsComponent } from '../../../../core/component/sic-table-a
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
@@ -100,7 +101,7 @@ export class Pmdt04Component implements OnInit {
   protected gridConfig: SicGridPanelConfig = {
     id: 'id',
     lazy: false,
-    selectable: false,
+    selectable: true, // ticked rows go to sic-bulk-export-bar
     showToolbar: false,
     defaultSortField: 'requirementCode',
     pageSize: this.pageSize(),

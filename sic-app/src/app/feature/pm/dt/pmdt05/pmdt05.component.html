@@ -80,7 +80,7 @@
         [title]="'PMDT05_PRINT_ALL_TITLE' | translate"
       >
         <i class="bi bi-collection-fill text-lg"></i>
-        <span>{{ 'PMDT05_PRINT_ALL_BTN' | translate }}</span>
+        <span>{{ selectedTabIds().length ? ('PMDT05_PRINT_SELECTED_BTN' | translate: { count: selectedTabIds().length }) : ('PMDT05_PRINT_ALL_BTN' | translate) }}</span>
       </button>
 
       <button
@@ -146,6 +146,10 @@
           [class.hover:bg-[var(--sidebar-hover)]]="currentTabId !== tab.id"
           [class.hover:border-[var(--border)]]="currentTabId !== tab.id"
         >
+          <input type="checkbox" class="cursor-pointer accent-[var(--crm-primary)]"
+                 [checked]="selectedTabIds().includes(tab.id)"
+                 (click)="$event.stopPropagation()" (change)="toggleTabSelected(tab.id)"
+                 [title]="'PMDT05_SELECT_TO_PRINT' | translate" />
           <i class="bi text-sm" [class]="getTabIcon(tab.diagramType)"></i>
 
           <span class="text-sm font-medium">

@@ -93,9 +93,10 @@ export class DrawioConnectorService {
     this.postMessage(msg, true);
   }
 
-  getEmptyDiagramXml(): string {
+  getEmptyDiagramXml(pageName: string = 'Page-1'): string {
+    const escapedName = pageName.replace(/"/g, '&quot;');
     return `<mxfile>
-<diagram id="page1" name="Page-1">
+<diagram id="page1" name="${escapedName}">
 <mxGraphModel>
 <root>
 <mxCell id="0"/>

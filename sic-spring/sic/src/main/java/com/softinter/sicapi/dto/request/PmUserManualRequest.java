@@ -14,7 +14,6 @@ public class PmUserManualRequest {
     @NotNull(message = "Project ID is required")
     private UUID projectId;
 
-    @NotBlank(message = "Manual code is required")
     private String manualCode;
 
     @NotBlank(message = "Manual title is required")

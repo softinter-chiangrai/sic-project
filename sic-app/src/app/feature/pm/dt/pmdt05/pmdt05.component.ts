@@ -82,6 +82,12 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   drawioReady = false;
   projectName = '';
   chatOpen = signal(false);
+  /** tabs ticked for "print selected"; none = "print all" */
+  selectedTabIds = signal<string[]>([]);
+
+  toggleTabSelected(id: string): void {
+    this.selectedTabIds.update((ids) => (ids.includes(id) ? ids.filter((x) => x !== id) : [...ids, id]));
+  }
   unreadCount = 0;
   currentDiagram: DiagramModel | null = null;
   private loadedDiagramTabId: string | null = null;
@@ -142,21 +148,35 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     }
 
     let diagramType = 'DFD';
-    const firstLine = code.trim().split('\n')[0].toLowerCase();
-    if (firstLine.includes('erdiagram')) {
+    const lowerTitle = (pageTitle || '').toLowerCase();
+    if (lowerTitle.includes('use case') || lowerTitle.includes('usecase')) {
+      diagramType = 'Use Case';
+    } else if (lowerTitle.includes('dfd')) {
+      diagramType = 'DFD';
+    } else if (lowerTitle.includes('er')) {
       diagramType = 'ER';
-    } else if (firstLine.includes('flowchart') || firstLine.includes('graph')) {
-      diagramType = 'Flowchart';
-    } else if (firstLine.includes('sequencediagram')) {
+    } else if (lowerTitle.includes('sequence')) {
       diagramType = 'Sequence';
-    } else if (firstLine.includes('classdiagram')) {
+    } else if (lowerTitle.includes('class')) {
       diagramType = 'Class';
-    } else if (firstLine.includes('statediagram')) {
+    } else if (lowerTitle.includes('state')) {
       diagramType = 'State';
-    } else if (firstLine.includes('gantt')) {
+    } else if (lowerTitle.includes('gantt')) {
       diagramType = 'Gantt';
-    } else if (firstLine.includes('mindmap')) {
+    } else if (lowerTitle.includes('mindmap')) {
       diagramType = 'Mindmap';
+    } else if (lowerTitle.includes('c4')) {
+      diagramType = 'C4';
+    } else {
+      const firstLine = code.trim().split('\n')[0].toLowerCase();
+      if (firstLine.includes('erdiagram')) diagramType = 'ER';
+      else if (firstLine.includes('sequencediagram')) diagramType = 'Sequence';
+      else if (firstLine.includes('classdiagram')) diagramType = 'Class';
+      else if (firstLine.includes('statediagram')) diagramType = 'State';
+      else if (firstLine.includes('gantt')) diagramType = 'Gantt';
+      else if (firstLine.includes('mindmap')) diagramType = 'Mindmap';
+      else if (firstLine.includes('c4')) diagramType = 'C4';
+      else diagramType = 'Flowchart';
     }
 
     const reqId = this.requirementId || this.route.snapshot.queryParams['requirementId'] || '';
@@ -199,7 +219,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
    */
   private addNewPageFromXml(parsedXml: string, pageName: string): void {
     try {
-      const currentXml = this.lastSavedXml || this.currentDiagram?.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+      const currentXml = this.lastSavedXml || this.currentDiagram?.graphData?.xml || this.drawioService.getEmptyDiagramXml(this.currentDiagram?.name || 'Page-1');
       const parser = new DOMParser();
       const currentDoc = parser.parseFromString(currentXml, 'text/xml');
       const parsedDoc = parser.parseFromString(parsedXml, 'text/xml');
@@ -220,23 +240,30 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         if (modelEl) {
           const created = currentDoc.createElement('diagram');
           created.setAttribute('id', `page-${Date.now()}`);
-          created.setAttribute('name', pageName);
+          created.setAttribute('name', pageName || 'AI Diagram');
           created.appendChild(currentDoc.importNode(modelEl, true));
           newDiagramEl = created;
         }
       } else {
         newDiagramEl = currentDoc.importNode(newDiagramEl, true) as Element;
         newDiagramEl.setAttribute('id', `page-${Date.now()}`);
-        newDiagramEl.setAttribute('name', pageName);
+        newDiagramEl.setAttribute('name', pageName || 'AI Diagram');
       }
 
       if (newDiagramEl && mxfileEl) {
-        // กำหนดชื่อหน้าที่ไม่ซ้ำ
+        // กำหนดชื่อหน้าให้ตรงตาม Diagram ที่เจน
         const existingPages = currentDoc.querySelectorAll('diagram');
         const pageCount = existingPages.length + 1;
-        if (!pageName || pageName === 'AI Diagram') {
-          newDiagramEl.setAttribute('name', `Page-${pageCount} (${pageName || 'AI'})`);
+        let finalPageName = pageName && pageName !== 'AI Diagram' ? pageName : `Page-${pageCount}`;
+
+        // ตรวจสอบชื่อซ้ำในหน้าเดิม ถ้าซ้ำให้ต่อท้ายตัวเลข
+        const existingNames = Array.from(existingPages).map((p) => p.getAttribute('name'));
+        if (existingNames.includes(finalPageName)) {
+          finalPageName = `${finalPageName} (${pageCount})`;
         }
+        newDiagramEl.setAttribute('name', finalPageName);
+
+        mxfileEl.appendChild(newDiagramEl);
 
         mxfileEl.appendChild(newDiagramEl);
 
@@ -876,7 +903,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       return;
     }
 
-    const allTabs = this.tabs();
+    const selected = this.selectedTabIds().filter((id) => this.tabs().some((t) => t.id === id));
+    const allTabs = selected.length ? this.tabs().filter((t) => selected.includes(t.id)) : this.tabs();
     if (allTabs.length === 0) return;
 
     const pdfWindow = openPdfWindow();
@@ -950,7 +978,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
         }
       }
 
-      this.diagramService.exportAllPdf(projId, currentTabId, firstPng).subscribe({
+      this.diagramService.exportAllPdf(projId, currentTabId, firstPng, selected).subscribe({
         next: (blob) => pdfWindow.show(blob, `diagrams-${projId}`),
         error: () => {
           pdfWindow.close();
@@ -1122,8 +1150,11 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
 
         this.currentDiagram = diagram;
         this.loadedDiagramTabId = tabIdToLoad;
-        let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml();
+        let xml = diagram.graphData?.xml || this.drawioService.getEmptyDiagramXml(diagram.name || 'Page-1');
         xml = this.ensureValidDrawioXml(xml);
+        if (diagram.name && xml.includes('name="Page-1"')) {
+          xml = xml.replace('name="Page-1"', `name="${diagram.name.replace(/"/g, '&quot;')}"`);
+        }
         console.log('[Diagram] XML length after validation:', xml.length);
         this.lastSavedXml = xml;
         // diagram ที่มีแต่ Mermaid (ยังไม่เคยมี XML เช่น สร้างจาก AI pipeline) → รอ draw.io โหลดหน้าเปล่าเสร็จ แล้วให้มันแปลง Mermaid วาดให้เอง

@@ -3,7 +3,7 @@ import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, s
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
@@ -13,6 +13,8 @@ import { PmSpecificationModel } from './pmdt07.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { resolveRequirementId } from '../../../../core/utils/resolve-context.util';
+import { SicButtonComponent } from 'sic-ng';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { environment } from '../../../../../environments/environment';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
@@ -20,11 +22,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+    imports: [SicBulkExportBarComponent, CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })
@@ -47,6 +50,17 @@ export class Pmdt07Component implements OnInit {
     pageSize = signal(10);
     searchTerm = signal('');
     filterStatus = signal('all');
+
+    // ===== AI Batch Create =====
+    showAiBatchModal = signal(false);
+    aiBatchSaving = signal(false);
+    readonly aiBatchFields: AiBatchFieldDef[] = [
+        { key: 'title', label: this.translate.instant('PMDT07_COL_TITLE'), type: 'text' },
+        { key: 'description', label: this.translate.instant('PMDT07_COL_DESCRIPTION') || 'Description', type: 'textarea' },
+        { key: 'specificationType', label: this.translate.instant('PMDT07_COL_TYPE'), type: 'text' },
+        { key: 'priority', label: this.translate.instant('PMDT07_COL_PRIORITY'), type: 'text' },
+        { key: 'module', label: this.translate.instant('PMDT07_COL_MODULE') || 'Module', type: 'text' },
+    ];
 
     @ViewChild('grid') gridRef?: SicGridPanelComponent;
 
@@ -78,7 +92,7 @@ export class Pmdt07Component implements OnInit {
         // Data is now fetched once (all projects) per load/reload and filtered+paginated
         // entirely client-side — see filteredSpecs / handleGridLoad.
         lazy: false,
-        selectable: false,
+        selectable: true, // ticked rows go to sic-bulk-export-bar
         showToolbar: false,
         pageSize: this.pageSize(),
         column: [
@@ -343,5 +357,52 @@ export class Pmdt07Component implements OnInit {
         } catch {
             return dateStr;
         }
+    }
+
+    resolveProjectId(): string | null {
+        const navIds = this.customerState.currentSelectedProjectIds();
+        if (navIds && navIds.length > 0) return navIds[0];
+        const navProj = this.customerState.currentProjectId();
+        if (navProj) return navProj;
+        const list = this.specs();
+        if (list && list.length > 0 && list[0].projectId) return list[0].projectId;
+        return null;
+    }
+
+    onAiBatchSaved(rows: Record<string, any>[]): void {
+        if (!rows.length) return;
+        const projId = this.resolveProjectId();
+        if (!projId) {
+            this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'ข้อผิดพลาด', 'กรุณาเลือกโครงการก่อนสร้างข้อมูล');
+            return;
+        }
+
+        this.aiBatchSaving.set(true);
+        const saveRequests = rows.map((row) =>
+            this.service.save({
+                projectId: projId,
+                title: row['title'] || row['specName'],
+                description: row['description'] || `<p>${row['title'] || ''}</p>`,
+                specificationType: row['specificationType'] || 'UI Specification',
+                priority: row['priority'] || 'Medium',
+                module: row['module'] || 'General',
+                status: 'Draft',
+                version: 'v1.0.0',
+                isActive: true,
+            } as any)
+        );
+
+        forkJoin(saveRequests)
+            .pipe(finalize(() => this.aiBatchSaving.set(false)))
+            .subscribe({
+                next: () => {
+                    this.showAiBatchModal.set(false);
+                    this.gridRef?.reload();
+                },
+                error: (err) => {
+                    console.error('AI batch save failed', err);
+                    this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'บันทึกไม่สำเร็จ', err.error?.message || err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+                },
+            });
     }
 }

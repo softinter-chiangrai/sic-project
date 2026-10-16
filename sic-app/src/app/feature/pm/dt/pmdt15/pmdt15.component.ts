@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 
 import { Pmdt15AService } from './pmdt15A/pmdt15A.service';
@@ -16,13 +16,15 @@ import { apiBaseUrl } from '../../../../core/config/api.config';
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { ApprovalService } from '../pmdt03/approval.service';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData, SicButtonComponent } from 'sic-ng';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt15',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
   templateUrl: './pmdt15.component.html',
   styleUrls: ['./pmdt15.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -47,6 +49,15 @@ export class Pmdt15Component implements OnInit {
   // Kept for "create/edit manual" navigation context and the back button only —
   // no longer used to filter the loaded list (navbar selection does that, client-side).
   projectId = signal<string | null>(null);
+
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'manualTitle', label: this.translate.instant('PMDT15_COL_TITLE') || 'Title', type: 'text' },
+    { key: 'manualType', label: this.translate.instant('PMDT15_COL_TYPE') || 'Type', type: 'text' },
+    { key: 'version', label: this.translate.instant('PMDT15_COL_VERSION') || 'Version', type: 'text' },
+  ];
 
   // ===== Navbar context filter (client-side) =====
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
@@ -82,7 +93,7 @@ export class Pmdt15Component implements OnInit {
   gridConfig: SicGridPanelConfig = {
     id: 'id',
     lazy: false,
-    selectable: false,
+    selectable: true, // ticked rows go to sic-bulk-export-bar
     showToolbar: false,
     column: [
       { label: this.translate.instant('PMDT15_COL_MANUAL_CODE'), name: 'manualCode', type: 'code', width: 140 },
@@ -302,6 +313,56 @@ export class Pmdt15Component implements OnInit {
       CANCELLED: this.translate.instant('PMDT15_APPROVAL_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
+  }
+
+  private resolveTargetProjectId(): string | null {
+    const ids = this.customerState.currentSelectedProjectIds();
+    if (ids && ids.length > 0) return ids[0];
+    if (this.projectId()) return this.projectId();
+    const row = this.manuals().find((m) => m.projectId);
+    return row ? (row.projectId as string) : null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    const projectId = this.resolveTargetProjectId();
+    if (!projectId) {
+      this.dialog.warning(
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_TITLE') || 'กรุณาเลือกโปรเจกต์',
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_DESC') || 'กรุณาเลือกโปรเจกต์จากแถบด้านบนก่อนบันทึกรายการชุด',
+      );
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const requests = rows.map((r) =>
+      this.service.save({
+        projectId,
+        manualTitle: r['manualTitle'] || 'Untitled Manual',
+        manualType: (r['manualType'] || 'USER').toUpperCase(),
+        version: r['version'] || '1.0.0',
+        status: 'DRAFT',
+      }),
+    );
+
+    forkJoin(requests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.dialog.success(
+            this.translate.instant('PM_AI_BATCH_SUCCESS_TITLE') || 'สร้างสำเร็จ',
+            (this.translate.instant('PM_AI_BATCH_SUCCESS_DESC') || 'สร้างรายการทั้งหมด {count} รายการเรียบร้อยแล้ว').replace('{count}', String(rows.length)),
+          );
+          this.gridRef?.reload();
+        },
+        error: (err) => {
+          console.error('Batch save user manual failed', err);
+          this.dialog.error(
+            this.translate.instant('PM_AI_BATCH_ERROR_TITLE') || 'บันทึกไม่สำเร็จ',
+            err?.error?.message || 'เกิดข้อผิดพลาดในการบันทึกรายการ',
+          );
+        },
+      });
   }
 }
 

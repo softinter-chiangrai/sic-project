@@ -21,6 +21,15 @@
 
     <!-- Actions & View Mode Toggle -->
     <div class="flex items-center gap-3">
+      <sic-button
+        variant="outline"
+        color="primary"
+        (click)="showAiBatchModal.set(true)"
+        [title]="'AI_BATCH_CREATE_BUTTON' | translate"
+      >
+        <i class="bi bi-magic mr-1"></i>
+        <span>{{ 'AI_BATCH_CREATE_BUTTON' | translate }}</span>
+      </sic-button>
       <!-- Create Button -->
       <button
         (click)="goToAdd()"
@@ -98,12 +107,22 @@
 
   <!-- ===== GALLERY CARDS VIEW (UI / FIGMA FOCUSED) ===== -->
   @if (!isLoading()) {
+    <sic-bulk-export-bar kind="design-review" [ids]="selectedIds()" (cleared)="selectedIds.set([])"></sic-bulk-export-bar>
+    @if (paginatedReviews().length > 0) {
+      <label class="inline-flex items-center gap-2 mb-3 text-xs text-[var(--text-muted)] cursor-pointer select-none">
+        <input type="checkbox" class="w-4 h-4 accent-[var(--crm-primary)]" [checked]="allOnPageSelected()" (change)="toggleAllOnPage($any($event.target).checked)" />
+        {{ 'BULK_EXPORT_SELECT_PAGE' | translate }}
+      </label>
+    }
     <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-3 gap-6">
       @for (review of paginatedReviews(); track review.id) {
         <div class="group rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] hover:border-[var(--crm-primary)]/50 hover:shadow-xl transition-all duration-300 flex flex-col overflow-hidden">
           
           <!-- Card Header / Figma Visual Preview Screen -->
           <div class="relative w-full h-56 bg-neutral-900 overflow-hidden border-b border-[var(--border)]">
+            <label class="absolute top-3 left-3 z-10 w-8 h-8 rounded-lg bg-black/55 backdrop-blur flex items-center justify-center cursor-pointer" (click)="$event.stopPropagation()">
+              <input type="checkbox" class="w-4 h-4 accent-[var(--crm-primary)]" [checked]="isSelected(review.id)" (change)="toggleSelected(review.id, $any($event.target).checked)" />
+            </label>
             @if (review.figmaUrl) {
               <!-- Live Figma Embed Iframe Thumbnail -->
               <iframe
@@ -547,5 +566,17 @@
       </div>
     </div>
   }
+
+  <!-- AI Batch Create Modal -->
+  <sic-ai-batch-modal
+    moduleType="DESIGN_REVIEW"
+    [moduleLabel]="'PMDT09_HEADER_TITLE' | translate"
+    [fields]="aiBatchFields"
+    [visible]="showAiBatchModal()"
+    [projectId]="resolveProjectId()"
+    [saving]="aiBatchSaving()"
+    (closed)="showAiBatchModal.set(false)"
+    (saved)="onAiBatchSaved($event)"
+  ></sic-ai-batch-modal>
 
 </div>

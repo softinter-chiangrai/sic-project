@@ -12,7 +12,6 @@ import java.util.UUID;
 public class PmDesignReviewRequest {
     private UUID id;
 
-    @NotBlank(message = "Review code is required")
     private String reviewCode;
 
     @NotBlank(message = "Title is required")

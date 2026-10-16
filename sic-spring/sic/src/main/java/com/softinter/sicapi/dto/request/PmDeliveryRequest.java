@@ -16,7 +16,6 @@ public class PmDeliveryRequest {
     @NotNull(message = "Project ID is required")
     private UUID projectId;
 
-    @NotBlank(message = "Delivery code is required")
     private String deliveryCode;
 
     @NotBlank(message = "Delivery title is required")

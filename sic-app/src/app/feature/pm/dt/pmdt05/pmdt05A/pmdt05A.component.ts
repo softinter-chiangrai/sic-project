@@ -496,22 +496,54 @@ export class Pmdt05AComponent implements OnInit, AfterViewInit, OnDestroy {
     const code = this.getMermaidCode(content);
     if (!code) return;
 
-    let pageTitle = 'AI Diagram';
-    const firstLine = code.trim().split('\n')[0].toLowerCase();
-    if (firstLine.includes('erdiagram')) {
-      pageTitle = 'ER Diagram';
-    } else if (firstLine.includes('flowchart') || firstLine.includes('graph')) {
-      pageTitle = 'Flowchart';
-    } else if (firstLine.includes('sequencediagram')) {
-      pageTitle = 'Sequence Diagram';
-    } else if (firstLine.includes('classdiagram')) {
-      pageTitle = 'Class Diagram';
-    } else if (firstLine.includes('statediagram')) {
-      pageTitle = 'State Diagram';
-    } else if (firstLine.includes('gantt')) {
-      pageTitle = 'Gantt';
-    } else if (firstLine.includes('mindmap')) {
-      pageTitle = 'Mindmap';
+    let pageTitle = '';
+
+    // 1. ตรวจสอบหัวข้อจาก Markdown เช่น "### Use Case Diagram: จัดการคำสั่งซื้อ" หรือ "**DFD Level 0**"
+    const titleMatch = content.match(/(?:###|##|#|\*\*)\s*([^\n*#`]+?(?:Diagram|ไดอะแกรม|แผนภาพ|DFD|Flowchart|Use Case|ER|Sequence|Class|State)[^\n*#`]*)/i);
+    if (titleMatch && titleMatch[1]) {
+      pageTitle = titleMatch[1].trim().replace(/^[:\-\s]+|[:\-\s]+$/g, '');
+    }
+
+    // 2. ถ้ายังไม่ได้ ให้ตรวจจาก Title Directive ภายใน Mermaid โค้ด
+    if (!pageTitle) {
+      const mermaidTitle = code.match(/(?:---\s*\ntitle:\s*["']?([^"'\n]+)["']?|title\s+([^\n]+))/i);
+      if (mermaidTitle) {
+        pageTitle = (mermaidTitle[1] || mermaidTitle[2]).trim();
+      }
+    }
+
+    // 3. ถ้าไม่มีหัวข้อ ให้ระบุตามประเภทของ Diagram โดยวิเคราะห์เนื้อหาและ Header
+    if (!pageTitle) {
+      const lowerCode = code.toLowerCase();
+      const firstLine = lowerCode.trim().split('\n')[0];
+
+      if (lowerCode.includes('dfd level 0') || lowerCode.includes('context diagram')) {
+        pageTitle = 'DFD Level 0';
+      } else if (lowerCode.includes('dfd level 1')) {
+        pageTitle = 'DFD Level 1';
+      } else if (lowerCode.includes('dfd level 2')) {
+        pageTitle = 'DFD Level 2';
+      } else if (lowerCode.includes('dfd') || (lowerCode.includes('external entity') && lowerCode.includes('data store'))) {
+        pageTitle = 'DFD Diagram';
+      } else if (lowerCode.includes('use case') || lowerCode.includes('usecase') || (lowerCode.includes('subgraph') && lowerCode.includes('actor'))) {
+        pageTitle = 'Use Case Diagram';
+      } else if (firstLine.includes('erdiagram') || lowerCode.startsWith('erdiagram')) {
+        pageTitle = 'ER Diagram';
+      } else if (firstLine.includes('sequencediagram') || lowerCode.startsWith('sequencediagram')) {
+        pageTitle = 'Sequence Diagram';
+      } else if (firstLine.includes('classdiagram') || lowerCode.startsWith('classdiagram')) {
+        pageTitle = 'Class Diagram';
+      } else if (firstLine.includes('statediagram') || lowerCode.startsWith('statediagram')) {
+        pageTitle = 'State Diagram';
+      } else if (firstLine.includes('gantt') || lowerCode.startsWith('gantt')) {
+        pageTitle = 'Gantt Chart';
+      } else if (firstLine.includes('mindmap') || lowerCode.startsWith('mindmap')) {
+        pageTitle = 'Mindmap';
+      } else if (firstLine.includes('c4') || lowerCode.includes('c4context')) {
+        pageTitle = 'C4 Diagram';
+      } else {
+        pageTitle = 'Flowchart';
+      }
     }
 
     this.insertMermaid.emit({ code, pageTitle } as any);

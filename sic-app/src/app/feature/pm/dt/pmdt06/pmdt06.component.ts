@@ -3,11 +3,12 @@ import { CommonModule } from '@angular/common';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Component, computed, effect, inject, OnInit, signal, ViewChild, ChangeDetectionStrategy } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../core/services/navigation.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { ChangeRequestService } from './change-request.service';
 import { ApprovalService } from '../pmdt03/approval.service';
@@ -16,6 +17,7 @@ import { CrAssignee, ChangeImpact, ChangeRequestItem } from './pmdt06.model';
 
 import { FormsModule } from '@angular/forms';
 import {
+  SicButtonComponent,
   SicGridLoadRequest,
   SicGridPanelComponent,
   SicGridPanelConfig,
@@ -27,20 +29,23 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt06',
   standalone: true,
-  imports: [
+  imports: [SicBulkExportBarComponent, 
     CommonModule,
     RouterModule,
     FormsModule,
+    SicButtonComponent,
     SicTableActionsComponent,
     SicComboboxComponent,
     SicStripHtmlPipe,
     SicGridPanelComponent,
     SicGridPanelTemplate,
     TranslateModule,
+    SicAiBatchModalComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',
@@ -66,6 +71,17 @@ export class Pmdt06Component implements OnInit {
   filterStatus = signal('all');
   // Kept for "create new CR" navigation prefill only — no longer used to filter the loaded list.
   projectId = signal<string | null>(null);
+
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'title', label: this.translate.instant('PMDT06_COL_TITLE'), type: 'text' },
+    { key: 'description', label: this.translate.instant('PMDT06_COL_DESCRIPTION') || 'Description', type: 'textarea' },
+    { key: 'reason', label: this.translate.instant('PMDT06_COL_REASON') || 'Reason', type: 'textarea' },
+    { key: 'changeType', label: this.translate.instant('PMDT06_COL_CHANGE_TYPE') || 'Change Type', type: 'text' },
+    { key: 'priority', label: this.translate.instant('PMDT06_COL_PRIORITY'), type: 'text' },
+  ];
 
   // Full unfiltered-by-project dataset, loaded once (all projects, backend projectId omitted).
   private allChangeRequests = signal<ChangeRequestItem[]>([]);
@@ -115,7 +131,7 @@ export class Pmdt06Component implements OnInit {
   gridConfig: SicGridPanelConfig = {
     id: 'id',
     lazy: false,
-    selectable: false,
+    selectable: true, // ticked rows go to sic-bulk-export-bar
     showToolbar: false,
     pageSize: this.pageSize(),
     column: [
@@ -482,5 +498,51 @@ export class Pmdt06Component implements OnInit {
       URGENT: this.translate.instant('PMDT06_PRIORITY_URGENT'),
     };
     return map[priority.toUpperCase()] || priority;
+  }
+
+  resolveProjectId(): string | null {
+    if (this.projectId()) return this.projectId();
+    const navIds = this.customerState.currentSelectedProjectIds();
+    if (navIds && navIds.length > 0) return navIds[0];
+    const navProj = this.customerState.currentProjectId();
+    if (navProj) return navProj;
+    const list = this.allChangeRequests();
+    if (list && list.length > 0 && list[0].projectId) return list[0].projectId;
+    return null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    if (!rows.length) return;
+    const projId = this.resolveProjectId();
+    if (!projId) {
+      this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'ข้อผิดพลาด', 'กรุณาเลือกโครงการก่อนสร้างข้อมูล');
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const saveRequests = rows.map((row) =>
+      this.http.post(this.baseUrl, {
+        projectId: projId,
+        title: row['title'],
+        description: row['description'],
+        reason: row['reason'] || row['description'],
+        changeType: row['changeType'] || 'Scope',
+        priority: row['priority'] || 'Medium',
+        status: 'Draft',
+      })
+    );
+
+    forkJoin(saveRequests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.fetchAll();
+        },
+        error: (err) => {
+          console.error('AI batch save failed', err);
+          this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE') || 'บันทึกไม่สำเร็จ', err.error?.message || err.message || 'เกิดข้อผิดพลาดในการบันทึก');
+        },
+      });
   }
 }

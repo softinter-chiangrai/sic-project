@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
 import { Pmdt17Service } from './pmdt17.service';
 import { Pmdt17PageData } from './pmdt17.model';
@@ -10,6 +10,8 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
+import { SicButtonComponent } from 'sic-ng';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
@@ -21,11 +23,13 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { MaContractsComponent } from './ma-contracts/ma-contracts.component';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmdt17',
   standalone: true,
   imports: [
+    SicBulkExportBarComponent, 
     CommonModule,
     RouterModule,
     FormsModule,
@@ -35,6 +39,8 @@ import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
     SicGridPanelTemplate,
     TranslateModule,
     MaContractsComponent,
+    SicButtonComponent,
+    SicAiBatchModalComponent,
   ],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
@@ -61,6 +67,16 @@ export class Pmdt17Component implements OnInit {
   filterStatus = signal('all');
   viewTab = signal<'tickets' | 'contracts'>('tickets');
 
+  // ===== AI Batch Create =====
+  showAiBatchModal = signal(false);
+  aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'title', label: this.translate.instant('PMDT17_COL_TITLE') || 'Title', type: 'text' },
+    { key: 'description', label: this.translate.instant('PMDT17_DESC_TITLE') || 'Description', type: 'textarea' },
+    { key: 'severity', label: this.translate.instant('PMDT17_COL_SEVERITY') || 'Severity', type: 'text' },
+    { key: 'ticketType', label: this.translate.instant('PMDT17_COL_TYPE') || 'Ticket Type', type: 'text' },
+  ];
+
   // ===== Navbar context filter (client-side) =====
   // Backend has no project-scope filter param for ma-tickets, so — matching the pattern used
   // by sibling PM list pages (pmdt16, pmdt14, pmdt19, pmdt09, ...) — we fetch the full
@@ -85,7 +101,7 @@ export class Pmdt17Component implements OnInit {
     const visible = this.visibleColumns();
     return {
       id: 'id',
-      selectable: false,
+      selectable: true, // ticked rows go to sic-bulk-export-bar
       showToolbar: false,
       // Fetch-all-then-filter-client-side (see `selectedProjectIds` above) requires the grid
       // to paginate the already-loaded, client-filtered dataset locally.
@@ -548,6 +564,55 @@ export class Pmdt17Component implements OnInit {
       CANCELLED: this.translate.instant('PMDT17_APPR_CANCELLED'),
     };
     return status ? map[status.toUpperCase()] || status : '-';
+  }
+
+  private resolveProjectId(): string | null {
+    const ids = this.customerState.currentSelectedProjectIds();
+    if (ids && ids.length > 0) return ids[0];
+    const row = this.rows().find((r) => r.projectId);
+    return row ? row.projectId : null;
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    const projectId = this.resolveProjectId();
+    if (!projectId) {
+      this.dialog.warning(
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_TITLE') || 'กรุณาเลือกโปรเจกต์',
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_DESC') || 'กรุณาเลือกโปรเจกต์จากแถบด้านบนก่อนบันทึกรายการชุด',
+      );
+      return;
+    }
+
+    this.aiBatchSaving.set(true);
+    const requests = rows.map((r) =>
+      this.http.post(`${apiBaseUrl}/api/pm/ma-tickets/save`, {
+        projectId,
+        title: r['title'] || r['ticketTitle'] || 'Untitled Ticket',
+        description: r['description'] || '-',
+        severity: (r['severity'] || 'MEDIUM').toUpperCase(),
+        ticketType: (r['ticketType'] || 'BUG_SUPPORT').toUpperCase(),
+      }),
+    );
+
+    forkJoin(requests)
+      .pipe(finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.dialog.success(
+            this.translate.instant('PM_AI_BATCH_SUCCESS_TITLE') || 'สร้างสำเร็จ',
+            (this.translate.instant('PM_AI_BATCH_SUCCESS_DESC') || 'สร้างรายการทั้งหมด {count} รายการเรียบร้อยแล้ว').replace('{count}', String(rows.length)),
+          );
+          this.fetchTickets();
+        },
+        error: (err) => {
+          console.error('Batch save MA tickets failed', err);
+          this.dialog.error(
+            this.translate.instant('PM_AI_BATCH_ERROR_TITLE') || 'บันทึกไม่สำเร็จ',
+            err?.error?.message || 'เกิดข้อผิดพลาดในการบันทึกรายการ',
+          );
+        },
+      });
   }
 }
 

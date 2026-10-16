@@ -277,9 +277,10 @@ export class DiagramService {
   }
 
 
-  exportAllPdf(projectId: string, currentTabId?: string, image?: string | null): Observable<Blob> {
+  /** tabIds = only the ticked tabs (empty = every tab) */
+  exportAllPdf(projectId: string, currentTabId?: string, image?: string | null, tabIds?: string[]): Observable<Blob> {
     const lang = this.languageService.getCurrentLanguage();
-    return this.http.post(`${this.apiUrl}/api/diagram/tabs/export-all-pdf`, { currentTabId, image }, {
+    return this.http.post(`${this.apiUrl}/api/diagram/tabs/export-all-pdf`, { currentTabId, image, tabIds }, {
       params: { projectId, lang },
       responseType: 'blob',
     });

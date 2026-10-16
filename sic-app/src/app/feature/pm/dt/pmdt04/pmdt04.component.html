@@ -12,12 +12,23 @@
         {{ totalItems() }} {{ 'PMDT04_ITEMS_UNIT' | translate }}
       </span>
     </div>
-    <button
-      (click)="goToAdd()"
-      class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
-    >
-      <i class="bi bi-plus-lg"></i> {{ 'PMDT04_ADD_REQUIREMENT_BTN' | translate }}
-    </button>
+    <div class="flex items-center gap-2">
+      <sic-button
+        variant="outline"
+        color="primary"
+        (click)="showAiBatchModal.set(true)"
+        [title]="'AI_BATCH_CREATE_BUTTON' | translate"
+      >
+        <i class="bi bi-magic mr-1"></i>
+        <span>{{ 'AI_BATCH_CREATE_BUTTON' | translate }}</span>
+      </sic-button>
+      <button
+        (click)="goToAdd()"
+        class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
+      >
+        <i class="bi bi-plus-lg"></i> {{ 'PMDT04_ADD_REQUIREMENT_BTN' | translate }}
+      </button>
+    </div>
   </div>
 
   <!-- FILTERS -->
@@ -53,6 +64,7 @@
   </div>
 
   <!-- GRID -->
+  <sic-bulk-export-bar [grid]="grid" kind="requirement"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
     [config]="gridConfig"
@@ -111,4 +123,16 @@
         </div>
       </ng-template>
     </sic-gridpanel>
+
+  <!-- AI BATCH CREATE MODAL -->
+  <sic-ai-batch-modal
+    moduleType="REQUIREMENT"
+    [moduleLabel]="'PMDT04_PAGE_TITLE' | translate"
+    [fields]="aiBatchFields"
+    [visible]="showAiBatchModal()"
+    [projectId]="resolveProjectId()"
+    [saving]="aiBatchSaving()"
+    (closed)="showAiBatchModal.set(false)"
+    (saved)="onAiBatchSaved($event)"
+  ></sic-ai-batch-modal>
 </div>

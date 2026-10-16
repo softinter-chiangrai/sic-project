@@ -13,6 +13,11 @@ public interface PmDiagramExportService {
     byte[] exportDiagramPdf(UUID diagramId, UUID businessId, String lang, String imageDataUri, List<Map<String, Object>> requestPages);
 
     /** รวมทุก Diagram ของโครงการเป็น PDF เล่มเดียว */
-    byte[] exportAllDiagramsPdf(UUID projectId, UUID currentDiagramId, UUID businessId, String lang, String currentImageDataUri);
+    default byte[] exportAllDiagramsPdf(UUID projectId, UUID currentDiagramId, UUID businessId, String lang, String currentImageDataUri) {
+        return exportAllDiagramsPdf(projectId, currentDiagramId, businessId, lang, currentImageDataUri, null);
+    }
+
+    /** onlyTabIds = เฉพาะแท็บที่เลือก (null/ว่าง = ทุกแท็บ) */
+    byte[] exportAllDiagramsPdf(UUID projectId, UUID currentDiagramId, UUID businessId, String lang, String currentImageDataUri, List<UUID> onlyTabIds);
 
 }

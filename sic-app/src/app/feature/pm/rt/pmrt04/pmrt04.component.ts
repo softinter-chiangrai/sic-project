@@ -31,11 +31,12 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
+import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -103,7 +104,7 @@ export class Pmrt04Component implements OnInit {
     const visible = this.visibleColumns();
     return {
       id: 'id',
-      selectable: false,
+      selectable: true, // ticked rows go to sic-bulk-export-bar
       showToolbar: false,
       defaultSortField: 'contractNo',
       pageSize: this.pageSize(),

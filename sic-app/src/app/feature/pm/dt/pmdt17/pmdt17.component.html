@@ -14,6 +14,12 @@
     </div>
     <div class="flex gap-2">
       @if (viewTab() === 'tickets') {
+      <sic-button
+        variant="outline"
+        icon="bi bi-stars"
+        [text]="'AI_BATCH_CREATE_BUTTON' | translate"
+        (click)="showAiBatchModal.set(true)"
+      ></sic-button>
       <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
@@ -88,6 +94,7 @@
   </div>
 
   <!-- GRID -->
+  <sic-bulk-export-bar [grid]="grid" kind="ma-ticket"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
     [config]="gridConfig()"
@@ -207,4 +214,17 @@
 
 
 }
+
+  <!-- AI Batch Create Modal -->
+  <sic-ai-batch-modal
+    moduleType="MA_TICKET"
+    [moduleLabel]="'PMDT17_PAGE_TITLE' | translate"
+    [fields]="aiBatchFields"
+    [visible]="showAiBatchModal()"
+    [projectId]="resolveProjectId()"
+    [saving]="aiBatchSaving()"
+    (closed)="showAiBatchModal.set(false)"
+    (saved)="onAiBatchSaved($event)"
+  ></sic-ai-batch-modal>
+
 </div>

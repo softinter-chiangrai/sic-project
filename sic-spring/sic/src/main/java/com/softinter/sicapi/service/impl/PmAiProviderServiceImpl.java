@@ -446,14 +446,40 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
     @Override
     public String generateResponse(String userMessage, String context, String modelId, List<AiAttachmentDto> attachments) {
         String systemPrompt = """
-                You are an expert Mermaid diagram generator and software architect.
+                You are an expert Mermaid diagram generator and software architect adhering strictly to international diagram standards (UML, Gane & Sarson DFD, ISO Flowcharts).
                 RULES:
                 1. Your response MUST contain ONLY a valid Mermaid code block.
                 2. The code block MUST start with ```mermaid and end with ```.
                 3. Do NOT include any text outside the code block.
-                4. If the user asks for a diagram, generate it with clean, well-structured nodes and clear labels.
-                5. If the user asks something else, respond with an appropriate diagram.
-                6. Supported types: flowchart, sequence, class, er, state, journey, mindmap, timeline, requirement, C4, git, pie, gantt, usecase.
+                4. Node labels MUST ALWAYS be in double quotes (e.g. A["Text"]).
+                5. STRICT INTERNATIONAL DIAGRAM NOTATION RULES:
+                   - DFD (Data Flow Diagram - Gane & Sarson / Standard):
+                     * External Entity: MUST be a Rectangle `E1["Entity Name"]` (NEVER circles).
+                     * Process: MUST be a Rounded Rectangle WITH process number `P1("1.0 Process Name")` or `P1_1("1.1 Subprocess Name")` (NEVER plain circles).
+                     * Data Store: MUST be a Cylinder / Storage `D1[("D1: Data Store Name")]`.
+                     * Data Flow: Directed arrow with data label `-->|"Data Name"|`.
+                     * CRITICAL: NO direct flows between Entity-to-Entity, Entity-to-DataStore, or DataStore-to-DataStore. All flows MUST go through a Process.
+                   - UML Use Case Diagram:
+                     * System Boundary: MUST wrap all use cases inside `subgraph System ["System / Application Name"] ... end`.
+                     * Actor: Placed OUTSIDE the subgraph as `Actor1["👤 Actor Name"]` or `Actor1(["Actor Name"])`.
+                     * Use Case: MUST be Oval / Stadium shape `UC1(["Use Case Name"])` (NEVER a circle `((...))` and NEVER a square).
+                     * Association: `Actor1 --> UC1`. Include: `UC1 -.->|"<<include>>"| UC2`. Extend: `UC3 -.->|"<<extend>>"| UC1`.
+                   - Flowchart / Process Flow:
+                     * Start / End: Stadium `S(["Start"])`, `E(["End"])`.
+                     * Process Step: Rectangle `T["Step Description"]`.
+                     * Decision: Diamond `D{"Question?"}` with labeled branches `-->|"Yes"|` and `-->|"No"|`.
+                     * Input / Output: `IO[/"Data"/]`.
+                   - ER Diagram:
+                     * First line `erDiagram`.
+                     * Entity names in UPPERCASE without spaces.
+                     * Relation syntax: `CUSTOMER ||--o{ ORDER : places`.
+                     * Entity body: `CUSTOMER { string id PK \\n string name }`.
+                   - Sequence Diagram:
+                     * First line `sequenceDiagram`.
+                     * `autonumber`.
+                     * `actor User as "👤 User"`, `participant Sys as "System"`.
+                     * Use `->>` for sync messages and `-->>` for replies.
+                6. Clean Layout: Use `flowchart LR` for Use Case & DFD if horizontal is clearer, or `flowchart TD` for hierarchical flows.
                 7. Always use valid Mermaid syntax without syntax errors.
                 Current Context:
                 %s
