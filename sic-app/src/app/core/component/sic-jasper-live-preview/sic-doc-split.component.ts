@@ -1,32 +1,20 @@
 // src/app/core/component/sic-jasper-live-preview/sic-doc-split.component.ts
 import { CommonModule } from '@angular/common';
-import { ChangeDetectionStrategy, Component, Input, signal } from '@angular/core';
-import { TranslateModule } from '@ngx-translate/core';
+import { ChangeDetectionStrategy, Component, Input, model } from '@angular/core';
 import { SicJasperLivePreviewComponent } from './sic-jasper-live-preview.component';
-
-type Mode = 'edit' | 'split' | 'pdf';
+import { DocViewMode } from './sic-doc-view-toggle.component';
 
 /**
- * Wraps a document form: edit (form only) / split (form + live Jasper PDF) / PDF only. The form stays in the DOM in every
- * mode, so switching never loses what was typed. Starts in edit: wide forms (tables) keep their full width until asked.
+ * Wraps a document form: edit (form only) / split (form + live Jasper PDF) / pdf (PDF only); the mode comes from a
+ * sic-doc-view-toggle in the form's header via [(mode)]. The form stays in the DOM in every mode, so switching never loses
+ * what was typed; no PDF is asked for in edit mode.
  */
 @Component({
   selector: 'sic-doc-split',
   standalone: true,
-  imports: [CommonModule, TranslateModule, SicJasperLivePreviewComponent],
+  imports: [CommonModule, SicJasperLivePreviewComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex justify-end mb-3">
-      <div class="inline-flex items-center gap-1 p-0.5 rounded-lg border border-[var(--border)] text-xs">
-        @for (m of modes; track m.mode) {
-          <button type="button" (click)="mode.set(m.mode)" [title]="m.label | translate"
-                  class="px-2.5 py-1 rounded-md transition-colors flex items-center gap-1"
-                  [class]="mode() === m.mode ? 'bg-[var(--crm-primary)] text-white' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'">
-            <i class="bi" [class]="m.icon"></i> <span class="hidden sm:inline">{{ m.label | translate }}</span>
-          </button>
-        }
-      </div>
-    </div>
     <div class="grid gap-4" [ngClass]="{ 'lg:grid-cols-2': mode() === 'split' }">
       <div class="min-w-0" [class.hidden]="mode() === 'pdf'">
         <ng-content />
@@ -45,10 +33,5 @@ export class SicDocSplitComponent {
   /** the form as it would be saved */
   @Input() body: unknown;
 
-  mode = signal<Mode>('edit');
-  readonly modes: { mode: Mode; icon: string; label: string }[] = [
-    { mode: 'edit', icon: 'bi-pencil', label: 'DOC_VIEW_EDIT' },
-    { mode: 'split', icon: 'bi-layout-split', label: 'DOC_VIEW_SPLIT' },
-    { mode: 'pdf', icon: 'bi-filetype-pdf', label: 'DOC_VIEW_PDF' },
-  ];
+  mode = model<DocViewMode>('edit');
 }

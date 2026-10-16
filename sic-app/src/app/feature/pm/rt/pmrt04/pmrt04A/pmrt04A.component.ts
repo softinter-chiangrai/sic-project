@@ -46,12 +46,13 @@ import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.u
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
+import { SicDocViewToggleComponent, DocViewMode } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-view-toggle.component';
 import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-split.component';
 
 @Component({
   selector: 'app-pmrt04a',
   standalone: true,
-  imports: [SicDocSplitComponent, 
+  imports: [SicDocSplitComponent, SicDocViewToggleComponent, 
     SicCrHistoryPanelComponent,
     CommonModule,
     ReactiveFormsModule,
@@ -275,6 +276,9 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     }
     return this.formData?.isChanged ?? false;
   };
+
+  /** edit / split / pdf, shared by the header toggle and sic-doc-split */
+  docView: DocViewMode = 'edit';
 
   /** the form as it would be saved, for the live Jasper PDF (sic-doc-split) */
   pdfPreviewBody(): any {

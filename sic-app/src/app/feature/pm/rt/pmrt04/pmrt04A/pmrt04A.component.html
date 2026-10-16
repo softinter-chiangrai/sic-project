@@ -43,6 +43,7 @@
       </div>
 
       <div class="flex items-center gap-2">
+        <sic-doc-view-toggle [(mode)]="docView"></sic-doc-view-toggle>
         @if (!isView && !isLocked) {
           <button
             type="button"
@@ -121,7 +122,7 @@
 
     <sic-cr-history-panel targetType="CONTRACT" [targetId]="contractId"></sic-cr-history-panel>
 
-    <sic-doc-split kind="contract" [body]="pdfPreviewBody()">
+    <sic-doc-split [(mode)]="docView" kind="contract" [body]="pdfPreviewBody()">
       <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
         <!-- Single Unified Form Card -->
         <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">

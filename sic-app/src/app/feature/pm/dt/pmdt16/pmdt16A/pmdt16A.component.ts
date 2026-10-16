@@ -39,12 +39,13 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
+import { SicDocViewToggleComponent, DocViewMode } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-view-toggle.component';
 import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-split.component';
 
 @Component({
   selector: 'app-pmdt16a',
   standalone: true,
-  imports: [SicDocSplitComponent, 
+  imports: [SicDocSplitComponent, SicDocViewToggleComponent, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -318,6 +319,9 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       setTimeout(() => this.copiedId.set(null), 2000);
     });
   }
+
+  /** edit / split / pdf, shared by the header toggle and sic-doc-split */
+  docView: DocViewMode = 'edit';
 
   /** the form as it would be saved, for the live Jasper PDF (sic-doc-split) */
   pdfPreviewBody(): any {

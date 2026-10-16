@@ -26,6 +26,7 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
+      <sic-doc-view-toggle [(mode)]="docView"></sic-doc-view-toggle>
       @if (!isView() && !isLocked()) {
         <button
           type="button"
@@ -40,7 +41,7 @@
   </div>
 
   <div class="mb-4"><sic-cr-history-panel targetType="MA_TICKET" [targetId]="id()"></sic-cr-history-panel></div>
-  <sic-doc-split kind="ma-ticket" [body]="pdfPreviewBody()">
+  <sic-doc-split [(mode)]="docView" kind="ma-ticket" [body]="pdfPreviewBody()">
     <form [formGroup]="formData.form" class="space-y-5">
       <!-- Section 1: Classification -->
       <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">

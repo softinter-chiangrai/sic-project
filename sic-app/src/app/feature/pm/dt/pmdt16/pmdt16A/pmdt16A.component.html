@@ -36,6 +36,7 @@
           <span>{{ 'PMDT16A_AI_GENERATE_BTN' | translate }}</span>
         </button>
       }
+      <sic-doc-view-toggle [(mode)]="docView"></sic-doc-view-toggle>
       @if (id()) {
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
@@ -46,7 +47,7 @@
   </div>
 
   <div class="mb-4"><sic-cr-history-panel targetType="INVOICE" [targetId]="id()"></sic-cr-history-panel></div>
-  <sic-doc-split kind="invoice" [body]="pdfPreviewBody()">
+  <sic-doc-split [(mode)]="docView" kind="invoice" [body]="pdfPreviewBody()">
     <form [formGroup]="formData.form" class="space-y-5">
       <!-- Section 1: Core Details -->
       <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">

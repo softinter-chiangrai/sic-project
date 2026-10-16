@@ -9,7 +9,8 @@
       <sic-version-badge [status]="currentStatus" [isLocked]="currentIsLocked"></sic-version-badge>
     </div>
   }
-  <sic-doc-split kind="change-request" [body]="pdfPreviewBody()">
+  <div class="flex justify-end"><sic-doc-view-toggle [(mode)]="docView"></sic-doc-view-toggle></div>
+  <sic-doc-split [(mode)]="docView" kind="change-request" [body]="pdfPreviewBody()">
     <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
 
