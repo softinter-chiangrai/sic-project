@@ -127,3 +127,65 @@ test('change request assigned to the second user', async () => {
   const done = await u2.post(`/api/pm/change-requests/${crId}/assignees/complete`, undefined, { assigneeId: id2 });
   expect(done.status, JSON.stringify(done.body)).toBeLessThan(500);
 });
+
+test('modifying an approval flow auto-cancels active approvals, resets document to draft, and allows resubmit', async () => {
+  const flowCode = mock('FC');
+  const flowId = await w.make('/api/pm/approval-flows', {
+    flowCode,
+    flowName: 'Initial Flow',
+    documentType: 'REQUIREMENT',
+    approvalMode: 'CHAIN',
+    isActive: true,
+    steps: [{ stepOrder: 1, stepName: 'Step 1', approverUserId: id2, isRequired: true }],
+  }, '/api/pm/approval-flows/{id}');
+
+  const { documentId, approvalId } = await submit(flowId);
+
+  const approvalRes = await w.api.get(`/api/pm/approvals/${approvalId}`);
+  expect(status(approvalRes.body)).toBe('PENDING');
+
+  const reqBefore = await w.api.get(`/api/pm/requirement/${documentId}`);
+  expect(reqBefore.body.data?.status || reqBefore.body.status).toMatch(/in review/i);
+
+  const gotFlow = await w.api.get(`/api/pm/approval-flows/${flowId}`);
+  const flowData = gotFlow.body.data ?? gotFlow.body;
+  const updateRes = await w.api.put(`/api/pm/approval-flows/${flowId}`, {
+    id: flowId,
+    flowCode,
+    flowName: 'Updated Flow Name',
+    documentType: 'REQUIREMENT',
+    approvalMode: 'CHAIN',
+    isActive: true,
+    rowVersion: flowData.rowVersion,
+    steps: [{ stepOrder: 1, stepName: 'Updated Step 1', approverUserId: id2, isRequired: true }],
+  });
+  expect(updateRes.status).toBeLessThan(300);
+
+  const cancelledApproval = await w.api.get(`/api/pm/approvals/${approvalId}`);
+  expect(status(cancelledApproval.body)).toBe('CANCELLED');
+
+  const notifs = await w.api.get('/api/su/notifications', { size: 50 });
+  const items = notifs.body?.items || notifs.body?.data?.items || [];
+  const cancelNotif = items.find((n: any) => n.linkUrl?.includes(approvalId) || n.title?.includes('ยกเลิกคำขออนุมัติ') || n.message?.includes('Approval Flow'));
+  expect(cancelNotif, 'Requester should receive notification when approval is cancelled by flow modification').toBeTruthy();
+  expect(cancelNotif.type).toBe('APPROVAL');
+
+  const reqAfter = await w.api.get(`/api/pm/requirement/${documentId}`);
+  expect(reqAfter.body.data?.status || reqAfter.body.status).toMatch(/draft/i);
+
+  const resubmit = await w.api.post('/api/pm/approvals/submit', {
+    documentType: 'REQUIREMENT',
+    documentId,
+    flowId,
+    documentCode: 'E2E-RESUBMIT',
+    documentTitle: 'Approval doc resubmitted',
+  });
+  expect(resubmit.status).toBeLessThan(300);
+  const newApprovalId = idOf(resubmit.body);
+  expect(status(resubmit.body)).toBe('PENDING');
+
+  const approveRes = await u2.post(`/api/pm/approvals/${newApprovalId}/approve`, { approvalId: newApprovalId, comment: 'Approved on updated flow' });
+  expect(approveRes.status).toBeLessThan(300);
+  expect(status(approveRes.body)).toBe('APPROVED');
+});
+

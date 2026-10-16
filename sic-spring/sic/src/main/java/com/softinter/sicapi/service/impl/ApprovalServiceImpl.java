@@ -725,6 +725,12 @@ public class ApprovalServiceImpl implements ApprovalService {
             updateDocumentStatusOnCancel(approval);
 
             try {
+                notificationService.notifyCancelledByFlow(approval, reason);
+            } catch (Exception e) {
+                log.error("Error sending notification on cancelByFlow: {}", e.getMessage(), e);
+            }
+
+            try {
                 auditLogService.log(
                         "CANCEL_APPROVAL",
                         "Approval Center / " + approval.getDocumentType(),

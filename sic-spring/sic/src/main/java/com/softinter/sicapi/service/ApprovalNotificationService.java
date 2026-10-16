@@ -11,6 +11,7 @@ public interface ApprovalNotificationService {
     void notifyRevisionRequested(PmApproval approval);
     void notifyPendingReminder(PmApproval approval);
     void notifyDelegate(PmApproval approval, String delegatedTo);
+    void notifyCancelledByFlow(PmApproval approval, String reason);
 
     /** แจ้งเตือนผู้ใช้โดยตรง (ระบบเป็นผู้ส่ง) ใช้กับงานตั้งเวลา เช่น เตือนสัญญาใกล้หมดอายุ */
     void notifyUser(UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl);

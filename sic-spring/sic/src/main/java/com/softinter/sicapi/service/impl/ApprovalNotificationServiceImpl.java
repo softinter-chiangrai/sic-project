@@ -129,6 +129,28 @@ public class ApprovalNotificationServiceImpl implements ApprovalNotificationServ
 
     @Override
     @Transactional
+    public void notifyCancelledByFlow(PmApproval approval, String reason) {
+        log.info("🔔 Approval cancelled by flow modification: {} - {}", approval.getDocumentCode(), approval.getDocumentTitle());
+        String docLabel = approval.getDocumentTitle() != null ? approval.getDocumentTitle() : approval.getDocumentCode();
+        String message = "คำขออนุมัติเอกสาร " + docLabel + " ถูกยกเลิกและคืนสถานะเป็นแบบร่าง เนื่องจาก Approval Flow มีการปรับปรุง กรุณาส่งขออนุมัติใหม่อีกครั้ง";
+        if (reason != null && !reason.isBlank()) {
+            message += " (เหตุผล: " + reason + ")";
+        }
+
+        sendNotification(
+                approval.getRequestedBy(),
+                null,
+                "ระบบอนุมัติ",
+                "คำขออนุมัติถูกยกเลิก (Flow มีการปรับปรุง): " + (approval.getDocumentCode() != null ? approval.getDocumentCode() : approval.getDocumentType()),
+                message,
+                "APPROVAL",
+                "/pm/approval/" + approval.getId(),
+                approval.getBusinessId()
+        );
+    }
+
+    @Override
+    @Transactional
     public void notifyUser(UUID businessId, String recipientUserId, String title, String message, String type, String linkUrl) {
         sendNotification(recipientUserId, "system", "ระบบ", title, message, type, linkUrl, businessId);
     }

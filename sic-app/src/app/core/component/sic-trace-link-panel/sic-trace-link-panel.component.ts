@@ -95,21 +95,28 @@ export class SicTraceLinkPanelComponent implements OnChanges {
     }).subscribe(({ asSource, asTarget, asSourceDiag, asTargetDiag }) => {
       const allSource = [...asSource, ...asSourceDiag];
       const allTarget = [...asTarget, ...asTargetDiag];
-      const seen = new Set<string>();
-      const rows: { link: TraceLink; otherType: string; otherId: string; fromSource: boolean }[] = [];
+      const seen = new Map<string, { link: TraceLink; otherType: string; otherId: string; fromSource: boolean }>();
+
+      const addRow = (link: TraceLink, otherType: string, otherId: string, fromSource: boolean) => {
+        const otherNorm = (otherType || '').toUpperCase().trim();
+        const canonicalType = diagramTypes.includes(otherNorm) ? 'DIAGRAM' : otherNorm;
+        const dedupeKey = `${fromSource ? 'SRC' : 'TGT'}:${canonicalType}:${otherId}:${link.relationshipType}`;
+        const existing = seen.get(dedupeKey);
+        if (!existing) {
+          seen.set(dedupeKey, { link, otherType, otherId, fromSource });
+        } else if (existing.otherType.toUpperCase().trim() === 'DIAGRAM' && diagramTypes.includes(otherNorm) && otherNorm !== 'DIAGRAM') {
+          seen.set(dedupeKey, { link, otherType, otherId, fromSource });
+        }
+      };
 
       for (const link of allSource) {
-        if (!seen.has(link.id)) {
-          seen.add(link.id);
-          rows.push({ link, otherType: link.targetType, otherId: link.targetId, fromSource: true });
-        }
+        addRow(link, link.targetType, link.targetId, true);
       }
       for (const link of allTarget) {
-        if (!seen.has(link.id)) {
-          seen.add(link.id);
-          rows.push({ link, otherType: link.sourceType, otherId: link.sourceId, fromSource: false });
-        }
+        addRow(link, link.sourceType, link.sourceId, false);
       }
+
+      const rows = Array.from(seen.values());
 
       if (rows.length === 0) {
         this.links.set([]);
