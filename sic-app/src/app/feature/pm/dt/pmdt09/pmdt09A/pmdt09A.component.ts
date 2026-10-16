@@ -28,13 +28,13 @@ import { Pmdt09AService } from './pmdt09A.service';
 import { Pmdt09Service } from '../pmdt09.service';
 
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
-import { SicLivePdfButtonComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-live-pdf-button.component';
+import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-split.component';
 
 // ===== Component =====
 @Component({
   selector: 'app-pmdt09a',
   standalone: true,
-  imports: [SicLivePdfButtonComponent, 
+  imports: [SicDocSplitComponent, 
     CommonModule,
     ReactiveFormsModule,
     RouterModule,
@@ -152,7 +152,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   isSaved = false;
   pageDirty = () => this.isSaved ? false : (this.formData?.isChanged ?? false);
 
-  /** the form as it would be saved, for the live Jasper PDF (sic-live-pdf-button) */
+  /** the form as it would be saved, for the live Jasper PDF (sic-doc-split) */
   pdfPreviewBody(): any {
     return { ...this.form.getRawValue(), id: this.reviewId || this.form.getRawValue().id || null };
   }

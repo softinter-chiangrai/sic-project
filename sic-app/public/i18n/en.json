@@ -1,6 +1,7 @@
 {
-  "LIVE_PDF_TAB_QUICK": "Preview",
-  "LIVE_PDF_TAB_JASPER": "Real PDF",
+  "DOC_VIEW_EDIT": "Edit",
+  "DOC_VIEW_SPLIT": "Split",
+  "DOC_VIEW_PDF": "PDF",
   "LIVE_PDF_GENERATING": "Generating PDF…",
   "LIVE_PDF_UPDATING": "Updating…",
   "FIELD_PROJECT_ID": "Project (choose it in the top bar)",

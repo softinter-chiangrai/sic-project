@@ -9,635 +9,636 @@
       <sic-version-badge [status]="currentStatus" [isLocked]="currentIsLocked"></sic-version-badge>
     </div>
   }
-  <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-        <!-- CR Code -->
-        <div>
-          <sic-input
-            [label]="'PMDT06_CR_CODE_LABEL' | translate"
-            formControlName="crCode"
-            [required]="true"
-            [placeholder]="'PMDT06_CR_CODE_PLACEHOLDER' | translate"
-            [errorMessages]="{ required: ('PMDT06_CR_CODE_REQUIRED_MSG' | translate) }"
-          ></sic-input>
-        </div>
-
-        <!-- Target Type Selection -->
-        <div>
-          <sic-combobox
-            [label]="'PMDT06_TARGET_TYPE_LABEL' | translate"
-            formControlName="targetType"
-            [options]="targetTypeOptions"
-            [required]="true"
-            [disabled]="isTargetLocked()"
-            [clearable]="!isTargetLocked()"
-            [placeholder]="'PMDT06_TARGET_TYPE_PLACEHOLDER' | translate"
-          ></sic-combobox>
-        </div>
-
-        <!-- Target Document Combobox -->
-        <div class="md:col-span-2">
-          <sic-combobox
-            [label]="'PMDT06_TARGET_DOC_LABEL' | translate"
-            formControlName="targetId"
-            [apiUrl]="targetDocumentApiUrl()"
-            [options]="targetDocumentOptions()"
-            [params]="{ targetType: selectedTargetType(), projectId: projectId }"
-            valueField="value"
-            textField="text"
-            [required]="true"
-            [disabled]="isTargetLocked()"
-            [clearable]="!isTargetLocked()"
-            [hint]="'PMDT06_TARGET_DOC_HINT' | translate"
-            [emptyText]="'PMDT06_TARGET_DOC_EMPTY' | translate"
-            [errorMessages]="{ required: ('PMDT06_TARGET_DOC_REQUIRED_MSG' | translate) }"
-          ></sic-combobox>
-        </div>
-
-        <!-- Title -->
-        <div class="md:col-span-2">
-          <sic-input
-            [label]="'PMDT06_CR_TITLE_LABEL' | translate"
-            formControlName="title"
-            [required]="true"
-            [placeholder]="'PMDT06_CR_TITLE_PLACEHOLDER' | translate"
-          ></sic-input>
-        </div>
-
-        <!-- Description -->
-        <div class="md:col-span-2">
-          <sic-tiptap-editor
-            [label]="'PMDT06_DESC_LABEL' | translate"
-            formControlName="description"
-            minHeight="140px"
-            [placeholder]="'PMDT06_DESC_PLACEHOLDER' | translate"
-          ></sic-tiptap-editor>
-        </div>
-
-        <!-- Change Reason & Priority -->
-        <div>
-          <sic-combobox
-            [label]="'PMDT06_CHANGE_REASON_LABEL' | translate"
-            formControlName="changeReason"
-            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
-            valueField="value"
-            textField="text"
-            [placeholder]="'PMDT06_CHANGE_REASON_PLACEHOLDER' | translate"
-            [required]="true"
-            [clearable]="false"
-          ></sic-combobox>
-        </div>
-
-        <div>
-          <sic-combobox
-            [label]="'PMDT06_COL_PRIORITY' | translate"
-            formControlName="priority"
-            [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'"
-            valueField="value"
-            textField="text"
-            [placeholder]="'PMDT06_PRIORITY_PLACEHOLDER' | translate"
-            [required]="true"
-            [errorMessages]="{ required: ('PMDT06_PRIORITY_REQUIRED_MSG' | translate) }"
-          ></sic-combobox>
-        </div>
-
-        <!-- Change Level (semver: PATCH / MINOR / MAJOR) -->
-        <div>
-          <sic-combobox
-            [label]="'PMDT06_CHANGE_LEVEL_LABEL' | translate"
-            formControlName="changeLevel"
-            [items]="changeLevelOptions"
-            valueField="value"
-            textField="text"
-            [placeholder]="'PMDT06_CHANGE_LEVEL_PLACEHOLDER' | translate"
-            [required]="true"
-            [errorMessages]="{ required: ('PMDT06_CHANGE_LEVEL_REQUIRED_MSG' | translate) }"
-          ></sic-combobox>
-          <p class="text-xs text-[var(--text-muted)] mt-1.5">{{ 'PMDT06_CHANGE_LEVEL_HINT' | translate }}</p>
-        </div>
-
-        <!-- Assignee (Multiple) -->
-        <div>
-          <sic-combobox
-            [label]="'PMDT06_ASSIGNEE_LABEL' | translate"
-            formControlName="assigneeIds"
-            [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
-            valueField="value"
-            textField="text"
-            [placeholder]="'PMDT06_ASSIGNEE_PLACEHOLDER' | translate"
-            [clearable]="true"
-            [multiple]="true"
-            (selectionChanged)="onAssigneeSelectionChanged($event)"
-          ></sic-combobox>
-        </div>
-
-        <!-- Attachments (Full Width) -->
-        <div class="md:col-span-2">
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
-            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-            {{ 'PMDT06_ATTACHMENTS_LABEL' | translate }}
-          </label>
-          <sic-upload
-            formControlName="attachmentGroupId"
-            [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
-            [multiple]="true"
-            category="all"
-            [disabled]="isView"
-          ></sic-upload>
-        </div>
-
-        <!-- Hidden projectId -->
-        <input type="hidden" formControlName="projectId" />
-      </div>
-
-      <!-- Approval Flow Selection -->
-      <div class="border-t border-[var(--border)] pt-4 mt-2">
-        <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
-          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          {{ 'PMDT06_APPROVAL_PROCESS_LABEL' | translate }}
-        </div>
-
+  <sic-doc-split kind="change-request" [body]="pdfPreviewBody()">
+    <form [formGroup]="form" (ngSubmit)="save()" class="space-y-4">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            [label]="'PMDT06_SELECT_FLOW_LABEL' | translate"
-            [apiUrl]="documenttypeapiUrl"
-            valueField="id"
-            textField="flowName"
-            [placeholder]="'PMDT06_SELECT_FLOW_LABEL' | translate"
-            [clearable]="true"
-            formControlName="approvalFlowId"
-            (selectionChanged)="onFlowChange($event)"
-          ></sic-combobox>
-        </div>
 
-        @if (!selectedFlowId && flows.length > 0) {
-          <p class="text-xs text-[var(--text-muted)] mt-1">
-            * {{ 'PMDT06_FLOW_HINT' | translate }}
-          </p>
-        }
-      </div>
-
-      <!-- ===== IMPACT ANALYSIS SECTION ===== -->
-      @if (form.get('targetId')?.value || impactData() || isEdit || isView) {
-        <div class="border-t border-[var(--border)] pt-4 mt-2">
-          <div class="flex items-center justify-between">
-            <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
-              {{ 'PMDT06_IMPACT_TITLE' | translate }}
-              @if (isLoadingImpact()) {
-                <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
-                  <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'PMDT06_ANALYZING_LABEL' | translate }}
-                </span>
-              }
-            </h4>
-            <div class="flex items-center gap-2">
-              @if (changeRequestId) {
-                <button
-                  type="button"
-                  (click)="openHistoryModal()"
-                  class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--text-active)] bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--border)] flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                  title="ดูประวัติการวิเคราะห์ผลกระทบทั้งหมด"
-                >
-                  <i class="bi bi-clock-history text-indigo-500"></i>
-                  <span>ประวัติการวิเคราะห์</span>
-                </button>
-              }
-              @if (!isView) {
-                <button
-                  type="button"
-                  (click)="refreshImpact()"
-                  [disabled]="isLoadingImpact() || isAiAnalyzing()"
-                  class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
-                >
-                  <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
-                  {{ 'PMDT06_REANALYZE_BTN' | translate }}
-                </button>
-                <button
-                  type="button"
-                  (click)="aiAnalyzeImpact()"
-                  [disabled]="isLoadingImpact() || isAiAnalyzing()"
-                  class="text-xs px-2.5 py-1 rounded-md font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                  title="ใช้อัจฉริยะ AI ช่วยคัดกรองเอกสารและประเมิน Manday"
-                >
-                  <i class="bi bi-stars" [class.animate-spin]="isAiAnalyzing()"></i>
-                  <span>{{ isAiAnalyzing() ? 'กำลังวิเคราะห์ AI...' : 'วิเคราะห์ด้วย AI' }}</span>
-                </button>
-              }
-            </div>
+          <!-- CR Code -->
+          <div>
+            <sic-input
+              [label]="'PMDT06_CR_CODE_LABEL' | translate"
+              formControlName="crCode"
+              [required]="true"
+              [placeholder]="'PMDT06_CR_CODE_PLACEHOLDER' | translate"
+              [errorMessages]="{ required: ('PMDT06_CR_CODE_REQUIRED_MSG' | translate) }"
+            ></sic-input>
           </div>
 
-          @if (showImpactSection() && impactData(); as impact) {
-            <div class="mt-3 space-y-3">
-              <!-- สรุปผลกระทบ -->
-              <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10 gap-2">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-blue-500 dark:text-blue-400">
-                    {{ impact.impactedRequirementIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_REQUIREMENT' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-purple-500 dark:text-purple-400">
-                    {{ impact.impactedSpecIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_SPECIFICATION' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-orange-500 dark:text-orange-400">
-                    {{ impact.impactedDiagramIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_DIAGRAM' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-emerald-500 dark:text-emerald-400">
-                    {{ impact.impactedTaskIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_TASK' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-yellow-500 dark:text-yellow-400">
-                    {{ impact.impactedTestCaseIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_TESTCASE' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-red-500 dark:text-red-400">
-                    {{ impact.impactedBugIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_BUG' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-sky-500 dark:text-sky-400">
-                    {{ impact.impactedManualIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_MANUAL' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-teal-500 dark:text-teal-400">
-                    {{ impact.impactedDeliveryIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_DELIVERY' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-pink-500 dark:text-pink-400">
-                    {{ impact.impactedInvoiceIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_INVOICE' | translate }}</div>
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
-                  <div class="text-xl font-bold text-amber-500 dark:text-amber-400">
-                    {{ impact.impactedMaTicketIds?.length || 0 }}
-                  </div>
-                  <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_MA' | translate }}</div>
-                </div>
-              </div>
+          <!-- Target Type Selection -->
+          <div>
+            <sic-combobox
+              [label]="'PMDT06_TARGET_TYPE_LABEL' | translate"
+              formControlName="targetType"
+              [options]="targetTypeOptions"
+              [required]="true"
+              [disabled]="isTargetLocked()"
+              [clearable]="!isTargetLocked()"
+              [placeholder]="'PMDT06_TARGET_TYPE_PLACEHOLDER' | translate"
+            ></sic-combobox>
+          </div>
 
-              <!-- รายละเอียดเพิ่มเติม -->
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_STATUS_LABEL_COLON' | translate }}</span>
-                  <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
-                    {{ getImpactStatusText(impact.analysisStatus) }}
+          <!-- Target Document Combobox -->
+          <div class="md:col-span-2">
+            <sic-combobox
+              [label]="'PMDT06_TARGET_DOC_LABEL' | translate"
+              formControlName="targetId"
+              [apiUrl]="targetDocumentApiUrl()"
+              [options]="targetDocumentOptions()"
+              [params]="{ targetType: selectedTargetType(), projectId: projectId }"
+              valueField="value"
+              textField="text"
+              [required]="true"
+              [disabled]="isTargetLocked()"
+              [clearable]="!isTargetLocked()"
+              [hint]="'PMDT06_TARGET_DOC_HINT' | translate"
+              [emptyText]="'PMDT06_TARGET_DOC_EMPTY' | translate"
+              [errorMessages]="{ required: ('PMDT06_TARGET_DOC_REQUIRED_MSG' | translate) }"
+            ></sic-combobox>
+          </div>
+
+          <!-- Title -->
+          <div class="md:col-span-2">
+            <sic-input
+              [label]="'PMDT06_CR_TITLE_LABEL' | translate"
+              formControlName="title"
+              [required]="true"
+              [placeholder]="'PMDT06_CR_TITLE_PLACEHOLDER' | translate"
+            ></sic-input>
+          </div>
+
+          <!-- Description -->
+          <div class="md:col-span-2">
+            <sic-tiptap-editor
+              [label]="'PMDT06_DESC_LABEL' | translate"
+              formControlName="description"
+              minHeight="140px"
+              [placeholder]="'PMDT06_DESC_PLACEHOLDER' | translate"
+            ></sic-tiptap-editor>
+          </div>
+
+          <!-- Change Reason & Priority -->
+          <div>
+            <sic-combobox
+              [label]="'PMDT06_CHANGE_REASON_LABEL' | translate"
+              formControlName="changeReason"
+              [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=PM&parameterCode=CHANGE_REASON'"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT06_CHANGE_REASON_PLACEHOLDER' | translate"
+              [required]="true"
+              [clearable]="false"
+            ></sic-combobox>
+          </div>
+
+          <div>
+            <sic-combobox
+              [label]="'PMDT06_COL_PRIORITY' | translate"
+              formControlName="priority"
+              [apiUrl]="environment.apiBaseUrl + '/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY'"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT06_PRIORITY_PLACEHOLDER' | translate"
+              [required]="true"
+              [errorMessages]="{ required: ('PMDT06_PRIORITY_REQUIRED_MSG' | translate) }"
+            ></sic-combobox>
+          </div>
+
+          <!-- Change Level (semver: PATCH / MINOR / MAJOR) -->
+          <div>
+            <sic-combobox
+              [label]="'PMDT06_CHANGE_LEVEL_LABEL' | translate"
+              formControlName="changeLevel"
+              [items]="changeLevelOptions"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT06_CHANGE_LEVEL_PLACEHOLDER' | translate"
+              [required]="true"
+              [errorMessages]="{ required: ('PMDT06_CHANGE_LEVEL_REQUIRED_MSG' | translate) }"
+            ></sic-combobox>
+            <p class="text-xs text-[var(--text-muted)] mt-1.5">{{ 'PMDT06_CHANGE_LEVEL_HINT' | translate }}</p>
+          </div>
+
+          <!-- Assignee (Multiple) -->
+          <div>
+            <sic-combobox
+              [label]="'PMDT06_ASSIGNEE_LABEL' | translate"
+              formControlName="assigneeIds"
+              [apiUrl]="environment.apiBaseUrl + '/api/business/combobox-members?businessId=' + businessId"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT06_ASSIGNEE_PLACEHOLDER' | translate"
+              [clearable]="true"
+              [multiple]="true"
+              (selectionChanged)="onAssigneeSelectionChanged($event)"
+            ></sic-combobox>
+          </div>
+
+          <!-- Attachments (Full Width) -->
+          <div class="md:col-span-2">
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+              {{ 'PMDT06_ATTACHMENTS_LABEL' | translate }}
+            </label>
+            <sic-upload
+              formControlName="attachmentGroupId"
+              [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+              [multiple]="true"
+              category="all"
+              [disabled]="isView"
+            ></sic-upload>
+          </div>
+
+          <!-- Hidden projectId -->
+          <input type="hidden" formControlName="projectId" />
+        </div>
+
+        <!-- Approval Flow Selection -->
+        <div class="border-t border-[var(--border)] pt-4 mt-2">
+          <div class="text-sm font-medium text-[var(--text-active)] mb-2 flex items-center gap-2">
+            <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+            {{ 'PMDT06_APPROVAL_PROCESS_LABEL' | translate }}
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <sic-combobox
+              [label]="'PMDT06_SELECT_FLOW_LABEL' | translate"
+              [apiUrl]="documenttypeapiUrl"
+              valueField="id"
+              textField="flowName"
+              [placeholder]="'PMDT06_SELECT_FLOW_LABEL' | translate"
+              [clearable]="true"
+              formControlName="approvalFlowId"
+              (selectionChanged)="onFlowChange($event)"
+            ></sic-combobox>
+          </div>
+
+          @if (!selectedFlowId && flows.length > 0) {
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              * {{ 'PMDT06_FLOW_HINT' | translate }}
+            </p>
+          }
+        </div>
+
+        <!-- ===== IMPACT ANALYSIS SECTION ===== -->
+        @if (form.get('targetId')?.value || impactData() || isEdit || isView) {
+          <div class="border-t border-[var(--border)] pt-4 mt-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-diagram-3 text-[var(--crm-primary)]"></i>
+                {{ 'PMDT06_IMPACT_TITLE' | translate }}
+                @if (isLoadingImpact()) {
+                  <span class="text-xs text-[var(--text-muted)] font-normal ml-2">
+                    <i class="bi bi-arrow-repeat animate-spin"></i> {{ 'PMDT06_ANALYZING_LABEL' | translate }}
                   </span>
-                  @if (impact.analyzedAt) {
-                    <span class="text-[var(--text-muted)] ml-2 text-xs">
-                      {{ impact.analyzedAt | sicDate: null : 'DD/MM/YYYY HH:mm' }}
-                    </span>
-                  }
-                </div>
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                  <span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_MANDAY_LABEL' | translate }}</span>
-                  <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} {{ 'PMDT06_DAY_UNIT' | translate }}</span>
-                  @if (impact.timelineImpact) {
-                    <span class="text-[var(--text-muted)] ml-4">
-                      {{ 'PMDT06_TIMELINE_LABEL' | translate }} {{ impact.timelineImpact }} {{ 'PMDT06_DAY_UNIT' | translate }}
-                    </span>
-                  }
-                </div>
-                @if (impact.aiRationale) {
-                  <div class="md:col-span-2 bg-gradient-to-r from-violet-50/80 to-indigo-50/80 dark:from-violet-950/20 dark:to-indigo-950/20 rounded-lg p-3 border border-violet-200 dark:border-violet-800/50 space-y-1">
-                    <div class="flex items-center gap-1.5 font-semibold text-xs text-violet-700 dark:text-violet-300">
-                      <i class="bi bi-stars"></i>
-                      <span>เหตุผลและการวิเคราะห์จาก AI (AI Semantic Rationale)</span>
-                    </div>
-                    <p class="text-xs text-[var(--text-active)] leading-relaxed whitespace-pre-line">{{ impact.aiRationale }}</p>
-                  </div>
                 }
-
-                @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
-                  <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
-                    <p class="font-medium text-[var(--text-active)] mb-1">{{ 'PMDT06_IMPACT_DETAIL_LABEL' | translate }}</p>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
-                      @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
-                      @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
-                      @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
-                      @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
-                      @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
-                    </div>
-                  </div>
+              </h4>
+              <div class="flex items-center gap-2">
+                @if (changeRequestId) {
+                  <button
+                    type="button"
+                    (click)="openHistoryModal()"
+                    class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--text-active)] bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--border)] flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+                    title="ดูประวัติการวิเคราะห์ผลกระทบทั้งหมด"
+                  >
+                    <i class="bi bi-clock-history text-indigo-500"></i>
+                    <span>ประวัติการวิเคราะห์</span>
+                  </button>
+                }
+                @if (!isView) {
+                  <button
+                    type="button"
+                    (click)="refreshImpact()"
+                    [disabled]="isLoadingImpact() || isAiAnalyzing()"
+                    class="text-xs text-[var(--crm-primary)] hover:underline flex items-center gap-1 disabled:opacity-50"
+                  >
+                    <i class="bi bi-arrow-repeat" [class.animate-spin]="isLoadingImpact()"></i>
+                    {{ 'PMDT06_REANALYZE_BTN' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    (click)="aiAnalyzeImpact()"
+                    [disabled]="isLoadingImpact() || isAiAnalyzing()"
+                    class="text-xs px-2.5 py-1 rounded-md font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                    title="ใช้อัจฉริยะ AI ช่วยคัดกรองเอกสารและประเมิน Manday"
+                  >
+                    <i class="bi bi-stars" [class.animate-spin]="isAiAnalyzing()"></i>
+                    <span>{{ isAiAnalyzing() ? 'กำลังวิเคราะห์ AI...' : 'วิเคราะห์ด้วย AI' }}</span>
+                  </button>
                 }
               </div>
+            </div>
 
-              <!-- ผลกระทบระดับโครงการและลูกค้า (Upstream Traceability) -->
-              @if ((impact.impactedCustomers && impact.impactedCustomers.length > 0) || (impact.impactedProjects && impact.impactedProjects.length > 0) || impact.impactedCustomerIds?.length || impact.impactedProjectIds?.length) {
-                <div class="bg-[var(--bg)] rounded-lg p-3 border border-indigo-200/70 dark:border-indigo-900/40 bg-indigo-50/20 dark:bg-indigo-950/10 space-y-2.5">
-                  <div class="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
-                    <i class="bi bi-diagram-3"></i>
-                    <span>{{ 'PMDT06_UPSTREAM_CONTEXT_LABEL' | translate }}</span>
+            @if (showImpactSection() && impactData(); as impact) {
+              <div class="mt-3 space-y-3">
+                <!-- สรุปผลกระทบ -->
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 xl:grid-cols-10 gap-2">
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-blue-500 dark:text-blue-400">
+                      {{ impact.impactedRequirementIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_REQUIREMENT' | translate }}</div>
                   </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-purple-500 dark:text-purple-400">
+                      {{ impact.impactedSpecIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_SPECIFICATION' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-orange-500 dark:text-orange-400">
+                      {{ impact.impactedDiagramIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_DIAGRAM' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-emerald-500 dark:text-emerald-400">
+                      {{ impact.impactedTaskIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_TASK' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-yellow-500 dark:text-yellow-400">
+                      {{ impact.impactedTestCaseIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_TESTCASE' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-red-500 dark:text-red-400">
+                      {{ impact.impactedBugIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_BUG' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-sky-500 dark:text-sky-400">
+                      {{ impact.impactedManualIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_MANUAL' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-teal-500 dark:text-teal-400">
+                      {{ impact.impactedDeliveryIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_DELIVERY' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-pink-500 dark:text-pink-400">
+                      {{ impact.impactedInvoiceIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_INVOICE' | translate }}</div>
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)] text-center">
+                    <div class="text-xl font-bold text-amber-500 dark:text-amber-400">
+                      {{ impact.impactedMaTicketIds?.length || 0 }}
+                    </div>
+                    <div class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_MA' | translate }}</div>
+                  </div>
+                </div>
 
-                  <!-- Impacted Customers -->
-                  @if ((impact.impactedCustomers && impact.impactedCustomers.length > 0) || impact.impactedCustomerIds?.length) {
-                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                      <span class="text-[var(--text-muted)] font-medium flex items-center gap-1">
-                        <i class="bi bi-building"></i> {{ 'PMDT06_IMPACT_CUSTOMERS_LABEL' | translate }}:
+                <!-- รายละเอียดเพิ่มเติม -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                    <span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_STATUS_LABEL_COLON' | translate }}</span>
+                    <span [class]="getImpactStatusClass(impact.analysisStatus) + ' ml-2 px-2 py-0.5 rounded-full text-xs'">
+                      {{ getImpactStatusText(impact.analysisStatus) }}
+                    </span>
+                    @if (impact.analyzedAt) {
+                      <span class="text-[var(--text-muted)] ml-2 text-xs">
+                        {{ impact.analyzedAt | sicDate: null : 'DD/MM/YYYY HH:mm' }}
                       </span>
-                      @if (impact.impactedCustomers && impact.impactedCustomers.length > 0) {
-                        @for (cust of impact.impactedCustomers; track cust.id) {
-                          <span (click)="openItemDetail('CUSTOMER', cust.id)"
-                                class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded text-xs text-amber-700 dark:text-amber-400 font-medium">
-                            <i class="bi bi-briefcase text-[0.7rem]"></i>
-                            {{ cust.name ? (cust.code ? cust.code + ' - ' + cust.name : cust.name) : (cust.code || (cust.id | slice:0:8)) }}
-                          </span>
-                        }
-                      } @else {
-                        @for (id of impact.impactedCustomerIds; track id) {
-                          <span (click)="openItemDetail('CUSTOMER', id)"
-                                class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded text-xs text-amber-700 dark:text-amber-400 font-medium">
-                            <i class="bi bi-briefcase text-[0.7rem]"></i> {{ id | slice:0:8 }}
-                          </span>
-                        }
-                      }
+                    }
+                  </div>
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                    <span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_MANDAY_LABEL' | translate }}</span>
+                    <span class="text-[var(--text-active)] ml-2">{{ impact.mandayImpact || 0 }} {{ 'PMDT06_DAY_UNIT' | translate }}</span>
+                    @if (impact.timelineImpact) {
+                      <span class="text-[var(--text-muted)] ml-4">
+                        {{ 'PMDT06_TIMELINE_LABEL' | translate }} {{ impact.timelineImpact }} {{ 'PMDT06_DAY_UNIT' | translate }}
+                      </span>
+                    }
+                  </div>
+                  @if (impact.aiRationale) {
+                    <div class="md:col-span-2 bg-gradient-to-r from-violet-50/80 to-indigo-50/80 dark:from-violet-950/20 dark:to-indigo-950/20 rounded-lg p-3 border border-violet-200 dark:border-violet-800/50 space-y-1">
+                      <div class="flex items-center gap-1.5 font-semibold text-xs text-violet-700 dark:text-violet-300">
+                        <i class="bi bi-stars"></i>
+                        <span>เหตุผลและการวิเคราะห์จาก AI (AI Semantic Rationale)</span>
+                      </div>
+                      <p class="text-xs text-[var(--text-active)] leading-relaxed whitespace-pre-line">{{ impact.aiRationale }}</p>
                     </div>
                   }
 
-                  <!-- Impacted Projects -->
-                  @if ((impact.impactedProjects && impact.impactedProjects.length > 0) || impact.impactedProjectIds?.length) {
-                    <div class="flex flex-wrap items-center gap-1.5 text-xs">
-                      <span class="text-[var(--text-muted)] font-medium flex items-center gap-1">
-                        <i class="bi bi-folder2-open"></i> {{ 'PMDT06_IMPACT_PROJECTS_LABEL' | translate }}:
-                      </span>
-                      @if (impact.impactedProjects && impact.impactedProjects.length > 0) {
-                        @for (proj of impact.impactedProjects; track proj.id) {
-                          <span (click)="openItemDetail('PROJECT', proj.id)"
-                                class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded text-xs text-indigo-700 dark:text-indigo-400 font-medium">
-                            <i class="bi bi-folder-check text-[0.7rem]"></i>
-                            <span>{{ proj.name ? (proj.code ? proj.code + ' - ' + proj.name : proj.name) : (proj.code || (proj.id | slice:0:8)) }}</span>
-                            @if (proj.status) {
-                              <span class="text-[0.65rem] px-1 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-semibold">{{ proj.status }}</span>
+                  @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
+                    <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
+                      <p class="font-medium text-[var(--text-active)] mb-1">{{ 'PMDT06_IMPACT_DETAIL_LABEL' | translate }}</p>
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
+                        @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
+                        @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
+                        @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
+                        @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
+                        @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }
+                      </div>
+                    </div>
+                  }
+                </div>
+
+                <!-- ผลกระทบระดับโครงการและลูกค้า (Upstream Traceability) -->
+                @if ((impact.impactedCustomers && impact.impactedCustomers.length > 0) || (impact.impactedProjects && impact.impactedProjects.length > 0) || impact.impactedCustomerIds?.length || impact.impactedProjectIds?.length) {
+                  <div class="bg-[var(--bg)] rounded-lg p-3 border border-indigo-200/70 dark:border-indigo-900/40 bg-indigo-50/20 dark:bg-indigo-950/10 space-y-2.5">
+                    <div class="flex items-center gap-1.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300">
+                      <i class="bi bi-diagram-3"></i>
+                      <span>{{ 'PMDT06_UPSTREAM_CONTEXT_LABEL' | translate }}</span>
+                    </div>
+
+                    <!-- Impacted Customers -->
+                    @if ((impact.impactedCustomers && impact.impactedCustomers.length > 0) || impact.impactedCustomerIds?.length) {
+                      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span class="text-[var(--text-muted)] font-medium flex items-center gap-1">
+                          <i class="bi bi-building"></i> {{ 'PMDT06_IMPACT_CUSTOMERS_LABEL' | translate }}:
+                        </span>
+                        @if (impact.impactedCustomers && impact.impactedCustomers.length > 0) {
+                          @for (cust of impact.impactedCustomers; track cust.id) {
+                            <span (click)="openItemDetail('CUSTOMER', cust.id)"
+                                  class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded text-xs text-amber-700 dark:text-amber-400 font-medium">
+                              <i class="bi bi-briefcase text-[0.7rem]"></i>
+                              {{ cust.name ? (cust.code ? cust.code + ' - ' + cust.name : cust.name) : (cust.code || (cust.id | slice:0:8)) }}
+                            </span>
+                          }
+                        } @else {
+                          @for (id of impact.impactedCustomerIds; track id) {
+                            <span (click)="openItemDetail('CUSTOMER', id)"
+                                  class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 px-2 py-0.5 rounded text-xs text-amber-700 dark:text-amber-400 font-medium">
+                              <i class="bi bi-briefcase text-[0.7rem]"></i> {{ id | slice:0:8 }}
+                            </span>
+                          }
+                        }
+                      </div>
+                    }
+
+                    <!-- Impacted Projects -->
+                    @if ((impact.impactedProjects && impact.impactedProjects.length > 0) || impact.impactedProjectIds?.length) {
+                      <div class="flex flex-wrap items-center gap-1.5 text-xs">
+                        <span class="text-[var(--text-muted)] font-medium flex items-center gap-1">
+                          <i class="bi bi-folder2-open"></i> {{ 'PMDT06_IMPACT_PROJECTS_LABEL' | translate }}:
+                        </span>
+                        @if (impact.impactedProjects && impact.impactedProjects.length > 0) {
+                          @for (proj of impact.impactedProjects; track proj.id) {
+                            <span (click)="openItemDetail('PROJECT', proj.id)"
+                                  class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1.5 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded text-xs text-indigo-700 dark:text-indigo-400 font-medium">
+                              <i class="bi bi-folder-check text-[0.7rem]"></i>
+                              <span>{{ proj.name ? (proj.code ? proj.code + ' - ' + proj.name : proj.name) : (proj.code || (proj.id | slice:0:8)) }}</span>
+                              @if (proj.status) {
+                                <span class="text-[0.65rem] px-1 py-0.2 rounded bg-indigo-100 dark:bg-indigo-900/60 text-indigo-800 dark:text-indigo-300 font-semibold">{{ proj.status }}</span>
+                              }
+                            </span>
+                          }
+                        } @else {
+                          @for (id of impact.impactedProjectIds; track id) {
+                            <span (click)="openItemDetail('PROJECT', id)"
+                                  class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded text-xs text-indigo-700 dark:text-indigo-400 font-medium">
+                              <i class="bi bi-folder text-[0.7rem]"></i> {{ id | slice:0:8 }}
+                            </span>
+                          }
+                        }
+                      </div>
+                    }
+                  </div>
+                }
+
+                @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length || impact.impactedTestCaseIds?.length || impact.impactedBugIds?.length || impact.impactedManualIds?.length || impact.impactedDeliveryIds?.length || impact.impactedInvoiceIds?.length || impact.impactedMaTicketIds?.length) {
+                  <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
+                    <p class="font-medium text-[var(--text-active)]">{{ 'PMDT06_IMPACTED_DOCS_LABEL' | translate }}</p>
+                    <div class="flex flex-wrap gap-1 mt-1">
+                      @if (impact.impactedRequirements && impact.impactedRequirements.length > 0) {
+                        @for (req of impact.impactedRequirements; track req.id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
+                            <span (click)="openItemDetail('REQ', req.id)" class="cursor-pointer hover:underline">
+                              REQ: {{ req.name ? (req.code ? req.code + ' - ' + req.name : req.name) : (req.code || (req.id | slice:0:8)) }}
+                            </span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('REQ', req.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
                       } @else {
-                        @for (id of impact.impactedProjectIds; track id) {
-                          <span (click)="openItemDetail('PROJECT', id)"
-                                class="cursor-pointer hover:opacity-80 transition-all hover:scale-105 active:scale-95 select-none inline-flex items-center gap-1 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800/60 px-2 py-0.5 rounded text-xs text-indigo-700 dark:text-indigo-400 font-medium">
-                            <i class="bi bi-folder text-[0.7rem]"></i> {{ id | slice:0:8 }}
+                        @for (id of impact.impactedRequirementIds; track id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
+                            <span (click)="openItemDetail('REQ', id)" class="cursor-pointer hover:underline">REQ: {{ id | slice:0:8 }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('REQ', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
                           </span>
                         }
+                      }
+
+                      @if (impact.impactedSpecs && impact.impactedSpecs.length > 0) {
+                        @for (spec of impact.impactedSpecs; track spec.id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
+                            <span (click)="openItemDetail('SPEC', spec.id)" class="cursor-pointer hover:underline">
+                              SPEC: {{ spec.name ? (spec.code ? spec.code + ' - ' + spec.name : spec.name) : (spec.code || (spec.id | slice:0:8)) }}
+                            </span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('SPEC', spec.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      } @else {
+                        @for (id of impact.impactedSpecIds; track id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
+                            <span (click)="openItemDetail('SPEC', id)" class="cursor-pointer hover:underline">SPEC: {{ id | slice:0:8 }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('SPEC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      }
+
+                      @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
+                        @for (diag of impact.impactedDiagrams; track diag.id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400 font-medium">
+                            <span (click)="openItemDetail('DIAGRAM', diag.id)" class="cursor-pointer hover:underline">DIAGRAM: {{ diag.name }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('DIAGRAM', diag.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      } @else {
+                        @for (id of impact.impactedDiagramIds; track id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400">
+                            <span (click)="openItemDetail('DIAGRAM', id)" class="cursor-pointer hover:underline">DIAGRAM: {{ id | slice:0:8 }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('DIAGRAM', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      }
+
+                      @if (impact.impactedTasks && impact.impactedTasks.length > 0) {
+                        @for (task of impact.impactedTasks; track task.id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
+                            <span (click)="openItemDetail('TASK', task.id)" class="cursor-pointer hover:underline">
+                              TASK: {{ task.name ? (task.code ? task.code + ' - ' + task.name : task.name) : (task.code || (task.id | slice:0:8)) }}
+                            </span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('TASK', task.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      } @else {
+                        @for (id of impact.impactedTaskIds; track id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
+                            <span (click)="openItemDetail('TASK', id)" class="cursor-pointer hover:underline">TASK: {{ id | slice:0:8 }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('TASK', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      }
+
+                      @if (impact.impactedTestCases && impact.impactedTestCases.length > 0) {
+                        @for (tc of impact.impactedTestCases; track tc.id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
+                            <span (click)="openItemDetail('TC', tc.id)" class="cursor-pointer hover:underline">
+                              TC: {{ tc.name ? (tc.code ? tc.code + ' - ' + tc.name : tc.name) : (tc.code || (tc.id | slice:0:8)) }}
+                            </span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('TC', tc.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      } @else {
+                        @for (id of impact.impactedTestCaseIds; track id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
+                            <span (click)="openItemDetail('TC', id)" class="cursor-pointer hover:underline">TC: {{ id | slice:0:8 }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('TC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      }
+
+                      @if (impact.impactedBugs && impact.impactedBugs.length > 0) {
+                        @for (bug of impact.impactedBugs; track bug.id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
+                            <span (click)="openItemDetail('BUG', bug.id)" class="cursor-pointer hover:underline">
+                              BUG: {{ bug.name ? (bug.code ? bug.code + ' - ' + bug.name : bug.name) : (bug.code || (bug.id | slice:0:8)) }}
+                            </span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('BUG', bug.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      } @else {
+                        @for (id of impact.impactedBugIds; track id) {
+                          <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
+                            <span (click)="openItemDetail('BUG', id)" class="cursor-pointer hover:underline">BUG: {{ id | slice:0:8 }}</span>
+                            @if (!isView) {
+                              <button type="button" (click)="excludeItem('BUG', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            }
+                          </span>
+                        }
+                      }
+
+                      @for (x of impact.impactedManuals; track x.id) {
+                        <span class="inline-flex items-center gap-1 select-none bg-sky-50 dark:bg-sky-900/20 px-2 py-0.5 rounded text-[0.6rem] text-sky-600 dark:text-sky-400">
+                          <span>MANUAL: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('MANUAL', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
+                      }
+                      @for (x of impact.impactedDeliveries; track x.id) {
+                        <span class="inline-flex items-center gap-1 select-none bg-teal-50 dark:bg-teal-900/20 px-2 py-0.5 rounded text-[0.6rem] text-teal-600 dark:text-teal-400">
+                          <span>DELIVERY: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('DELIVERY', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
+                      }
+                      @for (x of impact.impactedInvoices; track x.id) {
+                        <span class="inline-flex items-center gap-1 select-none bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded text-[0.6rem] text-pink-600 dark:text-pink-400">
+                          <span>INVOICE: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('INVOICE', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
+                      }
+                      @for (x of impact.impactedMaTickets; track x.id) {
+                        <span class="inline-flex items-center gap-1 select-none bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">
+                          <span>MA: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
+                          @if (!isView) {
+                            <button type="button" (click)="excludeItem('MA', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                          }
+                        </span>
                       }
                     </div>
-                  }
-                </div>
-              }
-
-              @if (impact.impactedRequirementIds?.length || impact.impactedSpecIds?.length || impact.impactedDiagramIds?.length || impact.impactedTaskIds?.length || impact.impactedTestCaseIds?.length || impact.impactedBugIds?.length || impact.impactedManualIds?.length || impact.impactedDeliveryIds?.length || impact.impactedInvoiceIds?.length || impact.impactedMaTicketIds?.length) {
-                <div class="text-xs text-[var(--text-muted)] border-t border-[var(--border)] pt-2">
-                  <p class="font-medium text-[var(--text-active)]">{{ 'PMDT06_IMPACTED_DOCS_LABEL' | translate }}</p>
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    @if (impact.impactedRequirements && impact.impactedRequirements.length > 0) {
-                      @for (req of impact.impactedRequirements; track req.id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
-                          <span (click)="openItemDetail('REQ', req.id)" class="cursor-pointer hover:underline">
-                            REQ: {{ req.name ? (req.code ? req.code + ' - ' + req.name : req.name) : (req.code || (req.id | slice:0:8)) }}
-                          </span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('REQ', req.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedRequirementIds; track id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
-                          <span (click)="openItemDetail('REQ', id)" class="cursor-pointer hover:underline">REQ: {{ id | slice:0:8 }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('REQ', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    }
-
-                    @if (impact.impactedSpecs && impact.impactedSpecs.length > 0) {
-                      @for (spec of impact.impactedSpecs; track spec.id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
-                          <span (click)="openItemDetail('SPEC', spec.id)" class="cursor-pointer hover:underline">
-                            SPEC: {{ spec.name ? (spec.code ? spec.code + ' - ' + spec.name : spec.name) : (spec.code || (spec.id | slice:0:8)) }}
-                          </span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('SPEC', spec.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedSpecIds; track id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
-                          <span (click)="openItemDetail('SPEC', id)" class="cursor-pointer hover:underline">SPEC: {{ id | slice:0:8 }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('SPEC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    }
-
-                    @if (impact.impactedDiagrams && impact.impactedDiagrams.length > 0) {
-                      @for (diag of impact.impactedDiagrams; track diag.id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400 font-medium">
-                          <span (click)="openItemDetail('DIAGRAM', diag.id)" class="cursor-pointer hover:underline">DIAGRAM: {{ diag.name }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('DIAGRAM', diag.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedDiagramIds; track id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400">
-                          <span (click)="openItemDetail('DIAGRAM', id)" class="cursor-pointer hover:underline">DIAGRAM: {{ id | slice:0:8 }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('DIAGRAM', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    }
-
-                    @if (impact.impactedTasks && impact.impactedTasks.length > 0) {
-                      @for (task of impact.impactedTasks; track task.id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
-                          <span (click)="openItemDetail('TASK', task.id)" class="cursor-pointer hover:underline">
-                            TASK: {{ task.name ? (task.code ? task.code + ' - ' + task.name : task.name) : (task.code || (task.id | slice:0:8)) }}
-                          </span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('TASK', task.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedTaskIds; track id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
-                          <span (click)="openItemDetail('TASK', id)" class="cursor-pointer hover:underline">TASK: {{ id | slice:0:8 }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('TASK', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    }
-
-                    @if (impact.impactedTestCases && impact.impactedTestCases.length > 0) {
-                      @for (tc of impact.impactedTestCases; track tc.id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
-                          <span (click)="openItemDetail('TC', tc.id)" class="cursor-pointer hover:underline">
-                            TC: {{ tc.name ? (tc.code ? tc.code + ' - ' + tc.name : tc.name) : (tc.code || (tc.id | slice:0:8)) }}
-                          </span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('TC', tc.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedTestCaseIds; track id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
-                          <span (click)="openItemDetail('TC', id)" class="cursor-pointer hover:underline">TC: {{ id | slice:0:8 }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('TC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    }
-
-                    @if (impact.impactedBugs && impact.impactedBugs.length > 0) {
-                      @for (bug of impact.impactedBugs; track bug.id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
-                          <span (click)="openItemDetail('BUG', bug.id)" class="cursor-pointer hover:underline">
-                            BUG: {{ bug.name ? (bug.code ? bug.code + ' - ' + bug.name : bug.name) : (bug.code || (bug.id | slice:0:8)) }}
-                          </span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('BUG', bug.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    } @else {
-                      @for (id of impact.impactedBugIds; track id) {
-                        <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
-                          <span (click)="openItemDetail('BUG', id)" class="cursor-pointer hover:underline">BUG: {{ id | slice:0:8 }}</span>
-                          @if (!isView) {
-                            <button type="button" (click)="excludeItem('BUG', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                          }
-                        </span>
-                      }
-                    }
-
-                    @for (x of impact.impactedManuals; track x.id) {
-                      <span class="inline-flex items-center gap-1 select-none bg-sky-50 dark:bg-sky-900/20 px-2 py-0.5 rounded text-[0.6rem] text-sky-600 dark:text-sky-400">
-                        <span>MANUAL: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
-                        @if (!isView) {
-                          <button type="button" (click)="excludeItem('MANUAL', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                        }
-                      </span>
-                    }
-                    @for (x of impact.impactedDeliveries; track x.id) {
-                      <span class="inline-flex items-center gap-1 select-none bg-teal-50 dark:bg-teal-900/20 px-2 py-0.5 rounded text-[0.6rem] text-teal-600 dark:text-teal-400">
-                        <span>DELIVERY: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
-                        @if (!isView) {
-                          <button type="button" (click)="excludeItem('DELIVERY', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                        }
-                      </span>
-                    }
-                    @for (x of impact.impactedInvoices; track x.id) {
-                      <span class="inline-flex items-center gap-1 select-none bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded text-[0.6rem] text-pink-600 dark:text-pink-400">
-                        <span>INVOICE: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
-                        @if (!isView) {
-                          <button type="button" (click)="excludeItem('INVOICE', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                        }
-                      </span>
-                    }
-                    @for (x of impact.impactedMaTickets; track x.id) {
-                      <span class="inline-flex items-center gap-1 select-none bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">
-                        <span>MA: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
-                        @if (!isView) {
-                          <button type="button" (click)="excludeItem('MA', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
-                        }
-                      </span>
-                    }
                   </div>
-                </div>
-              }
-            </div>
-          } @else if (!isLoadingImpact()) {
-            <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
-              <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
-              <p class="text-sm">{{ 'PMDT06_NO_IMPACT_DATA_MSG' | translate }}</p>
-              @if (!isView) {
+                }
+              </div>
+            } @else if (!isLoadingImpact()) {
+              <div class="mt-3 text-center py-6 text-[var(--text-muted)] border border-dashed border-[var(--border)] rounded-lg">
+                <i class="bi bi-inbox text-3xl block mb-2 opacity-30"></i>
+                <p class="text-sm">{{ 'PMDT06_NO_IMPACT_DATA_MSG' | translate }}</p>
+                @if (!isView) {
+                  <button
+                    type="button"
+                    (click)="refreshImpact()"
+                    class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+                  >
+                    {{ 'PMDT06_CLICK_AUTO_ANALYZE_BTN' | translate }}
+                  </button>
+                }
+              </div>
+            }
+          </div>
+        }
+
+        @if (isEdit && changeRequestId) {
+          <sic-trace-link-panel
+            entityType="CHANGE_REQUEST"
+            [entityId]="changeRequestId"
+            [projectId]="projectId"
+          ></sic-trace-link-panel>
+        }
+
+        <!-- Actions -->
+        <div class="flex items-center justify-between pt-2 border-t border-[var(--border)]">
+          <div>
+            @if (changeRequestId) {
+              <div class="flex items-center gap-2">
+                @if (currentStatus === 'DRAFT' || currentStatus === 'REJECTED') {
+                  <sic-button
+                    type="button"
+                    variant="solid" color="danger"
+                    (click)="deleteChangeRequest()"
+                  >
+                    <i class="bi bi-trash me-1"></i>
+                    {{ 'PMDT06_DELETE_BTN' | translate }}
+                  </sic-button>
+                }
                 <button
                   type="button"
-                  (click)="refreshImpact()"
-                  class="mt-2 text-xs text-[var(--crm-primary)] hover:underline"
+                  (click)="exportPdf()"
+                  class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--text)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] shadow-sm transition-all cursor-pointer"
                 >
-                  {{ 'PMDT06_CLICK_AUTO_ANALYZE_BTN' | translate }}
+                  <i class="bi bi-printer text-sm text-[var(--crm-primary)]"></i>
+                  <span>{{ 'PMDT06_PRINT_DOC_BTN' | translate }}</span>
                 </button>
-              }
-            </div>
-          }
-        </div>
-      }
+              </div>
+            }
+          </div>
 
-      @if (isEdit && changeRequestId) {
-        <sic-trace-link-panel
-          entityType="CHANGE_REQUEST"
-          [entityId]="changeRequestId"
-          [projectId]="projectId"
-        ></sic-trace-link-panel>
-      }
-
-      <!-- Actions -->
-      <div class="flex items-center justify-between pt-2 border-t border-[var(--border)]">
-        <div>
-          @if (changeRequestId) {
-            <div class="flex items-center gap-2">
-              @if (currentStatus === 'DRAFT' || currentStatus === 'REJECTED') {
-                <sic-button
-                  type="button"
-                  variant="solid" color="danger"
-                  (click)="deleteChangeRequest()"
-                >
-                  <i class="bi bi-trash me-1"></i>
-                  {{ 'PMDT06_DELETE_BTN' | translate }}
-                </sic-button>
-              }
-              <sic-live-pdf-button kind="change-request" [body]="pdfPreviewBody()"></sic-live-pdf-button>
-              <button
-                type="button"
-                (click)="exportPdf()"
-                class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--text)] bg-[var(--bg)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] shadow-sm transition-all cursor-pointer"
-              >
-                <i class="bi bi-printer text-sm text-[var(--crm-primary)]"></i>
-                <span>{{ 'PMDT06_PRINT_DOC_BTN' | translate }}</span>
-              </button>
-            </div>
-          }
+          <div class="flex items-center gap-3">
+            @if (isView) {
+              <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_BACK_BTN' | translate }}</sic-button>
+            } @else {
+              <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_CANCEL_BTN' | translate }}</sic-button>
+              <sic-button (click)="save()" type="button" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving">
+                {{ getSaveButtonLabel() }}
+              </sic-button>
+            }
+          </div>
         </div>
-
-        <div class="flex items-center gap-3">
-          @if (isView) {
-            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_BACK_BTN' | translate }}</sic-button>
-          } @else {
-            <sic-button type="button" variant="outline" color="primary" (click)="cancel()">{{ 'PMDT06_CANCEL_BTN' | translate }}</sic-button>
-            <sic-button (click)="save()" type="button" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving">
-              {{ getSaveButtonLabel() }}
-            </sic-button>
-          }
-        </div>
-      </div>
-    </form>
+      </form>
+  </sic-doc-split>
 </div>
 <!-- Modal: ประวัติการวิเคราะห์ผลกระทบ (Impact Analysis History) -->
 @if (showHistoryModal()) {

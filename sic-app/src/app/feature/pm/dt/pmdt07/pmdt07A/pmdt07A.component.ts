@@ -28,7 +28,6 @@ import { PmSpecificationModel } from '../pmdt07.model';
 import { Pmdt07AResolvedPageData } from '../pmdt07.resolver';
 import { Pmdt07AForm } from './pmdt07A.form';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
-import { Pmdt07PreviewComponent } from '../pmdt07-preview/pmdt07-preview.component';
 import { SpecificationExportService } from '../specification-export.service';
 import { ApprovalService } from '../../pmdt03/approval.service';
 import type { ApprovalFlow } from '../../pmdt03/approval.model';
@@ -64,7 +63,6 @@ import { SicJasperLivePreviewComponent } from '../../../../../core/component/sic
         SicTiptapEditorComponent,
         SicUploadComponent,
         SicCheckboxComponent,
-        Pmdt07PreviewComponent,
         SicTraceLinkPanelComponent,
     SicCrHistoryPanelComponent,
         TranslateModule,
@@ -737,8 +735,6 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
         return null;
     }
 
-    // preview pane: the quick HTML preview, or the real Jasper PDF of the unsaved form (refreshed when typing pauses)
-    previewKind: 'html' | 'pdf' = 'html';
 
     pdfPreviewBody(): any {
         const data = this.prepareSubmitData();
@@ -834,11 +830,6 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     setViewMode(mode: 'edit' | 'split' | 'preview'): void {
         this.viewMode = mode;
         this.cdr.markForCheck();
-    }
-
-    // ===== Preview Data =====
-    getPreviewData(): PmSpecificationModel {
-        return this.prepareSubmitData();
     }
 
     // ===== Export (JasperReports PDF) =====

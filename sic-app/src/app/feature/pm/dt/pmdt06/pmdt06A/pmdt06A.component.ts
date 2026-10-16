@@ -38,12 +38,12 @@ import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
-import { SicLivePdfButtonComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-live-pdf-button.component';
+import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-split.component';
 
 @Component({
     selector: 'app-pmdt06a',
     standalone: true,
-    imports: [SicLivePdfButtonComponent, 
+    imports: [SicDocSplitComponent, 
         CommonModule,
         FormsModule,
         ReactiveFormsModule,
@@ -244,7 +244,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         this.selectedTargetType() ? environment.apiBaseUrl + '/api/pm/change-requests/target-combobox' : '',
     );
 
-    /** the form as it would be saved, for the live Jasper PDF (sic-live-pdf-button) */
+    /** the form as it would be saved, for the live Jasper PDF (sic-doc-split) */
     pdfPreviewBody(): any {
       return { ...this.form.getRawValue(), id: this.changeRequestId || this.form.getRawValue().id || null };
     }

@@ -10,7 +10,7 @@
 
 <!-- ===== FORM ===== -->
 @if (!isLoading && form) {
-  <div class="max-w-4xl mx-auto p-0.5 space-y-6">
+  <div class="max-w-6xl mx-auto p-0.5 space-y-6">
     <!-- Header with Back Button and Badges -->
     <div class="flex flex-wrap items-center justify-between gap-4 pb-2 border-b border-[var(--border)]">
       <div class="flex items-center gap-3">
@@ -43,7 +43,6 @@
       </div>
 
       <div class="flex items-center gap-2">
-        <sic-live-pdf-button kind="contract" [body]="pdfPreviewBody()"></sic-live-pdf-button>
         @if (!isView && !isLocked) {
           <button
             type="button"
@@ -122,237 +121,239 @@
 
     <sic-cr-history-panel targetType="CONTRACT" [targetId]="contractId"></sic-cr-history-panel>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
-      <!-- Single Unified Form Card -->
-      <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <!-- Customer -->
-          <div>
-            <sic-combobox
-              [label]="'PMRT04A_CUSTOMER_LABEL' | translate"
-              formControlName="customerId"
-              [apiUrl]="apiGetCustomersUrl"
-              valueField="value"
-              textField="text"
-              [required]="true"
-              [placeholder]="'PMRT04A_CUSTOMER_PLACEHOLDER' | translate"
-              [errorMessages]="{ required: ('PMRT04A_CUSTOMER_REQUIRED' | translate) }"
-              (selectionChanged)="onCustomerSelected($event)"
-            ></sic-combobox>
-          </div>
+    <sic-doc-split kind="contract" [body]="pdfPreviewBody()">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-6">
+        <!-- Single Unified Form Card -->
+        <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <!-- Customer -->
+            <div>
+              <sic-combobox
+                [label]="'PMRT04A_CUSTOMER_LABEL' | translate"
+                formControlName="customerId"
+                [apiUrl]="apiGetCustomersUrl"
+                valueField="value"
+                textField="text"
+                [required]="true"
+                [placeholder]="'PMRT04A_CUSTOMER_PLACEHOLDER' | translate"
+                [errorMessages]="{ required: ('PMRT04A_CUSTOMER_REQUIRED' | translate) }"
+                (selectionChanged)="onCustomerSelected($event)"
+              ></sic-combobox>
+            </div>
 
-          <!-- Project -->
-          <div>
-            <sic-combobox
-              [label]="'PMRT04A_PROJECT_LABEL' | translate"
-              formControlName="projectId"
-              [apiUrl]="apiGetProjectsUrl"
-              valueField="value"
-              textField="text"
-              [required]="true"
-              [placeholder]="'PMRT04A_PROJECT_PLACEHOLDER' | translate"
-              [errorMessages]="{ required: ('PMRT04A_PROJECT_REQUIRED' | translate) }"
-              (selectionChanged)="onProjectSelected($event)"
-            ></sic-combobox>
-          </div>
+            <!-- Project -->
+            <div>
+              <sic-combobox
+                [label]="'PMRT04A_PROJECT_LABEL' | translate"
+                formControlName="projectId"
+                [apiUrl]="apiGetProjectsUrl"
+                valueField="value"
+                textField="text"
+                [required]="true"
+                [placeholder]="'PMRT04A_PROJECT_PLACEHOLDER' | translate"
+                [errorMessages]="{ required: ('PMRT04A_PROJECT_REQUIRED' | translate) }"
+                (selectionChanged)="onProjectSelected($event)"
+              ></sic-combobox>
+            </div>
 
-          <!-- Contract No -->
-          <div>
-            <sic-input
-              [label]="'PMRT04A_CONTRACT_NO_LABEL' | translate"
-              formControlName="contractNo"
-              [required]="true"
-              [placeholder]="'PMRT04A_CONTRACT_NO_PLACEHOLDER' | translate"
-              [errorMessages]="{
-                required: 'PMRT04A_CONTRACT_NO_REQUIRED' | translate,
-                maxlength: 'PMRT04A_CONTRACT_NO_MAXLENGTH' | translate
-              }"
-            ></sic-input>
-          </div>
+            <!-- Contract No -->
+            <div>
+              <sic-input
+                [label]="'PMRT04A_CONTRACT_NO_LABEL' | translate"
+                formControlName="contractNo"
+                [required]="true"
+                [placeholder]="'PMRT04A_CONTRACT_NO_PLACEHOLDER' | translate"
+                [errorMessages]="{
+                  required: 'PMRT04A_CONTRACT_NO_REQUIRED' | translate,
+                  maxlength: 'PMRT04A_CONTRACT_NO_MAXLENGTH' | translate
+                }"
+              ></sic-input>
+            </div>
 
-          <!-- Contract Type -->
-          <div>
-            <sic-combobox
-              [label]="'PMRT04A_CONTRACT_TYPE_LABEL' | translate"
-              formControlName="contractType"
-              [items]="contractTypeOptions"
-              valueField="value"
-              textField="label"
-              [required]="true"
-              [placeholder]="'PMRT04A_CONTRACT_TYPE_PLACEHOLDER' | translate"
-              [errorMessages]="{ required: 'PMRT04A_CONTRACT_TYPE_REQUIRED' | translate }"
-            ></sic-combobox>
-          </div>
+            <!-- Contract Type -->
+            <div>
+              <sic-combobox
+                [label]="'PMRT04A_CONTRACT_TYPE_LABEL' | translate"
+                formControlName="contractType"
+                [items]="contractTypeOptions"
+                valueField="value"
+                textField="label"
+                [required]="true"
+                [placeholder]="'PMRT04A_CONTRACT_TYPE_PLACEHOLDER' | translate"
+                [errorMessages]="{ required: 'PMRT04A_CONTRACT_TYPE_REQUIRED' | translate }"
+              ></sic-combobox>
+            </div>
 
-          <!-- Start Date -->
-          <div>
-            <sic-datepicker
-              [label]="'PMRT04A_START_DATE_LABEL' | translate"
-              formControlName="startDate"
-              [required]="true"
-              [placeholder]="'PMRT04A_START_DATE_PLACEHOLDER' | translate"
-              dateFormat="DD/MM/YYYY"
-              [errorMessages]="{ required: 'PMRT04A_START_DATE_REQUIRED' | translate }"
-            ></sic-datepicker>
-          </div>
+            <!-- Start Date -->
+            <div>
+              <sic-datepicker
+                [label]="'PMRT04A_START_DATE_LABEL' | translate"
+                formControlName="startDate"
+                [required]="true"
+                [placeholder]="'PMRT04A_START_DATE_PLACEHOLDER' | translate"
+                dateFormat="DD/MM/YYYY"
+                [errorMessages]="{ required: 'PMRT04A_START_DATE_REQUIRED' | translate }"
+              ></sic-datepicker>
+            </div>
 
-          <!-- End Date -->
-          <div>
-            <sic-datepicker
-              [label]="'PMRT04A_END_DATE_LABEL' | translate"
-              formControlName="endDate"
-              [required]="true"
-              [placeholder]="'PMRT04A_END_DATE_PLACEHOLDER' | translate"
-              dateFormat="DD/MM/YYYY"
-              [errorMessages]="{ required: 'PMRT04A_END_DATE_REQUIRED' | translate }"
-            ></sic-datepicker>
-          </div>
+            <!-- End Date -->
+            <div>
+              <sic-datepicker
+                [label]="'PMRT04A_END_DATE_LABEL' | translate"
+                formControlName="endDate"
+                [required]="true"
+                [placeholder]="'PMRT04A_END_DATE_PLACEHOLDER' | translate"
+                dateFormat="DD/MM/YYYY"
+                [errorMessages]="{ required: 'PMRT04A_END_DATE_REQUIRED' | translate }"
+              ></sic-datepicker>
+            </div>
 
-          <!-- Contract Value -->
-          <div>
-            <sic-input
-              [label]="'PMRT04A_CONTRACT_VALUE_LABEL' | translate"
-              type="text"
-              formControlName="contractValue"
-              [required]="true"
-              placeholder="0.00"
-              [errorMessages]="{
-                required: 'PMRT04A_CONTRACT_VALUE_REQUIRED' | translate,
-                min: 'PMRT04A_CONTRACT_VALUE_MIN' | translate
-              }"
-            ></sic-input>
-          </div>
+            <!-- Contract Value -->
+            <div>
+              <sic-input
+                [label]="'PMRT04A_CONTRACT_VALUE_LABEL' | translate"
+                type="text"
+                formControlName="contractValue"
+                [required]="true"
+                placeholder="0.00"
+                [errorMessages]="{
+                  required: 'PMRT04A_CONTRACT_VALUE_REQUIRED' | translate,
+                  min: 'PMRT04A_CONTRACT_VALUE_MIN' | translate
+                }"
+              ></sic-input>
+            </div>
 
-          <!-- Payment Terms (Full Width) -->
-          <div class="md:col-span-2">
-            <sic-tiptap-editor
-              [label]="'PMRT04A_PAYMENT_TERMS_LABEL' | translate"
-              formControlName="paymentTerms"
-              minHeight="120px"
-              [placeholder]="'PMRT04A_PAYMENT_TERMS_PLACEHOLDER' | translate"
-            ></sic-tiptap-editor>
-          </div>
+            <!-- Payment Terms (Full Width) -->
+            <div class="md:col-span-2">
+              <sic-tiptap-editor
+                [label]="'PMRT04A_PAYMENT_TERMS_LABEL' | translate"
+                formControlName="paymentTerms"
+                minHeight="120px"
+                [placeholder]="'PMRT04A_PAYMENT_TERMS_PLACEHOLDER' | translate"
+              ></sic-tiptap-editor>
+            </div>
 
-          <!-- Auto-renew -->
-          <div class="md:col-span-2">
-            <label class="inline-flex items-start gap-2 text-sm text-[var(--text)] cursor-pointer">
-              <input type="checkbox" class="mt-1" formControlName="autoRenew" />
-              <span>
-                <span class="font-medium text-[var(--text-active)]">{{ 'PMRT04A_AUTO_RENEW_LABEL' | translate }}</span>
-                <span class="block text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AUTO_RENEW_HINT' | translate }}</span>
-              </span>
-            </label>
-          </div>
+            <!-- Auto-renew -->
+            <div class="md:col-span-2">
+              <label class="inline-flex items-start gap-2 text-sm text-[var(--text)] cursor-pointer">
+                <input type="checkbox" class="mt-1" formControlName="autoRenew" />
+                <span>
+                  <span class="font-medium text-[var(--text-active)]">{{ 'PMRT04A_AUTO_RENEW_LABEL' | translate }}</span>
+                  <span class="block text-xs text-[var(--text-muted)]">{{ 'PMRT04A_AUTO_RENEW_HINT' | translate }}</span>
+                </span>
+              </label>
+            </div>
 
-          <!-- Scope Summary (Full Width) -->
-          <div class="md:col-span-2">
-            <sic-tiptap-editor
-              [label]="'PMRT04A_SCOPE_SUMMARY_LABEL' | translate"
-              formControlName="scopeSummary"
-              minHeight="140px"
-              [placeholder]="'PMRT04A_SCOPE_SUMMARY_PLACEHOLDER' | translate"
-            ></sic-tiptap-editor>
-          </div>
+            <!-- Scope Summary (Full Width) -->
+            <div class="md:col-span-2">
+              <sic-tiptap-editor
+                [label]="'PMRT04A_SCOPE_SUMMARY_LABEL' | translate"
+                formControlName="scopeSummary"
+                minHeight="140px"
+                [placeholder]="'PMRT04A_SCOPE_SUMMARY_PLACEHOLDER' | translate"
+              ></sic-tiptap-editor>
+            </div>
 
-          <!-- Attachments (Full Width) -->
-          <div class="md:col-span-2">
-            <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
-              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-              {{ 'PMRT04A_ATTACHMENTS_LABEL' | translate }}
-            </label>
-            <sic-upload
-              formControlName="attachmentGroupId"
-              [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
-              [multiple]="true"
-              category="all"
-              [disabled]="isLocked || isView"
-            ></sic-upload>
-          </div>
+            <!-- Attachments (Full Width) -->
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+                <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+                {{ 'PMRT04A_ATTACHMENTS_LABEL' | translate }}
+              </label>
+              <sic-upload
+                formControlName="attachmentGroupId"
+                [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+                [multiple]="true"
+                category="all"
+                [disabled]="isLocked || isView"
+              ></sic-upload>
+            </div>
 
-          <!-- Active Checkbox -->
-          <div class="md:col-span-2">
-            <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-[var(--text-active)] select-none">
-              <input
-                type="checkbox"
-                formControlName="isActive"
-                class="w-4 h-4 text-[var(--crm-primary)] rounded focus:ring-[var(--crm-primary)]/20"
-              />
-              <span>{{ 'PMRT04A_ACTIVE_CHECKBOX_LABEL' | translate }}</span>
-            </label>
-          </div>
+            <!-- Active Checkbox -->
+            <div class="md:col-span-2">
+              <label class="flex items-center gap-2.5 cursor-pointer text-sm font-medium text-[var(--text-active)] select-none">
+                <input
+                  type="checkbox"
+                  formControlName="isActive"
+                  class="w-4 h-4 text-[var(--crm-primary)] rounded focus:ring-[var(--crm-primary)]/20"
+                />
+                <span>{{ 'PMRT04A_ACTIVE_CHECKBOX_LABEL' | translate }}</span>
+              </label>
+            </div>
 
-          <!-- Approval Flow (Full Width, bottom of form) -->
-          @if (!isView) {
-            <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
-              <div class="text-sm font-medium text-[var(--text-active)] mb-3 flex items-center gap-2">
-                <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-                {{ 'PMRT04A_APPROVAL_SECTION_TITLE' | translate }}
-              </div>
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <sic-combobox
-                    [label]="'PMRT04A_APPROVAL_FLOW_LABEL' | translate"
-                    [apiUrl]="apiGetApprovals"
-                    valueField="id"
-                    textField="flowName"
-                    [placeholder]="'PMRT04A_APPROVAL_FLOW_PLACEHOLDER' | translate"
-                    [clearable]="true"
-                    (selectionChanged)="selectedFlowId = $event?.id"
-                  ></sic-combobox>
+            <!-- Approval Flow (Full Width, bottom of form) -->
+            @if (!isView) {
+              <div class="md:col-span-2 border-t border-[var(--border)] pt-4 mt-2">
+                <div class="text-sm font-medium text-[var(--text-active)] mb-3 flex items-center gap-2">
+                  <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+                  {{ 'PMRT04A_APPROVAL_SECTION_TITLE' | translate }}
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div>
+                    <sic-combobox
+                      [label]="'PMRT04A_APPROVAL_FLOW_LABEL' | translate"
+                      [apiUrl]="apiGetApprovals"
+                      valueField="id"
+                      textField="flowName"
+                      [placeholder]="'PMRT04A_APPROVAL_FLOW_PLACEHOLDER' | translate"
+                      [clearable]="true"
+                      (selectionChanged)="selectedFlowId = $event?.id"
+                    ></sic-combobox>
+                  </div>
                 </div>
               </div>
-            </div>
-          }
+            }
+          </div>
         </div>
-      </div>
 
 
 
-      <!-- Actions Buttons Bar -->
-      <div class="flex items-center justify-end gap-3 pt-2">
-        <sic-button
-          type="button"
-          variant="outline" color="primary"
-          [block]="false"
-          (click)="onBack()"
-        >
-          <i class="bi bi-arrow-left"></i>
-          {{ 'PMRT04A_BACK' | translate }}
-        </sic-button>
-
-        @if (isLocked) {
+        <!-- Actions Buttons Bar -->
+        <div class="flex items-center justify-end gap-3 pt-2">
           <sic-button
             type="button"
-            variant="solid" color="primary"
+            variant="outline" color="primary"
             [block]="false"
-            (click)="requestChange()"
+            (click)="onBack()"
           >
-            <i class="bi bi-pencil-square"></i>
-            {{ 'PMRT04A_REQUEST_CHANGE' | translate }}
+            <i class="bi bi-arrow-left"></i>
+            {{ 'PMRT04A_BACK' | translate }}
           </sic-button>
-        } @else if (!isView) {
-          <sic-button
-            type="submit"
-            variant="solid" color="primary"
-            [block]="false"
-            [loading]="isSaving"
-            [disabled]="isSaving || form.invalid"
-          >
-            @if (!isSaving) {
-              <i class="bi bi-floppy"></i>
-            }
-            {{ (isSaving ? 'PMRT04A_SAVING' : (isEdit ? 'PMRT04A_SAVE_BUTTON' : 'PMRT04A_CREATE_BUTTON')) | translate }}
-          </sic-button>
-        }
-      </div>
 
-      @if (isLocked) {
-        <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
-          <i class="bi bi-lock-fill"></i>
-          {{ 'PMRT04A_LOCKED_NOTICE' | translate }}
+          @if (isLocked) {
+            <sic-button
+              type="button"
+              variant="solid" color="primary"
+              [block]="false"
+              (click)="requestChange()"
+            >
+              <i class="bi bi-pencil-square"></i>
+              {{ 'PMRT04A_REQUEST_CHANGE' | translate }}
+            </sic-button>
+          } @else if (!isView) {
+            <sic-button
+              type="submit"
+              variant="solid" color="primary"
+              [block]="false"
+              [loading]="isSaving"
+              [disabled]="isSaving || form.invalid"
+            >
+              @if (!isSaving) {
+                <i class="bi bi-floppy"></i>
+              }
+              {{ (isSaving ? 'PMRT04A_SAVING' : (isEdit ? 'PMRT04A_SAVE_BUTTON' : 'PMRT04A_CREATE_BUTTON')) | translate }}
+            </sic-button>
+          }
         </div>
-      }
-    </form>
+
+        @if (isLocked) {
+          <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+            <i class="bi bi-lock-fill"></i>
+            {{ 'PMRT04A_LOCKED_NOTICE' | translate }}
+          </div>
+        }
+      </form>
+    </sic-doc-split>
   </div>
 }
 

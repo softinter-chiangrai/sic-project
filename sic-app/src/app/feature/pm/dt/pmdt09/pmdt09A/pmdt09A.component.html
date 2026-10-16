@@ -26,7 +26,6 @@
         }
       </div>
     </div>
-    <sic-live-pdf-button kind="design-review" [body]="pdfPreviewBody()"></sic-live-pdf-button>
     @if (isEdit) {
       <button
         type="button"
@@ -49,338 +48,340 @@
 
   @if (!isLoading && form) {
     <div class="mb-4"><sic-cr-history-panel targetType="DESIGN_REVIEW" [targetId]="form.get('id')?.value"></sic-cr-history-panel></div>
-    <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
-      <!-- Unified Single Card -->
-      <div class="bg-[var(--sidebar)] p-6 rounded-xl border border-[var(--border)] shadow-sm space-y-5">
-        <!-- Form Inputs Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    <sic-doc-split kind="design-review" [body]="pdfPreviewBody()">
+      <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-5">
+        <!-- Unified Single Card -->
+        <div class="bg-[var(--sidebar)] p-6 rounded-xl border border-[var(--border)] shadow-sm space-y-5">
+          <!-- Form Inputs Grid -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
-          <sic-combobox
-            [label]="'PMDT09_CUSTOMER_LABEL' | translate"
-            formControlName="customerId"
-            [apiUrl]="service.apiGetComboboxCustomer"
-            valueField="value"
-            textField="text"
-            [clearable]="true"
-            [placeholder]="'PMDT09_CUSTOMER_PLACEHOLDER' | translate"
-            (selectionChanged)="onCustomerSelected($event)"
-          ></sic-combobox>
-
-          <sic-combobox
-            [label]="'PMDT09_PROJECT_LABEL' | translate"
-            formControlName="projectId"
-            [apiUrl]="service.apiGetComboboxProject"
-            [params]="projectParams"
-            valueField="value"
-            textField="text"
-            [required]="true"
-            [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
-            (selectionChanged)="onProjectSelected($event)"
-          ></sic-combobox>
-
-          <sic-input
-            [label]="'PMDT09_REVIEW_CODE_LABEL' | translate"
-            formControlName="reviewCode"
-            [required]="true"
-            [placeholder]="'PMDT09_REVIEW_CODE_PLACEHOLDER' | translate"
-          ></sic-input>
-
-          <sic-input
-            [label]="'PMDT09_TITLE_LABEL' | translate"
-            formControlName="title"
-            [required]="true"
-            [placeholder]="'PMDT09_TITLE_PLACEHOLDER' | translate"
-          ></sic-input>
-
-          <sic-combobox
-            [label]="'PMDT09_SEVERITY_FIELD_LABEL' | translate"
-            formControlName="severity"
-            [items]="service.severityOptions"
-            valueField="value"
-            textField="label"
-            [required]="true"
-            [placeholder]="'PMDT09_SEV_SELECT_PH' | translate"
-          ></sic-combobox>
-
-          <sic-combobox
-            [label]="'PMDT09_STATUS_LABEL' | translate"
-            formControlName="status"
-            [items]="service.statusOptions"
-            valueField="value"
-            textField="label"
-            [required]="true"
-            [placeholder]="'PMDT09_STATUS_SELECT_PH' | translate"
-          ></sic-combobox>
-
-          <sic-datepicker
-            [label]="'PMDT09_DUE_DATE_LABEL' | translate"
-            formControlName="dueDate"
-            [required]="true"
-            placeholder="DD/MM/YYYY"
-          ></sic-datepicker>
-
-          <div class="md:col-span-2 lg:col-span-2">
             <sic-combobox
-              [label]="'PMDT09_ASSIGNED_TO_LABEL' | translate"
-              formControlName="assignedTo"
-              [apiUrl]="service.apiGetUsers"
-              valueField="name"
-              textField="name"
-              [multiple]="true"
+              [label]="'PMDT09_CUSTOMER_LABEL' | translate"
+              formControlName="customerId"
+              [apiUrl]="service.apiGetComboboxCustomer"
+              valueField="value"
+              textField="text"
+              [clearable]="true"
+              [placeholder]="'PMDT09_CUSTOMER_PLACEHOLDER' | translate"
+              (selectionChanged)="onCustomerSelected($event)"
+            ></sic-combobox>
+
+            <sic-combobox
+              [label]="'PMDT09_PROJECT_LABEL' | translate"
+              formControlName="projectId"
+              [apiUrl]="service.apiGetComboboxProject"
+              [params]="projectParams"
+              valueField="value"
+              textField="text"
               [required]="true"
-              [placeholder]="'PMDT09_ASSIGNED_TO_PH' | translate"
+              [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
+              (selectionChanged)="onProjectSelected($event)"
+            ></sic-combobox>
+
+            <sic-input
+              [label]="'PMDT09_REVIEW_CODE_LABEL' | translate"
+              formControlName="reviewCode"
+              [required]="true"
+              [placeholder]="'PMDT09_REVIEW_CODE_PLACEHOLDER' | translate"
+            ></sic-input>
+
+            <sic-input
+              [label]="'PMDT09_TITLE_LABEL' | translate"
+              formControlName="title"
+              [required]="true"
+              [placeholder]="'PMDT09_TITLE_PLACEHOLDER' | translate"
+            ></sic-input>
+
+            <sic-combobox
+              [label]="'PMDT09_SEVERITY_FIELD_LABEL' | translate"
+              formControlName="severity"
+              [items]="service.severityOptions"
+              valueField="value"
+              textField="label"
+              [required]="true"
+              [placeholder]="'PMDT09_SEV_SELECT_PH' | translate"
+            ></sic-combobox>
+
+            <sic-combobox
+              [label]="'PMDT09_STATUS_LABEL' | translate"
+              formControlName="status"
+              [items]="service.statusOptions"
+              valueField="value"
+              textField="label"
+              [required]="true"
+              [placeholder]="'PMDT09_STATUS_SELECT_PH' | translate"
+            ></sic-combobox>
+
+            <sic-datepicker
+              [label]="'PMDT09_DUE_DATE_LABEL' | translate"
+              formControlName="dueDate"
+              [required]="true"
+              placeholder="DD/MM/YYYY"
+            ></sic-datepicker>
+
+            <div class="md:col-span-2 lg:col-span-2">
+              <sic-combobox
+                [label]="'PMDT09_ASSIGNED_TO_LABEL' | translate"
+                formControlName="assignedTo"
+                [apiUrl]="service.apiGetUsers"
+                valueField="name"
+                textField="name"
+                [multiple]="true"
+                [required]="true"
+                [placeholder]="'PMDT09_ASSIGNED_TO_PH' | translate"
+              ></sic-combobox>
+            </div>
+
+            <sic-combobox
+              [label]="'PMDT09_APPROVAL_FLOW_LABEL' | translate"
+              [apiUrl]="service.apiGetApprovalFlows"
+              valueField="id"
+              textField="flowName"
+              [placeholder]="'PMDT09_APPROVAL_FLOW_PH' | translate"
+              [clearable]="true"
+              formControlName="approvalFlowId"
+              (selectionChanged)="onFlowChange($event)"
             ></sic-combobox>
           </div>
 
-          <sic-combobox
-            [label]="'PMDT09_APPROVAL_FLOW_LABEL' | translate"
-            [apiUrl]="service.apiGetApprovalFlows"
-            valueField="id"
-            textField="flowName"
-            [placeholder]="'PMDT09_APPROVAL_FLOW_PH' | translate"
-            [clearable]="true"
-            formControlName="approvalFlowId"
-            (selectionChanged)="onFlowChange($event)"
-          ></sic-combobox>
-        </div>
+          <!-- Description (Tiptap Editor) -->
+          <div class="space-y-1.5">
+            <sic-tiptap-editor
+              [label]="'PMDT09_DESC_LABEL' | translate"
+              [required]="true"
+              formControlName="description"
+              [placeholder]="'PMDT09_DESC_PH' | translate"
+              minHeight="160px"
+            ></sic-tiptap-editor>
+          </div>
 
-        <!-- Description (Tiptap Editor) -->
-        <div class="space-y-1.5">
-          <sic-tiptap-editor
-            [label]="'PMDT09_DESC_LABEL' | translate"
-            [required]="true"
-            formControlName="description"
-            [placeholder]="'PMDT09_DESC_PH' | translate"
-            minHeight="160px"
-          ></sic-tiptap-editor>
-        </div>
+          <!-- Attachments -->
+          <div class="space-y-1.5">
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+              {{ 'PMDT09_ATTACHMENTS_LABEL' | translate }}
+            </label>
+            <sic-upload
+              formControlName="attachmentGroupId"
+              [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+              [multiple]="true"
+              category="all"
+              [disabled]="isLocked"
+            ></sic-upload>
+          </div>
 
-        <!-- Attachments -->
-        <div class="space-y-1.5">
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
-            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-            {{ 'PMDT09_ATTACHMENTS_LABEL' | translate }}
-          </label>
-          <sic-upload
-            formControlName="attachmentGroupId"
-            [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
-            [multiple]="true"
-            category="all"
-            [disabled]="isLocked"
-          ></sic-upload>
-        </div>
+          <!-- Figma Link & Embed Configuration -->
+          <div class="space-y-3">
+            <sic-input
+              label="Figma File / Prototype URL"
+              formControlName="figmaUrl"
+              [placeholder]="'PMDT09_FIGMA_URL_PH' | translate"
+            ></sic-input>
 
-        <!-- Figma Link & Embed Configuration -->
-        <div class="space-y-3">
-          <sic-input
-            label="Figma File / Prototype URL"
-            formControlName="figmaUrl"
-            [placeholder]="'PMDT09_FIGMA_URL_PH' | translate"
-          ></sic-input>
-
-          @if (activeEmbedUrl) {
-            <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] shadow-sm overflow-hidden transition-all duration-300">
-              <!-- Toolbar Header -->
-              <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[var(--bg-secondary,var(--bg))] border-b border-[var(--border)]">
-                <!-- Left: Title & Mode Selector -->
-                <div class="flex items-center gap-3">
-                  <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center p-1.5 shadow-xs border border-[var(--crm-primary)]/20">
-                    <svg class="w-5 h-5" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z" fill="#1ABCFE"/>
-                      <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
-                      <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#FF7262"/>
-                      <path d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z" fill="#F24E1E"/>
-                      <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
-                    </svg>
+            @if (activeEmbedUrl) {
+              <div class="rounded-xl border border-[var(--border)] bg-[var(--bg)] shadow-sm overflow-hidden transition-all duration-300">
+                <!-- Toolbar Header -->
+                <div class="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-[var(--bg-secondary,var(--bg))] border-b border-[var(--border)]">
+                  <!-- Left: Title & Mode Selector -->
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-lg bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center p-1.5 shadow-xs border border-[var(--crm-primary)]/20">
+                      <svg class="w-5 h-5" viewBox="0 0 38 57" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 28.5C19 23.2533 23.2533 19 28.5 19C33.7467 19 38 23.2533 38 28.5C38 33.7467 33.7467 38 28.5 38C23.2533 38 19 33.7467 19 28.5Z" fill="#1ABCFE"/>
+                        <path d="M0 47.5C0 42.2533 4.25329 38 9.5 38H19V47.5C19 52.7467 14.7467 57 9.5 57C4.25329 57 0 52.7467 0 47.5Z" fill="#0ACF83"/>
+                        <path d="M19 0V19H28.5C33.7467 19 38 14.7467 38 9.5C38 4.25329 33.7467 0 28.5 0H19Z" fill="#FF7262"/>
+                        <path d="M0 9.5C0 14.7467 4.25329 19 9.5 19H19V0H9.5C4.25329 0 0 4.25329 0 9.5Z" fill="#F24E1E"/>
+                        <path d="M0 28.5C0 33.7467 4.25329 38 9.5 38H19V19H9.5C4.25329 19 0 23.2533 0 28.5Z" fill="#A259FF"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                        Figma Live Workspace
+                        <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
+                          Embed API Active
+                        </span>
+                      </h3>
+                      <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT09_CONTROL_TEST_DESC' | translate }}</span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-                      Figma Live Workspace
-                      <span class="text-xs px-2 py-0.5 rounded-full font-medium bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] border border-[var(--crm-primary)]/20">
-                        Embed API Active
-                      </span>
-                    </h3>
-                    <span class="text-xs text-[var(--text-muted)]">{{ 'PMDT09_CONTROL_TEST_DESC' | translate }}</span>
+
+                  <!-- Center/Right: Embed API Controllers -->
+                  <div class="flex items-center gap-1.5 flex-wrap">
+                    <div class="flex items-center bg-[var(--bg)] border border-[var(--border)] rounded-lg p-0.5 shadow-sm">
+                      <button
+                        type="button"
+                        (click)="prototypePrev()"
+                        class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
+                        [title]="'PMDT09_PREV_PAGE_TITLE' | translate"
+                      >
+                        <i class="bi bi-skip-backward-fill"></i>
+                        <span class="hidden sm:inline">{{ 'PMDT09_PREV_BTN' | translate }}</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="prototypeNext()"
+                        class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
+                        [title]="'PMDT09_NEXT_PAGE_TITLE' | translate"
+                      >
+                        <span class="hidden sm:inline">{{ 'PMDT09_NEXT_BTN' | translate }}</span>
+                        <i class="bi bi-skip-forward-fill"></i>
+                      </button>
+                      <div class="w-[1px] h-4 bg-[var(--border)] mx-1"></div>
+                      <button
+                        type="button"
+                        (click)="prototypeRestart()"
+                        class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-amber-500 transition-all flex items-center gap-1"
+                        [title]="'PMDT09_RESTART_PROTO_TITLE' | translate"
+                      >
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                        <span class="hidden sm:inline">{{ 'PMDT09_RESTART_BTN' | translate }}</span>
+                      </button>
+                      <button
+                        type="button"
+                        (click)="prototypeToggleHints()"
+                        class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-indigo-500 transition-all flex items-center gap-1"
+                        [title]="'PMDT09_TOGGLE_HINTS_TITLE' | translate"
+                      >
+                        <i class="bi bi-lightbulb"></i>
+                        <span class="hidden sm:inline">{{ 'PMDT09_HINTS_BTN' | translate }}</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      (click)="openExternalFigma()"
+                      class="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all flex items-center gap-1.5 shadow-sm"
+                      [title]="'PMDT09_OPEN_FIGMA_NEW_TAB' | translate"
+                    >
+                      <i class="bi bi-box-arrow-up-right"></i>
+                      <span class="hidden md:inline">{{ 'PMDT09_OPEN_FIGMA_BTN' | translate }}</span>
+                    </button>
+                    <button
+                      type="button"
+                      (click)="toggleFullscreen()"
+                      class="p-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all shadow-sm"
+                      [title]="isFullscreen ? ('PMDT09_COLLAPSE_TITLE' | translate) : ('PMDT09_EXPAND_TITLE' | translate)"
+                    >
+                      <i [class]="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
+                    </button>
                   </div>
                 </div>
 
-                <!-- Center/Right: Embed API Controllers -->
-                <div class="flex items-center gap-1.5 flex-wrap">
-                  <div class="flex items-center bg-[var(--bg)] border border-[var(--border)] rounded-lg p-0.5 shadow-sm">
-                    <button
-                      type="button"
-                      (click)="prototypePrev()"
-                      class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                      [title]="'PMDT09_PREV_PAGE_TITLE' | translate"
-                    >
-                      <i class="bi bi-skip-backward-fill"></i>
-                      <span class="hidden sm:inline">{{ 'PMDT09_PREV_BTN' | translate }}</span>
-                    </button>
-                    <button
-                      type="button"
-                      (click)="prototypeNext()"
-                      class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-[var(--crm-primary)] transition-all flex items-center gap-1"
-                      [title]="'PMDT09_NEXT_PAGE_TITLE' | translate"
-                    >
-                      <span class="hidden sm:inline">{{ 'PMDT09_NEXT_BTN' | translate }}</span>
-                      <i class="bi bi-skip-forward-fill"></i>
-                    </button>
-                    <div class="w-[1px] h-4 bg-[var(--border)] mx-1"></div>
-                    <button
-                      type="button"
-                      (click)="prototypeRestart()"
-                      class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-amber-500 transition-all flex items-center gap-1"
-                      [title]="'PMDT09_RESTART_PROTO_TITLE' | translate"
-                    >
-                      <i class="bi bi-arrow-counterclockwise"></i>
-                      <span class="hidden sm:inline">{{ 'PMDT09_RESTART_BTN' | translate }}</span>
-                    </button>
-                    <button
-                      type="button"
-                      (click)="prototypeToggleHints()"
-                      class="px-2.5 py-1.5 rounded text-xs font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] hover:text-indigo-500 transition-all flex items-center gap-1"
-                      [title]="'PMDT09_TOGGLE_HINTS_TITLE' | translate"
-                    >
-                      <i class="bi bi-lightbulb"></i>
-                      <span class="hidden sm:inline">{{ 'PMDT09_HINTS_BTN' | translate }}</span>
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    (click)="openExternalFigma()"
-                    class="px-3 py-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all flex items-center gap-1.5 shadow-sm"
-                    [title]="'PMDT09_OPEN_FIGMA_NEW_TAB' | translate"
-                  >
-                    <i class="bi bi-box-arrow-up-right"></i>
-                    <span class="hidden md:inline">{{ 'PMDT09_OPEN_FIGMA_BTN' | translate }}</span>
-                  </button>
-                  <button
-                    type="button"
-                    (click)="toggleFullscreen()"
-                    class="p-1.5 rounded-lg border border-[var(--border)] bg-[var(--bg)] text-xs text-[var(--text)] hover:text-[var(--crm-primary)] hover:border-[var(--crm-primary)] transition-all shadow-sm"
-                    [title]="isFullscreen ? ('PMDT09_COLLAPSE_TITLE' | translate) : ('PMDT09_EXPAND_TITLE' | translate)"
-                  >
-                    <i [class]="isFullscreen ? 'bi bi-fullscreen-exit' : 'bi bi-arrows-fullscreen'"></i>
-                  </button>
+                <!-- Iframe Container -->
+                <div
+                  class="relative w-full bg-neutral-900 flex items-center justify-center transition-all duration-300"
+                  [style.height]="isFullscreen ? '800px' : '520px'"
+                >
+                  @if (isFigmaLoading) {
+                    <div class="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 text-white">
+                      <div class="w-8 h-8 border-3 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
+                      <span class="text-xs tracking-wide text-neutral-300">{{ 'PMDT09_CONNECTING_FIGMA' | translate }}</span>
+                    </div>
+                  }
+                  <iframe
+                    #figmaIframe
+                    [src]="activeEmbedUrl"
+                    class="w-full h-full border-0"
+                    allowfullscreen
+                    allow="clipboard-read; clipboard-write"
+                  ></iframe>
                 </div>
               </div>
+            }
+          </div>
 
-              <!-- Iframe Container -->
-              <div
-                class="relative w-full bg-neutral-900 flex items-center justify-center transition-all duration-300"
-                [style.height]="isFullscreen ? '800px' : '520px'"
-              >
-                @if (isFigmaLoading) {
-                  <div class="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm z-10 flex flex-col items-center justify-center gap-3 text-white">
-                    <div class="w-8 h-8 border-3 border-[var(--crm-primary)] border-t-transparent rounded-full animate-spin"></div>
-                    <span class="text-xs tracking-wide text-neutral-300">{{ 'PMDT09_CONNECTING_FIGMA' | translate }}</span>
+          <!-- Active Status & Approval Warning Footer -->
+          <div class="pt-3 border-t border-[var(--border)] flex items-center justify-between">
+            <label class="flex items-center gap-2 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                formControlName="isActive"
+                class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20"
+              />
+              <span class="text-[var(--text-active)] font-medium">{{ 'PMDT09_ACTIVE_TOGGLE_LABEL' | translate }}</span>
+            </label>
+
+            @if (!selectedFlowId && flows.length > 0) {
+              <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
+                <i class="bi bi-info-circle"></i> {{ 'PMDT09_APPROVAL_FLOW_HINT' | translate }}
+              </span>
+            }
+          </div>
+
+          @if (isEdit) {
+            <div class="pt-4 border-t border-[var(--border)]">
+              <sic-trace-link-panel
+                entityType="DESIGN_REVIEW"
+                [entityId]="form.get('id')?.value"
+                [projectId]="form.get('projectId')?.value"
+              ></sic-trace-link-panel>
+            </div>
+          }
+
+          <!-- Comments (โหมดแก้ไขเมื่อมี Comments) -->
+          @if (isEdit && form.get('comments')?.value?.length > 0) {
+            <div class="pt-4 border-t border-[var(--border)] space-y-3">
+              <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                <i class="bi bi-chat-dots text-[var(--crm-primary)]"></i>
+                {{ 'PMDT09_COMMENTS_SECTION_TITLE' | translate }}
+              </h3>
+              <div class="space-y-2.5">
+                @for (comment of form.get('comments')?.value; track comment.id) {
+                  <div class="flex items-start gap-3 p-3 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
+                    <div class="w-7 h-7 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center flex-shrink-0 font-semibold text-xs border border-[var(--crm-primary)]/20">
+                      {{ comment.author?.charAt(0) || '?' }}
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div class="flex items-center gap-2 flex-wrap">
+                        <span class="text-xs font-semibold text-[var(--text-active)]">{{ comment.author }}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
+                          {{ comment.type }}
+                        </span>
+                        <span class="text-[11px] text-[var(--text-muted)]">{{ comment.createdAt }}</span>
+                      </div>
+                      <p class="text-xs text-[var(--text)] mt-1 leading-relaxed">{{ comment.text }}</p>
+                    </div>
                   </div>
                 }
-                <iframe
-                  #figmaIframe
-                  [src]="activeEmbedUrl"
-                  class="w-full h-full border-0"
-                  allowfullscreen
-                  allow="clipboard-read; clipboard-write"
-                ></iframe>
               </div>
             </div>
           }
-        </div>
 
-        <!-- Active Status & Approval Warning Footer -->
-        <div class="pt-3 border-t border-[var(--border)] flex items-center justify-between">
-          <label class="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="checkbox"
-              formControlName="isActive"
-              class="w-4 h-4 rounded text-[var(--crm-primary)] focus:ring-[var(--crm-primary)]/20"
-            />
-            <span class="text-[var(--text-active)] font-medium">{{ 'PMDT09_ACTIVE_TOGGLE_LABEL' | translate }}</span>
-          </label>
-
-          @if (!selectedFlowId && flows.length > 0) {
-            <span class="text-xs text-[var(--text-muted)] flex items-center gap-1">
-              <i class="bi bi-info-circle"></i> {{ 'PMDT09_APPROVAL_FLOW_HINT' | translate }}
-            </span>
-          }
-        </div>
-
-        @if (isEdit) {
-          <div class="pt-4 border-t border-[var(--border)]">
-            <sic-trace-link-panel
-              entityType="DESIGN_REVIEW"
-              [entityId]="form.get('id')?.value"
-              [projectId]="form.get('projectId')?.value"
-            ></sic-trace-link-panel>
-          </div>
-        }
-
-        <!-- Comments (โหมดแก้ไขเมื่อมี Comments) -->
-        @if (isEdit && form.get('comments')?.value?.length > 0) {
-          <div class="pt-4 border-t border-[var(--border)] space-y-3">
-            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-              <i class="bi bi-chat-dots text-[var(--crm-primary)]"></i>
-              {{ 'PMDT09_COMMENTS_SECTION_TITLE' | translate }}
-            </h3>
-            <div class="space-y-2.5">
-              @for (comment of form.get('comments')?.value; track comment.id) {
-                <div class="flex items-start gap-3 p-3 rounded-xl bg-[var(--bg)] border border-[var(--border)]">
-                  <div class="w-7 h-7 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] flex items-center justify-center flex-shrink-0 font-semibold text-xs border border-[var(--crm-primary)]/20">
-                    {{ comment.author?.charAt(0) || '?' }}
-                  </div>
-                  <div class="flex-1 min-w-0">
-                    <div class="flex items-center gap-2 flex-wrap">
-                      <span class="text-xs font-semibold text-[var(--text-active)]">{{ comment.author }}</span>
-                      <span class="px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400">
-                        {{ comment.type }}
-                      </span>
-                      <span class="text-[11px] text-[var(--text-muted)]">{{ comment.createdAt }}</span>
-                    </div>
-                    <p class="text-xs text-[var(--text)] mt-1 leading-relaxed">{{ comment.text }}</p>
-                  </div>
-                </div>
+          <!-- Bottom Action Bar -->
+          <div class="pt-5 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-3">
+            <div>
+              @if (isEdit && !isLocked) {
+                <sic-button variant="solid" color="danger" (click)="onDelete()" [disabled]="isLoading || isSaving">
+                  <i class="bi bi-trash"></i> {{ 'PMDT09_DELETE_BTN' | translate }}
+                </sic-button>
+              }
+            </div>
+            <div class="flex items-center gap-3">
+              <sic-button variant="outline" (click)="onBack()">
+                <i class="bi bi-arrow-left"></i> {{ isLocked ? ('PMDT09_BACK_BTN_TITLE' | translate) : ('PMDT09_CANCEL_BTN' | translate) }}
+              </sic-button>
+              @if (isLocked) {
+                <sic-button variant="solid" color="primary" (click)="requestChange()">
+                  <i class="bi bi-pencil-square"></i> {{ 'PMDT09_REQUEST_CHANGE_BTN' | translate }}
+                </sic-button>
+              } @else {
+                <sic-button type="submit" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving || form.invalid">
+                  @if (!isSaving) {
+                    <i class="bi bi-check-lg"></i>
+                  }
+                  {{ isEdit ? ('PMDT09_SAVE_BTN' | translate) : ('PMDT09_CREATE_ITEM_BTN' | translate) }}
+                </sic-button>
               }
             </div>
           </div>
-        }
 
-        <!-- Bottom Action Bar -->
-        <div class="pt-5 border-t border-[var(--border)] flex items-center justify-between flex-wrap gap-3">
-          <div>
-            @if (isEdit && !isLocked) {
-              <sic-button variant="solid" color="danger" (click)="onDelete()" [disabled]="isLoading || isSaving">
-                <i class="bi bi-trash"></i> {{ 'PMDT09_DELETE_BTN' | translate }}
-              </sic-button>
-            }
-          </div>
-          <div class="flex items-center gap-3">
-            <sic-button variant="outline" (click)="onBack()">
-              <i class="bi bi-arrow-left"></i> {{ isLocked ? ('PMDT09_BACK_BTN_TITLE' | translate) : ('PMDT09_CANCEL_BTN' | translate) }}
-            </sic-button>
-            @if (isLocked) {
-              <sic-button variant="solid" color="primary" (click)="requestChange()">
-                <i class="bi bi-pencil-square"></i> {{ 'PMDT09_REQUEST_CHANGE_BTN' | translate }}
-              </sic-button>
-            } @else {
-              <sic-button type="submit" variant="solid" color="primary" [loading]="isSaving" [disabled]="isSaving || form.invalid">
-                @if (!isSaving) {
-                  <i class="bi bi-check-lg"></i>
-                }
-                {{ isEdit ? ('PMDT09_SAVE_BTN' | translate) : ('PMDT09_CREATE_ITEM_BTN' | translate) }}
-              </sic-button>
-            }
-          </div>
+          @if (isLocked) {
+            <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+              <i class="bi bi-lock-fill"></i>
+              {{ 'PMDT09_LOCKED_DOC_NOTICE' | translate }}
+            </div>
+          }
         </div>
-
-        @if (isLocked) {
-          <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
-            <i class="bi bi-lock-fill"></i>
-            {{ 'PMDT09_LOCKED_DOC_NOTICE' | translate }}
-          </div>
-        }
-      </div>
-    </form>
+      </form>
+    </sic-doc-split>
   }
 </div>

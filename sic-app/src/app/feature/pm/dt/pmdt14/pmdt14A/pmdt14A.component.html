@@ -27,7 +27,6 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <sic-live-pdf-button kind="delivery" [body]="pdfPreviewBody()"></sic-live-pdf-button>
       @if (!isView() && !isLocked()) {
         <button
           type="button"
@@ -109,217 +108,219 @@
 
   <!-- Main Form Card -->
   <div class="mb-4"><sic-cr-history-panel targetType="DELIVERY" [targetId]="id()"></sic-cr-history-panel></div>
-  <form [formGroup]="formData.form" class="space-y-5">
-    <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
-      <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
-        <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        {{ 'PMDT14_INFO_SECTION_TITLE' | translate }}
-      </h3>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <sic-combobox
-          formControlName="contractId"
-          [label]="'PMDT14_CONTRACT_LABEL' | translate"
-          [placeholder]="'PMDT14_CONTRACT_PLACEHOLDER' | translate"
-          [options]="contractOptions()"
-          valueField="value"
-          displayField="text"
-          [clearable]="true"
-          (selectionChanged)="onContractSelected($event)">
-        </sic-combobox>
-
-        <sic-input
-          formControlName="deliveryCode"
-          [label]="'PMDT14_CODE_FIELD_LABEL' | translate"
-          [placeholder]="'PMDT14_CODE_PLACEHOLDER' | translate">
-        </sic-input>
-
-        <sic-input
-          formControlName="deliveryTitle"
-          [label]="'PMDT14_TITLE_FIELD_LABEL' | translate"
-          [placeholder]="'PMDT14_TITLE_PLACEHOLDER' | translate">
-        </sic-input>
-
-        <sic-combobox
-          formControlName="deliveryType"
-          [label]="'PMDT14_TYPE_FIELD_LABEL' | translate"
-          [items]="typeOptions"
-          valueField="value"
-          displayField="label">
-        </sic-combobox>
-
-        <sic-datepicker
-          formControlName="deliveryDate"
-          [label]="'PMDT14_COL_DELIVERY_DATE' | translate">
-        </sic-datepicker>
-      </div>
-
-      <!-- Rich Text Editors using Tiptap -->
-      <div class="space-y-4 pt-2">
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
-            {{ 'PMDT14_RELEASE_NOTE_LABEL' | translate }}
-          </label>
-          <sic-tiptap-editor
-            formControlName="releaseNote"
-            [placeholderInput]="'PMDT14_RELEASE_NOTE_PLACEHOLDER' | translate"
-            minHeightInput="160px">
-          </sic-tiptap-editor>
-        </div>
-
-        <div class="flex flex-col gap-1.5">
-          <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-card-checklist text-[var(--crm-primary)]"></i>
-            {{ 'PMDT14_SUMMARY_LABEL' | translate }}
-          </label>
-          <sic-tiptap-editor
-            formControlName="deliverySummary"
-            [placeholderInput]="'PMDT14_SUMMARY_PLACEHOLDER' | translate"
-            minHeightInput="160px">
-          </sic-tiptap-editor>
-        </div>
-      </div>
-    </div>
-
-    <!-- Checklist Management Card -->
-    <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
-      <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
-          {{ 'PMDT14_CHECKLIST_TITLE' | translate }}
+  <sic-doc-split kind="delivery" [body]="pdfPreviewBody()">
+    <form [formGroup]="formData.form" class="space-y-5">
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
+        <h3 class="text-base font-semibold text-[var(--text-active)] border-b border-[var(--border)] pb-3 flex items-center gap-2">
+          <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+          {{ 'PMDT14_INFO_SECTION_TITLE' | translate }}
         </h3>
-        @if (!isView()) {
-          <button
-            type="button"
-            (click)="addChecklistItem()"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors"
-          >
-            <i class="bi bi-plus-lg"></i> {{ 'PMDT14_ADD_CHECKLIST_BTN' | translate }}
-          </button>
-        }
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <sic-combobox
+            formControlName="contractId"
+            [label]="'PMDT14_CONTRACT_LABEL' | translate"
+            [placeholder]="'PMDT14_CONTRACT_PLACEHOLDER' | translate"
+            [options]="contractOptions()"
+            valueField="value"
+            displayField="text"
+            [clearable]="true"
+            (selectionChanged)="onContractSelected($event)">
+          </sic-combobox>
+
+          <sic-input
+            formControlName="deliveryCode"
+            [label]="'PMDT14_CODE_FIELD_LABEL' | translate"
+            [placeholder]="'PMDT14_CODE_PLACEHOLDER' | translate">
+          </sic-input>
+
+          <sic-input
+            formControlName="deliveryTitle"
+            [label]="'PMDT14_TITLE_FIELD_LABEL' | translate"
+            [placeholder]="'PMDT14_TITLE_PLACEHOLDER' | translate">
+          </sic-input>
+
+          <sic-combobox
+            formControlName="deliveryType"
+            [label]="'PMDT14_TYPE_FIELD_LABEL' | translate"
+            [items]="typeOptions"
+            valueField="value"
+            displayField="label">
+          </sic-combobox>
+
+          <sic-datepicker
+            formControlName="deliveryDate"
+            [label]="'PMDT14_COL_DELIVERY_DATE' | translate">
+          </sic-datepicker>
+        </div>
+
+        <!-- Rich Text Editors using Tiptap -->
+        <div class="space-y-4 pt-2">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-file-earmark-text text-[var(--crm-primary)]"></i>
+              {{ 'PMDT14_RELEASE_NOTE_LABEL' | translate }}
+            </label>
+            <sic-tiptap-editor
+              formControlName="releaseNote"
+              [placeholderInput]="'PMDT14_RELEASE_NOTE_PLACEHOLDER' | translate"
+              minHeightInput="160px">
+            </sic-tiptap-editor>
+          </div>
+
+          <div class="flex flex-col gap-1.5">
+            <label class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-card-checklist text-[var(--crm-primary)]"></i>
+              {{ 'PMDT14_SUMMARY_LABEL' | translate }}
+            </label>
+            <sic-tiptap-editor
+              formControlName="deliverySummary"
+              [placeholderInput]="'PMDT14_SUMMARY_PLACEHOLDER' | translate"
+              minHeightInput="160px">
+            </sic-tiptap-editor>
+          </div>
+        </div>
       </div>
 
-      <div class="divide-y divide-[var(--border)]">
-        @for (item of checklists(); track $index) {
-          @if (item.state !== 2) {
-            <div class="py-3 flex items-center justify-between gap-4">
-              <div class="flex items-center gap-3 flex-1">
-                <input
-                  type="checkbox"
-                  [checked]="item.isChecked"
-                  [disabled]="isView()"
-                  (change)="toggleChecklist($index)"
-                  class="w-4 h-4 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" />
-                <input
-                  type="text"
-                  [(ngModel)]="item.itemName"
-                  [ngModelOptions]="{standalone: true}"
-                  [disabled]="isView()"
-                  (change)="formData.markAsDirty()"
-                  class="flex-1 text-sm bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none" />
-              </div>
-              <div class="flex items-center gap-3 text-xs">
-                <span [class]="'px-2 py-0.5 rounded text-[10px] font-medium ' + (item.isChecked ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400')">
-                  {{ (item.isChecked ? 'PMDT14_PASSED_WORD' : 'PMDT14_PENDING_WORD') | translate }}
-                </span>
-                @if (!isView()) {
-                  <button type="button" (click)="removeChecklistItem($index)" class="text-[var(--crm-danger)] hover:opacity-80 p-1">
-                    <i class="bi bi-trash"></i>
-                  </button>
-                }
-              </div>
-            </div>
+      <!-- Checklist Management Card -->
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
+        <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-check2-square text-[var(--crm-primary)]"></i>
+            {{ 'PMDT14_CHECKLIST_TITLE' | translate }}
+          </h3>
+          @if (!isView()) {
+            <button
+              type="button"
+              (click)="addChecklistItem()"
+              class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors"
+            >
+              <i class="bi bi-plus-lg"></i> {{ 'PMDT14_ADD_CHECKLIST_BTN' | translate }}
+            </button>
           }
-        }
+        </div>
+
+        <div class="divide-y divide-[var(--border)]">
+          @for (item of checklists(); track $index) {
+            @if (item.state !== 2) {
+              <div class="py-3 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3 flex-1">
+                  <input
+                    type="checkbox"
+                    [checked]="item.isChecked"
+                    [disabled]="isView()"
+                    (change)="toggleChecklist($index)"
+                    class="w-4 h-4 rounded border-[var(--border)] text-[var(--crm-primary)] focus:ring-[var(--crm-primary)] cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed" />
+                  <input
+                    type="text"
+                    [(ngModel)]="item.itemName"
+                    [ngModelOptions]="{standalone: true}"
+                    [disabled]="isView()"
+                    (change)="formData.markAsDirty()"
+                    class="flex-1 text-sm bg-transparent border-b border-dashed border-[var(--border)] focus:border-[var(--crm-primary)] outline-none px-1 py-0.5 text-[var(--text-active)] disabled:opacity-90 disabled:cursor-not-allowed disabled:border-none" />
+                </div>
+                <div class="flex items-center gap-3 text-xs">
+                  <span [class]="'px-2 py-0.5 rounded text-[10px] font-medium ' + (item.isChecked ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400' : 'bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400')">
+                    {{ (item.isChecked ? 'PMDT14_PASSED_WORD' : 'PMDT14_PENDING_WORD') | translate }}
+                  </span>
+                  @if (!isView()) {
+                    <button type="button" (click)="removeChecklistItem($index)" class="text-[var(--crm-danger)] hover:opacity-80 p-1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  }
+                </div>
+              </div>
+            }
+          }
+        </div>
       </div>
-    </div>
 
-    <!-- Attachments Card -->
-    <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
-      <div class="border-b border-[var(--border)] pb-3">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-          {{ 'PMDT14_ATTACHMENTS_TITLE' | translate }}
-        </h3>
-        <p class="text-xs text-[var(--text-muted)] mt-1">
-          {{ 'PMDT14_ATTACHMENTS_DESC' | translate }}
-        </p>
-      </div>
-
-      <sic-upload
-        formControlName="attachmentGroupId"
-        [uploadGroupId]="formData.form.controls['attachmentGroupId']?.value || null"
-        [maxFiles]="10">
-      </sic-upload>
-    </div>
-
-    <!-- Approval Flow Selection Card (New / Edit) -->
-    @if (!isView()) {
-      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+      <!-- Attachments Card -->
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl shadow-sm border border-[var(--border)] space-y-4">
         <div class="border-b border-[var(--border)] pb-3">
           <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-            {{ 'PMDT14_APPROVAL_FLOW_TITLE' | translate }}
+            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+            {{ 'PMDT14_ATTACHMENTS_TITLE' | translate }}
           </h3>
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            {{ 'PMDT14_APPROVAL_FLOW_DESC' | translate }}
+            {{ 'PMDT14_ATTACHMENTS_DESC' | translate }}
           </p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <sic-combobox
-            [label]="'PMDT14_APPROVAL_FLOW_TITLE' | translate"
-            [apiUrl]="approvalFlowsApi"
-            valueField="id"
-            textField="flowName"
-            [placeholder]="'PMDT14_SELECT_APPROVAL_FLOW' | translate"
-            [clearable]="true"
-            (selectionChanged)="selectedFlowId.set($event?.id || null)">
-          </sic-combobox>
+        <sic-upload
+          formControlName="attachmentGroupId"
+          [uploadGroupId]="formData.form.controls['attachmentGroupId']?.value || null"
+          [maxFiles]="10">
+        </sic-upload>
+      </div>
+
+      <!-- Approval Flow Selection Card (New / Edit) -->
+      @if (!isView()) {
+        <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+          <div class="border-b border-[var(--border)] pb-3">
+            <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+              {{ 'PMDT14_APPROVAL_FLOW_TITLE' | translate }}
+            </h3>
+            <p class="text-xs text-[var(--text-muted)] mt-1">
+              {{ 'PMDT14_APPROVAL_FLOW_DESC' | translate }}
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <sic-combobox
+              [label]="'PMDT14_APPROVAL_FLOW_TITLE' | translate"
+              [apiUrl]="approvalFlowsApi"
+              valueField="id"
+              textField="flowName"
+              [placeholder]="'PMDT14_SELECT_APPROVAL_FLOW' | translate"
+              [clearable]="true"
+              (selectionChanged)="selectedFlowId.set($event?.id || null)">
+            </sic-combobox>
+          </div>
         </div>
-      </div>
-    }
-
-    <!-- Trace Link Panel -->
-    @if (id()) {
-      <sic-trace-link-panel
-        entityType="DELIVERY"
-        [entityId]="id()"
-        [projectId]="projectId"
-      ></sic-trace-link-panel>
-    }
-
-    <!-- Bottom Action Bar -->
-    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
-      <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> {{ (isView() ? 'PMDT14_BACK_SIMPLE_TIP' : 'PMDT14_CANCEL_BTN') | translate }}
-      </sic-button>
-      @if (isLocked()) {
-        <sic-button variant="solid" color="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> {{ 'PMDT14_REQUEST_EDIT_BTN' | translate }}
-        </sic-button>
-      } @else if (isView()) {
-        <sic-button variant="solid" color="primary" (click)="goToEditMode()">
-          <i class="bi bi-pencil"></i> {{ 'PMDT14_EDIT_DOC_BTN' | translate }}
-        </sic-button>
-      } @else {
-        <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()">
-          @if (!isSaving()) {
-            <i class="bi bi-check-lg"></i>
-          }
-          {{ 'PMDT14_SAVE_DOC_BTN' | translate }}
-        </sic-button>
       }
-    </div>
 
-    @if (isLocked()) {
-      <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
-        <i class="bi bi-lock-fill"></i>
-        {{ 'PMDT14_LOCKED_NOTE' | translate }}
+      <!-- Trace Link Panel -->
+      @if (id()) {
+        <sic-trace-link-panel
+          entityType="DELIVERY"
+          [entityId]="id()"
+          [projectId]="projectId"
+        ></sic-trace-link-panel>
+      }
+
+      <!-- Bottom Action Bar -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+        <sic-button variant="outline" (click)="onBack()">
+          <i class="bi bi-arrow-left"></i> {{ (isView() ? 'PMDT14_BACK_SIMPLE_TIP' : 'PMDT14_CANCEL_BTN') | translate }}
+        </sic-button>
+        @if (isLocked()) {
+          <sic-button variant="solid" color="primary" (click)="requestChange()">
+            <i class="bi bi-pencil-square"></i> {{ 'PMDT14_REQUEST_EDIT_BTN' | translate }}
+          </sic-button>
+        } @else if (isView()) {
+          <sic-button variant="solid" color="primary" (click)="goToEditMode()">
+            <i class="bi bi-pencil"></i> {{ 'PMDT14_EDIT_DOC_BTN' | translate }}
+          </sic-button>
+        } @else {
+          <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()">
+            @if (!isSaving()) {
+              <i class="bi bi-check-lg"></i>
+            }
+            {{ 'PMDT14_SAVE_DOC_BTN' | translate }}
+          </sic-button>
+        }
       </div>
-    }
-  </form>
+
+      @if (isLocked()) {
+        <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+          <i class="bi bi-lock-fill"></i>
+          {{ 'PMDT14_LOCKED_NOTE' | translate }}
+        </div>
+      }
+    </form>
+  </sic-doc-split>
 </div>
 
 <!-- ============================================================ -->

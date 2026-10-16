@@ -46,12 +46,12 @@ import { tryAiAutoOpen } from '../../../../../core/utils/ai-navigator-deeplink.u
 import { SicAiAttachmentPickerComponent } from '../../../../../core/component/sic-ai-attachment-picker/sic-ai-attachment-picker.component';
 import { SicUploadComponent } from '../../../../../core/component/sic-upload/sic-upload.component';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
-import { SicLivePdfButtonComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-live-pdf-button.component';
+import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-split.component';
 
 @Component({
   selector: 'app-pmrt04a',
   standalone: true,
-  imports: [SicLivePdfButtonComponent, 
+  imports: [SicDocSplitComponent, 
     SicCrHistoryPanelComponent,
     CommonModule,
     ReactiveFormsModule,
@@ -276,7 +276,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     return this.formData?.isChanged ?? false;
   };
 
-  /** the form as it would be saved, for the live Jasper PDF (sic-live-pdf-button) */
+  /** the form as it would be saved, for the live Jasper PDF (sic-doc-split) */
   pdfPreviewBody(): any {
     return { ...this.form.getRawValue(), id: this.contractId || this.form.getRawValue().id || null };
   }

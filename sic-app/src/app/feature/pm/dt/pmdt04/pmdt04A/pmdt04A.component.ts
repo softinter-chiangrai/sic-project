@@ -52,7 +52,6 @@ import { NavigationService } from '../../../../../core/services/navigation.servi
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 
 // Preview Component
-import { SicRequirementPreviewComponent } from './pmdt04-preview/pmdt04-preview.component';
 import { SicJasperLivePreviewComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-jasper-live-preview.component';
 
 import { Pmdt04APageData, RequirementModel } from './pmdt04A.model';
@@ -131,7 +130,6 @@ export class Pmdt04AService {
     SicVersionBadgeComponent,
     SicComboboxComponent,
     SicInputComponent,
-    SicRequirementPreviewComponent,
     SicJasperLivePreviewComponent,
     SicTiptapEditorComponent,
     SicUploadComponent,
@@ -184,8 +182,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   // ===== View Mode =====
   viewMode: 'edit' | 'split' | 'preview' = 'split';
-  // preview panel: the quick HTML preview, or the real Jasper PDF of the unsaved form (refreshed when typing pauses)
-  previewKind: 'html' | 'pdf' = 'html';
 
   pdfPreviewBody(): any {
     const v = this.form.getRawValue();
@@ -727,26 +723,6 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   setViewMode(mode: 'edit' | 'split' | 'preview'): void {
     this.viewMode = mode;
     this.cdr.markForCheck();
-  }
-
-  // ===== Preview Data =====
-  getPreviewData(): any {
-    const value = this.form.value;
-    return {
-      requirementCode: value.requirementCode || '...',
-      title: value.title || '...',
-      description: value.description || `<em>${this.translate.instant('PMDT04_PLEASE_ENTER_DESCRIPTION')}</em>`,
-      acceptanceCriteria: value.acceptanceCriteria || '',
-      priority: value.priority || 'Must',
-      requirementType: value.requirementType || '',
-      source: value.source || '',
-      businessValue: value.businessValue || '',
-      createdBy: value.createdBy || this.translate.instant('PMDT04_DEFAULT_USER_LABEL'),
-      version: value.version || 'v1.0.0',
-      status: value.status || 'Draft',
-      projectName: value.projectName || this.translate.instant('PMDT04_LOADING_ELLIPSIS'),
-      createdAt: new Date().toISOString(),
-    };
   }
 
   getStatusText(status: string): string {

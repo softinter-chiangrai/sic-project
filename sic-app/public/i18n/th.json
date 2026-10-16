@@ -1,6 +1,7 @@
 {
-  "LIVE_PDF_TAB_QUICK": "ตัวอย่าง",
-  "LIVE_PDF_TAB_JASPER": "PDF จริง",
+  "DOC_VIEW_EDIT": "แก้ไข",
+  "DOC_VIEW_SPLIT": "แบ่งจอ",
+  "DOC_VIEW_PDF": "PDF",
   "LIVE_PDF_GENERATING": "กำลังสร้าง PDF…",
   "LIVE_PDF_UPDATING": "กำลังอัปเดต…",
   "FIELD_PROJECT_ID": "โครงการ (เลือกที่แถบด้านบน)",

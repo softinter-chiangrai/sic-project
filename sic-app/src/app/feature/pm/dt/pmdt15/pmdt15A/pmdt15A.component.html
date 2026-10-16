@@ -35,7 +35,6 @@
         <i class="bi bi-stars text-sm"></i>
         <span>{{ 'PMDT15_CREATE_WITH_AI' | translate }}</span>
       </button>
-      <sic-live-pdf-button kind="user-manual" [body]="pdfPreviewBody()"></sic-live-pdf-button>
       @if (id()) {
         <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
@@ -47,264 +46,266 @@
 
   <!-- Main Meta Form -->
   <div class="mb-4"><sic-cr-history-panel targetType="USER_MANUAL" [targetId]="id()"></sic-cr-history-panel></div>
-  <form [formGroup]="formData.form" class="space-y-5">
-    <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
-      <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
-        <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
-        {{ 'PMDT15_INFO_SECTION_TITLE' | translate }}
-      </h2>
+  <sic-doc-split kind="user-manual" [body]="pdfPreviewBody()">
+    <form [formGroup]="formData.form" class="space-y-5">
+      <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+        <h2 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2 border-b border-[var(--border)] pb-3">
+          <i class="bi bi-info-circle text-[var(--crm-primary)]"></i>
+          {{ 'PMDT15_INFO_SECTION_TITLE' | translate }}
+        </h2>
 
-      <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-        <div class="md:col-span-4">
-          <sic-combobox
-            formControlName="customerId"
-            [label]="'PMDT15_CUSTOMER_LABEL' | translate"
-            [apiUrl]="apiGetComboboxCustomer"
-            valueField="value"
-            textField="text"
-            [placeholder]="'PMDT15_CUSTOMER_PLACEHOLDER' | translate"
-            [clearable]="true"
-            (selectionChanged)="onCustomerSelected($event)">
-          </sic-combobox>
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+          <div class="md:col-span-4">
+            <sic-combobox
+              formControlName="customerId"
+              [label]="'PMDT15_CUSTOMER_LABEL' | translate"
+              [apiUrl]="apiGetComboboxCustomer"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT15_CUSTOMER_PLACEHOLDER' | translate"
+              [clearable]="true"
+              (selectionChanged)="onCustomerSelected($event)">
+            </sic-combobox>
+          </div>
 
-        <div class="md:col-span-4">
-          <sic-combobox
-            formControlName="projectId"
-            [label]="isProjectDerived() ? ('PMDT15_PROJECT_DERIVED_LABEL' | translate) : ('PMDT15_PROJECT_LABEL' | translate)"
-            [apiUrl]="apiGetComboboxProject"
-            [params]="projectParams"
-            valueField="value"
-            textField="text"
-            [placeholder]="'PMDT15_PROJECT_PLACEHOLDER' | translate"
-            [clearable]="true"
-            [required]="true"
-            [disabled]="isProjectDerived()"
-            (selectionChanged)="onProjectSelected($event)">
-          </sic-combobox>
-        </div>
+          <div class="md:col-span-4">
+            <sic-combobox
+              formControlName="projectId"
+              [label]="isProjectDerived() ? ('PMDT15_PROJECT_DERIVED_LABEL' | translate) : ('PMDT15_PROJECT_LABEL' | translate)"
+              [apiUrl]="apiGetComboboxProject"
+              [params]="projectParams"
+              valueField="value"
+              textField="text"
+              [placeholder]="'PMDT15_PROJECT_PLACEHOLDER' | translate"
+              [clearable]="true"
+              [required]="true"
+              [disabled]="isProjectDerived()"
+              (selectionChanged)="onProjectSelected($event)">
+            </sic-combobox>
+          </div>
 
-        <div class="md:col-span-4">
-          <sic-combobox
-            formControlName="deliveryId"
-            [label]="'PMDT15_DELIVERY_LABEL' | translate"
-            [options]="deliveryOptions()"
-            [placeholder]="'PMDT15_DELIVERY_PLACEHOLDER' | translate"
-            (selectionChanged)="onDeliverySelected($event)"
-            [clearable]="true"
-            valueField="value"
-            displayField="text">
-          </sic-combobox>
-        </div>
+          <div class="md:col-span-4">
+            <sic-combobox
+              formControlName="deliveryId"
+              [label]="'PMDT15_DELIVERY_LABEL' | translate"
+              [options]="deliveryOptions()"
+              [placeholder]="'PMDT15_DELIVERY_PLACEHOLDER' | translate"
+              (selectionChanged)="onDeliverySelected($event)"
+              [clearable]="true"
+              valueField="value"
+              displayField="text">
+            </sic-combobox>
+          </div>
 
-        <div class="md:col-span-3">
-          <sic-input
-            formControlName="manualCode"
-            [label]="'PMDT15_CODE_FIELD_LABEL' | translate"
-            [placeholder]="'PMDT15_CODE_PLACEHOLDER' | translate">
-          </sic-input>
-        </div>
+          <div class="md:col-span-3">
+            <sic-input
+              formControlName="manualCode"
+              [label]="'PMDT15_CODE_FIELD_LABEL' | translate"
+              [placeholder]="'PMDT15_CODE_PLACEHOLDER' | translate">
+            </sic-input>
+          </div>
 
-        <div class="md:col-span-3">
-          <sic-combobox
-            formControlName="manualType"
-            [label]="'PMDT15_TYPE_FIELD_LABEL' | translate"
-            [options]="typeOptions"
-            valueField="value"
-            displayField="label">
-          </sic-combobox>
-        </div>
+          <div class="md:col-span-3">
+            <sic-combobox
+              formControlName="manualType"
+              [label]="'PMDT15_TYPE_FIELD_LABEL' | translate"
+              [options]="typeOptions"
+              valueField="value"
+              displayField="label">
+            </sic-combobox>
+          </div>
 
-        <div class="md:col-span-6">
-          <sic-input
-            formControlName="manualTitle"
-            [label]="'PMDT15_TITLE_FIELD_LABEL' | translate"
-            [placeholder]="'PMDT15_TITLE_PLACEHOLDER' | translate">
-          </sic-input>
-        </div>
+          <div class="md:col-span-6">
+            <sic-input
+              formControlName="manualTitle"
+              [label]="'PMDT15_TITLE_FIELD_LABEL' | translate"
+              [placeholder]="'PMDT15_TITLE_PLACEHOLDER' | translate">
+            </sic-input>
+          </div>
 
-        <!-- Attachments -->
-        <div class="md:col-span-12">
-          <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
-            <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
-            {{ 'PMDT15_ATTACHMENTS_LABEL' | translate }}
-          </label>
-          <sic-upload
-            formControlName="attachmentGroupId"
-            [uploadGroupId]="formData?.form?.controls?.['attachmentGroupId']?.value || null"
-            [multiple]="true"
-            category="all"
-            [disabled]="isLocked()"
-          ></sic-upload>
+          <!-- Attachments -->
+          <div class="md:col-span-12">
+            <label class="block text-sm font-medium text-[var(--text-active)] mb-1.5 flex items-center gap-2">
+              <i class="bi bi-paperclip text-[var(--crm-primary)]"></i>
+              {{ 'PMDT15_ATTACHMENTS_LABEL' | translate }}
+            </label>
+            <sic-upload
+              formControlName="attachmentGroupId"
+              [uploadGroupId]="formData?.form?.controls?.['attachmentGroupId']?.value || null"
+              [multiple]="true"
+              category="all"
+              [disabled]="isLocked()"
+            ></sic-upload>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Interactive Section Builder Layout -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-      <!-- Left Sidebar: Section List -->
-      <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3">
-        <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
-          <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-            <i class="bi bi-list-nested text-[var(--crm-primary)]"></i>
-            {{ 'PMDT15_SECTION_STRUCTURE_TITLE' | translate }}
-          </h3>
-          <button
-            type="button"
-            (click)="addSection()"
-            [disabled]="isLocked()"
-            class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <i class="bi bi-plus-lg"></i> {{ 'PMDT15_ADD_SECTION_BTN' | translate }}
-          </button>
-        </div>
-
-        @if (sections().length === 0) {
-          <div class="text-center py-8 text-[var(--text-muted)] space-y-2">
-            <i class="bi bi-journal-plus text-3xl opacity-30"></i>
-            <p class="text-xs">{{ 'PMDT15_NO_SECTIONS_HINT' | translate }}</p>
+      <!-- Interactive Section Builder Layout -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+        <!-- Left Sidebar: Section List -->
+        <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-4 shadow-sm space-y-3">
+          <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+            <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+              <i class="bi bi-list-nested text-[var(--crm-primary)]"></i>
+              {{ 'PMDT15_SECTION_STRUCTURE_TITLE' | translate }}
+            </h3>
+            <button
+              type="button"
+              (click)="addSection()"
+              [disabled]="isLocked()"
+              class="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <i class="bi bi-plus-lg"></i> {{ 'PMDT15_ADD_SECTION_BTN' | translate }}
+            </button>
           </div>
-        } @else {
-          <div class="space-y-1.5">
-            @for (sec of sections(); track sec.id || $index) {
-              <div
-                (click)="selectSection($index)"
-                [class]="'p-2.5 rounded-lg border text-xs cursor-pointer transition-all flex items-center justify-between gap-2 ' +
-                  (selectedSectionIndex() === $index
-                    ? 'bg-[var(--crm-primary)]/10 border-[var(--crm-primary)] text-[var(--crm-primary)] font-medium shadow-xs'
-                    : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)]')"
-              >
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="font-mono text-[10px] opacity-60 shrink-0">{{ $index + 1 }}.</span>
-                  <span class="truncate">{{ sec.sectionTitle || ('PMDT15_UNTITLED_SECTION' | translate) }}</span>
+
+          @if (sections().length === 0) {
+            <div class="text-center py-8 text-[var(--text-muted)] space-y-2">
+              <i class="bi bi-journal-plus text-3xl opacity-30"></i>
+              <p class="text-xs">{{ 'PMDT15_NO_SECTIONS_HINT' | translate }}</p>
+            </div>
+          } @else {
+            <div class="space-y-1.5">
+              @for (sec of sections(); track sec.id || $index) {
+                <div
+                  (click)="selectSection($index)"
+                  [class]="'p-2.5 rounded-lg border text-xs cursor-pointer transition-all flex items-center justify-between gap-2 ' +
+                    (selectedSectionIndex() === $index
+                      ? 'bg-[var(--crm-primary)]/10 border-[var(--crm-primary)] text-[var(--crm-primary)] font-medium shadow-xs'
+                      : 'border-[var(--border)] text-[var(--text)] hover:bg-[var(--sidebar-hover)]')"
+                >
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="font-mono text-[10px] opacity-60 shrink-0">{{ $index + 1 }}.</span>
+                    <span class="truncate">{{ sec.sectionTitle || ('PMDT15_UNTITLED_SECTION' | translate) }}</span>
+                  </div>
+                  @if (!isLocked()) {
+                    <button
+                      type="button"
+                      (click)="removeSection($index); $event.stopPropagation()"
+                      class="text-[var(--crm-danger)] hover:opacity-80 p-0.5 shrink-0"
+                      [title]="'PMDT15_DELETE_SECTION_TIP' | translate"
+                    >
+                      <i class="bi bi-trash text-xs"></i>
+                    </button>
+                  }
                 </div>
-                @if (!isLocked()) {
-                  <button
-                    type="button"
-                    (click)="removeSection($index); $event.stopPropagation()"
-                    class="text-[var(--crm-danger)] hover:opacity-80 p-0.5 shrink-0"
-                    [title]="'PMDT15_DELETE_SECTION_TIP' | translate"
-                  >
-                    <i class="bi bi-trash text-xs"></i>
-                  </button>
-                }
-              </div>
-            }
-          </div>
-        }
-      </div>
-
-      <!-- Right Panel: Section Content Editor -->
-      <div class="md:col-span-2 bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
-        @if (selectedSection(); as sec) {
-          <div class="space-y-4">
-            <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
-              <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
-                <i class="bi bi-pencil-square text-[var(--crm-primary)]"></i>
-                {{ 'PMDT15_EDIT_SECTION_PREFIX' | translate }} {{ sec.sectionTitle || ('PMDT15_SUBSECTION_DEFAULT' | translate) }}
-              </h3>
+              }
             </div>
-
-            <div>
-              <sic-input
-                [ngModel]="sec.sectionTitle"
-                [ngModelOptions]="{standalone: true}"
-                [disabled]="isLocked()"
-                (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'sectionTitle', $event)"
-                [label]="'PMDT15_SECTION_NAME_LABEL' | translate"
-                [placeholder]="'PMDT15_SECTION_NAME_PLACEHOLDER' | translate">
-              </sic-input>
-            </div>
-
-            <div>
-              <label class="block text-xs font-semibold text-[var(--text)] mb-1.5">
-                {{ 'PMDT15_CONTENT_LABEL' | translate }}
-              </label>
-              <sic-tiptap-editor
-                [ngModel]="sec.content"
-                [ngModelOptions]="{standalone: true}"
-                [disabled]="isLocked()"
-                (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'content', $event)"
-                [placeholderInput]="'PMDT15_CONTENT_PLACEHOLDER' | translate"
-                minHeightInput="260px">
-              </sic-tiptap-editor>
-            </div>
-          </div>
-        } @else {
-          <div class="text-center py-16 text-[var(--text-muted)] space-y-2">
-            <i class="bi bi-arrow-left-circle text-4xl opacity-30"></i>
-            <p class="text-sm">{{ 'PMDT15_SELECT_SECTION_HINT' | translate }}</p>
-          </div>
-        }
-      </div>
-    </div>
-
-    <!-- Approval Flow Selection Card -->
-    <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
-      <div class="border-b border-[var(--border)] pb-3">
-        <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
-          <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
-          {{ 'PMDT15_APPROVAL_FLOW_TITLE' | translate }}
-        </h3>
-        <p class="text-xs text-[var(--text-muted)] mt-1">
-          {{ 'PMDT15_APPROVAL_FLOW_DESC' | translate }}
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <sic-combobox
-          [label]="'PMDT15_APPROVAL_FLOW_LABEL' | translate"
-          [apiUrl]="approvalFlowsApi"
-          valueField="id"
-          textField="flowName"
-          [placeholder]="'PMDT15_SELECT_APPROVAL_FLOW' | translate"
-          [clearable]="true"
-          (selectionChanged)="selectedFlowId.set($event?.id || null)">
-        </sic-combobox>
-      </div>
-    </div>
-
-    <!-- Trace Link Panel -->
-    @if (id()) {
-      <sic-trace-link-panel
-        entityType="USER_MANUAL"
-        [entityId]="id()"
-        [projectId]="projectId"
-      ></sic-trace-link-panel>
-    }
-
-    <!-- Bottom Action Bar -->
-    <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
-      <sic-button variant="outline" (click)="onBack()">
-        <i class="bi bi-arrow-left"></i> {{ 'PMDT15_CANCEL_BTN' | translate }}
-      </sic-button>
-      @if (id()) {
-        <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
-          <i class="bi bi-file-earmark-pdf text-red-500"></i>
-          {{ (isPrinting() ? 'PMDT15_GENERATING_PDF' : 'PMDT15_EXPORT_PDF') | translate }}
-        </sic-button>
-      }
-      @if (isLocked()) {
-        <sic-button variant="solid" color="primary" (click)="requestChange()">
-          <i class="bi bi-pencil-square"></i> {{ 'PMDT15_REQUEST_EDIT_BTN' | translate }}
-        </sic-button>
-      } @else {
-        <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()" [disabled]="isSaving()">
-          @if (!isSaving()) {
-            <i class="bi bi-check-lg"></i>
           }
-          {{ (isSaving() ? 'PMDT15_SAVING_ELLIPSIS' : 'PMDT15_SAVE_MANUAL_BTN') | translate }}
-        </sic-button>
-      }
-    </div>
+        </div>
 
-    @if (isLocked()) {
-      <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
-        <i class="bi bi-lock-fill"></i>
-        {{ 'PMDT15_LOCKED_NOTE' | translate }}
+        <!-- Right Panel: Section Content Editor -->
+        <div class="md:col-span-2 bg-[var(--sidebar)] border border-[var(--border)] rounded-xl p-5 shadow-sm space-y-4">
+          @if (selectedSection(); as sec) {
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b border-[var(--border)] pb-3">
+                <h3 class="text-sm font-semibold text-[var(--text-active)] flex items-center gap-2">
+                  <i class="bi bi-pencil-square text-[var(--crm-primary)]"></i>
+                  {{ 'PMDT15_EDIT_SECTION_PREFIX' | translate }} {{ sec.sectionTitle || ('PMDT15_SUBSECTION_DEFAULT' | translate) }}
+                </h3>
+              </div>
+
+              <div>
+                <sic-input
+                  [ngModel]="sec.sectionTitle"
+                  [ngModelOptions]="{standalone: true}"
+                  [disabled]="isLocked()"
+                  (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'sectionTitle', $event)"
+                  [label]="'PMDT15_SECTION_NAME_LABEL' | translate"
+                  [placeholder]="'PMDT15_SECTION_NAME_PLACEHOLDER' | translate">
+                </sic-input>
+              </div>
+
+              <div>
+                <label class="block text-xs font-semibold text-[var(--text)] mb-1.5">
+                  {{ 'PMDT15_CONTENT_LABEL' | translate }}
+                </label>
+                <sic-tiptap-editor
+                  [ngModel]="sec.content"
+                  [ngModelOptions]="{standalone: true}"
+                  [disabled]="isLocked()"
+                  (ngModelChange)="onSectionFieldChange(selectedSectionIndex(), 'content', $event)"
+                  [placeholderInput]="'PMDT15_CONTENT_PLACEHOLDER' | translate"
+                  minHeightInput="260px">
+                </sic-tiptap-editor>
+              </div>
+            </div>
+          } @else {
+            <div class="text-center py-16 text-[var(--text-muted)] space-y-2">
+              <i class="bi bi-arrow-left-circle text-4xl opacity-30"></i>
+              <p class="text-sm">{{ 'PMDT15_SELECT_SECTION_HINT' | translate }}</p>
+            </div>
+          }
+        </div>
       </div>
-    }
-  </form>
+
+      <!-- Approval Flow Selection Card -->
+      <div class="bg-[var(--sidebar)] p-5 rounded-xl border border-[var(--border)] shadow-sm space-y-4">
+        <div class="border-b border-[var(--border)] pb-3">
+          <h3 class="text-base font-semibold text-[var(--text-active)] flex items-center gap-2">
+            <i class="bi bi-check2-circle text-[var(--crm-primary)]"></i>
+            {{ 'PMDT15_APPROVAL_FLOW_TITLE' | translate }}
+          </h3>
+          <p class="text-xs text-[var(--text-muted)] mt-1">
+            {{ 'PMDT15_APPROVAL_FLOW_DESC' | translate }}
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <sic-combobox
+            [label]="'PMDT15_APPROVAL_FLOW_LABEL' | translate"
+            [apiUrl]="approvalFlowsApi"
+            valueField="id"
+            textField="flowName"
+            [placeholder]="'PMDT15_SELECT_APPROVAL_FLOW' | translate"
+            [clearable]="true"
+            (selectionChanged)="selectedFlowId.set($event?.id || null)">
+          </sic-combobox>
+        </div>
+      </div>
+
+      <!-- Trace Link Panel -->
+      @if (id()) {
+        <sic-trace-link-panel
+          entityType="USER_MANUAL"
+          [entityId]="id()"
+          [projectId]="projectId"
+        ></sic-trace-link-panel>
+      }
+
+      <!-- Bottom Action Bar -->
+      <div class="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+        <sic-button variant="outline" (click)="onBack()">
+          <i class="bi bi-arrow-left"></i> {{ 'PMDT15_CANCEL_BTN' | translate }}
+        </sic-button>
+        @if (id()) {
+          <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
+            <i class="bi bi-file-earmark-pdf text-red-500"></i>
+            {{ (isPrinting() ? 'PMDT15_GENERATING_PDF' : 'PMDT15_EXPORT_PDF') | translate }}
+          </sic-button>
+        }
+        @if (isLocked()) {
+          <sic-button variant="solid" color="primary" (click)="requestChange()">
+            <i class="bi bi-pencil-square"></i> {{ 'PMDT15_REQUEST_EDIT_BTN' | translate }}
+          </sic-button>
+        } @else {
+          <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()" [disabled]="isSaving()">
+            @if (!isSaving()) {
+              <i class="bi bi-check-lg"></i>
+            }
+            {{ (isSaving() ? 'PMDT15_SAVING_ELLIPSIS' : 'PMDT15_SAVE_MANUAL_BTN') | translate }}
+          </sic-button>
+        }
+      </div>
+
+      @if (isLocked()) {
+        <div class="flex items-center gap-2 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800 mt-3">
+          <i class="bi bi-lock-fill"></i>
+          {{ 'PMDT15_LOCKED_NOTE' | translate }}
+        </div>
+      }
+    </form>
+  </sic-doc-split>
 </div>
 
 <!-- ============================================================ -->

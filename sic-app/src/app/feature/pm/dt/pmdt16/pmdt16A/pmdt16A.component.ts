@@ -39,12 +39,12 @@ import { SicTraceLinkPanelComponent } from '../../../../../core/component/sic-tr
 import { SicCrHistoryPanelComponent } from '../../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
 import { openPdfWindow } from '../../../../../core/utils/pdf-window.util';
 import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util';
-import { SicLivePdfButtonComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-live-pdf-button.component';
+import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-live-preview/sic-doc-split.component';
 
 @Component({
   selector: 'app-pmdt16a',
   standalone: true,
-  imports: [SicLivePdfButtonComponent, 
+  imports: [SicDocSplitComponent, 
     CommonModule,
     ReactiveFormsModule,
     FormsModule,
@@ -319,7 +319,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
-  /** the form as it would be saved, for the live Jasper PDF (sic-live-pdf-button) */
+  /** the form as it would be saved, for the live Jasper PDF (sic-doc-split) */
   pdfPreviewBody(): any {
     return { ...this.formData.form.getRawValue(), id: this.id() || this.formData.form.getRawValue().id || null, items: this.items() };
   }
