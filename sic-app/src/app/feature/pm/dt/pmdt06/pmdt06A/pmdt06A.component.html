@@ -327,12 +327,11 @@
                     </div>
                   }
 
-                  @if (impact.dfdImpact || impact.erImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
+                  @if (impact.diagramImpact || impact.uiImpact || impact.apiImpact || impact.testImpact) {
                     <div class="md:col-span-2 bg-[var(--bg)] rounded-lg p-3 border border-[var(--border)]">
                       <p class="font-medium text-[var(--text-active)] mb-1">{{ 'PMDT06_IMPACT_DETAIL_LABEL' | translate }}</p>
                       <div class="grid grid-cols-1 md:grid-cols-3 gap-1 text-xs text-[var(--text-muted)]">
-                        @if (impact.dfdImpact) { <span><span class="font-medium">DFD:</span> {{ impact.dfdImpact }}</span> }
-                        @if (impact.erImpact) { <span><span class="font-medium">ER:</span> {{ impact.erImpact }}</span> }
+                        @if (impact.diagramImpact) { <span><span class="font-medium">{{ 'PMDT06_DIAGRAM_IMPACT_LABEL' | translate }}</span> {{ impact.diagramImpact }}</span> }
                         @if (impact.uiImpact) { <span><span class="font-medium">UI:</span> {{ impact.uiImpact }}</span> }
                         @if (impact.apiImpact) { <span><span class="font-medium">API:</span> {{ impact.apiImpact }}</span> }
                         @if (impact.testImpact) { <span><span class="font-medium">Test:</span> {{ impact.testImpact }}</span> }

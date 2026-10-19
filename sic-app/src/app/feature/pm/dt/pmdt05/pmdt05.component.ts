@@ -16,7 +16,7 @@ import {
   ChangeDetectionStrategy
 } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
 import { Subject, take, takeUntil, interval, Observable, firstValueFrom } from 'rxjs';
 import { debounceTime } from 'rxjs/operators';
@@ -40,7 +40,7 @@ import { SicCrHistoryPanelComponent } from '../../../../core/component/sic-cr-hi
 @Component({
   selector: 'app-pmdt05',
   standalone: true,
-  imports: [CommonModule, Pmdt05AComponent, TranslateModule, SicCrHistoryPanelComponent],
+  imports: [CommonModule, RouterLink, Pmdt05AComponent, TranslateModule, SicCrHistoryPanelComponent],
   templateUrl: './pmdt05.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrls: ['./pmdt05.component.css'],

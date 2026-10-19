@@ -1,3 +1,5 @@
+import { environment } from '../../../../environments/environment';
+import { HttpClient } from '@angular/common/http';
 import {
   Component,
   ChangeDetectionStrategy,
@@ -16,12 +18,11 @@ import { finalize } from 'rxjs/operators';
 
 import { CustomerStateService } from '../../services/customer-state.service';
 import { PmCustomerProject } from '../../../feature/pm/rt/pmrt02/pmrt02.model';
-import { Pmrt03Service } from '../../../feature/pm/rt/pmrt03/pmrt03.service';
 import {
   ProjectDashboard,
   ProjectHealth,
   ProjectHealthFactor,
-} from '../../../feature/pm/rt/pmrt03/pmrt03.model';
+} from './project-health-widget.model';
 
 @Component({
   selector: 'app-project-health-widget',
@@ -32,7 +33,7 @@ import {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ProjectHealthWidgetComponent implements OnInit {
-  private readonly pmrt03Service = inject(Pmrt03Service);
+  private readonly http = inject(HttpClient);
   private readonly customerState = inject(CustomerStateService);
   private readonly translate = inject(TranslateService);
 
@@ -83,8 +84,8 @@ export class ProjectHealthWidgetComponent implements OnInit {
     if (!projectId) return;
     this.isLoading.set(true);
 
-    this.pmrt03Service
-      .getDashboard(projectId)
+    this.http
+      .get<ProjectDashboard>(`${environment.apiBaseUrl}/api/pm/dashboard/${projectId}`)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (data) => {

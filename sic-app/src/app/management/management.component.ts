@@ -1,5 +1,5 @@
 import { Component, inject, signal, ChangeDetectionStrategy } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { RouterLink, RouterOutlet } from '@angular/router';
 import { SicContainerComponent } from "../core/component/sic-container/sic-container.component";
 import { ThemeService } from '../core/services/theme.service';
 import { AppLanguage, LanguageService } from '../core/services/language.service';
@@ -11,7 +11,7 @@ import { APP_TRANSLATE_MODULE_CODE, APP_TRANSLATE_PROGRAM_CODE, AppTranslateLoad
 
 @Component({
   selector: 'app-management',
-  imports: [RouterOutlet, TranslateModule, SicContainerComponent],
+  imports: [RouterOutlet, RouterLink, TranslateModule, SicContainerComponent],
   templateUrl: './management.component.html',
   changeDetection: ChangeDetectionStrategy.Eager,
   styleUrl: './management.component.css',

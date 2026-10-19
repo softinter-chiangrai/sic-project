@@ -12,8 +12,7 @@ public class SaveImpactAnalysisRequest {
     @NotNull(message = "Change Request ID is required")
     private UUID changeRequestId;
 
-    private String dfdImpact;
-    private String erImpact;
+    private String diagramImpact; // any drawing type (DFD, ER, Flowchart, ...)
     private String uiImpact;
     private String apiImpact;
     private String testImpact;

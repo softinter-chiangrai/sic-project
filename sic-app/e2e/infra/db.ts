@@ -47,6 +47,14 @@ async function waitBackend() {
 export async function up() {
   if (await isUp()) return;
   if (!psql(`select 1 from pg_database where datname='${E2E_DB}'`)) psql(`CREATE DATABASE ${E2E_DB} OWNER "sic-app"`);
+  // Tests run against the backend started from source (AGENTS.md "Local Backend While Testing"): an old docker image
+  // would test old code. Starting the docker backend is opt-in (E2E_DOCKER_BACKEND=1, e.g. a machine without the source build).
+  if (!process.env['E2E_DOCKER_BACKEND']) {
+    throw new Error(
+      `no backend on :${PORT}. Start it from source first (DB ${E2E_DB}, port ${PORT}): ` +
+        'see .claude/skills/playwright/SKILL.md "Run"; or set E2E_DOCKER_BACKEND=1 to start the docker image instead',
+    );
+  }
   sh(
     'docker',
     ['compose', '-f', 'docker-compose.yml', ...(ALT_PORT ? ['-f', 'sic-app/e2e/infra/compose.alt-port.yml'] : []), 'up', '-d', 'sic-spring'],

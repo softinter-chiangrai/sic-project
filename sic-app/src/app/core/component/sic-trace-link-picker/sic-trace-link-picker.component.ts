@@ -180,7 +180,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'DIAGRAM',
-      label: 'Diagram (DFD/ER)',
+      label: 'Diagram (DFD, ER, Flowchart, Sequence, ...)',
       apiUrl: `${this.apiBase}/api/diagram/tabs`,
       valueField: 'id',
       textField: 'name',

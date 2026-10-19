@@ -17,8 +17,7 @@ export interface ChangeRequest {
 export interface ImpactAnalysis {
   id?: string;
   changeRequestId: string;
-  dfdImpact?: string;
-  erImpact?: string;
+  diagramImpact?: string; // any drawing type (DFD, ER, Flowchart, ...)
   uiImpact?: string;
   apiImpact?: string;
   testImpact?: string;

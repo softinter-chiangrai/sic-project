@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SIC Backend Kahoot Quiz - ทายหน้าที่ของโมดูลระบบ</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Kanit:wght@300;400;600;700;800&family=Montserrat:wght@700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: radial-gradient(circle at 50% 20%, #2f0743 0%, #170426 50%, #0a0112 100%);
+      --red: #e21b3c;
+      --red-hover: #b9102c;
+      --blue: #1368ce;
+      --blue-hover: #0d4fa0;
+      --yellow: #ffa602;
+      --yellow-hover: #d98a00;
+      --green: #26890c;
+      --green-hover: #1c6808;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --card-border: rgba(255, 255, 255, 0.15);
+      --text: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Kanit', sans-serif;
+      user-select: none;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Ambient animated background bubbles */
+    .bubble {
+      position: absolute;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+      pointer-events: none;
+      animation: floatUp 14s infinite linear;
+      z-index: 0;
+    }
+    @keyframes floatUp {
+      0% { transform: translateY(105vh) scale(0.7); opacity: 0; }
+      20% { opacity: 0.6; }
+      80% { opacity: 0.6; }
+      100% { transform: translateY(-10vh) scale(1.2); opacity: 0; }
+    }
+
+    header {
+      position: relative;
+      z-index: 2;
+      padding: 14px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.25);
+      backdrop-filter: blur(8px);
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+    }
+
+    .brand-badge {
+      background: linear-gradient(135deg, #ff007a, #7928ca);
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .icon-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--card-border);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+    .icon-btn:hover {
+      background: rgba(255, 255, 255, 0.25);
+      transform: scale(1.05);
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      z-index: 2;
+      max-width: 1100px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    /* Screen containers */
+    .screen {
+      width: 100%;
+      display: none;
+      animation: fadeIn 0.3s ease-out;
+    }
+    .screen.active {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* LOBBY / START SCREEN */
+    .lobby-card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 40px;
+      text-align: center;
+      max-width: 650px;
+      width: 100%;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+    }
+
+    .lobby-title {
+      font-size: 2.4rem;
+      font-weight: 800;
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #ff8a00, #e52e71, #9b51e0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .lobby-desc {
+      font-size: 1.1rem;
+      color: #e0e0e0;
+      margin-bottom: 24px;
+      line-height: 1.6;
+    }
+
+    .badge-excluded {
+      display: inline-block;
+      background: rgba(255, 75, 75, 0.2);
+      border: 1px solid rgba(255, 75, 75, 0.4);
+      color: #ff9999;
+      padding: 6px 14px;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      margin-bottom: 24px;
+    }
+
+    .option-group {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .mode-chip {
+      background: rgba(255, 255, 255, 0.1);
+      border: 2px solid transparent;
+      padding: 10px 18px;
+      border-radius: 14px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .mode-chip.selected {
+      border-color: #ffa602;
+      background: rgba(255, 166, 2, 0.25);
+      transform: scale(1.05);
+    }
+
+    .btn-start {
+      background: linear-gradient(135deg, #1368ce, #26890c);
+      color: white;
+      border: none;
+      padding: 16px 48px;
+      border-radius: 50px;
+      font-size: 1.4rem;
+      font-weight: 800;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(38, 137, 12, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .btn-start:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 14px 30px rgba(38, 137, 12, 0.6);
+    }
+
+    /* QUIZ TOP BAR */
+    .quiz-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding: 0 8px;
+    }
+
+    .quiz-progress {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #ffa602;
+    }
+
+    .quiz-score {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #4cd964;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .streak-badge {
+      background: linear-gradient(90deg, #ff416c, #ff4b2b);
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 800;
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.08); }
+    }
+
+    /* QUESTION CARD */
+    .question-box {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.95);
+      color: #170426;
+      border-radius: 20px;
+      padding: 24px 30px;
+      margin-bottom: 20px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+      position: relative;
+      text-align: center;
+    }
+
+    .module-category {
+      display: inline-block;
+      font-size: 0.85rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: #7928ca;
+      background: #f0e6ff;
+      padding: 4px 12px;
+      border-radius: 20px;
+      margin-bottom: 8px;
+    }
+
+    .module-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2rem;
+      font-weight: 900;
+      color: #1a1a2e;
+      word-break: break-word;
+      letter-spacing: -0.5px;
+    }
+
+    .module-subtext {
+      margin-top: 6px;
+      color: #555;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    /* TIMER BAR */
+    .timer-container {
+      width: 100%;
+      height: 12px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      margin-bottom: 24px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .timer-bar {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #26890c, #ffa602, #e21b3c);
+      transition: width 0.1s linear;
+    }
+
+    .timer-seconds {
+      position: absolute;
+      top: -28px;
+      right: 0;
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: #ffa602;
+    }
+
+    /* KAHOOT 4 CHOICES GRID */
+    .choices-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      width: 100%;
+    }
+
+    @media (max-width: 768px) {
+      .choices-grid {
+        grid-template-columns: 1fr;
+      }
+      .module-name {
+        font-size: 1.5rem;
+      }
+      .lobby-title {
+        font-size: 1.8rem;
+      }
+    }
+
+    .choice-btn {
+      border: none;
+      border-radius: 16px;
+      padding: 22px 20px;
+      color: white;
+      font-size: 1.15rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      text-align: left;
+      line-height: 1.4;
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.35);
+      transition: transform 0.15s, filter 0.15s;
+      min-height: 95px;
+      position: relative;
+    }
+
+    .choice-btn:hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.01);
+      filter: brightness(1.1);
+    }
+    .choice-btn:active:not(:disabled) {
+      transform: translateY(1px);
+    }
+
+    .choice-btn:disabled {
+      cursor: default;
+    }
+
+    .shape-icon {
+      font-size: 1.8rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 44px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+    }
+
+    .choice-red { background-color: var(--red); }
+    .choice-blue { background-color: var(--blue); }
+    .choice-yellow { background-color: var(--yellow); }
+    .choice-green { background-color: var(--green); }
+
+    /* Answer States */
+    .choice-btn.correct {
+      animation: pulseGreen 0.6s infinite alternate;
+      border: 4px solid #fff;
+    }
+    @keyframes pulseGreen {
+      from { transform: scale(1); box-shadow: 0 0 20px #26890c; }
+      to { transform: scale(1.03); box-shadow: 0 0 35px #4cd964; }
+    }
+
+    .choice-btn.wrong {
+      opacity: 0.35;
+      filter: grayscale(0.7);
+    }
+    .choice-btn.dimmed {
+      opacity: 0.25;
+      filter: grayscale(0.9);
+    }
+
+    /* FEEDBACK MODAL / BAR */
+    .feedback-banner {
+      width: 100%;
+      margin-top: 18px;
+      padding: 18px 24px;
+      border-radius: 16px;
+      display: none;
+      animation: slideUp 0.3s ease-out;
+      backdrop-filter: blur(10px);
+    }
+    .feedback-banner.show {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    @keyframes slideUp {
+      from { transform: translateY(20px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    .feedback-banner.is-correct {
+      background: rgba(38, 137, 12, 0.9);
+      border: 1px solid #4cd964;
+    }
+    .feedback-banner.is-wrong {
+      background: rgba(226, 27, 60, 0.9);
+      border: 1px solid #ff7b92;
+    }
+
+    .feedback-title {
+      font-size: 1.3rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .feedback-detail {
+      font-size: 0.95rem;
+      opacity: 0.95;
+      margin-top: 4px;
+    }
+
+    .btn-next {
+      background: #ffffff;
+      color: #170426;
+      border: none;
+      padding: 12px 28px;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+    .btn-next:hover {
+      transform: scale(1.05);
+    }
+
+    /* RESULT SCREEN */
+    .result-card {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 36px;
+      max-width: 720px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    }
+
+    .trophy {
+      font-size: 4.5rem;
+      margin-bottom: 12px;
+      animation: bounce 1.2s infinite alternate ease-in-out;
+    }
+    @keyframes bounce {
+      from { transform: translateY(0); }
+      to { transform: translateY(-12px); }
+    }
+
+    .result-score-big {
+      font-size: 3rem;
+      font-weight: 900;
+      color: #ffa602;
+      margin-bottom: 6px;
+    }
+
+    .result-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 14px;
+      margin: 24px 0;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .stat-val {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .stat-lbl {
+      font-size: 0.85rem;
+      color: #bbb;
+      margin-top: 4px;
+    }
+
+    .review-list {
+      max-height: 220px;
+      overflow-y: auto;
+      text-align: left;
+      margin-bottom: 24px;
+      padding-right: 6px;
+    }
+    .review-item {
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.04);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+    .review-item.ok { border-left: 4px solid #4cd964; }
+    .review-item.fail { border-left: 4px solid #e21b3c; }
+
+    .result-actions {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Floating bubbles -->
+  <div class="bubble" style="left: 10%; width: 120px; height: 120px; animation-delay: 0s;"></div>
+  <div class="bubble" style="left: 30%; width: 80px; height: 80px; animation-delay: 3s;"></div>
+  <div class="bubble" style="left: 70%; width: 140px; height: 140px; animation-delay: 5s;"></div>
+  <div class="bubble" style="left: 85%; width: 90px; height: 90px; animation-delay: 8s;"></div>
+
+  <header>
+    <div class="brand">
+      <span>SIC KAHOOT!</span>
+      <span class="brand-badge">BACKEND ARCHITECTURE</span>
+    </div>
+    <div class="header-actions">
+      <button class="icon-btn" id="soundBtn" onclick="toggleSound()">🔊 เปิดเสียง</button>
+      <button class="icon-btn" onclick="restartGame()">🔄 เริ่มใหม่</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- 1. LOBBY SCREEN -->
+    <section class="screen active" id="lobbyScreen">
+      <div class="lobby-card">
+        <h1 class="lobby-title">ทายหน้าที่โมดูล Backend</h1>
+        <p class="lobby-desc">
+          เกมทดสอบความเข้าใจโครงสร้างไฟล์จริงของระบบ <strong>sic-spring</strong><br>
+          เตรียมพร้อมตอบคำถามอาจารย์ 100% สไตล์ Kahoot! สี่ตัวเลือกสุดมันส์
+        </p>
+
+        <div class="badge-excluded">
+          🚫 กรองออกแล้ว: ไม่รวม Entity, Enum, DB Master Data, entity/pm, entity/su
+        </div>
+
+        <div style="font-weight: 600; margin-bottom: 10px; color: #ffa602;">เลือกจำนวนข้อสอบ:</div>
+        <div class="option-group" id="modeSelector">
+          <div class="mode-chip selected" data-count="10">⚡ 10 ข้อ ด่วนพิเศษ</div>
+          <div class="mode-chip" data-count="20">🎯 20 ข้อ มาตรฐาน</div>
+          <div class="mode-chip" data-count="35">🔥 35 ข้อ ตะลุยจัดเต็ม</div>
+        </div>
+
+        <button class="btn-start" onclick="startGame()">🚀 เริ่มเกมเลย!</button>
+      </div>
+    </section>
+
+    <!-- 2. QUIZ SCREEN -->
+    <section class="screen" id="quizScreen">
+      <div class="quiz-header">
+        <div class="quiz-progress" id="progressText">ข้อ 1 / 10</div>
+        <div class="quiz-score">
+          <span id="streakBadge" class="streak-badge" style="display:none;">🔥 0 Streak</span>
+          <span>คะแนน: <strong id="scoreText">0</strong></span>
+        </div>
+      </div>
+
+      <div class="timer-container">
+        <div class="timer-bar" id="timerBar"></div>
+        <span class="timer-seconds" id="timerSeconds">15s</span>
+      </div>
+
+      <div class="question-box">
+        <div class="module-category" id="moduleCategory">PACKAGE / SERVICE</div>
+        <div class="module-name" id="moduleName">AiSqlGeneratorService</div>
+        <div class="module-subtext">โมดูล/คลาสนี้มีหน้าที่และการทำงานหลักอะไรในระบบ?</div>
+      </div>
+
+      <div class="choices-grid">
+        <button class="choice-btn choice-red" onclick="selectAnswer(0)" id="btn0">
+          <span class="shape-icon">▲</span>
+          <span class="choice-text" id="choiceText0">ตัวเลือกที่ 1</span>
+        </button>
+        <button class="choice-btn choice-blue" onclick="selectAnswer(1)" id="btn1">
+          <span class="shape-icon">◆</span>
+          <span class="choice-text" id="choiceText1">ตัวเลือกที่ 2</span>
+        </button>
+        <button class="choice-btn choice-yellow" onclick="selectAnswer(2)" id="btn2">
+          <span class="shape-icon">●</span>
+          <span class="choice-text" id="choiceText2">ตัวเลือกที่ 3</span>
+        </button>
+        <button class="choice-btn choice-green" onclick="selectAnswer(3)" id="btn3">
+          <span class="shape-icon">■</span>
+          <span class="choice-text" id="choiceText3">ตัวเลือกที่ 4</span>
+        </button>
+      </div>
+
+      <div class="feedback-banner" id="feedbackBanner">
+        <div>
+          <div class="feedback-title" id="feedbackTitle">ถูกต้อง! 🎉</div>
+          <div class="feedback-detail" id="feedbackDetail">คำอธิบายเพิ่มเติม</div>
+        </div>
+        <button class="btn-next" id="btnNext" onclick="nextQuestion()">ถัดไป ➔</button>
+      </div>
+    </section>
+
+    <!-- 3. RESULT SCREEN -->
+    <section class="screen" id="resultScreen">
+      <div class="result-card">
+        <div class="trophy" id="trophyIcon">🏆</div>
+        <h2 id="resultRank" style="font-size: 2rem; font-weight: 800;">สุดยอดสถาปนิก Backend!</h2>
+        <div class="result-score-big" id="finalScore">0</div>
+        <p style="color: #bbb;">คะแนนรวมของคุณ</p>
+
+        <div class="result-stats">
+          <div class="stat-box">
+            <div class="stat-val" id="statCorrect" style="color: #4cd964;">0</div>
+            <div class="stat-lbl">ตอบถูก</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statWrong" style="color: #e21b3c;">0</div>
+            <div class="stat-lbl">ตอบผิด/หมดเวลา</div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-val" id="statAccuracy" style="color: #ffa602;">0%</div>
+            <div class="stat-lbl">ความแม่นยำ</div>
+          </div>
+        </div>
+
+        <div class="review-list" id="reviewList">
+          <!-- Item logs -->
+        </div>
+
+        <div class="result-actions">
+          <button class="btn-start" style="padding: 14px 36px; font-size: 1.1rem;" onclick="restartGame()">🎮 เล่นใหม่อีกครั้ง</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ============================================================
+       QUESTION BANK - คลังคำถามเฉพาะ Modules/Services/Utils/Configs
+       (ไม่รวม Entity, Enum, DB, entity/pm, entity/su ตามโจทย์)
+       ============================================================ */
+    const QUESTION_BANK = [
+      {
+        module: "SecurityConfig.java",
+        package: "config",
+        answer: "ตั้งค่า Spring Security ตรวจสอบ JWT Bearer Token จาก Keycloak จัดการ CORS และกำหนด Stateless Session",
+        category: "Config / Security"
+      },
+      {
+        module: "BusinessContextHolder.java",
+        package: "config",
+        answer: "เก็บค่า businessId ปัจจุบันของ Request ใน ThreadLocal เพื่อกรองข้อมูล Multi-tenancy ทุกเลเยอร์",
+        category: "Config / Multi-tenancy"
+      },
+      {
+        module: "FlywayConfig.java",
+        package: "config",
+        answer: "ควบคุมการรัน Database Migration สคริปต์ SQL ใน db/migration อัตโนมัติเมื่อระบบเริ่มทำงาน",
+        category: "Config / Database"
+      },
+      {
+        module: "AuditLogAspect.java",
+        package: "config (AOP)",
+        answer: "คลาส AspectJ ดักจับ Method ที่มี @AuditLog บันทึกเวลา ผู้ใช้ และข้อมูลลงตาราง su_audit_log อัตโนมัติ",
+        category: "AOP / Audit"
+      },
+      {
+        module: "AiApiKeyConverter.java",
+        package: "config",
+        answer: "AttributeConverter ทำหน้าที่เข้ารหัส (Encrypt) และถอดรหัส (Decrypt) API Key ของโมเดล AI ในฐานข้อมูล",
+        category: "Config / Security"
+      },
+      {
+        module: "S3Config.java",
+        package: "config",
+        answer: "สร้าง Spring Bean S3Client เชื่อมต่อไปยัง SeaweedFS Object Storage ผ่าน AWS S3 API โปรโตคอล",
+        category: "Config / Storage"
+      },
+      {
+        module: "WebSocketConfig.java",
+        package: "config",
+        answer: "ตั้งค่า STOMP WebSocket Message Broker ผ่าน Endpoint /ws เพื่อแชทสดและ WebRTC Signaling",
+        category: "Config / WebSocket"
+      },
+      {
+        module: "BusinessContextInterceptor.java",
+        package: "interceptor",
+        answer: "ดักจับ HTTP Request ดึง Header X-Business-Id มาเซ็ตใน BusinessContextHolder และเคลียร์ทิ้งเมื่อเสร็จสิ้น",
+        category: "Interceptor / Web MVC"
+      },
+      {
+        module: "JwtChannelInterceptor.java",
+        package: "interceptor",
+        answer: "ดักจับการเชื่อมต่อ WebSocket (STOMP CONNECT) เพื่อตรวจสอบความถูกต้องของ JWT Token",
+        category: "Interceptor / WebSocket"
+      },
+      {
+        module: "LanguageInterceptor.java",
+        package: "interceptor",
+        answer: "ดักอ่าน Header Accept-Language เพื่อกำหนด Locale ภาษา (ไทย/อังกฤษ) สำหรับแสดงข้อความในระบบ",
+        category: "Interceptor / I18n"
+      },
+      {
+        module: "GlobalExceptionHandler.java",
+        package: "exception",
+        answer: "ตัวจัดการ Error ส่วนกลางผ่าน @RestControllerAdvice รวบรวม Exception ทั้งหมดแปลงเป็น Response JSON รูปแบบมาตรฐาน",
+        category: "Exception Handling"
+      },
+      {
+        module: "DocumentLockedException.java",
+        package: "exception",
+        answer: "Custom Exception ถูกโยนเมื่อมีผู้ใช้อื่นกำลังเปิดแก้ไขเอกสารเดียวกันอยู่ ป้องกัน Concurrency Conflict (409)",
+        category: "Exception Handling"
+      },
+      {
+        module: "ChatWebSocketController.java",
+        package: "websocket",
+        answer: "Controller รับ-ส่งข้อความแชทสดรายบุคคล/กลุ่ม และรับ-ส่งสัญญาณ WebRTC Call Signaling (Offer/Answer/Candidate)",
+        category: "WebSocket / Controller"
+      },
+      {
+        module: "ApprovalTimeoutScheduler.java",
+        package: "scheduler",
+        answer: "Cron Job ตรวจสอบคำขออนุมัติที่ค้างเกินกำหนด (Timeout) ส่ง Notification แจ้งเตือนผู้อนุมัติหรือเปลี่ยนสถานะ",
+        category: "Scheduler / Background Job"
+      },
+      {
+        module: "ContractLifecycleScheduler.java",
+        package: "scheduler",
+        answer: "Cron Job ตรวจหาสัญญาลูกค้าที่ใกล้หมดอายุล่วงหน้า และแจ้งเตือนฝ่ายขายกับผู้จัดการโครงการ",
+        category: "Scheduler / Background Job"
+      },
+      {
+        module: "DocumentDiffHelper.java",
+        package: "util",
+        answer: "เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่เพิ่ม ลบ หรือแก้ไข",
+        category: "Utility / Document"
+      },
+      {
+        module: "JsonSnapshotHelper.java",
+        package: "util",
+        answer: "แปลง State ของ Entity ทั้งก้อนเป็น JSON Snapshot สำหรับบันทึกประวัติการเปลี่ยนแปลงใน Version History",
+        category: "Utility / Serialization"
+      },
+      {
+        module: "PdfBook.java",
+        package: "util",
+        answer: "รวมไฟล์ PDF หลายฉบับ (ปก, Requirement, Spec, Diagram) เข้าเป็นเอกสารเล่มเดียวที่สมบูรณ์",
+        category: "Utility / PDF"
+      },
+      {
+        module: "SortValidator.java",
+        package: "util",
+        answer: "ตรวจสอบความถูกต้องของชื่อคอลัมน์ที่ขอเรียงลำดับ ป้องกัน SQL Injection จากชื่อคอลัมน์แปลกปลอม",
+        category: "Utility / Security"
+      },
+      {
+        module: "EditSessionServiceImpl.java",
+        package: "service.impl",
+        answer: "สร้าง Lock Session เมื่อเปิดแก้ไขเอกสาร ตรวจจับ Heartbeat และปลด Lock เมื่อผู้ใช้ปิดหน้าจอ",
+        category: "Service / Concurrency"
+      },
+      {
+        module: "ApprovalServiceImpl.java",
+        package: "service.impl",
+        answer: "คลาสขนาดใหญ่ควบคุม State Machine การอนุมัติ (ยื่นขอ, อนุมัติ, ตีกลับ, ยกเลิก) ของทุกโมดูลในระบบ",
+        category: "Service / Workflow"
+      },
+      {
+        module: "AiSqlGeneratorServiceImpl.java",
+        package: "service.impl",
+        answer: "วิเคราะห์ Entity และความสัมพันธ์จาก ER Diagram แล้วสร้างคำสั่ง SQL CREATE TABLE สำหรับ PostgreSQL/MySQL",
+        category: "Service / AI Generator"
+      },
+      {
+        module: "AiNavigatorServiceImpl.java",
+        package: "service.impl",
+        answer: "วิเคราะห์คำถามหรือข้อสงสัยของผู้ใช้ แล้วแนะนำหน้าจอหรือฟังก์ชันที่เกี่ยวข้องในระบบอย่างชาญฉลาด",
+        category: "Service / AI Assistance"
+      },
+      {
+        module: "AiBatchGeneratorServiceImpl.java",
+        package: "service.impl",
+        answer: "สร้างข้อมูลจำลองโครงการ ลูกค้า Requirement และ Task แบบ Batch ด้วย AI เพื่อใช้ทดสอบระบบ",
+        category: "Service / AI Generator"
+      },
+      {
+        module: "FileStorageServiceImpl.java",
+        package: "service.impl",
+        answer: "อัปโหลด ตรวจสอบประเภทและขนาดไฟล์ ดาวน์โหลด และลบไฟล์บน SeaweedFS Object Storage (S3)",
+        category: "Service / Storage"
+      },
+      {
+        module: "GlobalSearchServiceImpl.java",
+        package: "service.impl",
+        answer: "ค้นหาข้อมูลด้วยคำค้นหาเดียวครอบคลุมทุกโมดูล ทั้งโครงการ ลูกค้า สัญญา Requirement และเอกสาร",
+        category: "Service / Search"
+      },
+      {
+        module: "ImpactAnalysisServiceImpl.java",
+        package: "service.impl",
+        answer: "วิเคราะห์ Traceability Matrix เพื่อประเมินผลกระทบต่อ Requirement และ Task เมื่อมีการยื่น Change Request (CR)",
+        category: "Service / Impact Analysis"
+      },
+      {
+        module: "TraceLinkServiceImpl.java",
+        package: "service.impl",
+        answer: "สร้างและจัดการเส้นทางความเชื่อมโยงย้อนกลับได้แบบ Requirement -> Spec -> Task -> Test Case",
+        category: "Service / Traceability"
+      },
+      {
+        module: "PmDiagramTabServiceImpl.java",
+        package: "service.impl",
+        answer: "บันทึก Node, Edge, สี, ข้อความ และตำแหน่งพิกัดของไดอะแกรม DFD และ ERD ลงฐานข้อมูล",
+        category: "Service / Architecture Diagram"
+      },
+      {
+        module: "PmDesignReviewServiceImpl.java",
+        package: "service.impl",
+        answer: "จัดการรอบการตรวจทานการออกแบบ (UI/UX Review) และรวบรวมความคิดเห็นของผู้ตรวจแต่ละขั้นตอน",
+        category: "Service / Review"
+      },
+      {
+        module: "ProgramAccessServiceImpl.java",
+        package: "service.impl",
+        answer: "ตรวจสอบสิทธิ์ว่า Role ของผู้ใช้ปัจจุบันมีสิทธิ์เปิดดู แก้ไข หรือลบข้อมูลในหน้าจอ (Program) นั้นๆ หรือไม่",
+        category: "Service / Authorization"
+      },
+      {
+        module: "UserSessionTrackerImpl.java",
+        package: "service.impl",
+        answer: "ติดตามสถานะ Active/Idle ของผู้ใช้งานในระบบแบบ Real-time",
+        category: "Service / Presence"
+      },
+      {
+        module: "ContractLifecycleService.java",
+        package: "service.impl",
+        answer: "ตรวจสอบและอัปเดตสถานะของสัญญาลูกค้าตามเงื่อนไขวันเวลา (Draft -> Active -> Expiring -> Expired)",
+        category: "Service / Contract"
+      },
+      {
+        module: "DocumentVersionServiceImpl.java",
+        package: "service.impl",
+        answer: "บันทึก JSON Snapshot ทุกการเปลี่ยนแปลง ค้นหาประวัติย้อนหลัง และคำนวณ Diff ระหว่างเวอร์ชัน",
+        category: "Service / Versioning"
+      },
+      {
+        module: "PmMaTicketServiceImpl.java",
+        package: "service.impl",
+        answer: "เปิด Ticket มอบหมายช่าง/โปรแกรมเมอร์ ติดตาม SLA และบันทึกผลการซ่อมบำรุงระบบหลังส่งมอบ",
+        category: "Service / Maintenance (MA)"
+      },
+      {
+        module: "ReportHelper.java",
+        package: "util",
+        answer: "จัดเตรียมโครงสร้างข้อมูล คำนวณยอดเงินรวมและสถิติเพื่อส่งต่อให้ Report Microservice ออกเอกสาร",
+        category: "Utility / Reporting"
+      },
+      {
+        module: "BusinessAccessServiceImpl.java",
+        package: "service.impl",
+        answer: "ตรวจสอบสิทธิ์ว่าผู้ใช้ปัจจุบันมีสิทธิ์เข้าถึงหรือแก้ไขข้อมูลใน Business Unit (องค์กร) นั้นหรือไม่",
+        category: "Service / Security"
+      },
+      {
+        module: "BusinessInviteServiceImpl.java",
+        package: "service.impl",
+        answer: "สร้างลิงก์คำเชิญ ส่งอีเมลโทเค็น และตรวจสอบการกดยอมรับคำเชิญเข้าร่วมองค์กรของผู้ใช้ใหม่",
+        category: "Service / Organization"
+      },
+      {
+        module: "MailServiceImpl.java",
+        package: "service.impl",
+        answer: "ส่งอีเมลแจ้งเตือนผ่าน JavaMailSender เชื่อมต่อ Mail Server ตามเทมเพลตที่กำหนดในระบบ",
+        category: "Service / Email"
+      },
+      {
+        module: "MenuServiceImpl.java",
+        package: "service.impl",
+        answer: "คัดกรองและส่งมอบโครงสร้างเมนูหน้าจอที่ตรงตาม Role และสิทธิ์การมองเห็นของผู้ใช้ปัจจุบัน",
+        category: "Service / UI Navigation"
+      }
+    ];
+
+    /* ============================================================
+       AUDIO SYNTHESIS (Web Audio API - Zero External Dependencies)
+       ============================================================ */
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, type, duration, delay = 0) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        setTimeout(() => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = type;
+          osc.frequency.setValueAtTime(freq, ctx.currentTime);
+          gain.gain.setValueAtTime(0.15, ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + duration);
+        }, delay);
+      } catch (e) {
+        console.warn("Audio error:", e);
+      }
+    }
+
+    function playCorrectSound() {
+      playTone(523.25, 'triangle', 0.15, 0);   // C5
+      playTone(659.25, 'triangle', 0.15, 90);  // E5
+      playTone(783.99, 'triangle', 0.18, 180); // G5
+      playTone(1046.50, 'sine', 0.35, 270);    // C6
+    }
+
+    function playWrongSound() {
+      playTone(280, 'sawtooth', 0.18, 0);
+      playTone(220, 'sawtooth', 0.35, 120);
+    }
+
+    function playTickSound() {
+      playTone(800, 'sine', 0.04, 0);
+    }
+
+    function playFanfare() {
+      const notes = [440, 554, 659, 880];
+      notes.forEach((freq, idx) => playTone(freq, 'triangle', 0.25, idx * 120));
+    }
+
+    function toggleSound() {
+      soundEnabled = !soundEnabled;
+      const btn = document.getElementById('soundBtn');
+      btn.innerText = soundEnabled ? '🔊 เปิดเสียง' : '🔇 ปิดเสียง';
+      if (soundEnabled) playCorrectSound();
+    }
+
+    /* ============================================================
+       GAME ENGINE STATE & LOGIC
+       ============================================================ */
+    let currentQuestions = [];
+    let currentIndex = 0;
+    let score = 0;
+    let streak = 0;
+    let timer = null;
+    let timeLeft = 15;
+    const QUESTION_TIME = 15;
+    let answered = false;
+    let resultsLog = [];
+    let selectedCount = 10;
+
+    // Mode chips selector
+    document.querySelectorAll('.mode-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('selected'));
+        chip.classList.add('selected');
+        selectedCount = parseInt(chip.getAttribute('data-count'), 10);
+      });
+    });
+
+    function shuffleArray(arr) {
+      const copy = [...arr];
+      for (let i = copy.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [copy[i], copy[j]] = [copy[j], copy[i]];
+      }
+      return copy;
+    }
+
+    function startGame() {
+      getAudioContext();
+      // Select questions randomly
+      const shuffled = shuffleArray(QUESTION_BANK);
+      const limit = Math.min(selectedCount, shuffled.length);
+      currentQuestions = shuffled.slice(0, limit);
+
+      currentIndex = 0;
+      score = 0;
+      streak = 0;
+      resultsLog = [];
+
+      switchScreen('quizScreen');
+      loadQuestion();
+    }
+
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(screenId).classList.add('active');
+    }
+
+    function loadQuestion() {
+      answered = false;
+      const q = currentQuestions[currentIndex];
+
+      // Update UI Header
+      document.getElementById('progressText').innerText = `ข้อ ${currentIndex + 1} / ${currentQuestions.length}`;
+      document.getElementById('scoreText').innerText = score.toLocaleString();
+      const streakBadge = document.getElementById('streakBadge');
+      if (streak >= 2) {
+        streakBadge.innerText = `🔥 ${streak} Streak!`;
+        streakBadge.style.display = 'inline-block';
+      } else {
+        streakBadge.style.display = 'none';
+      }
+
+      // Reset feedback banner
+      const feedbackBanner = document.getElementById('feedbackBanner');
+      feedbackBanner.className = 'feedback-banner';
+      feedbackBanner.style.display = 'none';
+
+      // Set Question
+      document.getElementById('moduleCategory').innerText = `${q.category} • ${q.package}`;
+      document.getElementById('moduleName').innerText = q.module;
+
+      // Generate 4 choices (1 correct + 3 distinct distractors)
+      const otherAnswers = QUESTION_BANK
+        .filter(item => item.module !== q.module)
+        .map(item => item.answer);
+      const shuffledDistractors = shuffleArray(otherAnswers).slice(0, 3);
+
+      const choiceList = [
+        { text: q.answer, isCorrect: true },
+        { text: shuffledDistractors[0], isCorrect: false },
+        { text: shuffledDistractors[1], isCorrect: false },
+        { text: shuffledDistractors[2], isCorrect: false },
+      ];
+
+      const shuffledChoices = shuffleArray(choiceList);
+
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`btn${i}`);
+        const textSpan = document.getElementById(`choiceText${i}`);
+        btn.disabled = false;
+        btn.className = `choice-btn choice-${['red', 'blue', 'yellow', 'green'][i]}`;
+        textSpan.innerText = shuffledChoices[i].text;
+        btn.dataset.correct = shuffledChoices[i].isCorrect;
+      }
+
+      // Start Countdown Timer
+      startTimer();
+    }
+
+    function startTimer() {
+      clearInterval(timer);
+      timeLeft = QUESTION_TIME;
+      updateTimerUI();
+
+      timer = setInterval(() => {
+        timeLeft -= 0.1;
+        if (timeLeft <= 0) {
+          timeLeft = 0;
+          updateTimerUI();
+          clearInterval(timer);
+          handleTimeout();
+        } else {
+          updateTimerUI();
+          // Tick sound in last 3 seconds
+          if (timeLeft <= 3.0 && Math.round(timeLeft * 10) % 10 === 0) {
+            playTickSound();
+          }
+        }
+      }, 100);
+    }
+
+    function updateTimerUI() {
+      const pct = (timeLeft / QUESTION_TIME) * 100;
+      const bar = document.getElementById('timerBar');
+      bar.style.width = `${pct}%`;
+      document.getElementById('timerSeconds').innerText = `${Math.ceil(timeLeft)}s`;
+    }
+
+    function selectAnswer(selectedIndex) {
+      if (answered) return;
+      answered = true;
+      clearInterval(timer);
+
+      const selectedBtn = document.getElementById(`btn${selectedIndex}`);
+      const isCorrect = selectedBtn.dataset.correct === 'true';
+      const currentQ = currentQuestions[currentIndex];
+
+      // Disable buttons and show colors
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`btn${i}`);
+        btn.disabled = true;
+        if (btn.dataset.correct === 'true') {
+          btn.classList.add('correct');
+        } else if (i === selectedIndex && !isCorrect) {
+          btn.classList.add('wrong');
+        } else {
+          btn.classList.add('dimmed');
+        }
+      }
+
+      // Calculate Kahoot Score: base 500 + time bonus up to 500 + streak multiplier
+      if (isCorrect) {
+        streak++;
+        const timeRatio = Math.max(0, timeLeft / QUESTION_TIME);
+        const points = Math.round(500 + (timeRatio * 500) + (streak * 50));
+        score += points;
+        playCorrectSound();
+        showFeedback(true, `+${points} คะแนน! เก่งมาก`, currentQ.answer);
+        resultsLog.push({ module: currentQ.module, isCorrect: true, userScore: points });
+      } else {
+        streak = 0;
+        playWrongSound();
+        showFeedback(false, "ตอบผิดนะจ๊ะ!", `คำตอบที่ถูกต้องคือ: ${currentQ.answer}`);
+        resultsLog.push({ module: currentQ.module, isCorrect: false, userScore: 0 });
+      }
+
+      document.getElementById('scoreText').innerText = score.toLocaleString();
+    }
+
+    function handleTimeout() {
+      if (answered) return;
+      answered = true;
+      streak = 0;
+      playWrongSound();
+
+      const currentQ = currentQuestions[currentIndex];
+
+      for (let i = 0; i < 4; i++) {
+        const btn = document.getElementById(`btn${i}`);
+        btn.disabled = true;
+        if (btn.dataset.correct === 'true') {
+          btn.classList.add('correct');
+        } else {
+          btn.classList.add('dimmed');
+        }
+      }
+
+      showFeedback(false, "หมดเวลา! ⏰", `คำตอบที่ถูกต้องคือ: ${currentQ.answer}`);
+      resultsLog.push({ module: currentQ.module, isCorrect: false, userScore: 0 });
+    }
+
+    function showFeedback(isOk, title, desc) {
+      const banner = document.getElementById('feedbackBanner');
+      banner.style.display = 'flex';
+      banner.className = `feedback-banner show ${isOk ? 'is-correct' : 'is-wrong'}`;
+      document.getElementById('feedbackTitle').innerText = (isOk ? '🎉 ' : '❌ ') + title;
+      document.getElementById('feedbackDetail').innerText = desc;
+    }
+
+    function nextQuestion() {
+      currentIndex++;
+      if (currentIndex < currentQuestions.length) {
+        loadQuestion();
+      } else {
+        endGame();
+      }
+    }
+
+    function endGame() {
+      clearInterval(timer);
+      playFanfare();
+      switchScreen('resultScreen');
+
+      document.getElementById('finalScore').innerText = score.toLocaleString();
+      const correctCount = resultsLog.filter(r => r.isCorrect).length;
+      const wrongCount = resultsLog.length - correctCount;
+      const accuracy = Math.round((correctCount / resultsLog.length) * 100);
+
+      document.getElementById('statCorrect').innerText = correctCount;
+      document.getElementById('statWrong').innerText = wrongCount;
+      document.getElementById('statAccuracy').innerText = `${accuracy}%`;
+
+      // Rank Title & Trophy
+      const rankEl = document.getElementById('resultRank');
+      const trophyEl = document.getElementById('trophyIcon');
+      if (accuracy >= 90) {
+        trophyEl.innerText = '👑';
+        rankEl.innerText = 'ระดับเทพ: Software Architect ปราบโปรเจกต์ได้ 100%!';
+      } else if (accuracy >= 70) {
+        trophyEl.innerText = '🏆';
+        rankEl.innerText = 'ระดับเซียน: Senior Developer พร้อมตอบอาจารย์ฉลุย!';
+      } else if (accuracy >= 50) {
+        trophyEl.innerText = '🎖️';
+        rankEl.innerText = 'ระดับผ่านเกณฑ์: ทบทวนอีกนิด รับรองเต็มแน่นอน';
+      } else {
+        trophyEl.innerText = '📚';
+        rankEl.innerText = 'ต้องทบทวนเพิ่ม: เปิดอ่าน Guide แล้วลองใหม่อีกรอบ!';
+      }
+
+      // Review list
+      const reviewList = document.getElementById('reviewList');
+      reviewList.innerHTML = '';
+      resultsLog.forEach((item, idx) => {
+        const div = document.createElement('div');
+        div.className = `review-item ${item.isCorrect ? 'ok' : 'fail'}`;
+        div.innerHTML = `
+          <span><strong>ข้อ ${idx + 1}:</strong> <code>${item.module}</code></span>
+          <span>${item.isCorrect ? `✅ +${item.userScore}` : '❌ ผิด'}</span>
+        `;
+        reviewList.appendChild(div);
+      });
+    }
+
+    function restartGame() {
+      clearInterval(timer);
+      switchScreen('lobbyScreen');
+    }
+  </script>
+</body>
+</html>

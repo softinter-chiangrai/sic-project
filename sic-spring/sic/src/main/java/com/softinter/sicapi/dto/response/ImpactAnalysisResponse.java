@@ -55,8 +55,7 @@ public class ImpactAnalysisResponse {
     private Instant analyzedAt;
     private String analyzedBy;
 
-    private String dfdImpact;
-    private String erImpact;
+    private String diagramImpact; // any drawing type (DFD, ER, Flowchart, ...)
     private String uiImpact;
     private String apiImpact;
     private String testImpact;

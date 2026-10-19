@@ -4795,5 +4795,6 @@
   "PMDT12_REALTIME_SYNC_TOOLTIP": "Synced in real time (click to refresh now)",
   "PMDT12_OPEN_BUG_TOOLTIP": "Click to open a bug from the failed test",
   "PMDT12C_TASK_NAME_PH": "Bug title or summary, e.g. [BUG] Creating a master product fails...",
-  "PMDT12C_DESCRIPTION_PH": "Steps to reproduce, the expected result and what actually happened..."
+  "PMDT12C_DESCRIPTION_PH": "Steps to reproduce, the expected result and what actually happened...",
+  "PMDT06_DIAGRAM_IMPACT_LABEL": "Diagram:"
 }

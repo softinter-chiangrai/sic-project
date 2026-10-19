@@ -236,18 +236,6 @@ export class Pmdt04Component implements OnInit {
     this.navigation.navigate(['/feature/pm/requirement', id, 'view']);
   }
 
-  goToView(id: string) {
-    const projectId = resolveProjectId(this.route, this.customerState);
-    const requirement = this.requirements().find(r => r.id === id);
-    this.navigation.navigate(['/feature/pm/matrix'], {
-      queryParams: {
-        requirementId: id,
-        projectId: projectId,
-        requirementTitle: requirement?.title || ''
-      }
-    });
-  }
-
   printDocument(req: RequirementItem) {
     if (!req.id) {
       this.dialog.warn(this.translate.instant('PMDT04_NO_REQ_CODE_TITLE'), this.translate.instant('PMDT04_CANNOT_PRINT_MSG'));

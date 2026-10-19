@@ -29,7 +29,8 @@ Needs from docker only: `sic-database` (:54320), `sic-auth` Keycloak (:8080), `s
 #   APP_KEYCLOAK_AUTH_SERVER_URL=http://localhost:8080   APP_STORAGE_S3_ENDPOINT=http://localhost:8888   SERVER_PORT=5266
 cd sic-spring/sic; .\mvnw.cmd -q spring-boot:run "-Dspring-boot.run.jvmArguments=-Xmx700m"   # ready in ~60 s (401 on /api/business/activation)
 ```
-Then run Playwright with the same DB/port (globalSetup sees :5266 up and uses it; never point E2E_DB at `sic_app`):
+Then run Playwright with the same DB/port (globalSetup sees :5266 up and uses it; if nothing listens there it stops with an error instead of
+starting the docker image, unless `E2E_DOCKER_BACKEND=1`; never point E2E_DB at `sic_app`):
 ```
 cd sic-app && E2E_DB=sic_app_e2e E2E_API_PORT=5266 E2E_KEEP=1 npx playwright test --project=api      # or ui / pages
 ```

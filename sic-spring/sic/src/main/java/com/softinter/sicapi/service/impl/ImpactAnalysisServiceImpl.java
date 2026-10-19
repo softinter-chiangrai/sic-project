@@ -104,8 +104,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                 .orElse(new ChangeImpactAnalysis());
 
         analysis.setChangeRequest(changeRequest);
-        analysis.setDfdImpact(request.getDfdImpact());
-        analysis.setErImpact(request.getErImpact());
+        analysis.setDiagramImpact(request.getDiagramImpact());
         analysis.setUiImpact(request.getUiImpact());
         analysis.setApiImpact(request.getApiImpact());
         analysis.setTestImpact(request.getTestImpact());
@@ -923,8 +922,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         dto.setAnalyzedAt(entity.getAnalyzedAt());
         dto.setAnalyzedBy(entity.getAnalyzedBy());
 
-        dto.setDfdImpact(entity.getDfdImpact());
-        dto.setErImpact(entity.getErImpact());
+        dto.setDiagramImpact(entity.getDiagramImpact());
         dto.setUiImpact(entity.getUiImpact());
         dto.setApiImpact(entity.getApiImpact());
         dto.setTestImpact(entity.getTestImpact());
@@ -1200,8 +1198,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             history.setVersionNo(nextVersion);
             history.setMandayImpact(analysis.getMandayImpact());
             history.setTimelineImpact(analysis.getTimelineImpact());
-            history.setDfdImpact(analysis.getDfdImpact());
-            history.setErImpact(analysis.getErImpact());
+            history.setDiagramImpact(analysis.getDiagramImpact());
             history.setUiImpact(analysis.getUiImpact());
             history.setApiImpact(analysis.getApiImpact());
             history.setTestImpact(analysis.getTestImpact());
@@ -1270,8 +1267,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         dummy.setAnalysisStatus(h.getAnalysisStatus());
         dummy.setMandayImpact(h.getMandayImpact());
         dummy.setTimelineImpact(h.getTimelineImpact());
-        dummy.setDfdImpact(h.getDfdImpact());
-        dummy.setErImpact(h.getErImpact());
+        dummy.setDiagramImpact(h.getDiagramImpact());
         dummy.setUiImpact(h.getUiImpact());
         dummy.setApiImpact(h.getApiImpact());
         dummy.setTestImpact(h.getTestImpact());
@@ -1308,8 +1304,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         analysis.setAnalysisStatus(h.getAnalysisStatus());
         analysis.setMandayImpact(h.getMandayImpact());
         analysis.setTimelineImpact(h.getTimelineImpact());
-        analysis.setDfdImpact(h.getDfdImpact());
-        analysis.setErImpact(h.getErImpact());
+        analysis.setDiagramImpact(h.getDiagramImpact());
         analysis.setUiImpact(h.getUiImpact());
         analysis.setApiImpact(h.getApiImpact());
         analysis.setTestImpact(h.getTestImpact());

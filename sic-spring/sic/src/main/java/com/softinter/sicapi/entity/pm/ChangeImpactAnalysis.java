@@ -21,11 +21,9 @@ public class ChangeImpactAnalysis extends BaseEntity {
     @JoinColumn(name = "change_request_id", nullable = false)
     private PmChangeRequest changeRequest;
 
-    @Column(name = "dfd_impact", columnDefinition = "TEXT")
-    private String dfdImpact;
-
-    @Column(name = "er_impact", columnDefinition = "TEXT")
-    private String erImpact;
+    /** Impact on diagrams of any drawing type (DFD, ER, Flowchart, Sequence, ...). */
+    @Column(name = "diagram_impact", columnDefinition = "TEXT")
+    private String diagramImpact;
 
     @Column(name = "ui_impact", columnDefinition = "TEXT")
     private String uiImpact;
