@@ -36,8 +36,6 @@ public class PmDiagramTabRequest {
 
     // ===== Traceability Fields (optional) =====
     private List<UUID> relatedRequirementIds;
-    private List<UUID> relatedDfdIds;
-    private List<UUID> relatedRequirementIdsForEr;
 
     private Integer state;
     private Integer rowVersion;

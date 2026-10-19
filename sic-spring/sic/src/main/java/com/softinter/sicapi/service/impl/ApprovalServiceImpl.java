@@ -941,8 +941,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                         .map(p -> !"Planning".equalsIgnoreCase(p.getStatus()))
                         .orElse(false);
             case "DIAGRAM":
-            case "DFD":
-            case "ER":
             default:
                 return true;
         }
@@ -1065,8 +1063,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                 });
                 break;
             case "DIAGRAM":
-            case "DFD":
-            case "ER":
                 diagramTabRepository.findById(documentId).ifPresent(tab -> {
                     String newVersion = nextVersionAfterChange("DIAGRAM", tab.getId(), changeLevel);
                     versionService.createVersion("DIAGRAM", tab.getId(), tab.getProjectId(),
@@ -1150,8 +1146,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                         .orElseThrow(() -> new ResourceNotFoundException("Contract not found: " + documentId));
                 break;
             case "DIAGRAM":
-            case "DFD":
-            case "ER":
                 diagramTabRepository.findById(documentId)
                         .orElseThrow(() -> new ResourceNotFoundException("Diagram not found: " + documentId));
                 break;
@@ -1683,8 +1677,6 @@ public class ApprovalServiceImpl implements ApprovalService {
                     }
                     break;
                 case "DIAGRAM":
-                case "DFD":
-                case "ER":
                     var diagOpt = diagramTabRepository.findById(documentId);
                     if (diagOpt.isPresent()) {
                         projId = diagOpt.get().getProjectId();

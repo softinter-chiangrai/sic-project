@@ -17,8 +17,6 @@ export type DocumentType =
     | 'REQUIREMENT'
     | 'SPECIFICATION'
     | 'DIAGRAM'
-    | 'DFD'
-    | 'ER'
     | 'DESIGN_REVIEW'
     | 'DELIVERY'
     | 'INVOICE'

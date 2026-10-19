@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.DiagramTypes;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -370,12 +371,11 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
 
         // ✅ รวบรวม Diagram ทุกประเภท (DIAGRAM, DFD, ER, USECASE, ฯลฯ)
         Set<UUID> diagramSet = new HashSet<>();
-        String[] diagramTypes = {"DIAGRAM", "DFD", "ER", "USECASE", "SEQUENCE", "CLASS"};
-        for (String dType : diagramTypes) {
-            if (impacted.containsKey(dType)) {
-                diagramSet.addAll(impacted.get(dType));
+        impacted.forEach((type, ids) -> {
+            if (DiagramTypes.isDiagram(type)) {
+                diagramSet.addAll(ids);
             }
-        }
+        });
         UUID[] diagramIds = diagramSet.toArray(UUID[]::new);
 
         ChangeImpactAnalysis analysis = new ChangeImpactAnalysis();
@@ -417,7 +417,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
                     impactedProjectIds.add(t.getSpecification().getRequirement().getProjectId());
                 }
             });
-        } else if (("DIAGRAM".equalsIgnoreCase(targetType) || "DFD".equalsIgnoreCase(targetType) || "ER".equalsIgnoreCase(targetType)) && targetId != null) {
+        } else if (DiagramTypes.isDiagram(targetType) && targetId != null) {
             diagramTabRepository.findById(targetId).ifPresent(d -> {
                 if (d.getProjectId() != null) {
                     impactedProjectIds.add(d.getProjectId());

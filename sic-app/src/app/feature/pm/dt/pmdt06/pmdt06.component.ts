@@ -376,8 +376,9 @@ export class Pmdt06Component implements OnInit {
       REQUIREMENT: this.translate.instant('PMDT06_TARGET_REQUIREMENT'),
       SPECIFICATION: this.translate.instant('PMDT06_TARGET_SPECIFICATION'),
       TASK: this.translate.instant('PMDT06_TARGET_TASK'),
-      DFD: this.translate.instant('PMDT06_TARGET_DFD'),
-      ER: this.translate.instant('PMDT06_TARGET_ER'),
+      DIAGRAM: this.translate.instant('PMDT06_TARGET_DIAGRAM_FULL'),
+      DFD: this.translate.instant('PMDT06_TARGET_DIAGRAM_FULL'),
+      ER: this.translate.instant('PMDT06_TARGET_DIAGRAM_FULL'),
     };
     return map[type.toUpperCase()] || type;
   }

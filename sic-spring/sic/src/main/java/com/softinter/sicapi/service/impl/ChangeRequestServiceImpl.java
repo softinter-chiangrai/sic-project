@@ -621,8 +621,6 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             case "USER_MANUAL":
             case "INVOICE":
             case "MA_TICKET":
-            case "DFD":
-            case "ER":
                 // เอกสารประเภทอื่น ๆ ที่ระบบรองรับ
                 break;
             default:

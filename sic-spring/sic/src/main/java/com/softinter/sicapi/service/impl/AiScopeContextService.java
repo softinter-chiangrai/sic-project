@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.DiagramTypes;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.softinter.sicapi.config.BusinessContextHolder;
@@ -155,7 +156,7 @@ public class AiScopeContextService {
         }
         String head;
         String desc = null;
-        switch (type.toUpperCase()) {
+        switch (DiagramTypes.isDiagram(type) ? "DIAGRAM" : type.toUpperCase()) {
             case "REQUIREMENT" -> {
                 var r = requirementRepository.findById(id).orElse(null);
                 if (r == null) return null;
@@ -168,7 +169,7 @@ public class AiScopeContextService {
                 head = nz(s.getSpecificationCode()) + " " + nz(s.getTitle());
                 desc = s.getDescription();
             }
-            case "DIAGRAM", "DFD", "ER" -> {
+            case "DIAGRAM" -> {
                 var d = diagramRepository.findById(id).orElse(null);
                 if (d == null) return null;
                 head = nz(d.getDiagramCode()) + " " + nz(d.getName());

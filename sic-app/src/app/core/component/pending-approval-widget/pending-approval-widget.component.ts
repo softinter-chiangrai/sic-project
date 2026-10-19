@@ -32,8 +32,6 @@ export class PendingApprovalWidgetComponent {
       REQUIREMENT: 'bi-clipboard-check',
       SPECIFICATION: 'bi-file-text',
       DIAGRAM: 'bi-diagram-3',
-      DFD: 'bi-diagram-3',
-      ER: 'bi-table',
       DESIGN_REVIEW: 'bi-palette2',
       CHANGE_REQUEST: 'bi-arrow-left-right',
       TEST_PLAN: 'bi-clipboard-data',

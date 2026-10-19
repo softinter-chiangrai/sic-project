@@ -39,6 +39,14 @@ Your own backend for clicking around stays on :5265 (real DB) and does not clash
 
 **At the end (once), every image whose code changed:** `docker compose up -d --build sic-report-service` and `docker compose up -d --build sic-app`
 (both build themselves), and for the backend `mvnw -DskipTests package` first (its Dockerfile only copies `target/*.jar`), then `docker compose up -d --build sic-spring`.
+Stop the local backend / `npm start` first (RAM). Then `docker compose up -d` everything back on the real DB (unset `SIC_APP_DB_NAME` / `E2E_API_PORT`).
+
+`sic-app` on a low-RAM machine (`npm run build ... cannot allocate memory`): stopping the other containers may not be enough, the docker VM
+borrows host RAM. Build Angular on the host instead (`NODE_OPTIONS=--max-old-space-size=3072 npm run build` in `sic-app`), copy `dist` +
+`package*.json` into a scratch folder with a Dockerfile = the builder stage of `sic-app/Dockerfile` up to `npm install` (same lines, so it is
+cached) + a runtime stage that copies `dist` from the context and `node_modules` from the builder, then
+`docker build -t sic-project-sic-app:latest --build-arg GITHUB_TOKEN=<from .env> <folder>` and `docker compose up -d --no-build sic-app`.
+Do not edit `sic-app/Dockerfile` for this. Delete `sic-app/dist` afterwards.
 - Credentials: `sic-app/e2e/.env.local` (E2E_USER / E2E_PASS, gitignored). Never commit.
 - Routes: `e2e/pages.ts` (static only; `:id` pages need seeded data). Add a path there for new pages.
 - Per page it fails on: bounced to Keycloak, empty body, pageerror, any 5xx response.

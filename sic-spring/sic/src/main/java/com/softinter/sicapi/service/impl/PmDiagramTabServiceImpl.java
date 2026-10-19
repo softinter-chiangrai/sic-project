@@ -143,41 +143,6 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             }
         }
 
-        // 6. DFD → เชื่อมกับ DFD อื่นๆ (ถ้ามี)
-        if ("DFD".equals(diagramType) && request.getRelatedDfdIds() != null) {
-            for (UUID dfdId : request.getRelatedDfdIds()) {
-                traceLinkService.createLink(
-                        request.getProjectId(),
-                        "DFD", dfdId,
-                        "DFD", saved.getId(),
-                        TraceRelationship.RELATED_TO);
-            }
-        }
-
-        // 7. ER → เชื่อมกับ DFD และ Requirement (ถ้ามี)
-        if ("ER".equals(diagramType)) {
-            if (request.getRelatedDfdIds() != null) {
-                for (UUID dfdId : request.getRelatedDfdIds()) {
-                    traceLinkService.createLink(
-                            request.getProjectId(),
-                            "DFD", dfdId,
-                            "ER", saved.getId(),
-                            TraceRelationship.IMPLEMENTED_BY);
-                }
-            }
-            if (request.getRelatedRequirementIdsForEr() != null) {
-                for (UUID reqId : request.getRelatedRequirementIdsForEr()) {
-                    if (requirementRepository.existsById(reqId)) {
-                        traceLinkService.createLink(
-                                request.getProjectId(),
-                                "REQUIREMENT", reqId,
-                                "ER", saved.getId(),
-                                TraceRelationship.DESIGNED_BY);
-                    }
-                }
-            }
-        }
-
         // ✅ Create document version
         documentVersionService.createVersion(
                 "DIAGRAM",

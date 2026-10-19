@@ -3,8 +3,6 @@ package com.softinter.sicapi.entity.enums;
 public enum DocumentType {
     REQUIREMENT("Requirement"),
     SPECIFICATION("Specification"),
-    DFD("DFD"),
-    ER("ER Diagram"),
     DIAGRAM("Diagram"),
     DESIGN_REVIEW("Design Review"),
     DELIVERY("Delivery"),
