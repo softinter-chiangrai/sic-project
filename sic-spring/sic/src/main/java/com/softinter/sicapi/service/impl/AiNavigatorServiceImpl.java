@@ -140,9 +140,11 @@ public class AiNavigatorServiceImpl implements AiNavigatorService {
             String openBatchModuleType = null;
             String openBatchRoute = null;
             AiModuleRegistry.ModuleDef def = moduleRegistry.get(intentModuleType);
-            if (def != null) {
+            if (def != null && def.getCreateRoute() != null) {
                 openBatchModuleType = def.getModuleType();
                 openBatchRoute = def.getCreateRoute();
+            } else if (def != null && routes.stream().noneMatch(r -> def.getListRoute().equals(r.getPath()))) {
+                routes.add(AiRouteSuggestionDto.builder().label(def.getLabel()).path(def.getListRoute()).build());
             }
 
             return AiNavigatorChatResponse.builder()

@@ -447,8 +447,11 @@ export class Pmdt12Component implements OnInit, OnDestroy {
     const projectId = this.resolveProjectId();
 
     this.aiBatchSaving.set(true);
-    const saveRequests = rows.map((row) =>
+    // the code is required (max 30) and the batch has no code column: one per row, unique per save
+    const stamp = Date.now().toString(36).toUpperCase();
+    const saveRequests = rows.map((row, i) =>
       this.service.saveTestCase({
+        testCaseCode: `TC-AI-${stamp}-${i + 1}`,
         projectId: projectId || undefined,
         title: row['title'],
         testStep: row['testStep'],
@@ -470,6 +473,7 @@ export class Pmdt12Component implements OnInit, OnDestroy {
         },
         error: (err) => {
           console.error('AI batch save failed', err);
+          this.dialog.error(this.translate.instant('COMMON_ERROR_TITLE'), err.error?.message || err.message || '');
         },
       });
   }

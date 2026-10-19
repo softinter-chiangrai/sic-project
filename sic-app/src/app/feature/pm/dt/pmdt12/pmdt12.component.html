@@ -16,7 +16,7 @@
         type="button"
         (click)="refreshData()"
         class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 hover:bg-[var(--crm-primary)]/20 border border-[var(--crm-primary)]/25 transition-all cursor-pointer shadow-2xs"
-        title="ซิงค์ข้อมูลอัตโนมัติแบบเรียลไทม์ (คลิกเพื่อรีเฟรชทันที)"
+        [title]="'PMDT12_REALTIME_SYNC_TOOLTIP' | translate"
       >
         <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
         <i class="bi bi-arrow-repeat text-xs" [class.animate-spin]="isSilentRefreshing()"></i>
@@ -270,7 +270,7 @@
               } @else {
                 <span class="font-semibold text-base text-[var(--text-active)] flex items-center gap-2">
                   <i class="bi bi-question-circle text-amber-500"></i>
-                  Test Cases ที่ยังไม่ได้กำหนด Scenario (Unassigned)
+                  {{ 'PMDT12_UNASSIGNED_CASES' | translate }}
                 </span>
               }
 
@@ -484,7 +484,7 @@
                                 class="px-2.5 py-1 rounded-md text-xs font-semibold text-[var(--text-muted)] bg-[var(--border)]/60 cursor-not-allowed flex items-center gap-1 opacity-60"
                                 [title]="getExecuteButtonDisabledTitle(testCase)"
                               >
-                                <i class="bi bi-play-circle"></i> รอ Testing
+                                <i class="bi bi-play-circle"></i> {{ 'PMDT12_WAITING_TEST' | translate }}
                               </button>
                             }
                           }
@@ -493,10 +493,10 @@
                             <button
                               (click)="goToCreateBug(testCase, $event)"
                               class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
-                              title="คลิกเพื่อเปิด Bug จากผลการทดสอบที่ไม่ผ่าน"
+                              [title]="'PMDT12_OPEN_BUG_TOOLTIP' | translate"
                             >
                               <i class="bi bi-bug-fill text-xs"></i>
-                              <span>เปิด Bug</span>
+                              <span>{{ 'PMDT12_OPEN_BUG' | translate }}</span>
                             </button>
                           }
                           <!-- Bug Button & Badges when test case has Active Bugs -->
@@ -541,7 +541,7 @@
                   } @empty {
                     <tr>
                       <td colspan="9" class="px-4 py-6 text-center text-sm text-[var(--text-muted)]">
-                        ไม่มี Test Case ในกลุ่มนี้
+                        {{ 'PMDT12_GROUP_EMPTY' | translate }}
                       </td>
                     </tr>
                   }
@@ -592,7 +592,7 @@
               class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all shadow-sm cursor-pointer"
             >
               <i class="bi bi-folder-plus"></i>
-              เพิ่ม Test Scenario
+              {{ 'PMDT12_ADD_SCENARIO' | translate }}
             </button>
           </div>
         </div>

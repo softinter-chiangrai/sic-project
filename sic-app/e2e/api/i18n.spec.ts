@@ -43,6 +43,21 @@ test('no English value is a humanised key', () => {
   const words = (k: string) => k.split('.').pop()!.split('_').slice(1).join(' ').toLowerCase();
   const suffix = /(Title|Msg|Message|Label|Placeholder|Hint|Text|Desc|Description|Empty|Error|Fail|Success|Warn)$/;
   const keySuffix = /(_TITLE|_MSG|_MESSAGE|_LABEL|_PLACEHOLDER|_HINT|_TEXT|_DESC|_DESCRIPTION|_EMPTY|_ERROR|_FAIL|_SUCCESS|_WARN)/;
-  const bad = Object.entries(en).filter(([k, v]) => v.toLowerCase() === words(k) && keySuffix.test(k) && suffix.test(v)).map(([k, v]) => `${k}="${v}"`);
+  // also code words that never belong in UI text ("Create Button", "Processing Ellipsis", "Desc Ph") and "Ai" cased from AI_
+  const codeWord = /\b(Button|Btn|Ellipsis|Tooltip|Ph|Lbl)\b|\bAi\b/;
+  const bad = Object.entries(en)
+    .filter(([k, v]) => v.toLowerCase() === words(k) && ((keySuffix.test(k) && suffix.test(v)) || codeWord.test(v)))
+    .map(([k, v]) => `${k}="${v}"`);
   expect(bad, `placeholder English text: ${bad.slice(0, 10).join(', ')}`).toEqual([]);
+});
+
+test('templates have no hardcoded Thai text (it would show in the English UI)', () => {
+  const bad: string[] = [];
+  for (const f of sources(root).filter((f) => f.endsWith('.html'))) {
+    const s = fs.readFileSync(f, 'utf8').replace(/<!--[\s\S]*?-->/g, '');
+    const where = path.relative(root, f);
+    for (const m of s.matchAll(/>([^<>{}]*[฀-๿][^<>{}]*)</g)) if (m[1].trim()) bad.push(`${where}: ${m[1].trim().slice(0, 40)}`);
+    for (const m of s.matchAll(/\s(placeholder|title|label|aria-label|alt)="([^"]*[฀-๿][^"]*)"/g)) bad.push(`${where}: ${m[1]}="${m[2].slice(0, 40)}"`);
+  }
+  expect(bad, `use a translate key instead:\n${bad.slice(0, 15).join('\n')}`).toEqual([]);
 });

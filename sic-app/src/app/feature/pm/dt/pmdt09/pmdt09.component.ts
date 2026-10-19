@@ -60,7 +60,6 @@ export class Pmdt09Component implements OnInit {
     { key: 'title', label: this.translate.instant('PMDT09_TITLE') || 'Title', type: 'text' },
     { key: 'description', label: this.translate.instant('PMDT09_DESCRIPTION') || 'Description', type: 'textarea' },
     { key: 'severity', label: this.translate.instant('PMDT09_SEVERITY') || 'Severity', type: 'text' },
-    { key: 'reviewableType', label: 'Review Type', type: 'text' },
   ];
 
   // ===== Card Comments Section State =====
@@ -568,7 +567,7 @@ export class Pmdt09Component implements OnInit {
         title: row['title'],
         description: row['description'],
         severity: row['severity'] || 'Medium',
-        reviewableType: row['reviewableType'] || 'UI/UX',
+        reviewableType: 'Specification', // same default as the design review form (pmdt09A)
         status: 'Open',
       })
     );

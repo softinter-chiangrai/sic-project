@@ -5,14 +5,14 @@
       <button
         (click)="goBack()"
         class="w-9 h-9 rounded-xl flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all border border-[var(--border)] bg-[var(--bg)]"
-        title="ย้อนกลับ"
+        [title]="'COMMON_BACK' | translate"
       >
         <i class="bi bi-arrow-left text-lg"></i>
       </button>
       <div>
         <div class="flex items-center gap-2">
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-[var(--crm-primary)]/10 text-[var(--crm-primary)]">
-            <i class="bi bi-calendar3"></i> ปฏิทินงานโครงการ (Task Calendar)
+            <i class="bi bi-calendar3"></i> {{ 'CAL_TITLE' | translate }}
           </span>
           @if (phase()?.phaseName) {
             <span class="text-xs text-[var(--text-muted)]">
@@ -31,7 +31,7 @@
       <!-- Project Filter -->
       <div class="flex items-center gap-1.5 text-xs text-[var(--text-muted)] bg-[var(--bg)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 shadow-sm">
         <i class="bi bi-folder2 text-[var(--crm-primary)]"></i>
-        <label class="font-medium text-[var(--text-active)]">โครงการ:</label>
+        <label class="font-medium text-[var(--text-active)]">{{ 'CAL_PROJECT_LABEL' | translate }}</label>
         <select
           [ngModel]="selectedProjectId()"
           (ngModelChange)="onProjectFilterChange($event)"
@@ -53,12 +53,12 @@
       @if ((selectedProjectId() !== 'ALL' || selectedProjectIds().length === 1) && availablePhases().length > 0) {
         <div class="flex items-center gap-1.5 text-xs text-[var(--text-muted)] bg-[var(--bg)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 shadow-sm">
           <i class="bi bi-layer-forward text-[var(--crm-primary)]"></i>
-          <label class="font-medium text-[var(--text-active)]">เฟส:</label>
+          <label class="font-medium text-[var(--text-active)]">{{ 'CAL_PHASE_LABEL' | translate }}</label>
           <select
             [ngModel]="selectedPhaseId()"
             (ngModelChange)="onPhaseFilterChange($event)"
             class="bg-transparent text-xs text-[var(--text-active)] font-medium focus:outline-none cursor-pointer pr-1 max-w-[160px] truncate">
-            <option value="ALL">ทุกเฟส (All Phases)</option>
+            <option value="ALL">{{ 'CAL_ALL_PHASES' | translate }}</option>
             @for (ph of availablePhases(); track ph.id) {
               <option [value]="ph.id">{{ ph.phaseName }}</option>
             }
@@ -76,7 +76,7 @@
         (click)="toggleDateSidebar()"
         [class]="isSidebarOpen() ? 'bg-[var(--crm-primary)]/15 text-[var(--crm-primary)] border-[var(--crm-primary)]/30' : 'bg-[var(--bg)] text-[var(--text-muted)] border-[var(--border)]'"
         class="px-3 py-2 border rounded-xl text-xs font-medium transition-all flex items-center gap-1.5">
-        <i class="bi bi-layout-sidebar-reverse"></i> รายละเอียดวันที่
+        <i class="bi bi-layout-sidebar-reverse"></i> {{ 'CAL_DAY_DETAIL' | translate }}
       </button>
     </div>
   </div>
@@ -213,14 +213,14 @@
             (click)="selectCustomItemType('holiday')"
             [class]="customItemForm.type === 'holiday' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
             class="flex-1 py-1.5 text-xs rounded-md transition-all flex items-center justify-center gap-1.5">
-            <span>🎉</span> วันหยุด / กิจกรรม
+            <span>🎉</span> {{ 'LEAVE_HOLIDAY_EVENT' | translate }}
           </button>
           <button
             type="button"
             (click)="selectCustomItemType('leave')"
             [class]="customItemForm.type === 'leave' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
             class="flex-1 py-1.5 text-xs rounded-md transition-all flex items-center justify-center gap-1.5">
-            <span>🏖️</span> วันลาทีมงาน (Leave)
+            <span>🏖️</span> {{ 'LEAVE_TEAM_LEAVE' | translate }}
           </button>
         </div>
 
@@ -228,12 +228,12 @@
           <!-- Member Leave Fields -->
           <div>
             <sic-combobox
-              label="ชื่อผู้ลา / พนักงาน *"
+              [label]="'LEAVE_EMPLOYEE' | translate"
               [apiUrl]="memberApiUrl"
               [options]="memberOptions"
               valueField="value"
               textField="text"
-              placeholder="เลือกสมาชิกในทีม"
+              [placeholder]="'LEAVE_SELECT_MEMBER' | translate"
               [clearable]="false"
               [(ngModel)]="customItemForm.userId"
               [ngModelOptions]="{ standalone: true }"
@@ -242,28 +242,28 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">ประเภทการลา</label>
+            <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">{{ 'LEAVE_TYPE' | translate }}</label>
             <select
               [(ngModel)]="customItemForm.leaveType"
               class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]">
-              <option value="vacation">🏖️ ลาพักร้อน (Vacation Leave)</option>
-              <option value="sick">🤒 ลาป่วย (Sick Leave)</option>
-              <option value="personal">💼 ลากิจ (Personal Leave)</option>
-              <option value="other">📌 ลาอื่นๆ (Other)</option>
+              <option value="vacation">{{ 'LEAVE_VACATION' | translate }}</option>
+              <option value="sick">{{ 'LEAVE_SICK' | translate }}</option>
+              <option value="personal">{{ 'LEAVE_PERSONAL' | translate }}</option>
+              <option value="other">{{ 'LEAVE_OTHER' | translate }}</option>
             </select>
           </div>
 
           <div class="grid grid-cols-2 gap-3">
             <div>
               <sic-datepicker
-                label="ตั้งแต่วันที่"
+                [label]="'LEAVE_FROM' | translate"
                 [(ngModel)]="customItemForm.date"
                 [ngModelOptions]="{ standalone: true }">
               </sic-datepicker>
             </div>
             <div>
               <sic-datepicker
-                label="ถึงวันที่"
+                [label]="'LEAVE_TO' | translate"
                 [(ngModel)]="customItemForm.endDate"
                 [ngModelOptions]="{ standalone: true }">
               </sic-datepicker>
@@ -271,11 +271,11 @@
           </div>
 
           <div>
-            <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">หมายเหตุ / เหตุผล</label>
+            <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">{{ 'LEAVE_REMARK' | translate }}</label>
             <textarea
               [(ngModel)]="customItemForm.description"
               rows="2"
-              placeholder="ระบุเหตุผลการลา (ถ้ามี)"
+              [placeholder]="'LEAVE_REASON_PH' | translate"
               class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]"></textarea>
           </div>
         } @else {

@@ -453,10 +453,8 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
 
     if (!title && !desc) {
       this.dialog.warn(
-        this.translate.instant('COMMON_WARN_TITLE', { defaultValue: 'คำเตือน' }),
-        this.aiBugLang() === 'th'
-          ? 'กรุณาระบุชื่อข้อผิดพลาดหรือรายละเอียดก่อนให้ AI วิเคราะห์'
-          : 'Please enter bug title or description before requesting AI analysis'
+        this.translate.instant('COMMON_WARN_TITLE'),
+        this.translate.instant('PMDT12_AI_BUG_NEED_INPUT_MSG')
       );
       return;
     }

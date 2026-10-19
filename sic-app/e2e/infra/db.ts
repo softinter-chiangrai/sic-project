@@ -4,7 +4,7 @@
 import { execFileSync } from 'node:child_process';
 import * as path from 'node:path';
 
-const E2E_DB = process.env['E2E_DB'] ?? 'sic_app_e2e';
+export const E2E_DB = process.env['E2E_DB'] ?? 'sic_app_e2e';
 // Optional second port: run the test backend next to one you started yourself on :5265 (it uses your real DB, so never reuse that one)
 const ALT_PORT = process.env['E2E_API_PORT'];
 const PORT = ALT_PORT ?? '5265';

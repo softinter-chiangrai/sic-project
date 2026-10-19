@@ -584,13 +584,18 @@ export class Pmdt17Component implements OnInit {
     }
 
     this.aiBatchSaving.set(true);
+    // the backend enums reject anything else (AI or a hand-edited cell): fall back to a valid value
+    const oneOf = (v: unknown, allowed: string[], fallback: string) => {
+      const s = String(v ?? '').trim().toUpperCase();
+      return allowed.includes(s) ? s : fallback;
+    };
     const requests = rows.map((r) =>
       this.http.post(`${apiBaseUrl}/api/pm/ma-tickets/save`, {
         projectId,
         title: r['title'] || r['ticketTitle'] || 'Untitled Ticket',
         description: r['description'] || '-',
-        severity: (r['severity'] || 'MEDIUM').toUpperCase(),
-        ticketType: (r['ticketType'] || 'BUG_SUPPORT').toUpperCase(),
+        severity: oneOf(r['severity'], ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'], 'MEDIUM'),
+        ticketType: oneOf(r['ticketType'], ['BUG_SUPPORT', 'DATA_ISSUE', 'USER_SUPPORT', 'CHANGE_REQUEST', 'PERFORMANCE', 'SECURITY', 'INFRA'], 'BUG_SUPPORT'),
       }),
     );
 

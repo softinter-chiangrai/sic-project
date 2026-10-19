@@ -11,7 +11,8 @@ import lombok.Getter;
 /**
  * Single source of truth for which business modules the Global AI Navigator and the AI Batch
  * Generator know about: the human label, where the module's list page lives, where the
- * "create new" route is (used to auto-open that page's AI modal after navigation), and the
+ * "create new" route is (used to auto-open that page's AI modal after navigation; only set when that
+ * page handles ?aiAutoOpen via tryAiAutoOpen, otherwise the navigator links the list page), and the
  * JSON schema the batch generator must ask the LLM to produce for that module.
  *
  * Add a new module here to make it available to BOTH features at once.
@@ -44,7 +45,6 @@ public class AiModuleRegistry {
                 .moduleType("CUSTOMER")
                 .label("ลูกค้า (Customer)")
                 .listRoute("/feature/pm/customer")
-                .createRoute("/feature/pm/customer/new")
                 .schemaDescription("{ \"companyNameLocal\": \"ชื่อบริษัทไทย (เช่น บริษัท สยามนวัตกรรม ดิจิทัล จำกัด)\", \"companyNameEn\": \"Company name in English (e.g. Siam Innovation Digital Co., Ltd.)\", \"taxId\": \"เลขประจำตัวผู้เสียภาษี 13 หลัก ขึ้นต้น 01055xxxxxxxx\", \"branchCode\": \"00000\", \"contactPerson\": \"ชื่อผู้ติดต่อคนไทย เช่น คุณสมชาย วิจิตรศิลป์\", \"phoneNumber\": \"เบอร์โทรศัพท์ไทย เช่น 02-xxx-xxxx หรือ 08x-xxx-xxxx\", \"email\": \"อีเมล เช่น contact@domain.co.th\", \"addressLocal\": \"ที่อยู่ในประเทศไทย เช่น 88/12 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท 21 แขวงคลองเตยเหนือ เขตวัฒนา กรุงเทพมหานคร 10110\", \"addressEn\": \"Thai address in English\", \"zipCode\": \"10110\" }")
                 .build());
 
@@ -60,7 +60,6 @@ public class AiModuleRegistry {
                 .moduleType("PHASE")
                 .label("ระยะโครงการ (Phase)")
                 .listRoute("/feature/pm/phase")
-                .createRoute("/feature/pm/phase/new")
                 .schemaDescription("{ \"phaseName\": string, \"description\": string, \"startDate\": \"YYYY-MM-DD\"|null, \"endDate\": \"YYYY-MM-DD\"|null, \"color\": \"#3B82F6\"|\"#10B981\"|\"#8B5CF6\"|\"#F59E0B\"|\"#EC4899\"|\"#06B6D4\" }")
                 .build());
 
@@ -117,7 +116,7 @@ public class AiModuleRegistry {
                 .label("MA Ticket")
                 .listRoute("/feature/pm/ma-ticket")
                 .createRoute("/feature/pm/ma-ticket/new")
-                .schemaDescription("{ \"title\": string, \"description\": string, \"severity\": \"CRITICAL\"|\"HIGH\"|\"MEDIUM\"|\"LOW\", \"ticketType\": \"BUG_SUPPORT\"|\"CR_SUPPORT\"|\"GENERAL_QUESTION\" }")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"severity\": \"CRITICAL\"|\"HIGH\"|\"MEDIUM\"|\"LOW\", \"ticketType\": \"BUG_SUPPORT\"|\"DATA_ISSUE\"|\"USER_SUPPORT\"|\"CHANGE_REQUEST\"|\"PERFORMANCE\"|\"SECURITY\"|\"INFRA\" }")
                 .build());
 
         register(ModuleDef.builder()
@@ -132,7 +131,6 @@ public class AiModuleRegistry {
                 .moduleType("APPROVAL_FLOW")
                 .label("Approval Flow")
                 .listRoute("/feature/bu/approval-flow")
-                .createRoute("/feature/bu/approval-flow/new")
                 .schemaDescription("{ \"stepName\": string, \"approverRole\": string, \"stepOrder\": number }")
                 .build());
 
@@ -140,7 +138,6 @@ public class AiModuleRegistry {
                 .moduleType("ROLE")
                 .label("บทบาท (Role)")
                 .listRoute("/feature/bu/role")
-                .createRoute("/feature/bu/role")
                 .schemaDescription("{ \"roleName\": string, \"description\": string }")
                 .build());
 
@@ -148,7 +145,6 @@ public class AiModuleRegistry {
                 .moduleType("TEAM")
                 .label("ทีม (Team)")
                 .listRoute("/feature/bu/team")
-                .createRoute("/feature/bu/team")
                 .schemaDescription("{ \"teamName\": string, \"description\": string }")
                 .build());
 
@@ -156,7 +152,6 @@ public class AiModuleRegistry {
                 .moduleType("TASK")
                 .label("งาน (Task)")
                 .listRoute("/feature/pm/task-board")
-                .createRoute("/feature/pm/task/new")
                 .schemaDescription("{ \"taskName\": string, \"description\": string, \"priority\": \"Critical\"|\"High\"|\"Medium\"|\"Low\", \"estimateManday\": number, \"color\": \"#3B82F6\"|\"#10B981\"|\"#8B5CF6\"|\"#F59E0B\" }")
                 .build());
 
@@ -164,7 +159,6 @@ public class AiModuleRegistry {
                 .moduleType("CHANGE_REQUEST")
                 .label("คำขอเปลี่ยนแปลง (Change Request)")
                 .listRoute("/feature/pm/change-request")
-                .createRoute("/feature/pm/change-request/new")
                 .schemaDescription("{ \"title\": string, \"description\": string, \"reason\": string, \"priority\": \"High\"|\"Medium\"|\"Low\", \"changeType\": \"Scope\"|\"Schedule\"|\"Cost\"|\"Design\" }")
                 .build());
 
@@ -172,15 +166,13 @@ public class AiModuleRegistry {
                 .moduleType("DESIGN_REVIEW")
                 .label("ทบทวนการออกแบบ (Design Review)")
                 .listRoute("/feature/pm/design-review")
-                .createRoute("/feature/pm/design-review/new")
-                .schemaDescription("{ \"title\": string, \"description\": string, \"reviewType\": \"Architecture\"|\"UI/UX\"|\"Database\"|\"Security\"|\"Code Review\", \"priority\": \"High\"|\"Medium\"|\"Low\" }")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"severity\": \"High\"|\"Medium\"|\"Low\" }")
                 .build());
 
         register(ModuleDef.builder()
                 .moduleType("MILESTONE")
                 .label("หมุดหมาย (Milestone)")
                 .listRoute("/feature/pm/phase")
-                .createRoute("/feature/pm/milestone/new")
                 .schemaDescription("{ \"milestoneName\": string, \"description\": string, \"dueDate\": \"YYYY-MM-DD\"|null, \"color\": \"#F59E0B\" }")
                 .build());
 
@@ -188,7 +180,6 @@ public class AiModuleRegistry {
                 .moduleType("WORK_PACKAGE")
                 .label("ชุดงาน (Work Package)")
                 .listRoute("/feature/pm/phase")
-                .createRoute("/feature/pm/work-package/new")
                 .schemaDescription("{ \"packageName\": string, \"description\": string, \"startDate\": \"YYYY-MM-DD\"|null, \"endDate\": \"YYYY-MM-DD\"|null, \"color\": \"#8B5CF6\" }")
                 .build());
     }

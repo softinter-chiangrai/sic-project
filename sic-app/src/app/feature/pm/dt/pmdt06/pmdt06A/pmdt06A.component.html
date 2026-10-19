@@ -199,10 +199,10 @@
                     type="button"
                     (click)="openHistoryModal()"
                     class="text-xs px-2.5 py-1 rounded-md font-medium text-[var(--text-active)] bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--border)] flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
-                    title="ดูประวัติการวิเคราะห์ผลกระทบทั้งหมด"
+                    [title]="'PMDT06_IMPACT_HISTORY_TOOLTIP' | translate"
                   >
                     <i class="bi bi-clock-history text-indigo-500"></i>
-                    <span>ประวัติการวิเคราะห์</span>
+                    <span>{{ 'PMDT06_IMPACT_HISTORY_BTN' | translate }}</span>
                   </button>
                 }
                 @if (!isView) {
@@ -220,10 +220,10 @@
                     (click)="aiAnalyzeImpact()"
                     [disabled]="isLoadingImpact() || isAiAnalyzing()"
                     class="text-xs px-2.5 py-1 rounded-md font-medium text-white bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-sm flex items-center gap-1.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="ใช้อัจฉริยะ AI ช่วยคัดกรองเอกสารและประเมิน Manday"
+                    [title]="'PMDT06_AI_ANALYZE_TOOLTIP' | translate"
                   >
                     <i class="bi bi-stars" [class.animate-spin]="isAiAnalyzing()"></i>
-                    <span>{{ isAiAnalyzing() ? 'กำลังวิเคราะห์ AI...' : 'วิเคราะห์ด้วย AI' }}</span>
+                    <span>{{ (isAiAnalyzing() ? 'PMDT06_AI_ANALYZING' : 'PMDT06_AI_ANALYZE_BTN') | translate }}</span>
                   </button>
                 }
               </div>
@@ -321,7 +321,7 @@
                     <div class="md:col-span-2 bg-gradient-to-r from-violet-50/80 to-indigo-50/80 dark:from-violet-950/20 dark:to-indigo-950/20 rounded-lg p-3 border border-violet-200 dark:border-violet-800/50 space-y-1">
                       <div class="flex items-center gap-1.5 font-semibold text-xs text-violet-700 dark:text-violet-300">
                         <i class="bi bi-stars"></i>
-                        <span>เหตุผลและการวิเคราะห์จาก AI (AI Semantic Rationale)</span>
+                        <span>{{ 'PMDT06_AI_RATIONALE_TITLE' | translate }}</span>
                       </div>
                       <p class="text-xs text-[var(--text-active)] leading-relaxed whitespace-pre-line">{{ impact.aiRationale }}</p>
                     </div>
@@ -415,7 +415,7 @@
                               REQ: {{ req.name ? (req.code ? req.code + ' - ' + req.name : req.name) : (req.code || (req.id | slice:0:8)) }}
                             </span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('REQ', req.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('REQ', req.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -424,7 +424,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-blue-50 dark:bg-blue-900/20 px-2 py-0.5 rounded text-[0.6rem] text-blue-600 dark:text-blue-400">
                             <span (click)="openItemDetail('REQ', id)" class="cursor-pointer hover:underline">REQ: {{ id | slice:0:8 }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('REQ', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('REQ', id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -437,7 +437,7 @@
                               SPEC: {{ spec.name ? (spec.code ? spec.code + ' - ' + spec.name : spec.name) : (spec.code || (spec.id | slice:0:8)) }}
                             </span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('SPEC', spec.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('SPEC', spec.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -446,7 +446,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-purple-50 dark:bg-purple-900/20 px-2 py-0.5 rounded text-[0.6rem] text-purple-600 dark:text-purple-400">
                             <span (click)="openItemDetail('SPEC', id)" class="cursor-pointer hover:underline">SPEC: {{ id | slice:0:8 }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('SPEC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('SPEC', id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -457,7 +457,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400 font-medium">
                             <span (click)="openItemDetail('DIAGRAM', diag.id)" class="cursor-pointer hover:underline">DIAGRAM: {{ diag.name }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('DIAGRAM', diag.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('DIAGRAM', diag.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -466,7 +466,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-orange-50 dark:bg-orange-950/40 border border-orange-200 dark:border-orange-800 px-2 py-0.5 rounded text-[0.6rem] text-orange-600 dark:text-orange-400">
                             <span (click)="openItemDetail('DIAGRAM', id)" class="cursor-pointer hover:underline">DIAGRAM: {{ id | slice:0:8 }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('DIAGRAM', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('DIAGRAM', id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -479,7 +479,7 @@
                               TASK: {{ task.name ? (task.code ? task.code + ' - ' + task.name : task.name) : (task.code || (task.id | slice:0:8)) }}
                             </span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('TASK', task.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('TASK', task.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -488,7 +488,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded text-[0.6rem] text-emerald-600 dark:text-emerald-400">
                             <span (click)="openItemDetail('TASK', id)" class="cursor-pointer hover:underline">TASK: {{ id | slice:0:8 }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('TASK', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('TASK', id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -501,7 +501,7 @@
                               TC: {{ tc.name ? (tc.code ? tc.code + ' - ' + tc.name : tc.name) : (tc.code || (tc.id | slice:0:8)) }}
                             </span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('TC', tc.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('TC', tc.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -510,7 +510,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-yellow-50 dark:bg-yellow-900/20 px-2 py-0.5 rounded text-[0.6rem] text-yellow-600 dark:text-yellow-400">
                             <span (click)="openItemDetail('TC', id)" class="cursor-pointer hover:underline">TC: {{ id | slice:0:8 }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('TC', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('TC', id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -523,7 +523,7 @@
                               BUG: {{ bug.name ? (bug.code ? bug.code + ' - ' + bug.name : bug.name) : (bug.code || (bug.id | slice:0:8)) }}
                             </span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('BUG', bug.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('BUG', bug.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -532,7 +532,7 @@
                           <span class="inline-flex items-center gap-1 select-none bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded text-[0.6rem] text-red-600 dark:text-red-400">
                             <span (click)="openItemDetail('BUG', id)" class="cursor-pointer hover:underline">BUG: {{ id | slice:0:8 }}</span>
                             @if (!isView) {
-                              <button type="button" (click)="excludeItem('BUG', id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                              <button type="button" (click)="excludeItem('BUG', id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                             }
                           </span>
                         }
@@ -542,7 +542,7 @@
                         <span class="inline-flex items-center gap-1 select-none bg-sky-50 dark:bg-sky-900/20 px-2 py-0.5 rounded text-[0.6rem] text-sky-600 dark:text-sky-400">
                           <span>MANUAL: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
                           @if (!isView) {
-                            <button type="button" (click)="excludeItem('MANUAL', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            <button type="button" (click)="excludeItem('MANUAL', x.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                           }
                         </span>
                       }
@@ -550,7 +550,7 @@
                         <span class="inline-flex items-center gap-1 select-none bg-teal-50 dark:bg-teal-900/20 px-2 py-0.5 rounded text-[0.6rem] text-teal-600 dark:text-teal-400">
                           <span>DELIVERY: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
                           @if (!isView) {
-                            <button type="button" (click)="excludeItem('DELIVERY', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            <button type="button" (click)="excludeItem('DELIVERY', x.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                           }
                         </span>
                       }
@@ -558,7 +558,7 @@
                         <span class="inline-flex items-center gap-1 select-none bg-pink-50 dark:bg-pink-900/20 px-2 py-0.5 rounded text-[0.6rem] text-pink-600 dark:text-pink-400">
                           <span>INVOICE: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
                           @if (!isView) {
-                            <button type="button" (click)="excludeItem('INVOICE', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            <button type="button" (click)="excludeItem('INVOICE', x.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                           }
                         </span>
                       }
@@ -566,7 +566,7 @@
                         <span class="inline-flex items-center gap-1 select-none bg-amber-50 dark:bg-amber-900/20 px-2 py-0.5 rounded text-[0.6rem] text-amber-600 dark:text-amber-400">
                           <span>MA: {{ x.name ? (x.code ? x.code + ' - ' + x.name : x.name) : (x.code || (x.id | slice:0:8)) }}</span>
                           @if (!isView) {
-                            <button type="button" (click)="excludeItem('MA', x.id, $event)" title="ตัดออกจากผลกระทบ" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
+                            <button type="button" (click)="excludeItem('MA', x.id, $event)" [title]="'PMDT06_EXCLUDE_FROM_IMPACT' | translate" class="hover:text-red-500 font-bold px-0.5 focus:outline-none opacity-60 hover:opacity-100">✕</button>
                           }
                         </span>
                       }
@@ -652,8 +652,8 @@
             <i class="bi bi-clock-history text-base"></i>
           </div>
           <div>
-            <h3 class="font-semibold text-sm text-[var(--text-active)]">ประวัติการวิเคราะห์ผลกระทบ</h3>
-            <p class="text-xs text-[var(--text-muted)]">บันทึก snapshot ของการวิเคราะห์ผลกระทบแต่ละครั้ง</p>
+            <h3 class="font-semibold text-sm text-[var(--text-active)]">{{ 'PMDT06_IMPACT_HISTORY_TITLE' | translate }}</h3>
+            <p class="text-xs text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_HISTORY_DESC' | translate }}</p>
           </div>
         </div>
         <button type="button" (click)="closeHistoryModal()" class="text-[var(--text-muted)] hover:text-[var(--text-active)] p-1 rounded-lg hover:bg-[var(--border)] transition-colors">
@@ -666,12 +666,12 @@
         @if (isLoadingHistory()) {
           <div class="py-12 flex flex-col items-center justify-center text-[var(--text-muted)] gap-2">
             <i class="bi bi-arrow-repeat animate-spin text-2xl text-[var(--crm-primary)]"></i>
-            <span class="text-xs">กำลังโหลดประวัติการวิเคราะห์...</span>
+            <span class="text-xs">{{ 'PMDT06_IMPACT_HISTORY_LOADING' | translate }}</span>
           </div>
         } @else if (impactHistory().length === 0) {
           <div class="py-12 flex flex-col items-center justify-center text-[var(--text-muted)] gap-2">
             <i class="bi bi-journal-x text-3xl opacity-40"></i>
-            <span class="text-xs">ยังไม่มีประวัติการวิเคราะห์ผลกระทบสำหรับ Change Request นี้</span>
+            <span class="text-xs">{{ 'PMDT06_IMPACT_HISTORY_EMPTY' | translate }}</span>
           </div>
         } @else {
           <div class="space-y-3">
@@ -697,10 +697,10 @@
                       type="button"
                       (click)="restoreHistoryVersion(item)"
                       class="text-xs px-2.5 py-1 rounded font-medium text-white bg-indigo-600 hover:bg-indigo-700 flex items-center gap-1 shadow-sm active:scale-95 transition-all"
-                      title="นำผลการวิเคราะห์เวอร์ชันนี้มาใช้งาน"
+                      [title]="'PMDT06_IMPACT_HISTORY_RESTORE_TOOLTIP' | translate"
                     >
                       <i class="bi bi-arrow-counterclockwise"></i>
-                      <span>นำมาใช้</span>
+                      <span>{{ 'PMDT06_IMPACT_HISTORY_RESTORE' | translate }}</span>
                     </button>
                   }
                 </div>
@@ -736,7 +736,7 @@
                     <span class="font-semibold text-red-600 dark:text-red-400 ml-1">{{ item.bugCount }}</span>
                   </div>
                   <div>
-                    <span class="text-[var(--text-muted)]">ผู้บันทึก:</span>
+                    <span class="text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_HISTORY_BY' | translate }}</span>
                     <span class="text-[var(--text-active)] ml-1 truncate">{{ item.analyzedBy || '-' }}</span>
                   </div>
                 </div>
@@ -762,7 +762,7 @@
           (click)="closeHistoryModal()"
           class="px-3.5 py-1.5 rounded-lg text-xs font-medium text-[var(--text-active)] bg-[var(--bg-card)] border border-[var(--border)] hover:bg-[var(--border)] transition-colors"
         >
-          ปิด
+          {{ 'COMMON_CLOSE' | translate }}
         </button>
       </div>
     </div>

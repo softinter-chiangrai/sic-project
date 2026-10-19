@@ -641,28 +641,16 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
     aiAnalyzeImpact() {
         const targetType = this.form.get('targetType')?.value || this.selectedTargetType();
         const targetId = this.form.get('targetId')?.value;
-        const changeLevel = this.form.get('changeLevel')?.value || 'MINOR';
         if (!targetType || !targetId) {
+            this.dialog.warn(this.translate.instant('PMDT06_AI_ANALYZE_FAIL_TITLE'), this.translate.instant('PMDT06_AI_SELECT_TARGET_MSG'));
             return;
         }
 
         this.isAiAnalyzing.set(true);
-        if (this.changeRequestId) {
-            this.impactService.aiAnalyze(this.changeRequestId)
-                .pipe(finalize(() => this.isAiAnalyzing.set(false)))
-                .subscribe({
-                    next: (data) => {
-                        this.impactData.set(data);
-                        this.showImpactSection.set(true);
-                        this.cdr.detectChanges();
-                    },
-                    error: (err) => {
-                        console.error('AI analyze impact failed:', err);
-                    }
-                });
-        } else {
-            const formVal = this.form.getRawValue();
-            this.impactService.aiPreview({
+        const formVal = this.form.getRawValue();
+        const analyze$ = this.changeRequestId
+            ? this.impactService.aiAnalyze(this.changeRequestId)
+            : this.impactService.aiPreview({
                 targetType,
                 targetId,
                 title: formVal.title,
@@ -670,19 +658,19 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 changeReason: formVal.changeReason,
                 changeLevel: formVal.changeLevel,
                 priority: formVal.priority,
-            })
-                .pipe(finalize(() => this.isAiAnalyzing.set(false)))
-                .subscribe({
-                    next: (data) => {
-                        this.impactData.set(data);
-                        this.showImpactSection.set(true);
-                        this.cdr.detectChanges();
-                    },
-                    error: (err) => {
-                        console.error('AI preview impact failed:', err);
-                    }
-                });
-        }
+            });
+        analyze$
+            .pipe(finalize(() => this.isAiAnalyzing.set(false)))
+            .subscribe({
+                next: (data) => {
+                    this.impactData.set(data);
+                    this.showImpactSection.set(true);
+                    this.cdr.detectChanges();
+                },
+                error: (err) => {
+                    this.dialog.error(this.translate.instant('PMDT06_AI_ANALYZE_FAIL_TITLE'), err?.error?.message || this.translate.instant('PMDT06_GENERIC_ERROR'));
+                }
+            });
     }
 
     // ===== CRUD =====

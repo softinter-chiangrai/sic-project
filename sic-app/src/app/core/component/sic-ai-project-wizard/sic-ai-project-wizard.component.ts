@@ -345,15 +345,15 @@ export class SicAiProjectWizardComponent implements OnDestroy {
     const id = this.createdProjectId();
     this.close();
     if (id) {
-      this.router.navigate(['/pm/dt/pmdt01A'], { queryParams: { id } });
+      this.router.navigate(['/feature/pm/project', id, 'edit']);
     } else {
-      this.router.navigate(['/pm/rt/pmrt01']);
+      this.router.navigate(['/feature/pm/project']);
     }
   }
 
   goToGantt(): void {
     this.close();
-    this.router.navigate(['/pm/rt/pmrt07']);
+    this.router.navigate(['/feature/pm/gantt']);
   }
 
   onFilesSelected(event: Event): void {
@@ -421,6 +421,6 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   goToHistoryProject(job: AiPipelineJob): void {
     if (!job.projectId) return;
     this.close();
-    this.router.navigate(['/pm/dt/pmdt01A'], { queryParams: { id: job.projectId } });
+    this.router.navigate(['/feature/pm/project', job.projectId, 'edit']);
   }
 }

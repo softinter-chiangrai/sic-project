@@ -41,7 +41,8 @@ cd sic-app && npx playwright test        # setup (login) + e2e/pages.spec.ts (al
 - Guards that must stay green: `e2e/api/friendly-errors.spec.ts` (a rejected save is 4xx with plain words, never SQL; lists never cross businesses) and `e2e/api/i18n.spec.ts` (every translation key used exists in en+th; no English text that is just a humanised key).
 - Two users: `e2e-second` is created in Keycloak (real realm) for multi-person approvals (`e2e/api/approvals-multi.spec.ts`) and removed by teardown / `npm run e2e:down`.
 - Forms are filled by `e2e/ui/forms.ts` (discovers required `ng-invalid` controls; knows sic-input/combobox/datepicker/radio/checkbox/tiptap + native inputs). A module that needs more declares it in the `mods` table of `crud.spec.ts` (`values`, `query`, `prepare`, `spa`, `page1`, `noGridDelete`).
-- Not covered: profile edit (needs an e-mailed OTP), AI generation (no LLM key), positive path of joining a business by token (needs a third user).
+- Not covered: profile edit (needs an e-mailed OTP), positive path of joining a business by token (needs a third user).
+- AI features: read `ai-modules.md` (this folder) before writing any AI test: every AI module, buttons, endpoints, mock pattern, known bugs.
 - Needs ~1.5 GB free RAM for the Angular dev server; close other IDEs if it crashes at start (exit 3221226505).
 
 ## Gotchas

@@ -301,7 +301,7 @@
                                       />
                                       <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors flex items-center justify-center">
                                         <span class="opacity-0 group-hover:opacity-100 transition-opacity px-3 py-1.5 rounded-full bg-black/70 text-white text-xs font-medium flex items-center gap-1.5 backdrop-blur-xs">
-                                          <i class="bi bi-arrows-fullscreen"></i> คลิกดูภาพเต็ม
+                                          <i class="bi bi-arrows-fullscreen"></i> {{ 'PMDT08_CLICK_FULL_IMAGE' | translate }}
                                         </span>
                                       </div>
                                     </div>
@@ -574,7 +574,7 @@
             type="button"
             (click)="closeImagePreview()"
             class="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-all cursor-pointer"
-            title="ปิด (Esc)"
+            [title]="'COMMON_CLOSE_ESC' | translate"
           >
             <i class="bi bi-x-lg text-lg"></i>
           </button>
@@ -598,7 +598,7 @@
       <div
         class="w-full py-3 text-center text-xs text-zinc-400 bg-gradient-to-t from-black/80 to-transparent pointer-events-none"
       >
-        คลิกพื้นที่ว่างหรือกด Esc เพื่อปิด
+        {{ 'PMDT08_CLOSE_IMAGE_HINT' | translate }}
       </div>
     </div>
   }

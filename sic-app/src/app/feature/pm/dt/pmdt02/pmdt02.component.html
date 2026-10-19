@@ -26,7 +26,7 @@
           @if (phaseHolidaySummary(); as summary) {
             @if (summary.holidayDays > 0 || summary.weekendDays > 0) {
               <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20"
-                title="จำนวนวันทำงานจริงและวันหยุดตลอดระยะเวลาของ Phase นี้">
+                [title]="'PMDT02_WORKDAYS_TOOLTIP' | translate">
                 <i class="bi bi-briefcase"></i>
                 วันทำงาน: {{ summary.workingDays }} วัน
                 <span class="text-[var(--text-muted)] opacity-80">(วันหยุดพิเศษ {{ summary.holidayDays }} วัน, ส.-อา. {{ summary.weekendDays }} วัน)</span>
@@ -474,14 +474,14 @@
                 (click)="selectCustomItemType('holiday')"
                 [class]="customItemForm.type === 'holiday' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
                 class="flex-1 py-1.5 text-xs rounded-md transition-all flex items-center justify-center gap-1.5">
-                <span>🎉</span> วันหยุด / กิจกรรม
+                <span>🎉</span> {{ 'LEAVE_HOLIDAY_EVENT' | translate }}
               </button>
               <button
                 type="button"
                 (click)="selectCustomItemType('leave')"
                 [class]="customItemForm.type === 'leave' ? 'bg-[var(--sidebar)] text-[var(--crm-primary)] shadow-sm font-semibold' : 'text-[var(--text-muted)] hover:text-[var(--text-active)]'"
                 class="flex-1 py-1.5 text-xs rounded-md transition-all flex items-center justify-center gap-1.5">
-                <span>🏖️</span> วันลาทีมงาน (Leave)
+                <span>🏖️</span> {{ 'LEAVE_TEAM_LEAVE' | translate }}
               </button>
             </div>
 
@@ -489,12 +489,12 @@
               <!-- Member Leave Fields -->
               <div>
                 <sic-combobox
-                  label="ชื่อผู้ลา / พนักงาน *"
+                  [label]="'LEAVE_EMPLOYEE' | translate"
                   [apiUrl]="memberApiUrl"
                   [options]="memberOptions"
                   valueField="value"
                   textField="text"
-                  placeholder="เลือกสมาชิกในทีม"
+                  [placeholder]="'LEAVE_SELECT_MEMBER' | translate"
                   [clearable]="false"
                   [(ngModel)]="customItemForm.userId"
                   [ngModelOptions]="{ standalone: true }"
@@ -503,28 +503,28 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">ประเภทการลา</label>
+                <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">{{ 'LEAVE_TYPE' | translate }}</label>
                 <select
                   [(ngModel)]="customItemForm.leaveType"
                   class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]">
-                  <option value="vacation">🏖️ ลาพักร้อน (Vacation Leave)</option>
-                  <option value="sick">🤒 ลาป่วย (Sick Leave)</option>
-                  <option value="personal">💼 ลากิจ (Personal Leave)</option>
-                  <option value="other">📌 ลาอื่นๆ (Other)</option>
+                  <option value="vacation">{{ 'LEAVE_VACATION' | translate }}</option>
+                  <option value="sick">{{ 'LEAVE_SICK' | translate }}</option>
+                  <option value="personal">{{ 'LEAVE_PERSONAL' | translate }}</option>
+                  <option value="other">{{ 'LEAVE_OTHER' | translate }}</option>
                 </select>
               </div>
 
               <div class="grid grid-cols-2 gap-3">
                 <div>
                   <sic-datepicker
-                    label="ตั้งแต่วันที่"
+                    [label]="'LEAVE_FROM' | translate"
                     [(ngModel)]="customItemForm.date"
                     [ngModelOptions]="{ standalone: true }">
                   </sic-datepicker>
                 </div>
                 <div>
                   <sic-datepicker
-                    label="ถึงวันที่"
+                    [label]="'LEAVE_TO' | translate"
                     [(ngModel)]="customItemForm.endDate"
                     [ngModelOptions]="{ standalone: true }">
                   </sic-datepicker>
@@ -532,11 +532,11 @@
               </div>
 
               <div>
-                <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">หมายเหตุ / เหตุผล</label>
+                <label class="block text-xs font-semibold text-[var(--text-muted)] mb-1">{{ 'LEAVE_REMARK' | translate }}</label>
                 <textarea
                   [(ngModel)]="customItemForm.description"
                   rows="2"
-                  placeholder="ระบุเหตุผลการลา (ถ้ามี)"
+                  [placeholder]="'LEAVE_REASON_PH' | translate"
                   class="w-full px-3 py-2 bg-[var(--bg)] border border-[var(--border)] rounded-lg text-sm text-[var(--text-active)] focus:outline-none focus:border-[var(--crm-primary)]"></textarea>
               </div>
             } @else {

@@ -45,7 +45,7 @@
           [label]="'PMDT04B_TITLE_LABEL' | translate"
           formControlName="title"
           [required]="true"
-          placeholder="ระบบ Login"
+          [placeholder]="'PMDT04B_EXAMPLE_PH' | translate"
         ></sic-input>
         @if (form.get('title')?.touched && form.get('title')?.invalid) {
           <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMDT04B_TITLE_REQUIRED' | translate }}</p>

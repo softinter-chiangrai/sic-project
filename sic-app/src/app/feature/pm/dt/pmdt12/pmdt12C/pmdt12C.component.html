@@ -28,7 +28,7 @@
           </span>
         </div>
         <p class="text-xs sm:text-sm text-[var(--text-muted)] mt-1 ml-11">
-          บันทึกและส่งต่องานแก้ไขข้อผิดพลาดไปยังทีมพัฒนา พร้อมเชื่อมโยง Test Case และหลักฐานการทดสอบ
+          {{ 'PMDT12C_SUBTITLE' | translate }}
         </p>
       </div>
     </div>
@@ -37,7 +37,7 @@
   @if (isLoading()) {
     <div class="flex flex-col items-center justify-center py-20 gap-3">
       <div class="w-10 h-10 border-4 border-[var(--border)] border-t-rose-500 rounded-full animate-spin"></div>
-      <p class="text-sm text-[var(--text-muted)]">กำลังโหลดข้อมูล...</p>
+      <p class="text-sm text-[var(--text-muted)]">{{ 'COMMON_LOADING_DATA' | translate }}</p>
     </div>
   } @else {
 
@@ -50,14 +50,14 @@
       <div class="p-6 md:p-8 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] shadow-xs space-y-6">
         <h2 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2 pb-2 border-b border-[var(--border)]">
           <i class="bi bi-pencil-square text-rose-500"></i>
-          <span>รายละเอียด Bug Task</span>
+          <span>{{ 'PMDT12C_SECTION_DETAIL' | translate }}</span>
         </h2>
 
         <!-- Row 1: Code & Severity -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-              รหัส Bug Task <span class="text-rose-500">*</span>
+              {{ 'PMDT12C_TASK_CODE' | translate }} <span class="text-rose-500">*</span>
             </label>
             <input
               type="text"
@@ -84,12 +84,12 @@
         <!-- Row 2: Bug Title -->
         <div>
           <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-            ชื่อ / หัวข้อ Bug <span class="text-rose-500">*</span>
+            {{ 'PMDT12C_TASK_NAME' | translate }} <span class="text-rose-500">*</span>
           </label>
           <input
             type="text"
             formControlName="taskName"
-            placeholder="ระบุหัวข้อหรือสรุปปัญหาข้อผิดพลาด เช่น [BUG] สร้างข้อมูลสินค้าหลัก..."
+            [placeholder]="'PMDT12C_TASK_NAME_PH' | translate"
             class="w-full h-[2.9rem] px-3.5 py-2.5 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-sm text-[var(--text-active)] focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all font-medium"
           />
         </div>
@@ -108,7 +108,7 @@
 
           <div>
             <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-              ประมาณการ Manday <span class="text-rose-500">*</span>
+              {{ 'PMDT12C_ESTIMATE_MANDAY' | translate }} <span class="text-rose-500">*</span>
             </label>
             <input
               type="number"
@@ -124,7 +124,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-              วันที่เริ่ม <span class="text-rose-500">*</span>
+              {{ 'PMDT12C_START_DATE' | translate }} <span class="text-rose-500">*</span>
             </label>
             <input
               type="date"
@@ -135,7 +135,7 @@
 
           <div>
             <label class="block text-sm font-semibold text-[var(--text-active)] mb-1.5">
-              กำหนดส่ง <span class="text-rose-500">*</span>
+              {{ 'PMDT12C_DUE_DATE' | translate }} <span class="text-rose-500">*</span>
             </label>
             <input
               type="date"
@@ -150,7 +150,7 @@
         <div class="space-y-2">
           <div class="flex items-center justify-between flex-wrap gap-2 mb-1">
             <label class="block text-sm font-semibold text-[var(--text-active)]">
-              <span>รายละเอียดข้อผิดพลาด (Steps to Reproduce & Expected vs Actual) <span class="text-rose-500">*</span></span>
+              <span>{{ 'PMDT12C_DESCRIPTION' | translate }} <span class="text-rose-500">*</span></span>
             </label>
             <div class="flex items-center gap-2">
               <!-- AI Language Switcher -->
@@ -194,7 +194,7 @@
           <textarea
             rows="8"
             formControlName="description"
-            placeholder="ระบุขั้นตอนการทำให้เกิดข้อผิดพลาด ผลลัพธ์ที่คาดหวัง และสิ่งที่เกิดขึ้นจริง..."
+            [placeholder]="'PMDT12C_DESCRIPTION_PH' | translate"
             class="w-full px-3.5 py-3 rounded-[0.95rem] border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 transition-all leading-relaxed resize-y font-mono"
           ></textarea>
         </div>
@@ -288,10 +288,10 @@
         <div>
           <h2 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
             <i class="bi bi-paperclip text-rose-500"></i>
-            <span>เอกสารแนบ / ไฟล์หลักฐานข้อผิดพลาด (Evidence & Attachments)</span>
+            <span>{{ 'PMDT12C_EVIDENCE_TITLE' | translate }}</span>
           </h2>
           <p class="text-xs text-[var(--text-muted)] mt-1">
-            แนบภาพหน้าจอ (Screenshots), วิดีโอ, log files, หรือเอกสารที่แสดงข้อผิดพลาดเพื่อช่วยให้ Dev แก้ไขได้รวดเร็ว
+            {{ 'PMDT12C_EVIDENCE_DESC' | translate }}
           </p>
         </div>
 
@@ -309,22 +309,22 @@
           <div>
             <h2 class="text-sm font-bold text-[var(--text-active)] flex items-center gap-2">
               <i class="bi bi-diagram-3-fill text-rose-500"></i>
-              <span>ความสัมพันธ์ที่เชื่อมโยง (Linked Relationships & Traceability)</span>
+              <span>{{ 'PMDT12C_LINKS_TITLE' | translate }}</span>
             </h2>
             <p class="text-xs text-[var(--text-muted)] mt-1">
-              แสดงการเชื่อมโยงความสัมพันธ์ของ Bug รายการนี้กับ Test Scenario, Test Case, Specification และ Task
+              {{ 'PMDT12C_LINKS_DESC' | translate }}
             </p>
           </div>
 
           @if (testCaseCode()) {
             <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-rose-50/60 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-800 text-xs text-[var(--text-active)]">
               <i class="bi bi-info-circle-fill text-rose-500"></i>
-              <span>อ้างอิงเคสทดสอบ: <strong class="font-mono text-rose-600 dark:text-rose-400">{{ testCaseCode() }}</strong></span>
+              <span>{{ 'PMDT12C_TEST_CASE_REF' | translate }} <strong class="font-mono text-rose-600 dark:text-rose-400">{{ testCaseCode() }}</strong></span>
               @if (testCaseTitle()) {
                 <span class="text-[var(--text-muted)] truncate max-w-sm">- {{ testCaseTitle() }}</span>
               }
               @if (parentTaskCode()) {
-                <span class="ml-auto text-[var(--text-muted)] shrink-0">Task ที่ผูก: <strong class="font-mono text-blue-600 dark:text-blue-400">{{ parentTaskCode() }}</strong></span>
+                <span class="ml-auto text-[var(--text-muted)] shrink-0">{{ 'PMDT12C_LINKED_TASK' | translate }} <strong class="font-mono text-blue-600 dark:text-blue-400">{{ parentTaskCode() }}</strong></span>
               }
             </div>
           }
@@ -345,7 +345,7 @@
           class="px-5 py-2.5 rounded-xl text-sm font-medium text-[var(--text)] hover:bg-[var(--sidebar-hover)] border border-[var(--border)] transition-all cursor-pointer flex items-center gap-2"
         >
           <i class="bi bi-x-lg text-xs"></i>
-          <span>ยกเลิก</span>
+          <span>{{ 'COMMON_CANCEL' | translate }}</span>
         </button>
 
         <button
@@ -355,7 +355,7 @@
         >
           @if (isSubmitting()) {
             <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-            <span>กำลังบันทึก...</span>
+            <span>{{ 'COMMON_SAVING' | translate }}</span>
           } @else {
             <i class="bi bi-bug-fill"></i>
             <span>{{ isEdit() ? 'บันทึกการแก้ไข' : 'บันทึกและสร้าง Bug Task' }}</span>
