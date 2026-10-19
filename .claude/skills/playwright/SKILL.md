@@ -18,10 +18,26 @@ npx playwright install chromium
 Run with `npx playwright test` or a scratchpad `*.mjs` script importing `@playwright/test`. Do not commit test files unless asked.
 
 ## Run
-Needs Keycloak (:8080), backend (:5265, `docker compose up -d sic-spring`) up. Playwright starts the UI (`npm start`) itself if :4200 is down.
+**Rule: test against a backend run from source, not the `sic-spring` docker container.** Rebuilding the jar + image after every fix is slow and the container
+gets recreated on the real DB by any `docker compose up`. Build the docker images once, at the very end, when every fix is in and the suites pass.
+
+Needs from docker only: `sic-database` (:54320), `sic-auth` Keycloak (:8080), `sic-report-service` (:8082), `sic-seaweedfs` (:8888). Stop the backend containers
+(`docker stop sic-spring-backend`) so nothing else serves the API. Start the backend from source on :5266 against the throwaway DB:
+```powershell
+# env = the sic-spring service env of docker-compose.yml (+ root .env), with docker hostnames swapped for localhost ports:
+#   SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:54320/sic_app_e2e   REPORT_SERVICE_URL=http://localhost:8082
+#   APP_KEYCLOAK_AUTH_SERVER_URL=http://localhost:8080   APP_STORAGE_S3_ENDPOINT=http://localhost:8888   SERVER_PORT=5266
+cd sic-spring/sic; .\mvnw.cmd -q spring-boot:run "-Dspring-boot.run.jvmArguments=-Xmx700m"   # ready in ~60 s (401 on /api/business/activation)
 ```
-cd sic-app && npx playwright test        # setup (login) + e2e/pages.spec.ts (all static routes, ~9-14 min)
+Then run Playwright with the same DB/port (globalSetup sees :5266 up and uses it; never point E2E_DB at `sic_app`):
 ```
+cd sic-app && E2E_DB=sic_app_e2e E2E_API_PORT=5266 E2E_KEEP=1 npx playwright test --project=api      # or ui / pages
+```
+After a backend fix: stop the local backend (Ctrl+C / kill the java on :5266) and start it again. Playwright starts the UI (`npm start`) itself if :4200 is down.
+Your own backend for clicking around stays on :5265 (real DB) and does not clash. Don't export PDFs from it while tests run (the report service points at `sic_app_e2e` until teardown).
+
+**At the end (once), every image whose code changed:** `docker compose up -d --build sic-report-service` and `docker compose up -d --build sic-app`
+(both build themselves), and for the backend `mvnw -DskipTests package` first (its Dockerfile only copies `target/*.jar`), then `docker compose up -d --build sic-spring`.
 - Credentials: `sic-app/e2e/.env.local` (E2E_USER / E2E_PASS, gitignored). Never commit.
 - Routes: `e2e/pages.ts` (static only; `:id` pages need seeded data). Add a path there for new pages.
 - Per page it fails on: bounced to Keycloak, empty body, pageerror, any 5xx response.

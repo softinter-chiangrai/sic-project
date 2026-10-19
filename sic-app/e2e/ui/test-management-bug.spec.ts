@@ -54,7 +54,7 @@ test.describe('UI: Test Management Failed Test & Bug Creation', () => {
     await expect(row).toContainText(/Fail|ไม่ผ่าน/i);
 
     // Assert that the prominent "เปิด Bug" button is present and visible
-    const openBugBtn = row.locator('button:has-text("เปิด Bug")');
+    const openBugBtn = row.getByRole('button', { name: /เปิด Bug|Open bug/i }); // th or en UI
     await expect(openBugBtn).toBeVisible();
 
     // Click "เปิด Bug" and verify navigation to /feature/pm/bug/new

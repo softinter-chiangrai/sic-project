@@ -6,11 +6,13 @@ import { selectProject } from './forms';
 // The popup blocker is ON here (Playwright turns it off by default) and every export response is held back DELAY ms:
 // a button that calls window.open() only after the response would get no tab at all.
 // Read-only: it only exports existing documents of PDF_PROJECT.
-// Run: npx playwright test e2e/ui/pdf-export-tab.spec.ts --project=ui --no-deps --retries=0
+// Run: PDF_PROJECT="<a project with documents>" npx playwright test e2e/ui/pdf-export-tab.spec.ts --project=ui --no-deps --retries=0
+// Manual check only: it needs a project full of real documents, which the throwaway e2e DB does not have, so the regular run skips it.
+test.skip(!process.env['PDF_PROJECT'], 'manual check: set PDF_PROJECT to a project that has documents');
 test.use({ launchOptions: { ignoreDefaultArgs: ['--disable-popup-blocking'] } });
 test.describe.configure({ mode: 'serial' });
 
-const PROJECT = process.env['PDF_PROJECT'] ?? '7-Eleven Next-Gen Enterprise Resource Planning (Retail ERP) Platform';
+const PROJECT = process.env['PDF_PROJECT'] ?? '';
 const DELAY = 8_000; // > the few seconds of user activation a browser allows for window.open
 const P = '/feature/pm';
 const icon = (page: Page, cls: string) => page.locator(`button:has(i.${cls}):visible`).first();

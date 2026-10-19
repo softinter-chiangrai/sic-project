@@ -17,4 +17,5 @@
 ## 3. Testing Policy (Playwright Only)
 - **Playwright Over Chrome Direct:** Always run tests via Playwright CLI (`npx playwright test ...`).
 - **No Direct Chrome Testing:** Do not launch or test through direct Chrome browser subagent to prevent slow execution.
+- **Local Backend While Testing:** Run tests against the backend started from source (`mvnw spring-boot:run`, port 5266, DB `sic_app_e2e`), not the `sic-spring` docker container. Fix → restart the local backend → retest. The frontend runs from source too (`npm start`, Playwright starts it). Build the docker images (`sic-spring`, `sic-report-service`, `sic-app`) **once**, after every fix is done and the suites pass. Steps: `.claude/skills/playwright/SKILL.md` → "Run".
 

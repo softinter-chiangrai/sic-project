@@ -144,9 +144,10 @@ test.describe('Contract Lifecycle & Notification System (UI)', () => {
     const searchInput = ui.page.locator('input.sic-search-input').first();
     await searchInput.fill(ctNo);
 
-    // ตรวจสอบว่าพบสัญญาในตาราง พร้อม badge สถานะใกล้หมดอายุ
-    const row = ui.page.locator('tr, .sic-gridpanel__row').filter({ hasText: ctNo }).first();
-    await expect(row).toBeVisible({ timeout: 20_000 });
+    // ต่ออายุอัตโนมัติไปแล้ว: ตารางแสดงเฉพาะฉบับล่าสุดของแต่ละสาย (latestOnly) ฉบับเดิมจึงไม่อยู่ในแท็บ "ใกล้หมดอายุ" อีก
+    // (ไม่ต้องดำเนินการแล้ว ดูย้อนหลังได้จากประวัติการต่อสัญญา) และ -R1 ยังไม่ใกล้หมดอายุ
+    await expect(ui.page.getByText(/No data found|ไม่พบข้อมูล/).first()).toBeVisible({ timeout: 20_000 });
+    await expect(ui.page.locator('tr, .sic-gridpanel__row').filter({ hasText: ctNo })).toHaveCount(0);
 
     // เปลี่ยนกลับเป็นแท็บ "ทั้งหมด" และค้นหาฉบับต่ออายุ -R1
     const allTab = ui.page.locator('button').filter({ hasText: /ทั้งหมด|All/i }).first();
