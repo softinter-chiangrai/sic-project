@@ -231,6 +231,8 @@ public class AiProjectPipelineJobService {
         final List<Ref> diagrams = new ArrayList<>();
         final List<Member> members = new ArrayList<>();
         final Map<UUID, String> wpColors = new HashMap<>();
+        /** work package id → [start, end] เพื่อบังคับให้ task อยู่ในช่วงของ WP */
+        final Map<UUID, LocalDate[]> wpRanges = new HashMap<>();
     }
 
     // ===================== public API =====================
@@ -606,7 +608,9 @@ public class AiProjectPipelineJobService {
                 You are a Senior Project Manager. Build the work breakdown structure: Phase -> Milestone -> Work Package.
                 Limits: 3-5 phases, max 2 milestones per phase, max 2 work packages per milestone. Fill EVERY field.
                 Assign a DISTINCT modern hex color to each phase (choose from: #3B82F6, #10B981, #8B5CF6, #F59E0B, #EC4899, #06B6D4, #F97316, #6366F1).
-                Weeks are 1-based within the project duration. Respond ONLY with valid JSON in a ```json block, same language as the project:
+                Weeks are 1-based within the project duration. Dates must nest: a milestone's weekDue lies within its phase's weeks,
+                and a work package starts no earlier than its phase and ends no later than its milestone's weekDue.
+                Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "phases": [ { "phaseName": "...", "description": "...", "weekStart": 1, "weekEnd": 3, "color": "#3B82F6",
                     "milestones": [ { "milestoneName": "...", "description": "...", "weekDue": 3,
                         "workPackages": [ { "packageName": "...", "description": "...", "weekStart": 1, "weekEnd": 2 } ] } ] } ] }
@@ -619,8 +623,9 @@ public class AiProjectPipelineJobService {
             pq.setProjectId(c.projectId);
             pq.setPhaseName(cut(txt(ph, "phaseName"), 255));
             pq.setDescription(txt(ph, "description"));
-            pq.setStartDate(weekStart(c, ph.path("weekStart").asInt(1)));
-            pq.setEndDate(weekEnd(c, ph.path("weekEnd").asInt(c.weeks)));
+            int phaseWeekStart = ph.path("weekStart").asInt(1);
+            pq.setStartDate(weekStart(c, phaseWeekStart));
+            pq.setEndDate(weekEnd(c, Math.max(phaseWeekStart, ph.path("weekEnd").asInt(c.weeks))));
             String phaseColor = txt(ph, "color");
             if (phaseColor == null || phaseColor.isBlank() || (phaseIdx > 0 && "#3B82F6".equalsIgnoreCase(phaseColor))) {
                 phaseColor = PALETTE.get(phaseIdx % PALETTE.size());
@@ -639,7 +644,8 @@ public class AiProjectPipelineJobService {
                 mq.setPhaseId(phase.getId());
                 mq.setMilestoneName(cut(txt(ms, "milestoneName"), 255));
                 mq.setDescription(txt(ms, "description"));
-                mq.setDueDate(weekEnd(c, ms.path("weekDue").asInt(pq.getEndDate() != null ? c.weeks : 1)));
+                // AI ไม่ได้ทำตามลำดับชั้นเสมอ: บีบ milestone ให้อยู่ในช่วง phase
+                mq.setDueDate(clamp(weekEnd(c, ms.path("weekDue").asInt(c.weeks)), pq.getStartDate(), pq.getEndDate()));
                 mq.setColor(firstNonBlank(txt(ms, "color"), "#F59E0B"));
                 MilestoneResponse milestone = milestoneService.createMilestone(mq);
                 c.milestones.add(new Ref(milestone.getId(), mq.getMilestoneName()));
@@ -652,14 +658,17 @@ public class AiProjectPipelineJobService {
                     wq.setMilestoneId(milestone.getId());
                     wq.setPackageName(cut(txt(wp, "packageName"), 255));
                     wq.setDescription(txt(wp, "description"));
-                    wq.setStartDate(weekStart(c, wp.path("weekStart").asInt(1)));
-                    wq.setEndDate(weekEnd(c, wp.path("weekEnd").asInt(2)));
+                    // WP อยู่ในช่วง [เริ่ม phase, กำหนดส่ง milestone]
+                    LocalDate wpStart = clamp(weekStart(c, wp.path("weekStart").asInt(1)), pq.getStartDate(), mq.getDueDate());
+                    wq.setStartDate(wpStart);
+                    wq.setEndDate(clamp(weekEnd(c, wp.path("weekEnd").asInt(2)), wpStart, mq.getDueDate()));
                     wq.setColor(firstNonBlank(txt(wp, "color"), "#8B5CF6"));
                     WorkPackageResponse saved = workPackageService.createWorkPackage(wq);
                     c.workPackages.add(new Ref(saved.getId(), wq.getPackageName()));
                     step.rec("Work Package", wq.getPackageName(), "Milestone", mq.getMilestoneName(),
                             "ช่วงเวลา", wq.getStartDate() + " ถึง " + wq.getEndDate(), "รายละเอียด", wq.getDescription());
                     c.wpColors.put(saved.getId(), wq.getColor());
+                    c.wpRanges.put(saved.getId(), new LocalDate[] { wq.getStartDate(), wq.getEndDate() });
                     total++;
                 }
             }
@@ -751,11 +760,12 @@ public class AiProjectPipelineJobService {
         JsonNode root = ask(c, """
                 You are a Delivery Manager. Break the work into implementation tasks (max 12), each linked to one work package and, if relevant, one specification by number.
                 Fill EVERY field. priority is one of: Critical | High | Medium | Low. Weeks are 1-based within the project duration.
+                A task MUST start and end inside its work package's week range (shown next to each work package).
                 Assign a distinct modern hex color to each task (choose from: #3B82F6, #10B981, #8B5CF6, #F59E0B, #EC4899, #06B6D4, #F97316, #6366F1, #14B8A6, #EF4444).
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
                 { "tasks": [ { "workPackageRef": 1, "specificationRef": 1, "taskName": "...", "description": "...", "estimateManday": 3,
                     "weekStart": 1, "durationDays": 5, "priority": "High", "color": "#10B981" } ] }
-                """, projectContext(c) + "\n\nWork Packages:\n" + numbered(c.workPackages) + "\n\nSpecifications:\n" + numbered(c.specs), false);
+                """, projectContext(c) + "\n\nWork Packages:\n" + numberedWorkPackages(c) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         int idx = 1;
         int failed = 0;
@@ -782,8 +792,15 @@ public class AiProjectPipelineJobService {
             tq.setTaskName(cut(txt(n, "taskName"), 255));
             tq.setDescription(txt(n, "description"));
             LocalDate start = weekStart(c, n.path("weekStart").asInt(1));
+            LocalDate end = start.plusDays(Math.max(1, n.path("durationDays").asInt(5)));
+            // AI ไม่ได้ทำตามช่วงของ WP เสมอ: บีบ task ให้อยู่ในช่วงของ work package ที่สังกัด
+            LocalDate[] range = c.wpRanges.get(wp.id());
+            if (range != null) {
+                if (start.isBefore(range[0]) || start.isAfter(range[1])) start = range[0];
+                end = clamp(end, start, range[1]);
+            }
             tq.setStartDate(start);
-            tq.setEndDate(start.plusDays(Math.max(1, n.path("durationDays").asInt(5))));
+            tq.setEndDate(end);
             tq.setEstimateManday(n.path("estimateManday").asInt(3));
             tq.setPriority(pickIgnoreCase(txt(n, "priority"), List.of("Critical", "High", "Medium", "Low"), "Medium"));
             TaskResponse saved = taskService.createTask(tq);
@@ -1487,6 +1504,22 @@ public class AiProjectPipelineJobService {
         return pick(value, Set.copyOf(allowed), fallback);
     }
 
+    private String numberedWorkPackages(Ctx c) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < c.workPackages.size(); i++) {
+            Ref wp = c.workPackages.get(i);
+            LocalDate[] r = c.wpRanges.get(wp.id());
+            sb.append(i + 1).append(". ").append(wp.name());
+            if (r != null && r[0] != null && r[1] != null) {
+                long from = java.time.temporal.ChronoUnit.WEEKS.between(c.startDate, r[0]) + 1;
+                long to = java.time.temporal.ChronoUnit.WEEKS.between(c.startDate, r[1]);
+                sb.append(" (weeks ").append(from).append("-").append(Math.max(from, to)).append(")");
+            }
+            sb.append("\n");
+        }
+        return sb.length() == 0 ? "(none)" : sb.toString();
+    }
+
     private String numbered(List<Ref> refs) {
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < refs.size(); i++) {
@@ -1505,6 +1538,10 @@ public class AiProjectPipelineJobService {
 
     private LocalDate weekStart(Ctx c, int week) {
         return c.startDate.plusWeeks(Math.max(1, Math.min(week, c.weeks)) - 1L);
+    }
+
+    static LocalDate clamp(LocalDate d, LocalDate lo, LocalDate hi) {
+        return d.isBefore(lo) ? lo : d.isAfter(hi) ? hi : d;
     }
 
     private LocalDate weekEnd(Ctx c, int week) {

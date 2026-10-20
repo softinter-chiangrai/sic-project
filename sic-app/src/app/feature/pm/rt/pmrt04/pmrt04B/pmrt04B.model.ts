@@ -11,7 +11,6 @@ export interface Pmrt04BModel {
   newEndDate: string | null;
   newContractValue: number | null;
   renewalRemark?: string | null;
-  renewalStatus: string;
   approvalFlowId?: string | null;
   attachmentGroupId?: string | null;
 }

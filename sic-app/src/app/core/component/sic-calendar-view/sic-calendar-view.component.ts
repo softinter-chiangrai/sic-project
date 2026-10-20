@@ -345,19 +345,6 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
     }
   }
 
-  onPhaseFilterChange(phId: string): void {
-    this.selectedPhaseId.set(phId);
-    if (phId !== 'ALL') {
-      const ph = this.allLoadedPhases().find((p) => p.id === phId);
-      if (ph) {
-        this.phase.set(ph);
-        this.loadPhaseTree(ph);
-      } else {
-        this.loadPhaseDetail(phId);
-      }
-    }
-  }
-
   ngOnDestroy(): void {
     this.sub?.unsubscribe();
   }

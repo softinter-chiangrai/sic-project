@@ -70,7 +70,6 @@ export class Pmrt04BForm {
       newStartDate: newStartDate.toISOString().split('T')[0],
       newEndDate: newEndDate.toISOString().split('T')[0],
       newContractValue: original.contractValue,
-      renewalStatus: 'ต่อแล้ว',
     };
   }
 
@@ -82,7 +81,6 @@ export class Pmrt04BForm {
         newEndDate: fb.control(null, Validators.required),
         newContractValue: fb.control(null, [Validators.required, Validators.min(0)]),
         renewalRemark: fb.control(null),
-        renewalStatus: fb.control('ต่อแล้ว'),
         approvalFlowId: fb.control(null),
         attachmentGroupId: fb.control(null),
       },

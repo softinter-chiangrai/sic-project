@@ -301,11 +301,6 @@
               >
                 {{ row.data?.title }}
               </span>
-              @if (row.data?.assignedTo) {
-                <span class="text-[9px] text-[var(--text-muted)] truncate max-w-[70px] hidden md:inline" [title]="row.data?.assignedTo">
-                  <i class="bi bi-person me-0.5"></i>{{ row.data?.assignedTo }}
-                </span>
-              }
             }
           </div>
         </ng-template>

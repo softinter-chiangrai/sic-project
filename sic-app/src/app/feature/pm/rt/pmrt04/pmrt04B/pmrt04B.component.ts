@@ -77,16 +77,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
   customerDisplayName = '';
   projectDisplayName = '';
 
-  // Renewal Status Options for Combobox
-  get renewalStatusOptions() {
-    return [
-      { value: 'ต่อแล้ว', text: this.translate.instant('PMRT04B_STATUS_RENEWED') },
-      { value: 'รอต่อ', text: this.translate.instant('PMRT04B_STATUS_PENDING_RENEWAL') },
-      { value: 'ยังไม่ต่อ', text: this.translate.instant('PMRT04B_STATUS_NOT_RENEWED') },
-      { value: 'ยกเลิก', text: this.translate.instant('PMRT04B_STATUS_CANCELLED') },
-    ];
-  }
-
   // ===== Approval Flow =====
   flows: ApprovalFlow[] = [];
   selectedFlowId: string | null = null;
@@ -319,7 +309,6 @@ export class Pmrt04BComponent implements OnInit, CanComponentDeactivate {
       endDate: DateTimeUtil.toInstantIsoString(formValue.newEndDate) || endDateStr,
       contractValue: formValue.newContractValue,
       signStatus: 'Draft',
-      renewalStatus: formValue.renewalStatus,
       autoRenew: original.autoRenew ?? false,
       attachmentGroupId: this.extractUploadGroupId(formValue.attachmentGroupId),
       isActive: true,

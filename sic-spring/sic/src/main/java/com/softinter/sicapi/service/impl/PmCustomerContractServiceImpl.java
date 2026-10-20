@@ -354,6 +354,8 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             DocumentDiffHelper.checkChange(changes, "เลขที่สัญญา (Contract No)", contract.getContractNo(), request.getContractNo());
             DocumentDiffHelper.checkChange(changes, "ประเภทสัญญา (Type)", contract.getContractType(), request.getContractType());
             DocumentDiffHelper.checkChange(changes, "สถานะลงนาม (Sign Status)", contract.getSignStatus(), request.getSignStatus());
+            DocumentDiffHelper.checkChange(changes, "วันเริ่มสัญญา (Start Date)", contract.getStartDate(), request.getStartDate());
+            DocumentDiffHelper.checkChange(changes, "วันสิ้นสุดสัญญา (End Date)", contract.getEndDate(), request.getEndDate());
             DocumentDiffHelper.checkChange(changes, "มูลค่าสัญญา (Value)", contract.getContractValue(), request.getContractValue());
             DocumentDiffHelper.checkChange(changes, "เงื่อนไขการชำระเงิน (Payment Terms)", contract.getPaymentTerms(), request.getPaymentTerms());
             DocumentDiffHelper.checkChange(changes, "ขอบเขตงาน (Scope)", contract.getScopeSummary(), request.getScopeSummary());
@@ -409,7 +411,8 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         contract.setPaymentTerms(request.getPaymentTerms());
         contract.setScopeSummary(request.getScopeSummary());
         contract.setSignStatus(request.getSignStatus());
-        contract.setRenewalStatus(request.getRenewalStatus());
+        // ฉบับต่ออายุเป็นสัญญาใหม่ ยังไม่เคยถูกต่อ: สถานะการต่อเริ่มว่างเสมอ
+        contract.setRenewalStatus(isNew && request.getParentContractId() != null ? null : request.getRenewalStatus());
         contract.setAutoRenew(Boolean.TRUE.equals(request.getAutoRenew()));
         contract.setParentContractId(request.getParentContractId());
         contract.setIsActive(request.getIsActive() != null ? request.getIsActive() : true);
@@ -428,12 +431,9 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         DateRangeValidator.check(contract.getStartDate(), contract.getEndDate());
         contract = contractRepository.save(contract);
 
-        // ✅ ถ้าเป็นการสร้างสัญญาใหม่จากการต่อสัญญา (มี parentContractId) ให้อัปเดตสัญญาเดิมเป็น "ต่อแล้ว"
+        // สร้างฉบับต่ออายุ: สัญญาเดิมยังไม่ "ต่อแล้ว" จนกว่าฉบับใหม่จะอนุมัติ (ApprovalServiceImpl ตั้งให้ตอนอนุมัติ)
         if (isNew && request.getParentContractId() != null) {
             contractRepository.findById(request.getParentContractId()).ifPresent(parent -> {
-                parent.setRenewalStatus("ต่อแล้ว");
-                contractRepository.save(parent);
-
                 // บันทึกประวัติให้สัญญาเดิมด้วย โดยคงเลขเวอร์ชันเดิม (การต่อสัญญาไม่ใช่การแก้เนื้อหาสัญญาเดิม)
                 documentVersionService.createVersion(
                         "CONTRACT",

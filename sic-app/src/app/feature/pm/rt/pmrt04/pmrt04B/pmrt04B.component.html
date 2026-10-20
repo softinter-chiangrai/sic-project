@@ -162,19 +162,6 @@
                 <p class="text-xs text-[var(--crm-danger)] mt-1">{{ 'PMRT04B_NEW_CONTRACT_VALUE_REQUIRED' | translate }}</p>
               }
             </div>
-
-            <!-- สถานะการต่อ (Combobox) -->
-            <div>
-              <sic-combobox
-                [label]="'PMRT04B_RENEWAL_STATUS_COMBOBOX_LABEL' | translate"
-                [options]="renewalStatusOptions"
-                valueField="value"
-                textField="text"
-                formControlName="renewalStatus"
-                [placeholder]="'PMRT04B_RENEWAL_STATUS_PLACEHOLDER' | translate"
-                [clearable]="false"
-              ></sic-combobox>
-            </div>
           </div>
 
           <!-- หมายเหตุการต่อสัญญา (Tiptap Editor) -->

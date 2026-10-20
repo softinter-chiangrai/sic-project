@@ -94,12 +94,18 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
               </ng-template>
               <ng-template #phaseTemplate let-phase let-row="row">
                 <div
-                  class="h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
+                  class="relative h-full rounded-md flex items-center justify-between px-2 text-white text-[0.7rem] font-medium shadow-sm transition-all overflow-hidden"
                   [style.background-color]="phase.color || row.data?.color || '#3b82f6'"
                   [title]="(phase.label || row.label) + getAssigneesTooltip(row.data?.assignees)">
-                  <span class="truncate mr-1 flex-1">{{ phase.label || row.label }}</span>
+                  @if (row.progress > 0) {
+                    <div class="absolute left-0 top-0 bottom-0 bg-white/20 pointer-events-none" [style.width.%]="row.progress"></div>
+                  }
+                  <span class="truncate mr-1 flex-1 relative">{{ phase.label || row.label }}</span>
+                  @if (row.progress != null) {
+                    <span class="relative px-1.5 rounded bg-black/25 text-[10px] font-bold flex-shrink-0 mr-1">{{ row.progress | number: '1.0-0' }}%</span>
+                  }
                   @if (row.data?.assignees && row.data?.assignees.length > 0) {
-                    <div class="flex items-center -space-x-1 flex-shrink-0">
+                    <div class="relative flex items-center -space-x-1 flex-shrink-0">
                       @for (person of row.data?.assignees.slice(0, 3); track $index) {
                         <sic-avatar
                           [name]="getAssigneeName(person)"

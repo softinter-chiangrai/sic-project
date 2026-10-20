@@ -559,7 +559,8 @@ export class PortfolioGanttWidgetComponent {
                     color: taskColor,
                     icon: '📋',
                     status: task.status,
-                    assignedTo: task.assignedTo,
+                    // assignedTo is a user id; show the person's name
+                    assignedTo: task.assigneeNames?.[task.assignedTo ?? ''] || Object.values(task.assigneeNames ?? {})[0] || undefined,
                     startDate: taskStart,
                     plannedEndDate: taskEnd,
                     progressPercent: taskProgress,

@@ -374,7 +374,6 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
               contractValue: parent.contractValue,
               paymentTerms: parent.paymentTerms,
               autoRenew: true,
-              renewalStatus: 'ต่อแล้ว',
               scopeSummary: parent.scopeSummary || (refTicketNo ? `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>` : undefined),
               startDate: newStartDate ?? undefined,
               endDate: newEndDate ?? undefined,

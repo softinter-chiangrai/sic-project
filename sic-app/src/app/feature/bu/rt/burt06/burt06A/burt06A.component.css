@@ -1,4 +1,40 @@
-/* sic-app/src/app/feature/bu/rt/burt06/burt06A.component.css */
 :host {
   display: block;
+}
+
+.timeout-number-input {
+  width: 100%;
+  min-height: var(--sic-control-height-md, 3.15rem);
+  height: var(--sic-control-height-md, 3.15rem);
+  padding: 0 1rem;
+  border: 1px solid var(--sic-color-border, var(--border));
+  border-radius: var(--sic-radius-md, 0.95rem);
+  background: var(--sic-color-bg, transparent);
+  color: var(--text-active);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  box-sizing: border-box;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.timeout-number-input:hover {
+  border-color: color-mix(in srgb, var(--crm-primary) 22%, var(--border));
+}
+
+.timeout-number-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--crm-primary) 40%, var(--border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary) 14%, transparent);
+}
+
+.timeout-number-input::-webkit-inner-spin-button,
+.timeout-number-input::-webkit-outer-spin-button {
+  opacity: 1;
+  cursor: pointer;
+  height: 1.5rem;
+  margin-right: -0.25rem;
 }
