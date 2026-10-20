@@ -37,9 +37,10 @@ cd sic-app && E2E_DB=sic_app_e2e E2E_API_PORT=5266 E2E_KEEP=1 npx playwright tes
 After a backend fix: stop the local backend (Ctrl+C / kill the java on :5266) and start it again. Playwright starts the UI (`npm start`) itself if :4200 is down.
 Your own backend for clicking around stays on :5265 (real DB) and does not clash. Don't export PDFs from it while tests run (the report service points at `sic_app_e2e` until teardown).
 
-**At the end (once), every image whose code changed:** `docker compose up -d --build sic-report-service` and `docker compose up -d --build sic-app`
-(both build themselves), and for the backend `mvnw -DskipTests package` first (its Dockerfile only copies `target/*.jar`), then `docker compose up -d --build sic-spring`.
-Stop the local backend / `npm start` first (RAM). Then `docker compose up -d` everything back on the real DB (unset `SIC_APP_DB_NAME` / `E2E_API_PORT`).
+**At the end (once), every image whose code changed:** first free RAM: stop the local backend / `npm start`, then `docker compose down`
+(never `-v`). Clean docker (AGENTS.md section 3). For the backend run `mvnw -DskipTests package` first (its Dockerfile only copies `target/*.jar`).
+Then build only, nothing running: `docker compose build sic-spring sic-app sic-report-service` (just the changed ones; `sic-app` and
+`sic-report-service` build themselves). Then `docker compose up -d` everything back on the real DB (unset `SIC_APP_DB_NAME` / `E2E_API_PORT`).
 
 `sic-app` on a low-RAM machine (`npm run build ... cannot allocate memory`): stopping the other containers may not be enough, the docker VM
 borrows host RAM. Build Angular on the host instead (`NODE_OPTIONS=--max-old-space-size=3072 npm run build` in `sic-app`), copy `dist` +
