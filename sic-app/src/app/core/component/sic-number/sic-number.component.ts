@@ -44,6 +44,7 @@ export class SicNumberComponent implements ControlValueAccessor, OnInit {
   @Input() thousandSeparator = ',';
   @Input() allowNegativeNumbers = false;
   @Input() errorMessages: Record<string, string> = {};
+  @Input() align: 'left' | 'right' | 'center' = 'right';
 
   @HostBinding('class.sic-number-host') readonly hostClass = true;
 
