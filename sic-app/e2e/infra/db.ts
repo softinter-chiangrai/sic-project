@@ -44,7 +44,24 @@ async function waitBackend() {
   throw new Error('backend did not come up');
 }
 
+// Tests write data: never let them run on the real DB (another agent once ran plain `npx playwright test`, .env.local sent it to sic_app).
+async function guardRealDb() {
+  if (process.env['E2E_ALLOW_REAL_DB'] === '1') return;
+  const fix = 'run with E2E_DB=sic_app_e2e E2E_API_PORT=5266 against a backend started from source (.claude/skills/playwright/SKILL.md "Run")';
+  if (E2E_DB === 'sic_app') throw new Error(`E2E_DB=sic_app is the real database, refusing to test on it: ${fix}`);
+  if (PORT !== '5265') return;
+  // :5265 is the docker backend on the real DB, unless it was re-pointed to E2E_DB (E2E_DOCKER_BACKEND=1)
+  const upNow = await fetch('http://localhost:5265/api/business/activation').then(() => true, () => false);
+  if (!upNow) return;
+  let env = '';
+  try {
+    env = sh('docker', ['inspect', '-f', '{{range .Config.Env}}{{println .}}{{end}}', 'sic-spring-backend']);
+  } catch {}
+  if (!env.includes(`/${E2E_DB}`)) throw new Error(`:5265 serves the real database (sic_app), refusing to test on it: ${fix}`);
+}
+
 export async function up() {
+  await guardRealDb();
   if (await isUp()) return;
   if (!psql(`select 1 from pg_database where datname='${E2E_DB}'`)) psql(`CREATE DATABASE ${E2E_DB} OWNER "sic-app"`);
   // Tests run against the backend started from source (AGENTS.md "Local Backend While Testing"): an old docker image
