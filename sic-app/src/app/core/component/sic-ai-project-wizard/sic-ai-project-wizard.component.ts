@@ -43,7 +43,7 @@ export class SicAiProjectWizardComponent implements OnDestroy {
   readonly selectedCustomerId = signal<string>('');
   readonly customerOptions = signal<{ id: string; label: string }[]>([]);
   readonly durationWeeks = signal<number>(12);
-  readonly selectedModel = signal<string>('gemini-2.5-flash-lite');
+  readonly selectedModel = this.aiModelsSvc.selection();
   readonly attachedFiles = signal<File[]>([]);
 
   constructor() {

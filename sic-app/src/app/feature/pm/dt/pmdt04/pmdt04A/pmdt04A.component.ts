@@ -1,6 +1,7 @@
 // src/app/feature/pm/dt/pmdt05/pmdt05.component.ts
 import { CommonModule } from '@angular/common';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 import {
   Component,
   inject,
@@ -209,7 +210,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   aiAssistPrompt = '';
   aiAssistTitle = '';
   aiAssistType = 'FUNCTIONAL';
-  aiAssistModel = DEFAULT_AI_MODEL;
+  aiAssistModel = inject(AiModelsService).selection();
   aiModels = AI_MODEL_OPTIONS;
   aiHistories: any[] = [];
   aiCurrentDraft: any = null;
@@ -317,7 +318,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       title: this.aiAssistTitle || formVal.title || undefined,
       requirementType: this.aiAssistType || formVal.requirementType || undefined,
       prompt: effectivePrompt || undefined,
-      model: this.aiAssistModel || undefined,
+      model: this.aiAssistModel() || undefined,
       attachments,
     }).pipe(finalize(() => {
       this.isGeneratingAiAssist = false;
@@ -345,7 +346,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
           targetId,
           fullDraft,
           this.aiAssistPrompt,
-          this.aiAssistModel,
+          this.aiAssistModel(),
           titleToSave
         );
 

@@ -37,7 +37,6 @@ export class Burt02Component implements OnInit {
   private translate = inject(TranslateService);
 
   protected searchTerm = signal('');
-  protected filterStatus = signal('all');
   protected filterUserCount = signal('all');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
@@ -52,7 +51,6 @@ export class Burt02Component implements OnInit {
   // ===== Computed =====
   protected filteredRoles = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
-    const status = this.filterStatus();
     const userCountFilter = this.filterUserCount();
 
     let result = this.roles();
@@ -61,12 +59,6 @@ export class Burt02Component implements OnInit {
       result = result.filter(
         (r) => r.roleCode.toLowerCase().includes(term) || r.roleName.toLowerCase().includes(term),
       );
-    }
-
-    if (status === 'active') {
-      result = result.filter((r) => r.isActive);
-    } else if (status === 'inactive') {
-      result = result.filter((r) => !r.isActive);
     }
 
     if (userCountFilter === 'hasUsers') {
@@ -98,10 +90,6 @@ export class Burt02Component implements OnInit {
   protected totalPages = computed(() => Math.ceil(this.totalItems() / this.pageSize()));
 
   ngOnInit() {
-    this.statusSelectOptions = [
-      { value: 'active', text: 'BURT02_ACTIVE_OPT' },
-      { value: 'inactive', text: 'BURT02_INACTIVE_OPT' },
-    ];
     this.userCountSelectOptions = [
       { value: 'hasUsers', text: 'BURT02_HAS_USERS_OPT' },
       { value: 'noUsers', text: 'BURT02_NO_USERS_OPT' },
@@ -110,8 +98,6 @@ export class Burt02Component implements OnInit {
     this.roles.set(page.roles);
   }
 
-  // ===== Options =====
-  protected statusSelectOptions: { value: string; text: string }[] = [];
 
   protected userCountSelectOptions: { value: string; text: string }[] = [];
 
@@ -127,11 +113,6 @@ export class Burt02Component implements OnInit {
     this.currentPage.set(1);
   }
 
-  onFilterChange(value: any) {
-    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
-    this.filterStatus.set(val || 'all');
-    this.currentPage.set(1);
-  }
 
   onFilterUserCountChange(value: any) {
     const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';

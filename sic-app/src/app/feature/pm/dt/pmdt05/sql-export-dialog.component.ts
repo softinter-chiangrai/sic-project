@@ -3,7 +3,8 @@ import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, Input, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../core/services/ai-models.service';
 import { environment } from '../../../../../environments/environment';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -662,7 +663,7 @@ export class SqlExportDialogComponent implements OnInit {
     { value: 'mysql', text: 'MySQL' },
   ];
 
-  selectedAiModel = DEFAULT_AI_MODEL;
+  selectedAiModel = inject(AiModelsService).selection();
   aiModels = AI_MODEL_OPTIONS;
 
   // AI DB Validation Signals
@@ -794,7 +795,7 @@ export class SqlExportDialogComponent implements OnInit {
       tabId: this.tabId,
       mode: this.genMode,
       baseVersionId: this.selectedBaseVersionId,
-      model: this.selectedAiModel,
+      model: this.selectedAiModel(),
     };
 
     console.log('📤 Sending Generate Request:', payload);
@@ -895,7 +896,7 @@ export class SqlExportDialogComponent implements OnInit {
       pageName: selectedPage.name,
       tabId: this.tabId,
       lang: this.validationLang(),
-      model: this.selectedAiModel,
+      model: this.selectedAiModel(),
     };
 
     this.http.post<any>(endpoint, payload).subscribe({

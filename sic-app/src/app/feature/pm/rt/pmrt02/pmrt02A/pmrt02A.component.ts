@@ -1,4 +1,5 @@
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 
 // src/app/feature/pm/rt/pmrt02/pmrt02A/pmrt02A.component.ts
 import { CommonModule } from '@angular/common';
@@ -90,7 +91,7 @@ export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   aiActiveTab = signal<'generate' | 'history'>('generate');
   isGeneratingAi = signal(false);
-  aiModel = signal(DEFAULT_AI_MODEL);
+  aiModel = inject(AiModelsService).selection();
   aiPrompt = signal('');
   aiHistories = signal<AiHistoryItem<any>[]>([]);
   aiCurrentDraft = signal<any>(null);

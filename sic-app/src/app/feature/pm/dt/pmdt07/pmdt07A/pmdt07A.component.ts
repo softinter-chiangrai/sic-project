@@ -1,7 +1,8 @@
 // src/app/feature/pm/dt/pmdt08/pmdt08A/pmdt08A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, OnDestroy, signal, ChangeDetectorRef, ChangeDetectionStrategy } from '@angular/core';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, Subscription, interval, takeWhile, tap } from 'rxjs';
@@ -191,7 +192,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     aiAssistRequirementId = '';
     aiAssistDiagramIds: string[] = [];
     aiAssistPrompt = '';
-    aiAssistModel = DEFAULT_AI_MODEL;
+    aiAssistModel = inject(AiModelsService).selection();
     aiModels = AI_MODEL_OPTIONS;
     aiHistories: any[] = [];
     aiCurrentDraft: any = null;
@@ -379,7 +380,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
             diagramId: diagramIds.length === 1 ? diagramIds[0] : undefined,
             specificationType: specType,
             prompt: effectivePrompt || undefined,
-            model: this.aiAssistModel || undefined,
+            model: this.aiAssistModel() || undefined,
             attachments,
         }).pipe(finalize(() => {
             this.isGeneratingAiAssist = false;
@@ -410,7 +411,7 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     targetId,
                     fullDraft,
                     this.aiAssistPrompt,
-                    this.aiAssistModel,
+                    this.aiAssistModel(),
                     titleToSet
                 );
 

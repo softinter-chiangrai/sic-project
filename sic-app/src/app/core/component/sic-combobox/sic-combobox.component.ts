@@ -246,6 +246,8 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     this.languageChangeSubscription = this.translate.onLangChange.subscribe(() => {
       this.handleLanguageChange();
     });
+
+    document.addEventListener('scroll', this.onAnyScroll, true);
   }
 
   ngOnDestroy(): void {
@@ -261,6 +263,7 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     if (this.positionDropdownHandle) {
       clearTimeout(this.positionDropdownHandle);
     }
+    document.removeEventListener('scroll', this.onAnyScroll, true);
     this.languageChangeSubscription?.unsubscribe();
     this.loadSubscription?.unsubscribe();
     this.valueSubscription?.unsubscribe();
@@ -435,10 +438,12 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     }
   }
 
-  @HostListener('window:scroll')
-  onWindowScroll(): void {
-    this.onWindowResize();
-  }
+  // Capture phase: also catches scrolling inside modals/panels, which never reaches window
+  private readonly onAnyScroll = (event: Event): void => {
+    if (!this.dropdownPanel?.nativeElement.contains(event.target as Node)) {
+      this.onWindowResize();
+    }
+  };
 
   onFieldFocus(): void {
     this.openDropdown();
@@ -1216,35 +1221,62 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     }
 
     const rect = anchorElement.getBoundingClientRect();
-    const panelRect = panelElement.getBoundingClientRect();
-    const panelHeight = panelRect.height || panelElement.offsetHeight || 320;
     const gap = 8;
-    const viewportPadding = 8;
-    const viewportHeight = window.innerHeight;
-    const viewportWidth = window.innerWidth;
-    const width = Math.min(rect.width, viewportWidth - viewportPadding * 2);
-    const spaceBelow = viewportHeight - rect.bottom - viewportPadding;
-    const spaceAbove = rect.top - viewportPadding;
+    const padding = 8;
+    // A transformed/filtered ancestor (e.g. a centered modal) becomes the containing block of
+    // position:fixed: coords are relative to it and it clips the panel, so fit inside it.
+    const block = this.fixedContainingBlock(panelElement);
+    const bounds = {
+      top: Math.max(0, block.top),
+      left: Math.max(0, block.left),
+      bottom: Math.min(window.innerHeight, block.bottom),
+      right: Math.min(window.innerWidth, block.right),
+    };
 
-    let top = rect.bottom + gap;
-    if (spaceBelow < panelHeight && spaceAbove > spaceBelow) {
-      top = rect.top - panelHeight - gap;
-    }
+    const options = this.optionsPanel?.nativeElement;
+    const chrome = options ? panelElement.offsetHeight - options.offsetHeight : 0;
+    const cssMaxHeight = parseFloat(getComputedStyle(document.documentElement).fontSize) * 18; // .sic-combobox__options max-height
+    const naturalHeight = Math.min(options?.scrollHeight ?? cssMaxHeight, cssMaxHeight) + chrome;
+    const spaceBelow = bounds.bottom - rect.bottom - gap - padding;
+    const spaceAbove = rect.top - bounds.top - gap - padding;
+    const openUp = spaceBelow < naturalHeight && spaceAbove > spaceBelow;
+    const height = Math.min(naturalHeight, openUp ? spaceAbove : spaceBelow);
+    const top = openUp ? rect.top - gap - height : rect.bottom + gap;
 
-    top = Math.max(viewportPadding, Math.min(top, viewportHeight - panelHeight - viewportPadding));
-
+    const width = Math.min(rect.width, bounds.right - bounds.left - padding * 2);
     let left = rect.left;
-    if (left + width > viewportWidth - viewportPadding) {
-      left = Math.max(viewportPadding, viewportWidth - width - viewportPadding);
+    if (left + width > bounds.right - padding) {
+      left = Math.max(bounds.left + padding, bounds.right - width - padding);
     }
 
     this.dropdownPanelStyle = {
       position: 'fixed',
-      top: `${top}px`,
-      left: `${left}px`,
+      top: `${top - block.top}px`,
+      left: `${left - block.left}px`,
       width: `${width}px`,
       minWidth: `${width}px`,
+      '--sic-combobox-options-max-h': `${Math.max(0, height - chrome)}px`,
     };
+  }
+
+  private fixedContainingBlock(element: HTMLElement): { top: number; left: number; bottom: number; right: number } {
+    for (let el = element.parentElement; el; el = el.parentElement) {
+      const style = getComputedStyle(el);
+      if (
+        style.transform !== 'none' ||
+        style.filter !== 'none' ||
+        style.backdropFilter !== 'none' ||
+        style.perspective !== 'none' ||
+        /transform|filter|perspective/.test(style.willChange) ||
+        /paint|layout|strict|content/.test(style.contain)
+      ) {
+        const rect = el.getBoundingClientRect();
+        const top = rect.top + el.clientTop;
+        const left = rect.left + el.clientLeft;
+        return { top, left, bottom: top + el.clientHeight, right: left + el.clientWidth };
+      }
+    }
+    return { top: 0, left: 0, bottom: window.innerHeight, right: window.innerWidth };
   }
 
   private scheduleDropdownPositionUpdate(): void {

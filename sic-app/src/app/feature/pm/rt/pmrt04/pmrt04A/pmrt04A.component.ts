@@ -1,5 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 
 // src/app/feature/pm/rt/pmrt04/pmrt04A/pmrt04A.component.ts
 
@@ -164,7 +165,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   aiActiveTab = signal<'generate' | 'history'>('generate');
   isGeneratingAi = signal(false);
-  aiModel = signal(DEFAULT_AI_MODEL);
+  aiModel = inject(AiModelsService).selection();
   aiPrompt = signal('');
   aiContractType = signal('SOFTWARE_DEVELOPMENT');
   aiHistories = signal<AiHistoryItem<any>[]>([]);

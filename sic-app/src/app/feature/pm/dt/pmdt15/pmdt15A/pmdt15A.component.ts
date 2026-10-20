@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, signal, computed, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@angular/core';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 import { FormBuilder, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -135,7 +136,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   isGeneratingAi = signal(false);
   aiAssistTab = signal<'generate' | 'history'>('generate');
-  aiModel = signal(DEFAULT_AI_MODEL);
+  aiModel = inject(AiModelsService).selection();
   aiModels = AI_MODEL_OPTIONS;
   aiManualType = signal('USER');
   aiSelectedRequirementIds = signal<string[]>([]);

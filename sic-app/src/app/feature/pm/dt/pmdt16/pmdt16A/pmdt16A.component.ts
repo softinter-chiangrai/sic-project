@@ -1,6 +1,7 @@
 import { Component, inject, signal, OnInit, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 import { ReactiveFormsModule, FormBuilder, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { HttpClient } from '@angular/common/http';
@@ -127,7 +128,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   showAiModal = signal(false);
   isGeneratingAi = signal(false);
   aiAssistTab = signal<'generate' | 'history'>('generate');
-  aiModel = signal(DEFAULT_AI_MODEL);
+  aiModel = inject(AiModelsService).selection();
   aiPrompt = signal('');
   aiBillingType = signal('FIXED_PRICE');
   aiModels = AI_MODEL_OPTIONS;

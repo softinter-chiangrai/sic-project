@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 // src/app/feature/pm/dt/pmdt13/pmdt13A/pmdt13A.component.ts
 import { CommonModule } from '@angular/common';
 import { Component, inject, OnInit, signal, ChangeDetectionStrategy, computed } from '@angular/core';
-import { AI_MODEL_OPTIONS, DEFAULT_AI_MODEL } from '../../../../../core/config/ai-models.config';
+import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
+import { AiModelsService } from '../../../../../core/services/ai-models.service';
 import { FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 
@@ -90,7 +91,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   aiAssistTab = signal<'generate' | 'history'>('generate');
   aiAssistTaskId = signal<string | null>(null);
   aiAssistPrompt = signal<string>('');
-  aiAssistModel = signal<string>(DEFAULT_AI_MODEL);
+  aiAssistModel = inject(AiModelsService).selection();
   aiModels = AI_MODEL_OPTIONS;
   aiHistories = signal<any[]>([]);
   aiCurrentDraft = signal<any>(null);

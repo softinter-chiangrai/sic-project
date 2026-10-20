@@ -42,11 +42,11 @@ export class Burt06AForm {
       selectedUserIds: [Burt06AForm.parseUserIds(step?.approverUserId), [Validators.required]],
       isRequired: [step?.isRequired !== false],
       timeoutDays: [
-        step?.timeoutDays !== undefined && step?.timeoutDays !== null ? step.timeoutDays : 1,
+        step?.timeoutDays !== undefined && step?.timeoutDays !== null ? Number(step.timeoutDays) : 1,
         [Validators.required, Validators.min(1)],
       ],
       timeoutAction: [step?.timeoutAction || 'NONE', [Validators.required]],
-      canSkip: [step?.canSkip || false],
+      canSkip: [false],
       rowVersion: [step?.rowVersion || null],
     });
   }

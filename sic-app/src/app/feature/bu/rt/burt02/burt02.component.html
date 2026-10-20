@@ -39,16 +39,6 @@
       }
     </div>
 
-    <!-- ตัวกรองสถานะ -->
-    <div class="min-w-[170px]">
-      <sic-combobox
-        [options]="statusSelectOptions"
-        [ngModel]="filterStatus()"
-        (ngModelChange)="onFilterChange($event)"
-        [placeholder]="'BURT02_STATUS_ALL_PLACEHOLDER' | translate"
-        [clearable]="true"
-      ></sic-combobox>
-    </div>
 
     <!-- ตัวกรองจำนวนผู้ใช้ -->
     <div class="min-w-[190px]">

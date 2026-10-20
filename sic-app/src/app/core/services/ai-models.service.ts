@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, WritableSignal, inject, linkedSignal, signal } from '@angular/core';
 import { catchError, of, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import {
@@ -20,6 +20,15 @@ export class AiModelsService {
 
   constructor() {
     this.refresh();
+  }
+
+  /** A model pick that falls back to the default whenever the model list no longer contains it. */
+  selection(): WritableSignal<string> {
+    return linkedSignal<AiModelOption[], string>({
+      source: this.models,
+      computation: (models, prev) =>
+        prev && models.some((m) => m.id === prev.value) ? prev.value : this.defaultModel(),
+    });
   }
 
   refresh(): void {

@@ -198,6 +198,8 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
 
     const steps = (raw.steps as any[])?.map((s) => ({
       ...s,
+      timeoutDays: s.timeoutDays !== null && s.timeoutDays !== undefined && s.timeoutDays !== '' ? Number(s.timeoutDays) : 1,
+      canSkip: false,
       approverUserId: ((s.selectedUserIds as string[]) ?? []).join(',') || s.approverUserId || '',
     }));
 
