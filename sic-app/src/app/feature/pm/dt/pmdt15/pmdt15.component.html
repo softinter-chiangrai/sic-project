@@ -23,15 +23,17 @@
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
         {{ totalElements() }} {{ 'PMDT15_ITEMS_SUFFIX' | translate }}
       </span>
+    </div>
     <div class="flex items-center gap-2">
-      <sic-button
-        variant="outline"
-        color="primary"
+      <button
+        type="button"
         (click)="showAiBatchModal.set(true)"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
+        [title]="'AI_BATCH_CREATE_BUTTON' | translate"
       >
-        <i class="bi bi-stars mr-1" sicIconLeft></i>
-        {{ 'AI_BATCH_CREATE_BUTTON' | translate }}
-      </sic-button>
+        <i class="bi bi-stars text-base"></i>
+        <span>{{ 'AI_BATCH_CREATE_BUTTON' | translate }}</span>
+      </button>
       <button
         (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md"
@@ -84,7 +86,19 @@
     </div>
   </div>
 
+  <!-- EMPTY STATE -->
+  @if (totalElements() === 0 && !isLoading() && hasLoadedData()) {
+    <sic-empty-state
+      icon="bi bi-book"
+      title="ไม่พบรายการคู่มือการใช้งาน"
+      description="เริ่มต้นด้วยการสร้างคู่มือการใช้งานใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [actionLabel]="'PMDT15_CREATE_BUTTON' | translate"
+      (action)="goToAdd()"
+    ></sic-empty-state>
+  }
+
   <!-- GRID -->
+  <div [class.hidden]="totalElements() === 0 && hasLoadedData()">
   <sic-bulk-export-bar [grid]="grid" kind="user-manual"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
@@ -151,6 +165,7 @@
         </sic-table-actions>
       </ng-template>
     </sic-gridpanel>
+  </div>
 
   <!-- AI Batch Create Modal -->
   <sic-ai-batch-modal

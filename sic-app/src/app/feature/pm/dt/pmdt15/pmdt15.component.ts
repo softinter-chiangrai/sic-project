@@ -20,11 +20,12 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt15',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt15.component.html',
   styleUrls: ['./pmdt15.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -43,6 +44,7 @@ export class Pmdt15Component implements OnInit {
 
   manuals = signal<PmUserManualModel[]>([]);
   isLoading = signal(false);
+  hasLoadedData = signal(false);
   totalElements = signal(0);
   page = signal(1);
   size = signal(50);
@@ -139,7 +141,11 @@ export class Pmdt15Component implements OnInit {
         manualType: this.filterType() || undefined,
         status: this.filterStatus() || undefined,
       })
-      .pipe(finalize(() => { this.isLoading.set(false); this.cdr.markForCheck(); }))
+      .pipe(finalize(() => {
+        this.isLoading.set(false);
+        this.hasLoadedData.set(true);
+        this.cdr.markForCheck();
+      }))
       .subscribe({
         next: (res) => {
           const items = res.data || [];
@@ -153,6 +159,7 @@ export class Pmdt15Component implements OnInit {
         },
         error: (err) => {
           const msg = err.error?.message || this.translate.instant('PMDT15_LOAD_ERROR');
+          this.hasLoadedData.set(true);
           this.manuals.set([]);
           this.totalElements.set(0);
           grid.setRows([], { totalElements: 0 }, request.requestId);

@@ -269,14 +269,23 @@ export class Pmdt02Component implements OnInit {
     const allSystemHolidays = this.holidayService.getAllCalendarHolidays(phaseId);
 
     // Also include custom holidays and user leaves formatted as holidays
-    const userLeavesAsHolidays: SicCalendarHoliday[] = this.holidayService.getUserLeaves().map((l) => ({
-      id: `leave-${l.id}`,
-      date: l.startDate,
-      title: `🏖️ ลา: ${l.userName}`,
-      source: 'office',
-      color: '#ec4899',
-      icon: '🏖️',
-    }));
+    const userLeavesAsHolidays: SicCalendarHoliday[] = [];
+    this.holidayService.getUserLeaves().forEach((l) => {
+      const start = dayjs(l.startDate);
+      const end = l.endDate ? dayjs(l.endDate) : start;
+      const diffDays = end.diff(start, 'day');
+      const totalDays = diffDays >= 0 ? diffDays : 0;
+      for (let i = 0; i <= totalDays; i++) {
+        userLeavesAsHolidays.push({
+          id: `leave-${l.id}_${i}`,
+          date: start.add(i, 'day').format('YYYY-MM-DD'),
+          title: `🏖️ ลา: ${l.userName}`,
+          source: 'office',
+          color: '#ec4899',
+          icon: '🏖️',
+        });
+      }
+    });
 
     const combined = [...allSystemHolidays, ...this.customHolidays(), ...userLeavesAsHolidays];
     const seen = new Set<string>();
@@ -989,23 +998,31 @@ export class Pmdt02Component implements OnInit {
           const hList: SicCalendarHoliday[] = [];
           const eList: SicCalendarEvent[] = [];
           parsed.forEach((item: any) => {
-            hList.push({
-              id: item.id,
-              date: item.date,
-              title: item.title,
-              source: 'office',
-              color: item.color || '#8b5cf6',
-              icon: item.icon || '📌',
-            });
-            eList.push({
-              id: item.id,
-              date: item.date,
-              title: item.title,
-              color: item.color || '#8b5cf6',
-              icon: item.icon || '📌',
-              description: item.description || '',
-              extra: { type: 'holiday', id: item.id, isCustom: true, raw: item },
-            } as any);
+            const start = dayjs(item.date);
+            const end = item.endDate ? dayjs(item.endDate) : start;
+            const diffDays = end.diff(start, 'day');
+            const totalDays = diffDays >= 0 ? diffDays : 0;
+
+            for (let i = 0; i <= totalDays; i++) {
+              const dStr = start.add(i, 'day').format('YYYY-MM-DD');
+              hList.push({
+                id: `${item.id}_${i}`,
+                date: dStr,
+                title: item.title,
+                source: 'office',
+                color: item.color || '#8b5cf6',
+                icon: item.icon || '📌',
+              });
+              eList.push({
+                id: `${item.id}_${i}`,
+                date: dStr,
+                title: item.title,
+                color: item.color || '#8b5cf6',
+                icon: item.icon || '📌',
+                description: item.description || '',
+                extra: { type: 'holiday', id: item.id, isCustom: true, raw: item },
+              } as any);
+            }
           });
           this.customHolidays.set(hList);
           this.customEvents.set(eList);

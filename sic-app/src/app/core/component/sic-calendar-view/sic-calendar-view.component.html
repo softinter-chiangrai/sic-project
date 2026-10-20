@@ -259,12 +259,21 @@
           </div>
         } @else {
           <!-- Standard Holiday / Event Fields -->
-          <div>
-            <sic-datepicker
-              [label]="'PMDT02_DATE_LABEL' | translate"
-              [(ngModel)]="customItemForm.date"
-              [ngModelOptions]="{ standalone: true }">
-            </sic-datepicker>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <sic-datepicker
+                [label]="'LEAVE_FROM' | translate"
+                [(ngModel)]="customItemForm.date"
+                [ngModelOptions]="{ standalone: true }">
+              </sic-datepicker>
+            </div>
+            <div>
+              <sic-datepicker
+                [label]="'LEAVE_TO' | translate"
+                [(ngModel)]="customItemForm.endDate"
+                [ngModelOptions]="{ standalone: true }">
+              </sic-datepicker>
+            </div>
           </div>
 
           <div>

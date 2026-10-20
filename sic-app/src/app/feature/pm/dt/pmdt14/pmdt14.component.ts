@@ -24,11 +24,12 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { resolveProjectId } from '../../../../core/utils/resolve-context.util';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,
@@ -70,7 +71,7 @@ export class Pmdt14Component implements OnInit {
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
   private rawDeliveries = signal<PmDeliveryModel[]>([]);
   private gridRef = signal<SicGridPanelComponent | null>(null);
-  private hasLoadedData = signal(false);
+  hasLoadedData = signal(false);
 
   gridConfig: SicGridPanelConfig = {
     id: 'id',
