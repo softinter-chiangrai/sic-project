@@ -28,6 +28,7 @@ import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt06',
@@ -42,6 +43,7 @@ import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-e
     SicGridPanelComponent,
     SicGridPanelTemplate,
     TranslateModule,
+    SicEmptyStateComponent,
   ],
   changeDetection: ChangeDetectionStrategy.Default,
   templateUrl: './pmdt06.component.html',

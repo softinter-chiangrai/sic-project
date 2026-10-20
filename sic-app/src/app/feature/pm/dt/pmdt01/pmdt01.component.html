@@ -100,11 +100,14 @@
         }
       </div>
     } @else {
-      <div class="text-center py-12 text-[var(--text-muted)]">
-        <i class="bi bi-inbox text-5xl block mb-3 opacity-30"></i>
-        <p>{{ 'PMDT01_EMPTY_TITLE' | translate }}</p>
-        <p class="text-sm">{{ 'PMDT01_EMPTY_HINT' | translate }}</p>
-      </div>
+      <sic-empty-state
+        icon="bi bi-layers"
+        [title]="'PMDT01_EMPTY_TITLE' | translate"
+        [description]="'PMDT01_EMPTY_HINT' | translate"
+        [actionLabel]="'PMDT01_ADD_PHASE' | translate"
+        actionIcon="bi bi-plus-lg"
+        (action)="openCreatePhase()"
+      ></sic-empty-state>
     }
   }
 

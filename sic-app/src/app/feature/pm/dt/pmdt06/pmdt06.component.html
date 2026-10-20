@@ -56,6 +56,7 @@
   </div>
 
   <!-- GRID -->
+  <div [class.hidden]="totalItems() === 0">
   <sic-bulk-export-bar [grid]="grid" kind="change-request"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
@@ -154,5 +155,15 @@
         </div>
       </ng-template>
     </sic-gridpanel>
+  </div>
 
+  @if (totalItems() === 0) {
+    <sic-empty-state
+      icon="bi bi-arrow-repeat"
+      title="ไม่พบรายการ Change Request"
+      description="เริ่มต้นด้วยการสร้าง Change Request ใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [actionLabel]="'PMDT06_ADD_BTN' | translate"
+      (action)="goToAdd()"
+    ></sic-empty-state>
+  }
 </div>

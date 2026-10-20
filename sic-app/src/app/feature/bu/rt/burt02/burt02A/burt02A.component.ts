@@ -233,10 +233,10 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
 
   ngOnInit(): void {
     this.groupOptions = [
-      { value: 'all', text: this.translate.instant('BURT02A_GROUP_ALL') },
-      { value: 'PM', text: this.translate.instant('BURT02A_GROUP_PM') },
-      { value: 'BU', text: this.translate.instant('BURT02A_GROUP_BU') },
-      { value: 'SU', text: this.translate.instant('BURT02A_GROUP_SU') },
+      { value: 'all', text: 'BURT02A_GROUP_ALL' },
+      { value: 'PM', text: 'BURT02A_GROUP_PM' },
+      { value: 'BU', text: 'BURT02A_GROUP_BU' },
+      { value: 'SU', text: 'BURT02A_GROUP_SU' },
     ];
     this.gridConfig = this.buildGridConfig();
 

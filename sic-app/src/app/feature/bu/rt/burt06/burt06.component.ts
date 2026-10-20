@@ -59,18 +59,20 @@ export class Burt06Component implements OnInit {
 
   statusSelectOptions: { value: string; text: string }[] = [];
 
-  docTypeSelectOptions = computed(() => {
+  get docTypeSelectOptions() {
     return Object.keys(this.documentTypeMap).map((key) => ({
       value: key,
       text: this.getDocumentTypeText(key),
     }));
-  });
+  }
 
-  modeSelectOptions = computed(() => [
-    { value: 'CHAIN', text: this.getApprovalModeText('CHAIN') },
-    { value: 'PARALLEL', text: this.getApprovalModeText('PARALLEL') },
-    { value: 'ANY', text: this.getApprovalModeText('ANY') },
-  ]);
+  get modeSelectOptions() {
+    return [
+      { value: 'CHAIN', text: this.getApprovalModeText('CHAIN') },
+      { value: 'PARALLEL', text: this.getApprovalModeText('PARALLEL') },
+      { value: 'ANY', text: this.getApprovalModeText('ANY') },
+    ];
+  }
 
   // Filtered list
   filteredFlows = computed(() => {
@@ -142,8 +144,8 @@ export class Burt06Component implements OnInit {
 
   ngOnInit(): void {
     this.statusSelectOptions = [
-      { value: 'active', text: this.translate.instant('BURT06_ACTIVE_OPT') },
-      { value: 'inactive', text: this.translate.instant('BURT06_INACTIVE_OPT') },
+      { value: 'active', text: 'BURT06_ACTIVE_OPT' },
+      { value: 'inactive', text: 'BURT06_INACTIVE_OPT' },
     ];
     this.gridConfig = this.buildGridConfig();
     const page: Burt06PageData = this.route.snapshot.data['form'];

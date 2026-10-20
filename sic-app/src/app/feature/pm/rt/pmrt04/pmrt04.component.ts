@@ -32,11 +32,12 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicEmptyStateComponent],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -129,13 +130,14 @@ export class Pmrt04Component implements OnInit {
       { value: 'Draft', text: this.translate.instant('PMRT04_STATUS_OPT_DRAFT') },
       { value: 'Sent', text: this.translate.instant('PMRT04_STATUS_SENT') },
       { value: 'Signed', text: this.translate.instant('PMRT04_STATUS_SIGNED') },
+      { value: 'expiring', text: this.translate.instant('PMRT04_PRESET_EXPIRING') },
       { value: 'Expired', text: this.translate.instant('PMRT04_STATUS_EXPIRED') },
       { value: 'Cancelled', text: this.translate.instant('PMRT04_STATUS_CANCELLED') },
     ];
   });
 
   typeSelectOptions = computed(() => {
-    return this.contractTypes().map((t) => ({ value: t, text: this.translate.instant(t) || t }));
+    return this.contractTypes().map((t) => ({ value: t, text: t }));
   });
 
   renewalStatusOptions = computed(() => {
@@ -287,17 +289,15 @@ export class Pmrt04Component implements OnInit {
     }
 
     const status = this.filterStatus();
-    if (status !== 'all') {
+    if (status === 'expiring') {
+      params = params.set('expiringWithinDays', '30');
+    } else if (status !== 'all') {
       params = params.set('status', status);
     }
 
     const type = this.filterType();
     if (type !== 'all') {
       params = params.set('contractType', type);
-    }
-
-    if (this.activePreset() === 'expiring') {
-      params = params.set('expiringWithinDays', '30');
     }
     params = params.set('latestOnly', 'true'); // แสดงเฉพาะฉบับล่าสุดของแต่ละสาย (ฉบับก่อนหน้าดูได้จากประวัติการต่อสัญญา)
     const renewal = this.filterRenewalStatus();
@@ -488,10 +488,13 @@ export class Pmrt04Component implements OnInit {
     const keyword = this.searchTerm();
     if (keyword) params = params.set('keyword', keyword);
     const status = this.filterStatus();
-    if (status !== 'all') params = params.set('status', status);
+    if (status === 'expiring') {
+      params = params.set('expiringWithinDays', '30');
+    } else if (status !== 'all') {
+      params = params.set('status', status);
+    }
     const type = this.filterType();
     if (type !== 'all') params = params.set('contractType', type);
-    if (this.activePreset() === 'expiring') params = params.set('expiringWithinDays', '30');
     params = params.set('latestOnly', 'true');
     const renewalCsv = this.filterRenewalStatus();
     if (renewalCsv && renewalCsv !== 'all') params = params.set('renewalStatus', renewalCsv);

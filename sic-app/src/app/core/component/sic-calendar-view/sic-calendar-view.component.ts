@@ -133,7 +133,6 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
 
   phasesToDisplay = computed<PhaseResponse[]>(() => {
     const selPhId = this.selectedPhaseId();
-    const selProjId = this.selectedProjectId();
     const all = this.allLoadedPhases();
     const contextIds = this.selectedProjectIds();
     const hasContext = contextIds && contextIds.length > 0;
@@ -147,15 +146,6 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
       return [];
     }
 
-    if (selProjId !== 'ALL') {
-      const filtered = all.filter((p) => p.projectId === selProjId);
-      if (filtered.length > 0) return filtered;
-      const cur = this.phase();
-      if (cur && cur.projectId === selProjId) return [cur];
-      return [];
-    }
-
-    // When selProjId === 'ALL':
     if (contextIdSet) {
       const filtered = all.filter((p) => contextIdSet.has(p.projectId));
       if (filtered.length > 0) return filtered;
@@ -171,17 +161,11 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
 
   pageTitle = computed(() => {
     const selPhId = this.selectedPhaseId();
-    const selProjId = this.selectedProjectId();
     const contextIds = this.selectedProjectIds();
 
     if (selPhId !== 'ALL') {
       const ph = this.phasesToDisplay()[0] || this.phase();
       return ph?.phaseName || this.translate.instant('PMDT02_CALENDAR_HEADING') || 'Task Calendar';
-    }
-
-    if (selProjId !== 'ALL') {
-      const proj = this.allProjects().find((p) => p.id === selProjId);
-      return proj ? proj.projectName : 'Project Calendar';
     }
 
     if (contextIds && contextIds.length === 1) {
@@ -197,11 +181,7 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
   constructor() {
     effect(() => {
       const contextIds = this.selectedProjectIds();
-      const current = this.selectedProjectId();
-      if (contextIds.length > 0 && current !== 'ALL' && !contextIds.includes(current)) {
-        this.selectedProjectId.set('ALL');
-        this.selectedPhaseId.set('ALL');
-      }
+      this.selectedPhaseId.set('ALL');
 
       if (contextIds.length === 1) {
         const singleId = contextIds[0];
@@ -213,7 +193,7 @@ export class SicCalendarViewComponent implements OnInit, OnDestroy {
             this.availablePhases.set(phases || []);
           });
         }
-      } else if (contextIds.length === 0 && current === 'ALL') {
+      } else {
         this.availablePhases.set([]);
       }
     });

@@ -105,10 +105,10 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
   priorityApiUrl = `${environment.apiBaseUrl}/api/db/parameter/lov?group=COMMON&parameterCode=PRIORITY`;
 
   priorityOptions = [
-    { value: 'CRITICAL', text: 'วิกฤต (Critical)' },
-    { value: 'HIGH', text: 'สูง (High)' },
-    { value: 'MEDIUM', text: 'ปานกลาง (Medium)' },
-    { value: 'LOW', text: 'ต่ำ (Low)' },
+    { value: 'CRITICAL', text: 'PRIORITY_CRITICAL' },
+    { value: 'HIGH', text: 'PRIORITY_HIGH' },
+    { value: 'MEDIUM', text: 'PRIORITY_MEDIUM' },
+    { value: 'LOW', text: 'PRIORITY_LOW' },
   ];
 
   // CanComponentDeactivate implementation

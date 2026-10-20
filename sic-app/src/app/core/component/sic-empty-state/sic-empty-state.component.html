@@ -1,0 +1,46 @@
+<div
+  class="sic-empty-state"
+  [class.sic-empty-state--dashed]="dashed"
+  [class.sic-empty-state--sm]="padding === 'sm'"
+  [class.sic-empty-state--lg]="padding === 'lg'"
+>
+  @if (icon) {
+    <div class="sic-empty-state__icon-wrap">
+      <i [class]="icon"></i>
+    </div>
+  }
+  @if (title) {
+    <h3 class="sic-empty-state__title">{{ title }}</h3>
+  }
+  @if (description) {
+    <p class="sic-empty-state__desc">{{ description }}</p>
+  }
+
+  <ng-content></ng-content>
+
+  @if (actionLabel) {
+    @if (actionRouterLink) {
+      <a
+        [routerLink]="actionRouterLink"
+        (click)="action.emit()"
+        class="sic-empty-state__action-btn"
+      >
+        @if (actionIcon) {
+          <i [class]="actionIcon"></i>
+        }
+        <span>{{ actionLabel }}</span>
+      </a>
+    } @else {
+      <button
+        type="button"
+        (click)="action.emit()"
+        class="sic-empty-state__action-btn"
+      >
+        @if (actionIcon) {
+          <i [class]="actionIcon"></i>
+        }
+        <span>{{ actionLabel }}</span>
+      </button>
+    }
+  }
+</div>

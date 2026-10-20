@@ -99,12 +99,12 @@ export class Burt02Component implements OnInit {
 
   ngOnInit() {
     this.statusSelectOptions = [
-      { value: 'active', text: this.translate.instant('BURT02_ACTIVE_OPT') },
-      { value: 'inactive', text: this.translate.instant('BURT02_INACTIVE_OPT') },
+      { value: 'active', text: 'BURT02_ACTIVE_OPT' },
+      { value: 'inactive', text: 'BURT02_INACTIVE_OPT' },
     ];
     this.userCountSelectOptions = [
-      { value: 'hasUsers', text: this.translate.instant('BURT02_HAS_USERS_OPT') },
-      { value: 'noUsers', text: this.translate.instant('BURT02_NO_USERS_OPT') },
+      { value: 'hasUsers', text: 'BURT02_HAS_USERS_OPT' },
+      { value: 'noUsers', text: 'BURT02_NO_USERS_OPT' },
     ];
     const page: Burt02PageData = this.route.snapshot.data['form'];
     this.roles.set(page.roles);

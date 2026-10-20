@@ -85,10 +85,10 @@ export class Pmdt02CComponent implements OnInit {
   leaveConflicts = computed(() => this.holidayService.checkUserLeaveConflicts(this.selectedAssignees(), this.startDateVal(), this.endDateVal()));
 
   priorityOptions = [
-    { value: 'Low', text: this.translate.instant('PMDT02_PRIORITY_LOW') },
-    { value: 'Medium', text: this.translate.instant('PMDT02_PRIORITY_MEDIUM') },
-    { value: 'High', text: this.translate.instant('PMDT02_PRIORITY_HIGH') },
-    { value: 'Critical', text: this.translate.instant('PMDT02_PRIORITY_CRITICAL') },
+    { value: 'Low', text: 'PMDT02_PRIORITY_LOW' },
+    { value: 'Medium', text: 'PMDT02_PRIORITY_MEDIUM' },
+    { value: 'High', text: 'PMDT02_PRIORITY_HIGH' },
+    { value: 'Critical', text: 'PMDT02_PRIORITY_CRITICAL' },
   ];
 
   // เก็บชื่อผู้ใช้เพื่อแสดง (key = userId, value = displayName)

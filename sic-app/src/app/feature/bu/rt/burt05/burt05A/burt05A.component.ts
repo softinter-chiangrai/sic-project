@@ -79,11 +79,11 @@ export class Burt05AComponent implements OnInit, CanComponentDeactivate {
 
   ngOnInit() {
     this.permissionSelectOptions = [
-      { value: 'Full', text: this.translate.instant('BURT05A_LEVEL_FULL_OPT') },
-      { value: 'Edit', text: this.translate.instant('BURT05A_LEVEL_EDIT_OPT') },
-      { value: 'Approve', text: this.translate.instant('BURT05A_LEVEL_APPROVE_OPT') },
-      { value: 'View', text: this.translate.instant('BURT05A_LEVEL_VIEW_OPT') },
-      { value: 'None', text: this.translate.instant('BURT05A_LEVEL_NONE_OPT') },
+      { value: 'Full', text: 'BURT05A_LEVEL_FULL_OPT' },
+      { value: 'Edit', text: 'BURT05A_LEVEL_EDIT_OPT' },
+      { value: 'Approve', text: 'BURT05A_LEVEL_APPROVE_OPT' },
+      { value: 'View', text: 'BURT05A_LEVEL_VIEW_OPT' },
+      { value: 'None', text: 'BURT05A_LEVEL_NONE_OPT' },
     ];
     const id = this.route.snapshot.paramMap.get('id');
     const segments = this.route.snapshot.url;

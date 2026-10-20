@@ -10,11 +10,12 @@ import { CustomerStateService } from '../../../../core/services/customer-state.s
 import { SicStripHtmlPipe } from '../../../../core/pipes/sic-strip-html.pipe';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt01',
   standalone: true,
-  imports: [CommonModule, SicStripHtmlPipe, TranslateModule, SicAiBatchModalComponent],
+  imports: [CommonModule, SicStripHtmlPipe, TranslateModule, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt01.component.html',
 })
 export class Pmdt01Component implements OnInit {

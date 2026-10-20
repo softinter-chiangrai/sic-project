@@ -139,25 +139,25 @@ export class Pmdt09Component implements OnInit {
 
   // ===== Options =====
   readonly statusSelectOptions = [
-    { value: 'Open', text: 'Open' },
-    { value: 'In Progress', text: 'In Progress' },
-    { value: 'Resolved', text: 'Resolved' },
-    { value: 'Closed', text: 'Closed' },
+    { value: 'Open', text: 'PMDT09_ST_OPEN' },
+    { value: 'In Progress', text: 'PMDT09_ST_INPROGRESS' },
+    { value: 'Resolved', text: 'PMDT09_ST_RESOLVED' },
+    { value: 'Closed', text: 'PMDT09_ST_CLOSED' },
   ];
 
   readonly typeSelectOptions = [
-    { value: 'Requirement', text: 'Requirement' },
-    { value: 'Specification', text: 'Specification' },
-    { value: 'Diagram', text: 'Diagram' },
-    { value: 'UI Prototype', text: 'UI Prototype' },
-    { value: 'Test Case', text: 'Test Case' },
-    { value: 'User Manual', text: 'User Manual' },
+    { value: 'Requirement', text: 'DOC_TYPE_REQUIREMENT' },
+    { value: 'Specification', text: 'DOC_TYPE_SPECIFICATION' },
+    { value: 'Diagram', text: 'DOC_TYPE_DIAGRAM' },
+    { value: 'UI Prototype', text: 'DOC_TYPE_UI_PROTOTYPE' },
+    { value: 'Test Case', text: 'DOC_TYPE_TEST_CASE' },
+    { value: 'User Manual', text: 'DOC_TYPE_USER_MANUAL' },
   ];
 
   readonly severitySelectOptions = [
-    { value: 'Low', text: 'Low' },
-    { value: 'Medium', text: 'Medium' },
-    { value: 'High', text: 'High' },
+    { value: 'Low', text: 'PRIORITY_LOW' },
+    { value: 'Medium', text: 'PRIORITY_MEDIUM' },
+    { value: 'High', text: 'PRIORITY_HIGH' },
   ];
 
   statusOptions = ['Open', 'In Progress', 'Resolved', 'Changed', 'Closed'];

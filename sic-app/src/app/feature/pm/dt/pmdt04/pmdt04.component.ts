@@ -24,11 +24,12 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt04',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
   changeDetection: ChangeDetectionStrategy.Eager,
   templateUrl: './pmdt04.component.html',
 })
@@ -100,11 +101,11 @@ export class Pmdt04Component implements OnInit {
 
   // ===== Options =====
   readonly statusOptions = [
-    { value: 'Draft', text: this.translate.instant('PMDT04_STATUS_DRAFT') },
-    { value: 'In Review', text: this.translate.instant('PMDT04_STATUS_IN_REVIEW') },
-    { value: 'Approved', text: this.translate.instant('PMDT04_STATUS_APPROVED') },
-    { value: 'Changed', text: this.translate.instant('PMDT04_STATUS_CHANGED') },
-    { value: 'Cancelled', text: this.translate.instant('PMDT04_STATUS_CANCELLED') },
+    { value: 'Draft', text: 'PMDT04_STATUS_DRAFT' },
+    { value: 'In Review', text: 'PMDT04_STATUS_IN_REVIEW' },
+    { value: 'Approved', text: 'PMDT04_STATUS_APPROVED' },
+    { value: 'Changed', text: 'PMDT04_STATUS_CHANGED' },
+    { value: 'Cancelled', text: 'PMDT04_STATUS_CANCELLED' },
   ];
 
   // ===== Grid =====

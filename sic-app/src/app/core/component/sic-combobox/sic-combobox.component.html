@@ -42,7 +42,7 @@
           class="sic-combobox__field-input"
           type="text"
           [value]="inputText"
-          [placeholder]="(multiple && selectedItems.length > 0) ? '' : placeholder"
+          [placeholder]="(multiple && selectedItems.length > 0) ? '' : (placeholder | translate)"
           [disabled]="disabled"
           [readonly]="readonly"
           (focus)="onFieldFocus()"
@@ -94,9 +94,9 @@
         [ngStyle]="dropdownPanelStyle">
         <div #optionsPanel class="sic-combobox__options" tabindex="-1" (scroll)="onOptionsScroll($event)">
           @if (showLoadingState) {
-            <div class="sic-combobox__state">Loading...</div>
+            <div class="sic-combobox__state">{{ 'COMBOBOX_LOADING' | translate }}</div>
           } @else if (showEmptyState) {
-            <div class="sic-combobox__state">{{ emptyText }}</div>
+            <div class="sic-combobox__state">{{ emptyText | translate }}</div>
           } @else {
             @for (item of filteredOptions; track trackOption($index, item); let index = $index) {
               <button

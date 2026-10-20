@@ -216,12 +216,12 @@ export class Pmdt14Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'DRAFT', text: this.translate.instant('PMDT14_STATUS_DRAFT') },
-    { value: 'PREPARING', text: this.translate.instant('PMDT14_STATUS_PREPARING') },
-    { value: 'READY', text: this.translate.instant('PMDT14_STATUS_READY') },
-    { value: 'DELIVERED', text: this.translate.instant('PMDT14_STATUS_DELIVERED') },
-    { value: 'CONFIRMED', text: this.translate.instant('PMDT14_STATUS_CONFIRMED') },
-    { value: 'CHANGED', text: this.translate.instant('PMDT14_STATUS_CHANGED') },
+    { value: 'DRAFT', text: 'PMDT14_STATUS_DRAFT' },
+    { value: 'PREPARING', text: 'PMDT14_STATUS_PREPARING' },
+    { value: 'READY', text: 'PMDT14_STATUS_READY' },
+    { value: 'DELIVERED', text: 'PMDT14_STATUS_DELIVERED' },
+    { value: 'CONFIRMED', text: 'PMDT14_STATUS_CONFIRMED' },
+    { value: 'CHANGED', text: 'PMDT14_STATUS_CHANGED' },
   ];
 
   onFilterChange(value: any, grid: SicGridPanelComponent): void {

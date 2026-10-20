@@ -57,24 +57,6 @@
     </div>
   </div>
 
-  <!-- PRESET TABS -->
-  <div class="flex flex-wrap gap-2">
-    <button type="button" (click)="setPreset('all', grid)"
-      class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
-      [class]="activePreset() === 'all'
-        ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
-        : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
-      {{ 'PMRT04_PRESET_ALL' | translate }} <span class="opacity-80">{{ totalItems() }}</span>
-    </button>
-    <button type="button" (click)="setPreset('expiring', grid)"
-      class="px-3.5 py-1.5 rounded-full text-sm font-medium border transition-all"
-      [class]="activePreset() === 'expiring'
-        ? 'bg-[var(--crm-primary)] text-white border-[var(--crm-primary)]'
-        : 'bg-transparent text-[var(--text)] border-[var(--border)] hover:bg-[var(--sidebar-hover)]'">
-      {{ 'PMRT04_PRESET_EXPIRING' | translate }}
-    </button>
-  </div>
-
   <!-- FILTERS -->
   <div class="flex flex-wrap gap-3 items-center">
     <div class="relative flex-1 min-w-[200px]">
@@ -130,6 +112,7 @@
   </div>
 
   <!-- GRID -->
+  <div [class.hidden]="totalItems() === 0 && !isLoading()">
   <sic-bulk-export-bar [grid]="grid" kind="contract"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
@@ -246,6 +229,17 @@
         </div>
       </ng-template>
     </sic-gridpanel>
+  </div>
+
+  @if (totalItems() === 0 && !isLoading()) {
+    <sic-empty-state
+      icon="bi bi-file-earmark-check"
+      title="ไม่พบรายการสัญญา"
+      description="เริ่มต้นด้วยการสร้างสัญญาใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [actionLabel]="'PMRT04_ADD_BUTTON' | translate"
+      (action)="goToAdd()"
+    ></sic-empty-state>
+  }
 
   <!-- BULK ACTION BAR -->
   @if (grid.selectedRowIds.size > 0) {

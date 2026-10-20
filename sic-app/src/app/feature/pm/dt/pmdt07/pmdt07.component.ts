@@ -23,11 +23,12 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [SicBulkExportBarComponent, CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent],
+    imports: [SicBulkExportBarComponent, CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })
@@ -230,11 +231,11 @@ export class Pmdt07Component implements OnInit {
     }
 
     readonly statusOptions = [
-        { value: 'Draft', text: this.translate.instant('PMDT07_STATUS_DRAFT') },
-        { value: 'Review', text: this.translate.instant('PMDT07_STATUS_REVIEW') },
-        { value: 'Approved', text: this.translate.instant('PMDT07_STATUS_APPROVED') },
-        { value: 'Released', text: this.translate.instant('PMDT07_STATUS_RELEASED') },
-        { value: 'Changed', text: this.translate.instant('PMDT07_STATUS_CHANGED') },
+        { value: 'Draft', text: 'PMDT07_STATUS_DRAFT' },
+        { value: 'Review', text: 'PMDT07_STATUS_REVIEW' },
+        { value: 'Approved', text: 'PMDT07_STATUS_APPROVED' },
+        { value: 'Released', text: 'PMDT07_STATUS_RELEASED' },
+        { value: 'Changed', text: 'PMDT07_STATUS_CHANGED' },
     ];
 
     onFilterChange(value: any, grid: SicGridPanelComponent): void {

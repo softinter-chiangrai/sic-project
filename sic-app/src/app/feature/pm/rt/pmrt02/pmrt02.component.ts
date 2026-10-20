@@ -26,11 +26,12 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmrt02',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicEmptyStateComponent],
   templateUrl: './pmrt02.component.html',
   styleUrl: './pmrt02.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -101,33 +102,35 @@ export class Pmrt02Component implements OnInit {
   }
 
   // ===== Options =====
-  readonly statusSelectOptions = [
-    'Prospect',
-    'Contract Drafting',
-    'Contract Signed',
-    'Requirement Gathering',
-    'Requirement Approval',
-    'System Analysis',
-    'Diagram Design',
-    'Specification Design',
-    'Specification Approval',
-    'Planning',
-    'Development',
-    'Internal Testing',
-    'UAT',
-    'Bug Fixing',
-    'Ready for Delivery',
-    'Delivered',
-    'Invoicing',
-    'Closed',
+  get statusSelectOptions() {
+    return [
+      'Prospect',
+      'Contract Drafting',
+      'Contract Signed',
+      'Requirement Gathering',
+      'Requirement Approval',
+      'System Analysis',
+      'Diagram Design',
+      'Specification Design',
+      'Specification Approval',
+      'Planning',
+      'Development',
+      'Internal Testing',
+      'UAT',
+      'Bug Fixing',
+      'Ready for Delivery',
+      'Delivered',
+      'Invoicing',
+      'Closed',
     'MA Active',
-  ].map((s) => ({ value: s, text: this.getStatusText(s) }));
+    ].map((s) => ({ value: s, text: this.getStatusText(s) }));
+  }
 
   readonly prioritySelectOptions = [
-    { value: 'Low', text: 'Low' },
-    { value: 'Medium', text: 'Medium' },
-    { value: 'High', text: 'High' },
-    { value: 'Critical', text: 'Critical' },
+    { value: 'Low', text: 'PRIORITY_LOW' },
+    { value: 'Medium', text: 'PRIORITY_MEDIUM' },
+    { value: 'High', text: 'PRIORITY_HIGH' },
+    { value: 'Critical', text: 'PRIORITY_CRITICAL' },
   ];
 
   statusOptions = [

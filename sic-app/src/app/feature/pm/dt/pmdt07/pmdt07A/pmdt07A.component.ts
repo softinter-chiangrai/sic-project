@@ -492,13 +492,13 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     }
 
     specificationTypeOptions = [
-        { value: 'UI Specification', text: 'UI Specification' },
-        { value: 'API Specification', text: 'API Specification' },
-        { value: 'Business Rule Specification', text: 'Business Rule Specification' },
-        { value: 'Report Specification', text: 'Report Specification' },
-        { value: 'Data Specification', text: 'Data Specification' },
-        { value: 'Integration Specification', text: 'Integration Specification' },
-        { value: 'Permission Specification', text: 'Permission Specification' },
+        { value: 'UI Specification', text: 'SPEC_TYPE_UI' },
+        { value: 'API Specification', text: 'SPEC_TYPE_API' },
+        { value: 'Business Rule Specification', text: 'SPEC_TYPE_BUSINESS_RULE' },
+        { value: 'Report Specification', text: 'SPEC_TYPE_REPORT' },
+        { value: 'Data Specification', text: 'SPEC_TYPE_DATA' },
+        { value: 'Integration Specification', text: 'SPEC_TYPE_INTEGRATION' },
+        { value: 'Permission Specification', text: 'SPEC_TYPE_PERMISSION' },
     ];
 
     initForm(): void {

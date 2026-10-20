@@ -48,7 +48,7 @@ interface TraceEntityTypeDef {
           >
             <option value="" disabled>{{ 'TRACE_LINK_PICKER_ENTITY_TYPE_PLACEHOLDER' | translate }}</option>
             @for (t of availableEntityTypes; track t.type) {
-              <option [value]="t.type">{{ t.label }}</option>
+              <option [value]="t.type">{{ t.label | translate }}</option>
             }
           </select>
         </div>
@@ -77,7 +77,7 @@ interface TraceEntityTypeDef {
             [formControl]="form.controls.relationshipType"
           >
             @for (opt of relationshipOptions; track opt.value) {
-              <option [value]="opt.value">{{ opt.label }}</option>
+              <option [value]="opt.value">{{ opt.label | translate }}</option>
             }
           </select>
         </div>
@@ -117,7 +117,7 @@ export class SicTraceLinkPickerComponent {
   entityTypes: TraceEntityTypeDef[] = [
     {
       type: 'REQUIREMENT',
-      label: 'Requirement',
+      label: 'DOC_TYPE_REQUIREMENT',
       apiUrl: `${this.apiBase}/api/pm/requirement`,
       valueField: 'id',
       textField: 'title',
@@ -126,7 +126,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'SPECIFICATION',
-      label: 'Specification',
+      label: 'DOC_TYPE_SPECIFICATION',
       apiUrl: `${this.apiBase}/api/pm/specifications`,
       valueField: 'id',
       textField: 'title',
@@ -135,7 +135,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'TASK',
-      label: 'Task',
+      label: 'DOC_TYPE_TASK',
       apiUrl: `${this.apiBase}/api/pm/tasks/search`,
       valueField: 'id',
       textField: 'taskName',
@@ -144,7 +144,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'TEST_CASE',
-      label: 'Test Case',
+      label: 'DOC_TYPE_TEST_CASE',
       apiUrl: `${this.apiBase}/api/pm/test-cases/paging`,
       valueField: 'id',
       textField: 'title',
@@ -153,7 +153,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'BUG',
-      label: 'Bug',
+      label: 'DOC_TYPE_BUG',
       apiUrl: `${this.apiBase}/api/pm/bugs/paging`,
       valueField: 'id',
       textField: 'title',
@@ -162,7 +162,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'CHANGE_REQUEST',
-      label: 'Change Request',
+      label: 'DOC_TYPE_CHANGE_REQUEST',
       apiUrl: `${this.apiBase}/api/pm/change-requests`,
       valueField: 'id',
       textField: 'title',
@@ -171,7 +171,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'DESIGN_REVIEW',
-      label: 'Design Review',
+      label: 'DOC_TYPE_DESIGN_REVIEW',
       apiUrl: `${this.apiBase}/api/pm/design-reviews`,
       valueField: 'id',
       textField: 'title',
@@ -180,7 +180,7 @@ export class SicTraceLinkPickerComponent {
     },
     {
       type: 'DIAGRAM',
-      label: 'Diagram (DFD, ER, Flowchart, Sequence, ...)',
+      label: 'DOC_TYPE_DIAGRAM_ALL',
       apiUrl: `${this.apiBase}/api/diagram/tabs`,
       valueField: 'id',
       textField: 'name',

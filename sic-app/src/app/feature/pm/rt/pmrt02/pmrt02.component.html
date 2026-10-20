@@ -88,6 +88,7 @@
   </div>
 
   <!-- GRID -->
+  <div [class.hidden]="totalItems() === 0 && !isLoading()">
   <sic-bulk-export-bar [grid]="grid" kind="project"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
@@ -177,4 +178,15 @@
         </div>
       </ng-template>
     </sic-gridpanel>
+  </div>
+
+  @if (totalItems() === 0 && !isLoading()) {
+    <sic-empty-state
+      icon="bi bi-briefcase"
+      title="ไม่พบรายการโครงการ"
+      description="เริ่มต้นด้วยการสร้างโครงการใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [actionLabel]="'PMRT02_ADD_BUTTON' | translate"
+      (action)="goToAdd()"
+    ></sic-empty-state>
+  }
 </div>

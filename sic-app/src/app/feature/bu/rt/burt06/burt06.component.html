@@ -58,7 +58,7 @@
     <!-- Filter: Document Type -->
     <div class="min-w-[190px]">
       <sic-combobox
-        [options]="docTypeSelectOptions()"
+        [options]="docTypeSelectOptions"
         [ngModel]="filterDocumentType()"
         (ngModelChange)="onFilterDocTypeChange($event, grid)"
         [placeholder]="'BURT06_DOCTYPE_ALL_PLACEHOLDER' | translate"
@@ -69,7 +69,7 @@
     <!-- Filter: Approval Mode -->
     <div class="min-w-[180px]">
       <sic-combobox
-        [options]="modeSelectOptions()"
+        [options]="modeSelectOptions"
         [ngModel]="filterApprovalMode()"
         (ngModelChange)="onFilterModeChange($event, grid)"
         [placeholder]="'BURT06_MODE_ALL_PLACEHOLDER' | translate"

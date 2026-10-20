@@ -92,27 +92,33 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   selectedFlowId = signal<string | null>(null);
   isLoadingFlows = signal(false);
 
-  ticketTypeOptions = [
-    { value: 'BUG_SUPPORT', label: this.translate.instant('PMDT17_TYPE_BUG_SUPPORT') },
-    { value: 'DATA_ISSUE', label: this.translate.instant('PMDT17_TYPE_DATA_ISSUE') },
-    { value: 'USER_SUPPORT', label: this.translate.instant('PMDT17_TYPE_USER_SUPPORT') },
-    { value: 'CHANGE_REQUEST', label: this.translate.instant('PMDT17_TYPE_CHANGE_REQUEST') },
-  ];
+  get ticketTypeOptions() {
+    return [
+      { value: 'BUG_SUPPORT', label: this.translate.instant('PMDT17_TYPE_BUG_SUPPORT') },
+      { value: 'DATA_ISSUE', label: this.translate.instant('PMDT17_TYPE_DATA_ISSUE') },
+      { value: 'USER_SUPPORT', label: this.translate.instant('PMDT17_TYPE_USER_SUPPORT') },
+      { value: 'CHANGE_REQUEST', label: this.translate.instant('PMDT17_TYPE_CHANGE_REQUEST') },
+    ];
+  }
 
-  severityOptions = [
-    { value: 'LOW', label: this.translate.instant('PMDT17_SEV_LOW') },
-    { value: 'MEDIUM', label: this.translate.instant('PMDT17_SEV_MEDIUM') },
-    { value: 'HIGH', label: this.translate.instant('PMDT17_SEV_HIGH') },
-    { value: 'CRITICAL', label: this.translate.instant('PMDT17_SEV_CRITICAL') },
-  ];
+  get severityOptions() {
+    return [
+      { value: 'LOW', label: this.translate.instant('PMDT17_SEV_LOW') },
+      { value: 'MEDIUM', label: this.translate.instant('PMDT17_SEV_MEDIUM') },
+      { value: 'HIGH', label: this.translate.instant('PMDT17_SEV_HIGH') },
+      { value: 'CRITICAL', label: this.translate.instant('PMDT17_SEV_CRITICAL') },
+    ];
+  }
 
-  statusOptions = [
-    { value: 'OPEN', label: this.translate.instant('PMDT17_STATUS_OPEN_INTAKE') },
-    { value: 'IN_PROGRESS', label: this.translate.instant('PMDT17_STATUS_IN_PROGRESS') },
-    { value: 'WAITING_CUSTOMER', label: this.translate.instant('PMDT17_STATUS_WAITING_CUST_SHORT') },
-    { value: 'RESOLVED', label: this.translate.instant('PMDT17_STATUS_RESOLVED_DONE') },
-    { value: 'CLOSED', label: this.translate.instant('PMDT17_STATUS_CLOSED_WORK') },
-  ];
+  get statusOptions() {
+    return [
+      { value: 'OPEN', label: this.translate.instant('PMDT17_STATUS_OPEN_INTAKE') },
+      { value: 'IN_PROGRESS', label: this.translate.instant('PMDT17_STATUS_IN_PROGRESS') },
+      { value: 'WAITING_CUSTOMER', label: this.translate.instant('PMDT17_STATUS_WAITING_CUST_SHORT') },
+      { value: 'RESOLVED', label: this.translate.instant('PMDT17_STATUS_RESOLVED_DONE') },
+      { value: 'CLOSED', label: this.translate.instant('PMDT17_STATUS_CLOSED_WORK') },
+    ];
+  }
 
   apiMembersCombobox = `${apiBaseUrl}/api/business/combobox-members`;
   apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;

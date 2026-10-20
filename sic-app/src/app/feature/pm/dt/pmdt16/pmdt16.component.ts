@@ -22,11 +22,12 @@ import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridP
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt16',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicEmptyStateComponent],
   templateUrl: './pmdt16.component.html',
   styleUrls: ['./pmdt16.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

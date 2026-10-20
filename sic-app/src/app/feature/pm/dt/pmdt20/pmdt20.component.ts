@@ -61,8 +61,8 @@ export class Pmdt20Component implements OnInit {
   protected userSelectOptions = signal<{ value: string; text: string }[]>([]);
 
   readonly statusSelectOptions = [
-    { value: 'Success', text: 'Success' },
-    { value: 'Failed', text: 'Failed' },
+    { value: 'Success', text: 'PMDT20_STATUS_SUCCESS' },
+    { value: 'Failed', text: 'PMDT20_STATUS_FAILED' },
   ];
 
   ngOnInit() {

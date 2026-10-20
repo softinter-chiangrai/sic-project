@@ -28,29 +28,8 @@
 
     <!-- Actions & Controls -->
     <div class="flex items-center gap-2.5 flex-wrap">
-      <!-- Project Filter -->
-      <div class="flex items-center gap-1.5 text-xs text-[var(--text-muted)] bg-[var(--bg)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 shadow-sm">
-        <i class="bi bi-folder2 text-[var(--crm-primary)]"></i>
-        <label class="font-medium text-[var(--text-active)]">{{ 'CAL_PROJECT_LABEL' | translate }}</label>
-        <select
-          [ngModel]="selectedProjectId()"
-          (ngModelChange)="onProjectFilterChange($event)"
-          class="bg-transparent text-xs text-[var(--text-active)] font-medium focus:outline-none cursor-pointer pr-1 max-w-[190px] truncate">
-          <option value="ALL">
-            @if (selectedProjectIds().length > 0) {
-              🌟 ทุกโครงการที่เลือก ({{ selectedProjectIds().length }})
-            } @else {
-              🌟 ทุกโครงการ (All Projects)
-            }
-          </option>
-          @for (proj of filteredProjects(); track proj.id) {
-            <option [value]="proj.id">{{ proj.projectName }}</option>
-          }
-        </select>
-      </div>
-
       <!-- Phase Filter -->
-      @if ((selectedProjectId() !== 'ALL' || selectedProjectIds().length === 1) && availablePhases().length > 0) {
+      @if (selectedProjectIds().length === 1 && availablePhases().length > 0) {
         <div class="flex items-center gap-1.5 text-xs text-[var(--text-muted)] bg-[var(--bg)] border border-[var(--border)] rounded-xl px-2.5 py-1.5 shadow-sm">
           <i class="bi bi-layer-forward text-[var(--crm-primary)]"></i>
           <label class="font-medium text-[var(--text-active)]">{{ 'CAL_PHASE_LABEL' | translate }}</label>

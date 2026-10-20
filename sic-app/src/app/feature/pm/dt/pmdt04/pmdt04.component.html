@@ -63,6 +63,7 @@
   </div>
 
   <!-- GRID -->
+  <div [class.hidden]="totalItems() === 0 && !isLoading()">
   <sic-bulk-export-bar [grid]="grid" kind="requirement"></sic-bulk-export-bar>
   <sic-gridpanel
     #grid
@@ -122,6 +123,17 @@
         </div>
       </ng-template>
     </sic-gridpanel>
+  </div>
+
+  @if (totalItems() === 0 && !isLoading()) {
+    <sic-empty-state
+      icon="bi bi-clipboard-check"
+      title="ไม่พบรายการ Requirement"
+      description="เริ่มต้นด้วยการสร้าง Requirement ใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [actionLabel]="'PMDT04_ADD_REQUIREMENT_BTN' | translate"
+      (action)="goToAdd()"
+    ></sic-empty-state>
+  }
 
   <!-- AI BATCH CREATE MODAL -->
   <sic-ai-batch-modal

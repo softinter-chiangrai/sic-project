@@ -73,8 +73,8 @@ export class Burt04AComponent implements OnInit {
 
   ngOnInit() {
     this.statusSelectOptions = [
-      { value: 'active', text: this.translate.instant('BURT04_ACTIVE_OPT') },
-      { value: 'inactive', text: this.translate.instant('BURT04_INACTIVE_OPT') },
+      { value: 'active', text: 'BURT04_ACTIVE_OPT' },
+      { value: 'inactive', text: 'BURT04_INACTIVE_OPT' },
     ];
     this.gridConfig = this.buildGridConfig();
 

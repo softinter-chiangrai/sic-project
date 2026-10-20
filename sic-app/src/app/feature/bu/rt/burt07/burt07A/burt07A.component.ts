@@ -44,8 +44,8 @@ export class Burt07AComponent implements OnInit, CanComponentDeactivate {
   private translate = inject(TranslateService);
 
   readonly apiFormatOptions = computed(() => [
-    { value: 'OPENAI_COMPATIBLE', text: this.translate.instant('BURT07A_APIFORMAT_OPENAI_COMPATIBLE') },
-    { value: 'CLAUDE', text: this.translate.instant('BURT07A_APIFORMAT_CLAUDE') },
+    { value: 'OPENAI_COMPATIBLE', text: 'BURT07A_APIFORMAT_OPENAI_COMPATIBLE' },
+    { value: 'CLAUDE', text: 'BURT07A_APIFORMAT_CLAUDE' },
   ]);
 
   isEdit = false;

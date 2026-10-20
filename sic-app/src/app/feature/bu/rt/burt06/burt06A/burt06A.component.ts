@@ -96,10 +96,10 @@ export class Burt06AComponent implements OnInit, CanComponentDeactivate {
 
   private buildTimeoutActionOptions(): { value: string; text: string }[] {
     return [
-      { value: 'NONE', text: this.translate.instant('BURT06A_TIMEOUT_NONE') },
-      { value: 'AUTO_SKIP', text: this.translate.instant('BURT06A_TIMEOUT_AUTO_SKIP') },
-      { value: 'AUTO_APPROVE', text: this.translate.instant('BURT06A_TIMEOUT_AUTO_APPROVE') },
-      { value: 'AUTO_REJECT', text: this.translate.instant('BURT06A_TIMEOUT_AUTO_REJECT') },
+      { value: 'NONE', text: 'BURT06A_TIMEOUT_NONE' },
+      { value: 'AUTO_SKIP', text: 'BURT06A_TIMEOUT_AUTO_SKIP' },
+      { value: 'AUTO_APPROVE', text: 'BURT06A_TIMEOUT_AUTO_APPROVE' },
+      { value: 'AUTO_REJECT', text: 'BURT06A_TIMEOUT_AUTO_REJECT' },
     ];
   }
 

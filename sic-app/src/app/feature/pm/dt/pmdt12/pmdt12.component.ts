@@ -176,25 +176,25 @@ export class Pmdt12Component implements OnInit, OnDestroy {
 
   // ===== Options =====
   readonly statusSelectOptions = [
-    { value: 'Pass', text: this.translate.instant('PMDT12_STATUS_PASS') },
-    { value: 'Fail', text: this.translate.instant('PMDT12_STATUS_FAIL') },
-    { value: 'Blocked', text: this.translate.instant('PMDT12_STATUS_BLOCKED') },
-    { value: 'Pending', text: this.translate.instant('PMDT12_STATUS_PENDING') },
+    { value: 'Pass', text: 'PMDT12_STATUS_PASS' },
+    { value: 'Fail', text: 'PMDT12_STATUS_FAIL' },
+    { value: 'Blocked', text: 'PMDT12_STATUS_BLOCKED' },
+    { value: 'Pending', text: 'PMDT12_STATUS_PENDING' },
   ];
 
   readonly prioritySelectOptions = [
-    { value: 'High', text: this.translate.instant('PMDT12_PRIORITY_HIGH') },
-    { value: 'Medium', text: this.translate.instant('PMDT12_PRIORITY_MEDIUM') },
-    { value: 'Low', text: this.translate.instant('PMDT12_PRIORITY_LOW') },
+    { value: 'High', text: 'PMDT12_PRIORITY_HIGH' },
+    { value: 'Medium', text: 'PMDT12_PRIORITY_MEDIUM' },
+    { value: 'Low', text: 'PMDT12_PRIORITY_LOW' },
   ];
 
   readonly taskStatusSelectOptions = [
-    { value: 'Testing', text: '🧪 ' + this.translate.instant('PMDT12_TASK_STATUS_TESTING_OPT') },
-    { value: 'In Progress', text: '🛠️ ' + this.translate.instant('PMDT12_TASK_STATUS_DEV_OPT') },
+    { value: 'Testing', text: '🧪 ' + 'PMDT12_TASK_STATUS_TESTING_OPT' },
+    { value: 'In Progress', text: '🛠️ ' + 'PMDT12_TASK_STATUS_DEV_OPT' },
     { value: 'bugfix', text: '🚨 Bugfix' },
-    { value: 'complete', text: '✅ ' + this.translate.instant('PMDT12_TASK_STATUS_COMPLETE_OPT') },
-    { value: 'To Do', text: '📝 ' + this.translate.instant('PMDT12_TASK_STATUS_TODO_OPT') },
-    { value: 'on hold', text: '⏸️ ' + this.translate.instant('PMDT12_TASK_STATUS_ONHOLD_OPT') },
+    { value: 'complete', text: '✅ ' + 'PMDT12_TASK_STATUS_COMPLETE_OPT' },
+    { value: 'To Do', text: '📝 ' + 'PMDT12_TASK_STATUS_TODO_OPT' },
+    { value: 'on hold', text: '⏸️ ' + 'PMDT12_TASK_STATUS_ONHOLD_OPT' },
   ];
 
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];

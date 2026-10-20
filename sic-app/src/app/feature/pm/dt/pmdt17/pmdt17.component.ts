@@ -12,6 +12,7 @@ import { ApprovalService } from '../pmdt03/approval.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { SicButtonComponent } from 'sic-ng';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 import { SicTableActionsComponent } from '../../../../core/component/sic-table-actions/sic-table-actions.component';
 
@@ -41,6 +42,7 @@ import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-e
     MaContractsComponent,
     SicButtonComponent,
     SicAiBatchModalComponent,
+    SicEmptyStateComponent,
   ],
   templateUrl: './pmdt17.component.html',
   styleUrls: ['./pmdt17.component.css'],
@@ -276,12 +278,12 @@ export class Pmdt17Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'OPEN', text: this.translate.instant('PMDT17_STATUS_OPEN') },
-    { value: 'IN_PROGRESS', text: this.translate.instant('PMDT17_STATUS_IN_PROGRESS') },
-    { value: 'WAITING_CUSTOMER', text: this.translate.instant('PMDT17_STATUS_WAITING_CUSTOMER') },
-    { value: 'RESOLVED', text: this.translate.instant('PMDT17_STATUS_RESOLVED') },
-    { value: 'CHANGED', text: this.translate.instant('PMDT17_STATUS_CHANGED') },
-    { value: 'CLOSED', text: this.translate.instant('PMDT17_STATUS_CLOSED') },
+    { value: 'OPEN', text: 'PMDT17_STATUS_OPEN' },
+    { value: 'IN_PROGRESS', text: 'PMDT17_STATUS_IN_PROGRESS' },
+    { value: 'WAITING_CUSTOMER', text: 'PMDT17_STATUS_WAITING_CUSTOMER' },
+    { value: 'RESOLVED', text: 'PMDT17_STATUS_RESOLVED' },
+    { value: 'CHANGED', text: 'PMDT17_STATUS_CHANGED' },
+    { value: 'CLOSED', text: 'PMDT17_STATUS_CLOSED' },
   ];
 
   onFilterChange(value: any) {

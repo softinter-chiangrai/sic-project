@@ -20,6 +20,7 @@ import { FormsModule } from '@angular/forms';
 import { CustomerModel } from './pmrt01A/pmrt01A.model'; // ✅ import model
 import { Pmrt01AService } from './pmrt01A/pmrt01A.service';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 import { RecentItemsService } from '../../../../core/services/recent-items.service';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -27,7 +28,7 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'app-pmrt01',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule],
+  imports: [CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicEmptyStateComponent],
   templateUrl: './pmrt01.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -186,8 +187,8 @@ export class Pmrt01Component implements OnInit {
   }
 
   readonly statusOptions = [
-    { value: 'active', text: this.translate.instant('PMRT01_STATUS_ACTIVE') },
-    { value: 'inactive', text: this.translate.instant('PMRT01_STATUS_INACTIVE') },
+    { value: 'active', text: 'PMRT01_STATUS_ACTIVE' },
+    { value: 'inactive', text: 'PMRT01_STATUS_INACTIVE' },
   ];
 
   onFilterChange(value: any, grid: SicGridPanelComponent) {

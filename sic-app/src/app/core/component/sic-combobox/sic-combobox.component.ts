@@ -28,7 +28,7 @@ import {
   NG_VALUE_ACCESSOR,
   NgControl,
 } from '@angular/forms';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { Subscription } from 'rxjs';
 import { SicValidator } from '../../validator/sic.validator';
 
@@ -53,7 +53,7 @@ export class SicComboboxOptionTemplate {
 @Component({
   selector: 'sic-combobox',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, TranslateModule],
   templateUrl: './sic-combobox.component.html',
   styleUrl: './sic-combobox.component.css',
   host: {
@@ -93,8 +93,8 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
   @Input() pageNumberParam = 'pageNumber';
   @Input() pageSizeParam = 'pageSize';
   @Input() keywordParam = 'keyword';
-  @Input() placeholder = 'Select option';
-  @Input() emptyText = 'No data found';
+  @Input() placeholder = 'COMBOBOX_PLACEHOLDER';
+  @Input() emptyText = 'COMBOBOX_EMPTY';
   @Input() valueField = 'value';
   @Input() textField = 'text';
   @Input()

@@ -34,13 +34,13 @@ export interface CreateTraceLinkPayload {
 
 // เลือกใช้ตอนสร้าง/แสดง dropdown ความสัมพันธ์
 export const TRACE_RELATIONSHIP_OPTIONS: { value: TraceRelationshipType; label: string }[] = [
-  { value: 'RELATED_TO', label: 'เกี่ยวข้องกับ (Related to)' },
-  { value: 'DESIGNED_BY', label: 'ออกแบบจาก (Designed by)' },
-  { value: 'IMPLEMENTED_BY', label: 'ถูกพัฒนาโดย (Implemented by)' },
-  { value: 'DOCUMENTED_BY', label: 'ถูกบันทึกโดย (Documented by)' },
-  { value: 'VERIFIED_BY', label: 'ถูกตรวจสอบโดย (Verified by)' },
-  { value: 'FAILED_BY', label: 'ล้มเหลวจาก (Failed by)' },
-  { value: 'AFFECTED_BY', label: 'ได้รับผลกระทบจาก (Affected by)' },
+  { value: 'RELATED_TO', label: 'TRACE_REL_RELATED_TO_TARGET' },
+  { value: 'DESIGNED_BY', label: 'TRACE_REL_DESIGNED_BY_TARGET' },
+  { value: 'IMPLEMENTED_BY', label: 'TRACE_REL_IMPLEMENTED_BY_TARGET' },
+  { value: 'DOCUMENTED_BY', label: 'TRACE_REL_DOCUMENTED_BY_TARGET' },
+  { value: 'VERIFIED_BY', label: 'TRACE_REL_VERIFIED_BY_TARGET' },
+  { value: 'FAILED_BY', label: 'TRACE_REL_FAILED_BY_TARGET' },
+  { value: 'AFFECTED_BY', label: 'TRACE_REL_AFFECTED_BY_TARGET' },
 ];
 
 // relationshipType ที่บันทึกไว้เป็นมุมมองจากฝั่ง target เสมอ (target [relationshipType] source)

@@ -92,31 +92,31 @@ export class Pmdt03Component implements OnInit {
 
   // ===== Options =====
   readonly documentTypeOptions = [
-    { value: 'REQUIREMENT', text: 'REQUIREMENT' },
-    { value: 'SPECIFICATION', text: 'SPECIFICATION' },
-    { value: 'DIAGRAM', text: 'DIAGRAM' },
-    { value: 'DESIGN_REVIEW', text: 'DESIGN_REVIEW' },
-    { value: 'CHANGE_REQUEST', text: 'CHANGE_REQUEST' },
-    { value: 'TEST_PLAN', text: 'TEST_PLAN' },
-    { value: 'UAT', text: 'UAT' },
-    { value: 'DELIVERY', text: 'DELIVERY' },
-    { value: 'INVOICE', text: 'INVOICE' },
-    { value: 'CONTRACT', text: 'CONTRACT' },
-    { value: 'USER_MANUAL', text: 'USER_MANUAL' },
-    { value: 'PROJECT', text: 'PROJECT' },
+    { value: 'REQUIREMENT', text: 'DOC_TYPE_REQUIREMENT' },
+    { value: 'SPECIFICATION', text: 'DOC_TYPE_SPECIFICATION' },
+    { value: 'DIAGRAM', text: 'DOC_TYPE_DIAGRAM' },
+    { value: 'DESIGN_REVIEW', text: 'DOC_TYPE_DESIGN_REVIEW' },
+    { value: 'CHANGE_REQUEST', text: 'DOC_TYPE_CHANGE_REQUEST' },
+    { value: 'TEST_PLAN', text: 'DOC_TYPE_TEST_PLAN' },
+    { value: 'UAT', text: 'DOC_TYPE_UAT' },
+    { value: 'DELIVERY', text: 'DOC_TYPE_DELIVERY' },
+    { value: 'INVOICE', text: 'DOC_TYPE_INVOICE' },
+    { value: 'CONTRACT', text: 'DOC_TYPE_CONTRACT' },
+    { value: 'USER_MANUAL', text: 'DOC_TYPE_USER_MANUAL' },
+    { value: 'PROJECT', text: 'DOC_TYPE_PROJECT' },
   ];
 
   readonly statusSelectOptions = [
-    { value: 'PENDING', text: this.translate.instant('PMDT03_STATUS_PENDING') },
-    { value: 'APPROVED', text: this.translate.instant('PMDT03_STATUS_APPROVED') },
-    { value: 'REJECTED', text: this.translate.instant('PMDT03_STATUS_REJECTED') },
-    { value: 'NEED_REVISION', text: this.translate.instant('PMDT03_STATUS_NEED_REVISION_OPT') },
-    { value: 'CANCELLED', text: this.translate.instant('PMDT03_STATUS_CANCELLED') },
+    { value: 'PENDING', text: 'PMDT03_STATUS_PENDING' },
+    { value: 'APPROVED', text: 'PMDT03_STATUS_APPROVED' },
+    { value: 'REJECTED', text: 'PMDT03_STATUS_REJECTED' },
+    { value: 'NEED_REVISION', text: 'PMDT03_STATUS_NEED_REVISION_OPT' },
+    { value: 'CANCELLED', text: 'PMDT03_STATUS_CANCELLED' },
   ];
 
   readonly projectSelectOptions = [
-    { value: '1', text: this.translate.instant('PMDT03_PROJECT_CRM') },
-    { value: '2', text: this.translate.instant('PMDT03_PROJECT_HR') },
+    { value: '1', text: 'PMDT03_PROJECT_CRM' },
+    { value: '2', text: 'PMDT03_PROJECT_HR' },
   ];
 
   documentTypes = [
