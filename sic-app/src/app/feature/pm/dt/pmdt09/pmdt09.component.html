@@ -368,17 +368,14 @@
 
         </div>
       } @empty {
-        <div class="col-span-full py-16 text-center border border-dashed border-[var(--border)] rounded-2xl bg-[var(--sidebar)]/50 p-8">
-          <i class="bi bi-palette text-5xl text-[var(--text-muted)] opacity-30 block mb-3"></i>
-          <h3 class="text-lg font-semibold text-[var(--text-active)]">{{ 'PMDT09_EMPTY_TITLE' | translate }}</h3>
-          <p class="text-sm text-[var(--text-muted)] mt-1">{{ 'PMDT09_EMPTY_DESC' | translate }}</p>
-          <button
-            (click)="goToAdd()"
-            class="mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 transition-all shadow-sm"
-          >
-            <i class="bi bi-plus-lg"></i>
-            <span>{{ 'PMDT09_CREATE_BTN' | translate }}</span>
-          </button>
+        <div class="col-span-full">
+          <sic-empty-state
+            icon="bi bi-palette"
+            [title]="'PMDT09_EMPTY_TITLE' | translate"
+            [description]="'PMDT09_EMPTY_DESC' | translate"
+            [actionLabel]="'PMDT09_CREATE_BTN' | translate"
+            (action)="goToAdd()"
+          ></sic-empty-state>
         </div>
       }
     </div>

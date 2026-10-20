@@ -18,11 +18,12 @@ import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/comp
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicPaginationComponent } from '../../../../core/component/sic-pagination/sic-pagination.component';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent, SicButtonComponent, SicAiBatchModalComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

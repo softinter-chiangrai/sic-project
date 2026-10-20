@@ -32,11 +32,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt12',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule, SicAiBatchModalComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, TranslateModule, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt12.component.html',
   styleUrls: ['./pmdt12.component.css'],
   changeDetection: ChangeDetectionStrategy.OnPush,

@@ -582,20 +582,13 @@
 
         </div>
       } @empty {
-        <div class="flex flex-col items-center justify-center py-16 px-4 rounded-2xl border border-[var(--border)] bg-[var(--sidebar)] text-center gap-3">
-          <i class="bi bi-folder-x text-5xl text-[var(--text-muted)] opacity-30"></i>
-          <p class="text-lg font-medium text-[var(--text-active)]">{{ 'PMDT12_EMPTY_SCENARIO_TITLE' | translate }}</p>
-          <p class="text-sm text-[var(--text-muted)]">{{ 'PMDT12_EMPTY_SCENARIO_DESC' | translate }}</p>
-          <div class="flex items-center gap-2 mt-2">
-            <button
-              (click)="goToAddScenario()"
-              class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all shadow-sm cursor-pointer"
-            >
-              <i class="bi bi-folder-plus"></i>
-              {{ 'PMDT12_ADD_SCENARIO' | translate }}
-            </button>
-          </div>
-        </div>
+        <sic-empty-state
+          icon="bi bi-folder-x"
+          [title]="'PMDT12_EMPTY_SCENARIO_TITLE' | translate"
+          [description]="'PMDT12_EMPTY_SCENARIO_DESC' | translate"
+          [actionLabel]="'PMDT12_ADD_SCENARIO' | translate"
+          (action)="goToAddScenario()"
+        ></sic-empty-state>
       }
     </div>
   }

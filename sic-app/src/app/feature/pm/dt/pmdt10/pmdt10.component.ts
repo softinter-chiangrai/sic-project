@@ -21,6 +21,7 @@ import { Pmdt10Service } from './pmdt10.service';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
 import { SicAvatarComponent, SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
+import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
 @Component({
   selector: 'app-pmdt10',
@@ -38,6 +39,7 @@ import { SicComboboxComponent } from '../../../../core/component/sic-combobox/si
     SicGridPanelTemplate,
     TranslateModule,
     SicAiBatchModalComponent,
+    SicEmptyStateComponent,
   ],
   templateUrl: './pmdt10.component.html',
   styleUrls: ['./pmdt10.component.css'],
