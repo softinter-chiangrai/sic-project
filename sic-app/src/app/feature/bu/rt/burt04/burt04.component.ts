@@ -104,7 +104,8 @@ export class Burt04AComponent implements OnInit {
 
     this.isLoading.set(true);
     this.burt04Service
-      .getMembers(this.businessId, request.pageNumber - 1, request.pageSize)
+      // server ไม่รองรับ filter/sort param → ดึงทั้งหมดมา filter/sort แล้วแบ่งหน้าเอง (ponytail: สมาชิกต่อ business มีหลักสิบ, ถ้าเกิน 1000 ค่อยทำ filter ฝั่ง server)
+      .getMembers(this.businessId, 0, 1000)
       .pipe(finalize(() => this.isLoading.set(false)))
       .subscribe({
         next: (res) => {
@@ -130,7 +131,6 @@ export class Burt04AComponent implements OnInit {
           });
           this.members.set(mapped);
 
-          // filter/sort ภายในหน้าที่ดึงมา (ตาม logic เดิม — server ไม่รองรับ filter/sort param)
           let list = mapped;
           const term = this.searchTerm().toLowerCase();
           if (term) {
@@ -158,9 +158,10 @@ export class Burt04AComponent implements OnInit {
             return desc ? vb.localeCompare(va) : va.localeCompare(vb);
           });
 
-          const totalElements = res?.pageable?.totalElements ?? membersList.length;
+          const totalElements = list.length;
+          const start = (request.pageNumber - 1) * request.pageSize;
           this.totalItems.set(totalElements);
-          grid.setRows(list as unknown as SicGridRowData[], { totalElements }, request.requestId);
+          grid.setRows(list.slice(start, start + request.pageSize) as unknown as SicGridRowData[], { totalElements }, request.requestId);
         },
         error: (err) => {
           console.error('Load members error', err);

@@ -183,12 +183,12 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
                 if ("Cancelled".equalsIgnoreCase(status) || "ยกเลิก".equals(status) || "ยกเลิกสัญญา".equals(status)) {
                     predicates.add(cb.equal(root.get("renewalStatus"), RENEWAL_STATUS_CANCELLED));
                 } else {
-                    predicates.add(cb.equal(root.get("signStatus"), status));
+                    predicates.add(cb.equal(cb.lower(root.get("signStatus")), status.toLowerCase()));
                     predicates.add(cb.or(cb.isNull(root.get("renewalStatus")), cb.notEqual(root.get("renewalStatus"), RENEWAL_STATUS_CANCELLED)));
                 }
             }
             if (contractType != null && !contractType.isBlank() && !"all".equals(contractType)) {
-                predicates.add(cb.equal(root.get("contractType"), contractType));
+                predicates.add(cb.equal(cb.lower(root.get("contractType")), contractType.toLowerCase()));
             }
             if (renewalStatus != null && !renewalStatus.isBlank() && !"all".equalsIgnoreCase(renewalStatus)) {
                 var sub = query.subquery(UUID.class);

@@ -22,6 +22,28 @@ import com.softinter.sicapi.entity.pm.PmApprovalStepStatus;
 @Repository
 public interface PmApprovalRepository extends JpaRepository<PmApproval, UUID>, JpaSpecificationExecutor<PmApproval> {
 
+    /** id ของเอกสารทุกชนิดที่อยู่ในโปรเจกต์ (approval ไม่มี project_id — โปรเจกต์มาจากเอกสาร เหมือน resolveProjectInfo) */
+    @Query(value = """
+            SELECT id FROM pm_requirement WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_specification WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_change_request WHERE project_id IN (:projectIds)
+                OR target_id IN (SELECT id FROM pm_requirement WHERE project_id IN (:projectIds)
+                                 UNION SELECT id FROM pm_specification WHERE project_id IN (:projectIds))
+            UNION SELECT id FROM pm_design_review WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_diagram WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_delivery WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_invoice WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_ma_ticket WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_user_manual WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_customer_contract WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_test_plan WHERE project_id IN (:projectIds)
+            UNION SELECT id FROM pm_customer_project WHERE id IN (:projectIds)
+            """, nativeQuery = true)
+    List<UUID> findDocumentIdsByProjectIds(@Param("projectIds") List<UUID> projectIds);
+
+    @Query(value = "SELECT id FROM pm_customer_project WHERE is_delete = false AND LOWER(project_name) LIKE :pattern", nativeQuery = true)
+    List<UUID> findProjectIdsByNameLike(@Param("pattern") String pattern);
+
     @Query("SELECT a FROM PmApproval a WHERE a.documentType = :documentType AND a.documentId = :documentId AND a.isActive = true ORDER BY a.createdDate DESC")
     List<PmApproval> findByDocument(@Param("documentType") String documentType, @Param("documentId") UUID documentId);
 

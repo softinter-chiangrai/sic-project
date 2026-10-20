@@ -160,8 +160,8 @@
   @if (totalItems() === 0) {
     <sic-empty-state
       icon="bi bi-arrow-repeat"
-      title="ไม่พบรายการ Change Request"
-      description="เริ่มต้นด้วยการสร้าง Change Request ใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [title]="'PMDT06_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMDT06_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMDT06_ADD_BTN' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

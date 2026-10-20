@@ -131,9 +131,10 @@ public class PmApprovalController {
     public ResponseEntity<PaginationResponse<ApprovalResponse>> getPending(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String documentType,
+            @RequestParam(required = false) UUID projectId,
             @PageableDefault(size = 10, sort = "requestedDate", direction = Sort.Direction.ASC) Pageable pageable) {
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(approvalService.getPendingApprovals(userId, keyword, documentType, pageable));
+        return ResponseEntity.ok(approvalService.getPendingApprovals(userId, keyword, documentType, projectId, pageable));
     }
 
     @GetMapping("/history")
@@ -142,9 +143,10 @@ public class PmApprovalController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String documentType,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID projectId,
             @PageableDefault(size = 10, sort = "requestedDate", direction = Sort.Direction.DESC) Pageable pageable) {
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(approvalService.getApprovedHistory(userId, keyword, documentType, status, pageable));
+        return ResponseEntity.ok(approvalService.getApprovedHistory(userId, keyword, documentType, status, projectId, pageable));
     }
 
     @GetMapping("/my-requests")
@@ -153,9 +155,10 @@ public class PmApprovalController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String documentType,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) UUID projectId,
             @PageableDefault(size = 10, sort = "requestedDate", direction = Sort.Direction.DESC) Pageable pageable) {
         String userId = currentUserService.getUserId();
-        return ResponseEntity.ok(approvalService.getMyRequests(userId, keyword, documentType, status, pageable));
+        return ResponseEntity.ok(approvalService.getMyRequests(userId, keyword, documentType, status, projectId, pageable));
     }
 
     @GetMapping("/search")

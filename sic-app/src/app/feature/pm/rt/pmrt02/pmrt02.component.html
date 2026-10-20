@@ -183,8 +183,8 @@
   @if (totalItems() === 0 && !isLoading()) {
     <sic-empty-state
       icon="bi bi-briefcase"
-      title="ไม่พบรายการโครงการ"
-      description="เริ่มต้นด้วยการสร้างโครงการใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [title]="'PMRT02_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMRT02_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMRT02_ADD_BUTTON' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

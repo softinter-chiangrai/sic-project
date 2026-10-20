@@ -90,7 +90,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
                 predicates.add(cb.equal(root.get("project").get("id"), projectId));
             }
             if (status != null && !status.isBlank()) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.toLowerCase().trim();

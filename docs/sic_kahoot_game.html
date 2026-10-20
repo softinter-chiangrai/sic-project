@@ -300,31 +300,24 @@
       font-weight: 400;
     }
 
-    /* TIMER BAR */
-    .timer-container {
+    /* PROGRESS BAR (UNLIMITED TIME) */
+    .progress-track {
       width: 100%;
-      height: 12px;
-      background: rgba(255, 255, 255, 0.2);
+      height: 10px;
+      background: rgba(255, 255, 255, 0.15);
       border-radius: 6px;
       margin-bottom: 24px;
       overflow: hidden;
       position: relative;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
     }
 
-    .timer-bar {
+    .progress-bar-fill {
       height: 100%;
-      width: 100%;
-      background: linear-gradient(90deg, #26890c, #ffa602, #e21b3c);
-      transition: width 0.1s linear;
-    }
-
-    .timer-seconds {
-      position: absolute;
-      top: -28px;
-      right: 0;
-      font-size: 1.1rem;
-      font-weight: 800;
-      color: #ffa602;
+      width: 0%;
+      background: linear-gradient(90deg, #ff007a, #7928ca, #1368ce);
+      transition: width 0.3s ease;
+      border-radius: 6px;
     }
 
     /* KAHOOT 4 CHOICES GRID */
@@ -580,15 +573,21 @@
           เตรียมพร้อมตอบคำถามอาจารย์ 100% สไตล์ Kahoot! สี่ตัวเลือกสุดมันส์
         </p>
 
-        <div class="badge-excluded">
-          🚫 กรองออกแล้ว: ไม่รวม Entity, Enum, DB Master Data, entity/pm, entity/su
+        <div class="badge-excluded" style="background: rgba(38, 137, 12, 0.2); border-color: rgba(38, 137, 12, 0.5); color: #85e874; line-height: 1.6;">
+          🎯 <strong>กรองเฉพาะ Core Logic & Implementation รวม 134 ไฟล์</strong><br>
+          <span style="font-size: 0.82rem; color: #bbf7d0;">
+            • service/impl (90) • util (18) • config (16) • interceptor (3) • exception (3) • scheduler (2) • websocket (1) • root (1)<br>
+            <em>(ตัด service interface และ entity/enum ออกทั้งหมดตามที่กำหนด)</em>
+          </span>
         </div>
 
         <div style="font-weight: 600; margin-bottom: 10px; color: #ffa602;">เลือกจำนวนข้อสอบ:</div>
         <div class="option-group" id="modeSelector">
           <div class="mode-chip selected" data-count="10">⚡ 10 ข้อ ด่วนพิเศษ</div>
-          <div class="mode-chip" data-count="20">🎯 20 ข้อ มาตรฐาน</div>
-          <div class="mode-chip" data-count="35">🔥 35 ข้อ ตะลุยจัดเต็ม</div>
+          <div class="mode-chip" data-count="25">🎯 25 ข้อ มาตรฐาน</div>
+          <div class="mode-chip" data-count="50">🔥 50 ข้อ ซ้อมสอบเข้มข้น</div>
+          <div class="mode-chip" data-count="100">👑 100 ข้อ ท้าทายเซียน</div>
+          <div class="mode-chip" data-count="134">🏆 ทั้งหมด 134 ข้อ (ครบทุกโมดูล)</div>
         </div>
 
         <button class="btn-start" onclick="startGame()">🚀 เริ่มเกมเลย!</button>
@@ -605,9 +604,8 @@
         </div>
       </div>
 
-      <div class="timer-container">
-        <div class="timer-bar" id="timerBar"></div>
-        <span class="timer-seconds" id="timerSeconds">15s</span>
+      <div class="progress-track" title="ความคืบหน้าการทำแบบทดสอบ">
+        <div class="progress-bar-fill" id="progressBarFill"></div>
       </div>
 
       <div class="question-box">
@@ -635,12 +633,12 @@
         </button>
       </div>
 
-      <div class="feedback-banner" id="feedbackBanner">
+      <div class="feedback-banner" id="feedbackBanner" onclick="nextQuestion()" style="cursor: pointer;" title="คลิกหรือกด Spacebar เพื่อไปข้อต่อไปทันที">
         <div>
           <div class="feedback-title" id="feedbackTitle">ถูกต้อง! 🎉</div>
           <div class="feedback-detail" id="feedbackDetail">คำอธิบายเพิ่มเติม</div>
         </div>
-        <button class="btn-next" id="btnNext" onclick="nextQuestion()">ถัดไป ➔</button>
+        <button class="btn-next" id="btnNext" onclick="event.stopPropagation(); nextQuestion()">ถัดไป ➔</button>
       </div>
     </section>
 
@@ -680,254 +678,818 @@
 
   <script>
     /* ============================================================
-       QUESTION BANK - คลังคำถามเฉพาะ Modules/Services/Utils/Configs
-       (ไม่รวม Entity, Enum, DB, entity/pm, entity/su ตามโจทย์)
+       QUESTION BANK - คลังคำถามเฉพาะ Core Logic & Implementation 134 ไฟล์
+       (service/impl, util, config, interceptor, exception, scheduler, websocket, root)
        ============================================================ */
     const QUESTION_BANK = [
-      {
-        module: "SecurityConfig.java",
-        package: "config",
-        answer: "ตั้งค่า Spring Security ตรวจสอบ JWT Bearer Token จาก Keycloak จัดการ CORS และกำหนด Stateless Session",
-        category: "Config / Security"
-      },
-      {
-        module: "BusinessContextHolder.java",
-        package: "config",
-        answer: "เก็บค่า businessId ปัจจุบันของ Request ใน ThreadLocal เพื่อกรองข้อมูล Multi-tenancy ทุกเลเยอร์",
-        category: "Config / Multi-tenancy"
-      },
-      {
-        module: "FlywayConfig.java",
-        package: "config",
-        answer: "ควบคุมการรัน Database Migration สคริปต์ SQL ใน db/migration อัตโนมัติเมื่อระบบเริ่มทำงาน",
-        category: "Config / Database"
-      },
-      {
-        module: "AuditLogAspect.java",
-        package: "config (AOP)",
-        answer: "คลาส AspectJ ดักจับ Method ที่มี @AuditLog บันทึกเวลา ผู้ใช้ และข้อมูลลงตาราง su_audit_log อัตโนมัติ",
-        category: "AOP / Audit"
-      },
-      {
-        module: "AiApiKeyConverter.java",
-        package: "config",
-        answer: "AttributeConverter ทำหน้าที่เข้ารหัส (Encrypt) และถอดรหัส (Decrypt) API Key ของโมเดล AI ในฐานข้อมูล",
-        category: "Config / Security"
-      },
-      {
-        module: "S3Config.java",
-        package: "config",
-        answer: "สร้าง Spring Bean S3Client เชื่อมต่อไปยัง SeaweedFS Object Storage ผ่าน AWS S3 API โปรโตคอล",
-        category: "Config / Storage"
-      },
-      {
-        module: "WebSocketConfig.java",
-        package: "config",
-        answer: "ตั้งค่า STOMP WebSocket Message Broker ผ่าน Endpoint /ws เพื่อแชทสดและ WebRTC Signaling",
-        category: "Config / WebSocket"
-      },
-      {
-        module: "BusinessContextInterceptor.java",
-        package: "interceptor",
-        answer: "ดักจับ HTTP Request ดึง Header X-Business-Id มาเซ็ตใน BusinessContextHolder และเคลียร์ทิ้งเมื่อเสร็จสิ้น",
-        category: "Interceptor / Web MVC"
-      },
-      {
-        module: "JwtChannelInterceptor.java",
-        package: "interceptor",
-        answer: "ดักจับการเชื่อมต่อ WebSocket (STOMP CONNECT) เพื่อตรวจสอบความถูกต้องของ JWT Token",
-        category: "Interceptor / WebSocket"
-      },
-      {
-        module: "LanguageInterceptor.java",
-        package: "interceptor",
-        answer: "ดักอ่าน Header Accept-Language เพื่อกำหนด Locale ภาษา (ไทย/อังกฤษ) สำหรับแสดงข้อความในระบบ",
-        category: "Interceptor / I18n"
-      },
-      {
-        module: "GlobalExceptionHandler.java",
-        package: "exception",
-        answer: "ตัวจัดการ Error ส่วนกลางผ่าน @RestControllerAdvice รวบรวม Exception ทั้งหมดแปลงเป็น Response JSON รูปแบบมาตรฐาน",
-        category: "Exception Handling"
-      },
-      {
-        module: "DocumentLockedException.java",
-        package: "exception",
-        answer: "Custom Exception ถูกโยนเมื่อมีผู้ใช้อื่นกำลังเปิดแก้ไขเอกสารเดียวกันอยู่ ป้องกัน Concurrency Conflict (409)",
-        category: "Exception Handling"
-      },
-      {
-        module: "ChatWebSocketController.java",
-        package: "websocket",
-        answer: "Controller รับ-ส่งข้อความแชทสดรายบุคคล/กลุ่ม และรับ-ส่งสัญญาณ WebRTC Call Signaling (Offer/Answer/Candidate)",
-        category: "WebSocket / Controller"
-      },
-      {
-        module: "ApprovalTimeoutScheduler.java",
-        package: "scheduler",
-        answer: "Cron Job ตรวจสอบคำขออนุมัติที่ค้างเกินกำหนด (Timeout) ส่ง Notification แจ้งเตือนผู้อนุมัติหรือเปลี่ยนสถานะ",
-        category: "Scheduler / Background Job"
-      },
-      {
-        module: "ContractLifecycleScheduler.java",
-        package: "scheduler",
-        answer: "Cron Job ตรวจหาสัญญาลูกค้าที่ใกล้หมดอายุล่วงหน้า และแจ้งเตือนฝ่ายขายกับผู้จัดการโครงการ",
-        category: "Scheduler / Background Job"
-      },
-      {
-        module: "DocumentDiffHelper.java",
-        package: "util",
-        answer: "เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่เพิ่ม ลบ หรือแก้ไข",
-        category: "Utility / Document"
-      },
-      {
-        module: "JsonSnapshotHelper.java",
-        package: "util",
-        answer: "แปลง State ของ Entity ทั้งก้อนเป็น JSON Snapshot สำหรับบันทึกประวัติการเปลี่ยนแปลงใน Version History",
-        category: "Utility / Serialization"
-      },
-      {
-        module: "PdfBook.java",
-        package: "util",
-        answer: "รวมไฟล์ PDF หลายฉบับ (ปก, Requirement, Spec, Diagram) เข้าเป็นเอกสารเล่มเดียวที่สมบูรณ์",
-        category: "Utility / PDF"
-      },
-      {
-        module: "SortValidator.java",
-        package: "util",
-        answer: "ตรวจสอบความถูกต้องของชื่อคอลัมน์ที่ขอเรียงลำดับ ป้องกัน SQL Injection จากชื่อคอลัมน์แปลกปลอม",
-        category: "Utility / Security"
-      },
-      {
-        module: "EditSessionServiceImpl.java",
-        package: "service.impl",
-        answer: "สร้าง Lock Session เมื่อเปิดแก้ไขเอกสาร ตรวจจับ Heartbeat และปลด Lock เมื่อผู้ใช้ปิดหน้าจอ",
-        category: "Service / Concurrency"
-      },
-      {
-        module: "ApprovalServiceImpl.java",
-        package: "service.impl",
-        answer: "คลาสขนาดใหญ่ควบคุม State Machine การอนุมัติ (ยื่นขอ, อนุมัติ, ตีกลับ, ยกเลิก) ของทุกโมดูลในระบบ",
-        category: "Service / Workflow"
-      },
-      {
-        module: "AiSqlGeneratorServiceImpl.java",
-        package: "service.impl",
-        answer: "วิเคราะห์ Entity และความสัมพันธ์จาก ER Diagram แล้วสร้างคำสั่ง SQL CREATE TABLE สำหรับ PostgreSQL/MySQL",
-        category: "Service / AI Generator"
-      },
-      {
-        module: "AiNavigatorServiceImpl.java",
-        package: "service.impl",
-        answer: "วิเคราะห์คำถามหรือข้อสงสัยของผู้ใช้ แล้วแนะนำหน้าจอหรือฟังก์ชันที่เกี่ยวข้องในระบบอย่างชาญฉลาด",
-        category: "Service / AI Assistance"
-      },
-      {
-        module: "AiBatchGeneratorServiceImpl.java",
-        package: "service.impl",
-        answer: "สร้างข้อมูลจำลองโครงการ ลูกค้า Requirement และ Task แบบ Batch ด้วย AI เพื่อใช้ทดสอบระบบ",
-        category: "Service / AI Generator"
-      },
-      {
-        module: "FileStorageServiceImpl.java",
-        package: "service.impl",
-        answer: "อัปโหลด ตรวจสอบประเภทและขนาดไฟล์ ดาวน์โหลด และลบไฟล์บน SeaweedFS Object Storage (S3)",
-        category: "Service / Storage"
-      },
-      {
-        module: "GlobalSearchServiceImpl.java",
-        package: "service.impl",
-        answer: "ค้นหาข้อมูลด้วยคำค้นหาเดียวครอบคลุมทุกโมดูล ทั้งโครงการ ลูกค้า สัญญา Requirement และเอกสาร",
-        category: "Service / Search"
-      },
-      {
-        module: "ImpactAnalysisServiceImpl.java",
-        package: "service.impl",
-        answer: "วิเคราะห์ Traceability Matrix เพื่อประเมินผลกระทบต่อ Requirement และ Task เมื่อมีการยื่น Change Request (CR)",
-        category: "Service / Impact Analysis"
-      },
-      {
-        module: "TraceLinkServiceImpl.java",
-        package: "service.impl",
-        answer: "สร้างและจัดการเส้นทางความเชื่อมโยงย้อนกลับได้แบบ Requirement -> Spec -> Task -> Test Case",
-        category: "Service / Traceability"
-      },
-      {
-        module: "PmDiagramTabServiceImpl.java",
-        package: "service.impl",
-        answer: "บันทึก Node, Edge, สี, ข้อความ และตำแหน่งพิกัดของไดอะแกรม DFD และ ERD ลงฐานข้อมูล",
-        category: "Service / Architecture Diagram"
-      },
-      {
-        module: "PmDesignReviewServiceImpl.java",
-        package: "service.impl",
-        answer: "จัดการรอบการตรวจทานการออกแบบ (UI/UX Review) และรวบรวมความคิดเห็นของผู้ตรวจแต่ละขั้นตอน",
-        category: "Service / Review"
-      },
-      {
-        module: "ProgramAccessServiceImpl.java",
-        package: "service.impl",
-        answer: "ตรวจสอบสิทธิ์ว่า Role ของผู้ใช้ปัจจุบันมีสิทธิ์เปิดดู แก้ไข หรือลบข้อมูลในหน้าจอ (Program) นั้นๆ หรือไม่",
-        category: "Service / Authorization"
-      },
-      {
-        module: "UserSessionTrackerImpl.java",
-        package: "service.impl",
-        answer: "ติดตามสถานะ Active/Idle ของผู้ใช้งานในระบบแบบ Real-time",
-        category: "Service / Presence"
-      },
-      {
-        module: "ContractLifecycleService.java",
-        package: "service.impl",
-        answer: "ตรวจสอบและอัปเดตสถานะของสัญญาลูกค้าตามเงื่อนไขวันเวลา (Draft -> Active -> Expiring -> Expired)",
-        category: "Service / Contract"
-      },
-      {
-        module: "DocumentVersionServiceImpl.java",
-        package: "service.impl",
-        answer: "บันทึก JSON Snapshot ทุกการเปลี่ยนแปลง ค้นหาประวัติย้อนหลัง และคำนวณ Diff ระหว่างเวอร์ชัน",
-        category: "Service / Versioning"
-      },
-      {
-        module: "PmMaTicketServiceImpl.java",
-        package: "service.impl",
-        answer: "เปิด Ticket มอบหมายช่าง/โปรแกรมเมอร์ ติดตาม SLA และบันทึกผลการซ่อมบำรุงระบบหลังส่งมอบ",
-        category: "Service / Maintenance (MA)"
-      },
-      {
-        module: "ReportHelper.java",
-        package: "util",
-        answer: "จัดเตรียมโครงสร้างข้อมูล คำนวณยอดเงินรวมและสถิติเพื่อส่งต่อให้ Report Microservice ออกเอกสาร",
-        category: "Utility / Reporting"
-      },
-      {
-        module: "BusinessAccessServiceImpl.java",
-        package: "service.impl",
-        answer: "ตรวจสอบสิทธิ์ว่าผู้ใช้ปัจจุบันมีสิทธิ์เข้าถึงหรือแก้ไขข้อมูลใน Business Unit (องค์กร) นั้นหรือไม่",
-        category: "Service / Security"
-      },
-      {
-        module: "BusinessInviteServiceImpl.java",
-        package: "service.impl",
-        answer: "สร้างลิงก์คำเชิญ ส่งอีเมลโทเค็น และตรวจสอบการกดยอมรับคำเชิญเข้าร่วมองค์กรของผู้ใช้ใหม่",
-        category: "Service / Organization"
-      },
-      {
-        module: "MailServiceImpl.java",
-        package: "service.impl",
-        answer: "ส่งอีเมลแจ้งเตือนผ่าน JavaMailSender เชื่อมต่อ Mail Server ตามเทมเพลตที่กำหนดในระบบ",
-        category: "Service / Email"
-      },
-      {
-        module: "MenuServiceImpl.java",
-        package: "service.impl",
-        answer: "คัดกรองและส่งมอบโครงสร้างเมนูหน้าจอที่ตรงตาม Role และสิทธิ์การมองเห็นของผู้ใช้ปัจจุบัน",
-        category: "Service / UI Navigation"
-      }
-    ];
+  {
+    "module": "SicApiApplication.java",
+    "package": "Root",
+    "category": "Application Entry Point",
+    "answer": "คลาสหลักสำหรับบูตระบบ Spring Boot (@SpringBootApplication), เปิดใช้งาน Asynchronous (@EnableAsync), Scheduling (@EnableScheduling) และรัน loadDotEnv() เพื่อโหลด Environment Variables จากไฟล์ .env"
+  },
+  {
+    "module": "AiApiKeyConverter.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "JPA AttributeConverter เข้ารหัส (Encrypt) และถอดรหัส (Decrypt) API Key ของ AI (เช่น Gemini, Claude) ก่อนบันทึกลงหรืออ่านจากฐานข้อมูลเพื่อความปลอดภัย"
+  },
+  {
+    "module": "AuditLog.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "Custom Annotation (@AuditLog) สำหรับแปะบน Method ของ Controller หรือ Service เพื่อระบุ Action และ Module ที่ต้องการบันทึกประวัติการใช้งาน"
+  },
+  {
+    "module": "AuditLogAspect.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "คลาส AOP (AspectJ) ดักจับ Method ที่มี @AuditLog ดึงข้อมูลผู้ใช้งาน, เวลา, Parameter และผลลัพธ์การทำงาน ไปบันทึกลงตาราง su_audit_log อัตโนมัติ"
+  },
+  {
+    "module": "AuditorAwareImpl.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ดึง Username ของผู้ใช้ปัจจุบันจาก Keycloak Security Context ส่งให้ฟิลด์ @CreatedBy และ @LastModifiedBy ใน JPA Entity"
+  },
+  {
+    "module": "BusinessContextHolder.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "เก็บค่า businessId ปัจจุบันของ Thread (ThreadLocal) เพื่อให้เลเยอร์ Service เรียกใช้คัดกรองข้อมูลระดับ Multi-tenancy ได้โดยไม่ต้องส่ง Parameter ข้ามทุกเลเยอร์"
+  },
+  {
+    "module": "CacheConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "เปิดใช้งาน Spring Cache Abstraction (@EnableCaching) สำหรับแคชข้อมูลที่ถูกอ่านบ่อย เช่น สิทธิ์เมนู หรือ Resource Bundle แปลภาษา"
+  },
+  {
+    "module": "CorsConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "กำหนดนโยบาย Cross-Origin Resource Sharing อนุญาตให้ Frontend (http://localhost:4200) ส่ง Request และ Header เข้ามาทำงานได้"
+  },
+  {
+    "module": "FlywayConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ควบคุมการรัน Database Migration สคริปต์ SQL ใน db/migration อัตโนมัติเมื่อระบบเริ่มทำงาน ช่วยให้ Schema ตรงกันทุก Environment"
+  },
+  {
+    "module": "JacksonInstantConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่าโมดูล Jackson สำหรับแปลงและจัดรูปแบบประเภทข้อมูลวันเวลา Instant และ LocalDateTime ให้ตรงตามมาตรฐาน ISO-8601"
+  },
+  {
+    "module": "JpaConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "เปิดใช้งาน JPA Auditing (@EnableJpaAuditing) สำหรับบันทึก Timestamp และผู้สร้าง/แก้ไขข้อมูลโดยอัตโนมัติ"
+  },
+  {
+    "module": "OpenApiConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่าเอกสาร Swagger / OpenAPI 3.0 สำหรับทดสอบ API และระบุ Security Scheme แบบ Bearer JWT Token"
+  },
+  {
+    "module": "ReportServiceProperties.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "คลาส Configuration Properties อ่านค่า URL, Secret Token และ Timeout ของ Microservice ออกรายงานจาก application.yml"
+  },
+  {
+    "module": "S3Config.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "สร้าง Spring Bean S3Client เชื่อมต่อไปยัง SeaweedFS Object Storage ผ่านโปรโตคอล AWS S3 API เพื่อบริหารจัดการไฟล์"
+  },
+  {
+    "module": "SecurityConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่าความปลอดภัยระบบ (Spring Security), กำหนด Filter ตรวจสอบ JWT Bearer Token จาก Keycloak, จัดการ CORS, Stateless Session, และเปิดสิทธิ์ Public Path (Swagger, Actuator, Public Files)"
+  },
+  {
+    "module": "WebConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ลงทะเบียน Interceptor (BusinessContextInterceptor, LanguageInterceptor) เข้าสู่ Spring MVC Request Lifecycle"
+  },
+  {
+    "module": "WebSocketConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่า STOMP WebSocket Message Broker ผ่าน Endpoint /ws และ Route /app, /topic สำหรับ Real-time Chat และ WebRTC Signaling"
+  },
+  {
+    "module": "BusinessContextInterceptor.java",
+    "package": "Interceptor",
+    "category": "ตัวดักจับ Request & Protocol",
+    "answer": "ดักจับ HTTP Request เพื่อดึง Header X-Business-Id นำไปเซ็ตใน BusinessContextHolder และเคลียร์ทิ้งเมื่อ Request ทำงานเสร็จ"
+  },
+  {
+    "module": "JwtChannelInterceptor.java",
+    "package": "Interceptor",
+    "category": "ตัวดักจับ Request & Protocol",
+    "answer": "ดักจับการเชื่อมต่อ WebSocket (STOMP CONNECT) เพื่อตรวจสอบความถูกต้องของ JWT Token หากไม่ผ่านจะปฏิเสธการเชื่อมต่อทันที"
+  },
+  {
+    "module": "LanguageInterceptor.java",
+    "package": "Interceptor",
+    "category": "ตัวดักจับ Request & Protocol",
+    "answer": "ดักอ่าน Header Accept-Language เพื่อกำหนด Locale ภาษา (ไทย/อังกฤษ) สำหรับแสดงผลข้อความแจ้งเตือนและ Error ในระบบ"
+  },
+  {
+    "module": "DocumentLockedException.java",
+    "package": "exception",
+    "category": "การจัดการข้อผิดพลาด",
+    "answer": "Custom Exception เมื่อมีผู้ใช้อื่นกำลังเปิดแก้ไขเอกสารฉบับเดียวกันอยู่ ป้องกัน Concurrency Conflict (HTTP 409 Conflict)"
+  },
+  {
+    "module": "GlobalExceptionHandler.java",
+    "package": "exception",
+    "category": "การจัดการข้อผิดพลาด",
+    "answer": "ตัวจัดการ Error ส่วนกลางผ่าน @RestControllerAdvice รวบรวม Exception ทั้งหมด (Validation, Not Found, Forbidden) แปลงเป็น Response JSON รูปแบบมาตรฐาน"
+  },
+  {
+    "module": "ResourceNotFoundException.java",
+    "package": "exception",
+    "category": "การจัดการข้อผิดพลาด",
+    "answer": "Custom Exception สำหรับข้อผิดพลาดค้นหาข้อมูลไม่พบในระบบ (HTTP 404 Not Found)"
+  },
+  {
+    "module": "ChatWebSocketController.java",
+    "package": "websocket",
+    "category": "การสื่อสาร Real",
+    "answer": "Controller ควบคุมการรับ-ส่งข้อความแชทสดรายบุคคล/กลุ่ม และรับ-ส่งสัญญาณ WebRTC Call Signaling (Offer/Answer/Candidate) สำหรับการสื่อสาร Real-time"
+  },
+  {
+    "module": "ApprovalTimeoutScheduler.java",
+    "package": "scheduler",
+    "category": "งานประมวลผลตามเวลา Background Jobs",
+    "answer": "Cron Job ทำงานตามรอบเวลา ตรวจสอบคำขออนุมัติที่ค้างเกินกำหนด (Timeout) ส่ง Notification เตือนผู้อนุมัติหรืออัปเดตสถานะ"
+  },
+  {
+    "module": "ContractLifecycleScheduler.java",
+    "package": "scheduler",
+    "category": "งานประมวลผลตามเวลา Background Jobs",
+    "answer": "Cron Job คอยตรวจหาสัญญาลูกค้าที่ใกล้หมดอายุล่วงหน้า แจ้งเตือนฝ่ายขายและผู้จัดการโครงการเพื่อเตรียมดำเนินการต่อสัญญา"
+  },
+  {
+    "module": "ApprovalKeywordSearchHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตัวช่วยสร้างเงื่อนไข Predicate สำหรับค้นหารายการคำขออนุมัติด้วยคำค้นหา (Keyword Search)"
+  },
+  {
+    "module": "ContractLifecycle.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบและควบคุม State Machine ของสัญญาลูกค้า (Draft -> Active -> Expiring -> Expired)"
+  },
+  {
+    "module": "ContractNoHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "สร้างและจัดฟอร์แมตรหัสสัญญาโครงการอัตโนมัติตามรูปแบบที่กำหนด (เช่น CTR-YYYYMM-XXXX)"
+  },
+  {
+    "module": "DateRangeValidator.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบความถูกต้องของช่วงวันที่ (วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด)"
+  },
+  {
+    "module": "DiagramTypes.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "กำหนดและตรวจสอบชุดประเภทไดอะแกรมทั้งหมด (DFD, ER, SEQUENCE, CLASS, FLOWCHART ฯลฯ) สำหรับระบบ Trace Link และ Change Impact Analysis"
+  },
+  {
+    "module": "DocumentDiffHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่ถูกเพิ่ม ลบ หรือแก้ไข"
+  },
+  {
+    "module": "EnumConverter.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "Generic Utility แปลงค่า Enum เป็น String หรือ Integer ในฐานข้อมูลอย่างปลอดภัย"
+  },
+  {
+    "module": "FileVisibilityConverter.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "แปลงค่าระดับการมองเห็นไฟล์ (Public, Internal, Confidential) ระหว่าง JPA และฐานข้อมูล"
+  },
+  {
+    "module": "JsonSnapshotHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "แปลง State ของ Entity ให้เป็น JSON Snapshot สำหรับบันทึกประวัติการเปลี่ยนแปลงในตาราง Version History"
+  },
+  {
+    "module": "KeywordSearchHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "สร้างเงื่อนไข SQL ค้นหาคำแบบ Case-insensitive และ Partial Matching รองรับภาษาไทยและอังกฤษ"
+  },
+  {
+    "module": "LanguageUtils.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ฟังก์ชันช่วยเหลือสำหรับตรวจสอบและสกัดรหัสภาษามาตรฐานจาก HTTP Header"
+  },
+  {
+    "module": "LocalizationHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ดึงข้อความ Resource Bundle สลับภาษาไทย-อังกฤษตาม Locale ของผู้ใช้งาน"
+  },
+  {
+    "module": "PaginationUtil.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ช่วยสร้างออบเจกต์ Pageable และคำนวณ Offset, Page Number, Page Size รองรับการทำ Pagination"
+  },
+  {
+    "module": "PdfBook.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "รวมไฟล์ PDF หลายๆ ฉบับ (เช่น ปก, Requirement, Spec, Diagram) เข้าเป็นเอกสารเล่มเดียวสมบูรณ์"
+  },
+  {
+    "module": "ReportHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ฟังก์ชันขนาดใหญ่เตรียมข้อมูล จัดตาราง และคำนวณผลรวมยอดเงิน/เวลา เพื่อส่งต่อให้ Report Service ออกรายงาน"
+  },
+  {
+    "module": "SortValidator.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบความถูกต้องของชื่อคอลัมน์ที่ขอเรียงลำดับ ป้องกัน SQL Injection จากการส่งชื่อคอลัมน์แปลกปลอม"
+  },
+  {
+    "module": "UniquenessValidator.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบความไม่ซ้ำกันของข้อมูลเฉพาะ เช่น รหัสโครงการ หรือเลขที่สัญญา"
+  },
+  {
+    "module": "VersionKeywordSearchHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ช่วยค้นหารายการบันทึกประวัติ Version เอกสารตามคำค้นหา"
+  },
+  {
+    "module": "AiBatchGeneratorServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ให้บริการสร้างข้อมูลจำลองโครงการ ลูกค้า Requirement และ Task แบบ Batch ด้วย AI"
+  },
+  {
+    "module": "AiMemberPicker.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Helper ช่วยคัดเลือกสมาชิกทีมที่เหมาะสมกับทักษะของงาน Task"
+  },
+  {
+    "module": "AiModelConfigServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก แก้ไข และทดสอบการเชื่อมต่อ API ของโมเดล AI (Claude, Gemini)"
+  },
+  {
+    "module": "AiNavigatorServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class วิเคราะห์คำถามของผู้ใช้แล้วแนะนำหน้าจอหรือฟังก์ชันที่เกี่ยวข้องในระบบ"
+  },
+  {
+    "module": "AiPhaseWbsService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างโครงสร้าง Phase, Milestone และ WBS ด้วย AI อัตโนมัติ"
+  },
+  {
+    "module": "AiProjectPipelineJobService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ควบคุม Job Background Pipeline ประมวลผลแปลง Requirement เป็น WBS และ Spec"
+  },
+  {
+    "module": "AiProjectPipelineServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการคิวงาน ตรวจสอบสถานะ และรับผลลัพธ์ของ AI Project Pipeline"
+  },
+  {
+    "module": "AiScopeContextService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สกัดและเตรียม Context ขอบเขตของโครงการส่งต่อให้กับ AI Prompt"
+  },
+  {
+    "module": "AiSqlGeneratorServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class วิเคราะห์ตาราง ฟิลด์ และความสัมพันธ์จาก ER Diagram แล้วสร้างคำสั่ง SQL CREATE TABLE สำหรับ PostgreSQL/MySQL"
+  },
+  {
+    "module": "ApprovalFlowServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเพิ่ม แก้ไข ลบขั้นตอนการอนุมัติ และตรวจสอบสิทธิ์ผู้อนุมัติในแต่ละ Step"
+  },
+  {
+    "module": "ApprovalNotificationServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ส่ง Notification และอีเมลแจ้งผู้อนุมัติเมื่อมีคำขอใหม่หรือเมื่อถึงคิวของตน"
+  },
+  {
+    "module": "ApprovalServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ขนาดใหญ่ควบคุม State Machine การอนุมัติ (ยื่นขอ, อนุมัติ, ตีกลับ, ยกเลิก) ของทุกโมดูลในระบบ"
+  },
+  {
+    "module": "AuditLogServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการดึงรายการประวัติการใช้งานระบบ พร้อมฟิลเตอร์ค้นหาผู้ใช้ วันที่ และ Action"
+  },
+  {
+    "module": "BulkDocumentExportService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ส่งออกเอกสารโครงการจำนวนมากแบบเป็นชุด (Bulk Export)"
+  },
+  {
+    "module": "BusinessAccessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ตรวจสอบความถูกต้องว่าผู้ใช้ปัจจุบันมีสิทธิ์เรียกดูหรือแก้ไขข้อมูลใน Business Unit นั้นหรือไม่"
+  },
+  {
+    "module": "BusinessInviteServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้างคำเชิญ ส่งอีเมลโทเค็น และตรวจสอบการตอบรับคำเชิญเข้าร่วมองค์กร"
+  },
+  {
+    "module": "ChangeRequestServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ควบคุมวงจรชีวิตของ CR คำนวณ Manday และค่าใช้จ่ายที่เปลี่ยนแปลง"
+  },
+  {
+    "module": "ComboboxServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ดึงข้อมูล Master Data ในรูปแบบ Key-Value เพื่อป้อนให้กับ ComboBox ในหน้าจอ Frontend"
+  },
+  {
+    "module": "ContractGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สร้างข้อมูลตั้งต้นของสัญญาโครงการอัตโนมัติ"
+  },
+  {
+    "module": "ContractLifecycleService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ตรวจสอบและอัปเดตสถานะของสัญญาตามเงื่อนไขวันเวลา"
+  },
+  {
+    "module": "CurrentUserServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สกัด Username, Email, BusinessId และ Roles จาก Spring Security Context"
+  },
+  {
+    "module": "DeliveryGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างข้อมูลร่างงวดการส่งมอบงานโครงการ"
+  },
+  {
+    "module": "DiscussionServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เพิ่ม ตอบกลับ และดึงความคิดเห็นในกระดาน Discussion ของโครงการ"
+  },
+  {
+    "module": "DocumentLivePreviewService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service แสดงตัวอย่างเอกสารแบบ Live Preview แบบ Real-time"
+  },
+  {
+    "module": "DocumentPdfExporters.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Helper จัดการการแปลงโครงสร้างเอกสารโครงการเป็นไฟล์ PDF"
+  },
+  {
+    "module": "DocumentVersionServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก JSON Snapshot ทุกการเปลี่ยนแปลง ค้นหาประวัติ และคำนวณ Diff ระหว่างเวอร์ชัน"
+  },
+  {
+    "module": "EditSessionServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้าง Lock Session เมื่อเปิดแก้ไขเอกสาร ตรวจจับ Heartbeat และปลด Lock เมื่อผู้ใช้ปิดหน้าจอ"
+  },
+  {
+    "module": "ErXmlParserServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service แปลงไฟล์ XML จากโปรแกรมออกแบบฐานข้อมูล เข้าสู่โครงสร้าง ER Diagram ในระบบ"
+  },
+  {
+    "module": "FileStorageServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class อัปโหลด ตรวจสอบประเภท/ขนาดไฟล์ ดาวน์โหลด และลบไฟล์บน SeaweedFS S3"
+  },
+  {
+    "module": "GlobalSearchServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ค้นหาคำค้นหาครอบคลุมทุกโมดูล (โครงการ ลูกค้า สัญญา Requirement และเอกสาร)"
+  },
+  {
+    "module": "ImpactAnalysisServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class วิเคราะห์ความเชื่อมโยง Traceability Matrix เพื่อประเมินผลกระทบต่อ Requirement และ Task เมื่อมี CR"
+  },
+  {
+    "module": "InvoiceGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างร่างใบแจ้งหนี้จากงวดงานที่ส่งมอบแล้ว"
+  },
+  {
+    "module": "MaTicketGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างรหัสและข้อมูลเริ่มต้นของ Ticket แจ้งซ่อม MA"
+  },
+  {
+    "module": "MailServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ส่งอีเมลแจ้งเตือนผ่าน JavaMailSender และเชื่อมต่อ SMTP"
+  },
+  {
+    "module": "MenuServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class คัดกรองและส่งมอบโครงสร้างเมนูหน้าจอที่สอดคล้องกับ Role ของผู้ใช้ปัจจุบัน"
+  },
+  {
+    "module": "MessageI18nCacheImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class แคชข้อความระบบหลายภาษาใน Memory เพื่อประสิทธิภาพในการดึงข้อมูล"
+  },
+  {
+    "module": "MilestoneServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD และติดตามสถานะความสำเร็จของ Milestone ในแต่ละเฟส"
+  },
+  {
+    "module": "NameUtilityServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ฟังก์ชันช่วยเหลือจัดรูปแบบชื่อ-นามสกุล และชื่อโครงการ"
+  },
+  {
+    "module": "PhaseServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD เฟสงาน และคำนวณสัดส่วนความก้าวหน้าของแต่ละเฟส"
+  },
+  {
+    "module": "PmAiProviderServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเรียกใช้งาน API ของโมเดล AI แต่ละค่าย (Anthropic Claude, Google Gemini)"
+  },
+  {
+    "module": "PmBugServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก แจกจ่ายงาน และติดตามการแก้ไข Bug ที่พบในโครงการ"
+  },
+  {
+    "module": "PmChangeRequestExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลสรุปคำขอ CR เพื่อส่งให้ Report Service ออกรายงาน"
+  },
+  {
+    "module": "PmCustomerContractExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ดึงข้อมูลสัญญา รายละเอียดงวดเงิน และเงื่อนไขเพื่อออกเอกสารสัญญา"
+  },
+  {
+    "module": "PmCustomerContractServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ควบคุมวงจรชีวิตสัญญา มูลค่างาน และการต่อสัญญาโครงการ"
+  },
+  {
+    "module": "PmCustomerProjectExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class รวบรวมข้อมูลโครงการ ทีมงาน และสถานะงานเพื่อพิมพ์รายงานสรุป"
+  },
+  {
+    "module": "PmCustomerProjectServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการโครงการ ตรวจสอบเงื่อนไขวันเวลา และสถิติภาพรวม"
+  },
+  {
+    "module": "PmCustomerServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD ข้อมูลลูกค้า บริษัทคู่ค้า และผู้ติดต่อ"
+  },
+  {
+    "module": "PmDashboardOrgServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class คำนวณสถิติภาพรวมโครงการและงบประมาณระดับองค์กร"
+  },
+  {
+    "module": "PmDeliveryExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลใบส่งมอบงานและ Checklist ตรวจรับ"
+  },
+  {
+    "module": "PmDeliveryServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการงวดส่งมอบ ตรวจสอบ Checklist และเปลี่ยนสถานะงวดงาน"
+  },
+  {
+    "module": "PmDesignReviewExportService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ส่งออกรายงานสรุปการตรวจทานการออกแบบ"
+  },
+  {
+    "module": "PmDesignReviewServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการรอบการตรวจทาน UI/Architecture และรวบรวมความคิดเห็นของผู้ตรวจ"
+  },
+  {
+    "module": "PmDiagramChatServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class รับคำถามเกี่ยวกับโครงสร้างฐานข้อมูลและ DFD ส่งให้ AI วิเคราะห์และตอบคำถาม"
+  },
+  {
+    "module": "PmDiagramExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ส่งออก DFD และ ER Diagram ในรูปแบบรูปภาพหรือไฟล์เอกสาร"
+  },
+  {
+    "module": "PmDiagramTabServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก Node, Edge, สี, ข้อความ และพิกัดของไดอะแกรมลงฐานข้อมูล"
+  },
+  {
+    "module": "PmInvoiceExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลใบแจ้งหนี้และรายการย่อยเพื่อออกเป็น PDF"
+  },
+  {
+    "module": "PmInvoiceServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ออกใบแจ้งหนี้ ติดตามยอดค้างชำระ และคำนวณภาษี"
+  },
+  {
+    "module": "PmMaTicketExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สรุปประวัติ Ticket การแจ้งซ่อมและการแก้ไขเพื่อพิมพ์รายงานส่งลูกค้า"
+  },
+  {
+    "module": "PmMaTicketServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เปิด Ticket มอบหมายงาน ติดตาม SLA และบันทึกผลการซ่อม"
+  },
+  {
+    "module": "PmPaymentServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึกหลักฐานการจ่ายเงิน อัปเดตยอดคงเหลือในใบแจ้งหนี้"
+  },
+  {
+    "module": "PmProjectDashboardServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class คำนวณดัชนีชี้วัดความคืบหน้า (Burn-down, Task Status) ของโครงการนั้นๆ"
+  },
+  {
+    "module": "PmRequirementExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูล Software Requirement Specification (SRS) เพื่อออกรายงาน"
+  },
+  {
+    "module": "PmRequirementServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก แก้ไข และติดตามสถานะการ Sign-off Requirement จากลูกค้า"
+  },
+  {
+    "module": "PmSpecificationExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลเอกสาร Functional Specification"
+  },
+  {
+    "module": "PmSpecificationServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดทำสเปก ผูก Data Field Mapping และคำนวณ Manday"
+  },
+  {
+    "module": "PmTestCaseServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเคสทดสอบ บันทึกผล Pass/Fail และผูกโยงกับ Bug"
+  },
+  {
+    "module": "PmTestScenarioServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ควบคุมกลุ่มการทดสอบตามฟังก์ชันงาน"
+  },
+  {
+    "module": "PmUatExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้างเอกสารรายงานผลการทดสอบ UAT สำหรับให้ลูกค้าเซ็นรับรอง"
+  },
+  {
+    "module": "PmUserManualExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class รวบรวมหัวข้อ รูปภาพ และเนื้อหาจัดทำเป็นเล่มคู่มือ PDF"
+  },
+  {
+    "module": "PmUserManualServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD บทเรียนและเนื้อหาคู่มือการใช้งานระบบ"
+  },
+  {
+    "module": "ProfileServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class อัปเดตข้อมูลผู้ใช้ เปลี่ยนรหัสผ่าน และจัดการรูปโปรไฟล์"
+  },
+  {
+    "module": "ProgramAccessCacheImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เก็บแคชสิทธิ์ของ Role ใน Memory เพื่อให้ตรวจสิทธิ์หน้าจอได้อย่างรวดเร็ว"
+  },
+  {
+    "module": "ProgramAccessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ตรวจสอบว่า Role ของผู้ใช้มีสิทธิ์เข้าถึงหน้าจอนั้นๆ หรือไม่"
+  },
+  {
+    "module": "ProjectGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างข้อมูลโครงการเริ่มต้นและเทมเพลตมาตรฐาน"
+  },
+  {
+    "module": "RequirementExportService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service รวบรวมและจัดฟอร์แมตข้อมูล Requirement สำหรับออกรายงาน"
+  },
+  {
+    "module": "RequirementGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างรายการ Requirement ตัวอย่างตามประเภทธุรกิจ"
+  },
+  {
+    "module": "SpecificationGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยแปลง Requirement ให้กลายเป็น Specification ร่างแรก"
+  },
+  {
+    "module": "SuBusinessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเพิ่มและแก้ไขข้อมูลองค์กร/หน่วยงาน"
+  },
+  {
+    "module": "SuUserBusinessMemberServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการสมาชิก เชิญ และกำหนด Role ภายในองค์กร"
+  },
+  {
+    "module": "SuUserBusinessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการความสัมพันธ์ระหว่าง User กับ Business Unit ต่างๆ"
+  },
+  {
+    "module": "TaskServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการ Task, มอบหมายงาน, บันทึกชั่วโมงทำงาน และเปลี่ยนสถานะงาน"
+  },
+  {
+    "module": "TestCaseGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สร้าง Test Case ตัวอย่างอัตโนมัติจาก Requirement และ Spec"
+  },
+  {
+    "module": "TestScenarioGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สร้างกลุ่ม Test Scenario ร่างแรกอัตโนมัติ"
+  },
+  {
+    "module": "ThaiCustomerGeneratorHelper.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Helper สร้างข้อมูลจำลองลูกค้า บริษัท และที่อยู่ภาษาไทยสำหรับการทดสอบ"
+  },
+  {
+    "module": "TraceLinkServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้างและจัดการเส้นทางความเชื่อมโยง Requirement -> Spec -> Task -> Test Case"
+  },
+  {
+    "module": "UnauthorizedException.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Exception ที่ถูกโยนเมื่อผู้ใช้ไม่มีสิทธิ์เข้าถึงทรัพยากรนั้นๆ"
+  },
+  {
+    "module": "UserManualGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างโครงร่างคู่มือการใช้งานอัตโนมัติจาก Spec"
+  },
+  {
+    "module": "UserSessionTrackerImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ติดตามสถานะ Active/Idle ของผู้ใช้งานในระบบแบบ Real-time"
+  },
+  {
+    "module": "VerifyServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ตรวจสอบ Token การยืนยันอีเมลและการรีเซ็ตรหัสผ่าน"
+  },
+  {
+    "module": "WorkPackageServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการกลุ่มงานย่อยในระดับ Work Package ภายใต้ Phase โครงการ"
+  }
+];
 
     /* ============================================================
-       AUDIO SYNTHESIS (Web Audio API - Zero External Dependencies)
+       WEB AUDIO SYNTHESIZER (Sound Effects)
        ============================================================ */
     let audioCtx = null;
     let soundEnabled = true;
@@ -942,46 +1504,37 @@
       return audioCtx;
     }
 
-    function playTone(freq, type, duration, delay = 0) {
+    function playTone(freq, type = 'sine', duration = 0.15, delay = 0) {
       if (!soundEnabled) return;
       try {
         const ctx = getAudioContext();
-        setTimeout(() => {
-          const osc = ctx.createOscillator();
-          const gain = ctx.createGain();
-          osc.type = type;
-          osc.frequency.setValueAtTime(freq, ctx.currentTime);
-          gain.gain.setValueAtTime(0.15, ctx.currentTime);
-          gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
-          osc.connect(gain);
-          gain.connect(ctx.destination);
-          osc.start();
-          osc.stop(ctx.currentTime + duration);
-        }, delay);
-      } catch (e) {
-        console.warn("Audio error:", e);
-      }
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime + delay);
+        gain.gain.setValueAtTime(0.2, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + delay + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + duration);
+      } catch (e) {}
     }
 
     function playCorrectSound() {
-      playTone(523.25, 'triangle', 0.15, 0);   // C5
-      playTone(659.25, 'triangle', 0.15, 90);  // E5
-      playTone(783.99, 'triangle', 0.18, 180); // G5
-      playTone(1046.50, 'sine', 0.35, 270);    // C6
+      playTone(523.25, 'triangle', 0.15, 0.0);
+      playTone(659.25, 'triangle', 0.15, 0.08);
+      playTone(783.99, 'triangle', 0.25, 0.16);
     }
 
     function playWrongSound() {
-      playTone(280, 'sawtooth', 0.18, 0);
-      playTone(220, 'sawtooth', 0.35, 120);
-    }
-
-    function playTickSound() {
-      playTone(800, 'sine', 0.04, 0);
+      playTone(300, 'sawtooth', 0.18, 0.0);
+      playTone(220, 'sawtooth', 0.35, 0.12);
     }
 
     function playFanfare() {
       const notes = [440, 554, 659, 880];
-      notes.forEach((freq, idx) => playTone(freq, 'triangle', 0.25, idx * 120));
+      notes.forEach((freq, idx) => playTone(freq, 'triangle', 0.25, idx * 120 / 1000));
     }
 
     function toggleSound() {
@@ -992,16 +1545,14 @@
     }
 
     /* ============================================================
-       GAME ENGINE STATE & LOGIC
+       GAME ENGINE STATE & LOGIC (UNLIMITED TIME & AUTO NEXT)
        ============================================================ */
     let currentQuestions = [];
     let currentIndex = 0;
     let score = 0;
     let streak = 0;
-    let timer = null;
-    let timeLeft = 15;
-    const QUESTION_TIME = 15;
     let answered = false;
+    let autoNextTimeout = null;
     let resultsLog = [];
     let selectedCount = 10;
 
@@ -1025,7 +1576,10 @@
 
     function startGame() {
       getAudioContext();
-      // Select questions randomly
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
       const shuffled = shuffleArray(QUESTION_BANK);
       const limit = Math.min(selectedCount, shuffled.length);
       currentQuestions = shuffled.slice(0, limit);
@@ -1046,11 +1600,22 @@
 
     function loadQuestion() {
       answered = false;
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
       const q = currentQuestions[currentIndex];
 
-      // Update UI Header
+      // Update UI Header & Progress
       document.getElementById('progressText').innerText = `ข้อ ${currentIndex + 1} / ${currentQuestions.length}`;
       document.getElementById('scoreText').innerText = score.toLocaleString();
+      
+      const pct = ((currentIndex + 1) / currentQuestions.length) * 100;
+      const progressFill = document.getElementById('progressBarFill');
+      if (progressFill) {
+        progressFill.style.width = `${pct}%`;
+      }
+
       const streakBadge = document.getElementById('streakBadge');
       if (streak >= 2) {
         streakBadge.innerText = `🔥 ${streak} Streak!`;
@@ -1070,15 +1635,16 @@
 
       // Generate 4 choices (1 correct + 3 distinct distractors)
       const otherAnswers = QUESTION_BANK
-        .filter(item => item.module !== q.module)
+        .filter(item => item.module !== q.module && item.answer !== q.answer)
         .map(item => item.answer);
-      const shuffledDistractors = shuffleArray(otherAnswers).slice(0, 3);
+      const uniqueDistractors = Array.from(new Set(otherAnswers));
+      const shuffledDistractors = shuffleArray(uniqueDistractors).slice(0, 3);
 
       const choiceList = [
         { text: q.answer, isCorrect: true },
-        { text: shuffledDistractors[0], isCorrect: false },
-        { text: shuffledDistractors[1], isCorrect: false },
-        { text: shuffledDistractors[2], isCorrect: false },
+        { text: shuffledDistractors[0] || 'การทำงานเสริมของระบบ', isCorrect: false },
+        { text: shuffledDistractors[1] || 'ฟังก์ชันควบคุมความถูกต้องของข้อมูล', isCorrect: false },
+        { text: shuffledDistractors[2] || 'โมดูลจัดการส่วนการเชื่อมต่อภายนอก', isCorrect: false },
       ];
 
       const shuffledChoices = shuffleArray(choiceList);
@@ -1091,44 +1657,15 @@
         textSpan.innerText = shuffledChoices[i].text;
         btn.dataset.correct = shuffledChoices[i].isCorrect;
       }
-
-      // Start Countdown Timer
-      startTimer();
-    }
-
-    function startTimer() {
-      clearInterval(timer);
-      timeLeft = QUESTION_TIME;
-      updateTimerUI();
-
-      timer = setInterval(() => {
-        timeLeft -= 0.1;
-        if (timeLeft <= 0) {
-          timeLeft = 0;
-          updateTimerUI();
-          clearInterval(timer);
-          handleTimeout();
-        } else {
-          updateTimerUI();
-          // Tick sound in last 3 seconds
-          if (timeLeft <= 3.0 && Math.round(timeLeft * 10) % 10 === 0) {
-            playTickSound();
-          }
-        }
-      }, 100);
-    }
-
-    function updateTimerUI() {
-      const pct = (timeLeft / QUESTION_TIME) * 100;
-      const bar = document.getElementById('timerBar');
-      bar.style.width = `${pct}%`;
-      document.getElementById('timerSeconds').innerText = `${Math.ceil(timeLeft)}s`;
     }
 
     function selectAnswer(selectedIndex) {
       if (answered) return;
       answered = true;
-      clearInterval(timer);
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
 
       const selectedBtn = document.getElementById(`btn${selectedIndex}`);
       const isCorrect = selectedBtn.dataset.correct === 'true';
@@ -1147,14 +1684,13 @@
         }
       }
 
-      // Calculate Kahoot Score: base 500 + time bonus up to 500 + streak multiplier
+      // Calculate score & streak
       if (isCorrect) {
         streak++;
-        const timeRatio = Math.max(0, timeLeft / QUESTION_TIME);
-        const points = Math.round(500 + (timeRatio * 500) + (streak * 50));
+        const points = 1000 + (streak * 100);
         score += points;
         playCorrectSound();
-        showFeedback(true, `+${points} คะแนน! เก่งมาก`, currentQ.answer);
+        showFeedback(true, `+${points.toLocaleString()} คะแนน! ถูกต้อง`, currentQ.answer);
         resultsLog.push({ module: currentQ.module, isCorrect: true, userScore: points });
       } else {
         streak = 0;
@@ -1164,28 +1700,11 @@
       }
 
       document.getElementById('scoreText').innerText = score.toLocaleString();
-    }
 
-    function handleTimeout() {
-      if (answered) return;
-      answered = true;
-      streak = 0;
-      playWrongSound();
-
-      const currentQ = currentQuestions[currentIndex];
-
-      for (let i = 0; i < 4; i++) {
-        const btn = document.getElementById(`btn${i}`);
-        btn.disabled = true;
-        if (btn.dataset.correct === 'true') {
-          btn.classList.add('correct');
-        } else {
-          btn.classList.add('dimmed');
-        }
-      }
-
-      showFeedback(false, "หมดเวลา! ⏰", `คำตอบที่ถูกต้องคือ: ${currentQ.answer}`);
-      resultsLog.push({ module: currentQ.module, isCorrect: false, userScore: 0 });
+      // Automatically advance to next question after 1.2s delay
+      autoNextTimeout = setTimeout(() => {
+        nextQuestion();
+      }, 1200);
     }
 
     function showFeedback(isOk, title, desc) {
@@ -1197,6 +1716,10 @@
     }
 
     function nextQuestion() {
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
       currentIndex++;
       if (currentIndex < currentQuestions.length) {
         loadQuestion();
@@ -1206,14 +1729,17 @@
     }
 
     function endGame() {
-      clearInterval(timer);
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
       playFanfare();
       switchScreen('resultScreen');
 
       document.getElementById('finalScore').innerText = score.toLocaleString();
       const correctCount = resultsLog.filter(r => r.isCorrect).length;
       const wrongCount = resultsLog.length - correctCount;
-      const accuracy = Math.round((correctCount / resultsLog.length) * 100);
+      const accuracy = resultsLog.length > 0 ? Math.round((correctCount / resultsLog.length) * 100) : 0;
 
       document.getElementById('statCorrect').innerText = correctCount;
       document.getElementById('statWrong').innerText = wrongCount;
@@ -1244,16 +1770,31 @@
         div.className = `review-item ${item.isCorrect ? 'ok' : 'fail'}`;
         div.innerHTML = `
           <span><strong>ข้อ ${idx + 1}:</strong> <code>${item.module}</code></span>
-          <span>${item.isCorrect ? `✅ +${item.userScore}` : '❌ ผิด'}</span>
+          <span>${item.isCorrect ? `✅ +${item.userScore.toLocaleString()}` : '❌ ผิด'}</span>
         `;
         reviewList.appendChild(div);
       });
     }
 
     function restartGame() {
-      clearInterval(timer);
+      if (autoNextTimeout) {
+        clearTimeout(autoNextTimeout);
+        autoNextTimeout = null;
+      }
       switchScreen('lobbyScreen');
     }
+
+    // Keyboard Shortcuts: 1-4 for answers, Space/Enter for Next
+    window.addEventListener('keydown', (e) => {
+      const quizActive = document.getElementById('quizScreen').classList.contains('active');
+      if (!quizActive) return;
+      if (!answered && ['1', '2', '3', '4'].includes(e.key)) {
+        selectAnswer(parseInt(e.key, 10) - 1);
+      } else if (answered && (e.key === ' ' || e.key === 'Enter')) {
+        e.preventDefault();
+        nextQuestion();
+      }
+    });
   </script>
 </body>
 </html>

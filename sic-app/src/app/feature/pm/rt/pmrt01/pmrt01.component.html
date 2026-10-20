@@ -157,8 +157,8 @@
   @if (totalItems() === 0 && !isLoading()) {
     <sic-empty-state
       icon="bi bi-people"
-      title="ไม่พบรายการลูกค้า"
-      description="เริ่มต้นด้วยการสร้างลูกค้าใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [title]="'PMRT01_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMRT01_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMRT01_ADD_BUTTON' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

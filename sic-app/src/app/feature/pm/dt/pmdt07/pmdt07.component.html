@@ -137,8 +137,8 @@
     @if (totalItems() === 0 && !isLoading()) {
         <sic-empty-state
             icon="bi bi-file-text"
-            title="ไม่พบรายการ Specification"
-            description="เริ่มต้นด้วยการสร้าง Specification ใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+            [title]="'PMDT07_EMPTY_LIST_TITLE' | translate"
+            [description]="'PMDT07_EMPTY_LIST_DESC' | translate"
             [actionLabel]="'PMDT07_ADD_BTN' | translate"
             (action)="goToAdd()"
         ></sic-empty-state>

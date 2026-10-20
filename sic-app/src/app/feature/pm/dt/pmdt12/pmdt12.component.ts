@@ -190,13 +190,23 @@ export class Pmdt12Component implements OnInit, OnDestroy {
   ];
 
   readonly taskStatusSelectOptions = [
-    { value: 'Testing', text: '🧪 ' + 'PMDT12_TASK_STATUS_TESTING_OPT' },
-    { value: 'In Progress', text: '🛠️ ' + 'PMDT12_TASK_STATUS_DEV_OPT' },
-    { value: 'bugfix', text: '🚨 Bugfix' },
-    { value: 'complete', text: '✅ ' + 'PMDT12_TASK_STATUS_COMPLETE_OPT' },
-    { value: 'To Do', text: '📝 ' + 'PMDT12_TASK_STATUS_TODO_OPT' },
-    { value: 'on hold', text: '⏸️ ' + 'PMDT12_TASK_STATUS_ONHOLD_OPT' },
+    // text ต้องเป็น key ล้วน combobox ถึงจะแปลได้
+    { value: 'Testing', text: 'PMDT12_TASK_STATUS_TESTING_OPT' },
+    { value: 'In Progress', text: 'PMDT12_TASK_STATUS_DEV_OPT' },
+    { value: 'waiting fix', text: 'PMDT12_TASK_STATUS_WAITING_FIX_OPT' },
+    { value: 'complete', text: 'PMDT12_TASK_STATUS_COMPLETE_OPT' },
+    { value: 'To Do', text: 'PMDT12_TASK_STATUS_TODO_OPT' },
+    { value: 'on hold', text: 'PMDT12_TASK_STATUS_ONHOLD_OPT' },
   ];
+
+  /** ค่าสถานะงานมีหลายสะกด (Todo / To Do, bugfix / waiting fix, done / completed) — เทียบด้วยค่ากลาง */
+  private taskStatusKey(status?: string): string {
+    const s = (status || '').trim().toLowerCase();
+    if (s === 'todo' || s === 'to do') return 'to do';
+    if (s === 'bugfix' || s === 'waiting fix') return 'waiting fix';
+    if (s === 'completed' || s === 'done') return 'complete';
+    return s;
+  }
 
   statusOptions = ['Pass', 'Fail', 'Blocked', 'Pending'];
   priorityOptions = ['High', 'Medium', 'Low'];
@@ -251,11 +261,11 @@ export class Pmdt12Component implements OnInit, OnDestroy {
         return false;
       }
       // Filter taskStatus
-      if (taskStatus === 'ready' || taskStatus === 'testing') {
-        const ts = (this.getEffectiveTaskStatus(tc) || '').toLowerCase();
-        if (ts !== 'testing' && ts !== 'ready') return false;
-      } else if (taskStatus !== 'all') {
-        if ((this.getEffectiveTaskStatus(tc) || '').toLowerCase() !== taskStatus.toLowerCase()) return false;
+      if (taskStatus !== 'all') {
+        const want = this.taskStatusKey(taskStatus);
+        const ts = this.taskStatusKey(this.getEffectiveTaskStatus(tc));
+        const ready = want === 'testing' || want === 'ready';
+        if (ready ? ts !== 'testing' && ts !== 'ready' : ts !== want) return false;
       }
       // Search keyword
       if (search) {

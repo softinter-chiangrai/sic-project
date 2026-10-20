@@ -64,7 +64,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
                 predicates.add(cb.equal(root.get("scenarioId"), scenarioId));
             }
             if (status != null && !status.isBlank()) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("testStatus")), status.toLowerCase()));
             }
             if (keyword != null && !keyword.isBlank()) {
                 String pattern = "%" + keyword.toLowerCase() + "%";

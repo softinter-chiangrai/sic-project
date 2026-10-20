@@ -79,10 +79,10 @@ public class PmUserManualServiceImpl implements PmUserManualService {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
             if (manualType != null && !manualType.isBlank() && !"all".equalsIgnoreCase(manualType)) {
-                predicates.add(cb.equal(root.get("manualType"), manualType));
+                predicates.add(cb.equal(cb.lower(root.get("manualType")), manualType.toLowerCase()));
             }
             if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
             if (keyword != null && !keyword.trim().isEmpty()) {
                 String rawKw = keyword.trim().toLowerCase();

@@ -293,17 +293,19 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, Pageable pageable) {
-        return getPendingApprovals(userId, null, null, pageable);
+        return getPendingApprovals(userId, null, null, null, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, String keyword, String documentType, Pageable pageable) {
-        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank())) {
+    public PaginationResponse<ApprovalResponse> getPendingApprovals(String userId, String keyword, String documentType, UUID projectId, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && projectId == null) {
             Page<PmApproval> pageResult = approvalRepository.findPendingByApprover(userId, pageable);
             return toPaginationResponse(pageResult, pageable);
         }
 
+        List<UUID> projectDocIds = projectDocIds(projectId);
+        List<UUID> keywordDocIds = keywordProjectDocIds(keyword);
         Specification<PmApproval> spec = (root, query, cb) -> {
             query.distinct(true);
             Join<PmApproval, PmApprovalStepStatus> steps = root.join("stepStatuses");
@@ -316,7 +318,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             predicates.add(cb.or(
                     cb.notEqual(root.get("flow").get("approvalMode"), ApprovalMode.CHAIN),
                     cb.equal(steps.get("step"), root.get("currentStep"))));
-            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
+            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType, projectDocIds, keywordDocIds);
             return cb.and(predicates.toArray(new Predicate[0]));
         };
         Page<PmApproval> pageResult = approvalRepository.findAll(spec, pageable);
@@ -326,17 +328,19 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, Pageable pageable) {
-        return getApprovedHistory(userId, null, null, null, pageable);
+        return getApprovedHistory(userId, null, null, null, null, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, String keyword, String documentType, String status, Pageable pageable) {
-        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && (status == null || status.isBlank())) {
+    public PaginationResponse<ApprovalResponse> getApprovedHistory(String userId, String keyword, String documentType, String status, UUID projectId, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && (status == null || status.isBlank()) && projectId == null) {
             Page<PmApproval> pageResult = approvalRepository.findApprovedHistoryByApprover(userId, pageable);
             return toPaginationResponse(pageResult, pageable);
         }
 
+        List<UUID> projectDocIds = projectDocIds(projectId);
+        List<UUID> keywordDocIds = keywordProjectDocIds(keyword);
         Specification<PmApproval> spec = (root, query, cb) -> {
             query.distinct(true);
             Join<PmApproval, PmApprovalStepStatus> steps = root.join("stepStatuses");
@@ -344,7 +348,7 @@ public class ApprovalServiceImpl implements ApprovalService {
             predicates.add(cb.equal(steps.get("approver"), userId));
             predicates.add(cb.notEqual(steps.get("status"), ApprovalStatus.PENDING));
             predicates.add(cb.isTrue(root.get("isActive")));
-            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
+            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType, projectDocIds, keywordDocIds);
             if (status != null && !status.isBlank()) {
                 predicates.add(cb.equal(root.get("status"), ApprovalStatus.valueOf(status)));
             }
@@ -357,23 +361,25 @@ public class ApprovalServiceImpl implements ApprovalService {
     @Override
     @Transactional(readOnly = true)
     public PaginationResponse<ApprovalResponse> getMyRequests(String userId, Pageable pageable) {
-        return getMyRequests(userId, null, null, null, pageable);
+        return getMyRequests(userId, null, null, null, null, pageable);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PaginationResponse<ApprovalResponse> getMyRequests(String userId, String keyword, String documentType, String status, Pageable pageable) {
-        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && (status == null || status.isBlank())) {
+    public PaginationResponse<ApprovalResponse> getMyRequests(String userId, String keyword, String documentType, String status, UUID projectId, Pageable pageable) {
+        if ((keyword == null || keyword.isBlank()) && (documentType == null || documentType.isBlank()) && (status == null || status.isBlank()) && projectId == null) {
             Page<PmApproval> pageResult = approvalRepository
                     .findByRequestedByAndIsActiveTrueOrderByRequestedDateDesc(userId, pageable);
             return toPaginationResponse(pageResult, pageable);
         }
 
+        List<UUID> projectDocIds = projectDocIds(projectId);
+        List<UUID> keywordDocIds = keywordProjectDocIds(keyword);
         Specification<PmApproval> spec = (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
             predicates.add(cb.equal(root.get("requestedBy"), userId));
             predicates.add(cb.isTrue(root.get("isActive")));
-            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType);
+            addKeywordAndTypeFilters(cb, root, predicates, keyword, documentType, projectDocIds, keywordDocIds);
             if (status != null && !status.isBlank()) {
                 predicates.add(cb.equal(root.get("status"), ApprovalStatus.valueOf(status)));
             }
@@ -387,9 +393,14 @@ public class ApprovalServiceImpl implements ApprovalService {
                                            Root<PmApproval> root,
                                            List<Predicate> predicates,
                                            String keyword,
-                                           String documentType) {
+                                           String documentType,
+                                           List<UUID> projectDocIds,
+                                           List<UUID> keywordDocIds) {
         if (documentType != null && !documentType.isBlank()) {
             predicates.add(cb.equal(root.get("documentType"), documentType));
+        }
+        if (projectDocIds != null) {
+            predicates.add(projectDocIds.isEmpty() ? cb.disjunction() : root.get("documentId").in(projectDocIds));
         }
         if (keyword != null && !keyword.isBlank()) {
             String rawKw = keyword.trim().toLowerCase();
@@ -403,6 +414,9 @@ public class ApprovalServiceImpl implements ApprovalService {
                     cb.like(cb.lower(root.get("comment")), pattern),
                     cb.like(cb.lower(root.get("status").as(String.class)), pattern)
             ));
+            if (!keywordDocIds.isEmpty()) {
+                orPreds.add(root.get("documentId").in(keywordDocIds)); // ชื่อโปรเจกต์ที่แสดงในตาราง
+            }
 
             // ✅ Bilingual: สถานะการอนุมัติ (ไทย ↔ อังกฤษ)
             if (rawKw.contains("อนุมัติแล้ว") || rawKw.contains("ผ่านการอนุมัติ") || rawKw.equals("อนุมัติ") || rawKw.equals("approved")) {
@@ -419,6 +433,17 @@ public class ApprovalServiceImpl implements ApprovalService {
 
             predicates.add(cb.or(orPreds.toArray(new Predicate[0])));
         }
+    }
+
+    /** null = ไม่กรองโปรเจกต์ */
+    private List<UUID> projectDocIds(UUID projectId) {
+        return projectId == null ? null : approvalRepository.findDocumentIdsByProjectIds(List.of(projectId));
+    }
+
+    private List<UUID> keywordProjectDocIds(String keyword) {
+        if (keyword == null || keyword.isBlank()) return List.of();
+        List<UUID> projectIds = approvalRepository.findProjectIdsByNameLike("%" + keyword.trim().toLowerCase() + "%");
+        return projectIds.isEmpty() ? List.of() : approvalRepository.findDocumentIdsByProjectIds(projectIds);
     }
 
     private PaginationResponse<ApprovalResponse> toPaginationResponse(Page<PmApproval> pageResult, Pageable pageable) {

@@ -223,6 +223,7 @@ export class Pmdt16Component implements OnInit {
       { value: 'PARTIAL', text: this.translate.instant('PMDT16_STATUS_OPT_PARTIAL') },
       { value: 'PAID', text: this.translate.instant('PMDT16_STATUS_OPT_PAID') },
       { value: 'OVERDUE', text: this.translate.instant('PMDT16_STATUS_OPT_OVERDUE') },
+      { value: 'CANCELLED', text: this.translate.instant('PMDT16_STATUS_OPT_CANCELLED') },
     ];
   }
 

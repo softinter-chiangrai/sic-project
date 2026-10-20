@@ -1,0 +1,1796 @@
+[
+  {
+    "module": "SicApiApplication.java",
+    "package": "Root",
+    "category": "Application Entry Point",
+    "answer": "คลาสหลักสำหรับบูตระบบ Spring Boot (@SpringBootApplication), เปิดใช้งาน Asynchronous (@EnableAsync), Scheduling (@EnableScheduling) และรัน loadDotEnv() เพื่อโหลด Environment Variables จากไฟล์ .env"
+  },
+  {
+    "module": "AiApiKeyConverter.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "JPA AttributeConverter เข้ารหัส (Encrypt) และถอดรหัส (Decrypt) API Key ของ AI (เช่น Gemini, Claude) ก่อนบันทึกลงหรืออ่านจากฐานข้อมูลเพื่อความปลอดภัย"
+  },
+  {
+    "module": "AuditLog.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "Custom Annotation (@AuditLog) สำหรับแปะบน Method ของ Controller หรือ Service เพื่อระบุ Action และ Module ที่ต้องการบันทึกประวัติการใช้งาน"
+  },
+  {
+    "module": "AuditLogAspect.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "คลาส AOP (AspectJ) ดักจับ Method ที่มี @AuditLog ดึงข้อมูลผู้ใช้งาน, เวลา, Parameter และผลลัพธ์การทำงาน ไปบันทึกลงตาราง su_audit_log อัตโนมัติ"
+  },
+  {
+    "module": "AuditorAwareImpl.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ดึง Username ของผู้ใช้ปัจจุบันจาก Keycloak Security Context ส่งให้ฟิลด์ @CreatedBy และ @LastModifiedBy ใน JPA Entity"
+  },
+  {
+    "module": "BusinessContextHolder.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "เก็บค่า businessId ปัจจุบันของ Thread (ThreadLocal) เพื่อให้เลเยอร์ Service เรียกใช้คัดกรองข้อมูลระดับ Multi-tenancy ได้โดยไม่ต้องส่ง Parameter ข้ามทุกเลเยอร์"
+  },
+  {
+    "module": "CacheConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "เปิดใช้งาน Spring Cache Abstraction (@EnableCaching) สำหรับแคชข้อมูลที่ถูกอ่านบ่อย เช่น สิทธิ์เมนู หรือ Resource Bundle แปลภาษา"
+  },
+  {
+    "module": "CorsConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "กำหนดนโยบาย Cross-Origin Resource Sharing อนุญาตให้ Frontend (http://localhost:4200) ส่ง Request และ Header เข้ามาทำงานได้"
+  },
+  {
+    "module": "FlywayConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ควบคุมการรัน Database Migration สคริปต์ SQL ใน db/migration อัตโนมัติเมื่อระบบเริ่มทำงาน ช่วยให้ Schema ตรงกันทุก Environment"
+  },
+  {
+    "module": "JacksonInstantConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่าโมดูล Jackson สำหรับแปลงและจัดรูปแบบประเภทข้อมูลวันเวลา Instant และ LocalDateTime ให้ตรงตามมาตรฐาน ISO-8601"
+  },
+  {
+    "module": "JpaConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "เปิดใช้งาน JPA Auditing (@EnableJpaAuditing) สำหรับบันทึก Timestamp และผู้สร้าง/แก้ไขข้อมูลโดยอัตโนมัติ"
+  },
+  {
+    "module": "OpenApiConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่าเอกสาร Swagger / OpenAPI 3.0 สำหรับทดสอบ API และระบุ Security Scheme แบบ Bearer JWT Token"
+  },
+  {
+    "module": "ReportServiceProperties.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "คลาส Configuration Properties อ่านค่า URL, Secret Token และ Timeout ของ Microservice ออกรายงานจาก application.yml"
+  },
+  {
+    "module": "S3Config.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "สร้าง Spring Bean S3Client เชื่อมต่อไปยัง SeaweedFS Object Storage ผ่านโปรโตคอล AWS S3 API เพื่อบริหารจัดการไฟล์"
+  },
+  {
+    "module": "SecurityConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่าความปลอดภัยระบบ (Spring Security), กำหนด Filter ตรวจสอบ JWT Bearer Token จาก Keycloak, จัดการ CORS, Stateless Session, และเปิดสิทธิ์ Public Path (Swagger, Actuator, Public Files)"
+  },
+  {
+    "module": "WebConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ลงทะเบียน Interceptor (BusinessContextInterceptor, LanguageInterceptor) เข้าสู่ Spring MVC Request Lifecycle"
+  },
+  {
+    "module": "WebSocketConfig.java",
+    "package": "config",
+    "category": "โครงสร้างพื้นฐาน & การตั้งค่าระบบ",
+    "answer": "ตั้งค่า STOMP WebSocket Message Broker ผ่าน Endpoint /ws และ Route /app, /topic สำหรับ Real-time Chat และ WebRTC Signaling"
+  },
+  {
+    "module": "BusinessContextInterceptor.java",
+    "package": "Interceptor",
+    "category": "ตัวดักจับ Request & Protocol",
+    "answer": "ดักจับ HTTP Request เพื่อดึง Header X-Business-Id นำไปเซ็ตใน BusinessContextHolder และเคลียร์ทิ้งเมื่อ Request ทำงานเสร็จ"
+  },
+  {
+    "module": "JwtChannelInterceptor.java",
+    "package": "Interceptor",
+    "category": "ตัวดักจับ Request & Protocol",
+    "answer": "ดักจับการเชื่อมต่อ WebSocket (STOMP CONNECT) เพื่อตรวจสอบความถูกต้องของ JWT Token หากไม่ผ่านจะปฏิเสธการเชื่อมต่อทันที"
+  },
+  {
+    "module": "LanguageInterceptor.java",
+    "package": "Interceptor",
+    "category": "ตัวดักจับ Request & Protocol",
+    "answer": "ดักอ่าน Header Accept-Language เพื่อกำหนด Locale ภาษา (ไทย/อังกฤษ) สำหรับแสดงผลข้อความแจ้งเตือนและ Error ในระบบ"
+  },
+  {
+    "module": "DocumentLockedException.java",
+    "package": "exception",
+    "category": "การจัดการข้อผิดพลาด",
+    "answer": "Custom Exception เมื่อมีผู้ใช้อื่นกำลังเปิดแก้ไขเอกสารฉบับเดียวกันอยู่ ป้องกัน Concurrency Conflict (HTTP 409 Conflict)"
+  },
+  {
+    "module": "GlobalExceptionHandler.java",
+    "package": "exception",
+    "category": "การจัดการข้อผิดพลาด",
+    "answer": "ตัวจัดการ Error ส่วนกลางผ่าน @RestControllerAdvice รวบรวม Exception ทั้งหมด (Validation, Not Found, Forbidden) แปลงเป็น Response JSON รูปแบบมาตรฐาน"
+  },
+  {
+    "module": "ResourceNotFoundException.java",
+    "package": "exception",
+    "category": "การจัดการข้อผิดพลาด",
+    "answer": "Custom Exception สำหรับข้อผิดพลาดค้นหาข้อมูลไม่พบในระบบ (HTTP 404 Not Found)"
+  },
+  {
+    "module": "ChatWebSocketController.java",
+    "package": "websocket",
+    "category": "การสื่อสาร Real",
+    "answer": "Controller ควบคุมการรับ-ส่งข้อความแชทสดรายบุคคล/กลุ่ม และรับ-ส่งสัญญาณ WebRTC Call Signaling (Offer/Answer/Candidate) สำหรับการสื่อสาร Real-time"
+  },
+  {
+    "module": "ApprovalTimeoutScheduler.java",
+    "package": "scheduler",
+    "category": "งานประมวลผลตามเวลา Background Jobs",
+    "answer": "Cron Job ทำงานตามรอบเวลา ตรวจสอบคำขออนุมัติที่ค้างเกินกำหนด (Timeout) ส่ง Notification เตือนผู้อนุมัติหรืออัปเดตสถานะ"
+  },
+  {
+    "module": "ContractLifecycleScheduler.java",
+    "package": "scheduler",
+    "category": "งานประมวลผลตามเวลา Background Jobs",
+    "answer": "Cron Job คอยตรวจหาสัญญาลูกค้าที่ใกล้หมดอายุล่วงหน้า แจ้งเตือนฝ่ายขายและผู้จัดการโครงการเพื่อเตรียมดำเนินการต่อสัญญา"
+  },
+  {
+    "module": "ApprovalKeywordSearchHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตัวช่วยสร้างเงื่อนไข Predicate สำหรับค้นหารายการคำขออนุมัติด้วยคำค้นหา (Keyword Search)"
+  },
+  {
+    "module": "ContractLifecycle.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบและควบคุม State Machine ของสัญญาลูกค้า (Draft -> Active -> Expiring -> Expired)"
+  },
+  {
+    "module": "ContractNoHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "สร้างและจัดฟอร์แมตรหัสสัญญาโครงการอัตโนมัติตามรูปแบบที่กำหนด (เช่น CTR-YYYYMM-XXXX)"
+  },
+  {
+    "module": "DateRangeValidator.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบความถูกต้องของช่วงวันที่ (วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด)"
+  },
+  {
+    "module": "DiagramTypes.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "กำหนดและตรวจสอบชุดประเภทไดอะแกรมทั้งหมด (DFD, ER, SEQUENCE, CLASS, FLOWCHART ฯลฯ) สำหรับระบบ Trace Link และ Change Impact Analysis"
+  },
+  {
+    "module": "DocumentDiffHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่ถูกเพิ่ม ลบ หรือแก้ไข"
+  },
+  {
+    "module": "EnumConverter.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "Generic Utility แปลงค่า Enum เป็น String หรือ Integer ในฐานข้อมูลอย่างปลอดภัย"
+  },
+  {
+    "module": "FileVisibilityConverter.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "แปลงค่าระดับการมองเห็นไฟล์ (Public, Internal, Confidential) ระหว่าง JPA และฐานข้อมูล"
+  },
+  {
+    "module": "JsonSnapshotHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "แปลง State ของ Entity ให้เป็น JSON Snapshot สำหรับบันทึกประวัติการเปลี่ยนแปลงในตาราง Version History"
+  },
+  {
+    "module": "KeywordSearchHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "สร้างเงื่อนไข SQL ค้นหาคำแบบ Case-insensitive และ Partial Matching รองรับภาษาไทยและอังกฤษ"
+  },
+  {
+    "module": "LanguageUtils.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ฟังก์ชันช่วยเหลือสำหรับตรวจสอบและสกัดรหัสภาษามาตรฐานจาก HTTP Header"
+  },
+  {
+    "module": "LocalizationHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ดึงข้อความ Resource Bundle สลับภาษาไทย-อังกฤษตาม Locale ของผู้ใช้งาน"
+  },
+  {
+    "module": "PaginationUtil.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ช่วยสร้างออบเจกต์ Pageable และคำนวณ Offset, Page Number, Page Size รองรับการทำ Pagination"
+  },
+  {
+    "module": "PdfBook.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "รวมไฟล์ PDF หลายๆ ฉบับ (เช่น ปก, Requirement, Spec, Diagram) เข้าเป็นเอกสารเล่มเดียวสมบูรณ์"
+  },
+  {
+    "module": "ReportHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ฟังก์ชันขนาดใหญ่เตรียมข้อมูล จัดตาราง และคำนวณผลรวมยอดเงิน/เวลา เพื่อส่งต่อให้ Report Service ออกรายงาน"
+  },
+  {
+    "module": "SortValidator.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบความถูกต้องของชื่อคอลัมน์ที่ขอเรียงลำดับ ป้องกัน SQL Injection จากการส่งชื่อคอลัมน์แปลกปลอม"
+  },
+  {
+    "module": "UniquenessValidator.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ตรวจสอบความไม่ซ้ำกันของข้อมูลเฉพาะ เช่น รหัสโครงการ หรือเลขที่สัญญา"
+  },
+  {
+    "module": "VersionKeywordSearchHelper.java",
+    "package": "util",
+    "category": "คลาสช่วยเหลือส่วนกลาง",
+    "answer": "ช่วยค้นหารายการบันทึกประวัติ Version เอกสารตามคำค้นหา"
+  },
+  {
+    "module": "BaseBusinessEntity.java",
+    "package": "entity/base",
+    "category": "โครงสร้าง Entity แม่แบบ",
+    "answer": "Entity แม่แบบสืบทอดจาก BaseEntity โดยเพิ่มฟิลด์ businessId สำหรับตารางที่ต้องแบ่งข้อมูลตาม Business Unit"
+  },
+  {
+    "module": "BaseEntity.java",
+    "package": "entity/base",
+    "category": "โครงสร้าง Entity แม่แบบ",
+    "answer": "Entity แม่แบบสำหรับฟิลด์มาตรฐานทุกตาราง: createdBy, createdDate, updatedBy, updatedDate"
+  },
+  {
+    "module": "ApprovalMode.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum กำหนดโหมดการอนุมัติ เช่น อนุมัติแบบคนเดียว (SINGLE) หรือตามลำดับขั้น (SEQUENTIAL)"
+  },
+  {
+    "module": "ApprovalStatus.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum สถานะการอนุมัติ: PENDING (รออนุมัติ), APPROVED (อนุมัติแล้ว), REJECTED (ปฏิเสธ), CANCELLED (ยกเลิก)"
+  },
+  {
+    "module": "BillingType.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum รูปแบบการวางบิล เช่น ตามงวดงาน (MILESTONE) หรือตามระยะเวลา (MONTHLY/FIXED)"
+  },
+  {
+    "module": "ChatMessageType.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum ประเภทข้อความแชท: TEXT (ข้อความ), IMAGE (รูปภาพ), FILE (ไฟล์แนบ), CALL_SIGNAL (สัญญาณโทร)"
+  },
+  {
+    "module": "DocumentType.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum ประเภทเอกสารในระบบ: REQUIREMENT, SPECIFICATION, DFD, ERD, CONTRACT, TEST_CASE ฯลฯ"
+  },
+  {
+    "module": "EntityState.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum สถานะวงจรชีวิตของข้อมูล เช่น ACTIVE (ใช้งานอยู่), INACTIVE (ปิดการใช้งาน), DELETED (ลบชั่วคราว)"
+  },
+  {
+    "module": "FileCategory.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum หมวดหมู่ของไฟล์ที่อัปโหลด เช่น AVATAR, ATTACHMENT, CONTRACT_DOC, DIAGRAM_EXPORT"
+  },
+  {
+    "module": "FileVisibility.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum สิทธิ์การมองเห็นไฟล์: PUBLIC (สาธารณะ), INTERNAL (ภายในองค์กร), CONFIDENTIAL (เฉพาะผู้มีสิทธิ์)"
+  },
+  {
+    "module": "MaTicketSeverity.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum ระดับความรุนแรงของ MA Ticket: LOW, MEDIUM, HIGH, CRITICAL"
+  },
+  {
+    "module": "MaTicketStatus.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum สถานะงานแจ้งซ่อม MA: OPEN, IN_PROGRESS, RESOLVED, CLOSED"
+  },
+  {
+    "module": "MaTicketType.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum ประเภทของ MA Ticket: BUG_FIX (แก้ไขบั๊ก), ENHANCEMENT (ปรับปรุง), SUPPORT (ช่วยเหลือผู้ใช้)"
+  },
+  {
+    "module": "PaymentMethod.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum วิธีการชำระเงิน: BANK_TRANSFER, CREDIT_CARD, CHEQUE, CASH"
+  },
+  {
+    "module": "PaymentStatus.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum สถานะการชำระเงิน: UNPAID (ยังไม่จ่าย), PARTIAL (จ่ายบางส่วน), PAID (จ่ายครบแล้ว), OVERDUE (เกินกำหนด)"
+  },
+  {
+    "module": "TraceRelationship.java",
+    "package": "entity/enums",
+    "category": "ค่าคงที่ Enum ในระบบ",
+    "answer": "Enum ประเภทความสัมพันธ์ของ Traceability Matrix เช่น IMPLEMENTS, TESTS, DEPENDS_ON"
+  },
+  {
+    "module": "DbAiModelConfig.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_ai_model_config เก็บการตั้งค่า Provider, Model Name, API Key และ Parameter ของ AI"
+  },
+  {
+    "module": "DbCountry.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_country ข้อมูลประเทศ"
+  },
+  {
+    "module": "DbDistrict.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_district ข้อมูลอำเภอ/เขต"
+  },
+  {
+    "module": "DbMailConfig.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_mail_config การตั้งค่า Mail Server และ Credentials"
+  },
+  {
+    "module": "DbMailQueue.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_mail_queue คิวอีเมลที่รอการส่งออก"
+  },
+  {
+    "module": "DbMailTemplate.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_mail_template เทมเพลตเนื้อหาอีเมลสำหรับการแจ้งเตือนต่างๆ"
+  },
+  {
+    "module": "DbParameter.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_parameter พารามิเตอร์ระบบแบบ Key-Value"
+  },
+  {
+    "module": "DbProvince.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_province ข้อมูลจังหวัด"
+  },
+  {
+    "module": "DbSubDistrict.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_sub_district ข้อมูลตำบล/แขวง และรหัสไปรษณีย์"
+  },
+  {
+    "module": "DbTitle.java",
+    "package": "entity/db",
+    "category": "ตารางข้อมูลพื้นฐาน Master Data",
+    "answer": "Entity ตาราง db_title คำนำหน้าชื่อ (นาย, นาง, นางสาว, ดร.)"
+  },
+  {
+    "module": "ExExample.java",
+    "package": "entity/ex",
+    "category": "ตารางตัวอย่างและ Storage Ref",
+    "answer": "Entity ตารางตัวอย่างโครงสร้างโค้ดมาตรฐานสำหรับอ้างอิงในการพัฒนา"
+  },
+  {
+    "module": "StorageUploadReference.java",
+    "package": "entity/ex",
+    "category": "ตารางตัวอย่างและ Storage Ref",
+    "answer": "Entity ตารางอ้างอิงความสัมพันธ์การใช้งานไฟล์ในระบบ"
+  },
+  {
+    "module": "AiPipelineJob.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเก็บสถานะงาน Job การแปลง Requirement สู่ WBS/Spec อัตโนมัติด้วย AI"
+  },
+  {
+    "module": "ChangeImpactAnalysis.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางบันทึกผลการวิเคราะห์ผลกระทบของ Change Request (CR)"
+  },
+  {
+    "module": "ChangeImpactAnalysisHistory.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางบันทึกประวัติการวิเคราะห์ผลกระทบย้อนหลัง"
+  },
+  {
+    "module": "PmApproval.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเก็บข้อมูลคำขออนุมัติหลัก (Target Type, Target ID, ผู้ขอ, สถานะ)"
+  },
+  {
+    "module": "PmApprovalFlow.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางนิยามกระบวนการ Flow การอนุมัติของแต่ละประเภทเอกสาร"
+  },
+  {
+    "module": "PmApprovalFlowStep.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางกำหนดขั้นตอนย่อยและบทบาทของผู้อนุมัติในแต่ละ Step"
+  },
+  {
+    "module": "PmApprovalLog.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางประวัติการกดอนุมัติ ตีกลับ หรือยกเลิกคำขอ"
+  },
+  {
+    "module": "PmApprovalReminder.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางประวัติการส่งแจ้งเตือนการอนุมัติที่ค้างอยู่"
+  },
+  {
+    "module": "PmApprovalStepStatus.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางสถานะของแต่ละขั้นตอนในคำขออนุมัตินั้นๆ"
+  },
+  {
+    "module": "PmBug.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางบันทึกข้อผิดพลาด (Bug) ที่พบจากการทดสอบหรือใช้งานจริง"
+  },
+  {
+    "module": "PmChangeImpact.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางแจกแจงรายการผลกระทบต่อโมดูล/ตารางที่เกิดจาก CR"
+  },
+  {
+    "module": "PmChangeRequest.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางคำขอเปลี่ยนแปลงขอบเขตงานโครงการ (Change Request - CR)"
+  },
+  {
+    "module": "PmComment.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางความคิดเห็นและข้อความพูดคุยในกระดาน Discussion ของโครงการ"
+  },
+  {
+    "module": "PmCrAssignee.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางผู้รับผิดชอบการดำเนินการตามคำขอ Change Request"
+  },
+  {
+    "module": "PmCustomer.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางข้อมูลลูกค้า บริษัทคู่สัญญา ที่อยู่ และข้อมูลการติดต่อ"
+  },
+  {
+    "module": "PmCustomerContract.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางสัญญาโครงการ มูลค่าสัญญา วันที่เริ่ม-สิ้นสุด และเงื่อนไข"
+  },
+  {
+    "module": "PmCustomerProject.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางข้อมูลโครงการ วันที่ดำเนินงาน งบประมาณ และสถานะโครงการ"
+  },
+  {
+    "module": "PmDelivery.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางงวดการส่งมอบงานโครงการ (Delivery งวดที่ 1, 2, ...)"
+  },
+  {
+    "module": "PmDeliveryChecklist.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางรายการตรวจรับงานในแต่ละงวดการส่งมอบ"
+  },
+  {
+    "module": "PmDeliveryItem.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางรายการเอกสารหรือผลงานที่ต้องส่งมอบในงวดนั้นๆ"
+  },
+  {
+    "module": "PmDesignReview.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางบันทึกผลการตรวจทานการออกแบบ (UI/UX / Architecture Review)"
+  },
+  {
+    "module": "PmDiagramChat.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางประวัติการแชทกับ AI ผู้ช่วยให้คำปรึกษาการออกแบบไดอะแกรม"
+  },
+  {
+    "module": "PmDiagramSqlHistory.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางประวัติสคริปต์ SQL DDL ที่ถูก Generate มาจาก ER Diagram"
+  },
+  {
+    "module": "PmDiagramTab.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเก็บข้อมูลไดอะแกรม DFD และ ER Diagram (Node, Edge, ตำแหน่งพิกัด)"
+  },
+  {
+    "module": "PmDiagramVersion.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางประวัติเวอร์ชันย้อนหลังของไดอะแกรม"
+  },
+  {
+    "module": "PmDocumentVersion.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเก็บ Snapshot เวอร์ชันของเอกสารโครงการสำหรับดูประวัติหรือ Rollback"
+  },
+  {
+    "module": "PmEditSession.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเก็บสถานะ Lock การแก้ไขเอกสารแบบ Concurrency ป้องกันคนเปิดแก้ชนกัน"
+  },
+  {
+    "module": "PmInvoice.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางใบแจ้งหนี้ ยอดเงินเรียกเก็บ วันที่ครบกำหนดชำระ"
+  },
+  {
+    "module": "PmInvoiceItem.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางรายการสินค้า/บริการย่อยในใบแจ้งหนี้"
+  },
+  {
+    "module": "PmMaTicket.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางคำขอแจ้งซ่อม บำรุงรักษา หรือแจ้งปัญหาหลังส่งมอบงาน (MA Support)"
+  },
+  {
+    "module": "PmMaTicketAssignee.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางผู้รับผิดชอบ Ticket แจ้งซ่อม MA"
+  },
+  {
+    "module": "PmMilestone.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเป้าหมายความสำเร็จสำคัญ (Milestone) ของแต่ละเฟสโครงการ"
+  },
+  {
+    "module": "PmPayment.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางบันทึกการรับชำระเงิน ยอดเงิน วิธีชำระ และหลักฐานการโอน"
+  },
+  {
+    "module": "PmPhase.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเฟสของโครงการตามกระบวนการ SDLC"
+  },
+  {
+    "module": "PmRequirement.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางข้อกำหนดและความต้องการของระบบ และสถานะ Sign-off จากลูกค้า"
+  },
+  {
+    "module": "PmReviewComment.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางความคิดเห็นระหว่างการตรวจทานการออกแบบ Design Review"
+  },
+  {
+    "module": "PmSpecification.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางสเปกของฟังก์ชัน ฟิลด์ข้อมูล และการประเมิน Manday"
+  },
+  {
+    "module": "PmTask.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางงานย่อยระดับ Task สำหรับนักพัฒนาใน Work Package"
+  },
+  {
+    "module": "PmTaskAssignee.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางผู้รับผิดชอบงาน Task แต่ละชิ้น"
+  },
+  {
+    "module": "PmTestCase.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางเคสทดสอบระบบ (Preconditions, Steps, Expected Result, Status)"
+  },
+  {
+    "module": "PmTestScenario.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางกลุ่มสถานการณ์การทดสอบ (Test Scenario)"
+  },
+  {
+    "module": "PmTraceLink.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตาราง Traceability Matrix เชื่อมโยง Requirement, Spec, Task, Test Case"
+  },
+  {
+    "module": "PmUserManual.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางคู่มือการใช้งานระบบสำหรับผู้ใช้"
+  },
+  {
+    "module": "PmUserManualSection.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางหัวข้อย่อยและเนื้อหาในคู่มือการใช้งาน"
+  },
+  {
+    "module": "PmWorkPackage.java",
+    "package": "entity/pm",
+    "category": "ตารางงานโครงการ & วงจร SDLC",
+    "answer": "Entity ตารางกลุ่มงาน Work Package ใน WBS ภายใต้ Phase"
+  },
+  {
+    "module": "SuAuditLog.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตาราง su_audit_log บันทึกประวัติการกระทำของผู้ใช้ในระบบ (Who, When, Action, Data)"
+  },
+  {
+    "module": "SuBusiness.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตาราง su_business ข้อมูลองค์กร/หน่วยงาน (Multi-tenancy Unit)"
+  },
+  {
+    "module": "SuBusinessAudit.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางบันทึกการเปลี่ยนแปลงข้อมูลองค์กร"
+  },
+  {
+    "module": "SuBusinessInvite.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางคำเชิญเข้าร่วมองค์กรและโทเค็นการยืนยัน"
+  },
+  {
+    "module": "SuBusinessRole.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางบทบาทหน้าที่ (Roles) ภายในแต่ละองค์กร"
+  },
+  {
+    "module": "SuBusinessRoleProgram.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางสิทธิ์ของ Role ต่อแต่ละหน้าจอ (สิทธิ์อ่าน, สิทธิ์เขียน, สิทธิ์ลบ)"
+  },
+  {
+    "module": "SuChatGroup.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางห้องแชทกลุ่มโครงการหรือกลุ่มแผนก"
+  },
+  {
+    "module": "SuChatGroupCallParticipant.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางบันทึกผู้เข้าร่วมการโทร/ประชุมสายในห้องแชท"
+  },
+  {
+    "module": "SuChatGroupLog.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางบันทึกเหตุการณ์ในห้องแชทกลุ่ม (เช่น เพิ่มสมาชิก, เปลี่ยนชื่อกลุ่ม)"
+  },
+  {
+    "module": "SuChatGroupMember.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางสมาชิกในแต่ละห้องแชทกลุ่ม"
+  },
+  {
+    "module": "SuChatLog.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางข้อความแชทรายบุคคลและกลุ่ม"
+  },
+  {
+    "module": "SuMessage.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางข้อความระบบและการแจ้งเตือน"
+  },
+  {
+    "module": "SuNotification.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางการแจ้งเตือนส่วนบุคคลของผู้ใช้แต่ละคน"
+  },
+  {
+    "module": "SuProfile.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางข้อมูลโปรไฟล์ผู้ใช้งาน (ชื่อ, อีเมล, เบอร์โทร, รูปโปรไฟล์)"
+  },
+  {
+    "module": "SuProgram.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางรหัสโปรแกรม/หน้าจอทั้งหมดในระบบ (PMRT01, PMDT01 ฯลฯ)"
+  },
+  {
+    "module": "SuTask.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางงานระดับระบบ"
+  },
+  {
+    "module": "SuUpload.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตาราง Metadata ของไฟล์ที่อัปโหลด (ชื่อไฟล์, Bucket S3, ขนาด, MIME Type)"
+  },
+  {
+    "module": "SuUserBusiness.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางผูกความสัมพันธ์ระหว่างผู้ใช้งานกับองค์กร (User-Business Mapping)"
+  },
+  {
+    "module": "SuUserBusinessRole.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางกำหนด Role ให้กับผู้ใช้งานในองค์กรนั้นๆ"
+  },
+  {
+    "module": "SuUserTask.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางมอบหมายงานระบบให้ผู้ใช้"
+  },
+  {
+    "module": "SuVerify.java",
+    "package": "entity/su",
+    "category": "ตารางระบบ ผู้ใช้งาน สิทธิ์ และแชท",
+    "answer": "Entity ตารางโทเค็นสำหรับการยืนยันตัวตนหรือรีเซ็ตรหัสผ่าน"
+  },
+  {
+    "module": "AiBatchGeneratorService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการสร้าง Mockup Data สำหรับทดสอบระบบ"
+  },
+  {
+    "module": "AiModelConfigService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการการตั้งค่าโมเดล AI"
+  },
+  {
+    "module": "AiModuleRegistry.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Registry รวมรายชื่อและ Prompt Template สำหรับโมดูล AI ในระบบ"
+  },
+  {
+    "module": "AiNavigatorService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการ AI แนะนำการใช้งานและค้นหาหน้าจอระบบ"
+  },
+  {
+    "module": "AiProjectPipelineService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ควบคุม Pipeline งาน AI อัตโนมัติ"
+  },
+  {
+    "module": "AiSqlGeneratorService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการแปลง ER Diagram เป็นคำสั่ง SQL DDL"
+  },
+  {
+    "module": "ApprovalFlowService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการตั้งค่าขั้นตอน Flow การอนุมัติ"
+  },
+  {
+    "module": "ApprovalNotificationService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการส่งการแจ้งเตือนงานอนุมัติ"
+  },
+  {
+    "module": "ApprovalService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการแกนหลักของกระบวนการอนุมัติเอกสาร"
+  },
+  {
+    "module": "AuditLogService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการบันทึกและสืบค้นประวัติ Audit Log"
+  },
+  {
+    "module": "BusinessAccessService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการตรวจสอบสิทธิ์การเข้าถึงองค์กร"
+  },
+  {
+    "module": "BusinessInviteService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการเชิญผู้ใช้เข้าร่วมองค์กร"
+  },
+  {
+    "module": "ChangeRequestService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการคำขอเปลี่ยนแปลงขอบเขตงาน (CR)"
+  },
+  {
+    "module": "ComboboxService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการข้อมูล Dropdown ทั่วไประบบ"
+  },
+  {
+    "module": "CurrentUserService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการดึงข้อมูลผู้ใช้งานปัจจุบัน"
+  },
+  {
+    "module": "DiscussionService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการกระดานพูดคุยในโครงการ"
+  },
+  {
+    "module": "DocumentVersionService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการบันทึกและเปรียบเทียบเวอร์ชันเอกสาร"
+  },
+  {
+    "module": "EditSessionService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Concurrency Edit Session"
+  },
+  {
+    "module": "FileStorageService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดเก็บไฟล์ในระบบ Object Storage"
+  },
+  {
+    "module": "GlobalSearchService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการค้นหาข้อมูลแบบครอบคลุมทั้งระบบ (Global Search)"
+  },
+  {
+    "module": "ImpactAnalysisService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการวิเคราะห์ผลกระทบของ Change Request"
+  },
+  {
+    "module": "MailService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการส่งอีเมล"
+  },
+  {
+    "module": "MenuService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการดึงรายการเมนูระบบตามสิทธิ์"
+  },
+  {
+    "module": "MessageI18nCache.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface แคชข้อความแปลภาษา"
+  },
+  {
+    "module": "MessageService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการดึงข้อความแจ้งเตือนและระบบสื่อสาร"
+  },
+  {
+    "module": "MilestoneService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Milestone"
+  },
+  {
+    "module": "NameUtilityService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดรูปแบบชื่อ"
+  },
+  {
+    "module": "PhaseService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการเฟสงานโครงการ"
+  },
+  {
+    "module": "PmAiProviderService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการเชื่อมต่อ AI Provider"
+  },
+  {
+    "module": "PmBugService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการบั๊กของระบบ"
+  },
+  {
+    "module": "PmChangeRequestExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงาน Change Request"
+  },
+  {
+    "module": "PmCustomerContractExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงานสัญญาโครงการ"
+  },
+  {
+    "module": "PmCustomerContractService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการสัญญาลูกค้า"
+  },
+  {
+    "module": "PmCustomerProjectExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงานสรุปโครงการ"
+  },
+  {
+    "module": "PmCustomerProjectService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการโครงการ"
+  },
+  {
+    "module": "PmCustomerService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการข้อมูลลูกค้า"
+  },
+  {
+    "module": "PmDashboardOrgService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการแดชบอร์ดระดับองค์กร"
+  },
+  {
+    "module": "PmDeliveryExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงานการส่งมอบงาน"
+  },
+  {
+    "module": "PmDeliveryService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการงวดการส่งมอบ"
+  },
+  {
+    "module": "PmDesignReviewService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการตรวจทานการออกแบบ"
+  },
+  {
+    "module": "PmDiagramChatService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการแชทปรึกษาเรื่องไดอะแกรมกับ AI"
+  },
+  {
+    "module": "PmDiagramExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการส่งออกรูปภาพไดอะแกรม"
+  },
+  {
+    "module": "PmDiagramTabService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการแท็บไดอะแกรม"
+  },
+  {
+    "module": "PmInvoiceExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงานใบแจ้งหนี้"
+  },
+  {
+    "module": "PmInvoiceService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการใบแจ้งหนี้"
+  },
+  {
+    "module": "PmMaTicketExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงานงานแจ้งซ่อม MA"
+  },
+  {
+    "module": "PmMaTicketService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Ticket งาน MA"
+  },
+  {
+    "module": "PmPaymentService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการบันทึกการรับชำระเงิน"
+  },
+  {
+    "module": "PmProjectDashboardService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการแดชบอร์ดโครงการ"
+  },
+  {
+    "module": "PmRequirementExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกเอกสารความต้องการระบบ"
+  },
+  {
+    "module": "PmRequirementService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการความต้องการระบบ"
+  },
+  {
+    "module": "PmSpecificationExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกรายงาน Specification"
+  },
+  {
+    "module": "PmSpecificationService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Specification"
+  },
+  {
+    "module": "PmTestCaseService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการเคสทดสอบ"
+  },
+  {
+    "module": "PmTestScenarioService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Test Scenario"
+  },
+  {
+    "module": "PmUatExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกเอกสารผลการทดสอบ UAT"
+  },
+  {
+    "module": "PmUserManualExportService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ส่งออกคู่มือการใช้งาน"
+  },
+  {
+    "module": "PmUserManualService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการคู่มือผู้ใช้"
+  },
+  {
+    "module": "ProfileService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการโปรไฟล์ส่วนบุคคล"
+  },
+  {
+    "module": "ProgramAccessCache.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface แคชสิทธิ์การเข้าถึงหน้าจอ"
+  },
+  {
+    "module": "ProgramAccessService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ตรวจสอบสิทธิ์การเข้าถึงหน้าจอ"
+  },
+  {
+    "module": "ReportServiceClient.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "ประมวลผลการทำงานส่วนของ ReportServiceClient"
+  },
+  {
+    "module": "SuBusinessService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการข้อมูล Business Unit"
+  },
+  {
+    "module": "SuUserBusinessMemberService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface จัดการสมาชิกใน Business Unit"
+  },
+  {
+    "module": "SuUserBusinessService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface จัดการการผูกผู้ใช้กับองค์กร"
+  },
+  {
+    "module": "TaskService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการงาน Task รายบุคคล"
+  },
+  {
+    "module": "TemporaryUploadCleanupSchedulerService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "ประมวลผลการทำงานส่วนของ TemporaryUploadCleanupSchedulerService"
+  },
+  {
+    "module": "TraceLinkService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Traceability Matrix"
+  },
+  {
+    "module": "UserSessionTracker.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface ติดตาม Session ผู้ใช้งาน"
+  },
+  {
+    "module": "VerifyService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการตรวจสอบและยืนยันตัวตน"
+  },
+  {
+    "module": "WorkPackageService.java",
+    "package": "service",
+    "category": "Interface สำหรับ Business Logic",
+    "answer": "Interface บริการจัดการ Work Package"
+  },
+  {
+    "module": "AiBatchGeneratorServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ให้บริการสร้างข้อมูลจำลองโครงการ ลูกค้า Requirement และ Task แบบ Batch ด้วย AI"
+  },
+  {
+    "module": "AiMemberPicker.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Helper ช่วยคัดเลือกสมาชิกทีมที่เหมาะสมกับทักษะของงาน Task"
+  },
+  {
+    "module": "AiModelConfigServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก แก้ไข และทดสอบการเชื่อมต่อ API ของโมเดล AI (Claude, Gemini)"
+  },
+  {
+    "module": "AiNavigatorServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class วิเคราะห์คำถามของผู้ใช้แล้วแนะนำหน้าจอหรือฟังก์ชันที่เกี่ยวข้องในระบบ"
+  },
+  {
+    "module": "AiPhaseWbsService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างโครงสร้าง Phase, Milestone และ WBS ด้วย AI อัตโนมัติ"
+  },
+  {
+    "module": "AiProjectPipelineJobService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ควบคุม Job Background Pipeline ประมวลผลแปลง Requirement เป็น WBS และ Spec"
+  },
+  {
+    "module": "AiProjectPipelineServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการคิวงาน ตรวจสอบสถานะ และรับผลลัพธ์ของ AI Project Pipeline"
+  },
+  {
+    "module": "AiScopeContextService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สกัดและเตรียม Context ขอบเขตของโครงการส่งต่อให้กับ AI Prompt"
+  },
+  {
+    "module": "AiSqlGeneratorServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class วิเคราะห์ตาราง ฟิลด์ และความสัมพันธ์จาก ER Diagram แล้วสร้างคำสั่ง SQL CREATE TABLE สำหรับ PostgreSQL/MySQL"
+  },
+  {
+    "module": "ApprovalFlowServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเพิ่ม แก้ไข ลบขั้นตอนการอนุมัติ และตรวจสอบสิทธิ์ผู้อนุมัติในแต่ละ Step"
+  },
+  {
+    "module": "ApprovalNotificationServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ส่ง Notification และอีเมลแจ้งผู้อนุมัติเมื่อมีคำขอใหม่หรือเมื่อถึงคิวของตน"
+  },
+  {
+    "module": "ApprovalServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ขนาดใหญ่ควบคุม State Machine การอนุมัติ (ยื่นขอ, อนุมัติ, ตีกลับ, ยกเลิก) ของทุกโมดูลในระบบ"
+  },
+  {
+    "module": "AuditLogServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการดึงรายการประวัติการใช้งานระบบ พร้อมฟิลเตอร์ค้นหาผู้ใช้ วันที่ และ Action"
+  },
+  {
+    "module": "BulkDocumentExportService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ส่งออกเอกสารโครงการจำนวนมากแบบเป็นชุด (Bulk Export)"
+  },
+  {
+    "module": "BusinessAccessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ตรวจสอบความถูกต้องว่าผู้ใช้ปัจจุบันมีสิทธิ์เรียกดูหรือแก้ไขข้อมูลใน Business Unit นั้นหรือไม่"
+  },
+  {
+    "module": "BusinessInviteServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้างคำเชิญ ส่งอีเมลโทเค็น และตรวจสอบการตอบรับคำเชิญเข้าร่วมองค์กร"
+  },
+  {
+    "module": "ChangeRequestServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ควบคุมวงจรชีวิตของ CR คำนวณ Manday และค่าใช้จ่ายที่เปลี่ยนแปลง"
+  },
+  {
+    "module": "ComboboxServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ดึงข้อมูล Master Data ในรูปแบบ Key-Value เพื่อป้อนให้กับ ComboBox ในหน้าจอ Frontend"
+  },
+  {
+    "module": "ContractGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สร้างข้อมูลตั้งต้นของสัญญาโครงการอัตโนมัติ"
+  },
+  {
+    "module": "ContractLifecycleService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ตรวจสอบและอัปเดตสถานะของสัญญาตามเงื่อนไขวันเวลา"
+  },
+  {
+    "module": "CurrentUserServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สกัด Username, Email, BusinessId และ Roles จาก Spring Security Context"
+  },
+  {
+    "module": "DeliveryGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างข้อมูลร่างงวดการส่งมอบงานโครงการ"
+  },
+  {
+    "module": "DiscussionServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เพิ่ม ตอบกลับ และดึงความคิดเห็นในกระดาน Discussion ของโครงการ"
+  },
+  {
+    "module": "DocumentLivePreviewService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service แสดงตัวอย่างเอกสารแบบ Live Preview แบบ Real-time"
+  },
+  {
+    "module": "DocumentPdfExporters.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Helper จัดการการแปลงโครงสร้างเอกสารโครงการเป็นไฟล์ PDF"
+  },
+  {
+    "module": "DocumentVersionServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก JSON Snapshot ทุกการเปลี่ยนแปลง ค้นหาประวัติ และคำนวณ Diff ระหว่างเวอร์ชัน"
+  },
+  {
+    "module": "EditSessionServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้าง Lock Session เมื่อเปิดแก้ไขเอกสาร ตรวจจับ Heartbeat และปลด Lock เมื่อผู้ใช้ปิดหน้าจอ"
+  },
+  {
+    "module": "ErXmlParserServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service แปลงไฟล์ XML จากโปรแกรมออกแบบฐานข้อมูล เข้าสู่โครงสร้าง ER Diagram ในระบบ"
+  },
+  {
+    "module": "FileStorageServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class อัปโหลด ตรวจสอบประเภท/ขนาดไฟล์ ดาวน์โหลด และลบไฟล์บน SeaweedFS S3"
+  },
+  {
+    "module": "GlobalSearchServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ค้นหาคำค้นหาครอบคลุมทุกโมดูล (โครงการ ลูกค้า สัญญา Requirement และเอกสาร)"
+  },
+  {
+    "module": "ImpactAnalysisServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class วิเคราะห์ความเชื่อมโยง Traceability Matrix เพื่อประเมินผลกระทบต่อ Requirement และ Task เมื่อมี CR"
+  },
+  {
+    "module": "InvoiceGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างร่างใบแจ้งหนี้จากงวดงานที่ส่งมอบแล้ว"
+  },
+  {
+    "module": "MaTicketGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างรหัสและข้อมูลเริ่มต้นของ Ticket แจ้งซ่อม MA"
+  },
+  {
+    "module": "MailServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ส่งอีเมลแจ้งเตือนผ่าน JavaMailSender และเชื่อมต่อ SMTP"
+  },
+  {
+    "module": "MenuServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class คัดกรองและส่งมอบโครงสร้างเมนูหน้าจอที่สอดคล้องกับ Role ของผู้ใช้ปัจจุบัน"
+  },
+  {
+    "module": "MessageI18nCacheImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class แคชข้อความระบบหลายภาษาใน Memory เพื่อประสิทธิภาพในการดึงข้อมูล"
+  },
+  {
+    "module": "MilestoneServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD และติดตามสถานะความสำเร็จของ Milestone ในแต่ละเฟส"
+  },
+  {
+    "module": "NameUtilityServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ฟังก์ชันช่วยเหลือจัดรูปแบบชื่อ-นามสกุล และชื่อโครงการ"
+  },
+  {
+    "module": "PhaseServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD เฟสงาน และคำนวณสัดส่วนความก้าวหน้าของแต่ละเฟส"
+  },
+  {
+    "module": "PmAiProviderServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเรียกใช้งาน API ของโมเดล AI แต่ละค่าย (Anthropic Claude, Google Gemini)"
+  },
+  {
+    "module": "PmBugServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก แจกจ่ายงาน และติดตามการแก้ไข Bug ที่พบในโครงการ"
+  },
+  {
+    "module": "PmChangeRequestExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลสรุปคำขอ CR เพื่อส่งให้ Report Service ออกรายงาน"
+  },
+  {
+    "module": "PmCustomerContractExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ดึงข้อมูลสัญญา รายละเอียดงวดเงิน และเงื่อนไขเพื่อออกเอกสารสัญญา"
+  },
+  {
+    "module": "PmCustomerContractServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ควบคุมวงจรชีวิตสัญญา มูลค่างาน และการต่อสัญญาโครงการ"
+  },
+  {
+    "module": "PmCustomerProjectExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class รวบรวมข้อมูลโครงการ ทีมงาน และสถานะงานเพื่อพิมพ์รายงานสรุป"
+  },
+  {
+    "module": "PmCustomerProjectServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการโครงการ ตรวจสอบเงื่อนไขวันเวลา และสถิติภาพรวม"
+  },
+  {
+    "module": "PmCustomerServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD ข้อมูลลูกค้า บริษัทคู่ค้า และผู้ติดต่อ"
+  },
+  {
+    "module": "PmDashboardOrgServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class คำนวณสถิติภาพรวมโครงการและงบประมาณระดับองค์กร"
+  },
+  {
+    "module": "PmDeliveryExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลใบส่งมอบงานและ Checklist ตรวจรับ"
+  },
+  {
+    "module": "PmDeliveryServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการงวดส่งมอบ ตรวจสอบ Checklist และเปลี่ยนสถานะงวดงาน"
+  },
+  {
+    "module": "PmDesignReviewExportService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ส่งออกรายงานสรุปการตรวจทานการออกแบบ"
+  },
+  {
+    "module": "PmDesignReviewServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการรอบการตรวจทาน UI/Architecture และรวบรวมความคิดเห็นของผู้ตรวจ"
+  },
+  {
+    "module": "PmDiagramChatServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class รับคำถามเกี่ยวกับโครงสร้างฐานข้อมูลและ DFD ส่งให้ AI วิเคราะห์และตอบคำถาม"
+  },
+  {
+    "module": "PmDiagramExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ส่งออก DFD และ ER Diagram ในรูปแบบรูปภาพหรือไฟล์เอกสาร"
+  },
+  {
+    "module": "PmDiagramTabServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก Node, Edge, สี, ข้อความ และพิกัดของไดอะแกรมลงฐานข้อมูล"
+  },
+  {
+    "module": "PmInvoiceExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลใบแจ้งหนี้และรายการย่อยเพื่อออกเป็น PDF"
+  },
+  {
+    "module": "PmInvoiceServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ออกใบแจ้งหนี้ ติดตามยอดค้างชำระ และคำนวณภาษี"
+  },
+  {
+    "module": "PmMaTicketExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สรุปประวัติ Ticket การแจ้งซ่อมและการแก้ไขเพื่อพิมพ์รายงานส่งลูกค้า"
+  },
+  {
+    "module": "PmMaTicketServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เปิด Ticket มอบหมายงาน ติดตาม SLA และบันทึกผลการซ่อม"
+  },
+  {
+    "module": "PmPaymentServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึกหลักฐานการจ่ายเงิน อัปเดตยอดคงเหลือในใบแจ้งหนี้"
+  },
+  {
+    "module": "PmProjectDashboardServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class คำนวณดัชนีชี้วัดความคืบหน้า (Burn-down, Task Status) ของโครงการนั้นๆ"
+  },
+  {
+    "module": "PmRequirementExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูล Software Requirement Specification (SRS) เพื่อออกรายงาน"
+  },
+  {
+    "module": "PmRequirementServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class บันทึก แก้ไข และติดตามสถานะการ Sign-off Requirement จากลูกค้า"
+  },
+  {
+    "module": "PmSpecificationExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เตรียมข้อมูลเอกสาร Functional Specification"
+  },
+  {
+    "module": "PmSpecificationServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดทำสเปก ผูก Data Field Mapping และคำนวณ Manday"
+  },
+  {
+    "module": "PmTestCaseServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเคสทดสอบ บันทึกผล Pass/Fail และผูกโยงกับ Bug"
+  },
+  {
+    "module": "PmTestScenarioServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ควบคุมกลุ่มการทดสอบตามฟังก์ชันงาน"
+  },
+  {
+    "module": "PmUatExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้างเอกสารรายงานผลการทดสอบ UAT สำหรับให้ลูกค้าเซ็นรับรอง"
+  },
+  {
+    "module": "PmUserManualExportServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class รวบรวมหัวข้อ รูปภาพ และเนื้อหาจัดทำเป็นเล่มคู่มือ PDF"
+  },
+  {
+    "module": "PmUserManualServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class CRUD บทเรียนและเนื้อหาคู่มือการใช้งานระบบ"
+  },
+  {
+    "module": "ProfileServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class อัปเดตข้อมูลผู้ใช้ เปลี่ยนรหัสผ่าน และจัดการรูปโปรไฟล์"
+  },
+  {
+    "module": "ProgramAccessCacheImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class เก็บแคชสิทธิ์ของ Role ใน Memory เพื่อให้ตรวจสิทธิ์หน้าจอได้อย่างรวดเร็ว"
+  },
+  {
+    "module": "ProgramAccessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ตรวจสอบว่า Role ของผู้ใช้มีสิทธิ์เข้าถึงหน้าจอนั้นๆ หรือไม่"
+  },
+  {
+    "module": "ProjectGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างข้อมูลโครงการเริ่มต้นและเทมเพลตมาตรฐาน"
+  },
+  {
+    "module": "RequirementExportService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service รวบรวมและจัดฟอร์แมตข้อมูล Requirement สำหรับออกรายงาน"
+  },
+  {
+    "module": "RequirementGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างรายการ Requirement ตัวอย่างตามประเภทธุรกิจ"
+  },
+  {
+    "module": "SpecificationGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยแปลง Requirement ให้กลายเป็น Specification ร่างแรก"
+  },
+  {
+    "module": "SuBusinessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการเพิ่มและแก้ไขข้อมูลองค์กร/หน่วยงาน"
+  },
+  {
+    "module": "SuUserBusinessMemberServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการสมาชิก เชิญ และกำหนด Role ภายในองค์กร"
+  },
+  {
+    "module": "SuUserBusinessServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการความสัมพันธ์ระหว่าง User กับ Business Unit ต่างๆ"
+  },
+  {
+    "module": "TaskServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการ Task, มอบหมายงาน, บันทึกชั่วโมงทำงาน และเปลี่ยนสถานะงาน"
+  },
+  {
+    "module": "TestCaseGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สร้าง Test Case ตัวอย่างอัตโนมัติจาก Requirement และ Spec"
+  },
+  {
+    "module": "TestScenarioGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service สร้างกลุ่ม Test Scenario ร่างแรกอัตโนมัติ"
+  },
+  {
+    "module": "ThaiCustomerGeneratorHelper.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Helper สร้างข้อมูลจำลองลูกค้า บริษัท และที่อยู่ภาษาไทยสำหรับการทดสอบ"
+  },
+  {
+    "module": "TraceLinkServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class สร้างและจัดการเส้นทางความเชื่อมโยง Requirement -> Spec -> Task -> Test Case"
+  },
+  {
+    "module": "UnauthorizedException.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Exception ที่ถูกโยนเมื่อผู้ใช้ไม่มีสิทธิ์เข้าถึงทรัพยากรนั้นๆ"
+  },
+  {
+    "module": "UserManualGeneratorService.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Service ช่วยสร้างโครงร่างคู่มือการใช้งานอัตโนมัติจาก Spec"
+  },
+  {
+    "module": "UserSessionTrackerImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ติดตามสถานะ Active/Idle ของผู้ใช้งานในระบบแบบ Real-time"
+  },
+  {
+    "module": "VerifyServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class ตรวจสอบ Token การยืนยันอีเมลและการรีเซ็ตรหัสผ่าน"
+  },
+  {
+    "module": "WorkPackageServiceImpl.java",
+    "package": "service/impl",
+    "category": "Class ประมวลผล Logic & Generator Helpers",
+    "answer": "Class จัดการกลุ่มงานย่อยในระดับ Work Package ภายใต้ Phase โครงการ"
+  }
+]

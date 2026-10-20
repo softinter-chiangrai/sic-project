@@ -76,21 +76,23 @@
       ></sic-combobox>
     </div>
 
-    <!-- Filter: Status -->
-    <div class="min-w-[170px]">
-      <sic-combobox
-        [options]="statusSelectOptions"
-        [ngModel]="filterStatus()"
-        (ngModelChange)="onFilterChange($event, grid)"
-        [placeholder]="'PMDT03_ALL_STATUS_PLACEHOLDER' | translate"
-        [clearable]="true"
-      ></sic-combobox>
-    </div>
+    <!-- Filter: Status (รายการในแท็บ "รอฉันอนุมัติ" เป็น PENDING เสมอ) -->
+    @if (viewMode() !== 'pending') {
+      <div class="min-w-[170px]">
+        <sic-combobox
+          [options]="statusSelectOptions"
+          [ngModel]="filterStatus()"
+          (ngModelChange)="onFilterChange($event, grid)"
+          [placeholder]="'PMDT03_ALL_STATUS_PLACEHOLDER' | translate"
+          [clearable]="true"
+        ></sic-combobox>
+      </div>
+    }
 
     <!-- Filter: Project -->
     <div class="min-w-[170px]">
       <sic-combobox
-        [options]="projectSelectOptions"
+        [apiUrl]="apiGetComboboxProject"
         [ngModel]="filterProject()"
         (ngModelChange)="onProjectChange($event, grid)"
         [placeholder]="'PMDT03_ALL_PROJECTS_PLACEHOLDER' | translate"

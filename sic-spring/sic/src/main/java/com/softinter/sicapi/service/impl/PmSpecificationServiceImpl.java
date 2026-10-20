@@ -89,7 +89,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 predicates.add(cb.equal(root.get("specificationType"), specificationType));
             }
             if (status != null && !status.isBlank() && !"all".equals(status)) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
 
             if (keyword != null && !keyword.isBlank()) {

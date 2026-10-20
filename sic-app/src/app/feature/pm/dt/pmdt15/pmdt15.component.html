@@ -90,8 +90,8 @@
   @if (totalElements() === 0 && !isLoading() && hasLoadedData()) {
     <sic-empty-state
       icon="bi bi-book"
-      title="ไม่พบรายการคู่มือการใช้งาน"
-      description="เริ่มต้นด้วยการสร้างคู่มือการใช้งานใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [title]="'PMDT15_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMDT15_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMDT15_CREATE_BUTTON' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

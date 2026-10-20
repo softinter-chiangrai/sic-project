@@ -74,7 +74,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
             if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
 
             if (keyword != null && !keyword.trim().isEmpty()) {

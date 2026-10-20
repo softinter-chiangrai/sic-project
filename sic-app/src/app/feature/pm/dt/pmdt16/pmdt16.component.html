@@ -57,8 +57,8 @@
   @if (totalItems() === 0 && !invoicesResource.isLoading()) {
     <sic-empty-state
       icon="bi bi-receipt"
-      title="ไม่พบรายการใบแจ้งหนี้"
-      description="เริ่มต้นด้วยการสร้างใบแจ้งหนี้ใหม่ หรือปรับเปลี่ยนเงื่อนไขการค้นหา"
+      [title]="'PMDT16_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMDT16_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMDT16_CREATE_NEW' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

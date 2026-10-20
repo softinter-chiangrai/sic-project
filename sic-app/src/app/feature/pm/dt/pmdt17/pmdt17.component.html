@@ -88,8 +88,8 @@
   @if (totalItems() === 0 && !isLoading()) {
     <sic-empty-state
       icon="bi bi-headset"
-      title="ไม่พบรายการตั๋ว MA"
-      description="เริ่มต้นด้วยการเปิดตั๋ว MA ใหม่ หรือปรับเปลี่ยนเงื่อนไขการค้นหา"
+      [title]="'PMDT17_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMDT17_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMDT17_NEW_TICKET_BUTTON' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

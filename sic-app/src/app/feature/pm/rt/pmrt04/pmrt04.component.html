@@ -234,9 +234,9 @@
   @if (totalItems() === 0 && !isLoading()) {
     <sic-empty-state
       icon="bi bi-file-earmark-check"
-      title="ไม่พบรายการสัญญา"
-      description="เริ่มต้นด้วยการสร้างสัญญาใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
-      [actionLabel]="'PMRT04_ADD_BUTTON' | translate"
+      [title]="'PMRT04_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMRT04_EMPTY_LIST_DESC' | translate"
+      [actionLabel]="'PMRT04_ADD_CONTRACT_BTN' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>
   }

@@ -1,6 +1,6 @@
 # คู่มือโครงสร้างและหน้าที่ไฟล์ Backend ทั้งหมด (sic-spring)
 > **สำหรับเตรียมตัวตรวจโปรเจกต์และตอบคำถามอาจารย์แบบครบถ้วน 100%**  
-> *รวบรวมไฟล์จริงใน Backend ทั้งหมดจำนวน **298 ไฟล์** (ไม่รวม DTO, Controller, Repository)*
+> *รวบรวมไฟล์จริงใน Backend ทั้งหมดจำนวน **299 ไฟล์** (ไม่รวม DTO, Controller, Repository)*
 
 ---
 
@@ -14,7 +14,7 @@
 | `exception` | 3 | Global Exception Handling และ Custom Exceptions |
 | `websocket` | 1 | Real-time Chat & WebRTC Call Signaling |
 | `scheduler` | 2 | Background Cron Jobs (Approval Timeout, Contract Alert) |
-| `util` | 17 | ฟังก์ชันช่วยเหลือ จัดทำรายงาน, รวม PDF, คำนวณ, Diff, Snapshot |
+| `util` | 18 | ฟังก์ชันช่วยเหลือ จัดทำรายงาน, รวม PDF, คำนวณ, Diff, Snapshot |
 | `entity/base` | 2 | Base Entity สำหรับ Timestamp และ Business Id |
 | `entity/enums` | 14 | Enums กำหนดสถานะและประเภทข้อมูลต่างๆ ในระบบ |
 | `entity/db` | 10 | Master Data ข้อมูลที่อยู่ จังหวัด อำเภอ และพารามิเตอร์ |
@@ -23,7 +23,7 @@
 | `entity/su` | 21 | ตารางผู้ใช้ สิทธิ์ บทบาท ห้องแชท และ Audit Log |
 | `service` | 71 | Interface กำหนด Business Contract ทุกฟังก์ชัน |
 | `service/impl` | 90 | Implementation ประมวลผล Business Logic, Generator และ Helper |
-| **รวมทั้งสิ้น** | **298** | **ครบถ้วนทุกไฟล์ในระบบ** |
+| **รวมทั้งสิ้น** | **299** | **ครบถ้วนทุกไฟล์ในระบบ** |
 
 ---
 
@@ -95,7 +95,7 @@
 
 ---
 
-## 7. แพ็กเกจ `util` (คลาสช่วยเหลือส่วนกลาง - 17 ไฟล์)
+## 7. แพ็กเกจ `util` (คลาสช่วยเหลือส่วนกลาง - 18 ไฟล์)
 
 | ลำดับ | ชื่อไฟล์ | หน้าที่และการทำงานโดยละเอียด |
 |:---:|---|---|
@@ -103,19 +103,20 @@
 | 2 | `ContractLifecycle.java` | ตรวจสอบและควบคุม State Machine ของสัญญาลูกค้า (Draft -> Active -> Expiring -> Expired) |
 | 3 | `ContractNoHelper.java` | สร้างและจัดฟอร์แมตรหัสสัญญาโครงการอัตโนมัติตามรูปแบบที่กำหนด (เช่น `CTR-YYYYMM-XXXX`) |
 | 4 | `DateRangeValidator.java` | ตรวจสอบความถูกต้องของช่วงวันที่ (วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด) |
-| 5 | `DocumentDiffHelper.java` | เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่ถูกเพิ่ม ลบ หรือแก้ไข |
-| 6 | `EnumConverter.java` | Generic Utility แปลงค่า Enum เป็น String หรือ Integer ในฐานข้อมูลอย่างปลอดภัย |
-| 7 | `FileVisibilityConverter.java` | แปลงค่าระดับการมองเห็นไฟล์ (Public, Internal, Confidential) ระหว่าง JPA และฐานข้อมูล |
-| 8 | `JsonSnapshotHelper.java` | แปลง State ของ Entity ให้เป็น JSON Snapshot สำหรับบันทึกประวัติการเปลี่ยนแปลงในตาราง Version History |
-| 9 | `KeywordSearchHelper.java` | สร้างเงื่อนไข SQL ค้นหาคำแบบ Case-insensitive และ Partial Matching รองรับภาษาไทยและอังกฤษ |
-| 10 | `LanguageUtils.java` | ฟังก์ชันช่วยเหลือสำหรับตรวจสอบและสกัดรหัสภาษามาตรฐานจาก HTTP Header |
-| 11 | `LocalizationHelper.java` | ดึงข้อความ Resource Bundle สลับภาษาไทย-อังกฤษตาม Locale ของผู้ใช้งาน |
-| 12 | `PaginationUtil.java` | ช่วยสร้างออบเจกต์ `Pageable` และคำนวณ Offset, Page Number, Page Size รองรับการทำ Pagination |
-| 13 | `PdfBook.java` | รวมไฟล์ PDF หลายๆ ฉบับ (เช่น ปก, Requirement, Spec, Diagram) เข้าเป็นเอกสารเล่มเดียวสมบูรณ์ |
-| 14 | `ReportHelper.java` | ฟังก์ชันขนาดใหญ่เตรียมข้อมูล จัดตาราง และคำนวณผลรวมยอดเงิน/เวลา เพื่อส่งต่อให้ Report Service ออกรายงาน |
-| 15 | `SortValidator.java` | ตรวจสอบความถูกต้องของชื่อคอลัมน์ที่ขอเรียงลำดับ ป้องกัน SQL Injection จากการส่งชื่อคอลัมน์แปลกปลอม |
-| 16 | `UniquenessValidator.java` | ตรวจสอบความไม่ซ้ำกันของข้อมูลเฉพาะ เช่น รหัสโครงการ หรือเลขที่สัญญา |
-| 17 | `VersionKeywordSearchHelper.java` | ช่วยค้นหารายการบันทึกประวัติ Version เอกสารตามคำค้นหา |
+| 5 | `DiagramTypes.java` | กำหนดและตรวจสอบชุดประเภทไดอะแกรมทั้งหมด (DFD, ER, SEQUENCE, CLASS, FLOWCHART ฯลฯ) สำหรับระบบ Trace Link และ Change Impact Analysis |
+| 6 | `DocumentDiffHelper.java` | เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่ถูกเพิ่ม ลบ หรือแก้ไข |
+| 7 | `EnumConverter.java` | Generic Utility แปลงค่า Enum เป็น String หรือ Integer ในฐานข้อมูลอย่างปลอดภัย |
+| 8 | `FileVisibilityConverter.java` | แปลงค่าระดับการมองเห็นไฟล์ (Public, Internal, Confidential) ระหว่าง JPA และฐานข้อมูล |
+| 9 | `JsonSnapshotHelper.java` | แปลง State ของ Entity ให้เป็น JSON Snapshot สำหรับบันทึกประวัติการเปลี่ยนแปลงในตาราง Version History |
+| 10 | `KeywordSearchHelper.java` | สร้างเงื่อนไข SQL ค้นหาคำแบบ Case-insensitive และ Partial Matching รองรับภาษาไทยและอังกฤษ |
+| 11 | `LanguageUtils.java` | ฟังก์ชันช่วยเหลือสำหรับตรวจสอบและสกัดรหัสภาษามาตรฐานจาก HTTP Header |
+| 12 | `LocalizationHelper.java` | ดึงข้อความ Resource Bundle สลับภาษาไทย-อังกฤษตาม Locale ของผู้ใช้งาน |
+| 13 | `PaginationUtil.java` | ช่วยสร้างออบเจกต์ `Pageable` และคำนวณ Offset, Page Number, Page Size รองรับการทำ Pagination |
+| 14 | `PdfBook.java` | รวมไฟล์ PDF หลายๆ ฉบับ (เช่น ปก, Requirement, Spec, Diagram) เข้าเป็นเอกสารเล่มเดียวสมบูรณ์ |
+| 15 | `ReportHelper.java` | ฟังก์ชันขนาดใหญ่เตรียมข้อมูล จัดตาราง และคำนวณผลรวมยอดเงิน/เวลา เพื่อส่งต่อให้ Report Service ออกรายงาน |
+| 16 | `SortValidator.java` | ตรวจสอบความถูกต้องของชื่อคอลัมน์ที่ขอเรียงลำดับ ป้องกัน SQL Injection จากการส่งชื่อคอลัมน์แปลกปลอม |
+| 17 | `UniquenessValidator.java` | ตรวจสอบความไม่ซ้ำกันของข้อมูลเฉพาะ เช่น รหัสโครงการ หรือเลขที่สัญญา |
+| 18 | `VersionKeywordSearchHelper.java` | ช่วยค้นหารายการบันทึกประวัติ Version เอกสารตามคำค้นหา |
 
 ---
 

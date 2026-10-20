@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, effect, inject, OnInit, signal, untracked, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize, forkJoin } from 'rxjs';
@@ -63,13 +63,6 @@ export class Pmdt15Component implements OnInit {
 
   // ===== Navbar context filter (client-side) =====
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
-  readonly filteredManuals = computed(() => {
-    const ids = this.selectedProjectIds();
-    const all = this.manuals();
-    if (!ids || ids.length === 0) return all;
-    const idSet = new Set(ids);
-    return all.filter((m) => idSet.has(m.projectId));
-  });
 
   searchTerm = signal('');
   filterType = signal('');
@@ -109,15 +102,11 @@ export class Pmdt15Component implements OnInit {
   };
 
   constructor() {
-    // Re-render already-loaded rows whenever the navbar project selection changes,
-    // without re-fetching from the backend.
+    // navbar project selection changed → reload from page 1 (the grid loads page 1 itself on first render)
     effect(() => {
-      const filtered = this.filteredManuals();
-      const grid = this.gridRef;
-      if (grid) {
-        grid.setRows(filtered as unknown as SicGridRowData[], { totalElements: filtered.length });
-        this.totalElements.set(filtered.length);
-      }
+      this.selectedProjectIds();
+      const grid = untracked(() => this.gridRef);
+      if (grid) untracked(() => (grid.currentPage === 1 ? grid.reload() : grid.goToPage(1)));
     });
   }
 
@@ -131,12 +120,13 @@ export class Pmdt15Component implements OnInit {
 
   handleGridLoad(request: SicGridLoadRequest, grid: SicGridPanelComponent): void {
     this.isLoading.set(true);
-    // Always fetch all manuals unfiltered by project; navbar project-context selection
-    // filters the result client-side (see filteredManuals).
+    // navbar project selection (may be several projects) is filtered client-side: with a selection,
+    // fetch every match and page it here, otherwise the backend pages.
+    const ids = this.selectedProjectIds();
     this.service
       .getPaging({
-        page: request.pageNumber,
-        size: request.pageSize,
+        page: ids.length ? 1 : request.pageNumber,
+        size: ids.length ? 1000 : request.pageSize,
         keyword: this.searchTerm().trim() || undefined,
         manualType: this.filterType() || undefined,
         status: this.filterStatus() || undefined,
@@ -148,13 +138,18 @@ export class Pmdt15Component implements OnInit {
       }))
       .subscribe({
         next: (res) => {
-          const items = res.data || [];
-          const total = res.pageable?.totalElements || 0;
+          let items: PmUserManualModel[] = res.data || [];
+          let totalElements = res.pageable?.totalElements || 0;
+          if (ids.length) {
+            const idSet = new Set(ids);
+            const matched = items.filter((m) => idSet.has(m.projectId));
+            const start = (request.pageNumber - 1) * request.pageSize;
+            items = matched.slice(start, start + request.pageSize);
+            totalElements = matched.length;
+          }
           this.manuals.set(items);
-          const filtered = this.filteredManuals();
-          const totalElements = this.selectedProjectIds().length ? filtered.length : total;
           this.totalElements.set(totalElements);
-          grid.setRows(filtered as unknown as SicGridRowData[], { totalElements }, request.requestId);
+          grid.setRows(items as unknown as SicGridRowData[], { totalElements }, request.requestId);
           this.loadApprovalStatuses(items, grid, request.requestId);
         },
         error: (err) => {
@@ -179,7 +174,7 @@ export class Pmdt15Component implements OnInit {
               item.id === manual.id ? { ...item, approvalStatus: approval.status } : item
             )
           );
-          grid.setRows(this.filteredManuals() as unknown as SicGridRowData[], { totalElements: this.totalElements() }, requestId);
+          grid.setRows(this.manuals() as unknown as SicGridRowData[], { totalElements: this.totalElements() }, requestId);
           this.cdr.markForCheck();
         },
         error: () => {

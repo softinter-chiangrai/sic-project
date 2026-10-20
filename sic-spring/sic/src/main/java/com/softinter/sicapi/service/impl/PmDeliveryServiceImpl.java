@@ -92,7 +92,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                 predicates.add(cb.equal(root.get("projectId"), projectId));
             }
             if (status != null && !status.isBlank() && !"all".equalsIgnoreCase(status)) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
             if (deliveryType != null && !deliveryType.isBlank() && !"all".equalsIgnoreCase(deliveryType)) {
                 predicates.add(cb.equal(root.get("deliveryType"), deliveryType));

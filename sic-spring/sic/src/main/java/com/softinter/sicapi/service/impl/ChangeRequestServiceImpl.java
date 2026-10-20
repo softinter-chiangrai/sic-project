@@ -359,7 +359,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
                 predicates.add(cb.equal(root.get("targetId"), targetId));
             }
             if (status != null && !status.isBlank()) {
-                predicates.add(cb.equal(root.get("status"), status));
+                predicates.add(cb.equal(cb.lower(root.get("status")), status.toLowerCase()));
             }
             if (keyword != null && !keyword.isBlank()) {
                 String rawKw = keyword.trim().toLowerCase();

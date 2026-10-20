@@ -75,8 +75,8 @@
   @if (totalElements() === 0 && !isLoading() && hasLoadedData()) {
     <sic-empty-state
       icon="bi bi-box-seam"
-      title="ไม่พบรายการการส่งมอบ"
-      description="เริ่มต้นด้วยการสร้างเอกสารส่งมอบใหม่ หรือปรับเปลี่ยนตัวกรองค้นหา"
+      [title]="'PMDT14_EMPTY_LIST_TITLE' | translate"
+      [description]="'PMDT14_EMPTY_LIST_DESC' | translate"
       [actionLabel]="'PMDT14_CREATE_BUTTON' | translate"
       (action)="goToAdd()"
     ></sic-empty-state>

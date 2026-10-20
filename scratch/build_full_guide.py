@@ -74,6 +74,7 @@ DESCRIPTIONS = {
     "ContractLifecycle.java": "ตรวจสอบและควบคุม State Machine ของสัญญาลูกค้า (Draft -> Active -> Expiring -> Expired)",
     "ContractNoHelper.java": "สร้างและจัดฟอร์แมตรหัสสัญญาโครงการอัตโนมัติตามรูปแบบที่กำหนด (เช่น `CTR-YYYYMM-XXXX`)",
     "DateRangeValidator.java": "ตรวจสอบความถูกต้องของช่วงวันที่ (วันที่เริ่มต้นต้องไม่มากกว่าวันที่สิ้นสุด)",
+    "DiagramTypes.java": "กำหนดและตรวจสอบชุดประเภทไดอะแกรมทั้งหมด (DFD, ER, SEQUENCE, CLASS, FLOWCHART ฯลฯ) สำหรับระบบ Trace Link และ Change Impact Analysis",
     "DocumentDiffHelper.java": "เปรียบเทียบความแตกต่างของเนื้อหาเอกสาร 2 เวอร์ชัน (Text Diff) เพื่อดูส่วนที่ถูกเพิ่ม ลบ หรือแก้ไข",
     "EnumConverter.java": "Generic Utility แปลงค่า Enum เป็น String หรือ Integer ในฐานข้อมูลอย่างปลอดภัย",
     "FileVisibilityConverter.java": "แปลงค่าระดับการมองเห็นไฟล์ (Public, Internal, Confidential) ระหว่าง JPA และฐานข้อมูล",
@@ -375,7 +376,7 @@ sections = [
     ("4. แพ็กเกจ `exception` (การจัดการข้อผิดพลาด - 3 ไฟล์)", lambda f, p: "\\exception\\" in p.lower()),
     ("5. แพ็กเกจ `websocket` (การสื่อสาร Real-time - 1 ไฟล์)", lambda f, p: "\\websocket\\" in p.lower()),
     ("6. แพ็กเกจ `scheduler` (งานประมวลผลตามเวลา Background Jobs - 2 ไฟล์)", lambda f, p: "\\scheduler\\" in p.lower()),
-    ("7. แพ็กเกจ `util` (คลาสช่วยเหลือส่วนกลาง - 17 ไฟล์)", lambda f, p: "\\util\\" in p.lower()),
+    ("7. แพ็กเกจ `util` (คลาสช่วยเหลือส่วนกลาง - 18 ไฟล์)", lambda f, p: "\\util\\" in p.lower()),
     ("8. แพ็กเกจ `entity/base` (โครงสร้าง Entity แม่แบบ - 2 ไฟล์)", lambda f, p: "\\entity\\base\\" in p.lower()),
     ("9. แพ็กเกจ `entity/enums` (ค่าคงที่ Enum ในระบบ - 14 ไฟล์)", lambda f, p: "\\entity\\enums\\" in p.lower()),
     ("10. แพ็กเกจ `entity/db` (ตารางข้อมูลพื้นฐาน Master Data - 10 ไฟล์)", lambda f, p: "\\entity\\db\\" in p.lower()),
@@ -402,7 +403,7 @@ md_lines.append("| `Interceptor` | 3 | ดักจับ Business Context, WebS
 md_lines.append("| `exception` | 3 | Global Exception Handling และ Custom Exceptions |")
 md_lines.append("| `websocket` | 1 | Real-time Chat & WebRTC Call Signaling |")
 md_lines.append("| `scheduler` | 2 | Background Cron Jobs (Approval Timeout, Contract Alert) |")
-md_lines.append("| `util` | 17 | ฟังก์ชันช่วยเหลือ จัดทำรายงาน, รวม PDF, คำนวณ, Diff, Snapshot |")
+md_lines.append("| `util` | 18 | ฟังก์ชันช่วยเหลือ จัดทำรายงาน, รวม PDF, คำนวณ, Diff, Snapshot |")
 md_lines.append("| `entity/base` | 2 | Base Entity สำหรับ Timestamp และ Business Id |")
 md_lines.append("| `entity/enums` | 14 | Enums กำหนดสถานะและประเภทข้อมูลต่างๆ ในระบบ |")
 md_lines.append("| `entity/db` | 10 | Master Data ข้อมูลที่อยู่ จังหวัด อำเภอ และพารามิเตอร์ |")

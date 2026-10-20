@@ -21,6 +21,7 @@ import { ApprovalItem, Pmdt03PageData } from './pmdt03.model';
 import type { ApprovalSummary } from './approval.model';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { environment } from '../../../../../environments/environment';
 
 @Component({
   selector: 'app-pmdt03',
@@ -41,7 +42,7 @@ export class Pmdt03Component implements OnInit {
   protected searchTerm = signal('');
   protected filterType = signal('all');
   protected filterStatus = signal('all');
-  protected filterProject = signal('all');
+  protected filterProject = signal('');
   protected currentPage = signal(1);
   protected pageSize = signal(10);
   protected isLoading = signal(false);
@@ -103,42 +104,22 @@ export class Pmdt03Component implements OnInit {
     { value: 'INVOICE', text: 'DOC_TYPE_INVOICE' },
     { value: 'CONTRACT', text: 'DOC_TYPE_CONTRACT' },
     { value: 'USER_MANUAL', text: 'DOC_TYPE_USER_MANUAL' },
+    { value: 'MA_TICKET', text: 'DOC_TYPE_MA_TICKET' },
+    { value: 'TASK', text: 'DOC_TYPE_TASK' },
     { value: 'PROJECT', text: 'DOC_TYPE_PROJECT' },
   ];
 
   readonly statusSelectOptions = [
     { value: 'PENDING', text: 'PMDT03_STATUS_PENDING' },
+    { value: 'PARTIALLY_APPROVED', text: 'PMDT03_STATUS_PARTIALLY_APPROVED' },
     { value: 'APPROVED', text: 'PMDT03_STATUS_APPROVED' },
     { value: 'REJECTED', text: 'PMDT03_STATUS_REJECTED' },
     { value: 'NEED_REVISION', text: 'PMDT03_STATUS_NEED_REVISION_OPT' },
     { value: 'CANCELLED', text: 'PMDT03_STATUS_CANCELLED' },
+    { value: 'EXPIRED', text: 'PMDT03_STATUS_EXPIRED' },
   ];
 
-  readonly projectSelectOptions = [
-    { value: '1', text: 'PMDT03_PROJECT_CRM' },
-    { value: '2', text: 'PMDT03_PROJECT_HR' },
-  ];
-
-  documentTypes = [
-    'REQUIREMENT',
-    'SPECIFICATION',
-    'DIAGRAM',
-    'DESIGN_REVIEW',
-    'CHANGE_REQUEST',
-    'TEST_PLAN',
-    'UAT',
-    'DELIVERY',
-    'INVOICE',
-    'CONTRACT',
-    'USER_MANUAL',
-  ];
-
-  statusOptions = ['PENDING', 'APPROVED', 'REJECTED', 'NEED_REVISION', 'CANCELLED'];
-
-  projectOptions = [
-    { id: '1', name: this.translate.instant('PMDT03_PROJECT_CRM') },
-    { id: '2', name: this.translate.instant('PMDT03_PROJECT_HR') },
-  ];
+  readonly apiGetComboboxProject = `${environment.apiBaseUrl}/api/pm/customer-projects/combobox`;
 
   ngOnInit(): void {
     const pageData: Pmdt03PageData | undefined = this.route.snapshot.data['pageData'];
@@ -196,14 +177,15 @@ export class Pmdt03Component implements OnInit {
     const keyword = this.searchTerm().trim() || undefined;
     const documentType = this.filterType() !== 'all' ? this.filterType() : undefined;
     const status = this.filterStatus() !== 'all' ? this.filterStatus() : undefined;
+    const projectId = this.filterProject() || undefined;
 
     let request$;
     if (this.viewMode() === 'pending') {
-      request$ = this.approvalService.getPending(page, size, { keyword, documentType });
+      request$ = this.approvalService.getPending(page, size, { keyword, documentType, projectId });
     } else if (this.viewMode() === 'approvedHistory') {
-      request$ = this.approvalService.getApprovedHistory(page, size, { keyword, documentType, status });
+      request$ = this.approvalService.getApprovedHistory(page, size, { keyword, documentType, status, projectId });
     } else {
-      request$ = this.approvalService.getMyRequests(page, size, { keyword, documentType, status });
+      request$ = this.approvalService.getMyRequests(page, size, { keyword, documentType, status, projectId });
     }
 
     request$
@@ -267,7 +249,7 @@ export class Pmdt03Component implements OnInit {
         q: this.searchTerm() || null,
         status: this.filterStatus() !== 'all' ? this.filterStatus() : null,
         type: this.filterType() !== 'all' ? this.filterType() : null,
-        project: this.filterProject() !== 'all' ? this.filterProject() : null,
+        project: this.filterProject() || null,
         page: this.currentPage() > 1 ? this.currentPage() : null,
       },
       queryParamsHandling: 'merge',
@@ -300,8 +282,7 @@ export class Pmdt03Component implements OnInit {
   }
 
   onProjectChange(value: any, grid: SicGridPanelComponent): void {
-    const val = value !== undefined && value !== null ? (typeof value === 'object' && value.target ? value.target.value : value) : 'all';
-    this.filterProject.set(val || 'all');
+    this.filterProject.set(value || '');
     this.reloadFromPage1(grid);
   }
 
