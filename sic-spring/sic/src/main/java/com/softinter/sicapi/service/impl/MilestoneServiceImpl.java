@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -82,6 +83,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     public MilestoneResponse updateMilestone(UUID milestoneId, MilestoneRequest request) {
         PmMilestone ms = milestoneRepository.findById(milestoneId)
                 .orElseThrow(() -> new ResourceNotFoundException("Milestone not found"));
+        RowVersionGuard.check(ms.getRowVersion(), request.getRowVersion());
 
         ms.setMilestoneName(request.getMilestoneName());
         ms.setDescription(request.getDescription());
@@ -123,6 +125,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     private MilestoneResponse toResponse(PmMilestone ms) {
         MilestoneResponse dto = new MilestoneResponse();
         dto.setId(ms.getId());
+        dto.setRowVersion(ms.getRowVersion());
         dto.setPhaseId(ms.getPhase().getId());
         dto.setPhaseName(ms.getPhase().getPhaseName());
         dto.setMilestoneName(ms.getMilestoneName());
@@ -145,6 +148,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     private WorkPackageResponse toWorkPackageResponse(PmWorkPackage wp) {
         WorkPackageResponse dto = new WorkPackageResponse();
         dto.setId(wp.getId());
+        dto.setRowVersion(wp.getRowVersion());
         dto.setMilestoneId(wp.getMilestone().getId());
         dto.setMilestoneName(wp.getMilestone().getMilestoneName());
         dto.setPackageName(wp.getPackageName());
@@ -168,6 +172,7 @@ public class MilestoneServiceImpl implements MilestoneService {
     private TaskResponse toTaskResponse(PmTask task) {
         TaskResponse dto = new TaskResponse();
         dto.setId(task.getId());
+        dto.setRowVersion(task.getRowVersion());
         dto.setWorkPackageId(task.getWorkPackage().getId());
         dto.setWorkPackageName(task.getWorkPackage().getPackageName());
         dto.setTaskCode(task.getTaskCode());

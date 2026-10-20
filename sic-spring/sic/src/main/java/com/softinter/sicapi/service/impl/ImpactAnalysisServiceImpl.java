@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.util.DiagramTypes;
 import java.time.Instant;
 import java.util.Arrays;
@@ -103,6 +104,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         ChangeImpactAnalysis analysis = repository
                 .findByChangeRequestId(request.getChangeRequestId())
                 .orElse(new ChangeImpactAnalysis());
+        RowVersionGuard.check(analysis.getRowVersion(), request.getRowVersion());
 
         analysis.setChangeRequest(changeRequest);
         analysis.setDiagramImpact(request.getDiagramImpact());
@@ -754,6 +756,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         ImpactAnalysisResponse dto = new ImpactAnalysisResponse();
         
         dto.setId(entity.getId());
+        dto.setRowVersion(entity.getRowVersion());
         if (entity.getChangeRequest() != null) {
             dto.setChangeRequestId(entity.getChangeRequest().getId());
         }

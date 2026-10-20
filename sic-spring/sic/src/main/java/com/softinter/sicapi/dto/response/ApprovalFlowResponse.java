@@ -19,4 +19,7 @@ public class ApprovalFlowResponse {
     private String description;
     private boolean isActive;
     private List<ApprovalFlowStepResponse> steps;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

@@ -89,8 +89,9 @@ public class WorkPackageController {
             @PathVariable UUID wpId,
             @RequestBody WorkPackageRequest request) {
         log.info("Updating work package ID: {}", wpId);
-        WorkPackageResponse updated = workPackageService.updateWorkPackage(wpId, request);
-        return ResponseEntity.ok(updated);
+        workPackageService.updateWorkPackage(wpId, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(workPackageService.getWorkPackageById(wpId));
     }
 
     @DeleteMapping("/{wpId}")

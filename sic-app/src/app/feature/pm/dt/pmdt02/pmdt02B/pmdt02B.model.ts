@@ -4,6 +4,7 @@ import { SicFromData } from '../../../../../core/model/sic-from-data';
 import type { TaskResponse } from '../pmdt02C/pmdt02C.model';
 
 export interface WorkPackageRequest {
+  rowVersion?: number;
   milestoneId: string;
   packageName: string;
   description?: string;
@@ -14,6 +15,7 @@ export interface WorkPackageRequest {
 }
 
 export interface WorkPackageResponse {
+  rowVersion?: number;
   id: string;
   milestoneId: string;
   milestoneName: string;

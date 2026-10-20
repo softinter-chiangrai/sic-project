@@ -427,12 +427,13 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     @Transactional(readOnly = true)
     public List<PmDiagramTabResponse> getTabs(UUID projectId) {
         try {
-            String userId = currentUserService.getUserId();
             List<PmDiagramTab> tabs;
             if (projectId != null) {
                 tabs = tabRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
             } else {
-                tabs = tabRepository.findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(userId);
+                // ไม่ได้เลือกโครงการ: แสดง diagram ทั้งบริษัทให้ทั้งทีมเห็น (ไม่ใช่เฉพาะของผู้สร้าง)
+                tabs = tabRepository.findByBusinessIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(
+                        BusinessContextHolder.getBusinessId());
             }
             return tabs.stream()
                     .map(this::toResponse)

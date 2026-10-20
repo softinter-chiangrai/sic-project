@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -134,6 +135,7 @@ public class PhaseServiceImpl implements PhaseService {
     public PhaseResponse updatePhase(UUID phaseId, PhaseRequest request) {
         PmPhase phase = phaseRepository.findById(phaseId)
                 .orElseThrow(() -> new ResourceNotFoundException("Phase not found"));
+        RowVersionGuard.check(phase.getRowVersion(), request.getRowVersion());
 
         if (request.getPhaseCode() != null && !request.getPhaseCode().trim().isEmpty()) {
             phase.setPhaseCode(request.getPhaseCode().trim());
@@ -188,6 +190,7 @@ public class PhaseServiceImpl implements PhaseService {
     private PhaseResponse toResponse(PmPhase phase) {
         PhaseResponse dto = new PhaseResponse();
         dto.setId(phase.getId());
+        dto.setRowVersion(phase.getRowVersion());
         dto.setProjectId(phase.getProject().getId());
         dto.setProjectName(phase.getProject().getProjectName());
         dto.setPhaseCode(phase.getPhaseCode());
@@ -249,6 +252,7 @@ public class PhaseServiceImpl implements PhaseService {
     private MilestoneResponse toMilestoneResponse(PmMilestone ms) {
         MilestoneResponse dto = new MilestoneResponse();
         dto.setId(ms.getId());
+        dto.setRowVersion(ms.getRowVersion());
         dto.setPhaseId(ms.getPhase().getId());
         dto.setPhaseName(ms.getPhase().getPhaseName());
         dto.setMilestoneName(ms.getMilestoneName());
@@ -271,6 +275,7 @@ public class PhaseServiceImpl implements PhaseService {
     private WorkPackageResponse toWorkPackageResponse(PmWorkPackage wp) {
         WorkPackageResponse dto = new WorkPackageResponse();
         dto.setId(wp.getId());
+        dto.setRowVersion(wp.getRowVersion());
         dto.setMilestoneId(wp.getMilestone().getId());
         dto.setMilestoneName(wp.getMilestone().getMilestoneName());
         dto.setPackageName(wp.getPackageName());
@@ -294,6 +299,7 @@ public class PhaseServiceImpl implements PhaseService {
     private TaskResponse toTaskResponse(PmTask task) {
         TaskResponse dto = new TaskResponse();
         dto.setId(task.getId());
+        dto.setRowVersion(task.getRowVersion());
         dto.setWorkPackageId(task.getWorkPackage().getId());
         dto.setWorkPackageName(task.getWorkPackage().getPackageName());
         dto.setTaskCode(task.getTaskCode());

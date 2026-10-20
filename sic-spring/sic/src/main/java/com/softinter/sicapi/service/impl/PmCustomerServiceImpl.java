@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -299,10 +300,7 @@ public class PmCustomerServiceImpl implements PmCustomerService {
             customer.setSubDistrict(null);
         }
 
-        // Optimistic locking
-        if (request.getRowVersion() != null) {
-            customer.setRowVersion(request.getRowVersion());
-        }
+        RowVersionGuard.check(customer.getRowVersion(), request.getRowVersion());
     }
 
     private PmCustomerResponse toResponse(PmCustomer customer) {

@@ -388,6 +388,7 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
         const updatedParent = {
           ...this.parentTaskRecord,
           status: 'bugfix',
+          rowVersion: undefined, // ระบบซิงก์สถานะอัตโนมัติ ไม่ส่ง rowVersion: ไม่ให้เด้ง "มีผู้อื่นแก้ไข" จากข้อมูลในรายการที่ยังไม่รีเฟรช
         };
         this.service.updateTask(this.parentTaskRecord.id, updatedParent).subscribe({
           next: () => console.log('Parent task status updated to bugfix'),

@@ -787,8 +787,9 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     this.isEdit = true;
                     this.form.patchValue({ id: savedId });
                 }
-                if (typeof response === 'object' && response !== null) {
-                    this.form.patchValue(response);
+                // เอาแค่ rowVersion ใหม่ ไม่ทับสิ่งที่ผู้ใช้พิมพ์ต่อระหว่างรอ response
+                if (response?.rowVersion != null) {
+                    this.form.patchValue({ rowVersion: response.rowVersion });
                 }
                 this.form.markAsPristine({ onlySelf: true });
                 this.cdr.markForCheck();

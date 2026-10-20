@@ -121,7 +121,8 @@ public class PmRequirementController {
         }
         String userId = currentUserService.getUserId();
         PmRequirementResponse response = requirementService.save(request, businessId, userId);
-        return ResponseEntity.ok(response);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ save ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(requirementService.findById(response.getId(), businessId));
     }
 
     @DeleteMapping("/{id}")

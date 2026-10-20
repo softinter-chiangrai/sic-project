@@ -63,8 +63,9 @@ public class TaskController {
             @PathVariable UUID taskId,
             @RequestBody TaskRequest request) {
         log.info("Updating task ID: {}", taskId);
-        TaskResponse updated = taskService.updateTask(taskId, request);
-        return ResponseEntity.ok(updated);
+        taskService.updateTask(taskId, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(taskService.getTaskById(taskId));
     }
 
     @DeleteMapping("/{taskId}")

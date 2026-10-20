@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -120,6 +121,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     public PmCustomerProjectResponse update(UUID id, PmCustomerProjectRequest request) {
         PmCustomerProject project = projectRepository.findByIdAndIsDeleteFalse(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Project not found"));
+        RowVersionGuard.check(project.getRowVersion(), request.getRowVersion());
 
         // ✅ ป้องกันการแก้ไขโดยตรงหากผ่านการอนุมัติแล้ว (Baseline Locked)
         approvalService.assertNotApproved("PROJECT", project.getId());

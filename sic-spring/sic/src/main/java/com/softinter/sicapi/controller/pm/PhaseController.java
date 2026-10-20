@@ -117,8 +117,9 @@ public class PhaseController {
             @PathVariable UUID phaseId,
             @RequestBody PhaseRequest request) {
         log.info("Updating phase ID: {}", phaseId);
-        PhaseResponse updated = phaseService.updatePhase(phaseId, request);
-        return ResponseEntity.ok(updated);
+        phaseService.updatePhase(phaseId, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(phaseService.getPhaseById(phaseId));
     }
 
     @DeleteMapping("/phases/{phaseId}")

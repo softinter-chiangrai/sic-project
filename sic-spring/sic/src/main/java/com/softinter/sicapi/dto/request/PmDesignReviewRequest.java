@@ -34,4 +34,7 @@ public class PmDesignReviewRequest {
     private String figmaUrl;
     private String embedMode = "prototype";
     private Boolean isActive = true;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

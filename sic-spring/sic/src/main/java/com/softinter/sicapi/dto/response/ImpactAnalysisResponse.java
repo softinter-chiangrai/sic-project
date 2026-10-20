@@ -9,6 +9,8 @@ import java.util.List;
 public class ImpactAnalysisResponse {
     private UUID id;
     private UUID changeRequestId;
+    /** optimistic locking (xmin) ของแถวที่บันทึกไว้ (null = ยังไม่เคยบันทึก) */
+    private Integer rowVersion;
 
     private UUID[] impactedRequirementIds;
     private List<ImpactItem> impactedRequirements;

@@ -2319,6 +2319,8 @@
   "PMDT09_REVIEWABLE_LABEL": "เอกสาร/เป้าหมายที่ตรวจแบบ",
   "PMDT09_REVIEWABLE_PLACEHOLDER": "เลือกเอกสารเป้าหมาย",
   "PMDT09_REVIEWABLE_TYPE_LABEL": "ประเภทเป้าหมาย",
+  "PMDT09_SPECIFICATION_LABEL": "ข้อกำหนด (Specification)",
+  "PMDT09_SPECIFICATION_PLACEHOLDER": "เลือกข้อกำหนด (Specification)...",
   "PMDT09_REVIEWER_PREFIX": "ผู้ตรวจแบบ:",
   "PMDT09_REVIEW_CODE_LABEL": "รหัส Design Review",
   "PMDT09_REVIEW_CODE_PLACEHOLDER": "เช่น DR-001",

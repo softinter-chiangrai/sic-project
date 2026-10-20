@@ -30,4 +30,7 @@ public class SaveImpactAnalysisRequest {
     private String[] impactedTableNames;
     private UUID[] impactedProjectIds;
     private UUID[] impactedCustomerIds;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

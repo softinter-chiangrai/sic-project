@@ -652,6 +652,7 @@ export class Pmdt10Component implements OnInit {
         const updatedParentPayload: any = {
           ...parentTask,
           status: 'Testing',
+          rowVersion: undefined, // ระบบซิงก์สถานะอัตโนมัติ ไม่ส่ง rowVersion: ไม่ให้เด้ง "มีผู้อื่นแก้ไข" จากข้อมูลในรายการที่ยังไม่รีเฟรช
         };
         this.service.updateTask(parentTask.id, updatedParentPayload).subscribe({
           next: (updatedParent) => {

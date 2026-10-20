@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -70,6 +71,7 @@ public class SuUserBusinessServiceImpl implements SuUserBusinessService {
         SuUserBusiness ub;
         if (request.getId() != null) {
             ub = findById(request.getId());
+            RowVersionGuard.check(ub.getRowVersion(), request.getRowVersion());
         } else {
             ub = new SuUserBusiness();
         }

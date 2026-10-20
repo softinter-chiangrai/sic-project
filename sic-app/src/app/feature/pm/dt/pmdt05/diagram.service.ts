@@ -94,8 +94,8 @@ export class DiagramService {
   }
 
   // projectId is optional: the backend (`GET /api/diagram/tabs`) accepts an optional
-  // `projectId` query param. When omitted, it returns all diagrams owned by the current
-  // user across every project — used to show "everything" when no project is selected
+  // `projectId` query param. When omitted, it returns every diagram in the current
+  // business across every project — used to show "everything" when no project is selected
   // via the navbar, matching the show-all-then-filter convention used elsewhere
   // (pmdt16/pmdt19/sic-gantt).
   getTabs(projectId?: string | null): Observable<DiagramModel[]> {

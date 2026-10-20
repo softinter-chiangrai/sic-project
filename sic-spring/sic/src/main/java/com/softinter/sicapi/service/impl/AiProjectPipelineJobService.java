@@ -1271,28 +1271,27 @@ public class AiProjectPipelineJobService {
     }
 
     private void stepDesignReviews(Ctx c, StepState step) {
-        if (c.specs.isEmpty() && c.diagrams.isEmpty()) {
-            throw new IllegalStateException("ไม่มี Specification หรือ Diagram ให้ตรวจทาน");
+        if (c.specs.isEmpty()) {
+            throw new IllegalStateException("ไม่มี Specification ให้ตรวจทาน");
         }
         JsonNode root = ask(c, """
-                You are a Design Review Lead. Create design review items (max 4) for the specifications and diagrams. Fill EVERY field.
-                targetType is one of: Specification | Diagram. targetRef is the number in the matching list. severity is one of: Low | Medium | High.
+                You are a Design Review Lead. Create design review items (max 4) for the specifications. Fill EVERY field.
+                targetRef is the number in the matching specifications list. severity is one of: Low | Medium | High.
                 Respond ONLY with valid JSON in a ```json block, same language as the project:
-                { "reviews": [ { "targetType": "Specification", "targetRef": 1, "title": "...", "description": "HTML checklist of what to review", "severity": "Medium" } ] }
-                """, projectContext(c) + "\n\nSpecifications:\n" + numbered(c.specs) + "\nDiagrams:\n" + numbered(c.diagrams), false);
+                { "reviews": [ { "targetRef": 1, "title": "...", "description": "HTML checklist of what to review", "severity": "Medium" } ] }
+                """, projectContext(c) + "\n\nSpecifications:\n" + numbered(c.specs), false);
 
         int idx = 1;
         int count = 0;
         for (JsonNode r : arr(root, "reviews")) {
-            boolean isDiagram = "Diagram".equalsIgnoreCase(txt(r, "targetType"));
-            Ref target = refAt(isDiagram ? c.diagrams : c.specs, r.path("targetRef").asInt(0), 0);
+            Ref target = refAt(c.specs, r.path("targetRef").asInt(0), (idx - 1) % Math.max(1, c.specs.size()));
             if (target == null) continue;
             PmDesignReviewRequest rq = new PmDesignReviewRequest();
             rq.setProjectId(c.projectId);
             rq.setReviewCode(String.format("DR-%03d", idx++));
             rq.setTitle(cut(txt(r, "title"), 255));
             rq.setDescription(txt(r, "description"));
-            rq.setReviewableType(isDiagram ? "Diagram" : "Specification");
+            rq.setReviewableType("Specification");
             rq.setReviewableId(target.id());
             rq.setSeverity(pickIgnoreCase(txt(r, "severity"), List.of("Low", "Medium", "High"), "Medium"));
             rq.setReviewer(randomName(c));

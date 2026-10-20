@@ -12,4 +12,7 @@ public class MilestoneRequest {
     private LocalDate dueDate;
     private String color;
     private String status;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

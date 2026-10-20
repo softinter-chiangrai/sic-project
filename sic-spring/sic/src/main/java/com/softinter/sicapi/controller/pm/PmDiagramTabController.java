@@ -57,7 +57,9 @@ public class PmDiagramTabController {
     public ResponseEntity<PmDiagramTabResponse> updateTab(
             @PathVariable UUID id,
             @Valid @RequestBody PmDiagramTabRequest request) {
-        return ResponseEntity.ok(tabService.updateTab(id, request));
+        tabService.updateTab(id, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(tabService.getTab(id));
     }
 
     /** body.image = PNG data URI ที่ draw.io export จากแผนภาพที่เปิดอยู่ */

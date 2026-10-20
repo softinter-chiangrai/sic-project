@@ -36,4 +36,7 @@ public class TaskResponse {
     private UUID specificationId;
     private String specificationCode;
     private String specificationTitle;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

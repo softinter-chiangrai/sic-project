@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
 import com.softinter.sicapi.dto.response.PmDesignReviewResponse;
 import com.softinter.sicapi.dto.response.PmReviewCommentResponse;
@@ -147,6 +148,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
             entity = designReviewRepository.findByIdAndBusinessId(request.getId(), businessId)
                     .orElseThrow(() -> new ResourceNotFoundException("Design review not found"));
             approvalService.assertNotApproved("DESIGN_REVIEW", entity.getId());
+            RowVersionGuard.check(entity.getRowVersion(), request.getRowVersion());
             oldStatus = entity.getStatus();
 
             // ✅ Auto Diff Detection
@@ -335,6 +337,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
     private PmDesignReviewResponse mapToResponse(PmDesignReview entity) {
         PmDesignReviewResponse dto = new PmDesignReviewResponse();
         dto.setId(entity.getId());
+        dto.setRowVersion(entity.getRowVersion());
         dto.setReviewCode(entity.getReviewCode());
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
@@ -345,6 +348,12 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         }
         dto.setReviewableType(entity.getReviewItemType());
         dto.setReviewableId(entity.getReviewItemId());
+        if (entity.getReviewItemId() != null) {
+            specificationRepository.findById(entity.getReviewItemId()).ifPresent(s -> {
+                String code = s.getSpecificationCode() != null ? s.getSpecificationCode() + " - " : "";
+                dto.setReviewableName(code + (s.getTitle() != null ? s.getTitle() : ""));
+            });
+        }
         dto.setReviewer(entity.getReviewer());
         dto.setAssignedTo(entity.getAssignedTo());
         dto.setSeverity(entity.getSeverity());

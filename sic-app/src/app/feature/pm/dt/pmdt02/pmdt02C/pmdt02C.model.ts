@@ -3,6 +3,7 @@ import { SicBaseStateModel } from '../../../../../core/model/sic-base-model';
 import { SicFromData } from '../../../../../core/model/sic-from-data';
 
 export interface TaskRequest {
+  rowVersion?: number;
   workPackageId: string;
   taskCode: string;
   taskName: string;
@@ -20,6 +21,7 @@ export interface TaskRequest {
 }
 
 export interface TaskResponse {
+  rowVersion?: number;
   id: string;
   workPackageId: string;
   workPackageName: string;

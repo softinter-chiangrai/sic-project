@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -69,9 +70,7 @@ public class AiModelConfigServiceImpl implements AiModelConfigService {
             if (repository.existsByModelCodeAndIsDeleteFalseAndIdNot(request.getModelCode().trim(), entity.getId())) {
                 throw new IllegalStateException("modelCode already exists: " + request.getModelCode());
             }
-            if (request.getRowVersion() != null) {
-                entity.setRowVersion(request.getRowVersion());
-            }
+            RowVersionGuard.check(entity.getRowVersion(), request.getRowVersion());
         }
 
         entity.setModelCode(request.getModelCode().trim());

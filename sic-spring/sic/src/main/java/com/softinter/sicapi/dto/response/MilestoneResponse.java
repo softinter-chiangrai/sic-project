@@ -17,4 +17,7 @@ public class MilestoneResponse {
     private String status;
     private String color;
     private List<WorkPackageResponse> workPackages;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

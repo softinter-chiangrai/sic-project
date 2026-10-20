@@ -2319,6 +2319,8 @@
   "PMDT09_REVIEWABLE_LABEL": "Target Item / Document",
   "PMDT09_REVIEWABLE_PLACEHOLDER": "Select target document",
   "PMDT09_REVIEWABLE_TYPE_LABEL": "Target Type",
+  "PMDT09_SPECIFICATION_LABEL": "Specification",
+  "PMDT09_SPECIFICATION_PLACEHOLDER": "Select Specification...",
   "PMDT09_REVIEWER_PREFIX": "Reviewer:",
   "PMDT09_REVIEW_CODE_LABEL": "Review Code",
   "PMDT09_REVIEW_CODE_PLACEHOLDER": "e.g. DR-001",

@@ -19,6 +19,7 @@ public class PmDesignReviewResponse {
     private String projectName;
     private String reviewableType;
     private UUID reviewableId;
+    private String reviewableName;
     private String reviewer;
     private String assignedTo;
     private String severity;
@@ -34,4 +35,7 @@ public class PmDesignReviewResponse {
 
     /** เวอร์ชันเอกสารล่าสุด (จาก document version) สำหรับคอลัมน์ Version ในหน้า list */
     private String version;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

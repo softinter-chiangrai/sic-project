@@ -753,14 +753,14 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
             if (allPassed) {
               // ALL test cases in the scenario linked to this task have passed -> Move task to complete!
               if (currentStatus !== 'complete' && currentStatus !== 'completed' && currentStatus !== 'done') {
-                this.service.updateTask(parentTask.id, { ...parentTask, status: 'complete' }).subscribe({
+                this.service.updateTask(parentTask.id, { ...parentTask, status: 'complete', rowVersion: undefined }).subscribe({
                   next: () => console.log(`Parent task ${parentTask.taskCode} moved to complete because ALL test cases passed.`),
                 });
               }
             } else if (anyFailed) {
               // If any test case failed, keep/move to waiting fix
               if (currentStatus !== 'waiting fix' && currentStatus !== 'bugfix') {
-                this.service.updateTask(parentTask.id, { ...parentTask, status: 'waiting fix' }).subscribe({
+                this.service.updateTask(parentTask.id, { ...parentTask, status: 'waiting fix', rowVersion: undefined }).subscribe({
                   next: () => console.log(`Parent task ${parentTask.taskCode} moved to waiting fix because a test case failed.`),
                 });
               }
@@ -768,7 +768,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
               // Not all passed and none failed (some untested / in progress):
               // If task was prematurely in 'complete', revert to 'testing'
               if (currentStatus === 'complete' || currentStatus === 'completed' || currentStatus === 'done') {
-                this.service.updateTask(parentTask.id, { ...parentTask, status: 'testing' }).subscribe({
+                this.service.updateTask(parentTask.id, { ...parentTask, status: 'testing', rowVersion: undefined }).subscribe({
                   next: () => console.log(`Parent task ${parentTask.taskCode} reverted to testing because not all test cases passed yet.`),
                 });
               }
@@ -836,6 +836,7 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
       const updatedParent = {
         ...parentTask,
         status: 'bugfix',
+        rowVersion: undefined, // ระบบซิงก์สถานะอัตโนมัติ ไม่ส่ง rowVersion: ไม่ให้เด้ง "มีผู้อื่นแก้ไข" จากข้อมูลในรายการที่ยังไม่รีเฟรช
       };
       this.service.updateTask(parentTask.id, updatedParent).subscribe({
         next: () => console.log('Parent task moved to bugfix status'),

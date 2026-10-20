@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -347,7 +348,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             contract = contractRepository.findById(request.getId())
                     .orElseThrow(() -> new RuntimeException("ไม่พบสัญญารหัส " + request.getId()));
             approvalService.assertNotApproved("CONTRACT", contract.getId());
-            contract.setRowVersion(request.getRowVersion());
+            RowVersionGuard.check(contract.getRowVersion(), request.getRowVersion());
             oldSignStatus = contract.getSignStatus();
 
             // ✅ Auto Diff Detection

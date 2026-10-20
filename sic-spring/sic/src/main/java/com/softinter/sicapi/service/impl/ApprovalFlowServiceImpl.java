@@ -2,6 +2,7 @@
 
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
 import com.softinter.sicapi.dto.request.SaveApprovalFlowStepRequest;
 import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
@@ -130,6 +131,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
     public ApprovalFlowResponse updateFlow(UUID id, SaveApprovalFlowRequest request) {
         PmApprovalFlow flow = flowRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Approval flow not found"));
+        RowVersionGuard.check(flow.getRowVersion(), request.getRowVersion());
 
         // ตรวจสอบ Flow Code ซ้ำ
         flowRepository.findByFlowCode(request.getFlowCode())
@@ -237,6 +239,7 @@ public class ApprovalFlowServiceImpl implements ApprovalFlowService {
     private ApprovalFlowResponse toResponse(PmApprovalFlow flow) {
         ApprovalFlowResponse response = new ApprovalFlowResponse();
         response.setId(flow.getId());
+        response.setRowVersion(flow.getRowVersion());
         response.setFlowCode(flow.getFlowCode());
         response.setFlowName(flow.getFlowName());
         response.setDocumentType(flow.getDocumentType());

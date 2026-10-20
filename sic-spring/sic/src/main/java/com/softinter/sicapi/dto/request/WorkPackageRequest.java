@@ -13,4 +13,7 @@ public class WorkPackageRequest {
     private LocalDate endDate;
     private String color;
     private String status;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

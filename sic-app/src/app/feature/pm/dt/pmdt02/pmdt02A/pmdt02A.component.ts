@@ -147,6 +147,7 @@ export class Pmdt02AComponent implements OnInit {
       this.loadProjectFromPhase(data.phaseId);
     }
     this.form.patchValue({
+      rowVersion: data.rowVersion,
       phaseId: data.phaseId,
       milestoneName: data.milestoneName,
       description: data.description,
@@ -229,6 +230,7 @@ export class Pmdt02AComponent implements OnInit {
       dueDate: this.buildISOString(raw.dueDate, raw.dueTime!),
       color: raw.color || undefined, // ✅ ส่งค่าสี
       attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
+      rowVersion: raw.rowVersion ?? undefined,
     };
 
     const request = this.isEdit && this.milestoneId

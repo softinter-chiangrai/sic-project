@@ -57,6 +57,12 @@ export class Pmdt09Component implements OnInit {
   // ===== AI Batch Create =====
   showAiBatchModal = signal(false);
   aiBatchSaving = signal(false);
+  aiBatchSpecId = signal<string | null>(null);
+  readonly apiGetComboboxSpecification = `${environment.apiBaseUrl}/api/pm/design-reviews/combobox-specification`;
+  readonly aiBatchSpecParams = computed(() => {
+    const pid = this.resolveProjectId();
+    return pid ? { projectId: pid } : {};
+  });
   readonly aiBatchFields: AiBatchFieldDef[] = [
     { key: 'title', label: this.translate.instant('PMDT09_TITLE') || 'Title', type: 'text' },
     { key: 'description', label: this.translate.instant('PMDT09_DESCRIPTION') || 'Description', type: 'textarea' },
@@ -553,6 +559,16 @@ export class Pmdt09Component implements OnInit {
     return null;
   }
 
+  openAiBatchModal(): void {
+    this.aiBatchSpecId.set(null);
+    this.showAiBatchModal.set(true);
+  }
+
+  onAiBatchSpecSelected(event: any): void {
+    const val = event && typeof event === 'object' ? event.value : event;
+    this.aiBatchSpecId.set(val || null);
+  }
+
   onAiBatchSaved(rows: Record<string, any>[]): void {
     if (!rows.length) return;
     const projId = this.resolveProjectId();
@@ -561,6 +577,7 @@ export class Pmdt09Component implements OnInit {
       return;
     }
 
+    const specId = this.aiBatchSpecId();
     this.aiBatchSaving.set(true);
     const saveRequests = rows.map((row) =>
       this.http.post(`${environment.apiBaseUrl}/api/pm/design-reviews`, {
@@ -569,6 +586,7 @@ export class Pmdt09Component implements OnInit {
         description: row['description'],
         severity: row['severity'] || 'Medium',
         reviewableType: 'Specification', // same default as the design review form (pmdt09A)
+        reviewableId: specId || null,
         status: 'Open',
       })
     );

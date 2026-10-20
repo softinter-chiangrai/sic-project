@@ -44,7 +44,8 @@ public class AiModelConfigController {
     @PostMapping
     @Operation(summary = "Create or update an AI model config")
     public ResponseEntity<AiModelConfigResponse> save(@RequestBody SaveAiModelConfigRequest request) {
-        return ResponseEntity.ok(service.save(request));
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ save ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(service.getById(service.save(request).getId()));
     }
 
     @DeleteMapping("/{id}")

@@ -49,7 +49,9 @@ public class PmApprovalFlowController {
     public ResponseEntity<ApprovalFlowResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody SaveApprovalFlowRequest request) {
-        return ResponseEntity.ok(approvalFlowService.updateFlow(id, request));
+        approvalFlowService.updateFlow(id, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(approvalFlowService.getFlow(id));
     }
 
     @DeleteMapping("/{id}")

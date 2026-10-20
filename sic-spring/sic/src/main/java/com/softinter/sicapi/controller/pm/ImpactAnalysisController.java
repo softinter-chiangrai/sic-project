@@ -53,7 +53,7 @@ public class ImpactAnalysisController {
     @PostMapping("/auto-detect/{changeRequestId}")
     @Operation(summary = "Auto-detect impact using database function (legacy)")
     public ResponseEntity<ImpactAnalysisResponse> autoDetect(@PathVariable UUID changeRequestId) {
-        ImpactAnalysisResponse response = impactAnalysisService.autoDetect(changeRequestId);
+        ImpactAnalysisResponse response = withStoredRowVersion(impactAnalysisService.autoDetect(changeRequestId));
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 
@@ -61,7 +61,7 @@ public class ImpactAnalysisController {
     @PostMapping("/auto-detect-trace/{changeRequestId}")
     @Operation(summary = "Auto-detect impact using Traceability Engine")
     public ResponseEntity<ImpactAnalysisResponse> autoDetectUsingTrace(@PathVariable UUID changeRequestId) {
-        ImpactAnalysisResponse response = impactAnalysisService.autoDetectUsingTrace(changeRequestId);
+        ImpactAnalysisResponse response = withStoredRowVersion(impactAnalysisService.autoDetectUsingTrace(changeRequestId));
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 
@@ -69,7 +69,7 @@ public class ImpactAnalysisController {
     @PostMapping("/ai-analyze/{changeRequestId}")
     @Operation(summary = "Analyze impact using AI with Traceability Engine")
     public ResponseEntity<ImpactAnalysisResponse> aiAnalyze(@PathVariable UUID changeRequestId) {
-        ImpactAnalysisResponse response = impactAnalysisService.aiAnalyze(changeRequestId);
+        ImpactAnalysisResponse response = withStoredRowVersion(impactAnalysisService.aiAnalyze(changeRequestId));
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 
@@ -90,7 +90,7 @@ public class ImpactAnalysisController {
     @PostMapping("/history/{historyId}/restore")
     @Operation(summary = "Restore impact analysis from a history version")
     public ResponseEntity<ImpactAnalysisResponse> restoreHistory(@PathVariable UUID historyId) {
-        ImpactAnalysisResponse response = impactAnalysisService.restoreHistory(historyId);
+        ImpactAnalysisResponse response = withStoredRowVersion(impactAnalysisService.restoreHistory(historyId));
         return response != null ? ResponseEntity.ok(response) : ResponseEntity.badRequest().build();
     }
 
@@ -99,5 +99,17 @@ public class ImpactAnalysisController {
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         impactAnalysisService.delete(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * rowVersion (xmin) ในผลที่ service สร้างระหว่าง transaction ยังเป็นค่าที่ Hibernate เดา: อ่านค่าจริงหลัง commit
+     * (บางกรณี auto-detect ไม่ได้บันทึก ผลจึงคงเดิม แค่เติม rowVersion ของแถวที่เก็บไว้ ถ้ามี)
+     */
+    private ImpactAnalysisResponse withStoredRowVersion(ImpactAnalysisResponse response) {
+        if (response != null && response.getChangeRequestId() != null) {
+            ImpactAnalysisResponse stored = impactAnalysisService.getByChangeRequest(response.getChangeRequestId());
+            response.setRowVersion(stored != null ? stored.getRowVersion() : null);
+        }
+        return response;
     }
 }

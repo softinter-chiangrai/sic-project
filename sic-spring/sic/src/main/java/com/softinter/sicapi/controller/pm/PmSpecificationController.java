@@ -123,14 +123,15 @@ public class PmSpecificationController {
 
     @PostMapping
     @Operation(summary = "Create or update specification")
-    public ResponseEntity<UUID> save(@Valid @RequestBody PmSpecificationRequest request) {
+    public ResponseEntity<PmSpecificationResponse> save(@Valid @RequestBody PmSpecificationRequest request) {
         UUID businessId = BusinessContextHolder.getBusinessId();
         if (businessId == null) {
             return ResponseEntity.badRequest().build();
         }
         String userId = currentUserService.getUserId();
         UUID id = specificationService.save(request, businessId, userId);
-        return ResponseEntity.status(HttpStatus.CREATED).body(id);
+        // คืนข้อมูลเต็ม (มี rowVersion ใหม่) ไม่งั้น auto-save แล้วกดบันทึกจะชน "มีผู้อื่นแก้ไข" กับตัวเอง
+        return ResponseEntity.status(HttpStatus.CREATED).body(specificationService.findById(id, businessId));
     }
 
     @DeleteMapping("/{id}")

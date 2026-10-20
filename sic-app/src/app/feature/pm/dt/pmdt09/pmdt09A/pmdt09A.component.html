@@ -81,6 +81,18 @@
               (selectionChanged)="onProjectSelected($event)"
             ></sic-combobox>
 
+            <sic-combobox
+              [label]="'PMDT09_SPECIFICATION_LABEL' | translate"
+              formControlName="reviewableId"
+              [apiUrl]="service.apiGetComboboxSpecification"
+              [params]="specParams"
+              valueField="value"
+              textField="text"
+              [clearable]="true"
+              [placeholder]="'PMDT09_SPECIFICATION_PLACEHOLDER' | translate"
+              (selectionChanged)="onSpecSelected($event)"
+            ></sic-combobox>
+
             <sic-input
               [label]="'PMDT09_REVIEW_CODE_LABEL' | translate"
               formControlName="reviewCode"

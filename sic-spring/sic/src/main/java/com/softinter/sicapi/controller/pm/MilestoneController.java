@@ -78,8 +78,9 @@ public class MilestoneController {
             @PathVariable UUID milestoneId,
             @RequestBody MilestoneRequest request) {
         log.info("Updating milestone ID: {}", milestoneId);
-        MilestoneResponse updated = milestoneService.updateMilestone(milestoneId, request);
-        return ResponseEntity.ok(updated);
+        milestoneService.updateMilestone(milestoneId, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(milestoneService.getMilestoneById(milestoneId));
     }
 
     @DeleteMapping("/{milestoneId}")

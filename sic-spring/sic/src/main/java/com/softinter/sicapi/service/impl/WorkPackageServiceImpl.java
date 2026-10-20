@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -88,6 +89,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     public WorkPackageResponse updateWorkPackage(UUID wpId, WorkPackageRequest request) {
         PmWorkPackage wp = wpRepository.findById(wpId)
                 .orElseThrow(() -> new ResourceNotFoundException("Work Package not found"));
+        RowVersionGuard.check(wp.getRowVersion(), request.getRowVersion());
 
         wp.setPackageName(request.getPackageName());
         wp.setDescription(request.getDescription());
@@ -132,6 +134,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
     private WorkPackageResponse toResponse(PmWorkPackage wp) {
         WorkPackageResponse dto = new WorkPackageResponse();
         dto.setId(wp.getId());
+        dto.setRowVersion(wp.getRowVersion());
         dto.setMilestoneId(wp.getMilestone().getId());
         dto.setMilestoneName(wp.getMilestone().getMilestoneName());
         dto.setPackageName(wp.getPackageName());

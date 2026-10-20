@@ -21,7 +21,15 @@
                 COALESCE(r.title, '-')                  AS "title",
                 COALESCE(p.project_code, '-')           AS "projectCode",
                 COALESCE(p.project_name, '-')           AS "projectName",
-                COALESCE(r.review_item_type, '-')       AS "reviewItemType",
+                COALESCE(
+                    CASE 
+                        WHEN r.review_item_type = 'Specification' AND s.specification_code IS NOT NULL 
+                            THEN s.specification_code || ' ' || s.title
+                        WHEN r.review_item_type = 'Specification' THEN 'Specification'
+                        ELSE r.review_item_type 
+                    END, 
+                    '-'
+                ) AS "reviewItemType",
                 COALESCE(r.reviewer, '-')               AS "reviewer",
                 COALESCE(r.assigned_to, '-')            AS "assignedTo",
                 COALESCE(r.severity, '-')               AS "severity",
@@ -41,6 +49,7 @@
                   WHERE c.review_id = r.id AND c.is_delete = false) AS "comments"
             FROM pm_design_review r
             LEFT JOIN pm_customer_project p ON p.id = r.project_id
+            LEFT JOIN pm_specification s ON s.id = r.review_item_id
             WHERE r.is_delete = false
               AND r.id = CAST($P{designReviewId} AS uuid)
               AND ($P{businessId} IS NULL OR $P{businessId} = '' OR r.business_id = CAST(NULLIF($P{businessId}, '') AS uuid))]]></query>
@@ -171,12 +180,18 @@
 				<expression><![CDATA[$F{assignedTo}]]></expression>
 			</element>
 
-			<!-- Row 4: Due date -->
+			<!-- Row 4: Due date & Version -->
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000024" positionType="Float" x="10" y="94" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
 				<expression><![CDATA[($P{lang}.equals("en") ? "Due Date:" : "กำหนดเสร็จ:")]]></expression>
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000025" positionType="Float" x="110" y="94" width="145" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{dueDate}]]></expression>
+			</element>
+			<element kind="textField" uuid="5d047263-a98b-44cc-8d5d-783262b3997a" positionType="Float" x="270" y="94" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
+				<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
+			</element>
+			<element kind="textField" uuid="9a33212d-f43e-4fad-8384-1973c7b59916" positionType="Float" x="370" y="94" width="138" height="18" blankWhenNull="true" vTextAlign="Middle" style="Value">
+				<expression><![CDATA[$F{docVersion} != null ? $F{docVersion} : "-"]]></expression>
 			</element>
 
 			<!-- Row 5: Design link -->
@@ -185,12 +200,6 @@
 			</element>
 			<element kind="textField" uuid="d9e50009-0001-4001-8001-d3516a000027" positionType="Float" x="110" y="114" width="398" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
 				<expression><![CDATA[$F{figmaUrl}]]></expression>
-			</element>
-			<element kind="textField" uuid="5d047263-a98b-44cc-8d5d-783262b3997a" positionType="Float" x="10" y="134" width="95" height="18" blankWhenNull="true" vTextAlign="Middle" bold="false" style="Label">
-				<expression><![CDATA[($P{lang}.equals("en") ? "Version:" : "เวอร์ชัน:")]]></expression>
-			</element>
-			<element kind="textField" uuid="9a33212d-f43e-4fad-8384-1973c7b59916" positionType="Float" x="110" y="134" width="145" height="18" textAdjust="StretchHeight" blankWhenNull="true" vTextAlign="Middle" style="Value">
-				<expression><![CDATA[$F{docVersion} != null ? $F{docVersion} : "-"]]></expression>
 			</element>
 
 			<!-- Section 2: Description -->

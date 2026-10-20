@@ -26,4 +26,7 @@ public class PhaseResponse {
     private Integer milestoneCount;
     private Integer taskCount;
     private Integer taskCompletedCount;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

@@ -712,52 +712,57 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             next: (res: any) => {
                 const id = res?.id || (typeof res === 'string' ? res : null) || this.changeRequestId;
 
+                // ขั้นต่อไป (ส่งอนุมัติ / แจ้งสำเร็จ) รอให้บันทึก Impact Analysis เสร็จก่อน จะได้ไม่ทิ้งผลที่บันทึกไม่ผ่านไว้เงียบ ๆ
+                const finish = () => {
+                    if (this.selectedFlowId && id) {
+                        this.approvalService
+                            .submitForApproval({
+                                documentType: 'CHANGE_REQUEST',
+                                documentId: id,
+                                documentCode: data.crCode || ('CR-' + id.substring(0, 8).toUpperCase()),
+                                documentTitle: data.title || this.translate.instant('PMDT06_DEFAULT_CR_TITLE'),
+                                flowId: this.selectedFlowId,
+                                comment: this.translate.instant('PMDT06A_SUBMIT_APPROVAL_COMMENT'),
+                            })
+                            .pipe(finalize(() => (this.isSaving = false)))
+                            .subscribe({
+                                next: () => {
+                                    this.isSaved = true;
+                                    this.form.markAsPristine();
+                                    this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
+                                        this.navigateBack();
+                                    });
+                                },
+                                error: (err) => {
+                                    this.isSaved = true;
+                                    this.form.markAsPristine();
+                                    this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
+                                        this.navigateBack();
+                                    });
+                                },
+                            });
+                    } else {
+                        this.isSaving = false;
+                        this.isSaved = true;
+                        this.form.markAsPristine();
+                        this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
+                            this.navigateBack();
+                        });
+                    }
+                };
+
                 // บันทึก Impact Analysis หากผู้ใช้ปรับแต่งรายการ (MANUAL) หรือสร้างใหม่
                 const currentImpact = this.impactData();
                 if (id && currentImpact && (currentImpact.analysisStatus === 'MANUAL' || !this.changeRequestId)) {
-                    const impactPayload = {
-                        ...currentImpact,
-                        changeRequestId: id,
-                    };
-                    this.impactService.save(impactPayload).subscribe({
-                        error: (err) => console.warn('บันทึกผลกระทบไม่สำเร็จ:', err)
+                    this.impactService.save({ ...currentImpact, changeRequestId: id }).subscribe({
+                        next: finish,
+                        error: (err) =>
+                            this.dialog
+                                .warn('บันทึกผลกระทบไม่สำเร็จ', err.error?.message || 'บันทึก Change Request แล้ว แต่บันทึก Impact Analysis ไม่สำเร็จ')
+                                .then(finish),
                     });
-                }
-
-                if (this.selectedFlowId && id) {
-                    this.approvalService
-                        .submitForApproval({
-                            documentType: 'CHANGE_REQUEST',
-                            documentId: id,
-                            documentCode: data.crCode || ('CR-' + id.substring(0, 8).toUpperCase()),
-                            documentTitle: data.title || this.translate.instant('PMDT06_DEFAULT_CR_TITLE'),
-                            flowId: this.selectedFlowId,
-                            comment: this.translate.instant('PMDT06A_SUBMIT_APPROVAL_COMMENT'),
-                        })
-                        .pipe(finalize(() => (this.isSaving = false)))
-                        .subscribe({
-                            next: () => {
-                                this.isSaved = true;
-                                this.form.markAsPristine();
-                                this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
-                                    this.navigateBack();
-                                });
-                            },
-                            error: (err) => {
-                                this.isSaved = true;
-                                this.form.markAsPristine();
-                                this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
-                                    this.navigateBack();
-                                });
-                            },
-                        });
                 } else {
-                    this.isSaving = false;
-                    this.isSaved = true;
-                    this.form.markAsPristine();
-                    this.dialog.success(this.translate.instant('PMDT06_SAVE_SUCCESS_TITLE'), this.translate.instant('PMDT06_SAVE_SUCCESS_MSG')).then(() => {
-                        this.navigateBack();
-                    });
+                    finish();
                 }
             },
             error: (err) => {

@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryItemRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryRequest;
@@ -226,6 +227,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
                     .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูลการส่งมอบ"));
 
             approvalService.assertNotApproved("DELIVERY", entity.getId());
+            RowVersionGuard.check(entity.getRowVersion(), request.getRowVersion());
 
             String oldStatus = entity.getStatus();
 

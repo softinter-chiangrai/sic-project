@@ -117,6 +117,7 @@ export class Pmdt01AComponent implements OnInit {
     }
 
     this.form.patchValue({
+      rowVersion: data.rowVersion,
       projectId: data.projectId || this.projectId,
       phaseCode: data.phaseCode || '',
       phaseName: data.phaseName,
@@ -223,6 +224,7 @@ export class Pmdt01AComponent implements OnInit {
       owner: ownerString || undefined,
       color: raw.color || undefined,
       attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
+      rowVersion: raw.rowVersion ?? undefined,
     };
 
     const request =

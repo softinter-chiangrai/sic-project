@@ -27,4 +27,7 @@ public class ChangeRequestRequest {
     private String changeLevel; // PATCH | MINOR | MAJOR
     private String status;
     private UUID attachmentGroupId;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -312,8 +313,7 @@ public class BusinessAccessServiceImpl implements BusinessAccessService {
             business = businessRepository.findById(request.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Business not found with id: " + request.getId()));
 
-            // ตั้งค่า RowVersion ให้ Hibernate ตรวจสอบ Optimistic Locking
-            business.setRowVersion(request.getRowVersion());
+            RowVersionGuard.check(business.getRowVersion(), request.getRowVersion());
 
             // จัดการ UploadGroupId ก่อน map
             List<StorageUploadReference> uploadRefs = request.getUploadGroupData() != null ? request.getUploadGroupData() : List.of();

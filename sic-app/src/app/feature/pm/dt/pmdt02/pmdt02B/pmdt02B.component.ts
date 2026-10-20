@@ -154,6 +154,7 @@ export class Pmdt02BComponent implements OnInit {
       this.milestoneId = data.milestoneId;
     }
     this.form.patchValue({
+      rowVersion: data.rowVersion,
       milestoneId: data.milestoneId,
       packageName: data.packageName,
       description: data.description,
@@ -195,6 +196,7 @@ export class Pmdt02BComponent implements OnInit {
       endDate: this.buildISOString(raw.endDate, raw.endTime!),
       color: raw.color || undefined, // ✅ ส่งค่าสี
       attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
+      rowVersion: raw.rowVersion ?? undefined,
     };
 
     const request = this.isEdit && this.wpId

@@ -591,7 +591,7 @@ export class Pmdt12Component implements OnInit, OnDestroy {
                       !anyActiveBug && !allPassed && (currentStatus === 'waiting fix' || currentStatus === 'bugfix');
 
                     if (isPrematureComplete || shouldMoveToComplete || shouldMoveToWaitingFix || shouldMoveToTesting) {
-                      this.service.updateTask(taskRecord.id, { ...taskRecord, status: targetStatus }).subscribe({
+                      this.service.updateTask(taskRecord.id, { ...taskRecord, status: targetStatus, rowVersion: undefined }).subscribe({
                         next: () => {
                           const currentTasks = this.projectTasks();
                           const idx = currentTasks.findIndex((t: any) => t.id === taskId);
@@ -677,15 +677,17 @@ export class Pmdt12Component implements OnInit, OnDestroy {
     if (this.isPassedTest(testCase)) {
       return false;
     }
+    // เฉพาะเคสที่ตัวมันเองยังมี Active Bug เท่านั้นที่ไม่สามารถทดสอบได้
     if (this.hasActiveBug(testCase)) {
       return false;
     }
-    // If testCase has a linked task, allow execution if in 'testing' or 'waiting fix'
+    // เคสอื่นๆ ต้องสามารถทดสอบได้เสมอ แม้ Task จะอยู่ในสถานะ bugfix, waiting fix, testing, in progress หรือ todo
+    // ไม่บล็อกเคสอื่นเมื่อมีเคสหนึ่งเปิด Bug แล้ว Task เปลี่ยนสถานะเป็น bugfix
     if (testCase.taskId) {
       const status = (this.getEffectiveTaskStatus(testCase) || testCase.taskStatus || '').toLowerCase();
-      return status === 'testing' || status === 'waiting fix';
+      return !['closed', 'cancelled'].includes(status);
     }
-    // If no task is linked, allow execution (general / regression test)
+    // ถ้าไม่มี Task ผูกอยู่ อนุญาตให้ทดสอบได้เสมอ (general / regression test)
     return true;
   }
 
@@ -694,7 +696,7 @@ export class Pmdt12Component implements OnInit, OnDestroy {
       return this.translate.instant('PMDT12_CANNOT_TEST_BUG_MSG');
     }
     const status = (this.getEffectiveTaskStatus(testCase) || testCase.taskStatus || '').toLowerCase();
-    if (testCase.taskId && status !== 'testing' && status !== 'waiting fix') {
+    if (testCase.taskId && ['closed', 'cancelled'].includes(status)) {
       return this.translate.instant('PMDT12_TASK_NOT_READY_MSG');
     }
     return this.translate.instant('PMDT12_SAVE_TEST_RESULT_TT');

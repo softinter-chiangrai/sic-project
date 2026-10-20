@@ -14,5 +14,8 @@ public class PhaseRequest {
     private LocalDate endDate;
     private String color;
     private String owner;
-    private UUID dependencyId; 
+    private UUID dependencyId;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

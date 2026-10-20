@@ -18,4 +18,7 @@ public class WorkPackageResponse {
     private String status;
     private String color;
     private List<TaskResponse> tasks;
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

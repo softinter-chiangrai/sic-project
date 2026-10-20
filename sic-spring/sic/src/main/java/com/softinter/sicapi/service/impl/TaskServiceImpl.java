@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.TaskRequest;
 import com.softinter.sicapi.dto.response.TaskResponse;
 import com.softinter.sicapi.entity.enums.TraceRelationship;
@@ -136,6 +137,7 @@ public class TaskServiceImpl implements TaskService {
     public TaskResponse updateTask(UUID taskId, TaskRequest request) {
         PmTask task = taskRepository.findById(taskId)
                 .orElseThrow(() -> new ResourceNotFoundException("Task not found"));
+        RowVersionGuard.check(task.getRowVersion(), request.getRowVersion());
 
         java.util.List<String> changes = new java.util.ArrayList<>();
         DocumentDiffHelper.checkChange(changes, "รหัส Task", task.getTaskCode(), request.getTaskCode());
@@ -287,6 +289,7 @@ public class TaskServiceImpl implements TaskService {
     private TaskResponse toResponse(PmTask task) {
         TaskResponse dto = new TaskResponse();
         dto.setId(task.getId());
+        dto.setRowVersion(task.getRowVersion());
         if (task.getWorkPackage() != null) {
             dto.setWorkPackageId(task.getWorkPackage().getId());
             dto.setWorkPackageName(task.getWorkPackage().getPackageName());

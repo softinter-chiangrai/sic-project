@@ -17,7 +17,7 @@ public interface PmDiagramTabRepository extends JpaRepository<PmDiagramTab, UUID
 
     List<PmDiagramTab> findByBusinessIdAndProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(UUID businessId, UUID projectId);
 
-    List<PmDiagramTab> findByUserIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(String userId);
+    List<PmDiagramTab> findByBusinessIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(UUID businessId);
 
     @Query("SELECT d FROM PmDiagramTab d WHERE d.projectId = :projectId AND d.isDelete = false AND LOWER(d.name) LIKE LOWER(CONCAT('%', :keyword, '%'))")
     List<PmDiagramTab> searchByProjectIdAndKeyword(@Param("projectId") UUID projectId, @Param("keyword") String keyword);

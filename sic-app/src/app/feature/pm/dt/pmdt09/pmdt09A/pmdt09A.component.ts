@@ -138,10 +138,28 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     this.cdr.markForCheck();
   }
 
+  // ===== Specification sync =====
+  specParams: Record<string, any> = {};
+
   onProjectSelected(item: any): void {
     const projectId = item?.value ?? item?.id ?? null;
     if (projectId) {
       this.loadCustomerFromProject(projectId);
+      this.specParams = { projectId };
+    } else {
+      this.specParams = {};
+    }
+    this.form.patchValue({ reviewableId: null, reviewableName: null });
+    this.cdr.markForCheck();
+  }
+
+  onSpecSelected(item: any): void {
+    const specId = item?.value ?? item?.id ?? null;
+    const specName = item?.text ?? null;
+    if (specId) {
+      this.form.patchValue({ reviewableId: specId, reviewableType: 'Specification', reviewableName: specName });
+    } else {
+      this.form.patchValue({ reviewableId: null, reviewableType: 'Specification', reviewableName: null });
     }
     this.cdr.markForCheck();
   }
@@ -174,6 +192,7 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     const initialProjectId = this.form.get('projectId')?.value;
     if (initialProjectId) {
       this.loadCustomerFromProject(initialProjectId, true);
+      this.specParams = { projectId: initialProjectId };
     }
 
     if (this.isEdit && this.reviewId) {

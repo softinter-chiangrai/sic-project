@@ -287,6 +287,7 @@ export class Pmdt02CComponent implements OnInit {
       this.workPackageId = data.workPackageId;
     }
     this.form.patchValue({
+      rowVersion: data.rowVersion,
       workPackageId: data.workPackageId,
       specificationId: data.specificationId || null,
       taskCode: data.taskCode,
@@ -366,6 +367,7 @@ export class Pmdt02CComponent implements OnInit {
       color: raw.color || undefined,
       assigneeIds: raw.assigneeIds || [],
       attachmentGroupId: this.extractUploadGroupId(raw.attachmentGroupId) || undefined,
+      rowVersion: raw.rowVersion ?? undefined,
     };
 
     const request = this.isEdit && this.taskId

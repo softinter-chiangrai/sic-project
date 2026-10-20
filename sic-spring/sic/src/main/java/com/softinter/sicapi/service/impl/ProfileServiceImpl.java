@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -87,7 +88,7 @@ public class ProfileServiceImpl implements ProfileService {
         if (request.getState() == EntityState.MODIFIED.getEntityStateCode()) {
             profile = profileRepository.findById(request.getId())
                     .orElseThrow(() -> new IllegalArgumentException("Profile not found with id: " + request.getId()));
-            profile.setRowVersion(request.getRowVersion());
+            RowVersionGuard.check(profile.getRowVersion(), request.getRowVersion());
         } else {
             profile = new SuProfile();
         }

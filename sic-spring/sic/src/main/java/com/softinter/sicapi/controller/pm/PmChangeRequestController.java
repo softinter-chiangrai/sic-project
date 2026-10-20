@@ -51,7 +51,9 @@ public class PmChangeRequestController {
 
     @PutMapping("/{id}")
     public ResponseEntity<ChangeRequestResponse> update(@PathVariable UUID id, @Valid @RequestBody ChangeRequestRequest request) {
-        return ResponseEntity.ok(changeRequestService.updateChangeRequest(id, request));
+        changeRequestService.updateChangeRequest(id, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(changeRequestService.getChangeRequest(id));
     }
 
     @GetMapping("/{id}")

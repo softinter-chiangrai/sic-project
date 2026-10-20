@@ -24,4 +24,7 @@ public class TaskRequest {
 
     // ===== เพิ่มสำหรับ Traceability =====
     private UUID specificationId;   // เชื่อมกับ Specification
+
+    /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
+    private Integer rowVersion;
 }

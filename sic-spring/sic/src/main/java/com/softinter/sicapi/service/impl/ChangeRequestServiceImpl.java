@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.ChangeRequestRequest;
 import com.softinter.sicapi.dto.response.ChangeRequestResponse;
 import com.softinter.sicapi.dto.response.CrAssigneeResponse;
@@ -213,6 +214,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     public ChangeRequestResponse updateChangeRequest(UUID id, ChangeRequestRequest request) {
         PmChangeRequest cr = changeRequestRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("ไม่พบข้อมูล Change Request"));
+        RowVersionGuard.check(cr.getRowVersion(), request.getRowVersion());
 
         if (!"DRAFT".equals(cr.getStatus()) && !"SUBMITTED".equals(cr.getStatus())) {
             throw new IllegalStateException("ไม่สามารถแก้ไข Change Request ในสถานะ " + cr.getStatus() + " ได้");
@@ -633,6 +635,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
     private ChangeRequestResponse toResponse(PmChangeRequest cr) {
         ChangeRequestResponse response = new ChangeRequestResponse();
         response.setId(cr.getId());
+        response.setRowVersion(cr.getRowVersion());
         response.setCrCode(cr.getCrCode());
         response.setProjectId(cr.getProjectId());
         if (cr.getProjectId() != null) {
