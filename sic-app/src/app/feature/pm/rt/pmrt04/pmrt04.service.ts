@@ -16,6 +16,10 @@ export class Pmrt04Service {
     return localStorage.getItem('businessId') || '';
   }
 
+  saveContract(contract: Record<string, any>): Observable<string> {
+    return this.http.post<string>(`${this.baseUrl}/save`, contract);
+  }
+
   getContract(id: string): Observable<Pmrt04Model> {
     return this.http.get<Pmrt04Model>(`${this.baseUrl}/${id}`);
   }

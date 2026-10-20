@@ -27,5 +27,12 @@
 </header> -->
 
 <sic-container>
+    @if (hasBusiness) {
+        <a routerLink="/feature/dashboard"
+            class="inline-flex items-center gap-2 mb-3 text-sm text-[var(--text-muted)] hover:text-[var(--text-active)] transition-colors cursor-pointer">
+            <i class="bi bi-arrow-left"></i>
+            {{ 'MANAGEMENT.APP.BACK_TO_APP' | translate }}
+        </a>
+    }
     <router-outlet></router-outlet>
 </sic-container>

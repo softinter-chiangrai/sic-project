@@ -53,7 +53,7 @@ public class AiModuleRegistry {
                 .label("สัญญา (Contract)")
                 .listRoute("/feature/pm/contract")
                 .createRoute("/feature/pm/contract/new")
-                .schemaDescription("{ \"contractName\": string, \"contractNo\": string|null, \"description\": string, \"contractValue\": number|null, \"startDate\": null, \"endDate\": null }")
+                .schemaDescription("{ \"contractType\": \"Development Contract|Maintenance Contract|Support Contract|Change Request Contract|Extension Contract\", \"scopeSummary\": \"สรุปขอบเขตงานของสัญญา\", \"contractValue\": number, \"paymentTerms\": \"เงื่อนไขการชำระเงิน เช่น แบ่งจ่าย 3 งวด 30/40/30\", \"startDate\": \"YYYY-MM-DD\", \"endDate\": \"YYYY-MM-DD\" }")
                 .build());
 
         register(ModuleDef.builder()

@@ -210,6 +210,7 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
 
   ngOnChanges(_changes: SimpleChanges): void {
     if (!this.isBrowser) return;
+    this.cdr.markForCheck();
     this.scheduleConnectorLayout();
   }
 
@@ -242,24 +243,19 @@ export class SicOrganizationalChartComponent implements AfterViewInit, OnChanges
         onSave: (payload: NodeEditPayload) => {
           const newChild: SicOrganizationalChartNode = {
             ...draftNode,
+            roleCode: payload.roleCode,
             nameEn: payload.nameEn,
             nameLocal: payload.nameLocal,
             color: payload.color,
           };
-          parentNode.children.push(newChild);
           this.nodeAdded.emit({ parentId: parentNode.id, node: newChild });
-          this.dataChanged.emit(this.root);
-          this.scheduleConnectorLayout();
         },
       },
     });
   }
 
   removeChild(parentNode: SicOrganizationalChartNode, childId: string, childIndex: number): void {
-    parentNode.children.splice(childIndex, 1);
     this.nodeRemoved.emit({ parentId: parentNode.id, nodeId: childId });
-    this.dataChanged.emit(this.root);
-    this.scheduleConnectorLayout();
   }
 
   editNode(node: SicOrganizationalChartNode): void {

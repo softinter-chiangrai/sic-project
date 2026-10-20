@@ -175,11 +175,11 @@ export class Burt02Component implements OnInit {
         next: (data) => {
           const permissions: ProgramPermissionSummary[] = data.modules.map((m) => {
             const actions: string[] = [];
-            if (m.isAdd) actions.push('Add');
-            if (m.isSave) actions.push('Save');
-            if (m.isRemove) actions.push('Delete');
-            if (m.isPrint) actions.push('Print');
-            if (m.isSearch) actions.push('Search');
+            if (m.isAdd) actions.push(this.translate.instant('BURT02A_COL_ADD'));
+            if (m.isSave) actions.push(this.translate.instant('BURT02A_COL_SAVE'));
+            if (m.isRemove) actions.push(this.translate.instant('BURT02A_COL_DELETE'));
+            if (m.isPrint) actions.push(this.translate.instant('BURT02A_COL_PRINT'));
+            if (m.isSearch) actions.push(this.translate.instant('BURT02A_COL_SEARCH'));
             const levelText = actions.length > 0 ? actions.join(', ') : (m.isActive ? this.translate.instant('BURT02_ACTIVE_LABEL') : this.translate.instant('BURT02_NO_PERM_LABEL'));
 
             return {

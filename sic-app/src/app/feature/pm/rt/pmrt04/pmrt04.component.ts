@@ -13,7 +13,7 @@ import {
   ViewChild,
 } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
-import { finalize } from 'rxjs';
+import { concat, finalize, toArray } from 'rxjs';
 
 import { environment } from '../../../../../environments/environment';
 import { DialogService } from '../../../../core/services/dialog.service';
@@ -33,11 +33,12 @@ import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
+import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 @Component({
   selector: 'app-pmrt04',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicEmptyStateComponent],
+  imports: [SicAiBatchModalComponent, SicBulkExportBarComponent,CommonModule, RouterModule, FormsModule, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicEmptyStateComponent],
   templateUrl: './pmrt04.component.html',
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
@@ -764,5 +765,74 @@ export class Pmrt04Component implements OnInit {
       CANCELLED: this.translate.instant('PMRT04_APPROVAL_CANCELLED'),
     };
     return status ? map[status] || '-' : '-';
+  }
+
+  // ===== AI Batch =====
+  protected showAiBatchModal = signal(false);
+  protected aiBatchSaving = signal(false);
+  readonly aiBatchFields: AiBatchFieldDef[] = [
+    { key: 'contractType', label: this.translate.instant('PMRT04A_CONTRACT_TYPE_LABEL'), type: 'text' },
+    { key: 'scopeSummary', label: this.translate.instant('PMRT04A_SCOPE_SUMMARY_LABEL'), type: 'textarea' },
+    { key: 'contractValue', label: this.translate.instant('PMRT04A_CONTRACT_VALUE_LABEL'), type: 'number' },
+    { key: 'paymentTerms', label: this.translate.instant('PMRT04A_PAYMENT_TERMS_LABEL'), type: 'text' },
+    { key: 'startDate', label: this.translate.instant('PMRT04A_START_DATE_LABEL'), type: 'date' },
+    { key: 'endDate', label: this.translate.instant('PMRT04A_END_DATE_LABEL'), type: 'date' },
+  ];
+
+  protected resolveTargetProjectId(): string | null {
+    return this.filterProjectId() || this.customerState.getProjectId();
+  }
+
+  onAiBatchSaved(rows: Record<string, any>[]): void {
+    const projectId = this.resolveTargetProjectId();
+    const customerId =
+      this.filterCustomerId() ||
+      this.customerState.getCustomerId() ||
+      this.contracts().find((c) => c.projectId === projectId)?.customerId;
+    if (!projectId || !customerId) {
+      this.dialog.warn(
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_TITLE'),
+        this.translate.instant('PM_AI_BATCH_NO_PROJECT_DESC'),
+      );
+      return;
+    }
+
+    const today = new Date().toISOString().slice(0, 10);
+    const nextYear = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 10);
+    // ทีละรายการ: backend รันเลขสัญญา CTR-xxx จากจำนวนที่มี ยิงพร้อมกันจะได้เลขซ้ำ
+    const requests = rows.map((r) =>
+      this.contractService.saveContract({
+        contractNo: '[Auto]',
+        contractType: r['contractType'] || 'Development Contract',
+        customerId,
+        projectId,
+        startDate: r['startDate'] || today,
+        endDate: r['endDate'] || nextYear,
+        contractValue: Number(r['contractValue']) || 0,
+        paymentTerms: r['paymentTerms'] || '',
+        scopeSummary: r['scopeSummary'] || r['description'] || '',
+        signStatus: 'Draft',
+        autoRenew: r['contractType'] === 'Maintenance Contract',
+        isActive: true,
+      }),
+    );
+
+    this.aiBatchSaving.set(true);
+    concat(...requests)
+      .pipe(toArray(), finalize(() => this.aiBatchSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.showAiBatchModal.set(false);
+          this.dialog.success(
+            this.translate.instant('PM_AI_BATCH_SUCCESS_TITLE'),
+            this.translate.instant('PM_AI_BATCH_SUCCESS_DESC').replace('{count}', String(rows.length)),
+          );
+          this.gridRef?.reload();
+        },
+        error: (err) => {
+          this.dialog.error(this.translate.instant('PM_AI_BATCH_ERROR_TITLE'), err?.error?.message || err?.message);
+          this.gridRef?.reload();
+        },
+      });
   }
 }

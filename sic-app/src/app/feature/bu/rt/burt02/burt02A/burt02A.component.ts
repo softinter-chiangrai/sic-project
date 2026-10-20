@@ -473,7 +473,7 @@ export class Burt02AComponent implements OnInit, CanComponentDeactivate {
       if (missingCritical) {
         this.dialog.warn(
           this.translate.instant('BURT02A_ERROR_TITLE'),
-          'ไม่สามารถถอดสิทธิ์โปรแกรมจัดการระบบพื้นฐาน (BURT04, BURT05) ออกจากบทบาทผู้ดูแลระบบ (ADMIN) ได้'
+          this.translate.instant('BURT02A_ADMIN_CRITICAL_PERM_MSG')
         );
         return;
       }

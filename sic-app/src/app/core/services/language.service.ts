@@ -22,6 +22,9 @@ export class LanguageService {
 
   private readonly defaultTranslations: Record<'th' | 'en', Record<string, string>> = {
     th: {
+      COMBOBOX_PLACEHOLDER: 'เลือกรายการ',
+      COMBOBOX_EMPTY: 'ไม่พบข้อมูล',
+      COMBOBOX_LOADING: 'กำลังโหลด...',
       PMRT04A_CONTRACT_TYPE_DEV: 'สัญญาพัฒนาซอฟต์แวร์ (Development Contract)',
       PMRT04A_CONTRACT_TYPE_MA: 'สัญญาบำรุงรักษา (Maintenance Contract)',
       PMRT04A_CONTRACT_TYPE_SUPPORT: 'สัญญาบริการดูแลระบบ (Support Contract)',
@@ -737,6 +740,9 @@ export class LanguageService {
       PMDT12A_TEST_CASE_CODE_LABEL: 'รหัส Test Case',
     },
     en: {
+      COMBOBOX_PLACEHOLDER: 'Select option',
+      COMBOBOX_EMPTY: 'No data found',
+      COMBOBOX_LOADING: 'Loading...',
       PMRT04A_CONTRACT_TYPE_DEV: 'Development Contract',
       PMRT04A_CONTRACT_TYPE_MA: 'Maintenance Contract',
       PMRT04A_CONTRACT_TYPE_SUPPORT: 'Support Contract',

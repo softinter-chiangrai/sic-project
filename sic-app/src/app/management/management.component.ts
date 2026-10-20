@@ -6,6 +6,7 @@ import { AppLanguage, LanguageService } from '../core/services/language.service'
 import { TranslateModule } from '@ngx-translate/core';
 import { DialogService } from '../core/services/dialog.service';
 import { AuthService } from '../core/auth/auth.service';
+import { BusinessService } from '../core/services/business.service';
 import { TranslateService } from '@ngx-translate/core';
 import { APP_TRANSLATE_MODULE_CODE, APP_TRANSLATE_PROGRAM_CODE, AppTranslateLoader } from '../core/services/app-translate-loader.service';
 
@@ -25,6 +26,8 @@ export class Management {
   readonly translate = inject(TranslateService);
   readonly isDark = this.themeService.isDark.asReadonly();
   readonly currentLanguage = signal<AppLanguage>(this.languageService.getCurrentLanguage());
+  // ยังไม่มีธุรกิจ → /feature จะเด้งกลับมาที่นี่ ไม่ต้องโชว์ปุ่ม
+  readonly hasBusiness = !!inject(BusinessService).getCurrentBusinessId();
 
   toggleTheme(): void {
     this.themeService.toggleDark();

@@ -196,6 +196,7 @@
   "BURT02A_EDIT_BTN": "Edit",
   "BURT02A_EDIT_TITLE": "Edit (Add + Save + Print + Search)",
   "BURT02A_ERROR_TITLE": "An Error Occurred",
+  "BURT02A_ADMIN_CRITICAL_PERM_MSG": "Cannot remove core system management programs (BURT04, BURT05) from the ADMIN role",
   "BURT02A_FILTER_MODULE_PLACEHOLDER": "Filter Module",
   "BURT02A_FULL_BTN": "Full",
   "BURT02A_FULL_TITLE": "Full Permissions (All)",
@@ -4726,6 +4727,7 @@
   "MANAGEMENT": {
     "APP": {
       "LOGOUT_CONFIRM_TITLE": "Sign out",
+      "BACK_TO_APP": "Back to app",
       "LOGOUT_CONFIRM_MESSAGE": "Do you want to sign out?"
     }
   },
