@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.dto.request.PmInvoiceItemRequest;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
 import com.softinter.sicapi.dto.response.DocumentVersionResponse;
@@ -53,6 +54,8 @@ import jakarta.persistence.criteria.Subquery;
 @Service
 @RequiredArgsConstructor
 public class PmInvoiceServiceImpl implements PmInvoiceService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmInvoiceRepository invoiceRepository;
     private final PmInvoiceItemRepository invoiceItemRepository;
@@ -188,6 +191,7 @@ public class PmInvoiceServiceImpl implements PmInvoiceService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             if (entity.getInvoiceNo() == null || entity.getInvoiceNo().isBlank()) {
+                codeSequenceLock.lock("INVOICE", entity.getProjectId()); // parallel saves must not get the same code
                 long count = invoiceRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
                 String invoiceNo;
                 do {

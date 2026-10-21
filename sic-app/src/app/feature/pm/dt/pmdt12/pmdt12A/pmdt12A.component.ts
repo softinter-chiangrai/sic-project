@@ -800,7 +800,8 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
   private dispatchCreateTask(data: any, parentTask: any) {
     const todayStr = new Date().toISOString().split('T')[0];
-    const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
+    // milliseconds in base 36: a random 4-digit number collided often and the task save then failed as "code exists"
+    const bugCode = 'BUG-' + Date.now().toString(36).toUpperCase();
     
     // Format description with rich details
     let desc = `<b>[${this.translate.instant('PMDT12A_BUG_FROM_TEST_RESULT')}: ${data.testCaseCode || ''}]</b><br/><br/>`;

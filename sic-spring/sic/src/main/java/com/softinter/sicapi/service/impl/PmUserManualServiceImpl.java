@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.dto.request.PmUserManualRequest;
 import com.softinter.sicapi.dto.request.PmUserManualSectionRequest;
 import com.softinter.sicapi.dto.response.PmUserManualResponse;
@@ -42,6 +43,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PmUserManualServiceImpl implements PmUserManualService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmUserManualRepository manualRepository;
     private final PmUserManualSectionRepository sectionRepository;
@@ -137,6 +140,7 @@ public class PmUserManualServiceImpl implements PmUserManualService {
             entity.setCreatedBy(userId);
             entity.setCreatedDate(Instant.now());
             if (request.getManualCode() == null || request.getManualCode().isBlank()) {
+                codeSequenceLock.lock("MANUAL", request.getProjectId()); // parallel saves must not get the same code
                 long count = manualRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
                 String code;
                 do {

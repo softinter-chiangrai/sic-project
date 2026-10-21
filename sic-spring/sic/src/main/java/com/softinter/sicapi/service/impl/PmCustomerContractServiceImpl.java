@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.util.RowVersionGuard;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -62,6 +63,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class PmCustomerContractServiceImpl implements PmCustomerContractService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmCustomerContractRepository contractRepository;
     private final PmCustomerRepository customerRepository;
@@ -366,6 +369,8 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
             contract.setBusinessId(businessId);
             contract.setIsDelete(false);
 
+            // new contract or renewal: both pick the next free number, parallel saves must not get the same one
+            codeSequenceLock.lock("CONTRACT", request.getProjectId());
             if (request.getContractNo() == null || request.getContractNo().isBlank()
                     || request.getContractNo().contains("[สร้างอัตโนมัติ]")
                     || request.getContractNo().contains("[Auto")) {

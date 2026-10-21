@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.ChangeRequestRequest;
 import com.softinter.sicapi.dto.response.ChangeRequestResponse;
@@ -44,6 +45,8 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class ChangeRequestServiceImpl implements ChangeRequestService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmChangeRequestRepository changeRequestRepository;
     private final PmRequirementRepository requirementRepository;
@@ -133,6 +136,7 @@ public class ChangeRequestServiceImpl implements ChangeRequestService {
             }
             cr.setCrCode(code);
         } else {
+            if (projId != null) codeSequenceLock.lock("CHANGE_REQUEST", projId); // parallel saves must not get the same code
             long count = (projId != null ? changeRequestRepository.countByProjectIdAndIsDeleteFalse(projId) : 0) + 1;
             String code;
             do {

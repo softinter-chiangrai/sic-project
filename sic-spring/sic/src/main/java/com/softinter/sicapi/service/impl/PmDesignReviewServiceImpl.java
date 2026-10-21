@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
 import com.softinter.sicapi.dto.response.PmDesignReviewResponse;
@@ -56,6 +57,8 @@ import com.softinter.sicapi.entity.pm.PmSpecification;
 @Service
 @RequiredArgsConstructor
 public class PmDesignReviewServiceImpl implements PmDesignReviewService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmDesignReviewRepository designReviewRepository;
     private final PmReviewCommentRepository reviewCommentRepository;
@@ -177,6 +180,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
 
         entity.setProject(project);
         if (request.getReviewCode() == null || request.getReviewCode().isBlank()) {
+            codeSequenceLock.lock("DESIGN_REVIEW", request.getProjectId()); // parallel saves must not get the same code
             long count = designReviewRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
             String reviewCode;
             do {

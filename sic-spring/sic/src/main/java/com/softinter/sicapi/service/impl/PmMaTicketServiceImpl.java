@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.dto.request.PmMaTicketRequest;
 import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.dto.response.PmMaTicketResponse;
@@ -47,6 +48,8 @@ import org.springframework.data.jpa.domain.Specification;
 @Service
 @RequiredArgsConstructor
 public class PmMaTicketServiceImpl implements PmMaTicketService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmMaTicketRepository ticketRepository;
     private final PmMaTicketAssigneeRepository ticketAssigneeRepository;
@@ -173,6 +176,7 @@ public class PmMaTicketServiceImpl implements PmMaTicketService {
             entity.setCreatedDate(Instant.now());
             mapRequestToEntity(request, entity);
             if (entity.getTicketNo() == null || entity.getTicketNo().isBlank()) {
+                codeSequenceLock.lock("MA_TICKET", entity.getProjectId()); // parallel saves must not get the same code
                 long count = ticketRepository.countByProjectIdAndIsDeleteFalse(entity.getProjectId()) + 1;
                 String ticketNo;
                 do {

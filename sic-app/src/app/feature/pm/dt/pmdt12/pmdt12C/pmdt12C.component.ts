@@ -152,7 +152,8 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
 
     const todayStr = new Date().toISOString().split('T')[0];
     const nextDayStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
-    const bugCode = 'BUG-' + Math.floor(1000 + Math.random() * 9000);
+    // milliseconds in base 36: a random 4-digit number collided often and the task save then failed as "code exists"
+    const bugCode = 'BUG-' + Date.now().toString(36).toUpperCase();
 
     this.form.patchValue({
       taskCode: bugCode,

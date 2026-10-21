@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import java.time.Instant;
 import java.util.UUID;
 import java.util.List;
@@ -43,6 +44,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PmRequirementServiceImpl implements PmRequirementService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmRequirementRepository requirementRepository;
     private final SuUploadRepository uploadRepository;
@@ -155,6 +158,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
             requirement.setStatus("Draft");
             requirement.setIsActive(true);
             if (request.getRequirementCode() == null || request.getRequirementCode().isBlank()) {
+                codeSequenceLock.lock("REQUIREMENT", request.getProjectId()); // parallel saves must not get the same code
                 long count = requirementRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
                 String code;
                 do {

@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.PmDeliveryChecklistRequest;
 import com.softinter.sicapi.dto.request.PmDeliveryItemRequest;
@@ -47,6 +48,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PmDeliveryServiceImpl implements PmDeliveryService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmDeliveryRepository deliveryRepository;
     private final PmDeliveryChecklistRepository checklistRepository;
@@ -191,6 +194,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
             entity.setIsDelete(false);
             entity.setIsLocked(false);
             if (request.getDeliveryCode() == null || request.getDeliveryCode().isBlank()) {
+                codeSequenceLock.lock("DELIVERY", request.getProjectId()); // parallel saves must not get the same code
                 long count = deliveryRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
                 String code;
                 do {

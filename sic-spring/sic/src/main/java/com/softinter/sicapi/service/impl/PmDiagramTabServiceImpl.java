@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.dto.request.PmDiagramTabRequest;
@@ -43,6 +44,8 @@ import com.softinter.sicapi.dto.response.ComboboxResponse;
 @RequiredArgsConstructor
 public class PmDiagramTabServiceImpl implements PmDiagramTabService {
 
+    private final CodeSequenceLock codeSequenceLock;
+
     private final PmDiagramTabRepository tabRepository;
     private final PmDiagramVersionRepository versionRepository;
     private final CurrentUserService currentUserService;
@@ -83,6 +86,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
         tab.setProjectId(request.getProjectId());
         tab.setName(request.getName());
         if (request.getDiagramCode() == null || request.getDiagramCode().isBlank()) {
+            codeSequenceLock.lock("DIAGRAM", request.getProjectId()); // parallel saves must not get the same code
             long count = tabRepository.countByProjectIdAndIsDeleteFalse(request.getProjectId()) + 1;
             String code;
             do {

@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.util.RowVersionGuard;
 import com.softinter.sicapi.dto.request.TaskRequest;
 import com.softinter.sicapi.dto.response.TaskResponse;
@@ -45,6 +46,8 @@ import com.softinter.sicapi.util.DateRangeValidator;
 @Slf4j
 public class TaskServiceImpl implements TaskService {
 
+    private final CodeSequenceLock codeSequenceLock;
+
     private final PmTaskRepository taskRepository;
     private final PmTestCaseRepository testCaseRepository;
     private final PmWorkPackageRepository wpRepository;
@@ -70,6 +73,7 @@ public class TaskServiceImpl implements TaskService {
         UUID taskProjectId = wp.getMilestone().getPhase().getProject().getId();
         String taskCode = request.getTaskCode();
         if (taskCode == null || taskCode.isBlank()) {
+            codeSequenceLock.lock("TASK", taskProjectId); // parallel saves must not get the same code
             long count = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(taskProjectId).size() + 1;
             do {
                 taskCode = "TSK-" + String.format("%03d", count++);

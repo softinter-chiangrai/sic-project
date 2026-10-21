@@ -14,6 +14,7 @@ import {
   Input,
   OnChanges,
   OnDestroy,
+  OnInit,
   Output,
   SimpleChanges,
   TemplateRef,
@@ -68,7 +69,7 @@ export class SicComboboxOptionTemplate {
     },
   ],
 })
-export class SicComboboxComponent implements ControlValueAccessor, OnChanges, AfterContentInit, AfterViewInit, OnDestroy {
+export class SicComboboxComponent implements ControlValueAccessor, OnInit, OnChanges, AfterContentInit, AfterViewInit, OnDestroy {
   @Input() label?: string;
   @Input() apiUrl = '';
   private _options: any[] = [];
@@ -225,12 +226,15 @@ export class SicComboboxComponent implements ControlValueAccessor, OnChanges, Af
     this.hasProjectedTemplate = !!this.optionTemplate;
   }
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
+    // before the first check (as the other sic-* inputs do): isRequired reads the control's validators
     this.ngControl = this.injector.get(NgControl, null);
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
+  }
 
+  ngAfterViewInit(): void {
     this.readyHandle = setTimeout(() => {
       this.ready = true;
       this.readyHandle = null;

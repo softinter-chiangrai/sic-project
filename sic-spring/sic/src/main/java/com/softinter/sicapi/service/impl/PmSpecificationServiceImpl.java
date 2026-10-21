@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.dto.request.PmSpecificationRequest;
 import com.softinter.sicapi.dto.response.PmSpecificationResponse;
 import com.softinter.sicapi.entity.enums.EntityState;
@@ -46,6 +47,8 @@ import java.util.Map;
 @Service
 @RequiredArgsConstructor
 public class PmSpecificationServiceImpl implements PmSpecificationService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmSpecificationRepository specificationRepository;
     private final PmCustomerProjectRepository projectRepository;
@@ -192,6 +195,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
             }
 
             if (request.getSpecificationCode() == null || request.getSpecificationCode().isBlank()) {
+                codeSequenceLock.lock("SPECIFICATION", effectiveProjectId); // parallel saves must not get the same code
                 long count = specificationRepository.countByProjectIdAndIsDeleteFalse(effectiveProjectId) + 1;
                 String code;
                 do {

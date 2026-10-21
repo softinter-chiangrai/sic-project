@@ -1,5 +1,6 @@
 package com.softinter.sicapi.service.impl;
 
+import com.softinter.sicapi.util.CodeSequenceLock;
 import com.softinter.sicapi.util.RowVersionGuard;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -45,6 +46,8 @@ import com.softinter.sicapi.util.DateRangeValidator;
 @RequiredArgsConstructor
 @Slf4j
 public class PhaseServiceImpl implements PhaseService {
+
+    private final CodeSequenceLock codeSequenceLock;
 
     private final PmPhaseRepository phaseRepository;
     private final PmMilestoneRepository milestoneRepository;
@@ -92,6 +95,7 @@ public class PhaseServiceImpl implements PhaseService {
 
         String phaseCode = request.getPhaseCode();
         if (phaseCode == null || phaseCode.trim().isEmpty()) {
+            codeSequenceLock.lock("PHASE", request.getProjectId()); // parallel saves must not get the same code
             long count = phaseRepository.countByProjectId(request.getProjectId()) + 1;
             do {
                 phaseCode = String.format("PH-%03d", count++);

@@ -9,6 +9,7 @@ import {
   Injector,
   Input,
   OnDestroy,
+  OnInit,
   ViewChild,
   forwardRef,
   ChangeDetectionStrategy
@@ -45,7 +46,7 @@ import { END_BEFORE_START } from '../../validator/date-range.validator';
     },
   ],
 })
-export class SicDatepickerComponent implements ControlValueAccessor, AfterViewInit, OnDestroy {
+export class SicDatepickerComponent implements ControlValueAccessor, OnInit, AfterViewInit, OnDestroy {
   @Input() label?: string;
   @Input() placeholder = 'Select date';
   @Input() dateFormat?: string;
@@ -101,12 +102,15 @@ export class SicDatepickerComponent implements ControlValueAccessor, AfterViewIn
     this.generateWeekDays();
   }
 
-  ngAfterViewInit(): void {
+  ngOnInit(): void {
+    // before the first check (as the other sic-* inputs do): isRequired reads the control's validators
     this.ngControl = this.injector.get(NgControl, null);
     if (this.ngControl) {
       this.ngControl.valueAccessor = this;
     }
+  }
 
+  ngAfterViewInit(): void {
     // Subscribe to era changes from DateTimeUtil
     this.languageChangeSubscription = DateTimeUtil.onEraChange().subscribe(() => {
       this.onLanguageChange();
