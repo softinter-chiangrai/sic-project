@@ -26,6 +26,9 @@ public class PmDesignReview extends BaseBusinessEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id", nullable = false)
     private PmCustomerProject project;

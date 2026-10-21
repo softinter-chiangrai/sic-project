@@ -38,6 +38,7 @@ export const pmdt02BResolver: ResolveFn<WorkPackagePageData> = async (route) => 
         endTime: endTime,
         status: detail.status,
         color: detail.color,
+        attachmentGroupId: detail.attachmentGroupId ?? null,
       });
       return {
         workPackageData: new SicFromData<WorkPackageModel>(form, form.value as any),

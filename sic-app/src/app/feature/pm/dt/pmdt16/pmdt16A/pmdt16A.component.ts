@@ -603,6 +603,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       id: targetId || undefined,
       state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
       items: itemsPayload,
+      attachmentGroupId: Array.isArray(rawVal.attachmentGroupId) ? rawVal.attachmentGroupId[0]?.uploadGroupId ?? null : rawVal.attachmentGroupId,
     };
     this.service.save(formValue).subscribe({
       next: (res: any) => {

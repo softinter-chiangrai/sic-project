@@ -23,7 +23,7 @@ export class Pmdt16AForm {
       paymentStatus: fb.control('UNPAID', [Validators.required]),
       paidAmount: fb.control(0),
       paidDate: fb.control(null),
-      receiptGroupId: fb.control(null),
+      attachmentGroupId: fb.control(null),
       remark: fb.control(null),
       isActive: fb.control(true),
       state: fb.control(null),

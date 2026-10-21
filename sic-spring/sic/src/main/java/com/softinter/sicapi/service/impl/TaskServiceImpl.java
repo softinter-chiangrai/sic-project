@@ -88,6 +88,7 @@ public class TaskServiceImpl implements TaskService {
         task.setTaskCode(taskCode);
         task.setTaskName(request.getTaskName());
         task.setDescription(request.getDescription());
+        task.setAttachmentGroupId(request.getAttachmentGroupId());
         task.setAssignedTo(request.getAssignedTo());
         task.setStartDate(request.getStartDate());
         task.setEndDate(request.getEndDate());
@@ -158,6 +159,7 @@ public class TaskServiceImpl implements TaskService {
         task.setTaskCode(request.getTaskCode());
         task.setTaskName(request.getTaskName());
         task.setDescription(request.getDescription());
+        task.setAttachmentGroupId(request.getAttachmentGroupId());
         task.setAssignedTo(request.getAssignedTo());
         task.setStartDate(request.getStartDate());
         task.setEndDate(request.getEndDate());
@@ -313,6 +315,7 @@ public class TaskServiceImpl implements TaskService {
         dto.setTaskCode(task.getTaskCode());
         dto.setTaskName(task.getTaskName());
         dto.setDescription(task.getDescription());
+        dto.setAttachmentGroupId(task.getAttachmentGroupId());
         dto.setAssignedTo(task.getAssignedTo());
         dto.setStartDate(task.getStartDate());
         dto.setEndDate(task.getEndDate());

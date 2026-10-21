@@ -119,8 +119,8 @@
           {{ 'PMDT04B_ATTACHMENTS_LABEL' | translate }}
         </label>
         <sic-upload
-          formControlName="attachmentGroupId"
-          [uploadGroupId]="form.get('attachmentGroupId')?.value || null"
+          formControlName="uploadGroupId"
+          [uploadGroupId]="form.get('uploadGroupId')?.value || null"
           [multiple]="true"
           category="all"
         ></sic-upload>

@@ -175,6 +175,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         entity.setScenarioName(req.getScenarioName());
         entity.setPriority(req.getPriority() != null ? req.getPriority() : "Medium");
         entity.setDescription(req.getDescription());
+        entity.setAttachmentGroupId(req.getAttachmentGroupId());
         entity.setStatus(req.getStatus() != null ? req.getStatus() : "Active");
         entity.setTestType(req.getTestType() != null ? req.getTestType() : "SIT");
     }
@@ -195,6 +196,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         res.setScenarioName(entity.getScenarioName());
         res.setPriority(entity.getPriority());
         res.setDescription(entity.getDescription());
+        res.setAttachmentGroupId(entity.getAttachmentGroupId());
         res.setStatus(entity.getStatus());
         res.setTestType(entity.getTestType() != null ? entity.getTestType() : "SIT");
         res.setCreatedDate(entity.getCreatedDate());

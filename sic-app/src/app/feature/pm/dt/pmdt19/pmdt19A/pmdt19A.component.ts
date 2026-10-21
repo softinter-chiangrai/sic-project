@@ -106,6 +106,7 @@ export class Pmdt19AComponent implements OnInit, CanComponentDeactivate {
       ...rawVal,
       id: targetId || undefined,
       state: isEditMode ? SicEntityState.Modified : SicEntityState.Added,
+      fileRefId: Array.isArray(rawVal.fileRefId) ? rawVal.fileRefId[0]?.uploadGroupId ?? null : rawVal.fileRefId,
     };
 
     this.isSaving.set(true);

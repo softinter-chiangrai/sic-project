@@ -1,5 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
+import java.util.UUID;
 import java.time.LocalDate;
 
 import com.softinter.sicapi.entity.base.BaseBusinessEntity;
@@ -34,6 +35,9 @@ public class PmTask extends BaseBusinessEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 
     @Column(name = "assigned_to", length = 100)
     private String assignedTo;

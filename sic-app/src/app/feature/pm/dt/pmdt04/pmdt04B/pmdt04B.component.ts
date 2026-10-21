@@ -131,7 +131,7 @@ export class Pmdt04BComponent implements OnInit {
       baConfirmStatus: ['Pending'],
       customerConfirmStatus: ['Pending'],
       version: [{ value: 'v1.0.0', disabled: true }],
-      attachmentGroupId: [null],
+      uploadGroupId: [null],
       // ✅ ไม่มี status แล้ว
       isActive: [true],
       state: [null],
@@ -228,7 +228,7 @@ export class Pmdt04BComponent implements OnInit {
 
     this.isSaving = true;
     const data = this.form.value;
-    data.attachmentGroupId = this.extractUploadGroupId(data.attachmentGroupId);
+    data.uploadGroupId = this.extractUploadGroupId(data.uploadGroupId);
 
     if (this.isEdit) {
       data.state = this.ENTITY_STATE.Modified;

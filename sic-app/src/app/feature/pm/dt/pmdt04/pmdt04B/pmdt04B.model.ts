@@ -12,7 +12,7 @@ export interface Pmdt04BModel extends SicBaseStateModel {
   priority?: string;
   status?: string;
   assignedTo?: string;
-  attachmentGroupId?: string;
+  uploadGroupId?: string;
 }
 
 export interface Pmdt04BPageData {
@@ -34,7 +34,7 @@ export interface Requirement {
   customerConfirmStatus: string;
   version: string;
   status?: string;
-  attachmentGroupId?: string;
+  uploadGroupId?: string;
   isActive: boolean;
   state?: number;
   rowVersion?: number;

@@ -195,6 +195,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         }
         entity.setTitle(request.getTitle());
         entity.setDescription(request.getDescription());
+        entity.setAttachmentGroupId(request.getAttachmentGroupId());
         entity.setReviewItemType(request.getReviewableType() != null && !request.getReviewableType().isBlank() ? request.getReviewableType() : "Specification");
         entity.setReviewItemId(request.getReviewableId());
         entity.setReviewer(request.getReviewer());
@@ -345,6 +346,7 @@ public class PmDesignReviewServiceImpl implements PmDesignReviewService {
         dto.setReviewCode(entity.getReviewCode());
         dto.setTitle(entity.getTitle());
         dto.setDescription(entity.getDescription());
+        dto.setAttachmentGroupId(entity.getAttachmentGroupId());
         if (entity.getProject() != null) {
             dto.setProjectId(entity.getProject().getId());
             dto.setProjectCode(entity.getProject().getProjectCode());

@@ -35,7 +35,7 @@ export interface PmInvoiceModel {
   isLocked?: boolean;
   paidAmount?: number;
   paidDate?: string;
-  receiptGroupId?: string;
+  attachmentGroupId?: string;
   remark?: string;
   isActive?: boolean;
   items?: PmInvoiceItemModel[];

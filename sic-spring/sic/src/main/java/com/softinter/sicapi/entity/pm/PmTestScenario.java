@@ -45,6 +45,9 @@ public class PmTestScenario extends BaseBusinessEntity {
     @Column(name = "description", columnDefinition = "TEXT")
     private String description;
 
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
+
     // ===== Relationships =====
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "task_id", insertable = false, updatable = false)

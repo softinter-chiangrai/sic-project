@@ -15,4 +15,5 @@ public class MilestoneRequest {
 
     /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
     private Integer rowVersion;
+    private UUID attachmentGroupId;
 }

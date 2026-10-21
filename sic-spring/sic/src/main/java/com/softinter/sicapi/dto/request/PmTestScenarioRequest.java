@@ -29,4 +29,5 @@ public class PmTestScenarioRequest {
 
     private Integer state;
     private Integer rowVersion;
+    private UUID attachmentGroupId;
 }

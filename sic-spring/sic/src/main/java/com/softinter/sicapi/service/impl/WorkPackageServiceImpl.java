@@ -57,6 +57,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         wp.setMilestone(ms);
         wp.setPackageName(request.getPackageName());
         wp.setDescription(request.getDescription());
+        wp.setAttachmentGroupId(request.getAttachmentGroupId());
         wp.setStartDate(request.getStartDate());
         wp.setEndDate(request.getEndDate());
         wp.setStatus("Not Started");
@@ -93,6 +94,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
 
         wp.setPackageName(request.getPackageName());
         wp.setDescription(request.getDescription());
+        wp.setAttachmentGroupId(request.getAttachmentGroupId());
         wp.setStartDate(request.getStartDate());
         wp.setEndDate(request.getEndDate());
         wp.setColor(request.getColor());
@@ -139,6 +141,7 @@ public class WorkPackageServiceImpl implements WorkPackageService {
         dto.setMilestoneName(wp.getMilestone().getMilestoneName());
         dto.setPackageName(wp.getPackageName());
         dto.setDescription(wp.getDescription());
+        dto.setAttachmentGroupId(wp.getAttachmentGroupId());
         dto.setStartDate(wp.getStartDate());
         dto.setEndDate(wp.getEndDate());
         dto.setStatus(wp.getStatus());

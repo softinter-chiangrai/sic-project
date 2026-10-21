@@ -61,6 +61,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         ms.setPhase(phase);
         ms.setMilestoneName(request.getMilestoneName());
         ms.setDescription(request.getDescription());
+        ms.setAttachmentGroupId(request.getAttachmentGroupId());
         ms.setDueDate(request.getDueDate());  
         ms.setStatus("Not Started");
         ms.setColor(request.getColor());  
@@ -87,6 +88,7 @@ public class MilestoneServiceImpl implements MilestoneService {
 
         ms.setMilestoneName(request.getMilestoneName());
         ms.setDescription(request.getDescription());
+        ms.setAttachmentGroupId(request.getAttachmentGroupId());
         ms.setDueDate(request.getDueDate());
         ms.setColor(request.getColor());
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
@@ -130,6 +132,7 @@ public class MilestoneServiceImpl implements MilestoneService {
         dto.setPhaseName(ms.getPhase().getPhaseName());
         dto.setMilestoneName(ms.getMilestoneName());
         dto.setDescription(ms.getDescription());
+        dto.setAttachmentGroupId(ms.getAttachmentGroupId());
         dto.setDueDate(ms.getDueDate());
         dto.setStatus(ms.getStatus());
         dto.setColor(ms.getColor());

@@ -22,4 +22,5 @@ public class PmTestScenarioResponse {
     private Instant createdDate;
     private Instant updatedDate;
     private Integer rowVersion;
+    private UUID attachmentGroupId;
 }

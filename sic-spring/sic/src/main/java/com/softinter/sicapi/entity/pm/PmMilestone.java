@@ -1,5 +1,6 @@
 package com.softinter.sicapi.entity.pm;
 
+import java.util.UUID;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,6 +32,9 @@ public class PmMilestone extends BaseEntity {
 
     @Column(columnDefinition = "TEXT")
     private String description;
+
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
 
     @Column(name = "due_date")
     private LocalDate dueDate;

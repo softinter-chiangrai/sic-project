@@ -367,7 +367,7 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
       specificationId: formVal.specificationId || this.parentTaskRecord?.specificationId || null,
       assignedTo: formVal.assignedTo || null,
       assigneeIds: formVal.assignedTo ? [formVal.assignedTo] : (this.parentTaskRecord?.assigneeIds || []),
-      attachmentGroupId: formVal.attachmentGroupId || null,
+      attachmentGroupId: this.extractUploadGroupId(formVal.attachmentGroupId),
     };
 
     if (this.isEdit()) {
@@ -508,5 +508,13 @@ export class Pmdt12CComponent implements OnInit, CanComponentDeactivate {
       this.translate.instant('COMMON_SUCCESS_TITLE', { defaultValue: 'สำเร็จ' }),
       this.translate.instant('PMDT12_AI_APPLY_TO_DESC')
     );
+  }
+
+  private extractUploadGroupId(val: any): string | null {
+    if (!val) return null;
+    if (typeof val === 'string') return val;
+    if (Array.isArray(val) && val.length > 0) return val[0]?.uploadGroupId || val[0]?.id || null;
+    if (typeof val === 'object') return val.uploadGroupId || val.id || null;
+    return null;
   }
 }

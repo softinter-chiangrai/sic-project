@@ -34,6 +34,7 @@ export const pmdt02AResolver: ResolveFn<MilestonePageData> = async (route) => {
         dueTime: dueTime,
         status: detail.status,
         color: detail.color,
+        attachmentGroupId: detail.attachmentGroupId ?? null,
       });
       return {
         milestoneData: new SicFromData<MilestoneModel>(form, form.value as any),

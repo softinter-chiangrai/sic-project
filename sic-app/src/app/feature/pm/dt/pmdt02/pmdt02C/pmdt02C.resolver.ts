@@ -42,6 +42,7 @@ export const pmdt02CResolver: ResolveFn<TaskPageData> = async (route) => {
         priority: detail.priority,
         status: detail.status,
         color: detail.color,
+        attachmentGroupId: detail.attachmentGroupId ?? null,
         assigneeIds: detail.assigneeIds || [],
         assigneeNames: detail.assigneeNames || {},
       });

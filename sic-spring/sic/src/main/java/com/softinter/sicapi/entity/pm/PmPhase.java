@@ -58,6 +58,9 @@ public class PmPhase extends BaseEntity {
     @Column
     private Integer progress;
 
+    @Column(name = "attachment_group_id")
+    private UUID attachmentGroupId;
+
     @OneToMany(mappedBy = "phase", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<PmMilestone> milestones = new ArrayList<>();
 }

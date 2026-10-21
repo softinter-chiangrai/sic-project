@@ -22,6 +22,7 @@ public class PhaseResponse {
     private Integer progress;
     private UUID dependencyId;
     private String dependencyName;
+    private UUID attachmentGroupId;
     private List<MilestoneResponse> milestones;
     private Integer milestoneCount;
     private Integer taskCount;

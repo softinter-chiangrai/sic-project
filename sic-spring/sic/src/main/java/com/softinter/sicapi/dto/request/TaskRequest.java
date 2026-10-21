@@ -27,4 +27,5 @@ public class TaskRequest {
 
     /** optimistic locking (xmin): ส่งค่าที่ได้จาก GET กลับมาตอนแก้ไข */
     private Integer rowVersion;
+    private UUID attachmentGroupId;
 }
