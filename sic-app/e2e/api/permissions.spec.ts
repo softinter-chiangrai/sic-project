@@ -36,7 +36,7 @@ test('view-only role: read works, add/delete are refused with a plain message', 
   const perms = (await w.api.get('/api/menu/permissions')).body as any[];
   expect(perms.find((p) => p.programCode === 'PMRT01')).toMatchObject({ add: false, save: false, remove: false, print: false });
 
-  expect((await w.api.get('/api/pm/customers', { page: 0, size: 5 })).status).toBe(200);
+  expect((await w.api.get('/api/pm/customers', { businessId: w.api.businessId!, page: 0, size: 5 })).status).toBe(200);
 
   const add = await w.api.post('/api/pm/customers', { customerCode: 'E2E-NOPERM', companyNameEn: 'x', email: 'x@example.test' });
   expect(add.status).toBe(403);
