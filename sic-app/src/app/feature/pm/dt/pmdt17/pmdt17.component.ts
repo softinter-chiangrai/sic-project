@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { environment } from '../../../../../environments/environment';
+import { PermissionService } from '../../../../core/services/permission.service';
 import { HttpClient } from '@angular/common/http';
 import { finalize, forkJoin } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
@@ -58,6 +59,13 @@ export class Pmdt17Component implements OnInit {
   private approvalService = inject(ApprovalService);
   private recentItems = inject(RecentItemsService);
   private customerState = inject(CustomerStateService);
+  private permission = inject(PermissionService);
+
+  /** ปุ่มต่อสัญญา MA ไปหน้าสัญญา: ซ่อนถ้าไม่มีสิทธิ์เพิ่มสัญญา */
+  get canAddContract(): boolean {
+    const f = this.permission.flagsFor('/feature/pm/contract/new');
+    return f ? f.add || f.save : !this.permission.loaded; // โหลดแล้วแต่ไม่มีโปรแกรมสัญญาเลย = ไม่มีสิทธิ์
+  }
   isLoading = signal(false);
 
   approvalStatusMap = signal<Record<string, string>>({});

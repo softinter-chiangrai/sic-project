@@ -55,7 +55,7 @@
 
       <!-- ✅ ปุ่ม Save กลับมาแล้ว -->
       <button
-        (click)="saveDiagram()"
+        data-perm="edit" (click)="saveDiagram()"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] hover:-translate-y-0.5 hover:shadow-[0_4px_12px_rgba(26,115,232,0.25)]"
         [title]="'PMDT05_SAVE_TITLE' | translate"
       >
@@ -64,7 +64,7 @@
       </button>
 
       <button
-        (click)="exportPdf()"
+        data-perm="print" (click)="exportPdf()"
         [disabled]="!currentTabId"
         class="flex items-center gap-1.5 px-4 py-2 border-[1.5px] border-[var(--border,#d0d7de)] rounded-xl bg-[var(--sidebar,#f6f8fa)] text-sm font-medium cursor-pointer transition-all duration-200 text-[var(--text-active,#1e293b)] hover:bg-[var(--crm-primary,#1a73e8)] hover:text-white hover:border-[var(--crm-primary,#1a73e8)] disabled:opacity-50 disabled:cursor-not-allowed"
         [title]="'PMDT05_PRINT_CURRENT_TITLE' | translate"
@@ -194,7 +194,7 @@
 
           <!-- ปุ่มแก้ไขข้อมูล Tab (รูปดินสอ / info) -->
           <button
-            (click)="editTab(tab.id); $event.stopPropagation()"
+            data-perm="edit" (click)="editTab(tab.id); $event.stopPropagation()"
             class="ml-0.5 text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors opacity-0 group-hover:opacity-100"
             [class.opacity-100]="currentTabId === tab.id"
             [title]="'PMDT05_EDIT_TAB_TITLE' | translate"
@@ -205,7 +205,7 @@
           <!-- ปุ่มลบ Tab (ซ่อนถ้าผ่านการอนุมัติแล้ว) -->
           @if (!tab.isApproved && tab.approvalStatus !== 'APPROVED') {
             <button
-              (click)="deleteTab(tab.id, $event)"
+              data-perm="remove" (click)="deleteTab(tab.id, $event)"
               class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors opacity-0 group-hover:opacity-100"
               [class.opacity-100]="currentTabId === tab.id"
               [title]="'PMDT05_DELETE_TAB_TITLE' | translate"

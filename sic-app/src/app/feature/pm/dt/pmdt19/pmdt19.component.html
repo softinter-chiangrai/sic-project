@@ -115,7 +115,7 @@
               </button>
             }
             <button
-              (click)="onDelete(r.id)"
+              data-perm="remove" (click)="onDelete(r.id)"
               class="p-1.5 text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded-lg transition-all"
               [title]="'PMDT19_DELETE_TITLE' | translate"
             >

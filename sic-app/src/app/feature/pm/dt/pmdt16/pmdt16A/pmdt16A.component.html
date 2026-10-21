@@ -29,7 +29,7 @@
       @if (!isView() && !isLocked()) {
         <button
           type="button"
-          (click)="openAiModal()"
+          data-perm="form-edit" (click)="openAiModal()"
           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 border border-[var(--crm-primary)]/30 hover:bg-[var(--crm-primary)] hover:text-white shadow-sm hover:shadow transition-all cursor-pointer"
         >
           <i class="bi bi-stars text-sm"></i>
@@ -38,7 +38,7 @@
       }
       <sic-doc-view-toggle [(mode)]="docView"></sic-doc-view-toggle>
       @if (id()) {
-        <sic-button variant="outline" (click)="printPdf()" [disabled]="isPrinting()">
+        <sic-button variant="outline" data-perm="print" (click)="printPdf()" [disabled]="isPrinting()">
           <i class="bi bi-file-earmark-pdf text-red-500"></i>
           {{ isPrinting() ? ('PMDT16A_PDF_GENERATING' | translate) : ('PMDT16A_EXPORT_PDF' | translate) }}
         </sic-button>
@@ -117,7 +117,7 @@
           @if (!isView()) {
             <button
               type="button"
-              (click)="addItem()"
+              data-perm="form-edit" (click)="addItem()"
               class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-[var(--crm-primary)]/30 bg-[var(--crm-primary)]/10 text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/20 transition-colors"
             >
               <i class="bi bi-plus-lg"></i> {{ 'PMDT16A_ADD_ITEM' | translate }}
@@ -232,7 +232,7 @@
                     </td>
                     @if (!isView()) {
                       <td class="py-2 pl-2 text-right">
-                        <button type="button" (click)="removeItem($index)" class="text-[var(--crm-danger)] hover:opacity-80 p-1">
+                        <button type="button" data-perm="form-edit" (click)="removeItem($index)" class="text-[var(--crm-danger)] hover:opacity-80 p-1">
                           <i class="bi bi-trash"></i>
                         </button>
                       </td>
@@ -403,7 +403,7 @@
             <i class="bi bi-pencil"></i> {{ 'PMDT16A_BTN_EDIT_DATA' | translate }}
           </sic-button>
         } @else {
-          <sic-button variant="solid" color="primary" [loading]="isSaving()" (click)="submit()">
+          <sic-button variant="solid" color="primary" [loading]="isSaving()" data-perm="form-edit" (click)="submit()">
             @if (!isSaving()) {
               <i class="bi bi-check-lg"></i>
             }

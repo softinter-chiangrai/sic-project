@@ -201,7 +201,7 @@
 
           <!-- ปุ่มส่งออกเอกสาร PDF -->
           <button
-            (click)="printContract(r)"
+            data-perm="print" (click)="printContract(r)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 transition-all"
             [title]="'PMRT04_EXPORT_PDF_TITLE' | translate"
           >
@@ -210,7 +210,7 @@
 
           <!-- ปุ่มแก้ไข -->
           <button
-            (click)="goToEdit(r.id)"
+            data-perm="edit" (click)="goToEdit(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
             [title]="'PMRT04_EDIT_TITLE' | translate"
           >
@@ -229,7 +229,7 @@
           <!-- ปุ่มลบสัญญา (ซ่อนเมื่ออนุมัติหรือลงนามแล้ว) -->
           @if (canDeleteContract(r)) {
             <button
-              (click)="deleteContract(r, grid)"
+              data-perm="remove" (click)="deleteContract(r, grid)"
               class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
               [title]="'PMRT04_DELETE_TITLE' | translate"
             >

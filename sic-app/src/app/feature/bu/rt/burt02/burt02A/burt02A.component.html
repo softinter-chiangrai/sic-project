@@ -33,7 +33,7 @@
           {{ 'BURT02A_BACK_BTN' | translate }}
         </button>
         <button
-          (click)="submit()"
+          data-perm="edit" (click)="submit()"
           [disabled]="isSaving()"
           class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all disabled:opacity-60 disabled:cursor-not-allowed shadow-sm cursor-pointer"
         >

@@ -141,12 +141,12 @@
                     <i class="bi bi-plus-lg"></i> <span class="hidden sm:inline">{{ 'PMDT02_ADD_WP_SHORT' | translate }}</span>
                   </button>
                   <div class="h-3.5 w-px bg-[var(--border)]"></div>
-                  <button (click)="editMilestone(ms, $event)"
+                  <button data-perm="edit" (click)="editMilestone(ms, $event)"
                     class="w-7 h-7 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--sidebar)] rounded-lg transition-colors"
                     [title]="'PMDT02_EDIT_MS_TITLE' | translate">
                     <i class="bi bi-pencil"></i>
                   </button>
-                  <button (click)="deleteMilestone(ms, $event)"
+                  <button data-perm="remove" (click)="deleteMilestone(ms, $event)"
                     class="w-7 h-7 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded-lg transition-colors"
                     [title]="'PMDT02_DELETE_MS_TITLE' | translate">
                     <i class="bi bi-trash"></i>
@@ -180,11 +180,11 @@
                             [title]="'PMDT02_ADD_TASK_TITLE' | translate">
                             <i class="bi bi-plus-lg"></i> <span class="hidden sm:inline">{{ 'PMDT02_TASK_WORD' | translate }}</span>
                           </button>
-                          <button (click)="editWorkPackage(wp, ms.id, $event)"
+                          <button data-perm="edit" (click)="editWorkPackage(wp, ms.id, $event)"
                             class="w-6 h-6 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--sidebar)] rounded transition-colors">
                             <i class="bi bi-pencil"></i>
                           </button>
-                          <button (click)="deleteWorkPackage(wp, $event)"
+                          <button data-perm="remove" (click)="deleteWorkPackage(wp, $event)"
                             class="w-6 h-6 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded transition-colors">
                             <i class="bi bi-trash"></i>
                           </button>
@@ -210,11 +210,11 @@
                                 </span>
                               </div>
                               <div class="flex items-center gap-1 flex-shrink-0">
-                                <button (click)="editTask(task, wp.id, $event)"
+                                <button data-perm="edit" (click)="editTask(task, wp.id, $event)"
                                   class="w-6 h-6 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--sidebar)] rounded transition-colors">
                                   <i class="bi bi-pencil"></i>
                                 </button>
-                                <button (click)="deleteTask(task, $event)"
+                                <button data-perm="remove" (click)="deleteTask(task, $event)"
                                   class="w-6 h-6 flex items-center justify-center text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded transition-colors">
                                   <i class="bi bi-trash"></i>
                                 </button>

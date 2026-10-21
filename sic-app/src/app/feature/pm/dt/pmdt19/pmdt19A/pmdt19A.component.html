@@ -86,7 +86,7 @@
       <sic-button variant="outline" (click)="onBack()">
         <i class="bi bi-arrow-left"></i> {{ 'PMDT19A_BTN_CANCEL' | translate }}
       </sic-button>
-      <sic-button variant="solid" color="primary" (click)="onSubmit()" [loading]="isSaving()">
+      <sic-button variant="solid" color="primary" data-perm="form-edit" (click)="onSubmit()" [loading]="isSaving()">
         @if (!isSaving()) {
           <i class="bi bi-check-lg"></i>
         }

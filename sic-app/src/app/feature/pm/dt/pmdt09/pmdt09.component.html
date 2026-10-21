@@ -338,7 +338,7 @@
                 }
                 <button
                   type="button"
-                  (click)="printReview(review.id)"
+                  data-perm="print" (click)="printReview(review.id)"
                   class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                   [title]="'PMDT09_PRINT_BTN' | translate"
                 >
@@ -346,7 +346,7 @@
                 </button>
                 <button
                   type="button"
-                  (click)="goToEdit(review.id)"
+                  data-perm="edit" (click)="goToEdit(review.id)"
                   class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all"
                   [title]="'PMDT09_EDIT_REVIEW_TITLE' | translate"
                 >
@@ -355,7 +355,7 @@
                 @if (review.approvalStatus !== 'APPROVED') {
                   <button
                     type="button"
-                    (click)="onDeleteDesignReview(review)"
+                    data-perm="remove" (click)="onDeleteDesignReview(review)"
                     class="p-1.5 rounded-lg text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
                     [title]="'PMDT09_DELETE_REVIEW_TITLE' | translate"
                   >
@@ -536,7 +536,7 @@
               <i class="bi bi-exclamation-triangle text-4xl block mb-2 text-amber-500"></i>
               <p class="text-base font-semibold text-white">{{ 'PMDT09_NO_FIGMA_IN_ITEM' | translate }}</p>
               <button
-                (click)="goToEdit(review.id); closeLivePreview()"
+                data-perm="edit" (click)="goToEdit(review.id); closeLivePreview()"
                 class="mt-4 px-4 py-2 rounded-xl bg-[var(--crm-primary)] text-white text-xs font-medium"
               >
                 {{ 'PMDT09_GO_TO_EDIT_ADD_LINK' | translate }}
@@ -553,7 +553,7 @@
           </div>
           <div class="flex items-center gap-3">
             <button
-              (click)="goToEdit(review.id); closeLivePreview()"
+              data-perm="edit" (click)="goToEdit(review.id); closeLivePreview()"
               class="text-[var(--crm-primary)] hover:underline font-medium"
             >
               {{ 'PMDT09_EDIT_DETAIL_LINK' | translate }} &rarr;

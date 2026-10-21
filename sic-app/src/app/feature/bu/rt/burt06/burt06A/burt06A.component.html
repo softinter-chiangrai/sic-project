@@ -105,7 +105,7 @@
             </div>
             <button
               type="button"
-              (click)="addStep()"
+              data-perm="form-edit" (click)="addStep()"
               class="inline-flex items-center gap-1.5 px-3.5 py-2 text-sm font-medium text-white bg-[var(--crm-primary)] rounded-xl hover:bg-[var(--crm-primary)]/90 shadow-sm transition-all active:scale-95"
             >
               <i class="bi bi-plus-lg"></i> {{ 'BURT06A_ADD_STEP_BTN' | translate }}
@@ -142,7 +142,7 @@
                     <!-- ปุ่มเลื่อนขึ้น -->
                     <button
                       type="button"
-                      (click)="moveStepUp(i)"
+                      data-perm="form-edit" (click)="moveStepUp(i)"
                       [disabled]="i === 0"
                       class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-1.5 rounded-md hover:bg-[var(--bg)]"
                       [title]="'BURT06A_MOVE_UP_TITLE' | translate"
@@ -152,7 +152,7 @@
                     <!-- ปุ่มเลื่อนลง -->
                     <button
                       type="button"
-                      (click)="moveStepDown(i)"
+                      data-perm="form-edit" (click)="moveStepDown(i)"
                       [disabled]="i === steps.length - 1"
                       class="text-[var(--text-muted)] hover:text-[var(--crm-primary)] disabled:opacity-20 disabled:cursor-not-allowed transition-colors p-1.5 rounded-md hover:bg-[var(--bg)]"
                       [title]="'BURT06A_MOVE_DOWN_TITLE' | translate"
@@ -163,7 +163,7 @@
                     <!-- ปุ่มลบ -->
                     <button
                       type="button"
-                      (click)="removeStep(i)"
+                      data-perm="form-edit" (click)="removeStep(i)"
                       class="text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors p-1.5 rounded-md hover:bg-red-50 dark:hover:bg-red-900/30"
                       [title]="'BURT06A_REMOVE_STEP_TITLE' | translate"
                     >

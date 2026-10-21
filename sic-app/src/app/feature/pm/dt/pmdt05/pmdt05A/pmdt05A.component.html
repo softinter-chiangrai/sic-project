@@ -82,7 +82,7 @@
         <!-- Clear messages in active chat -->
         @if (messages().length > 0) {
           <button
-            (click)="clearCurrentChat()"
+            data-perm="remove" (click)="clearCurrentChat()"
             class="p-1.5 rounded-lg text-xs text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--sidebar-hover)] transition-colors cursor-pointer"
             [title]="'PMDT05_CLEAR_CHAT_TITLE' | translate"
           >
@@ -257,7 +257,7 @@
                       <i class="bi bi-pencil"></i>
                     </button>
                     <button
-                      (click)="deleteSession(session.id, $event)"
+                      data-perm="remove" (click)="deleteSession(session.id, $event)"
                       class="p-1 rounded-md text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-red-500/10 text-xs transition-colors cursor-pointer"
                       [title]="'PMDT05_DELETE_SESSION_TITLE' | translate"
                     >
@@ -387,7 +387,7 @@
                       </button>
                     }
                     <button
-                      (click)="insertMermaidToDiagram(message.content)"
+                      data-perm="edit" (click)="insertMermaidToDiagram(message.content)"
                       class="text-[var(--crm-primary)] hover:underline flex items-center gap-1 font-semibold cursor-pointer flex-shrink-0"
                       [title]="'PMDT05_INSERT_MERMAID_TITLE' | translate"
                     >

@@ -48,6 +48,11 @@ export class PermissionService {
       .subscribe((e) => this.applyBodyClasses(e.urlAfterRedirects));
   }
 
+  /** โหลดสิทธิ์สำเร็จแล้ว (null = ยังไม่โหลด/โหลดไม่ได้) */
+  get loaded(): boolean {
+    return this.perms !== null;
+  }
+
   ensureLoaded(): Observable<unknown> {
     return this.load$;
   }

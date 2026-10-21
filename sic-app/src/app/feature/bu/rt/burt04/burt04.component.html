@@ -119,7 +119,7 @@
         <div class="flex items-center justify-center gap-1">
           <!-- แก้ไขบทบาท -->
           <button
-            (click)="goToEdit(r.id)"
+            data-perm="edit" (click)="goToEdit(r.id)"
             class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-500/10 transition-all"
             [title]="'BURT04_MANAGE_ROLE_TITLE' | translate"
           >
@@ -142,7 +142,7 @@
           <!-- Remove -->
           @if (!r.isCurrentUser) {
             <button
-              (click)="removeMember(r, grid)"
+              data-perm="remove" (click)="removeMember(r, grid)"
               class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all"
               [title]="'BURT04_REMOVE_TITLE' | translate"
             >

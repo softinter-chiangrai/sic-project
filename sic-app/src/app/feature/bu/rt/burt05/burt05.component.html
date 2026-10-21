@@ -140,14 +140,14 @@
               <td class="px-4 py-2 text-center">
                 <div class="flex items-center justify-center gap-1">
                   <button
-                    (click)="goToEdit(flatNode)"
+                    data-perm="edit" (click)="goToEdit(flatNode)"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all"
                     [title]="'BURT05_EDIT_TITLE' | translate"
                   >
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button
-                    (click)="deleteProgram(flatNode)"
+                    data-perm="remove" (click)="deleteProgram(flatNode)"
                     class="w-7 h-7 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                     [title]="'BURT05_DELETE_TITLE' | translate"
                     [disabled]="flatNode.children.length > 0"

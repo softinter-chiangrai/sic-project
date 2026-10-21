@@ -84,13 +84,13 @@
 
             <div class="flex justify-end gap-2 mt-3 border-t border-[var(--border)] pt-3">
               <button
-                (click)="editPhase(phase, $event)"
+                data-perm="edit" (click)="editPhase(phase, $event)"
                 class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-primary)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
               >
                 <i class="bi bi-pencil"></i> {{ 'PMDT01_EDIT' | translate }}
               </button>
               <button
-                (click)="deletePhase(phase, $event)"
+                data-perm="remove" (click)="deletePhase(phase, $event)"
                 class="text-sm text-[var(--text-muted)] hover:text-[var(--crm-danger)] transition-colors px-2 py-1 rounded hover:bg-[var(--sidebar-hover)]"
               >
                 <i class="bi bi-trash"></i> {{ 'PMDT01_DELETE' | translate }}

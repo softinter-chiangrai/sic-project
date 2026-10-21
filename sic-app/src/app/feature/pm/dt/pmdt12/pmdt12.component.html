@@ -322,7 +322,7 @@
 
                 <!-- Delete Scenario -->
                 <button
-                  (click)="deleteScenario(group.scenario.id!, $event)"
+                  data-perm="remove" (click)="deleteScenario(group.scenario.id!, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors cursor-pointer"
                   [title]="'PMDT12_DELETE_SCENARIO_TT' | translate"
                 >
@@ -521,7 +521,7 @@
                           </button>
                           <!-- Edit -->
                           <button
-                            (click)="goToEdit(testCase.id!)"
+                            data-perm="edit" (click)="goToEdit(testCase.id!)"
                             class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-all cursor-pointer"
                             [title]="'PMDT12_EDIT_TT' | translate"
                           >
@@ -529,7 +529,7 @@
                           </button>
                           <!-- Delete -->
                           <button
-                            (click)="deleteTestCase(testCase.id!)"
+                            data-perm="remove" (click)="deleteTestCase(testCase.id!)"
                             class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all cursor-pointer"
                             [title]="'PMDT12_DELETE_TT' | translate"
                           >

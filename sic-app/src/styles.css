@@ -655,6 +655,7 @@ body.perm-no-add [data-perm~='add'],
 body.perm-no-save [data-perm~='edit'],
 body.perm-no-remove [data-perm~='remove'],
 body.perm-no-print [data-perm~='print'],
-body.perm-readonly form button[type='submit'] {
+body.perm-readonly form button[type='submit'],
+body.perm-readonly [data-perm~='form-edit'] {
   display: none !important;
 }

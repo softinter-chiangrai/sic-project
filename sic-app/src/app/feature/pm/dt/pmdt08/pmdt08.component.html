@@ -82,13 +82,13 @@
           <div class="flex items-center gap-1">
             @if (isAuthor(post.createdBy)) {
               <button
-                (click)="openEditModal(post)"
+                data-perm="edit" (click)="openEditModal(post)"
                 class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-500/10 transition-all"
                 [title]="'PMDT08_EDIT_POST_TITLE' | translate">
                 <i class="bi bi-pencil text-sm"></i>
               </button>
               <button
-                (click)="deletePost(post.id)"
+                data-perm="remove" (click)="deletePost(post.id)"
                 class="w-8 h-8 rounded-full flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-500/10 transition-all"
                 [title]="'PMDT08_DELETE_POST_TITLE' | translate">
                 <i class="bi bi-trash text-sm"></i>
@@ -357,7 +357,7 @@
                           <span>•</span>
                           <button type="button" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">{{ 'PMDT08_EDIT' | translate }}</button>
                           <span>•</span>
-                          <button type="button" (click)="deleteReply(post.id, reply.id)" class="hover:underline hover:text-red-500">{{ 'PMDT08_DELETE' | translate }}</button>
+                          <button type="button" data-perm="remove" (click)="deleteReply(post.id, reply.id)" class="hover:underline hover:text-red-500">{{ 'PMDT08_DELETE' | translate }}</button>
                         }
                       </div>
                     </div>
