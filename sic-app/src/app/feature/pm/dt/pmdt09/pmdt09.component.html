@@ -574,20 +574,6 @@
     [saving]="aiBatchSaving()"
     (closed)="showAiBatchModal.set(false)"
     (saved)="onAiBatchSaved($event)"
-  >
-    <div>
-      <sic-combobox
-        [label]="'PMDT09_SPECIFICATION_LABEL' | translate"
-        [apiUrl]="apiGetComboboxSpecification"
-        [params]="aiBatchSpecParams()"
-        valueField="value"
-        textField="text"
-        [clearable]="true"
-        [placeholder]="'PMDT09_SPECIFICATION_PLACEHOLDER' | translate"
-        [ngModel]="aiBatchSpecId()"
-        (selectionChanged)="onAiBatchSpecSelected($event)"
-      ></sic-combobox>
-    </div>
-  </sic-ai-batch-modal>
+  ></sic-ai-batch-modal>
 
 </div>

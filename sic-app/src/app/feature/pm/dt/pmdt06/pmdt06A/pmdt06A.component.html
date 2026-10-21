@@ -642,8 +642,8 @@
 </div>
 <!-- Modal: ประวัติการวิเคราะห์ผลกระทบ (Impact Analysis History) -->
 @if (showHistoryModal()) {
-  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in">
-    <div class="bg-[var(--bg-card)] border border-[var(--border)] rounded-xl shadow-2xl max-w-2xl w-full max-h-[85vh] flex flex-col overflow-hidden">
+  <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 animate-fade-in">
+    <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-xl shadow-2xl max-w-4xl w-full max-h-[85vh] flex flex-col overflow-hidden">
       <!-- Modal Header -->
       <div class="flex items-center justify-between px-5 py-4 border-b border-[var(--border)] bg-[var(--bg)]">
         <div class="flex items-center gap-2">
@@ -661,7 +661,7 @@
       </div>
 
       <!-- Modal Body -->
-      <div class="flex-1 overflow-y-auto p-5 space-y-3">
+      <div class="flex-1 overflow-y-auto overflow-x-hidden p-5 space-y-3">
         @if (isLoadingHistory()) {
           <div class="py-12 flex flex-col items-center justify-center text-[var(--text-muted)] gap-2">
             <i class="bi bi-arrow-repeat animate-spin text-2xl text-[var(--crm-primary)]"></i>
@@ -705,7 +705,7 @@
                 </div>
 
                 <!-- Stats summary -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-2 border-y border-[var(--border)] my-2 bg-[var(--bg-card)] rounded p-2">
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs py-2 border-y border-[var(--border)] my-2 bg-[var(--sidebar)] rounded p-2">
                   <div>
                     <span class="text-[var(--text-muted)]">Mandays:</span>
                     <span class="font-semibold text-[var(--text-active)] ml-1">{{ item.mandayImpact || 0 }} วัน</span>
@@ -734,11 +734,34 @@
                     <span class="text-[var(--text-muted)]">Bugs:</span>
                     <span class="font-semibold text-red-600 dark:text-red-400 ml-1">{{ item.bugCount }}</span>
                   </div>
-                  <div>
+                  <div class="min-w-0 truncate" [title]="item.analyzedByName || item.analyzedBy || ''">
                     <span class="text-[var(--text-muted)]">{{ 'PMDT06_IMPACT_HISTORY_BY' | translate }}</span>
-                    <span class="text-[var(--text-active)] ml-1 truncate">{{ item.analyzedBy || '-' }}</span>
+                    <span class="text-[var(--text-active)] ml-1">{{ item.analyzedByName || item.analyzedBy || '-' }}</span>
                   </div>
                 </div>
+
+                <!-- รายละเอียดทั้งหมดใน snapshot -->
+                @if (item.snapshot; as snap) {
+                  @if (snap.diagramImpact || snap.uiImpact || snap.apiImpact || snap.testImpact || snap.costImpact) {
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs text-[var(--text-muted)] mb-2">
+                      @if (snap.diagramImpact) { <span><span class="font-medium text-[var(--text-active)]">{{ 'PMDT06_DIAGRAM_IMPACT_LABEL' | translate }}</span> {{ snap.diagramImpact }}</span> }
+                      @if (snap.uiImpact) { <span><span class="font-medium text-[var(--text-active)]">UI:</span> {{ snap.uiImpact }}</span> }
+                      @if (snap.apiImpact) { <span><span class="font-medium text-[var(--text-active)]">API:</span> {{ snap.apiImpact }}</span> }
+                      @if (snap.testImpact) { <span><span class="font-medium text-[var(--text-active)]">Test:</span> {{ snap.testImpact }}</span> }
+                      @if (snap.costImpact) { <span><span class="font-medium text-[var(--text-active)]">Cost:</span> {{ snap.costImpact }}</span> }
+                    </div>
+                  }
+                  <div class="space-y-1.5 text-xs">
+                    @for (g of historyGroups(snap); track g.label) {
+                      <div class="flex flex-wrap items-start gap-1">
+                        <span class="text-[var(--text-muted)] font-medium shrink-0">{{ g.label | translate }} ({{ g.items.length }}):</span>
+                        @for (t of g.items; track $index) {
+                          <span [class]="g.cls + ' px-2 py-0.5 rounded text-[0.65rem] break-words max-w-full'">{{ t }}</span>
+                        }
+                      </div>
+                    }
+                  </div>
+                }
 
                 @if (item.aiRationale) {
                   <div class="mt-2 text-xs bg-violet-50/70 dark:bg-violet-950/20 border border-violet-200/70 dark:border-violet-800/40 rounded p-2 text-[var(--text-active)]">

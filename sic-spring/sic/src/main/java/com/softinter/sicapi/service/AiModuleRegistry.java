@@ -166,7 +166,7 @@ public class AiModuleRegistry {
                 .moduleType("DESIGN_REVIEW")
                 .label("ทบทวนการออกแบบ (Design Review)")
                 .listRoute("/feature/pm/design-review")
-                .schemaDescription("{ \"title\": string, \"description\": string, \"severity\": \"High\"|\"Medium\"|\"Low\" }")
+                .schemaDescription("{ \"title\": string, \"description\": string, \"severity\": \"High\"|\"Medium\"|\"Low\", \"specificationTitle\": string, \"reviewableId\": string }")
                 .build());
 
         register(ModuleDef.builder()

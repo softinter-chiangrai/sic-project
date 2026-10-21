@@ -69,6 +69,9 @@ export interface UserManualDraftResponse {
   manualTitle?: string;
   manualType?: string;
   summary?: string;
+  version?: string;
+  relatedSpecId?: string;
+  deliveryId?: string;
   sections?: UserManualSectionDraft[];
 }
 

@@ -90,6 +90,23 @@ public class ChangeImpactAnalysisHistory extends BaseEntity {
     @Column(name = "impacted_customer_ids", columnDefinition = "UUID[]")
     private UUID[] impactedCustomerIds;
 
+    // Derived documents captured at record time (null = recorded before these columns existed)
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_manual_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedManualIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_delivery_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedDeliveryIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_invoice_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedInvoiceIds;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "impacted_ma_ticket_ids", columnDefinition = "UUID[]")
+    private UUID[] impactedMaTicketIds;
+
     @Column(name = "analyzed_at")
     private Instant analyzedAt;
 

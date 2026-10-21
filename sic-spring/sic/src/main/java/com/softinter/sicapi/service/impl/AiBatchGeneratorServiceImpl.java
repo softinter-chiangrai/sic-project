@@ -3,16 +3,21 @@ package com.softinter.sicapi.service.impl;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.AiBatchGenerateRequest;
 import com.softinter.sicapi.dto.response.AiBatchGenerateResponse;
+import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.service.AiBatchGeneratorService;
 import com.softinter.sicapi.service.AiModuleRegistry;
 import com.softinter.sicapi.service.PmAiProviderService;
@@ -28,6 +33,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final AiModuleRegistry moduleRegistry;
     private final AiMemberPicker memberPicker;
+    private final PmSpecificationRepository specificationRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Pattern JSON_ARRAY_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -48,7 +54,15 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
                 ? Math.min(request.getCount(), MAX_COUNT)
                 : 5;
 
-        String systemPrompt = buildSystemPrompt(def, count);
+        List<PmSpecification> availableSpecs = List.of();
+        if ("DESIGN_REVIEW".equalsIgnoreCase(request.getModuleType()) && request.getProjectId() != null) {
+            UUID bizId = BusinessContextHolder.getBusinessId();
+            if (bizId != null) {
+                availableSpecs = specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, request.getProjectId());
+            }
+        }
+
+        String systemPrompt = buildSystemPrompt(def, count, availableSpecs);
         String userPrompt = request.getPrompt() != null && !request.getPrompt().isBlank()
                 ? request.getPrompt()
                 : "สร้างข้อมูลตัวอย่างที่สมเหตุสมผลสำหรับโมดูลนี้จำนวน " + count + " รายการ";
@@ -58,6 +72,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
             List<Map<String, Object>> items = parseItems(raw);
             if ("TEST_CASE".equals(def.getModuleType())) fillTestCaseDefaults(items);
             if ("PHASE".equals(def.getModuleType())) fillPhaseDefaults(items);
+            if ("DESIGN_REVIEW".equals(def.getModuleType())) fillDesignReviewDefaults(items, availableSpecs);
             return AiBatchGenerateResponse.builder()
                     .moduleType(def.getModuleType())
                     .items(items)
@@ -99,8 +114,52 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
         }
     }
 
-    private String buildSystemPrompt(AiModuleRegistry.ModuleDef def, int count) {
-        return """
+    /** Design Review ที่ AI สร้างเป็นชุด: ผูกกับ Specification ที่เหมาะสมที่สุด */
+    private void fillDesignReviewDefaults(List<Map<String, Object>> items, List<PmSpecification> specs) {
+        if (specs == null || specs.isEmpty()) return;
+        Map<String, PmSpecification> specById = specs.stream()
+                .collect(Collectors.toMap(s -> s.getId().toString(), s -> s, (a, b) -> a));
+
+        for (Map<String, Object> item : items) {
+            Object rawId = item.get("reviewableId");
+            PmSpecification matched = null;
+            if (rawId != null && specById.containsKey(rawId.toString().trim())) {
+                matched = specById.get(rawId.toString().trim());
+            }
+
+            if (matched == null) {
+                String specTitle = String.valueOf(item.getOrDefault("specificationTitle", "")).toLowerCase();
+                String specCode = String.valueOf(item.getOrDefault("specificationCode", "")).toLowerCase();
+                String itemTitle = String.valueOf(item.getOrDefault("title", "")).toLowerCase();
+
+                for (PmSpecification s : specs) {
+                    String code = (s.getSpecificationCode() != null ? s.getSpecificationCode() : "").toLowerCase();
+                    String title = (s.getTitle() != null ? s.getTitle() : "").toLowerCase();
+                    if ((!specCode.isBlank() && code.contains(specCode))
+                            || (!specTitle.isBlank() && (title.contains(specTitle) || specTitle.contains(title)))
+                            || (!title.isBlank() && itemTitle.contains(title))
+                            || (!code.isBlank() && itemTitle.contains(code))) {
+                        matched = s;
+                        break;
+                    }
+                }
+            }
+
+            if (matched == null) {
+                matched = specs.get(0);
+            }
+
+            item.put("reviewableId", matched.getId().toString());
+            item.put("reviewableType", "Specification");
+            String displayTitle = (matched.getSpecificationCode() != null ? matched.getSpecificationCode() + " - " : "") + matched.getTitle();
+            item.put("specificationTitle", displayTitle);
+            item.putIfAbsent("severity", "Medium");
+        }
+    }
+
+    private String buildSystemPrompt(AiModuleRegistry.ModuleDef def, int count, List<PmSpecification> availableSpecs) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("""
                 คุณคือ AI ผู้ช่วยสร้างข้อมูลชุด (Batch Create) สำหรับโมดูล "%s" ในระบบบริหารโครงการ SIC
 
                 กติกาสำคัญ (Data Integrity - ห้ามฝ่าฝืน):
@@ -112,7 +171,23 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
                 5. สร้างข้อมูลจำนวนประมาณ %d รายการ (หรือใกล้เคียงตามที่ผู้ใช้ระบุใน prompt) เนื้อหาสมจริง เป็นมืออาชีพ และสอดคล้องกับ prompt/ไฟล์แนบของผู้ใช้
                 6. ถ้าผู้ใช้แนบไฟล์เอกสาร/รูปภาพมาด้วย ให้ใช้ข้อมูลจากไฟล์นั้นเป็นหลักในการสร้างรายการ
                 7. ตอบข้อความในฟิลด์ต่างๆ เป็นภาษาเดียวกับที่ผู้ใช้พิมพ์ prompt (ถ้าผู้ใช้พิมพ์เป็นภาษาอังกฤษ ให้ตอบเป็นภาษาอังกฤษ / Respond in the same language as the user's prompt)
-                """.formatted(def.getLabel(), def.getSchemaDescription(), count);
+                """.formatted(def.getLabel(), def.getSchemaDescription(), count));
+
+        if ("DESIGN_REVIEW".equalsIgnoreCase(def.getModuleType()) && availableSpecs != null && !availableSpecs.isEmpty()) {
+            sb.append("\nรายการข้อกำหนด (Specification) ในโครงการที่มีอยู่:\n");
+            for (PmSpecification s : availableSpecs) {
+                sb.append("- UUID: ").append(s.getId())
+                  .append(" | รหัส: ").append(s.getSpecificationCode() != null ? s.getSpecificationCode() : "")
+                  .append(" | ชื่อ: ").append(s.getTitle() != null ? s.getTitle() : "").append("\n");
+            }
+            sb.append("""
+
+                    คำแนะนำสำหรับการผูกข้อกำหนด (Specification):
+                    - ให้พิจารณาหัวข้อและเนื้อหาการทบทวนการออกแบบแต่ละข้อ แล้วเลือกผูกกับข้อกำหนด (Specification) ที่สอดคล้องและเหมาะสมที่สุดจากรายการด้านบน
+                    - ในแต่ละรายการผลลัพธ์ ให้ระบุฟิลด์ "reviewableId" เป็น UUID ของ Specification ที่เลือก และฟิลด์ "specificationTitle" เป็นรหัสและชื่อของ Specification นั้น
+                    """);
+        }
+        return sb.toString();
     }
 
     private List<Map<String, Object>> parseItems(String raw) {

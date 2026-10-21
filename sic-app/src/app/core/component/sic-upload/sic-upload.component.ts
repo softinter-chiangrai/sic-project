@@ -465,6 +465,32 @@ export class SicUploadComponent implements ControlValueAccessor, OnInit, OnChang
     }
   }
 
+  /** เปิดไฟล์ในแท็บใหม่ให้เบราว์เซอร์แสดงเอง (PDF/รูป/วิดีโอ/text); ชนิดที่เบราว์เซอร์แสดงไม่ได้จะถูกดาวน์โหลดแทน */
+  async previewItem(item: SicUploadItem): Promise<void> {
+    if (!this.canDownload(item)) {
+      return;
+    }
+
+    // เปิดแท็บก่อน await ไม่งั้น popup blocker จะบล็อก
+    const tab = window.open('', '_blank');
+    item.errorMessage = null;
+    try {
+      const raw = await this.getItemBlob(item);
+      const blob = !raw.type || raw.type === 'application/octet-stream' ? new Blob([raw], { type: item.contentType || raw.type }) : raw;
+      const url = URL.createObjectURL(blob);
+      if (tab) {
+        tab.location.href = url;
+      } else {
+        window.open(url, '_blank');
+      }
+      setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    } catch (error) {
+      tab?.close();
+      item.errorMessage = this.resolveErrorMessage(error);
+      this.cdr.markForCheck();
+    }
+  }
+
   trackItem(index: number, item: SicUploadItem): string {
     return item.localId || `${index}`;
   }

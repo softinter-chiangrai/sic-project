@@ -16,7 +16,11 @@ import { DocViewMode } from './sic-doc-view-toggle.component';
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
     <div class="grid gap-4" [ngClass]="{ 'lg:grid-cols-2': mode() === 'split' }">
-      <div class="min-w-0" [class.hidden]="mode() === 'pdf'">
+      <div
+        class="min-w-0"
+        [class.hidden]="mode() === 'pdf'"
+        [ngClass]="{ 'lg:h-[calc(100vh-7rem)] lg:overflow-y-auto lg:pr-1': mode() === 'split' }"
+      >
         <ng-content />
       </div>
       @if (mode() !== 'edit') {

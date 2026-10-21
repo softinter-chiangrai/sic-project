@@ -491,6 +491,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
           manualTitle: draft.manualTitle,
           version: draft.version,
           relatedSpecId: draft.relatedSpecId,
+          deliveryId: draft.deliveryId,
           manualType: draft.manualType,
         },
         ['id'],
@@ -498,6 +499,13 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
         undefined,
         this.aiOverwrite(),
       );
+
+      if (draft.deliveryId) {
+        const projId = (this.formData?.form?.value as any)?.projectId;
+        if (this.deliveryOptions().length === 0) {
+          this.loadDeliveryOptions(projId);
+        }
+      }
     }
 
     const newSectionsList: PmUserManualSectionModel[] = draft.sections.map((s: any, idx: number) => ({

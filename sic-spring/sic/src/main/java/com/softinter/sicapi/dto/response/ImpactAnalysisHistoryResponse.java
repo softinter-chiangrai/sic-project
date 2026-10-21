@@ -17,6 +17,7 @@ public class ImpactAnalysisHistoryResponse {
     private String aiRationale;
     private Instant analyzedAt;
     private String analyzedBy;
+    private String analyzedByName;
     private Instant createdDate;
 
     // Counts of impacted documents

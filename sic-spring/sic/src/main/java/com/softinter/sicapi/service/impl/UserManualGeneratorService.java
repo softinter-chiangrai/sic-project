@@ -1,10 +1,13 @@
 package com.softinter.sicapi.service.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.GenerateUserManualDraftRequest;
 import com.softinter.sicapi.dto.response.UserManualDraftResponse;
+import com.softinter.sicapi.entity.pm.PmDelivery;
 import com.softinter.sicapi.entity.pm.PmRequirement;
 import com.softinter.sicapi.entity.pm.PmSpecification;
+import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
 import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.service.PmAiProviderService;
@@ -15,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +30,7 @@ public class UserManualGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final PmRequirementRepository requirementRepository;
     private final PmSpecificationRepository specificationRepository;
+    private final PmDeliveryRepository deliveryRepository;
     private final ObjectMapper objectMapper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -42,10 +47,20 @@ public class UserManualGeneratorService {
             specifications = specificationRepository.findAllById(request.getSpecificationIds());
         }
 
+        UUID projectId = request.getProjectId();
+        if (projectId == null && !specifications.isEmpty() && specifications.get(0).getProject() != null) {
+            projectId = specifications.get(0).getProject().getId();
+        }
+
+        UUID businessId = BusinessContextHolder.getBusinessId();
+        List<PmDelivery> deliveries = (projectId != null && businessId != null)
+                ? deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(businessId, projectId)
+                : List.of();
+
         String manualType = request.getManualType() != null && !request.getManualType().isBlank()
                 ? request.getManualType() : "USER";
 
-        String prompt = buildPrompt(requirements, specifications, manualType, request.getManualTitle(), request.getPrompt());
+        String prompt = buildPrompt(requirements, specifications, deliveries, manualType, request.getManualTitle(), request.getPrompt());
         String systemPrompt = """
                 You are a Principal Technical Writer, Lead System Analyst, and Enterprise Documentation Specialist with 15+ years of experience.
                 Your task is to analyze system requirements, technical specifications, and user instructions to produce an outstanding, highly structured, comprehensive User Manual (คู่มือการใช้งานระบบ) in Thai JSON format.
@@ -55,7 +70,7 @@ public class UserManualGeneratorService {
                 """;
 
         String aiResponse = aiProviderService.generateRawResponse(prompt, systemPrompt, request);
-        UserManualDraftResponse draft = parseAiResponse(aiResponse, manualType, request.getManualTitle(), requirements, specifications);
+        UserManualDraftResponse draft = parseAiResponse(aiResponse, manualType, request.getManualTitle(), requirements, specifications, deliveries);
 
         if (draft.getManualType() == null || draft.getManualType().isBlank()) {
             draft.setManualType(manualType);
@@ -65,10 +80,27 @@ public class UserManualGeneratorService {
             draft.setRelatedSpecId(request.getSpecificationIds().get(0));
         }
 
+        if (!deliveries.isEmpty()) {
+            UUID resolvedDeliveryId = null;
+            if (draft.getDeliveryId() != null) {
+                for (PmDelivery del : deliveries) {
+                    if (del.getId().equals(draft.getDeliveryId())) {
+                        resolvedDeliveryId = del.getId();
+                        break;
+                    }
+                }
+            }
+            if (resolvedDeliveryId == null) {
+                resolvedDeliveryId = deliveries.get(0).getId();
+            }
+            draft.setDeliveryId(resolvedDeliveryId);
+        }
+
         return draft;
     }
 
     private String buildPrompt(List<PmRequirement> requirements, List<PmSpecification> specifications,
+                               List<PmDelivery> deliveries,
                                String manualType, String customTitle, String customPrompt) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed, professional, and comprehensive User Manual (คู่มือการใช้งานระบบ).\n\n");
@@ -114,6 +146,17 @@ public class UserManualGeneratorService {
             }
         }
 
+        if (deliveries != null && !deliveries.isEmpty()) {
+            sb.append("**Available Deliveries Data (การส่งมอบที่เกี่ยวข้องในโครงการ):**\n");
+            for (PmDelivery del : deliveries) {
+                sb.append("- Delivery: ").append(del.getDeliveryCode() != null ? del.getDeliveryCode() + " - " : "")
+                  .append(del.getDeliveryTitle() != null ? del.getDeliveryTitle() : "Delivery")
+                  .append(" (Type: ").append(del.getDeliveryType() != null ? del.getDeliveryType() : "General")
+                  .append(", UUID: ").append(del.getId()).append(")\n");
+            }
+            sb.append("\n");
+        }
+
         if (customPrompt != null && !customPrompt.isBlank()) {
             sb.append("**User Specific Focus / Instructions:**\n")
               .append(customPrompt).append("\n\n");
@@ -143,6 +186,7 @@ public class UserManualGeneratorService {
                   "manualTitle": "ชื่อคู่มือการใช้งานที่ชัดเจนและสมบูรณ์",
                   "manualType": "USER",
                   "summary": "สรุปเนื้อหาภาพรวมของคู่มือฉบับนี้",
+                  "deliveryId": "UUID ของการส่งมอบที่เกี่ยวข้องจากรายการด้านบน หรือ null",
                   "sections": [
                     {
                       "sectionCode": "SEC-1",
@@ -165,9 +209,10 @@ public class UserManualGeneratorService {
     }
 
     private UserManualDraftResponse parseAiResponse(String aiResponse, String manualType, String customTitle,
-                                                   List<PmRequirement> reqs, List<PmSpecification> specs) {
+                                                   List<PmRequirement> reqs, List<PmSpecification> specs,
+                                                   List<PmDelivery> deliveries) {
         if (aiResponse == null || aiResponse.isBlank() || aiResponse.trim().equals("{}")) {
-            return createFallbackResponse(manualType, customTitle, reqs, specs, "No response from AI");
+            return createFallbackResponse(manualType, customTitle, reqs, specs, deliveries, "No response from AI");
         }
 
         try {
@@ -180,23 +225,27 @@ public class UserManualGeneratorService {
             }
             UserManualDraftResponse response = objectMapper.readValue(json, UserManualDraftResponse.class);
             if (response == null || response.getSections() == null || response.getSections().isEmpty()) {
-                return createFallbackResponse(manualType, customTitle, reqs, specs, aiResponse);
+                return createFallbackResponse(manualType, customTitle, reqs, specs, deliveries, aiResponse);
             }
             return response;
         } catch (Exception e) {
             log.error("Failed to parse AI response for User Manual: {}", aiResponse, e);
-            return createFallbackResponse(manualType, customTitle, reqs, specs, aiResponse);
+            return createFallbackResponse(manualType, customTitle, reqs, specs, deliveries, aiResponse);
         }
     }
 
     private UserManualDraftResponse createFallbackResponse(String manualType, String customTitle,
                                                           List<PmRequirement> reqs, List<PmSpecification> specs,
+                                                          List<PmDelivery> deliveries,
                                                           String rawResponse) {
         UserManualDraftResponse fallback = new UserManualDraftResponse();
         String title = (customTitle != null && !customTitle.isBlank()) ? customTitle : "คู่มือการใช้งานระบบ (User Manual)";
         fallback.setManualTitle(title);
         fallback.setManualType(manualType);
         fallback.setSummary("คู่มือการใช้งานสร้างโดยระบบ AI Assistant");
+        if (deliveries != null && !deliveries.isEmpty()) {
+            fallback.setDeliveryId(deliveries.get(0).getId());
+        }
 
         List<UserManualDraftResponse.SectionDraftDto> sections = new ArrayList<>();
         sections.add(new UserManualDraftResponse.SectionDraftDto(

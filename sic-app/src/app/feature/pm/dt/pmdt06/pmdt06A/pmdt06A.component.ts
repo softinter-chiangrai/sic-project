@@ -612,6 +612,28 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         this.showHistoryModal.set(false);
     }
 
+    // รายการเอกสารทั้งหมดใน snapshot ของประวัติ แยกตามประเภท (แสดงชื่อ ไม่ใช่แค่จำนวน)
+    historyGroups(s?: ImpactAnalysis): { label: string; cls: string; items: string[] }[] {
+        if (!s) return [];
+        const fmt = (x: { id: string; code?: string; name?: string }) =>
+            x.name ? (x.code ? `${x.code} - ${x.name}` : x.name) : (x.code || x.id.substring(0, 8));
+        return [
+            { label: 'PMDT06_IMPACT_CUSTOMERS_LABEL', cls: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20', items: (s.impactedCustomers || []).map(x => fmt({ ...x, code: x.code || x.customerCode, name: x.name || x.customerName })) },
+            { label: 'PMDT06_IMPACT_PROJECTS_LABEL', cls: 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-900/20', items: (s.impactedProjects || []).map(x => fmt({ ...x, code: x.code || x.projectCode, name: x.name || x.projectName })) },
+            { label: 'PMDT06_IMPACT_REQUIREMENT', cls: 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20', items: (s.impactedRequirements || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_SPECIFICATION', cls: 'text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20', items: (s.impactedSpecs || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_DIAGRAM', cls: 'text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20', items: (s.impactedDiagrams || []).map(d => d.diagramType ? `${d.name} (${d.diagramType})` : d.name) },
+            { label: 'PMDT06_IMPACT_TASK', cls: 'text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/20', items: (s.impactedTasks || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_TESTCASE', cls: 'text-yellow-600 dark:text-yellow-400 bg-yellow-50 dark:bg-yellow-900/20', items: (s.impactedTestCases || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_BUG', cls: 'text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20', items: (s.impactedBugs || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_MANUAL', cls: 'text-sky-600 dark:text-sky-400 bg-sky-50 dark:bg-sky-900/20', items: (s.impactedManuals || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_DELIVERY', cls: 'text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/20', items: (s.impactedDeliveries || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_INVOICE', cls: 'text-pink-600 dark:text-pink-400 bg-pink-50 dark:bg-pink-900/20', items: (s.impactedInvoices || []).map(fmt) },
+            { label: 'PMDT06_IMPACT_MA', cls: 'text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20', items: (s.impactedMaTickets || []).map(fmt) },
+            { label: 'Tables', cls: 'text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-800', items: s.impactedTableNames || [] },
+        ].filter(g => g.items.length > 0);
+    }
+
     restoreHistoryVersion(historyItem: ImpactAnalysisHistoryItem) {
         if (!historyItem || !historyItem.id) return;
         this.dialog.confirm(

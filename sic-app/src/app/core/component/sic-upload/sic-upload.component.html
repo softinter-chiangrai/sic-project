@@ -113,6 +113,14 @@
                     <button
                       type="button"
                       class="sic-upload__action"
+                      aria-label="Preview file"
+                      title="Preview file"
+                      (click)="previewItem(item)">
+                      <i class="bi bi-eye" aria-hidden="true"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="sic-upload__action"
                       [disabled]="item.downloadLoading"
                       [attr.aria-label]="item.downloadLoading ? 'Preparing download' : 'Download file'"
                       [attr.title]="item.downloadLoading ? 'Preparing download' : 'Download file'"

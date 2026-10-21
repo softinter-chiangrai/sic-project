@@ -156,11 +156,11 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   onSpecSelected(item: any): void {
     const specId = item?.value ?? item?.id ?? null;
     const specName = item?.text ?? null;
-    if (specId) {
-      this.form.patchValue({ reviewableId: specId, reviewableType: 'Specification', reviewableName: specName });
-    } else {
-      this.form.patchValue({ reviewableId: null, reviewableType: 'Specification', reviewableName: null });
-    }
+    this.form.patchValue({
+      reviewableId: specId,
+      reviewableType: 'Specification',
+      reviewableName: specName,
+    }, { emitEvent: false });
     this.cdr.markForCheck();
   }
 
@@ -210,11 +210,6 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       this.loadApprovalFlowForReview(this.reviewId);
     }
     this.updateEmbedUrl();
-
-    this.form.get('reviewableType')?.valueChanges.subscribe(() => {
-      this.form.patchValue({ reviewableId: null });
-      this.cdr.markForCheck();
-    });
 
     this.form.get('figmaUrl')?.valueChanges.subscribe(() => {
       this.updateEmbedUrl();

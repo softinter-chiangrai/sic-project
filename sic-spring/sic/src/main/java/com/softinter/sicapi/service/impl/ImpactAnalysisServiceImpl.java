@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.util.RowVersionGuard;
+import com.softinter.sicapi.util.LocalizationHelper;
 import com.softinter.sicapi.util.DiagramTypes;
 import java.time.Instant;
 import java.util.Arrays;
@@ -85,6 +86,7 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
     private final PmAiProviderService aiProviderService;
     private final ObjectMapper objectMapper;
     private final ChangeImpactAnalysisHistoryRepository historyRepository;
+    private final com.softinter.sicapi.repository.su.SuProfileRepository profileRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -1216,6 +1218,13 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
             history.setImpactedTableNames(analysis.getImpactedTableNames());
             history.setImpactedProjectIds(analysis.getImpactedProjectIds());
             history.setImpactedCustomerIds(analysis.getImpactedCustomerIds());
+            // เอกสารที่คำนวณต่อ (คู่มือ/ส่งมอบ/ใบแจ้งหนี้/MA) ต้องเก็บ ณ เวลานั้น ไม่งั้นเวอร์ชันเก่าจะแสดงค่าปัจจุบัน
+            ImpactAnalysisResponse derived = new ImpactAnalysisResponse();
+            fillDerivedDocuments(analysis, derived);
+            history.setImpactedManualIds(derived.getImpactedManualIds());
+            history.setImpactedDeliveryIds(derived.getImpactedDeliveryIds());
+            history.setImpactedInvoiceIds(derived.getImpactedInvoiceIds());
+            history.setImpactedMaTicketIds(derived.getImpactedMaTicketIds());
             history.setAnalyzedAt(analysis.getAnalyzedAt() != null ? analysis.getAnalyzedAt() : Instant.now());
             history.setAnalyzedBy(analysis.getAnalyzedBy());
 
@@ -1232,9 +1241,18 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         if (changeRequestId == null || historyRepository == null) {
             return List.of();
         }
-        return historyRepository.findByChangeRequestIdAndIsDeleteFalseOrderByCreatedDateDesc(changeRequestId)
-                .stream()
-                .map(this::toHistoryResponse)
+        List<ChangeImpactAnalysisHistory> rows = historyRepository.findByChangeRequestIdAndIsDeleteFalseOrderByCreatedDateDesc(changeRequestId);
+        List<String> userIds = rows.stream().map(ChangeImpactAnalysisHistory::getAnalyzedBy).filter(u -> u != null).distinct().toList();
+        Map<String, String> names = new java.util.HashMap<>();
+        if (!userIds.isEmpty()) {
+            profileRepository.findByUserIdIn(userIds).forEach(p -> names.put(p.getUserId(), LocalizationHelper.getFullName(p)));
+        }
+        return rows.stream()
+                .map(h -> {
+                    ImpactAnalysisHistoryResponse r = toHistoryResponse(h);
+                    r.setAnalyzedByName(names.get(h.getAnalyzedBy()));
+                    return r;
+                })
                 .toList();
     }
 
@@ -1289,6 +1307,27 @@ public class ImpactAnalysisServiceImpl implements ImpactAnalysisService {
         dummy.setAnalyzedBy(h.getAnalyzedBy());
 
         ImpactAnalysisResponse snapshot = toResponse(dummy);
+        // ใช้เอกสารที่เก็บไว้ ณ เวลาบันทึก (แถวเก่าก่อนมีคอลัมน์ = null จะใช้ค่าที่คำนวณใหม่แทน)
+        if (h.getImpactedManualIds() != null) {
+            snapshot.setImpactedManualIds(h.getImpactedManualIds());
+            snapshot.setImpactedManuals(userManualRepository.findAllById(idSet(h.getImpactedManualIds())).stream()
+                    .map(m -> item(m.getId(), m.getManualCode(), m.getManualTitle())).toList());
+        }
+        if (h.getImpactedDeliveryIds() != null) {
+            snapshot.setImpactedDeliveryIds(h.getImpactedDeliveryIds());
+            snapshot.setImpactedDeliveries(deliveryRepository.findAllById(idSet(h.getImpactedDeliveryIds())).stream()
+                    .map(d -> item(d.getId(), d.getDeliveryCode(), d.getDeliveryTitle())).toList());
+        }
+        if (h.getImpactedInvoiceIds() != null) {
+            snapshot.setImpactedInvoiceIds(h.getImpactedInvoiceIds());
+            snapshot.setImpactedInvoices(invoiceRepository.findAllById(idSet(h.getImpactedInvoiceIds())).stream()
+                    .map(i -> item(i.getId(), i.getInvoiceNo(), i.getRemark())).toList());
+        }
+        if (h.getImpactedMaTicketIds() != null) {
+            snapshot.setImpactedMaTicketIds(h.getImpactedMaTicketIds());
+            snapshot.setImpactedMaTickets(maTicketRepository.findAllById(idSet(h.getImpactedMaTicketIds())).stream()
+                    .map(t -> item(t.getId(), t.getTicketNo(), t.getTitle())).toList());
+        }
         resp.setSnapshot(snapshot);
         return resp;
     }

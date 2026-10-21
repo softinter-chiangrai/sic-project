@@ -16,6 +16,7 @@ public class UserManualDraftResponse {
     private String summary;
     private String version;
     private UUID relatedSpecId;
+    private UUID deliveryId;
     private List<SectionDraftDto> sections;
 
     @Data

@@ -99,6 +99,7 @@ export interface ImpactAnalysisHistoryItem {
     aiRationale?: string;
     analyzedAt?: string;
     analyzedBy?: string;
+    analyzedByName?: string;
     createdDate?: string;
     requirementCount: number;
     specCount: number;
