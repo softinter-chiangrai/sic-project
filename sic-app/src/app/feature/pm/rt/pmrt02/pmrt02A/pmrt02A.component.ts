@@ -63,6 +63,10 @@ import { withInvalidFields } from '../../../../../core/utils/invalid-fields.util
 export class Pmrt02AComponent implements OnInit, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
+  /** โหมดดู (ดูจาก route ไม่ใช่ isView เพราะเอกสารที่ล็อกก็ตั้ง isView ด้วย): ซ่อนปุ่มขอแก้ไขเอกสาร */
+  get isViewRoute(): boolean {
+    return /\/view(\?|$)|[?&]mode=view/.test(this.router.url);
+  }
   readonly dialog = inject(DialogService);
   private readonly fb = inject(FormBuilder);
   private projectService = inject(Pmrt02AService);

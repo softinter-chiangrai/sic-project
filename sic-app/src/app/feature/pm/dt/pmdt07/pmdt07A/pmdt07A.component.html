@@ -228,7 +228,7 @@
                             <sic-button type="button" variant="outline" color="primary" (click)="onBack()">
                                 <i class="bi bi-arrow-left"></i> {{ 'PMDT07_BACK_BTN' | translate }}
                             </sic-button>
-                            @if (isLocked) {
+                            @if (isLocked && !isViewRoute) {
                                 <sic-button type="button" variant="solid" color="primary" (click)="requestChange()">
                                     <i class="bi bi-pencil-square"></i> {{ 'PMDT07_REQUEST_CHANGE_BTN' | translate }}
                                 </sic-button>

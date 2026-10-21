@@ -57,6 +57,10 @@ import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-l
 export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactivate {
   readonly route = inject(ActivatedRoute);
   readonly router = inject(Router);
+  /** โหมดดู (ดูจาก route ไม่ใช่ isView เพราะเอกสารที่ล็อกก็ตั้ง isView ด้วย): ซ่อนปุ่มขอแก้ไขเอกสาร */
+  get isViewRoute(): boolean {
+    return /\/view(\?|$)|[?&]mode=view/.test(this.router.url);
+  }
   readonly service = inject(Pmdt09AService);
   private readonly listService = inject(Pmdt09Service);
   readonly dialog = inject(DialogService);

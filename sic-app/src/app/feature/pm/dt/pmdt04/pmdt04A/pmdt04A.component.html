@@ -229,7 +229,7 @@
                 <i class="bi bi-arrow-left"></i>
                 {{ 'PMDT04_BACK_BTN' | translate }}
               </sic-button>
-              @if (isLocked) {
+              @if (isLocked && !isViewRoute) {
                 <sic-button
                   type="button"
                   variant="solid" color="primary"

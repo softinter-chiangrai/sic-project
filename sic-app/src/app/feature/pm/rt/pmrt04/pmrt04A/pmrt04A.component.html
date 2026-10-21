@@ -321,7 +321,7 @@
             {{ 'PMRT04A_BACK' | translate }}
           </sic-button>
 
-          @if (isLocked) {
+          @if (isLocked && !isViewRoute) {
             <sic-button
               type="button"
               variant="solid" color="primary"

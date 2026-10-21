@@ -69,6 +69,10 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   private service = inject(Pmdt17AService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  /** โหมดดู (ดูจาก route ไม่ใช่ isView เพราะเอกสารที่ล็อกก็ตั้ง isView ด้วย): ซ่อนปุ่มขอแก้ไขเอกสาร */
+  get isViewRoute(): boolean {
+    return /\/view(\?|$)|[?&]mode=view/.test(this.router.url);
+  }
   private fb = inject(FormBuilder);
   private dialog = inject(DialogService);
   private customerState = inject(CustomerStateService);

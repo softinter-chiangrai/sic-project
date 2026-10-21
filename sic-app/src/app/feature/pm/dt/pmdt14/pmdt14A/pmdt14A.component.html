@@ -296,7 +296,7 @@
         <sic-button variant="outline" (click)="onBack()">
           <i class="bi bi-arrow-left"></i> {{ (isView() ? 'PMDT14_BACK_SIMPLE_TIP' : 'PMDT14_CANCEL_BTN') | translate }}
         </sic-button>
-        @if (isLocked()) {
+        @if (isLocked() && !isViewRoute) {
           <sic-button variant="solid" color="primary" (click)="requestChange()">
             <i class="bi bi-pencil-square"></i> {{ 'PMDT14_REQUEST_EDIT_BTN' | translate }}
           </sic-button>

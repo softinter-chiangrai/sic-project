@@ -77,6 +77,10 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   private readonly aiHttp = inject(HttpClient);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
+  /** โหมดดู (ดูจาก route ไม่ใช่ isView เพราะเอกสารที่ล็อกก็ตั้ง isView ด้วย): ซ่อนปุ่มขอแก้ไขเอกสาร */
+  get isViewRoute(): boolean {
+    return /\/view(\?|$)|[?&]mode=view/.test(this.router.url);
+  }
   public service = inject(Pmrt04AService);
   private approvalService = inject(ApprovalService);
   private dialog = inject(DialogService);

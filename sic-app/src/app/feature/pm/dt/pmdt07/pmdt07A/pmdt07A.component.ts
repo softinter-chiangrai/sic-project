@@ -144,6 +144,10 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     // Dependencies
     readonly route = inject(ActivatedRoute);
     readonly router = inject(Router);
+    /** โหมดดู (ดูจาก route ไม่ใช่ isViewOnly เพราะเอกสารที่ล็อกก็ตั้ง isViewOnly ด้วย): ซ่อนปุ่มขอแก้ไขเอกสาร */
+    get isViewRoute(): boolean {
+        return /\/view(\?|$)|[?&]mode=view/.test(this.router.url);
+    }
     readonly service = inject(Pmdt07Service);
     readonly dialog = inject(DialogService);
     private readonly fb = inject(FormBuilder);

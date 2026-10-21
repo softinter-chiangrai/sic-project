@@ -285,7 +285,7 @@
             {{ (isPrinting() ? 'PMDT15_GENERATING_PDF' : 'PMDT15_EXPORT_PDF') | translate }}
           </sic-button>
         }
-        @if (isLocked()) {
+        @if (isLocked() && !isViewRoute) {
           <sic-button variant="solid" color="primary" (click)="requestChange()">
             <i class="bi bi-pencil-square"></i> {{ 'PMDT15_REQUEST_EDIT_BTN' | translate }}
           </sic-button>
