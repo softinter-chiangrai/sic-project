@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDesignReviewRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -36,6 +38,7 @@ import com.softinter.sicapi.util.SortValidator;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Design Review", description = "จัดการข้อมูลตรวจสอบและประเมินงานออกแบบ (Design Review)")
+@RequireProgram({"PMDT09"})
 public class PmDesignReviewController {
 
     private final PmDesignReviewService designReviewService;

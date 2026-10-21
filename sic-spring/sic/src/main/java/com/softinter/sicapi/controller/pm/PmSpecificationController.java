@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.GenerateSpecDraftRequest;
 import com.softinter.sicapi.dto.request.PmSpecificationRequest;
@@ -39,6 +41,7 @@ import com.softinter.sicapi.util.ReportHelper;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Specification", description = "จัดการข้อมูลข้อกำหนด (Specification)")
+@RequireProgram({"PMDT07"})
 public class PmSpecificationController {
 
     private final PmSpecificationService specificationService;

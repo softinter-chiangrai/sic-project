@@ -35,7 +35,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
           id: 'sec-403-' + Date.now(),
           recipientUserId: authService.getUserId() || '',
           title: 'สิทธิ์การใช้งานถูกจำกัด',
-          message: 'คุณไม่มีสิทธิ์ในการเข้าถึงหรือดำเนินการนี้ ระบบได้ทำการอัปเดตสิทธิ์ล่าสุดให้แล้ว',
+          message: extractErrorMessage(err, 'คุณไม่มีสิทธิ์ในการเข้าถึงหรือดำเนินการนี้'),
           type: 'PERMISSION_CHANGED',
           read: false,
           createdDate: new Date(),

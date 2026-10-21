@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -33,6 +35,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/pm/tasks")
 @RequiredArgsConstructor
 @Slf4j
+@RequireProgram({"PMDT10", "PMDT11", "PMDT01", "PMDT12"})
 public class TaskController {
 
     private final TaskService taskService;

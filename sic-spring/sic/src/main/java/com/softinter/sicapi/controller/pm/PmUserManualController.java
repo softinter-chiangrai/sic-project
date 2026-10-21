@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmUserManualRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -34,6 +36,7 @@ import com.softinter.sicapi.service.impl.UserManualGeneratorService;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM User Manual Management", description = "PM User Manual Management API")
+@RequireProgram({"PMDT15"})
 public class PmUserManualController {
 
     private final PmUserManualService manualService;

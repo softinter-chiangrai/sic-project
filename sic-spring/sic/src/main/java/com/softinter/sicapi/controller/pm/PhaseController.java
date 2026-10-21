@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -31,6 +33,7 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/pm")
 @RequiredArgsConstructor
 @Slf4j
+@RequireProgram({"PMDT01"})
 public class PhaseController {
 
     private final PhaseService phaseService;

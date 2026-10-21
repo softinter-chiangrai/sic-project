@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.PmCustomerContractRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
 import com.softinter.sicapi.dto.response.PmCustomerContractResponse;
@@ -44,6 +46,7 @@ import com.softinter.sicapi.util.SortValidator;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Customer Contract", description = "จัดการข้อมูลสัญญาของลูกค้า")
+@RequireProgram({"PMRT04"})
 public class PmCustomerContractController {
 
     private final PmCustomerContractService contractService;

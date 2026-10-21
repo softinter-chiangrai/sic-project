@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmBugRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -27,6 +29,7 @@ import com.softinter.sicapi.entity.pm.PmBug;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM Bug / Issue", description = "PM Bug & Issue Management API")
+@RequireProgram({"PMDT12"})
 public class PmBugController {
 
     private final PmBugService bugService;

@@ -15,7 +15,7 @@
       </span>
     </div>
     <button
-      (click)="goToAdd()"
+      data-perm="add" (click)="goToAdd()"
       class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
     >
       <i class="bi bi-plus-lg"></i>
@@ -170,7 +170,7 @@
       <p class="text-lg font-medium text-[var(--text-active)]">{{ 'BURT05_NO_PROGRAMS_TITLE' | translate }}</p>
       <p class="text-sm text-[var(--text-muted)]">{{ 'BURT05_NO_PROGRAMS_HINT' | translate }}</p>
       <button
-        (click)="goToAdd()"
+        data-perm="add" (click)="goToAdd()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all"
       >
         <i class="bi bi-plus-lg"></i>

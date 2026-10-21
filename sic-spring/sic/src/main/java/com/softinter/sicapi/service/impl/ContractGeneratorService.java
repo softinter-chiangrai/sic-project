@@ -53,6 +53,8 @@ public class ContractGeneratorService {
                     "signStatus": "Draft"
                 }
                 5. Ensure professional, legally sound wording in Thai. Provide rich and detailed HTML tags for scopeSummary.
+                6. Match scopeSummary and paymentTerms to the contractType. Maintenance/Support Contract = service after go-live (SLA, response/resolve time per severity, support hours and channels, preventive maintenance, bug fixing, monthly/quarterly/annual fee), NOT a development scope with UAT milestones.
+                7. If no dates are given, startDate = today's date given in the prompt and endDate = 1 year later (minus 1 day).
                 """;
 
         try {
@@ -66,7 +68,8 @@ public class ContractGeneratorService {
 
     private String buildPrompt(PmCustomerProject project, String contractNo, String contractType, BigDecimal contractValue, String userPrompt) {
         StringBuilder sb = new StringBuilder();
-        sb.append("กรุณาร่างสัญญาจ้างพัฒนาซอฟต์แวร์หรือบริการ IT โดยมีรายละเอียดประกอบดังนี้:\n");
+        sb.append("กรุณาร่างสัญญาซอฟต์แวร์หรือบริการ IT ให้ตรงกับประเภทสัญญา โดยมีรายละเอียดประกอบดังนี้:\n");
+        sb.append("- วันที่วันนี้: ").append(java.time.LocalDate.now()).append("\n");
         if (project != null) {
             sb.append("- ชื่อโครงการ: ").append(project.getProjectName()).append("\n");
             sb.append("- รหัสโครงการ: ").append(project.getProjectCode()).append("\n");
@@ -86,7 +89,7 @@ public class ContractGeneratorService {
         if (userPrompt != null && !userPrompt.isBlank()) {
             sb.append("- ข้อกำหนดเพิ่มเติมจากผู้ใช้: ").append(userPrompt).append("\n");
         } else {
-            sb.append("- ข้อกำหนดเพิ่มเติม: ให้ร่างเนื้อหาขอบเขตงานและงวดการชำระเงินมาตรฐานสำหรับการพัฒนาซอฟต์แวร์ระดับองค์กร\n");
+            sb.append("- ข้อกำหนดเพิ่มเติม: ให้ร่างเนื้อหาขอบเขตงานและงวดการชำระเงินมาตรฐานระดับองค์กร ตามประเภทสัญญาข้างต้น\n");
         }
         return sb.toString();
     }

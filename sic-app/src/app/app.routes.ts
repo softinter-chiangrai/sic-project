@@ -9,6 +9,7 @@ import { businessInviteResolver } from './management/business/business-invite/bu
 import { businessJoinResolver } from './management/business/business-join/business-join.resolver';
 import { CanDeactivateGuard } from './core/guard/can-deactivate.guard';
 import { dashboardResolver } from './feature/dashboard/dashboard.resolver';
+import { permissionGuard } from './core/services/permission.service';
 
 export const routes: Routes = [
   {
@@ -42,6 +43,7 @@ export const routes: Routes = [
   {
     path: 'feature',
     canActivate: [authGuard, profileGuard, businessGuard],
+    canActivateChild: [permissionGuard],
     loadComponent: () => import('./feature/feature.component').then((m) => m.Feature),
     children: [
       {

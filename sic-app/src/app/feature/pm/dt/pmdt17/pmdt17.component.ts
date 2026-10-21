@@ -1,6 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, Component, computed, effect, inject, OnInit, signal, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
+import { environment } from '../../../../../environments/environment';
 import { HttpClient } from '@angular/common/http';
 import { finalize, forkJoin } from 'rxjs';
 import { apiBaseUrl } from '../../../../core/config/api.config';
@@ -22,7 +23,6 @@ import { RecentItemsService } from '../../../../core/services/recent-items.servi
 import { HttpParams } from '@angular/common/http';
 import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
-import { MaContractsComponent } from './ma-contracts/ma-contracts.component';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-export-bar/sic-bulk-export-bar.component';
 
@@ -39,7 +39,6 @@ import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-e
     SicGridPanelComponent,
     SicGridPanelTemplate,
     TranslateModule,
-    MaContractsComponent,
     SicButtonComponent,
     SicAiBatchModalComponent,
     SicEmptyStateComponent,
@@ -67,7 +66,6 @@ export class Pmdt17Component implements OnInit {
   pageSize = signal(10);
   searchTerm = signal('');
   filterStatus = signal('all');
-  viewTab = signal<'tickets' | 'contracts'>('tickets');
 
   // ===== AI Batch Create =====
   showAiBatchModal = signal(false);
@@ -229,7 +227,6 @@ export class Pmdt17Component implements OnInit {
 
   ngOnInit() {
     const qp = this.route.snapshot.queryParams;
-    if (qp['tab'] === 'contracts') this.viewTab.set('contracts');
     if (qp['q'] !== undefined) this.searchTerm.set(qp['q']);
     if (qp['status'] !== undefined) this.filterStatus.set(qp['status']);
     if (qp['page'] !== undefined) this.currentPage.set(+qp['page'] || 1);
@@ -238,16 +235,6 @@ export class Pmdt17Component implements OnInit {
     if (pageData) {
       this.pendingPreload = { tickets: pageData.initialTickets ?? [] };
     }
-  }
-
-  setViewTab(tab: 'tickets' | 'contracts'): void {
-    this.viewTab.set(tab);
-    this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { tab: tab === 'contracts' ? 'contracts' : null },
-      queryParamsHandling: 'merge',
-      replaceUrl: true,
-    });
   }
 
   // ===== URL State Sync =====
@@ -447,15 +434,31 @@ export class Pmdt17Component implements OnInit {
   }
 
   goToRenewContract(row: any) {
-    const queryParams: Record<string, any> = {
-      contractType: 'Maintenance Contract',
-    };
+    const contractType = 'Maintenance Contract';
+    const queryParams: Record<string, any> = { contractType };
     if (row.projectId) queryParams['projectId'] = row.projectId;
     if (row.customerId) queryParams['customerId'] = row.customerId;
-    if (row.contractId) queryParams['parentContractId'] = row.contractId;
     if (row.ticketNo) queryParams['refTicketNo'] = row.ticketNo;
+    const go = () => this.router.navigate(['/feature/pm/contract/new'], { queryParams });
 
-    this.router.navigate(['/feature/pm/contract/new'], { queryParams });
+    // ต่อจากสัญญา MA ฉบับล่าสุดของโครงการ ไม่ใช่สัญญาที่ตั๋วผูกอยู่ (อาจเป็นสัญญาพัฒนาระบบ ทำให้ประวัติการต่อปนกัน)
+    // ยังไม่มีสัญญา MA = สร้างฉบับแรก ไม่ผูกต้นทาง
+    if (!row.projectId) {
+      go();
+      return;
+    }
+    this.http
+      .get<{ data: { id: string }[] }>(`${environment.apiBaseUrl}/api/pm/contracts`, {
+        params: { projectId: row.projectId, contractType, latestOnly: true, size: 1, sortBy: 'endDate', sortDirection: 'DESC' },
+      })
+      .subscribe({
+        next: (res) => {
+          const latest = res?.data?.[0];
+          if (latest) queryParams['parentContractId'] = latest.id;
+          go();
+        },
+        error: () => go(),
+      });
   }
 
   printTicket(item: any) {

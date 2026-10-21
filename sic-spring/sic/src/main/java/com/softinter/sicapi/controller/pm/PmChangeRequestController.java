@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.ChangeRequestRequest;
 import com.softinter.sicapi.dto.response.ChangeRequestResponse;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -26,6 +28,7 @@ import org.springframework.data.domain.Sort;
 @RestController
 @RequestMapping("/api/pm/change-requests")
 @RequiredArgsConstructor
+@RequireProgram({"PMDT06"})
 public class PmChangeRequestController {
 
     private final ChangeRequestService changeRequestService;

@@ -23,6 +23,7 @@ import { TranslateService } from '@ngx-translate/core';
             @if (showPrint) {
                 <button
                     type="button"
+                    data-perm="print"
                     (click)="onPrint.emit()"
                     [disabled]="disabled"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
@@ -32,8 +33,10 @@ import { TranslateService } from '@ngx-translate/core';
             }
 
             @if (showEdit) {
+                <!-- ซ่อนปุ่มแก้ไขเมื่อไม่มีสิทธิ์ เฉพาะตอนมีปุ่มดู (ไม่งั้นจะเปิดรายการไม่ได้เลย) -->
                 <button
                     type="button"
+                    [attr.data-perm]="showView ? 'edit' : null"
                     (click)="onEdit.emit()"
                     [disabled]="disabled"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
@@ -45,6 +48,7 @@ import { TranslateService } from '@ngx-translate/core';
             @if (showDelete) {
                 <button
                     type="button"
+                    data-perm="remove"
                     (click)="onDelete.emit()"
                     [disabled]="disabled"
                     class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 disabled:opacity-40 disabled:cursor-not-allowed transition-all"

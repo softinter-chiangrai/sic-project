@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.PmChatRequest;
 import com.softinter.sicapi.dto.response.PmChatResponse;
 import com.softinter.sicapi.dto.response.PmDiagramChatSessionResponse;
@@ -16,6 +18,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/diagram/chat")
 @RequiredArgsConstructor
+@RequireProgram({"PMDT05"})
 public class PmDiagramChatController {
 
     private final PmDiagramChatService chatService;

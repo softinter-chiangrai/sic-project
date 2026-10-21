@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmCustomerProjectRequest;
 import com.softinter.sicapi.dto.response.ApiResponse;
@@ -42,6 +44,7 @@ import com.softinter.sicapi.util.SortValidator;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Customer Project", description = "จัดการข้อมูลโครงการของลูกค้า")
+@RequireProgram({"PMRT02"})
 public class PmCustomerProjectController {
 
     private final PmCustomerProjectService projectService;

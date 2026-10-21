@@ -66,6 +66,23 @@ public interface SuProgramRepository extends JpaRepository<SuProgram, UUID>, Jpa
 List<MenuProgramResponse> findAccessibleProgramsWithPermission(@Param("businessId") UUID businessId, @Param("userId") String userId);
 
 
+    // สิทธิ์ใช้ flag ของ role อย่างเดียว (flag ใน su_program ไม่ได้ตั้งค่าไว้ ถ้า AND ด้วยจะไม่มีใครมีสิทธิ์เลย)
+    @Query("SELECT new com.softinter.sicapi.dto.response.ProgramPermissionResponse(p.programCode, p.routePath, " +
+       "(SUM(CASE WHEN brp.isAdd = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN brp.isSave = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN brp.isRemove = true THEN 1 ELSE 0 END) > 0), " +
+       "(SUM(CASE WHEN brp.isPrint = true THEN 1 ELSE 0 END) > 0)) " +
+       "FROM SuProgram p " +
+       "JOIN SuBusinessRoleProgram brp ON brp.program.id = p.id " +
+       "JOIN SuBusinessRole br ON br.id = brp.businessRole.id " +
+       "JOIN SuUserBusinessRole ubr ON ubr.businessRole.id = br.id " +
+       "JOIN SuUserBusiness ub ON ub.id = ubr.userBusiness.id " +
+       "WHERE ub.businessId = :businessId AND ub.userId = :userId AND ub.isActive = true " +
+       "AND p.isActive = true AND p.isDelete = false " +
+       "AND brp.isActive = true AND br.isActive = true AND ubr.isActive = true " +
+       "GROUP BY p.programCode, p.routePath")
+    List<com.softinter.sicapi.dto.response.ProgramPermissionResponse> findProgramPermissions(@Param("businessId") UUID businessId, @Param("userId") String userId);
+
     List<SuProgram> findByParentProgramIdAndIsDeleteFalse(UUID parentProgramId);
 
     @Query("SELECT p FROM SuProgram p WHERE p.parentProgramId IS NULL AND p.isDelete = false AND p.isActive = true ORDER BY p.sortOrder")

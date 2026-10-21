@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.AiImpactPreviewRequest;
 import com.softinter.sicapi.dto.request.SaveImpactAnalysisRequest;
 import com.softinter.sicapi.dto.response.ImpactAnalysisHistoryResponse;
@@ -22,6 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Impact Analysis", description = "Impact Analysis for Change Requests")
+@RequireProgram({"PMDT06"})
 public class ImpactAnalysisController {
 
     private final ImpactAnalysisService impactAnalysisService;

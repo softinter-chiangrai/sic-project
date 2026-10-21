@@ -1,4 +1,6 @@
 package com.softinter.sicapi.controller.su;
+
+import com.softinter.sicapi.Interceptor.RequireProgram;
 import java.util.List;
 import java.util.UUID;
 
@@ -40,6 +42,7 @@ public class SuBusinessInviteController {
     }
 
     // POST /api/business/invite
+    @RequireProgram("BURT04")
     @PostMapping("/invite")
     @Operation(summary = "Create new invite")
     public ResponseEntity<UUID> createInvite(@Valid @RequestBody CreateInviteRequest request) {
@@ -47,6 +50,7 @@ public class SuBusinessInviteController {
     }
 
     // DELETE /api/business/invite/{id}
+    @RequireProgram("BURT04")
     @DeleteMapping("/invite/{id}")
     @Operation(summary = "Delete/revoke invite")
     public ResponseEntity<Void> deleteInvite(@PathVariable UUID id) {

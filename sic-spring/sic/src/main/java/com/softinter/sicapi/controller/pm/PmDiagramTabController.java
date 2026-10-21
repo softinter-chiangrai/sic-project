@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDiagramReorderRequest;
 import com.softinter.sicapi.service.PmDiagramExportService;
@@ -24,6 +26,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/diagram/tabs")
 @RequiredArgsConstructor
+@RequireProgram({"PMDT05"})
 public class PmDiagramTabController {
 
     private final PmDiagramTabService tabService;

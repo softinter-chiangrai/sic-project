@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.su;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.CreateProgramWithPermissionsRequest;
 import com.softinter.sicapi.dto.request.DeleteRequest;
@@ -44,6 +46,7 @@ import com.softinter.sicapi.exception.ResourceNotFoundException;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Program", description = "Program Management API")
+@RequireProgram({"BURT05"})
 public class SuProgramController {
 
     private final SuProgramRepository programRepository;

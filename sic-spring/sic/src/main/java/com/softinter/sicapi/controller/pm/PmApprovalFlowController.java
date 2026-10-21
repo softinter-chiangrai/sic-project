@@ -1,6 +1,8 @@
 // sic-spring/sic/src/main/java/com/softinter/sicapi/controller/pm/PmApprovalFlowController.java
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.SaveApprovalFlowRequest;
 import com.softinter.sicapi.dto.response.ApprovalFlowResponse;
 import com.softinter.sicapi.service.ApprovalFlowService;
@@ -21,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Approval Flow", description = "Approval Flow Management API")
+@RequireProgram({"BURT06"})
 public class PmApprovalFlowController {
 
     private final ApprovalFlowService approvalFlowService;

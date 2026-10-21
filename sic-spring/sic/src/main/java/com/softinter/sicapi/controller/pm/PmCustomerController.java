@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import static com.softinter.sicapi.util.PaginationUtil.of;
 
 import java.util.List;
@@ -39,6 +41,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Customer Management", description = "APIs สำหรับจัดการข้อมูลลูกค้า")
+@RequireProgram({"PMRT01"})
 public class PmCustomerController {
 
     private final PmCustomerService PmCustomerService;

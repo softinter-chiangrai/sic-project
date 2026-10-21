@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmInvoiceRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -34,6 +36,7 @@ import com.softinter.sicapi.util.ReportHelper;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM Invoice Management", description = "PM Invoice Management API")
+@RequireProgram({"PMDT16"})
 public class PmInvoiceController {
 
     private final PmInvoiceService invoiceService;

@@ -26,6 +26,7 @@ public class BusinessController {
 
     private final BusinessAccessService businessAccessService;
     private final CurrentUserService currentUserService;
+    private final com.softinter.sicapi.Interceptor.ProgramPermissionInterceptor programPermissionInterceptor;
     private final ComboboxService comboboxService;   // ✅ เพิ่ม
 
     @GetMapping
@@ -71,6 +72,10 @@ public class BusinessController {
 
     @PostMapping("/save")
     public ResponseEntity<UUID> saveBusiness(@RequestBody SaveBusinessRequest request) {
+        // แก้ข้อมูล business ต้องมีสิทธิ์ BURT01; สร้าง business ใหม่ (id ว่าง) ไม่ตรวจ
+        if (request.getId() != null && !programPermissionInterceptor.canSave("BURT01")) {
+            throw new org.springframework.security.access.AccessDeniedException("No BURT01 save permission");
+        }
         String userId = currentUserService.getUserId();
         UUID id = businessAccessService.saveBusiness(request, userId);
         return ResponseEntity.ok(id);

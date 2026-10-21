@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.su;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -37,6 +39,7 @@ import com.softinter.sicapi.entity.su.SuUserBusiness;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "User Business Member", description = "จัดการสมาชิกในธุรกิจ")
+@RequireProgram({"BURT04"})
 public class SuUserBusinessMemberController {
 
     private final SuUserBusinessMemberService memberService;

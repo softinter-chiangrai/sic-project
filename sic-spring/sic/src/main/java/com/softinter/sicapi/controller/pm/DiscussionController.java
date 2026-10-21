@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.PostRequest;
 import com.softinter.sicapi.dto.request.ReplyRequest;
 import com.softinter.sicapi.dto.request.UpdateCommentRequest;
@@ -32,6 +34,7 @@ import com.softinter.sicapi.util.PaginationUtil;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Discussion", description = "Discussion Feed API")
+@RequireProgram({"PMDT08"})
 public class DiscussionController {
 
     private final DiscussionService discussionService;

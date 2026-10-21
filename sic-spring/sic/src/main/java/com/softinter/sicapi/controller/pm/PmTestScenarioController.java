@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmTestScenarioRequest;
 import com.softinter.sicapi.dto.response.ComboboxResponse;
@@ -27,6 +29,7 @@ import com.softinter.sicapi.service.impl.TestScenarioGeneratorService;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM Test Scenario", description = "PM Test Scenario Management API")
+@RequireProgram({"PMDT12"})
 public class PmTestScenarioController {
 
     private final PmTestScenarioService scenarioService;

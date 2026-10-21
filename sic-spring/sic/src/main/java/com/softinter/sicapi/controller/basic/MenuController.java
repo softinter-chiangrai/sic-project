@@ -1,6 +1,10 @@
 package com.softinter.sicapi.controller.basic;
 
+import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.response.MenuResponse;
+import com.softinter.sicapi.dto.response.ProgramPermissionResponse;
+import com.softinter.sicapi.repository.su.SuProgramRepository;
+import com.softinter.sicapi.service.CurrentUserService;
 import com.softinter.sicapi.service.MenuService;
 import com.softinter.sicapi.util.LanguageUtils;
 
@@ -24,6 +28,8 @@ import java.util.List;
 public class MenuController {
 
     private final MenuService menuService;
+    private final SuProgramRepository programRepository;
+    private final CurrentUserService currentUserService;
 
     @GetMapping
     @Operation(summary = "Get user menu based on business and permissions")
@@ -31,5 +37,13 @@ public class MenuController {
         // ✅ ไม่ต้องใช้ LanguageUtils อีกต่อไป
         List<MenuResponse> menu = menuService.getMenu();
         return ResponseEntity.ok(menu);
+    }
+
+    @GetMapping("/permissions")
+    @Operation(summary = "สิทธิ์ add/save/remove/print ของผู้ใช้ต่อโปรแกรม (ใช้ซ่อนปุ่มฝั่งหน้าจอ)")
+    public ResponseEntity<List<ProgramPermissionResponse>> getPermissions() {
+        var businessId = BusinessContextHolder.getBusinessId();
+        if (businessId == null) return ResponseEntity.ok(List.of());
+        return ResponseEntity.ok(programRepository.findProgramPermissions(businessId, currentUserService.getUserId()));
     }
 }

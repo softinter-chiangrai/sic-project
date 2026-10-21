@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmMaTicketRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -34,6 +36,7 @@ import com.softinter.sicapi.util.ReportHelper;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM MA Ticket Management", description = "PM MA / Support Ticket Management API")
+@RequireProgram({"PMDT17"})
 public class PmMaTicketController {
 
     private final PmMaTicketService ticketService;

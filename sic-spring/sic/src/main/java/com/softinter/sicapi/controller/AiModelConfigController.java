@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -25,6 +27,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "AI Model Config", description = "Manage AI model providers/keys used across the system")
+@RequireProgram({"BURT07"})
 public class AiModelConfigController {
 
     private final AiModelConfigService service;

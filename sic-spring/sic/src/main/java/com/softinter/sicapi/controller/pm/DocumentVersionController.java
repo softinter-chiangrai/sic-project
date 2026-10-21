@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.DocumentVersionRequest;
 import com.softinter.sicapi.dto.response.DocumentVersionResponse;
 import com.softinter.sicapi.service.DocumentVersionService;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Document Version", description = "Document Version Management API")
+@RequireProgram({"PMDT19"})
 public class DocumentVersionController {
 
     private final DocumentVersionService versionService;

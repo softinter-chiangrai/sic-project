@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -56,6 +58,7 @@ import com.softinter.sicapi.util.SortValidator;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Requirement", description = "Requirement Management API")
+@RequireProgram({"PMDT04"})
 public class PmRequirementController {
 
     private final PmRequirementService requirementService;

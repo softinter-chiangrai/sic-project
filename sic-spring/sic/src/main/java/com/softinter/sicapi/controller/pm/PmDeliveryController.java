@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmDeliveryRequest;
 import com.softinter.sicapi.dto.response.PmDeliveryGateCheckResponse;
@@ -39,6 +41,7 @@ import com.softinter.sicapi.util.ReportHelper;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM Delivery Management", description = "PM Delivery Document Management API")
+@RequireProgram({"PMDT14"})
 public class PmDeliveryController {
 
     private final PmDeliveryService deliveryService;

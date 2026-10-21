@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -20,6 +22,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "AI Phase WBS", description = "สร้าง Milestone / Work Package / Task ใต้ Phase ด้วย AI ในครั้งเดียว")
+@RequireProgram({"PMDT01"})
 public class AiPhaseWbsController {
 
     private final AiPhaseWbsService service;

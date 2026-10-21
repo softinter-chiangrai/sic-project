@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.su;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -42,6 +44,7 @@ import com.softinter.sicapi.exception.ResourceNotFoundException;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "User Business Role", description = "User Business Role Management API")
+@RequireProgram({"BURT03", "BURT04"})
 public class SuUserBusinessRoleController {
 
     private final SuUserBusinessRoleRepository userBusinessRoleRepository;

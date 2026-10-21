@@ -93,7 +93,7 @@
       </div>
 
       <button
-        (click)="goToAddScenario()"
+        data-perm="add" (click)="goToAddScenario()"
         class="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/80 transition-all hover:shadow-md cursor-pointer whitespace-nowrap"
       >
         <i class="bi bi-folder-plus"></i>
@@ -285,7 +285,7 @@
               @if (group.scenario) {
                 <!-- + Add Test Case directly under this scenario -->
                 <button
-                  (click)="goToAddTestCase(group.scenario.id, $event)"
+                  data-perm="add" (click)="goToAddTestCase(group.scenario.id, $event)"
                   class="px-2.5 py-1 rounded-md text-xs font-medium text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-colors cursor-pointer flex items-center gap-1"
                   [title]="'PMDT12_ADD_TC_IN_SCENARIO_TT' | translate"
                 >
@@ -491,7 +491,7 @@
                           <!-- Bug Button: When test case is Failed and has NO active bugs yet -> allow opening Bug -->
                           @if (isFailedTest(testCase) && !hasActiveBug(testCase)) {
                             <button
-                              (click)="goToCreateBug(testCase, $event)"
+                              data-perm="add" (click)="goToCreateBug(testCase, $event)"
                               class="px-2.5 py-1 rounded-md text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 transition-all flex items-center gap-1 shadow-sm cursor-pointer"
                               [title]="'PMDT12_OPEN_BUG_TOOLTIP' | translate"
                             >
@@ -502,7 +502,7 @@
                           <!-- Bug Button & Badges when test case has Active Bugs -->
                           @if (hasActiveBug(testCase)) {
                             <button
-                              (click)="goToCreateBug(testCase, $event)"
+                              data-perm="add" (click)="goToCreateBug(testCase, $event)"
                               class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-semibold bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/60 dark:hover:bg-rose-900/60 text-rose-700 dark:text-rose-300 border border-rose-300 dark:border-rose-700 transition-all cursor-pointer shadow-xs"
                               [title]="'คลิกเพื่อเปิด Bug เพิ่มเติม (ปัจจุบันมี ' + getActiveBugsForTestCase(testCase).length + ' Bug ที่ยังเปิดอยู่)'"
                             >

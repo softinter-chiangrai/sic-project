@@ -519,7 +519,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
           patchData.autoRenew = true;
         }
         if (refTicketNo) {
-          patchData.scopeSummary = `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>`;
+          patchData.scopeSummary = this.autoScopeSummary = `<p>สัญญาบริการและบำรุงรักษา (MA) อ้างอิงตั๋ว MA เลขที่: ${refTicketNo}</p>`;
         }
         this.formData.patchValue(patchData);
         if (this.isView) {
@@ -788,8 +788,15 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  /** ข้อความขอบเขตงานที่ระบบเติมให้เอง (อ้างอิงตั๋ว MA) ไม่ใช่สิ่งที่ผู้ใช้พิมพ์ ให้ AI เขียนทับได้ */
+  private autoScopeSummary: string | null = null;
+
   private applyDraftToForm(draft: any): void {
     if (!draft) return;
+    const scope = this.form.get('scopeSummary');
+    if (this.autoScopeSummary && scope?.value === this.autoScopeSummary && draft.scopeSummary) {
+      scope.setValue(null);
+    }
     // Smart Preserve: กรอกเฉพาะช่องที่ผู้ใช้ยังไม่ได้กรอก ห้ามเขียนทับสิ่งที่ผู้ใช้พิมพ์ไว้แล้ว
     // และห้ามแตะ contractNo (ระบบเป็นผู้กำหนด)
     smartPatchFormAiDraft(

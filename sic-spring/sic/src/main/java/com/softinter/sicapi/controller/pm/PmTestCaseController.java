@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmTestCaseRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -32,6 +34,7 @@ import com.softinter.sicapi.service.impl.TestCaseGeneratorService;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM Test Case", description = "PM Test Case Management API")
+@RequireProgram({"PMDT12"})
 public class PmTestCaseController {
 
     private final PmTestCaseService testCaseService;

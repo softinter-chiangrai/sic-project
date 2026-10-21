@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.dto.request.PmPaymentRequest;
 import com.softinter.sicapi.dto.response.PaginationResponse;
@@ -28,6 +30,7 @@ import com.softinter.sicapi.entity.pm.PmPayment;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "PM Payment Management", description = "PM Payment Management API")
+@RequireProgram({"PMDT16"})
 public class PmPaymentController {
 
     private final PmPaymentService paymentService;

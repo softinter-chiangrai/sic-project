@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.su;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.*;
 import com.softinter.sicapi.dto.response.*;
 import com.softinter.sicapi.entity.su.SuBusinessRoleProgram;
@@ -35,6 +37,7 @@ import com.softinter.sicapi.exception.ResourceNotFoundException;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Business Role Program", description = "Business Role Program Management API")
+@RequireProgram({"BURT02"})
 public class SuBusinessRoleProgramController {
 
     private final SuBusinessRoleProgramRepository brpRepository;
