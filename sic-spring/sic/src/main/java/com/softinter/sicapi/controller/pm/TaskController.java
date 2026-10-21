@@ -55,7 +55,8 @@ public class TaskController {
     public ResponseEntity<TaskResponse> createTask(@RequestBody TaskRequest request) {
         log.info("Creating new task for work package ID: {}", request.getWorkPackageId());
         TaskResponse created = taskService.createTask(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(taskService.getTaskById(created.getId()));
     }
 
     @PutMapping("/{taskId}")

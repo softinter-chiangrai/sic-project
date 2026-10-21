@@ -60,7 +60,7 @@ test.describe('Contract Lifecycle & Notification System (UI)', () => {
     );
 
     // 1.3 สั่งรันประมวลผล Lifecycle เพื่อสร้าง Notification และสัญญาฉบับต่ออายุ
-    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle');
+    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle', undefined, { date: today() });
     expect(runRes.status).toBe(200);
 
     // 1.4 เข้าสู่หน้า Notification Center ของระบบ
@@ -130,7 +130,7 @@ test.describe('Contract Lifecycle & Notification System (UI)', () => {
     );
 
     // รัน Lifecycle
-    await w.api.post('/api/pm/contracts/run-lifecycle');
+    await w.api.post('/api/pm/contracts/run-lifecycle', undefined, { date: today() });
 
     // เปิดหน้ารายการสัญญา
     await ui.visit('/feature/pm/contract');

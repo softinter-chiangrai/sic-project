@@ -1932,6 +1932,8 @@
   "PMDT06_SAVE_BEFORE_PRINT_MSG": "กรุณาบันทึกข้อมูลก่อนพิมพ์เอกสาร",
   "PMDT06_SAVE_BTN": "บันทึกข้อมูล",
   "PMDT06_SAVE_FAIL_TITLE": "บันทึกไม่สำเร็จ",
+  "PMDT06_IMPACT_SAVE_FAIL_TITLE": "บันทึกผลกระทบไม่สำเร็จ",
+  "PMDT06_IMPACT_SAVE_FAIL_MSG": "บันทึก Change Request แล้ว แต่บันทึก Impact Analysis ไม่สำเร็จ",
   "PMDT06_SAVE_SUCCESS_MSG": "บันทึกข้อมูลคำขอเปลี่ยนแปลงเรียบร้อยแล้ว",
   "PMDT06_SAVE_SUCCESS_TITLE": "บันทึกสำเร็จ",
   "PMDT06_SAVING_LABEL": "กำลังบันทึก...",

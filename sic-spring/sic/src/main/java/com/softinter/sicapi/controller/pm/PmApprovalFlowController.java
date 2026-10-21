@@ -40,8 +40,9 @@ public class PmApprovalFlowController {
     @PostMapping
     @Operation(summary = "Create new approval flow")
     public ResponseEntity<ApprovalFlowResponse> create(@Valid @RequestBody SaveApprovalFlowRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(approvalFlowService.createFlow(request));
+        UUID id = approvalFlowService.createFlow(request).getId();
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(approvalFlowService.getFlow(id));
     }
 
     @PutMapping("/{id}")

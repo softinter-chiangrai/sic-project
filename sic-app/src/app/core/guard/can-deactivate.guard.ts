@@ -35,12 +35,12 @@ export const CanDeactivateGuard: CanDeactivateFn<CanComponentDeactivate> = (
     return false;
   };
 
-  const currentUrl = state?.url || '';
+  // whole path segments only: 'design-review' contains "view" but is an edit page
+  const isViewSegment = (path: string | undefined) =>
+    (path ?? '').split(/[/?#]/).some((s) => s === 'view' || s === 'preview');
   const isViewRoute =
-    currentUrl.includes('/view') ||
-    currentUrl.includes('/preview') ||
-    Boolean(route.routeConfig?.path?.includes('view')) ||
-    Boolean(route.routeConfig?.path?.includes('preview')) ||
+    isViewSegment(state?.url) ||
+    isViewSegment(route.routeConfig?.path) ||
     route.queryParams?.['mode'] === 'view';
 
   // 1. If explicitly in view-only mode, saved successfully, or currently saving/submitting, never block navigation

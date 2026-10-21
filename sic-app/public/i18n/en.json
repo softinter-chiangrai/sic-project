@@ -1932,6 +1932,8 @@
   "PMDT06_SAVE_BEFORE_PRINT_MSG": "Please save before printing",
   "PMDT06_SAVE_BTN": "Save Changes",
   "PMDT06_SAVE_FAIL_TITLE": "Save Failed",
+  "PMDT06_IMPACT_SAVE_FAIL_TITLE": "Impact Analysis Not Saved",
+  "PMDT06_IMPACT_SAVE_FAIL_MSG": "The Change Request was saved, but the Impact Analysis could not be saved",
   "PMDT06_SAVE_SUCCESS_MSG": "Change Request saved successfully",
   "PMDT06_SAVE_SUCCESS_TITLE": "Save Successful",
   "PMDT06_SAVING_LABEL": "Saving...",

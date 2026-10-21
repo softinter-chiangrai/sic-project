@@ -39,7 +39,14 @@ export class SicFromData<TModel extends object & SicStateModel> {
       return false;
     }
     const currentComparableValue = this.toComparableValue(this.sourceFormGroup.getRawValue());
-    return !this.isEqual(this.initialComparableValue, currentComparableValue);
+    // Only fields the user touched count: values a page patches in by code after loading (e.g. a project name
+    // fetched later) stay pristine and must not turn "clicked into a field" into "unsaved changes".
+    const touched = Object.entries(this.sourceFormGroup.controls).filter(([key, control]) => control.dirty && key !== 'state');
+    if (touched.length === 0) {
+      // markAsDirty() on the whole form (no single field touched): compare everything, as before
+      return !this.isEqual(this.initialComparableValue, currentComparableValue);
+    }
+    return touched.some(([key]) => !this.isEqual(this.initialComparableValue[key], currentComparableValue[key]));
   }
 
   get isNotChanged(): boolean {

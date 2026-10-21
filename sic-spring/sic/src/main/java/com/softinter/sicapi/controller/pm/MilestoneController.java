@@ -70,7 +70,8 @@ public class MilestoneController {
     public ResponseEntity<MilestoneResponse> createMilestone(@RequestBody MilestoneRequest request) {
         log.info("Creating new milestone for phase ID: {}", request.getPhaseId());
         MilestoneResponse created = milestoneService.createMilestone(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(milestoneService.getMilestoneById(created.getId()));
     }
 
     @PutMapping("/{milestoneId}")

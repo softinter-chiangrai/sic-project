@@ -107,7 +107,9 @@ export class Burt01Component extends BaseActionComponent implements OnInit, ISid
     this.service.save(data)
       .pipe(finalize(() => this.isSaving.set(false)))
       .subscribe({
-        next: (response) => {
+        next: () => {
+          // the page stays open: reload so the next save carries the new rowVersion and "no changes" starts over
+          this.service.getBusinessInfo().subscribe((fresh) => this.formData.resetModel({ ...this.formData.value, ...fresh }));
           this.dialog.success(this.translate.instant('BURT01_SAVED_TITLE'), this.translate.instant('BURT01_SAVED_MSG'));
         },
         error: (error) => {

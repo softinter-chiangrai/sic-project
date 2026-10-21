@@ -49,7 +49,9 @@ public class PmCustomerController {
             @RequestParam(required = false) UUID businessId,
             @Valid @RequestBody PmCustomerRequest request) {
         UUID effectiveBusinessId = businessId != null ? businessId : BusinessContextHolder.getBusinessId();
-        return ResponseEntity.status(HttpStatus.CREATED).body(PmCustomerService.create(effectiveBusinessId, request));
+        UUID id = PmCustomerService.create(effectiveBusinessId, request).getId();
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(PmCustomerService.findById(id));
     }
 
     @PutMapping("/{id}")
@@ -57,7 +59,9 @@ public class PmCustomerController {
     public ResponseEntity<PmCustomerResponse> update(
             @PathVariable UUID id,
             @Valid @RequestBody PmCustomerRequest request) {
-        return ResponseEntity.ok(PmCustomerService.update(id, request));
+        PmCustomerService.update(id, request);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ update ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.ok(PmCustomerService.findById(id));
     }
 
     @DeleteMapping("/{id}")

@@ -10,7 +10,17 @@ import { mock, userId } from '../api';
 test.describe.configure({ mode: 'default', retries: 0 });
 
 let w: World;
-test.beforeAll(async () => { w = await World.create(); });
+/** body of the last POST, to check the rowVersion a create answers with */
+let lastPost: any;
+test.beforeAll(async () => {
+  w = await World.create();
+  const post = w.api.post;
+  w.api.post = async (path: string, data?: unknown, params?: Record<string, string | number>) => {
+    const r = await post(path, data, params);
+    lastPost = r.body;
+    return r;
+  };
+});
 test.afterAll(async () => { await w.cleanup(); });
 
 const data = (b: any) => b?.data ?? b;
@@ -23,9 +33,14 @@ type Mod = {
 };
 
 async function probe(m: Mod) {
+  lastPost = undefined;
   const id = await m.create();
+  const created = data(lastPost);
   const g1 = data((await w.api.get(m.get(id))).body);
   expect.soft(g1.rowVersion, `${m.name}: GET returns rowVersion`).toBeTruthy();
+  if (created && typeof created === 'object' && created.rowVersion != null) {
+    expect.soft(created.rowVersion, `${m.name}: rowVersion in the create response equals the stored one`).toBe(g1.rowVersion);
+  }
 
   const r1 = await m.save(id, g1, 'B');
   expect.soft(r1.status, `${m.name}: save with current rowVersion -> ${JSON.stringify(r1.body).slice(0, 200)}`).toBeLessThan(300);
@@ -282,6 +297,27 @@ test('impact analysis', async () => {
     create: async () => crId,
     get: (id) => `/api/pm/impact-analysis/change-request/${id}`,
     save: (_id, g, t) => w.api.post('/api/pm/impact-analysis/save', { ...b(t), rowVersion: g.rowVersion }),
+  });
+});
+
+test('customer', async () => {
+  const b = (companyNameEn: string) => ({ companyNameEn, email: 'e2e@example.test' });
+  await probe({
+    name: 'customer',
+    create: () => w.make('/api/pm/customers', { ...b('A'), customerCode: mock('C') }, '/api/pm/customers/{id}'),
+    get: (id) => `/api/pm/customers/${id}`,
+    save: (id, g, t) => w.api.put(`/api/pm/customers/${id}`, { ...b(t), customerCode: g.customerCode, rowVersion: g.rowVersion }),
+  });
+});
+
+test('business', async () => {
+  // the seeded business of the test user (throwaway DB): saved with its own values, so nothing changes but xmin
+  const bizId = w.api.businessId!;
+  await probe({
+    name: 'business',
+    create: async () => bizId,
+    get: () => `/api/business/me`, // what the business settings page (BURT01) loads
+    save: (id, g) => w.api.post('/api/business/save', { ...g, id, state: 3, rowVersion: g.rowVersion }),
   });
 });
 

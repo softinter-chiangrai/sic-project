@@ -46,7 +46,9 @@ public class PmChangeRequestController {
 
     @PostMapping
     public ResponseEntity<ChangeRequestResponse> create(@Valid @RequestBody ChangeRequestRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(changeRequestService.createChangeRequest(request));
+        UUID id = changeRequestService.createChangeRequest(request).getId();
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(changeRequestService.getChangeRequest(id));
     }
 
     @PutMapping("/{id}")

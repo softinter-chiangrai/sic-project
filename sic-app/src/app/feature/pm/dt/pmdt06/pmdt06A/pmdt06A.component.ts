@@ -758,7 +758,10 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                         next: finish,
                         error: (err) =>
                             this.dialog
-                                .warn('บันทึกผลกระทบไม่สำเร็จ', err.error?.message || 'บันทึก Change Request แล้ว แต่บันทึก Impact Analysis ไม่สำเร็จ')
+                                .warn(
+                                    this.translate.instant('PMDT06_IMPACT_SAVE_FAIL_TITLE'),
+                                    err.error?.message || this.translate.instant('PMDT06_IMPACT_SAVE_FAIL_MSG'),
+                                )
                                 .then(finish),
                     });
                 } else {

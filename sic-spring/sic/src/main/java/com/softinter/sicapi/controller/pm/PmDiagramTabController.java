@@ -50,7 +50,9 @@ public class PmDiagramTabController {
 
     @PostMapping
     public ResponseEntity<PmDiagramTabResponse> createTab(@Valid @RequestBody PmDiagramTabRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(tabService.createTab(request));
+        UUID id = tabService.createTab(request).getId();
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(tabService.getTab(id));
     }
 
     @PutMapping("/{id}")

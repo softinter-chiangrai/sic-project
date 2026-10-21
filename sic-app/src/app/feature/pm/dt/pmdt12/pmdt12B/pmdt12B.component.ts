@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 // src/app/feature/pm/dt/pmdt13/pmdt13B/pmdt13B.component.ts
-import { Component, inject, OnInit, signal, ChangeDetectionStrategy } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectionStrategy, effect, untracked } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { AI_MODEL_OPTIONS } from '../../../../../core/config/ai-models.config';
 import { AiModelsService } from '../../../../../core/services/ai-models.service';
@@ -116,6 +116,20 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   isSaved = false;
   pageDirty = () => this.isView() ? false : (this.isSaved ? false : (this.formData?.isChanged ?? false));
+
+  constructor() {
+    // New scenario: follow the project picked on the navbar, so the task list (and the saved scenario) belong to it.
+    // Without this the form kept the tasks of the project cached when it opened and saved the scenario there.
+    effect(() => {
+      const pId = this.customerState.currentProjectId();
+      untracked(() => {
+        if (!this.formData || this.scenarioId || this.isView() || !pId) return;
+        if (pId === this.formData.form.get('projectId')?.value) return;
+        this.formData.form.patchValue({ projectId: pId, taskId: null, taskCode: null, taskName: null });
+        this.loadTasks(pId);
+      });
+    });
+  }
 
   ngOnInit(): void {
     this.buildStaticOptions();

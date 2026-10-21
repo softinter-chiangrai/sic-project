@@ -99,7 +99,8 @@ public class PhaseController {
         // Ensure the projectId in path matches the one in request
         request.setProjectId(projectId);
         PhaseResponse created = phaseService.createPhase(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(phaseService.getPhaseById(created.getId()));
     }
 
     @PostMapping("/phases")
@@ -109,7 +110,8 @@ public class PhaseController {
         }
         log.info("Creating new phase direct for project ID: {}", request.getProjectId());
         PhaseResponse created = phaseService.createPhase(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(phaseService.getPhaseById(created.getId()));
     }
 
     @PutMapping("/phases/{phaseId}")

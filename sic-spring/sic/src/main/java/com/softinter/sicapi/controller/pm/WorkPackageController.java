@@ -81,7 +81,8 @@ public class WorkPackageController {
     public ResponseEntity<WorkPackageResponse> createWorkPackage(@RequestBody WorkPackageRequest request) {
         log.info("Creating new work package for milestone ID: {}", request.getMilestoneId());
         WorkPackageResponse created = workPackageService.createWorkPackage(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        // โหลดใหม่หลัง commit: rowVersion (xmin) ในผลของ create ยังเป็นค่าที่ Hibernate เดา ไม่ใช่ค่าจริง
+        return ResponseEntity.status(HttpStatus.CREATED).body(workPackageService.getWorkPackageById(created.getId()));
     }
 
     @PutMapping("/{wpId}")

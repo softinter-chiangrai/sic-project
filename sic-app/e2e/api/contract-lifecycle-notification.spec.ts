@@ -36,11 +36,11 @@ test.describe('Contract Lifecycle & Notification System (API)', () => {
     );
 
     // รัน Lifecycle check
-    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle');
+    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle', undefined, { date: today() });
     expect(runRes.status).toBe(200);
 
     // ตรวจสอบการแจ้งเตือนในระบบ (/api/su/notifications)
-    const notifRes = await w.api.get('/api/su/notifications', { unreadOnly: true, size: 50 });
+    const notifRes = await w.api.get('/api/su/notifications', { unreadOnly: true, size: 200 });
     expect(notifRes.status).toBe(200);
     const items = notifRes.body?.items || [];
 
@@ -77,11 +77,11 @@ test.describe('Contract Lifecycle & Notification System (API)', () => {
     );
 
     // รัน Lifecycle check
-    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle');
+    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle', undefined, { date: today() });
     expect(runRes.status).toBe(200);
 
     // 1. ตรวจสอบ Notification แจ้งเตือนการสร้างฉบับต่ออายุอัตโนมัติ
-    const notifRes = await w.api.get('/api/su/notifications', { size: 50 });
+    const notifRes = await w.api.get('/api/su/notifications', { size: 200 });
     expect(notifRes.status).toBe(200);
     const items = notifRes.body?.items || [];
 
@@ -134,11 +134,11 @@ test.describe('Contract Lifecycle & Notification System (API)', () => {
     );
 
     // รัน Lifecycle check
-    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle');
+    const runRes = await w.api.post('/api/pm/contracts/run-lifecycle', undefined, { date: today() });
     expect(runRes.status).toBe(200);
 
     // ตรวจสอบ Notification เกินกำหนดเวลา
-    const notifRes = await w.api.get('/api/su/notifications', { size: 50 });
+    const notifRes = await w.api.get('/api/su/notifications', { size: 200 });
     expect(notifRes.status).toBe(200);
     const items = notifRes.body?.items || [];
 
