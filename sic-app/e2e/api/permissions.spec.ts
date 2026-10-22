@@ -78,6 +78,22 @@ test('/save: add-only can create but not update; save-only can update but not cr
   expect(upd2.status, JSON.stringify(upd2.body)).not.toBe(403);
 });
 
+test('status actions need save, create-from actions need add on the target program', async () => {
+  const contractId = await w.contract();
+  // create revision = เปลี่ยนสถานะเอกสารเดิม -> ต้องมีสิทธิ์บันทึก
+  await setFlags('PMRT04', 'is_add = true, is_save = false');
+  expect((await w.api.post(`/api/pm/contracts/${contractId}/create-revision`)).status).toBe(403);
+  await setFlags('PMRT04', 'is_add = false, is_save = true');
+  expect((await w.api.post(`/api/pm/contracts/${contractId}/create-revision`)).status).not.toBe(403);
+
+  // ใบส่งมอบ -> สร้างใบแจ้งหนี้ = สิทธิ์เพิ่มของหน้าใบแจ้งหนี้ (ไม่ใช่หน้าใบส่งมอบ)
+  const fake = '00000000-0000-0000-0000-000000000000';
+  await setFlags('PMDT16', 'is_add = false, is_active = true');
+  expect((await w.api.post(`/api/pm/delivery/${fake}/create-invoice`)).status).toBe(403);
+  await setFlags('PMDT16', 'is_add = true');
+  expect((await w.api.post(`/api/pm/delivery/${fake}/create-invoice`)).status).not.toBe(403);
+});
+
 test('save-only can still run non-create actions (bulk-save of role rights)', async () => {
   const roleId = await w.make('/api/su/business-roles/save', { businessId: w.api.businessId, roleCode: `E2E-R${Date.now() % 100000}`, roleNameEn: 'perm role', roleNameLocal: 'perm role', sortOrder: 99, isActive: true, state: 4 }, '/api/su/business-roles/{id}');
   const rows = sql(`SELECT brp.id || ',' || brp.is_add || ',' || brp.is_save FROM su_business_role_program brp WHERE ${await scope('BURT02')}`).split('\n').filter(Boolean);

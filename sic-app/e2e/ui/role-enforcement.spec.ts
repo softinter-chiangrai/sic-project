@@ -97,6 +97,37 @@ test('full-right page still shows its buttons', async () => {
   await expect(ui.page.locator('[data-perm~="add"]').first()).toBeVisible({ timeout: 30_000 });
 });
 
+test('no add on contracts: renew buttons hidden and the renew page is blocked', async () => {
+  const contractId = await w.contract();
+  const where = await scope(['PMRT04']);
+  const before = sql(`SELECT brp.id || ',' || brp.is_add FROM su_business_role_program brp WHERE ${where}`).split('\n').filter(Boolean);
+  const reload = () => ui.page.evaluate(() => (window as any).ng.getComponent(document.querySelector('sic-sidebar')).reloadMenuPermissions());
+  try {
+    sql(`UPDATE su_business_role_program brp SET is_add = false WHERE ${where}`);
+    await ui.visit('/feature/pm/contract');
+    await reload();
+    await expect(ui.page.locator('[data-perm~="edit"]').first()).toBeAttached({ timeout: 30_000 }); // แถวโหลดแล้ว
+    await expectAllHidden('add'); // ปุ่มเพิ่ม + ต่อสัญญาในแถว
+
+    await ui.page.evaluate((id) => {
+      history.pushState({}, '', `/feature/pm/contract/renew/${id}`);
+      dispatchEvent(new PopStateEvent('popstate'));
+    }, contractId);
+    await expect(ui.page.getByText('คุณไม่มีสิทธิ์เพิ่มข้อมูลในหน้านี้')).toBeVisible({ timeout: 15_000 });
+    await expect.poll(() => ui.page.url()).not.toMatch(/\/renew\//);
+
+    // ปุ่ม "ต่อสัญญา MA" ในแถวตั๋ว MA ใช้สิทธิ์เพิ่มของหน้าสัญญา
+    await ui.visit('/feature/pm/ma-ticket');
+    await expect(ui.page.locator('sic-table-actions').first()).toBeAttached({ timeout: 30_000 });
+    await expect(ui.page.locator('button:has(i.bi-file-earmark-plus)')).toHaveCount(0);
+  } finally {
+    for (const row of before) {
+      const [id, a] = row.split(',');
+      sql(`UPDATE su_business_role_program SET is_add = ${a} WHERE id = '${id}'`);
+    }
+  }
+});
+
 test('rights change applies without a page refresh', async () => {
   // เหมือน admin แก้สิทธิ์: backend ส่ง PERMISSION_CHANGED -> sidebar.reloadMenuPermissions()
   await ui.visit('/feature/pm/contract');

@@ -384,7 +384,7 @@ export class SicAiNavigatorComponent implements OnInit {
   /** wizard สร้างโครงการทั้งชุด: ซ่อนถ้าไม่มีสิทธิ์เพิ่มโครงการ (โหลดสิทธิ์แล้วแต่ไม่มีโปรแกรมโครงการ = ไม่มีสิทธิ์) */
   get canCreateProject(): boolean {
     const f = this.permission.flagsFor('/feature/pm/project/new');
-    return f ? f.add || f.save : !this.permission.loaded;
+    return f ? f.add : !this.permission.loaded;
   }
 
   openProjectWizard(prompt?: string): void {

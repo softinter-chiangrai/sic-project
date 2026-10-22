@@ -62,7 +62,7 @@ export class Pmdt17Component implements OnInit {
   /** ปุ่มต่อสัญญา MA ไปหน้าสัญญา: ซ่อนถ้าไม่มีสิทธิ์เพิ่มสัญญา */
   get canAddContract(): boolean {
     const f = this.permission.flagsFor('/feature/pm/contract/new');
-    return f ? f.add || f.save : !this.permission.loaded; // โหลดแล้วแต่ไม่มีโปรแกรมสัญญาเลย = ไม่มีสิทธิ์
+    return f ? f.add : !this.permission.loaded; // โหลดแล้วแต่ไม่มีโปรแกรมสัญญาเลย = ไม่มีสิทธิ์
   }
   isLoading = signal(false);
 

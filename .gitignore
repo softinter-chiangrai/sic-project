@@ -17,3 +17,9 @@ bin/
 fix-java-21.bat
 .env
 **/.env
+node_modules/
+preview_slides/
+assets_extracted/
+*.m4a
+*.pdf
+*สไลด์ Present Project Main ล่าสุด*.pptx

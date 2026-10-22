@@ -158,6 +158,7 @@ public class PmDeliveryController {
         return ResponseEntity.ok(deliveryService.signOff(id, signedBy, businessId, userId));
     }
 
+    @RequireProgram({"PMDT16"}) // สร้างใบแจ้งหนี้ใหม่ = สิทธิ์เพิ่มของหน้าใบแจ้งหนี้ ไม่ใช่หน้าใบส่งมอบ
     @PostMapping("/{id}/create-invoice")
     @Operation(summary = "Generate Invoice from accepted Delivery document")
     public ResponseEntity<UUID> createInvoice(@PathVariable UUID id) {

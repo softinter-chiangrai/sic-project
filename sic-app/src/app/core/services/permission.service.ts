@@ -89,26 +89,29 @@ export class PermissionService {
   private applyBodyClasses(url: string): void {
     const f = this.flagsFor(url);
     const path = url.split(/[?#]/)[0];
-    const isNew = /\/new$/.test(path);
+    const isNew = CREATE_PAGE.test(path);
     const isEdit = /\/(edit|view)$/.test(path) || /[?&]mode=view/.test(url); // หน้าดู: ไม่มีสิทธิ์บันทึก = ซ่อนปุ่มแก้ในฟอร์มด้วย
     const cls = document.body.classList;
     cls.toggle('perm-no-add', !!f && !f.add);
     cls.toggle('perm-no-save', !!f && !f.save);
     cls.toggle('perm-no-remove', !!f && !f.remove);
     cls.toggle('perm-no-print', !!f && !f.print);
-    cls.toggle('perm-readonly', !!f && ((isNew && !f.add && !f.save) || (isEdit && !f.save)));
+    cls.toggle('perm-readonly', !!f && ((isNew && !f.add) || (isEdit && !f.save)));
   }
 }
 
-/** กันเข้าหน้า /new โดยไม่มีสิทธิ์เพิ่ม (รวมปุ่มข้ามหน้า เช่น "ขอเปลี่ยนแปลง" -> หน้า CR) */
+/** หน้าสร้างเอกสารใหม่: /new และหน้าต่อสัญญา (สร้างสัญญาฉบับใหม่) */
+const CREATE_PAGE = /\/new$|\/renew\/[^/]+$/;
+
+/** กันเข้าหน้าสร้างใหม่โดยไม่มีสิทธิ์เพิ่ม (รวมปุ่มข้ามหน้า เช่น "ขอเปลี่ยนแปลง" -> หน้า CR) — backend สร้างใหม่ต้องใช้สิทธิ์เพิ่ม */
 export const permissionGuard: CanActivateChildFn = (_route, state) => {
   const svc = inject(PermissionService);
   const dialog = inject(DialogService);
   return svc.ensureLoaded().pipe(
     map(() => {
-      if (!/\/new$/.test(state.url.split(/[?#]/)[0])) return true;
+      if (!CREATE_PAGE.test(state.url.split(/[?#]/)[0])) return true;
       const f = svc.flagsFor(state.url);
-      if (!f || f.add || f.save) return true;
+      if (!f || f.add) return true;
       dialog.warn('ไม่มีสิทธิ์', 'คุณไม่มีสิทธิ์เพิ่มข้อมูลในหน้านี้');
       return false;
     }),

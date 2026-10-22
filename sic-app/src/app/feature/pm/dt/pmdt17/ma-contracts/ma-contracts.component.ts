@@ -39,7 +39,7 @@ export class MaContractsComponent {
   protected get contractPerm(): { add: boolean; save: boolean } {
     const f = this.permission.flagsFor('/feature/pm/contract');
     if (!f) return { add: !this.permission.loaded, save: !this.permission.loaded };
-    return { add: f.add || f.save, save: f.save };
+    return { add: f.add, save: f.save };
   }
   private customerState = inject(CustomerStateService);
 
