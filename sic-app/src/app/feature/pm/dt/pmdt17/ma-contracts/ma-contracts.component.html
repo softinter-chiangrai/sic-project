@@ -14,6 +14,7 @@
       <input type="checkbox" [checked]="showRenewed()" (change)="toggleShowRenewed()" />
       {{ 'PMDT17_MA_SHOW_RENEWED' | translate }}
     </label>
+    @if (contractPerm.add) {
     <button
       type="button"
       (click)="newContract()"
@@ -21,6 +22,7 @@
     >
       <i class="bi bi-plus-lg"></i> {{ 'PMDT17_MA_NEW_CONTRACT' | translate }}
     </button>
+    }
   </div>
 
   <sic-gridpanel #grid [config]="gridConfig()" (loadData)="handleGridLoad($event, grid)">
@@ -65,16 +67,20 @@
           [title]="'PMDT17_MA_VIEW' | translate">
           <i class="bi bi-eye"></i>
         </button>
+        @if (contractPerm.add) {
         <button type="button" (click)="renew(r.id)" [disabled]="!canRenew(r)"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/10 transition-all disabled:opacity-30 disabled:pointer-events-none"
           [title]="'PMDT17_MA_RENEW' | translate">
           <i class="bi bi-arrow-repeat text-sm"></i>
         </button>
+        }
+        @if (contractPerm.save) {
         <button type="button" (click)="cancel(r)" [disabled]="isCancelled(r)"
           class="w-8 h-8 rounded-lg flex items-center justify-center text-[var(--text-muted)] hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-all disabled:opacity-30 disabled:pointer-events-none"
           [title]="'PMDT17_MA_CANCEL' | translate">
           <i class="bi bi-x-circle"></i>
         </button>
+        }
       </div>
     </ng-template>
   </sic-gridpanel>

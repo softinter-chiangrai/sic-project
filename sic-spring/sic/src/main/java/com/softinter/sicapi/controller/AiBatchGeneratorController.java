@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller;
 
+import com.softinter.sicapi.Interceptor.ProgramPermissionService;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,10 +28,14 @@ import java.util.List;
 public class AiBatchGeneratorController {
 
     private final AiBatchGeneratorService batchGeneratorService;
+    private final ProgramPermissionService permissions;
 
     @PostMapping("/batch-generate")
     @Operation(summary = "สร้างข้อมูลชุดหลายรายการด้วย AI ตาม moduleType ที่ระบุ")
     public ResponseEntity<AiBatchGenerateResponse> batchGenerate(@RequestBody AiBatchGenerateRequest request) {
+        // สร้างข้อมูลใหม่ทีละหลายรายการ = ต้องมีสิทธิ์เพิ่มของโปรแกรมนั้น (ไม่รู้จัก moduleType = ตรวจทุกโปรแกรม)
+        String program = ProgramPermissionService.AI_MODULE.getOrDefault(String.valueOf(request.getModuleType()).toUpperCase(), ProgramPermissionService.ANY);
+        permissions.require(List.of(program), ProgramPermissionService.Action.ADD);
         try {
             return ResponseEntity.ok(batchGeneratorService.generate(request));
         } catch (Exception e) {

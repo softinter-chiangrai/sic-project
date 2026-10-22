@@ -694,7 +694,7 @@
                   @if (!isView) {
                     <button
                       type="button"
-                      (click)="restoreHistoryVersion(item)"
+                      data-perm="form-edit" (click)="restoreHistoryVersion(item)"
                       class="text-xs px-2.5 py-1 rounded font-medium text-white bg-indigo-600 hover:bg-indigo-700 flex items-center gap-1 shadow-sm active:scale-95 transition-all"
                       [title]="'PMDT06_IMPACT_HISTORY_RESTORE_TOOLTIP' | translate"
                     >

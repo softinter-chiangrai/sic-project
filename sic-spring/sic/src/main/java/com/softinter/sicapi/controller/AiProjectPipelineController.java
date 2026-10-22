@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.UUID;
 
 import org.springframework.data.domain.Page;
@@ -33,6 +35,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "AI Project Pipeline", description = "สร้างและประมวลผลทั้งโครงการแบบ End-to-End ด้วย AI Pipeline")
+@RequireProgram({"PMRT02"})
 public class AiProjectPipelineController {
 
     private final AiProjectPipelineService pipelineService;

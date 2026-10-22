@@ -100,7 +100,7 @@
         type="submit"
         form="pmdt09aForm"
         variant="solid" color="primary"
-        (click)="submitPost()"
+        data-perm="add" (click)="submitPost()"
         [loading]="isSubmitting"
         [disabled]="isSubmitting || postForm.invalid"
       >

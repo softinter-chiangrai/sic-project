@@ -27,7 +27,7 @@
     <div class="flex items-center gap-2">
       <button
         type="button"
-        (click)="showAiBatchModal.set(true)"
+        data-perm="add" (click)="showAiBatchModal.set(true)"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
         [title]="'AI_BATCH_CREATE_BUTTON' | translate"
       >

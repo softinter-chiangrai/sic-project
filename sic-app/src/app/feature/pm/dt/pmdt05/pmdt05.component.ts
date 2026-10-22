@@ -23,6 +23,7 @@ import { debounceTime } from 'rxjs/operators';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DialogService } from '../../../../core/services/dialog.service';
 import { DiagramService } from './diagram.service';
+import { PermissionService } from '../../../../core/services/permission.service';
 import { DrawioConnectorService, MermaidInsertResult } from './drawio-connector.service';
 import { Pmdt05AComponent } from './pmdt05A/pmdt05A.component';
 import { SqlExportDialogComponent } from './sql-export-dialog.component';
@@ -63,9 +64,15 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private injector = inject(Injector);
   private isCreateDialogOpened = false;
 
+  /** ไม่มีสิทธิ์บันทึกของหน้า diagram = เปิด draw.io แบบดูอย่างเดียว และไม่ autosave */
+  private readonly canEdit = (() => {
+    const f = inject(PermissionService).flagsFor('/feature/pm/diagram');
+    return !f || f.save;
+  })();
+
   /** draw.io ที่ host เอง (docker/drawio) พร้อมปลั๊กอิน sicMermaid */
   readonly drawioSrc: SafeResourceUrl = inject(DomSanitizer).bypassSecurityTrustResourceUrl(
-    `${environment.drawioUrl}/?embed=1&proto=json&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1&p=sicMermaid`,
+    `${environment.drawioUrl}/?embed=1&proto=json&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1&p=sicMermaid${this.canEdit ? '' : '&chrome=0'}`,
   );
 
   // ===== Global project context (navbar sic-context-switcher) =====
@@ -1274,6 +1281,7 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   }
 
   private persistDiagram(diagram: any, xml: string, png: string | null, requirementId: string, manual: boolean, pages?: any[]): void {
+    if (!this.canEdit) return; // ดูอย่างเดียว: ไม่ส่ง autosave ไป backend (จะได้ 403)
     const graphData: any = { xml, png: png ?? diagram.graphData?.png };
     if (pages && pages.length > 0) {
       graphData.pages = pages;

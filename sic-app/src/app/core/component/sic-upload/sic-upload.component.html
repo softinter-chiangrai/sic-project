@@ -19,6 +19,7 @@
   <button
     type="button"
     class="sic-upload__dropzone"
+    data-perm="form-edit"
     [class.sic-upload__dropzone--drag-active]="dragActive"
     [class.sic-upload__dropzone--invalid]="showError"
     [disabled]="disabled"
@@ -134,6 +135,7 @@
                     class="sic-upload__action sic-upload__action--ghost"
                     aria-label="Remove file"
                     title="Remove file"
+                    data-perm="form-edit"
                     (click)="removeItem(item)">
                     <i class="bi bi-x-lg" aria-hidden="true"></i>
                   </button>

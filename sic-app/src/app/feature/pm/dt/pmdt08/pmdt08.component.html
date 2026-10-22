@@ -352,10 +352,10 @@
                       <div class="flex items-center gap-3 text-[11px] text-[var(--text-muted)] mt-1 ml-2">
                         <span>{{ formatDate(reply.createdDate) }}</span>
                         <span>•</span>
-                        <button type="button" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">{{ 'PMDT08_REPLY' | translate }}</button>
+                        <button type="button" data-perm="add" (click)="startReply(post.id, reply.createdByName)" class="font-semibold hover:underline hover:text-[var(--crm-primary)]">{{ 'PMDT08_REPLY' | translate }}</button>
                         @if (isAuthor(reply.createdBy)) {
                           <span>•</span>
-                          <button type="button" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">{{ 'PMDT08_EDIT' | translate }}</button>
+                          <button type="button" data-perm="edit" (click)="startEditReply(post.id, reply.id)" class="hover:underline hover:text-amber-500">{{ 'PMDT08_EDIT' | translate }}</button>
                           <span>•</span>
                           <button type="button" data-perm="remove" (click)="deleteReply(post.id, reply.id)" class="hover:underline hover:text-red-500">{{ 'PMDT08_DELETE' | translate }}</button>
                         }
@@ -406,7 +406,7 @@
                     <div class="flex justify-end">
                       <button
                         type="button"
-                        (click)="submitComment()"
+                        data-perm="add" (click)="submitComment()"
                         class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
                         [disabled]="isSubmitting() || commentForm.invalid"
                       >
@@ -473,7 +473,7 @@
                         </button>
                         <button
                           type="button"
-                          (click)="submitReply()"
+                          data-perm="add" (click)="submitReply()"
                           class="px-4 py-1.5 rounded-full text-xs font-semibold text-white bg-[var(--crm-primary)] hover:opacity-90 transition-all flex items-center gap-1"
                           [disabled]="isSubmitting() || replyForm.invalid"
                         >

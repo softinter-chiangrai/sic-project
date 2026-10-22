@@ -59,7 +59,7 @@
             <!-- Export PDF Button -->
             <div>
                 <button
-                    (click)="exportSpecification()"
+                    data-perm="print" (click)="exportSpecification()"
                     [disabled]="isLoading || form.invalid"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
                     [title]="'PMDT07_PDF_BTN_TITLE' | translate">

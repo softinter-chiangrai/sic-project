@@ -399,7 +399,7 @@
             <i class="bi bi-pencil-square"></i> {{ 'PMDT16A_BTN_REQUEST_CHANGE' | translate }}
           </sic-button>
         } @else if (isView()) {
-          <sic-button variant="solid" color="primary" (click)="goToEditMode()">
+          <sic-button variant="solid" color="primary" data-perm="edit" (click)="goToEditMode()">
             <i class="bi bi-pencil"></i> {{ 'PMDT16A_BTN_EDIT_DATA' | translate }}
           </sic-button>
         } @else {

@@ -140,6 +140,11 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(com.softinter.sicapi.Interceptor.ProgramPermissionDeniedException.class)
+    public ResponseEntity<ErrorResponse> handleProgramPermissionDenied(com.softinter.sicapi.Interceptor.ProgramPermissionDeniedException ex) {
+        return new ResponseEntity<>(new ErrorResponse(false, ex.getMessage(), HttpStatus.FORBIDDEN.value()), HttpStatus.FORBIDDEN);
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex) {
         log.warn("Access denied: {}", ex.getMessage());

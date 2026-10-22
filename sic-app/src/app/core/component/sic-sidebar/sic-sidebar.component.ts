@@ -17,6 +17,7 @@ import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../auth/auth.service';
 import { TooltipDirective } from '../../directive/tooltip/tootop.directive';
 import { DialogService } from '../../services/dialog.service';
+import { PermissionService } from '../../services/permission.service';
 import { AppLanguage, LanguageService } from '../../services/language.service';
 import { ThemeService } from '../../services/theme.service';
 import { DateTimeUtil } from '../../utils/datetime.util';
@@ -57,6 +58,7 @@ import { BreadcrumbService } from '../../services/breadcrumb.service';
 export class SicSidebarComponent implements OnInit, OnDestroy {
   private readonly platformId = inject(PLATFORM_ID);
   private readonly authService = inject(AuthService);
+  private readonly permission = inject(PermissionService);
   private readonly themeService = inject(ThemeService);
   private readonly languageService = inject(LanguageService);
   private readonly dialog = inject(DialogService);
@@ -198,6 +200,7 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
   }
 
   reloadMenuPermissions(): void {
+    this.permission.reload(); // สิทธิ์ซ่อนปุ่มต้องตามเมนู (เช่นตอน admin แก้สิทธิ์ -> PERMISSION_CHANGED)
     this.service.getMenu().subscribe({
       next: (menu) => {
         this.rawMenuItems = menu;

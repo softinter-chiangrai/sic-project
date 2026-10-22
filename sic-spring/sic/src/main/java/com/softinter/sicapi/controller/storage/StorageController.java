@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.storage;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.request.CompleteUploadSessionRequest;
 import com.softinter.sicapi.dto.request.UploadSessionRequest;
 import com.softinter.sicapi.dto.response.StorageDownloadResponse;
@@ -33,6 +35,7 @@ import org.springframework.core.io.Resource;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Storage", description = "File Storage API")
+@RequireProgram({"*"})
 public class StorageController {
 
     private final FileStorageService fileStorageService;

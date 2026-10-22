@@ -352,7 +352,7 @@
                   <div class="absolute right-3 top-3.5 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     @if (item.isCustom) {
                       <button
-                        (click)="deleteCustomItem(item.id, $event)"
+                        data-perm="remove" (click)="deleteCustomItem(item.id, $event)"
                         class="p-1 text-[var(--crm-danger)] hover:bg-[var(--crm-danger)]/10 rounded transition-colors"
                         [title]="'PMDT02_DELETE' | translate">
                         <i class="bi bi-trash text-xs"></i>

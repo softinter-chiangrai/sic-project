@@ -76,7 +76,8 @@
         </div>
       </div>
 
-      <!-- AI Full-Project Wizard Button -->
+      <!-- AI Full-Project Wizard Button (สร้างโครงการ = ต้องมีสิทธิ์เพิ่มโครงการ) -->
+      @if (canCreateProject) {
       <button
         type="button"
         class="ai-nav-header-icon-btn ai-nav-wizard-btn"
@@ -86,6 +87,7 @@
       >
         <i class="bi bi-stars" style="color: var(--crm-primary);"></i>
       </button>
+      }
 
       <!-- New Chat Button -->
       <button

@@ -15,6 +15,8 @@ import {
   signal,
   ChangeDetectionStrategy
 } from '@angular/core';
+import { Router } from '@angular/router';
+import { PermissionService } from '../../services/permission.service';
 import { isPlatformBrowser } from '@angular/common';
 import { gantt } from 'dhtmlx-gantt';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -68,6 +70,8 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
   private isBrowser = isPlatformBrowser(this.platformId);
   private cdr = inject(ChangeDetectorRef);
   private translate = inject(TranslateService);
+  private permission = inject(PermissionService);
+  private router = inject(Router);
   private isInitialized = false;
   private eventIds: string[] = [];
 
@@ -175,11 +179,13 @@ export class DhtmlxGanttComponent implements AfterViewInit, OnChanges, OnDestroy
       },
     ];
 
-    // ✅ Drag & Drop
-    gantt.config['readonly'] = false;
-    gantt.config['drag_move'] = true;
-    gantt.config['drag_resize'] = true;
-    gantt.config['drag_progress'] = true;
+    // ✅ Drag & Drop (ไม่มีสิทธิ์บันทึกของหน้านี้ = ดูได้อย่างเดียว)
+    const f = this.permission.flagsFor(this.router.url);
+    const canEdit = !f || f.save;
+    gantt.config['readonly'] = !canEdit;
+    gantt.config['drag_move'] = canEdit;
+    gantt.config['drag_resize'] = canEdit;
+    gantt.config['drag_progress'] = canEdit;
 
     // ✅ ลดความสูงของสเกล
     gantt.config['scale_height'] = 35;

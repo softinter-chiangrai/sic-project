@@ -232,7 +232,7 @@
             variant="outline" color="danger"
             class="mr-auto"
             [disabled]="isSaving || isCancelled"
-            (click)="cancelContract()"
+            data-perm="edit" (click)="cancelContract()"
           >
             <i class="bi bi-x-octagon"></i>
             {{ 'PMRT04B_CANCEL_CONTRACT' | translate }}

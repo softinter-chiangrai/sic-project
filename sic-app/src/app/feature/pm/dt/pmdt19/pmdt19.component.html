@@ -107,7 +107,7 @@
             </button>
             @if (!r.isActive) {
               <button
-                (click)="onActivate(r.id)"
+                data-perm="edit" (click)="onActivate(r.id)"
                 class="p-1.5 text-emerald-600 hover:bg-emerald-500/10 rounded-lg transition-all"
                 [title]="'PMDT19_SET_ACTIVE_TITLE' | translate"
               >

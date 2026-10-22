@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { AI_MODEL_OPTIONS, AiModelOption } from '../../config/ai-models.config';
 import { AiModelsService } from '../../services/ai-models.service';
+import { PermissionService } from '../../services/permission.service';
 import {
   AiChatSession,
   AiNavigatorMessage,
@@ -29,6 +30,7 @@ export class SicAiNavigatorComponent implements OnInit {
   protected readonly navSvc = inject(AiNavigatorService);
   protected readonly pipelineSvc = inject(AiProjectPipelineService);
   protected readonly aiModelsSvc = inject(AiModelsService);
+  private readonly permission = inject(PermissionService);
   protected readonly translate = inject(TranslateService);
   private readonly dialog = inject(DialogService);
 
@@ -379,7 +381,14 @@ export class SicAiNavigatorComponent implements OnInit {
     }
   }
 
+  /** wizard สร้างโครงการทั้งชุด: ซ่อนถ้าไม่มีสิทธิ์เพิ่มโครงการ (โหลดสิทธิ์แล้วแต่ไม่มีโปรแกรมโครงการ = ไม่มีสิทธิ์) */
+  get canCreateProject(): boolean {
+    const f = this.permission.flagsFor('/feature/pm/project/new');
+    return f ? f.add || f.save : !this.permission.loaded;
+  }
+
   openProjectWizard(prompt?: string): void {
+    if (!this.canCreateProject) return;
     this.navSvc.close();
     this.pipelineSvc.openWizard(prompt || this.inputText || '');
   }

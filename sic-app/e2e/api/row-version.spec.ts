@@ -311,13 +311,14 @@ test('customer', async () => {
 });
 
 test('business', async () => {
-  // the seeded business of the test user (throwaway DB): saved with its own values, so nothing changes but xmin
+  // the seeded business of the test user (throwaway DB). Each save changes the e-mail by label (B -> C -> D): saving its own
+  // values is a no-op for Hibernate (no UPDATE, xmin unchanged), so a re-run on a kept DB would see no new rowVersion.
   const bizId = w.api.businessId!;
   await probe({
     name: 'business',
     create: async () => bizId,
     get: () => `/api/business/me`, // what the business settings page (BURT01) loads
-    save: (id, g) => w.api.post('/api/business/save', { ...g, id, state: 3, rowVersion: g.rowVersion }),
+    save: (id, g, t) => w.api.post('/api/business/save', { ...g, id, state: 3, rowVersion: g.rowVersion, email: `e2e-${t.toLowerCase()}@example.test` }),
   });
 });
 

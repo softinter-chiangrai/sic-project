@@ -8,6 +8,7 @@ import { environment } from '../../../../../../environments/environment';
 import { CustomerStateService } from '../../../../../core/services/customer-state.service';
 import { DialogService } from '../../../../../core/services/dialog.service';
 import { NavigationService } from '../../../../../core/services/navigation.service';
+import { PermissionService } from '../../../../../core/services/permission.service';
 import type { PaginationResponse } from '../../../../../core/model/pagination.model';
 import type { Contract } from '../../../rt/pmrt04/pmrt04.model';
 
@@ -32,6 +33,14 @@ export class MaContractsComponent {
   private dialog = inject(DialogService);
   private navigation = inject(NavigationService);
   private translate = inject(TranslateService);
+  private permission = inject(PermissionService);
+
+  /** ปุ่มในแท็บนี้แก้สัญญา (PMRT04) ไม่ใช่ MA: ใช้สิทธิ์ของหน้าสัญญา; โหลดแล้วแต่ไม่มีโปรแกรมสัญญา = ไม่มีสิทธิ์ */
+  protected get contractPerm(): { add: boolean; save: boolean } {
+    const f = this.permission.flagsFor('/feature/pm/contract');
+    if (!f) return { add: !this.permission.loaded, save: !this.permission.loaded };
+    return { add: f.add || f.save, save: f.save };
+  }
   private customerState = inject(CustomerStateService);
 
   protected readonly searchTerm = signal('');

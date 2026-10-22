@@ -27,7 +27,7 @@ import { openPdfWindow } from '../../utils/pdf-window.util';
           {{ 'BULK_EXPORT_SELECTED' | translate: { count: count() } }}
         </span>
         <div class="flex items-center gap-2">
-          <button type="button" (click)="print()"
+          <button type="button" data-perm="print" (click)="print()"
                   class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--crm-primary)] text-white text-xs font-semibold">
             <i class="bi bi-printer"></i> {{ 'BULK_EXPORT_PRINT' | translate }}
           </button>

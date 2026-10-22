@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.dto.response.AiModelResponse;
 import com.softinter.sicapi.service.PmAiProviderService;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
+@RequireProgram({"PMDT05"})
 public class PmDiagramAiController {
 
     private final PmAiProviderService aiProviderService;

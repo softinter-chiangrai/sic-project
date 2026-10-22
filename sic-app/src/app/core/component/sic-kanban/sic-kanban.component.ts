@@ -5,6 +5,7 @@ import {
   Component,
   computed,
   EventEmitter,
+  inject,
   Input,
   OnDestroy,
   Output,
@@ -24,6 +25,8 @@ import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 import { SicAvatarComponent } from 'sic-ng';
 import { SicStripHtmlPipe } from '../../pipes/sic-strip-html.pipe';
 import { TranslateModule } from '@ngx-translate/core';
+import { Router } from '@angular/router';
+import { PermissionService } from '../../services/permission.service';
 
 export type KanbanViewMode = 'task' | 'workPackage' | 'milestone';
 
@@ -218,12 +221,21 @@ export class SicKanbanComponent implements OnDestroy {
     }
   }
 
+  private readonly permission = inject(PermissionService);
+  private readonly router = inject(Router);
+
+  /** ไม่มีสิทธิ์บันทึกของหน้านี้ = ลากย้าย / ปุ่มบนการ์ดไม่ได้ (ดูได้อย่างเดียว) */
+  private get canSave(): boolean {
+    const f = this.permission.flagsFor(this.router.url);
+    return !f || f.save;
+  }
+
   get canDrag(): boolean {
-    return !this.readonly && this.allowDragDrop;
+    return !this.readonly && this.allowDragDrop && this.canSave;
   }
 
   get canAction(): boolean {
-    return !this.readonly && this.allowActions;
+    return !this.readonly && this.allowActions && this.canSave;
   }
 
   get canCreate(): boolean {

@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import com.softinter.sicapi.entity.enums.TraceRelationship;   // ✅ import enum
 import com.softinter.sicapi.entity.pm.PmTraceLink;
 import com.softinter.sicapi.service.TraceLinkService;
@@ -20,6 +22,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @SecurityRequirement(name = "Bearer Authentication")
 @Tag(name = "Trace Link", description = "Traceability Link Management")
+@RequireProgram({"PMDT04", "PMDT05", "PMDT06", "PMDT07", "PMDT09", "PMDT10", "PMDT12", "PMDT14", "PMDT15", "PMDT16", "PMDT17", "PMRT02", "PMRT04"})
 public class TraceLinkController {
 
     private final TraceLinkService traceLinkService;

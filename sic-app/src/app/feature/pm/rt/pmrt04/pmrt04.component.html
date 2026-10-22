@@ -49,7 +49,7 @@
 
       <button
         type="button"
-        (click)="showAiBatchModal.set(true)"
+        data-perm="add" (click)="showAiBatchModal.set(true)"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
         [title]="'AI_BATCH_CREATE_BUTTON' | translate"
       >
@@ -257,7 +257,7 @@
       <span class="text-sm font-medium text-[var(--text-active)]">
         <i class="bi bi-check2-square text-[var(--crm-primary)]"></i> {{ 'PMRT04_SELECTED_COUNT' | translate: { count: grid.selectedRowIds.size } }}
       </span>
-      <button type="button" (click)="bulkExportPdf(grid)"
+      <button type="button" data-perm="print" (click)="bulkExportPdf(grid)"
         class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium border border-[var(--border)] bg-transparent text-[var(--text)] hover:bg-[var(--sidebar-hover)] transition-all">
         <i class="bi bi-file-earmark-pdf"></i> {{ 'PMRT04_BULK_EXPORT_PDF_BTN' | translate }}
       </button>

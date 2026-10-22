@@ -35,17 +35,28 @@ const ROUTE_ALIAS: Record<string, string[]> = {
 @Injectable({ providedIn: 'root' })
 export class PermissionService {
   private readonly http = inject(HttpClient);
+  private readonly router = inject(Router);
   private perms: ProgramPermission[] | null = null;
-  private readonly load$ = this.http.get<ProgramPermission[]>(`${environment.apiBaseUrl}/api/menu/permissions`).pipe(
-    map((list) => (this.perms = list ?? [])),
-    catchError(() => of((this.perms = null))), // โหลดไม่ได้ = ไม่ซ่อนอะไร (backend ยังกันอยู่)
-    shareReplay(1),
-  );
+  private load$ = this.fetch();
 
   constructor() {
-    inject(Router)
-      .events.pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
+    this.router.events
+      .pipe(filter((e): e is NavigationEnd => e instanceof NavigationEnd))
       .subscribe((e) => this.applyBodyClasses(e.urlAfterRedirects));
+  }
+
+  private fetch(): Observable<unknown> {
+    return this.http.get<ProgramPermission[]>(`${environment.apiBaseUrl}/api/menu/permissions`).pipe(
+      map((list) => (this.perms = list ?? [])),
+      catchError(() => of((this.perms = null))), // โหลดไม่ได้ = ไม่ซ่อนอะไร (backend ยังกันอยู่)
+      shareReplay(1),
+    );
+  }
+
+  /** โหลดสิทธิ์ใหม่ (สลับ business / admin แก้สิทธิ์) แล้วซ่อน-แสดงปุ่มของหน้าปัจจุบันใหม่ทันที ไม่ต้องรีเฟรช */
+  reload(): void {
+    this.load$ = this.fetch();
+    this.load$.subscribe(() => this.applyBodyClasses(this.router.url));
   }
 
   /** โหลดสิทธิ์สำเร็จแล้ว (null = ยังไม่โหลด/โหลดไม่ได้) */
@@ -79,7 +90,7 @@ export class PermissionService {
     const f = this.flagsFor(url);
     const path = url.split(/[?#]/)[0];
     const isNew = /\/new$/.test(path);
-    const isEdit = /\/edit$/.test(path);
+    const isEdit = /\/(edit|view)$/.test(path) || /[?&]mode=view/.test(url); // หน้าดู: ไม่มีสิทธิ์บันทึก = ซ่อนปุ่มแก้ในฟอร์มด้วย
     const cls = document.body.classList;
     cls.toggle('perm-no-add', !!f && !f.add);
     cls.toggle('perm-no-save', !!f && !f.save);

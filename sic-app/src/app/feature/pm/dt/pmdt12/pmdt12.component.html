@@ -29,7 +29,7 @@
       <!-- AI Batch Create -->
       <button
         type="button"
-        (click)="showAiBatchModal.set(true)"
+        data-perm="add" (click)="showAiBatchModal.set(true)"
         class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-950/40 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
         [title]="'AI_BATCH_CREATE_BUTTON' | translate"
       >
@@ -70,7 +70,7 @@
               @for (opt of exportReportOptions; track opt.value) {
                 <button
                   type="button"
-                  (click)="onSelectExportType(opt.value)"
+                  data-perm="print" (click)="onSelectExportType(opt.value)"
                   class="w-full text-left px-3.5 py-2.5 hover:bg-[var(--bg)] flex items-start gap-3 transition-colors cursor-pointer group"
                 >
                   <i class="bi {{ opt.icon }} text-lg mt-0.5 group-hover:scale-110 transition-transform"></i>
@@ -304,7 +304,7 @@
 
                 <!-- Edit Scenario -->
                 <button
-                  (click)="goToEditScenario(group.scenario.id!, $event)"
+                  data-perm="edit" (click)="goToEditScenario(group.scenario.id!, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-500/10 transition-colors cursor-pointer"
                   [title]="'PMDT12_EDIT_SCENARIO_TT' | translate"
                 >
@@ -313,7 +313,7 @@
 
                 <!-- Print / Export Scenario Report -->
                 <button
-                  (click)="exportScenarioReport(group.scenario, $event)"
+                  data-perm="print" (click)="exportScenarioReport(group.scenario, $event)"
                   class="w-7 h-7 rounded-md flex items-center justify-center text-[var(--text-muted)] hover:text-purple-600 hover:bg-purple-50 dark:hover:bg-purple-500/10 transition-colors cursor-pointer"
                   [title]="'PMDT12_PRINT_SCENARIO_REPORT_TT' | translate"
                 >

@@ -127,7 +127,7 @@
           </button>
           <!-- Toggle Active -->
           <button
-            (click)="toggleActive(r, grid)"
+            data-perm="edit" (click)="toggleActive(r, grid)"
             class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
             [class.text-emerald-500]="r.isActive"
             [class.text-gray-400]="!r.isActive"

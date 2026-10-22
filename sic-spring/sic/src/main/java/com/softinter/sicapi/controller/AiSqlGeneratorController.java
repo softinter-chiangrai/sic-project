@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller;
 
+import com.softinter.sicapi.Interceptor.RequireProgram;
+
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -22,6 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @RequestMapping("/api/ai")
 @RequiredArgsConstructor
 @Slf4j
+@RequireProgram({"PMDT05"})
 public class AiSqlGeneratorController {
 
     private final AiSqlGeneratorService aiSqlGeneratorService;

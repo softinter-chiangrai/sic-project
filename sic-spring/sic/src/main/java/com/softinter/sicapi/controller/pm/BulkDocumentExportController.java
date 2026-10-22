@@ -1,5 +1,7 @@
 package com.softinter.sicapi.controller.pm;
 
+import com.softinter.sicapi.Interceptor.ProgramPermissionService;
+
 import com.softinter.sicapi.config.BusinessContextHolder;
 import com.softinter.sicapi.service.impl.BulkDocumentExportService;
 import com.softinter.sicapi.util.ReportHelper;
@@ -25,6 +27,7 @@ import java.util.UUID;
 public class BulkDocumentExportController {
 
     private final BulkDocumentExportService bulkExport;
+    private final com.softinter.sicapi.Interceptor.ProgramPermissionService permissions;
 
     public record BulkExportRequest(String kind, List<UUID> ids) {
     }
@@ -39,6 +42,8 @@ public class BulkDocumentExportController {
         if (businessId == null || request == null || !bulkExport.supports(request.kind())) {
             return ResponseEntity.badRequest().build();
         }
+        // ต้องมีสิทธิ์พิมพ์ของโปรแกรมที่เป็นเจ้าของเอกสารชนิดนั้น
+        permissions.require(java.util.List.of(ProgramPermissionService.EXPORT_KIND.get(request.kind())), ProgramPermissionService.Action.PRINT);
         var result = bulkExport.export(request.kind(), request.ids(), businessId, ReportHelper.resolveLang(lang, headerLang));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_PDF);
