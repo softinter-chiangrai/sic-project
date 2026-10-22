@@ -12,7 +12,6 @@ import { DialogService } from '../../../../core/services/dialog.service';
 import { LanguageService } from '../../../../core/services/language.service';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
-import { SicButtonComponent } from 'sic-ng';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
@@ -40,7 +39,6 @@ import { SicBulkExportBarComponent } from '../../../../core/component/sic-bulk-e
     SicGridPanelComponent,
     SicGridPanelTemplate,
     TranslateModule,
-    SicButtonComponent,
     SicAiBatchModalComponent,
     SicEmptyStateComponent,
   ],

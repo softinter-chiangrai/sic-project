@@ -17,7 +17,7 @@ import { ApprovalService } from '../pmdt03/approval.service';
 
 import { FormsModule } from '@angular/forms';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
-import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData, SicButtonComponent } from 'sic-ng';
+import { SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
@@ -29,7 +29,7 @@ import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-sta
 @Component({
   selector: 'app-pmdt14',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, SicTableActionsComponent, SicDatePipe, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt14.component.html',
   styleUrls: ['./pmdt14.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

@@ -19,7 +19,7 @@ import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/comp
 
 import { Pmdt10Service } from './pmdt10.service';
 import type { TaskResponse, SpecificationSummary, WorkPackageOption } from './pmdt10.model';
-import { SicAvatarComponent, SicButtonComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
+import { SicAvatarComponent, SicGridLoadRequest, SicGridPanelComponent, SicGridPanelConfig, SicGridPanelTemplate, SicGridRowData } from 'sic-ng';
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
 import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-state/sic-empty-state.component';
 
@@ -32,7 +32,6 @@ import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-sta
     RouterModule,
     DragDropModule,
     SicAvatarComponent,
-    SicButtonComponent,
     SicComboboxComponent,
     SicKanbanComponent,
     SicGridPanelComponent,

@@ -12,7 +12,6 @@ import { DesignReview, ReviewComment, Pmdt09PageData } from './pmdt09.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { CustomerStateService } from '../../../../core/services/customer-state.service';
 import { HttpClient } from '@angular/common/http';
-import { SicButtonComponent } from 'sic-ng';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { SicComboboxComponent } from '../../../../core/component/sic-combobox/sic-combobox.component';
@@ -23,7 +22,7 @@ import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-sta
 @Component({
   selector: 'app-pmdt09',
   standalone: true,
-  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
+  imports: [SicBulkExportBarComponent, CommonModule, RouterModule, FormsModule, TranslateModule, SicComboboxComponent, SicPaginationComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
   templateUrl: './pmdt09.component.html',
   styleUrls: ['./pmdt09.component.css'],
   changeDetection: ChangeDetectionStrategy.Default,

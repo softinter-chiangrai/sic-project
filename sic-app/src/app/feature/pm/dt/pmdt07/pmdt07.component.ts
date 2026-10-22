@@ -13,7 +13,6 @@ import { PmSpecificationModel } from './pmdt07.model';
 import { PaginationResponse } from '../../../../core/model/pagination.model';
 import { ApprovalService } from '../pmdt03/approval.service';
 import { resolveRequirementId } from '../../../../core/utils/resolve-context.util';
-import { SicButtonComponent } from 'sic-ng';
 import { SicAiBatchModalComponent, AiBatchFieldDef } from '../../../../core/component/sic-ai-batch-modal/sic-ai-batch-modal.component';
 
 import { environment } from '../../../../../environments/environment';
@@ -28,7 +27,7 @@ import { SicEmptyStateComponent } from '../../../../core/component/sic-empty-sta
 @Component({
     selector: 'app-pmdt07',
     standalone: true,
-    imports: [SicBulkExportBarComponent, CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicButtonComponent, SicAiBatchModalComponent, SicEmptyStateComponent],
+    imports: [SicBulkExportBarComponent, CommonModule, FormsModule, RouterModule, SicTableActionsComponent, SicComboboxComponent, SicGridPanelComponent, SicGridPanelTemplate, TranslateModule, SicAiBatchModalComponent, SicEmptyStateComponent],
     templateUrl: './pmdt07.component.html',
     changeDetection: ChangeDetectionStrategy.Default,
 })
