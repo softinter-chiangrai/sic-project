@@ -22,8 +22,16 @@
 - **Clean docker before every build:** disk fills up fast. Before any `docker compose build` / `up --build` (or a test run that recreates containers), run `docker builder prune -af` and `docker image prune -f`, then check `docker system df`. Never prune volumes (`docker volume prune`, `system prune --volumes`) — they hold the DB, Keycloak and SeaweedFS data. Also empty the user Temp folder (`%TEMP%`, skip files in use and `%TEMP%\claude`, which holds the running session's files).
 - Steps (env, ports, low-RAM build fallback): `.claude/skills/playwright/SKILL.md` → "Run".
 
-## 4. Testing Policy (Playwright Only)
-- **Playwright Over Chrome Direct:** Always run tests via Playwright CLI (`npx playwright test ...`).
+## 4. Testing Policy (Pick the Cheapest Test That Catches the Bug)
+| Change | Test with |
+|---|---|
+| Pure logic: validator, calculation, parser, date/SLA, permission rule with branches | JUnit 5 in `src/test/java` (`mvnw test`) |
+| API contract, permission per role, SQL against the real DB | Playwright API test, no browser (`npx playwright test`) |
+| UI flow, form, page rendering | Playwright UI test |
+| Touches several layers | The cheapest test that fails if the bug returns; a UI test only if the bug was in the UI |
+
+- **One fix, one test:** add the single test that would have caught the bug. No per-function suites.
+- **Playwright Over Chrome Direct:** Always run browser tests via Playwright CLI (`npx playwright test ...`).
 - **No Direct Chrome Testing:** Do not launch or test through direct Chrome browser subagent to prevent slow execution.
 - **Local Backend While Testing:** Run tests against the backend started from source (`mvnw spring-boot:run`, port 5266, DB `sic_app_e2e`), not the `sic-spring` docker container. Fix → restart the local backend → retest. The frontend runs from source too (`npm start`, Playwright starts it). Docker images are built once at the end (section 3).
 

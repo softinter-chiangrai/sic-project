@@ -11,17 +11,6 @@
       <span class="text-sm text-[var(--text-muted)] bg-[var(--bg)] px-3 py-0.5 rounded-full border border-[var(--border)]">
         {{ totalScenarios() }} Scenarios / {{ totalTestCases() }} Test Cases
       </span>
-      <!-- Live Sync / Auto-refresh Indicator -->
-      <button
-        type="button"
-        (click)="refreshData()"
-        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium text-[var(--crm-primary)] bg-[var(--crm-primary)]/10 hover:bg-[var(--crm-primary)]/20 border border-[var(--crm-primary)]/25 transition-all cursor-pointer shadow-2xs"
-        [title]="'PMDT12_REALTIME_SYNC_TOOLTIP' | translate"
-      >
-        <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        <i class="bi bi-arrow-repeat text-xs" [class.animate-spin]="isSilentRefreshing()"></i>
-        <span class="text-[0.7rem] font-semibold tracking-wider uppercase">Live</span>
-      </button>
     </div>
 
     <!-- Action Buttons -->
@@ -38,9 +27,10 @@
       </button>
 
       <!-- Export Test / UAT Report Dropdown -->
-      <div class="relative inline-block text-left">
+      <div class="relative inline-block text-left" data-perm="print">
         <button
           type="button"
+          data-perm="print"
           (click)="toggleExportDropdown($event)"
           [disabled]="isExportingUat()"
           class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-sm font-medium border border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300 bg-purple-50 dark:bg-purple-950/40 hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all hover:shadow-xs cursor-pointer whitespace-nowrap"
