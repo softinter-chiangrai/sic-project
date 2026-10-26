@@ -37,7 +37,6 @@ END $$;
 
 -- 4) การอนุมัติ / แจ้งเตือน / audit / ความคิดเห็น ที่เกิดก่อนสร้างข้อมูลสาธิต (25 ก.ย. 2569 เวลา 17:00)
 UPDATE pm_approval     SET is_delete=true, delete_date=now() WHERE created_date < '2026-09-25 17:00:00+07' AND is_delete=false;
-UPDATE pm_notification SET is_delete=true, delete_date=now() WHERE created_date < '2026-09-25 17:00:00+07' AND is_delete=false;
 UPDATE su_notification SET is_delete=true, delete_date=now() WHERE created_date < '2026-09-25 17:00:00+07' AND is_delete=false;
 UPDATE su_audit_log    SET is_delete=true, delete_date=now() WHERE created_date < '2026-09-25 17:00:00+07' AND is_delete=false;
 UPDATE pm_comment      SET is_delete=true, delete_date=now() WHERE created_date < '2026-09-25 17:00:00+07' AND is_delete=false;
