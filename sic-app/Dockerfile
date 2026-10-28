@@ -10,13 +10,13 @@ ARG GITHUB_TOKEN
 
 # Install git and configure GitHub credentials for private repos
 RUN apk add --no-cache git openssh-client && \
-    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "ssh://git@github.com/" && \
-    git config --global --add url."https://${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:" && \
-    git config --global --add url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+    printf "machine github.com\nlogin x-access-token\npassword %s\n" "${GITHUB_TOKEN}" > /root/.netrc && \
+    chmod 600 /root/.netrc && \
+    git config --global url."https://github.com/".insteadOf "ssh://git@github.com/" && \
+    git config --global --add url."https://github.com/".insteadOf "git@github.com:"
 
-# Copy package definitions and install dependencies
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install --legacy-peer-deps && rm -f /root/.netrc
 
 # Copy source code and build SSR application with memory optimization
 COPY . .
