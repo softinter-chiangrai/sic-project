@@ -146,3 +146,32 @@ test('rights change applies without a page refresh', async () => {
     }
   }
 });
+
+test('menu access: program menu item shows when granted, hides when revoked, and direct access is blocked', async () => {
+  await ui.visit('/feature/pm/contract'); // auto-expands the PM group
+  const customerMenu = ui.page.locator('sic-sidebar nav button').filter({ hasText: /ข้อมูลลูกค้า|Customer/i });
+  await expect(customerMenu).toBeVisible({ timeout: 15_000 });
+
+  const where = await scope(['PMRT01']);
+  const before = sql(`SELECT brp.id || ',' || brp.is_active FROM su_business_role_program brp WHERE ${where}`).split('\n').filter(Boolean);
+  try {
+    // Revoke access to PMRT01
+    sql(`UPDATE su_business_role_program brp SET is_active = false WHERE ${where}`);
+    await ui.page.evaluate(() => (window as any).ng.getComponent(document.querySelector('sic-sidebar')).reloadMenuPermissions());
+    await expect(customerMenu).toBeHidden({ timeout: 15_000 });
+
+    // Direct navigation: backend API should return 403
+    const apiPromise = ui.page.waitForResponse((r) => r.url().includes('/api/pm/customers') && r.request().method() === 'GET');
+    await ui.visit('/feature/pm/customer');
+    const res = await apiPromise;
+    expect(res.status()).toBe(403);
+  } finally {
+    for (const row of before) {
+      const [id, active] = row.split(',');
+      sql(`UPDATE su_business_role_program SET is_active = ${active} WHERE id = '${id}'`);
+    }
+    await ui.page.evaluate(() => (window as any).ng.getComponent(document.querySelector('sic-sidebar')).reloadMenuPermissions());
+    await expect(customerMenu).toBeVisible({ timeout: 15_000 });
+  }
+});
+
