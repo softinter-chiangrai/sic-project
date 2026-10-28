@@ -264,22 +264,6 @@
               [clearable]="false">
             </sic-combobox>
           </div>
-
-          <!-- Task Selection (Optional) -->
-          <div>
-            <sic-combobox
-              [label]="'PMDT12B_AI_TASK_REF_LABEL' | translate"
-              [items]="taskOptions()"
-              [placeholder]="'PMDT12B_AI_TASK_REF_PLACEHOLDER' | translate"
-              [ngModel]="aiAssistTaskId()"
-              (selectionChanged)="aiAssistTaskId.set($event?.value ?? $event?.id ?? $event ?? null)"
-              [clearable]="true">
-            </sic-combobox>
-            <p class="text-[11px] text-[var(--text-muted)] mt-1">
-              💡 {{ 'PMDT12B_AI_TASK_REF_HINT' | translate }}
-            </p>
-          </div>
-
           <!-- Prompt -->
           <div>
             <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">

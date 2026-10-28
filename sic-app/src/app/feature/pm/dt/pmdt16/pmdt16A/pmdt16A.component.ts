@@ -219,7 +219,7 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     this.service.generateDraft({
       projectId: projId || undefined,
       contractId: contractId || undefined,
-      invoiceType: this.aiBillingType() || undefined,
+      invoiceType: (this.formData?.form?.value as any)?.billingType || undefined,
       prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,

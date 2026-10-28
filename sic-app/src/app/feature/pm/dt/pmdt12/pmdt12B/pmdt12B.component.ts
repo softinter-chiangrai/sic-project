@@ -239,7 +239,7 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
 
   async generateWithAi(): Promise<void> {
     const pId = this.formData.form.get('projectId')?.value || this.customerState.getProjectId();
-    const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
+    const selectedTaskId = this.formData.form.get('taskId')?.value;
     const currentName = this.formData.form.get('scenarioName')?.value;
     const targetId = this.scenarioId || this.formData?.form?.get('id')?.value || 'new';
 

@@ -234,8 +234,8 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     this.service.generateDraft({
       projectId: projId || undefined,
       title: currentTitle || undefined,
-      ticketType: this.aiTicketType() || undefined,
-      priority: this.aiPriority() || undefined,
+      ticketType: (this.formData?.form?.value as any)?.ticketType || undefined,
+      priority: (this.formData?.form?.value as any)?.severity || undefined,
       prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,
       attachments,

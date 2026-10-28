@@ -752,7 +752,7 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
       projectId: this.projectId || this.form?.get('projectId')?.value || undefined,
       customerId: this.customerId || this.form?.get('customerId')?.value || undefined,
       contractNo: currentNo || undefined,
-      contractType: this.aiContractType() || this.form?.get('contractType')?.value || undefined,
+      contractType: this.form?.get('contractType')?.value || undefined,
       contractValue: currentVal ? Number(currentVal) : undefined,
       prompt: effectivePrompt || undefined,
       model: this.aiModel() || undefined,

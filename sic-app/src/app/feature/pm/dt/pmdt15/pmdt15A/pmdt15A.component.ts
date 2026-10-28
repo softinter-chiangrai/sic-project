@@ -433,7 +433,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.service.generateDraft({
       projectId: projId || undefined,
       manualTitle: currentTitle || undefined,
-      manualType: this.aiManualType(),
+      manualType: (this.formData?.form?.value as any)?.manualType || undefined,
       requirementIds: reqIds.length > 0 ? reqIds : undefined,
       specificationIds: specIds.length > 0 ? specIds : undefined,
       prompt: effectivePrompt || undefined,

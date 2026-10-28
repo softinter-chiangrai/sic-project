@@ -364,20 +364,6 @@
                 [clearable]="false">
               </sic-combobox>
             </div>
-
-            <!-- Draft Title / Feature Idea -->
-            <div>
-              <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
-                {{ 'PMDT04_AI_TITLE_INPUT_LABEL' | translate }}
-              </label>
-              <input
-                type="text"
-                [(ngModel)]="aiAssistTitle"
-                [placeholder]="'PMDT04_AI_TITLE_INPUT_PLACEHOLDER' | translate"
-                class="w-full px-3 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg)] text-[var(--text-active)] text-sm focus:outline-none focus:ring-2 focus:ring-[var(--crm-primary)]/20 focus:border-[var(--crm-primary)] transition-all placeholder-[var(--text-muted)]/50"
-              />
-            </div>
-
             <!-- Prompt Context -->
             <div>
               <label class="block text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1.5">
@@ -455,7 +441,7 @@
 
             <button
               (click)="generateWithAi()"
-              [disabled]="isGeneratingAiAssist || (!aiAssistTitle && !aiAssistPrompt)"
+              [disabled]="isGeneratingAiAssist"
               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold text-white bg-[var(--crm-primary)] hover:bg-[var(--crm-primary)]/90 disabled:opacity-50 shadow-md shadow-[var(--crm-primary)]/20 transition-all cursor-pointer">
               @if (isGeneratingAiAssist) {
                 <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>

@@ -319,8 +319,8 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     this.service.generateAiDraft({
       projectId: projectId || undefined,
-      title: this.aiAssistTitle || formVal.title || undefined,
-      requirementType: this.aiAssistType || formVal.requirementType || undefined,
+      title: formVal.title || undefined,
+      requirementType: formVal.requirementType || undefined,
       prompt: effectivePrompt || undefined,
       model: this.aiAssistModel() || undefined,
       attachments,
@@ -336,7 +336,7 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
         const titleToSave = (draft.title && draft.title.trim() !== '')
           ? draft.title
-          : (this.aiAssistTitle || formVal.title);
+          : formVal.title;
 
         const fullDraft = {
           ...draft,
