@@ -11,8 +11,8 @@ ARG GITHUB_TOKEN
 # Install git and configure GitHub credentials for private repos
 RUN apk add --no-cache git openssh-client && \
     git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "ssh://git@github.com/" && \
-    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:" && \
-    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+    git config --global --add url."https://${GITHUB_TOKEN}@github.com/".insteadOf "git@github.com:" && \
+    git config --global --add url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
 
 # Copy package definitions and install dependencies
 COPY package*.json ./
