@@ -24,6 +24,7 @@ public class DeliveryGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final PmCustomerProjectRepository projectRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -33,7 +34,8 @@ public class DeliveryGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String prompt = buildPrompt(project, request.getDeliveryTitle(), request.getDeliveryType(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String prompt = buildPrompt(project, request.getDeliveryTitle(), request.getDeliveryType(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Project Manager and Quality Assurance Lead with 15+ years of experience in enterprise software delivery and sign-off.
                 Your task is to generate a comprehensive, professional Software Delivery & Acceptance document in JSON format.
@@ -99,9 +101,13 @@ public class DeliveryGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmCustomerProject project, String customTitle, String deliveryType, String customPrompt) {
+    private String buildPrompt(PmCustomerProject project, String customTitle, String deliveryType, String customPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed Software Delivery Document Draft.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (project != null) {
             sb.append("**Project Context:**\n")

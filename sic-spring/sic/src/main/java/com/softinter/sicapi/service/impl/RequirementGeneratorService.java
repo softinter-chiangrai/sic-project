@@ -23,6 +23,7 @@ public class RequirementGeneratorService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmRequirementRepository requirementRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -37,7 +38,8 @@ public class RequirementGeneratorService {
             }
         }
 
-        String prompt = buildPrompt(project, request.getTitle(), request.getPrompt(), request.getRequirementType(), defaultCode);
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String prompt = buildPrompt(project, request.getTitle(), request.getPrompt(), request.getRequirementType(), defaultCode, projectScope);
         String systemPrompt = """
                 You are a Principal Business Analyst and Lead System Analyst with 15+ years of experience in enterprise software development.
                 Your task is to analyze user prompts and project contexts to generate a comprehensive, professional, well-structured Software Requirement in JSON format.
@@ -79,9 +81,13 @@ public class RequirementGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmCustomerProject project, String customTitle, String customPrompt, String requirementType, String suggestedCode) {
+    private String buildPrompt(PmCustomerProject project, String customTitle, String customPrompt, String requirementType, String suggestedCode, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed, professional Software Requirement.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (project != null) {
             sb.append("**Project Context:**\n")

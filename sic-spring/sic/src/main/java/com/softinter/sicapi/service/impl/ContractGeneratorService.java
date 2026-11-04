@@ -23,6 +23,7 @@ public class ContractGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final PmCustomerProjectRepository projectRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -32,7 +33,8 @@ public class ContractGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String prompt = buildPrompt(project, request.getContractNo(), request.getContractType(), request.getContractValue(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String prompt = buildPrompt(project, request.getContractNo(), request.getContractType(), request.getContractValue(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Legal Counsel and Enterprise Software Contract Specialist with 15+ years of experience drafting IT and Software Development contracts in Thailand.
                 Your task is to generate a comprehensive, detailed, professional Software Contract draft in JSON format.
@@ -66,9 +68,12 @@ public class ContractGeneratorService {
         }
     }
 
-    private String buildPrompt(PmCustomerProject project, String contractNo, String contractType, BigDecimal contractValue, String userPrompt) {
+    private String buildPrompt(PmCustomerProject project, String contractNo, String contractType, BigDecimal contractValue, String userPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("กรุณาร่างสัญญาซอฟต์แวร์หรือบริการ IT ให้ตรงกับประเภทสัญญา โดยมีรายละเอียดประกอบดังนี้:\n");
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
         sb.append("- วันที่วันนี้: ").append(java.time.LocalDate.now()).append("\n");
         if (project != null) {
             sb.append("- ชื่อโครงการ: ").append(project.getProjectName()).append("\n");

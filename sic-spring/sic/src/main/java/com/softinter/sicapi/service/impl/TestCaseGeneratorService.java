@@ -110,9 +110,13 @@ public class TestCaseGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmTask task, PmSpecification spec, PmRequirement req, PmTestScenario scenario, String customTitle, String customPrompt) {
+    private String buildPrompt(PmTask task, PmSpecification spec, PmRequirement req, PmTestScenario scenario, String customTitle, String customPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed, professional Software Test Case.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (scenario != null) {
             sb.append("**Test Scenario Context:**\n")

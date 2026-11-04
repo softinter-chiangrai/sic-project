@@ -24,6 +24,7 @@ public class MaTicketGeneratorService {
     private final PmCustomerProjectRepository projectRepository;
     private final ObjectMapper objectMapper;
     private final AiMemberPicker memberPicker;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -33,7 +34,8 @@ public class MaTicketGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String prompt = buildPrompt(project, request.getTitle(), request.getTicketType(), request.getSeverity(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String prompt = buildPrompt(project, request.getTitle(), request.getTicketType(), request.getSeverity(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead IT Service Management (ITSM) Specialist and Level 3 Support Lead with 15+ years of experience in enterprise software maintenance and incident management (ITIL aligned).
                 Your task is to analyze user prompts and generate a comprehensive, professional Maintenance & Support Ticket (MA Ticket) in JSON format.
@@ -74,9 +76,13 @@ public class MaTicketGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmCustomerProject project, String customTitle, String ticketType, String severity, String customPrompt) {
+    private String buildPrompt(PmCustomerProject project, String customTitle, String ticketType, String severity, String customPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed MA Support Ticket Draft.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (project != null) {
             sb.append("**Project Context:**\n")

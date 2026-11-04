@@ -26,6 +26,7 @@ public class TestScenarioGeneratorService {
     private final PmTaskRepository taskRepository;
     private final PmRequirementRepository requirementRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -34,22 +35,37 @@ public class TestScenarioGeneratorService {
         PmTask task = null;
         PmSpecification spec = null;
         PmRequirement req = null;
+        String searchQuery = (request.getScenarioName() != null ? request.getScenarioName() + " " : "")
+                + (request.getPrompt() != null ? request.getPrompt() : "");
 
         if (request.getTaskId() != null) {
             task = taskRepository.findById(request.getTaskId()).orElse(null);
-            if (task != null && task.getSpecification() != null) {
-                spec = task.getSpecification();
-                if (spec.getRequirement() != null) {
-                    req = spec.getRequirement();
-                }
+        } else if (request.getProjectId() != null) {
+            task = contextHelper.pickBestTask(request.getProjectId(), searchQuery);
+        }
+        if (task != null && task.getSpecification() != null) {
+            spec = task.getSpecification();
+            if (spec.getRequirement() != null) {
+                req = spec.getRequirement();
+            }
+        }
+
+        if (spec == null && request.getProjectId() != null) {
+            var topSpecs = contextHelper.pickTopSpecifications(request.getProjectId(), searchQuery, 1);
+            if (!topSpecs.isEmpty()) {
+                spec = topSpecs.get(0);
+                if (spec.getRequirement() != null) req = spec.getRequirement();
             }
         }
 
         if (req == null && request.getRequirementId() != null) {
             req = requirementRepository.findById(request.getRequirementId()).orElse(null);
+        } else if (req == null && request.getProjectId() != null) {
+            req = contextHelper.pickBestRequirement(request.getProjectId(), searchQuery);
         }
 
-        String prompt = buildPrompt(task, spec, req, request.getScenarioName(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), searchQuery);
+        String prompt = buildPrompt(task, spec, req, request.getScenarioName(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Architect and Senior Test Specialist.
                 Your task is to analyze user tasks, requirements, and specifications to generate a comprehensive, professional Test Scenario in JSON format.
@@ -63,9 +79,13 @@ public class TestScenarioGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmTask task, PmSpecification spec, PmRequirement req, String customName, String customPrompt) {
+    private String buildPrompt(PmTask task, PmSpecification spec, PmRequirement req, String customName, String customPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed, professional Test Scenario Document.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (task != null) {
             sb.append("**Task Information:**\n")

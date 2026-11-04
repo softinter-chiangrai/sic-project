@@ -32,19 +32,27 @@ public class UserManualGeneratorService {
     private final PmSpecificationRepository specificationRepository;
     private final PmDeliveryRepository deliveryRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
     @Transactional(readOnly = true)
     public UserManualDraftResponse generateDraft(GenerateUserManualDraftRequest request) {
+        String searchQuery = (request.getManualTitle() != null ? request.getManualTitle() + " " : "")
+                + (request.getPrompt() != null ? request.getPrompt() : "");
+
         List<PmRequirement> requirements = new ArrayList<>();
         if (request.getRequirementIds() != null && !request.getRequirementIds().isEmpty()) {
             requirements = requirementRepository.findAllById(request.getRequirementIds());
+        } else if (request.getProjectId() != null) {
+            requirements = contextHelper.pickTopRequirements(request.getProjectId(), searchQuery, 5);
         }
 
         List<PmSpecification> specifications = new ArrayList<>();
         if (request.getSpecificationIds() != null && !request.getSpecificationIds().isEmpty()) {
             specifications = specificationRepository.findAllById(request.getSpecificationIds());
+        } else if (request.getProjectId() != null) {
+            specifications = contextHelper.pickTopSpecifications(request.getProjectId(), searchQuery, 5);
         }
 
         UUID projectId = request.getProjectId();
@@ -76,8 +84,8 @@ public class UserManualGeneratorService {
             draft.setManualType(manualType);
         }
         draft.setVersion("1.0.0");
-        if (request.getSpecificationIds() != null && !request.getSpecificationIds().isEmpty()) {
-            draft.setRelatedSpecId(request.getSpecificationIds().get(0));
+        if (!specifications.isEmpty()) {
+            draft.setRelatedSpecId(specifications.get(0).getId());
         }
 
         if (!deliveries.isEmpty()) {
@@ -125,10 +133,10 @@ public class UserManualGeneratorService {
                 sb.append("--- Requirement: ").append(req.getRequirementCode() != null ? req.getRequirementCode() + " - " : "")
                   .append(req.getTitle()).append(" ---\n");
                 if (req.getDescription() != null && !req.getDescription().isBlank()) {
-                    sb.append("  - Description: ").append(req.getDescription()).append("\n");
+                    sb.append("  - Description: ").append(contextHelper.strip(req.getDescription(), 400)).append("\n");
                 }
                 if (req.getAcceptanceCriteria() != null && !req.getAcceptanceCriteria().isBlank()) {
-                    sb.append("  - Acceptance Criteria: ").append(req.getAcceptanceCriteria()).append("\n");
+                    sb.append("  - Acceptance Criteria: ").append(contextHelper.strip(req.getAcceptanceCriteria(), 400)).append("\n");
                 }
                 sb.append("\n");
             }
@@ -140,7 +148,7 @@ public class UserManualGeneratorService {
                 sb.append("--- Specification: ").append(spec.getSpecificationCode() != null ? spec.getSpecificationCode() + " - " : "")
                   .append(spec.getTitle()).append(" (Type: ").append(spec.getSpecificationType() != null ? spec.getSpecificationType() : "General").append(") ---\n");
                 if (spec.getDescription() != null && !spec.getDescription().isBlank()) {
-                    sb.append("  - Description: ").append(spec.getDescription()).append("\n");
+                    sb.append("  - Description: ").append(contextHelper.strip(spec.getDescription(), 400)).append("\n");
                 }
                 sb.append("\n");
             }

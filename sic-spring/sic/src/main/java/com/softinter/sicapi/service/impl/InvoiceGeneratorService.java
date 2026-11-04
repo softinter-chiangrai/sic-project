@@ -27,6 +27,7 @@ public class InvoiceGeneratorService {
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -39,9 +40,12 @@ public class InvoiceGeneratorService {
         PmCustomerContract contract = null;
         if (request.getContractId() != null) {
             contract = contractRepository.findById(request.getContractId()).orElse(null);
+        } else if (request.getProjectId() != null) {
+            contract = contextHelper.pickBestContract(request.getProjectId(), request.getPrompt());
         }
 
-        String prompt = buildPrompt(project, contract, request.getInvoiceType(), request.getInvoiceTitle(), request.getBillingPeriod(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String prompt = buildPrompt(project, contract, request.getInvoiceType(), request.getInvoiceTitle(), request.getBillingPeriod(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Project Financial Controller and Billing Specialist with 15+ years of experience in enterprise software contracting and invoicing.
                 Your task is to generate a comprehensive, professional Software Invoice / Payment Milestone draft in JSON format.
@@ -89,22 +93,28 @@ public class InvoiceGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmCustomerProject project, PmCustomerContract contract, String invoiceType, String customTitle, String billingPeriod, String customPrompt) {
+    private String buildPrompt(PmCustomerProject project, PmCustomerContract contract, String invoiceType, String customTitle, String billingPeriod, String customPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a professional Software Invoice / Milestone Draft.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (project != null) {
             sb.append("**Project Context:**\n")
               .append("- Project Name: ").append(project.getProjectName() != null ? project.getProjectName() : "").append("\n")
               .append("- Project Code: ").append(project.getProjectCode() != null ? project.getProjectCode() : "").append("\n")
-              .append("- Description: ").append(project.getDescription() != null ? project.getDescription() : "").append("\n\n");
+              .append("- Description: ").append(contextHelper.strip(project.getDescription(), 300)).append("\n\n");
         }
 
         if (contract != null) {
             sb.append("**Contract Context:**\n")
               .append("- Contract No: ").append(contract.getContractNo() != null ? contract.getContractNo() : "").append("\n")
               .append("- Contract Type: ").append(contract.getContractType() != null ? contract.getContractType() : "").append("\n")
-              .append("- Scope Summary: ").append(contract.getScopeSummary() != null ? contract.getScopeSummary() : "").append("\n\n");
+              .append("- Contract Value: ").append(contract.getContractValue() != null ? contract.getContractValue() : "").append("\n")
+              .append("- Payment Terms: ").append(contextHelper.strip(contract.getPaymentTerms(), 250)).append("\n")
+              .append("- Scope Summary: ").append(contextHelper.strip(contract.getScopeSummary(), 300)).append("\n\n");
         }
 
         if (invoiceType != null && !invoiceType.isBlank()) {
