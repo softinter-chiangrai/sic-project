@@ -1,6 +1,7 @@
 package com.softinter.sicapi.service.impl;
 
 import com.softinter.sicapi.config.BusinessContextHolder;
+import com.softinter.sicapi.entity.pm.PmCustomer;
 import com.softinter.sicapi.entity.pm.PmCustomerContract;
 import com.softinter.sicapi.entity.pm.PmCustomerProject;
 import com.softinter.sicapi.entity.pm.PmDelivery;
@@ -11,6 +12,7 @@ import com.softinter.sicapi.entity.pm.PmTask;
 import com.softinter.sicapi.entity.pm.PmTestScenario;
 import com.softinter.sicapi.repository.pm.PmCustomerContractRepository;
 import com.softinter.sicapi.repository.pm.PmCustomerProjectRepository;
+import com.softinter.sicapi.repository.pm.PmCustomerRepository;
 import com.softinter.sicapi.repository.pm.PmDeliveryRepository;
 import com.softinter.sicapi.repository.pm.PmDiagramTabRepository;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AiProjectContextHelper {
 
+    private final PmCustomerRepository customerRepository;
     private final PmCustomerProjectRepository projectRepository;
     private final PmCustomerContractRepository contractRepository;
     private final PmRequirementRepository requirementRepository;
@@ -43,6 +46,14 @@ public class AiProjectContextHelper {
     private final PmTaskRepository taskRepository;
     private final PmTestScenarioRepository scenarioRepository;
     private final PmDeliveryRepository deliveryRepository;
+
+    public PmCustomer pickBestCustomer(String prompt) {
+        UUID bizId = BusinessContextHolder.getBusinessId();
+        if (bizId == null) return null;
+        List<PmCustomer> all = customerRepository.findByBusinessIdAndIsActiveTrue(bizId);
+        List<PmCustomer> ranked = rankAndLimit(all, prompt, 1, c -> (c.getCustomerCode() + " " + c.getCompanyNameLocal() + " " + c.getCompanyNameEn()));
+        return ranked.isEmpty() ? null : ranked.get(0);
+    }
 
     public PmRequirement pickBestRequirement(UUID projectId, String prompt) {
         List<PmRequirement> list = pickTopRequirements(projectId, prompt, 1);

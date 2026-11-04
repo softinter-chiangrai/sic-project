@@ -34,6 +34,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
     private final AiModuleRegistry moduleRegistry;
     private final AiMemberPicker memberPicker;
     private final PmSpecificationRepository specificationRepository;
+    private final AiProjectContextHelper contextHelper;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final Pattern JSON_ARRAY_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
@@ -62,7 +63,8 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
             }
         }
 
-        String systemPrompt = buildSystemPrompt(def, count, availableSpecs);
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String systemPrompt = buildSystemPrompt(def, count, availableSpecs, projectScope);
         String userPrompt = request.getPrompt() != null && !request.getPrompt().isBlank()
                 ? request.getPrompt()
                 : "สร้างข้อมูลตัวอย่างที่สมเหตุสมผลสำหรับโมดูลนี้จำนวน " + count + " รายการ";
@@ -157,7 +159,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
         }
     }
 
-    private String buildSystemPrompt(AiModuleRegistry.ModuleDef def, int count, List<PmSpecification> availableSpecs) {
+    private String buildSystemPrompt(AiModuleRegistry.ModuleDef def, int count, List<PmSpecification> availableSpecs, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("""
                 คุณคือ AI ผู้ช่วยสร้างข้อมูลชุด (Batch Create) สำหรับโมดูล "%s" ในระบบบริหารโครงการ SIC
@@ -172,6 +174,10 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
                 6. ถ้าผู้ใช้แนบไฟล์เอกสาร/รูปภาพมาด้วย ให้ใช้ข้อมูลจากไฟล์นั้นเป็นหลักในการสร้างรายการ
                 7. ตอบข้อความในฟิลด์ต่างๆ เป็นภาษาเดียวกับที่ผู้ใช้พิมพ์ prompt (ถ้าผู้ใช้พิมพ์เป็นภาษาอังกฤษ ให้ตอบเป็นภาษาอังกฤษ / Respond in the same language as the user's prompt)
                 """.formatted(def.getLabel(), def.getSchemaDescription(), count));
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append("\n").append(projectScope);
+        }
 
         if ("DESIGN_REVIEW".equalsIgnoreCase(def.getModuleType()) && availableSpecs != null && !availableSpecs.isEmpty()) {
             sb.append("\nรายการข้อกำหนด (Specification) ในโครงการที่มีอยู่:\n");

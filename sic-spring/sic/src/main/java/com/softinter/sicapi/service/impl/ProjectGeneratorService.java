@@ -22,6 +22,7 @@ public class ProjectGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final PmCustomerRepository customerRepository;
     private final ObjectMapper objectMapper;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -29,6 +30,8 @@ public class ProjectGeneratorService {
         PmCustomer customer = null;
         if (request.getCustomerId() != null) {
             customer = customerRepository.findById(request.getCustomerId()).orElse(null);
+        } else {
+            customer = contextHelper.pickBestCustomer(request.getPrompt());
         }
 
         String prompt = buildPrompt(customer, request.getProjectCode(), request.getProjectName(), request.getPrompt());
