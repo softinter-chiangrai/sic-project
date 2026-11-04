@@ -3,9 +3,12 @@ package com.softinter.sicapi.dto.response;
 import lombok.Data;
 
 import java.util.List;
+import java.util.UUID;
 
 @Data
 public class SpecificationDraft {
+    private UUID requirementId;
+    private List<UUID> diagramIds;
     private String title;
     private String specificationType;
     private String objective;

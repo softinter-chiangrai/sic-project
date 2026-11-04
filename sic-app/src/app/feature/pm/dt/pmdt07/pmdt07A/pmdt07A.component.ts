@@ -406,8 +406,8 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
                     priority: draft.priority || this.form.value.priority || 'MEDIUM',
                     estimatedManday: draft.estimatedManday || this.form.value.estimatedManday,
                     description: draft.generatedHtmlDescription || draft.description || this.form.value.description,
-                    requirementId: requirementId,
-                    diagramIds: diagramIds,
+                    requirementId: requirementId || draft.requirementId,
+                    diagramIds: diagramIds.length > 0 ? diagramIds : (draft.diagramIds || []),
                 };
 
                 const historyItem = this.aiHistoryService.addHistory(

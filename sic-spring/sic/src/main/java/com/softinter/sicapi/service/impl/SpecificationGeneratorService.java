@@ -28,6 +28,7 @@ public class SpecificationGeneratorService {
     private final PmDiagramTabRepository diagramRepository;
     private final ObjectMapper objectMapper;
     private final AiMemberPicker memberPicker;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -42,16 +43,24 @@ public class SpecificationGeneratorService {
         PmRequirement requirement = null;
         if (request.getRequirementId() != null) {
             requirement = requirementRepository.findById(request.getRequirementId()).orElse(null);
+        } else if (request.getProjectId() != null) {
+            requirement = contextHelper.pickBestRequirement(request.getProjectId(), request.getPrompt());
         }
+
+        UUID effectiveProjectId = request.getProjectId() != null ? request.getProjectId()
+                : (requirement != null ? requirement.getProjectId() : null);
 
         List<PmDiagramTab> diagrams = new ArrayList<>();
         if (request.getDiagramIds() != null && !request.getDiagramIds().isEmpty()) {
             diagrams.addAll(diagramRepository.findAllById(request.getDiagramIds()));
         } else if (request.getDiagramId() != null) {
             diagramRepository.findById(request.getDiagramId()).ifPresent(diagrams::add);
+        } else if (effectiveProjectId != null) {
+            diagrams.addAll(contextHelper.pickTopDiagrams(effectiveProjectId, request.getPrompt(), 2));
         }
 
-        String prompt = buildPrompt(requirement, diagrams, request.getPrompt(), request.getSpecificationType());
+        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId, request.getPrompt());
+        String prompt = buildPrompt(requirement, diagrams, request.getPrompt(), request.getSpecificationType(), projectScope);
         String systemPrompt = """
                 You are a Lead Software Architect and Senior System Analyst with 15+ years of experience.
                 Your task is to analyze requirements, diagrams, and user descriptions to generate a comprehensive, highly accurate Software Specification Document in JSON format.
@@ -61,6 +70,8 @@ public class SpecificationGeneratorService {
         SpecificationDraft draft = parseAiResponse(aiResponse);
 
         if (request.getSpecificationType() != null && !request.getSpecificationType().isBlank()) draft.setSpecificationType(request.getSpecificationType());
+        if (requirement != null && draft.getRequirementId() == null) draft.setRequirementId(requirement.getId());
+        if (!diagrams.isEmpty() && draft.getDiagramIds() == null) draft.setDiagramIds(diagrams.stream().map(PmDiagramTab::getId).toList());
 
         AiMemberPicker.Member owner = memberPicker.pick();
         if (owner != null) draft.setOwner(owner.userId());
@@ -71,9 +82,13 @@ public class SpecificationGeneratorService {
         return draft;
     }
 
-    private String buildPrompt(PmRequirement req, List<PmDiagramTab> diagrams, String customPrompt, String specType) {
+    private String buildPrompt(PmRequirement req, List<PmDiagramTab> diagrams, String customPrompt, String specType, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed Software Specification Document.\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         if (specType != null && !specType.isBlank()) {
             sb.append("**Specification Type:** ").append(specType).append("\n");

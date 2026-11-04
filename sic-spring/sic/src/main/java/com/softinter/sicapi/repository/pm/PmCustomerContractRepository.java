@@ -29,6 +29,8 @@ public interface PmCustomerContractRepository
 
     List<PmCustomerContract> findByBusinessIdAndCustomerIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId, UUID customerId);
 
+    List<PmCustomerContract> findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(UUID businessId, UUID projectId);
+
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
 
     /** ฉบับต่ออายุที่ชี้มาที่สัญญานี้ */

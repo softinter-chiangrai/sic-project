@@ -33,6 +33,7 @@ public class TestCaseGeneratorService {
     private final PmTestScenarioRepository scenarioRepository;
     private final ObjectMapper objectMapper;
     private final AiMemberPicker memberPicker;
+    private final AiProjectContextHelper contextHelper;
 
     private static final Pattern JSON_PATTERN = Pattern.compile("```json\\s*([\\s\\S]*?)```");
 
@@ -42,26 +43,43 @@ public class TestCaseGeneratorService {
         PmSpecification spec = null;
         PmRequirement req = null;
         PmTestScenario scenario = null;
+        String searchQuery = (request.getTitle() != null ? request.getTitle() + " " : "")
+                + (request.getPrompt() != null ? request.getPrompt() : "");
 
         if (request.getTaskId() != null) {
             task = taskRepository.findById(request.getTaskId()).orElse(null);
-            if (task != null && task.getSpecification() != null) {
-                spec = task.getSpecification();
-                if (spec.getRequirement() != null) {
-                    req = spec.getRequirement();
-                }
+        } else if (request.getProjectId() != null) {
+            task = contextHelper.pickBestTask(request.getProjectId(), searchQuery);
+        }
+        if (task != null && task.getSpecification() != null) {
+            spec = task.getSpecification();
+            if (spec.getRequirement() != null) {
+                req = spec.getRequirement();
+            }
+        }
+
+        if (spec == null && request.getProjectId() != null) {
+            var topSpecs = contextHelper.pickTopSpecifications(request.getProjectId(), searchQuery, 1);
+            if (!topSpecs.isEmpty()) {
+                spec = topSpecs.get(0);
+                if (spec.getRequirement() != null) req = spec.getRequirement();
             }
         }
 
         if (req == null && request.getRequirementId() != null) {
             req = requirementRepository.findById(request.getRequirementId()).orElse(null);
+        } else if (req == null && request.getProjectId() != null) {
+            req = contextHelper.pickBestRequirement(request.getProjectId(), searchQuery);
         }
 
         if (request.getScenarioId() != null) {
             scenario = scenarioRepository.findById(request.getScenarioId()).orElse(null);
+        } else if (request.getProjectId() != null) {
+            scenario = contextHelper.pickBestScenario(request.getProjectId(), searchQuery);
         }
 
-        String prompt = buildPrompt(task, spec, req, scenario, request.getTitle(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), searchQuery);
+        String prompt = buildPrompt(task, spec, req, scenario, request.getTitle(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Engineer and Software Testing Specialist with 15+ years of experience.
                 Your task is to analyze user tasks, requirements, specifications, and scenarios to generate comprehensive, professional Software Test Cases in JSON format.
