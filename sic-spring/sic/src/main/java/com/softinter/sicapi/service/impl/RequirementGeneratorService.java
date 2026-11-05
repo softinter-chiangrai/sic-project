@@ -38,7 +38,7 @@ public class RequirementGeneratorService {
             }
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
         String prompt = buildPrompt(project, request.getTitle(), request.getPrompt(), request.getRequirementType(), defaultCode, projectScope);
         String systemPrompt = """
                 You are a Principal Business Analyst and Lead System Analyst with 15+ years of experience in enterprise software development.

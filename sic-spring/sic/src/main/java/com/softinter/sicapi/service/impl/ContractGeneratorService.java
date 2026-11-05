@@ -33,7 +33,7 @@ public class ContractGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
         String prompt = buildPrompt(project, request.getContractNo(), request.getContractType(), request.getContractValue(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Legal Counsel and Enterprise Software Contract Specialist with 15+ years of experience drafting IT and Software Development contracts in Thailand.

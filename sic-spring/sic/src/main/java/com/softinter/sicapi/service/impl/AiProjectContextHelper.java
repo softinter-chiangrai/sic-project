@@ -59,10 +59,6 @@ public class AiProjectContextHelper {
         return sb.append("\n").toString();
     }
 
-    public String buildProjectScopeBlock(UUID projectId, String unusedPrompt) {
-        return buildProjectScopeBlock(projectId);
-    }
-
     public String buildProjectScopeBlock(UUID projectId) {
         UUID bizId = BusinessContextHolder.getBusinessId();
         if (projectId == null) return "";

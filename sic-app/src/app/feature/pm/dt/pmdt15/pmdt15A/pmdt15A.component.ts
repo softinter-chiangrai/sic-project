@@ -385,7 +385,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.aiAssistTab.set('generate');
     this.loadAiHistory();
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
+    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
     this.loadAiComboboxOptions(projId);
     this.showAiModal.set(true);
     this.cdr.markForCheck();
@@ -400,7 +400,7 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
+    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
     const currentTitle = (this.formData?.form?.value as any)?.manualTitle;
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
 

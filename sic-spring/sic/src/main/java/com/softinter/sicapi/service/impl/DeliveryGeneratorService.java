@@ -34,7 +34,7 @@ public class DeliveryGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
         String prompt = buildPrompt(project, request.getDeliveryTitle(), request.getDeliveryType(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Project Manager and Quality Assurance Lead with 15+ years of experience in enterprise software delivery and sign-off.
