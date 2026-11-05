@@ -8,6 +8,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.softinter.sicapi.entity.pm.PmDelivery;
@@ -30,4 +32,6 @@ public interface PmDeliveryRepository extends JpaRepository<PmDelivery, UUID>, J
 
     boolean existsByBusinessIdAndProjectIdAndDeliveryCodeAndIsDeleteFalse(
             UUID businessId, UUID projectId, String deliveryCode);
+    @Query(value = "SELECT * FROM pm_delivery d WHERE d.business_id = :businessId AND d.project_id = :projectId AND d.is_delete = false ORDER BY d.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmDelivery> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
 }

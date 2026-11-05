@@ -57,4 +57,6 @@ public interface PmCustomerContractRepository
     List<PmCustomerContract> findExpiringContracts(@Param("from") LocalDate from,
                                                    @Param("to") LocalDate to,
                                                    @Param("closed") Collection<String> closed);
+    @Query(value = "SELECT * FROM pm_customer_contract c WHERE c.business_id = :businessId AND c.project_id = :projectId AND c.is_delete = false ORDER BY c.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmCustomerContract> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
 }

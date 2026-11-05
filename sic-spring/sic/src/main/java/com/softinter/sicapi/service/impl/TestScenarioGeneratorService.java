@@ -49,7 +49,7 @@ public class TestScenarioGeneratorService {
             req = requirementRepository.findById(request.getRequirementId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
         String prompt = buildPrompt(task, spec, req, request.getScenarioName(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Architect and Senior Test Specialist.

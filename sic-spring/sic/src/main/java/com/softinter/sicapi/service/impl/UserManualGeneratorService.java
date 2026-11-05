@@ -61,7 +61,7 @@ public class UserManualGeneratorService {
         String manualType = request.getManualType() != null && !request.getManualType().isBlank()
                 ? request.getManualType() : "USER";
 
-        String projectScope = contextHelper.buildProjectScopeBlock(projectId);
+        String projectScope = contextHelper.buildProjectScopeBlock(projectId, request.getPrompt());
         String prompt = buildPrompt(requirements, specifications, deliveries, manualType, request.getManualTitle(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Principal Technical Writer, Lead System Analyst, and Enterprise Documentation Specialist with 15+ years of experience.

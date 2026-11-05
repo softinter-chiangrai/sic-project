@@ -62,4 +62,11 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
            "OR LOWER(t.taskCode) LIKE LOWER(CONCAT('%', CAST(:keyword AS string), '%')))")
     List<PmTask> findByBusinessIdAndKeyword(@Param("businessId") UUID businessId,
                                              @Param("keyword") String keyword);
+    @Query(value = "SELECT t.* FROM pm_task t " +
+           "JOIN pm_work_package wp ON t.work_package_id = wp.id " +
+           "JOIN pm_milestone m ON wp.milestone_id = m.id " +
+           "JOIN pm_phase ph ON m.phase_id = ph.id " +
+           "WHERE ph.project_id = :projectId AND t.is_delete = false " +
+           "ORDER BY t.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmTask> findTopSimilar(@Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
 }

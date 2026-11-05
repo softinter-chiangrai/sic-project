@@ -34,7 +34,7 @@ public class MaTicketGeneratorService {
             project = projectRepository.findById(request.getProjectId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
         String prompt = buildPrompt(project, request.getTitle(), request.getTicketType(), request.getSeverity(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead IT Service Management (ITSM) Specialist and Level 3 Support Lead with 15+ years of experience in enterprise software maintenance and incident management (ITIL aligned).

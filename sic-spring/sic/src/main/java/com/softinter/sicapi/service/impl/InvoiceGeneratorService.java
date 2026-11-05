@@ -41,7 +41,7 @@ public class InvoiceGeneratorService {
             contract = contractRepository.findById(request.getContractId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
         String prompt = buildPrompt(project, contract, request.getInvoiceType(), request.getInvoiceTitle(), request.getBillingPeriod(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Project Financial Controller and Billing Specialist with 15+ years of experience in enterprise software contracting and invoicing.

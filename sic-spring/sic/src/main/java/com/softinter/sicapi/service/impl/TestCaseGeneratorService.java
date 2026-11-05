@@ -58,7 +58,7 @@ public class TestCaseGeneratorService {
             scenario = scenarioRepository.findById(request.getScenarioId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
         String prompt = buildPrompt(task, spec, req, scenario, request.getTitle(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Engineer and Software Testing Specialist with 15+ years of experience.

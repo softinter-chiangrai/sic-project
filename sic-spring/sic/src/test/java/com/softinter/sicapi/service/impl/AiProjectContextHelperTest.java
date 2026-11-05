@@ -39,6 +39,7 @@ class AiProjectContextHelperTest {
     @Mock private PmTaskRepository taskRepository;
     @Mock private PmTestScenarioRepository scenarioRepository;
     @Mock private PmDeliveryRepository deliveryRepository;
+    @Mock private com.softinter.sicapi.service.PmAiProviderService aiProviderService;
 
     @InjectMocks
     private AiProjectContextHelper helper;

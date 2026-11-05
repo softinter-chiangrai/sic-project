@@ -63,7 +63,7 @@ public class AiBatchGeneratorServiceImpl implements AiBatchGeneratorService {
             }
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
         String systemPrompt = buildSystemPrompt(def, count, availableSpecs, projectScope);
         String userPrompt = request.getPrompt() != null && !request.getPrompt().isBlank()
                 ? request.getPrompt()

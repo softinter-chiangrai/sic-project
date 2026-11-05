@@ -55,7 +55,7 @@ public class SpecificationGeneratorService {
             diagramRepository.findById(request.getDiagramId()).ifPresent(diagrams::add);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId);
+        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId, request.getPrompt());
         String prompt = buildPrompt(requirement, diagrams, request.getPrompt(), request.getSpecificationType(), projectScope);
         String systemPrompt = """
                 You are a Lead Software Architect and Senior System Analyst with 15+ years of experience.

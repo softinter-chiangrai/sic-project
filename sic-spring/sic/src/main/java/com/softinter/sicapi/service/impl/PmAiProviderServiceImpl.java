@@ -565,4 +565,51 @@ public class PmAiProviderServiceImpl implements PmAiProviderService {
         if (lower.startsWith("c4context") || lower.startsWith("c4container") || lower.startsWith("c4component")) return "C4";
         return "Flowchart";
     }
+
+    @Override
+    public float[] getEmbedding(String text) {
+        if (text == null || text.isBlank()) return null;
+        try {
+            ModelConfig config = resolveModelConfig(defaultModel);
+            String apiKey = config.apiKey != null ? config.apiKey.trim() : "";
+
+            // Gemini Embedding API หรือ OpenAI Compatible
+            String embedUrl;
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            Map<String, Object> body = new HashMap<>();
+
+            if ("claude".equalsIgnoreCase(config.provider)) {
+                // สำหรับ Claude ใช้ Gemini/OpenAI key เป็น fallback สำหรับแปลง embedding
+                String gemKey = getEffectiveKey(geminiApiKey, "GEMINI_API_KEY");
+                embedUrl = (geminiApiUrl != null && !geminiApiUrl.isBlank() ? geminiApiUrl : "https://gen.ai.kku.ac.th/upacth/api/v1") + "/embeddings";
+                if (!gemKey.isBlank()) headers.set("Authorization", "Bearer " + gemKey);
+                body.put("model", "text-embedding-3-small");
+                body.put("input", text);
+            } else {
+                String base = (config.apiUrl != null && !config.apiUrl.isBlank()) ? config.apiUrl : "https://gen.ai.kku.ac.th/upacth/api/v1/chat/completions";
+                embedUrl = base.contains("/chat/completions") ? base.replace("/chat/completions", "/embeddings") : base + "/embeddings";
+                if (!apiKey.isBlank()) headers.set("Authorization", "Bearer " + apiKey);
+                body.put("model", "text-embedding-3-small");
+                body.put("input", text);
+            }
+
+            HttpEntity<Map<String, Object>> entity = new HttpEntity<>(body, headers);
+            ResponseEntity<String> response = restTemplate.postForEntity(embedUrl, entity, String.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                JsonNode root = objectMapper.readTree(response.getBody());
+                JsonNode vecNode = root.path("data").path(0).path("embedding");
+                if (vecNode.isArray() && vecNode.size() > 0) {
+                    float[] vec = new float[vecNode.size()];
+                    for (int i = 0; i < vecNode.size(); i++) {
+                        vec[i] = (float) vecNode.get(i).asDouble();
+                    }
+                    return vec;
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Vector embedding generation skipped or failed (fallback to text index): {}", e.getMessage());
+        }
+        return null;
+    }
 }

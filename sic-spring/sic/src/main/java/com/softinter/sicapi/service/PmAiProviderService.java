@@ -43,4 +43,7 @@ public interface PmAiProviderService {
     String extractDiagramName(String aiResponse);
 
     String extractDiagramType(String script);
+
+    /** แปลงข้อความเป็น Vector 768 มิติสำหรับ Vector Semantic Search / RAG */
+    float[] getEmbedding(String text);
 }
