@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,11 +29,10 @@ public class ProjectGeneratorService {
         PmCustomer customer = null;
         if (request.getCustomerId() != null) {
             customer = customerRepository.findById(request.getCustomerId()).orElse(null);
-        } else {
-            customer = contextHelper.pickBestCustomer(request.getPrompt());
         }
 
-        String prompt = buildPrompt(customer, request.getProjectCode(), request.getProjectName(), request.getPrompt());
+        String customersIndex = (customer == null) ? contextHelper.buildCustomerIndexBlock() : "";
+        String prompt = buildPrompt(customer, customersIndex, request.getProjectCode(), request.getProjectName(), request.getPrompt());
         String systemPrompt = """
                 You are a Senior Project Manager and Solutions Architect with 15+ years of experience leading enterprise software development projects.
                 Your task is to generate a comprehensive, structured Project Charter / Plan draft in JSON format.
@@ -66,9 +64,12 @@ public class ProjectGeneratorService {
         }
     }
 
-    private String buildPrompt(PmCustomer customer, String projectCode, String projectName, String userPrompt) {
+    private String buildPrompt(PmCustomer customer, String customersIndex, String projectCode, String projectName, String userPrompt) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Please draft a comprehensive enterprise software project with the following context:\n");
+        sb.append("Please draft a comprehensive enterprise software project with the following context:\n\n");
+        if (customersIndex != null && !customersIndex.isBlank()) {
+            sb.append(customersIndex);
+        }
         if (customer != null) {
             String cName = customer.getCompanyNameLocal() != null ? customer.getCompanyNameLocal() : customer.getCompanyNameEn();
             sb.append("- Customer / Client: ").append(cName).append("\n");

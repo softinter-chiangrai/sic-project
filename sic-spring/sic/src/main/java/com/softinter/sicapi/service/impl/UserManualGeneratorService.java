@@ -38,21 +38,14 @@ public class UserManualGeneratorService {
 
     @Transactional(readOnly = true)
     public UserManualDraftResponse generateDraft(GenerateUserManualDraftRequest request) {
-        String searchQuery = (request.getManualTitle() != null ? request.getManualTitle() + " " : "")
-                + (request.getPrompt() != null ? request.getPrompt() : "");
-
         List<PmRequirement> requirements = new ArrayList<>();
         if (request.getRequirementIds() != null && !request.getRequirementIds().isEmpty()) {
             requirements = requirementRepository.findAllById(request.getRequirementIds());
-        } else if (request.getProjectId() != null) {
-            requirements = contextHelper.pickTopRequirements(request.getProjectId(), searchQuery, 5);
         }
 
         List<PmSpecification> specifications = new ArrayList<>();
         if (request.getSpecificationIds() != null && !request.getSpecificationIds().isEmpty()) {
             specifications = specificationRepository.findAllById(request.getSpecificationIds());
-        } else if (request.getProjectId() != null) {
-            specifications = contextHelper.pickTopSpecifications(request.getProjectId(), searchQuery, 5);
         }
 
         UUID projectId = request.getProjectId();
@@ -68,7 +61,8 @@ public class UserManualGeneratorService {
         String manualType = request.getManualType() != null && !request.getManualType().isBlank()
                 ? request.getManualType() : "USER";
 
-        String prompt = buildPrompt(requirements, specifications, deliveries, manualType, request.getManualTitle(), request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(projectId);
+        String prompt = buildPrompt(requirements, specifications, deliveries, manualType, request.getManualTitle(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Principal Technical Writer, Lead System Analyst, and Enterprise Documentation Specialist with 15+ years of experience.
                 Your task is to analyze system requirements, technical specifications, and user instructions to produce an outstanding, highly structured, comprehensive User Manual (คู่มือการใช้งานระบบ) in Thai JSON format.
@@ -84,7 +78,7 @@ public class UserManualGeneratorService {
             draft.setManualType(manualType);
         }
         draft.setVersion("1.0.0");
-        if (!specifications.isEmpty()) {
+        if (!specifications.isEmpty() && draft.getRelatedSpecId() == null) {
             draft.setRelatedSpecId(specifications.get(0).getId());
         }
 
@@ -109,9 +103,13 @@ public class UserManualGeneratorService {
 
     private String buildPrompt(List<PmRequirement> requirements, List<PmSpecification> specifications,
                                List<PmDelivery> deliveries,
-                               String manualType, String customTitle, String customPrompt) {
+                               String manualType, String customTitle, String customPrompt, String projectScope) {
         StringBuilder sb = new StringBuilder();
         sb.append("Please generate a detailed, professional, and comprehensive User Manual (คู่มือการใช้งานระบบ).\n\n");
+
+        if (projectScope != null && !projectScope.isBlank()) {
+            sb.append(projectScope);
+        }
 
         sb.append("**Target Manual Type:** ").append(manualType).append("\n");
         sb.append("- Explanation of Type: ");
@@ -194,6 +192,7 @@ public class UserManualGeneratorService {
                   "manualTitle": "ชื่อคู่มือการใช้งานที่ชัดเจนและสมบูรณ์",
                   "manualType": "USER",
                   "summary": "สรุปเนื้อหาภาพรวมของคู่มือฉบับนี้",
+                  "relatedSpecId": "UUID ของ Specification ที่เกี่ยวข้องจาก Project Specifications Index ด้านบน หรือ null",
                   "deliveryId": "UUID ของการส่งมอบที่เกี่ยวข้องจากรายการด้านบน หรือ null",
                   "sections": [
                     {

@@ -57,7 +57,7 @@ class AiProjectContextHelperTest {
     }
 
     @Test
-    void pickBestRequirement_ranksByPromptKeywordAndStripsHtml() {
+    void buildProjectScopeBlock_includesAllProjectItemsWithIdsAndStripsHtml() {
         PmRequirement r1 = new PmRequirement();
         r1.setId(UUID.randomUUID());
         r1.setRequirementCode("REQ-001");
@@ -73,10 +73,6 @@ class AiProjectContextHelperTest {
         when(requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId))
                 .thenReturn(List.of(r1, r2));
 
-        PmRequirement picked = helper.pickBestRequirement(projectId, "ช่วยเขียนสเปกหน้าชำระเงิน QR");
-        assertNotNull(picked);
-        assertEquals("REQ-002", picked.getRequirementCode());
-
         PmCustomerProject project = new PmCustomerProject();
         project.setId(projectId);
         project.setProjectCode("PRJ-001");
@@ -87,13 +83,19 @@ class AiProjectContextHelperTest {
                 .thenReturn(List.<PmCustomerContract>of());
         when(specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId))
                 .thenReturn(List.<PmSpecification>of());
+        when(diagramRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId))
+                .thenReturn(List.of());
+        when(taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId))
+                .thenReturn(List.of());
+        when(scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId))
+                .thenReturn(List.of());
         when(deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId))
                 .thenReturn(List.of());
 
-        String block = helper.buildProjectScopeBlock(projectId, "ชำระเงิน QR");
+        String block = helper.buildProjectScopeBlock(projectId);
         assertTrue(block.contains("PRJ-001 - Smart E-Commerce"));
-        assertTrue(block.contains("[REQ-002] ระบบชำระเงินผ่าน QR PromptPay"));
+        assertTrue(block.contains("ID: " + r1.getId() + " | [REQ-001] ระบบจัดการสมาชิก"));
+        assertTrue(block.contains("ID: " + r2.getId() + " | [REQ-002] ระบบชำระเงินผ่าน QR PromptPay"));
         assertFalse(block.contains("<table>"));
     }
 }
-

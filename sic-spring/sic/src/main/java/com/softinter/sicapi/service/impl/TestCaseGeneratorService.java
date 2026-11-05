@@ -8,7 +8,6 @@ import com.softinter.sicapi.entity.pm.PmSpecification;
 import com.softinter.sicapi.entity.pm.PmTask;
 import com.softinter.sicapi.entity.pm.PmTestScenario;
 import com.softinter.sicapi.repository.pm.PmRequirementRepository;
-import com.softinter.sicapi.repository.pm.PmSpecificationRepository;
 import com.softinter.sicapi.repository.pm.PmTaskRepository;
 import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import com.softinter.sicapi.service.PmAiProviderService;
@@ -29,7 +28,6 @@ public class TestCaseGeneratorService {
     private final PmAiProviderService aiProviderService;
     private final PmTaskRepository taskRepository;
     private final PmRequirementRepository requirementRepository;
-    private final PmSpecificationRepository specificationRepository;
     private final PmTestScenarioRepository scenarioRepository;
     private final ObjectMapper objectMapper;
     private final AiMemberPicker memberPicker;
@@ -43,13 +41,9 @@ public class TestCaseGeneratorService {
         PmSpecification spec = null;
         PmRequirement req = null;
         PmTestScenario scenario = null;
-        String searchQuery = (request.getTitle() != null ? request.getTitle() + " " : "")
-                + (request.getPrompt() != null ? request.getPrompt() : "");
 
         if (request.getTaskId() != null) {
             task = taskRepository.findById(request.getTaskId()).orElse(null);
-        } else if (request.getProjectId() != null) {
-            task = contextHelper.pickBestTask(request.getProjectId(), searchQuery);
         }
         if (task != null && task.getSpecification() != null) {
             spec = task.getSpecification();
@@ -57,28 +51,14 @@ public class TestCaseGeneratorService {
                 req = spec.getRequirement();
             }
         }
-
-        if (spec == null && request.getProjectId() != null) {
-            var topSpecs = contextHelper.pickTopSpecifications(request.getProjectId(), searchQuery, 1);
-            if (!topSpecs.isEmpty()) {
-                spec = topSpecs.get(0);
-                if (spec.getRequirement() != null) req = spec.getRequirement();
-            }
-        }
-
         if (req == null && request.getRequirementId() != null) {
             req = requirementRepository.findById(request.getRequirementId()).orElse(null);
-        } else if (req == null && request.getProjectId() != null) {
-            req = contextHelper.pickBestRequirement(request.getProjectId(), searchQuery);
         }
-
         if (request.getScenarioId() != null) {
             scenario = scenarioRepository.findById(request.getScenarioId()).orElse(null);
-        } else if (request.getProjectId() != null) {
-            scenario = contextHelper.pickBestScenario(request.getProjectId(), searchQuery);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), searchQuery);
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
         String prompt = buildPrompt(task, spec, req, scenario, request.getTitle(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Engineer and Software Testing Specialist with 15+ years of experience.
@@ -102,9 +82,9 @@ public class TestCaseGeneratorService {
         AiMemberPicker.Member tester = memberPicker.pick();
         if (tester != null) draft.setTester(tester.name());
         draft.setTestDate(LocalDate.now().plusDays(7).toString());
-        if (task != null) draft.setRelatedTask(task.getTaskName());
-        if (spec != null) draft.setRelatedSpec(spec.getTitle());
-        if (req != null) draft.setRelatedRequirement(req.getTitle());
+        if (task != null && draft.getRelatedTask() == null) draft.setRelatedTask(task.getTaskName());
+        if (spec != null && draft.getRelatedSpec() == null) draft.setRelatedSpec(spec.getTitle());
+        if (req != null && draft.getRelatedRequirement() == null) draft.setRelatedRequirement(req.getTitle());
         if (draft.getTestType() == null || !draft.getTestType().matches("SIT|UAT")) draft.setTestType("SIT");
 
         return draft;
@@ -166,7 +146,10 @@ public class TestCaseGeneratorService {
                   "testCaseCode": "TC-001",
                   "testStep": "<ol><li>เปิดหน้าจอ...</li><li>กรอกข้อมูล...</li><li>คลิกปุ่มบันทึก</li></ol>",
                   "expectedResult": "<p>1. ระบบบันทึกข้อมูลสำเร็จและแสดง Alert ยืนยัน</p><p>2. ข้อมูลปรากฏในตารางรายการอย่างถูกต้อง</p>",
-                  "testType": "SIT"
+                  "testType": "SIT",
+                  "relatedRequirement": "ชื่อ Requirement ที่เกี่ยวข้องที่สุดจากสารบัญโปรเจกต์ (หรือ null)",
+                  "relatedSpec": "ชื่อ Specification ที่เกี่ยวข้องที่สุดจากสารบัญโปรเจกต์ (หรือ null)",
+                  "relatedTask": "ชื่อ Task ที่เกี่ยวข้องที่สุดจากสารบัญโปรเจกต์ (หรือ null)"
                 }
                 ```
                 """);

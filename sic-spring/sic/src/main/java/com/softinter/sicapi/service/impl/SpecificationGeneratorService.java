@@ -43,8 +43,6 @@ public class SpecificationGeneratorService {
         PmRequirement requirement = null;
         if (request.getRequirementId() != null) {
             requirement = requirementRepository.findById(request.getRequirementId()).orElse(null);
-        } else if (request.getProjectId() != null) {
-            requirement = contextHelper.pickBestRequirement(request.getProjectId(), request.getPrompt());
         }
 
         UUID effectiveProjectId = request.getProjectId() != null ? request.getProjectId()
@@ -55,11 +53,9 @@ public class SpecificationGeneratorService {
             diagrams.addAll(diagramRepository.findAllById(request.getDiagramIds()));
         } else if (request.getDiagramId() != null) {
             diagramRepository.findById(request.getDiagramId()).ifPresent(diagrams::add);
-        } else if (effectiveProjectId != null) {
-            diagrams.addAll(contextHelper.pickTopDiagrams(effectiveProjectId, request.getPrompt(), 2));
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId, request.getPrompt());
+        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId);
         String prompt = buildPrompt(requirement, diagrams, request.getPrompt(), request.getSpecificationType(), projectScope);
         String systemPrompt = """
                 You are a Lead Software Architect and Senior System Analyst with 15+ years of experience.
@@ -127,6 +123,8 @@ public class SpecificationGeneratorService {
                 **JSON Schema:**
                 ```json
                 {
+                  "requirementId": "UUID จริงจาก Project Requirements Index ด้านบนที่เกี่ยวข้องกับคำสั่งนี้ที่สุด (หรือ null ถ้าไม่มีใบไหนเกี่ยวข้องเลย)",
+                  "diagramIds": ["UUID จริงจาก Project Diagrams Index ด้านบนที่เกี่ยวข้อง (หรือ [] ถ้าไม่มี)"],
                   "title": "ชื่อของ Specification (ภาษาไทย/อังกฤษ)",
                   "specificationType": "UI Specification",
                   "objective": "วัตถุประสงค์ของการทำงาน",

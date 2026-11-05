@@ -22,16 +22,13 @@ import com.softinter.sicapi.repository.pm.PmTestScenarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
- * ตัวช่วยดึงข้อมูลที่เกี่ยวข้องในโปรเจกต์อัตโนมัติ (Smart Context Auto-Resolver)
- * ปอกแท็ก HTML + จัดอันดับตามคำค้นใน Prompt + ตัดความยาวเพื่อประหยัด Token (~300-600 tokens)
+ * สร้าง "สารบัญย่อทั้งโปรเจกต์" (One-Shot Project Index Menu)
+ * ส่งรายชื่อเอกสารทุกใบในโปรเจกต์ (พร้อม UUID + รหัส + ชื่อเรื่อง + สรุปย่อ 100 ตัวอักษร)
+ * ให้ AI เป็นคนวิเคราะห์และเลือกอ้างอิงเอง 100% โดยไม่ใช้ระบบเทียบคำใน Java
  */
 @Component
 @RequiredArgsConstructor
@@ -47,120 +44,121 @@ public class AiProjectContextHelper {
     private final PmTestScenarioRepository scenarioRepository;
     private final PmDeliveryRepository deliveryRepository;
 
-    public PmCustomer pickBestCustomer(String prompt) {
+    public String buildCustomerIndexBlock() {
         UUID bizId = BusinessContextHolder.getBusinessId();
-        if (bizId == null) return null;
-        List<PmCustomer> all = customerRepository.findByBusinessIdAndIsActiveTrue(bizId);
-        List<PmCustomer> ranked = rankAndLimit(all, prompt, 1, c -> (c.getCustomerCode() + " " + c.getCompanyNameLocal() + " " + c.getCompanyNameEn()));
-        return ranked.isEmpty() ? null : ranked.get(0);
+        if (bizId == null) return "";
+        List<PmCustomer> customers = customerRepository.findByBusinessIdAndIsActiveTrue(bizId);
+        if (customers.isEmpty()) return "";
+        StringBuilder sb = new StringBuilder("**Available Customers Index (เลือกอ้างอิงลูกค้าที่เกี่ยวข้องจากรายการนี้):**\n");
+        customers.stream().limit(20).forEach(c ->
+            sb.append("  * ID: ").append(c.getId())
+              .append(" | [").append(c.getCustomerCode()).append("] ")
+              .append(c.getCompanyNameLocal() != null ? c.getCompanyNameLocal() : c.getCompanyNameEn())
+              .append("\n")
+        );
+        return sb.append("\n").toString();
     }
 
-    public PmRequirement pickBestRequirement(UUID projectId, String prompt) {
-        List<PmRequirement> list = pickTopRequirements(projectId, prompt, 1);
-        return list.isEmpty() ? null : list.get(0);
+    public String buildProjectScopeBlock(UUID projectId, String unusedPrompt) {
+        return buildProjectScopeBlock(projectId);
     }
 
-    public List<PmRequirement> pickTopRequirements(UUID projectId, String prompt, int limit) {
-        UUID bizId = BusinessContextHolder.getBusinessId();
-        if (projectId == null || bizId == null) return List.of();
-        List<PmRequirement> all = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
-        return rankAndLimit(all, prompt, limit, r -> (r.getRequirementCode() + " " + r.getTitle() + " " + strip(r.getDescription(), 300)));
-    }
-
-    public List<PmSpecification> pickTopSpecifications(UUID projectId, String prompt, int limit) {
-        UUID bizId = BusinessContextHolder.getBusinessId();
-        if (projectId == null || bizId == null) return List.of();
-        List<PmSpecification> all = specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
-        return rankAndLimit(all, prompt, limit, s -> (s.getSpecificationCode() + " " + s.getTitle() + " " + strip(s.getDescription(), 300)));
-    }
-
-    public List<PmDiagramTab> pickTopDiagrams(UUID projectId, String prompt, int limit) {
-        if (projectId == null) return List.of();
-        List<PmDiagramTab> all = diagramRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-        return rankAndLimit(all, prompt, limit, d -> (d.getName() + " " + d.getDiagramType() + " " + strip(d.getMermaidScript(), 200)));
-    }
-
-    public PmTask pickBestTask(UUID projectId, String prompt) {
-        if (projectId == null) return null;
-        List<PmTask> all = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId);
-        List<PmTask> ranked = rankAndLimit(all, prompt, 1, t -> (t.getTaskCode() + " " + t.getTaskName() + " " + strip(t.getDescription(), 200)));
-        return ranked.isEmpty() ? null : ranked.get(0);
-    }
-
-    public PmTestScenario pickBestScenario(UUID projectId, String prompt) {
-        UUID bizId = BusinessContextHolder.getBusinessId();
-        if (projectId == null || bizId == null) return null;
-        List<PmTestScenario> all = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
-        List<PmTestScenario> ranked = rankAndLimit(all, prompt, 1, s -> (s.getScenarioName() + " " + strip(s.getDescription(), 200)));
-        return ranked.isEmpty() ? null : ranked.get(0);
-    }
-
-    public PmCustomerContract pickBestContract(UUID projectId, String prompt) {
-        UUID bizId = BusinessContextHolder.getBusinessId();
-        if (projectId == null || bizId == null) return null;
-        List<PmCustomerContract> all = contractRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId);
-        List<PmCustomerContract> ranked = rankAndLimit(all, prompt, 1, c -> (c.getContractNo() + " " + c.getContractType() + " " + strip(c.getScopeSummary(), 200)));
-        return ranked.isEmpty() ? null : ranked.get(0);
-    }
-
-    /**
-     * สร้างบล็อกสรุปบริบทของโปรเจกต์แบบประหยัด Token (ปอก HTML + คัดเฉพาะตัวที่ตรงคำค้น Top 5)
-     * เพื่อให้ AI รู้ขอบเขตเอกสารที่เกี่ยวข้องทั้งหมดในโปรเจกต์โดยอัตโนมัติ
-     */
-    public String buildProjectScopeBlock(UUID projectId, String prompt) {
+    public String buildProjectScopeBlock(UUID projectId) {
         UUID bizId = BusinessContextHolder.getBusinessId();
         if (projectId == null) return "";
 
         StringBuilder sb = new StringBuilder();
         PmCustomerProject project = projectRepository.findById(projectId).orElse(null);
         if (project != null) {
-            sb.append("**Auto-Resolved Project Scope Context:**\n")
+            sb.append("**Project Scope & Document Index (ให้วิเคราะห์คำสั่งผู้ใช้ แล้วเลือกอ้างอิงเฉพาะเอกสารและ UUID ที่เกี่ยวข้องจากสารบัญนี้):**\n")
               .append("- Project: ").append(project.getProjectCode() != null ? project.getProjectCode() + " - " : "")
               .append(project.getProjectName()).append("\n");
-            String desc = strip(project.getDescription(), 250);
+            String desc = strip(project.getDescription(), 200);
             if (!desc.isBlank()) {
                 sb.append("- Project Overview: ").append(desc).append("\n");
             }
         }
 
         if (bizId != null) {
-            PmCustomerContract contract = pickBestContract(projectId, prompt);
-            if (contract != null) {
-                sb.append("- Active Contract: ").append(contract.getContractNo())
-                  .append(" (").append(contract.getContractType()).append(", Value: ").append(contract.getContractValue()).append(")\n");
-                String scope = strip(contract.getScopeSummary(), 220);
-                if (!scope.isBlank()) sb.append("  Contract Scope: ").append(scope).append("\n");
+            List<PmCustomerContract> contracts = contractRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId);
+            if (!contracts.isEmpty()) {
+                PmCustomerContract c = contracts.get(0);
+                sb.append("- Active Contract: ID: ").append(c.getId())
+                  .append(" | [").append(c.getContractNo()).append("] (")
+                  .append(c.getContractType()).append(", Value: ").append(c.getContractValue()).append(")");
+                String scope = strip(c.getScopeSummary(), 100);
+                if (!scope.isBlank()) sb.append(" — ").append(scope);
+                sb.append("\n");
             }
 
-            List<PmRequirement> reqs = pickTopRequirements(projectId, prompt, 5);
+            List<PmRequirement> reqs = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
             if (!reqs.isEmpty()) {
-                sb.append("- Relevant Project Requirements (Top ").append(reqs.size()).append("):\n");
-                for (PmRequirement r : reqs) {
-                    sb.append("  * [").append(r.getRequirementCode()).append("] ").append(r.getTitle());
-                    String ac = strip(r.getAcceptanceCriteria() != null ? r.getAcceptanceCriteria() : r.getDescription(), 180);
+                sb.append("- Project Requirements Index (").append(reqs.size()).append(" items):\n");
+                reqs.stream().limit(30).forEach(r -> {
+                    sb.append("  * ID: ").append(r.getId())
+                      .append(" | [").append(r.getRequirementCode()).append("] ").append(r.getTitle());
+                    String ac = strip(r.getAcceptanceCriteria() != null ? r.getAcceptanceCriteria() : r.getDescription(), 100);
                     if (!ac.isBlank()) sb.append(" — ").append(ac);
                     sb.append("\n");
-                }
+                });
             }
 
-            List<PmSpecification> specs = pickTopSpecifications(projectId, prompt, 5);
+            List<PmSpecification> specs = specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
             if (!specs.isEmpty()) {
-                sb.append("- Relevant Project Specifications (Top ").append(specs.size()).append("):\n");
-                for (PmSpecification s : specs) {
-                    sb.append("  * [").append(s.getSpecificationCode()).append("] ").append(s.getTitle())
+                sb.append("- Project Specifications Index (").append(specs.size()).append(" items):\n");
+                specs.stream().limit(30).forEach(s -> {
+                    sb.append("  * ID: ").append(s.getId())
+                      .append(" | [").append(s.getSpecificationCode()).append("] ").append(s.getTitle())
                       .append(" (").append(s.getSpecificationType()).append(")");
-                    String sd = strip(s.getDescription(), 160);
+                    String sd = strip(s.getDescription(), 100);
                     if (!sd.isBlank()) sb.append(" — ").append(sd);
                     sb.append("\n");
-                }
+                });
+            }
+
+            List<PmDiagramTab> diagrams = diagramRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+            if (!diagrams.isEmpty()) {
+                sb.append("- Project Diagrams Index (").append(diagrams.size()).append(" items):\n");
+                diagrams.stream().limit(20).forEach(d -> {
+                    sb.append("  * ID: ").append(d.getId())
+                      .append(" | [").append(d.getDiagramType()).append("] ").append(d.getName());
+                    String ms = strip(d.getMermaidScript(), 100);
+                    if (!ms.isBlank()) sb.append(" — ").append(ms);
+                    sb.append("\n");
+                });
+            }
+
+            List<PmTask> tasks = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId);
+            if (!tasks.isEmpty()) {
+                sb.append("- Project Tasks Index (").append(tasks.size()).append(" items):\n");
+                tasks.stream().limit(30).forEach(t -> {
+                    sb.append("  * ID: ").append(t.getId())
+                      .append(" | [").append(t.getTaskCode()).append("] ").append(t.getTaskName());
+                    String td = strip(t.getDescription(), 100);
+                    if (!td.isBlank()) sb.append(" — ").append(td);
+                    sb.append("\n");
+                });
+            }
+
+            List<PmTestScenario> scenarios = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
+            if (!scenarios.isEmpty()) {
+                sb.append("- Project Test Scenarios Index (").append(scenarios.size()).append(" items):\n");
+                scenarios.stream().limit(20).forEach(sc -> {
+                    sb.append("  * ID: ").append(sc.getId())
+                      .append(" | ").append(sc.getScenarioName());
+                    String scd = strip(sc.getDescription(), 100);
+                    if (!scd.isBlank()) sb.append(" — ").append(scd);
+                    sb.append("\n");
+                });
             }
 
             List<PmDelivery> deliveries = deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId);
             if (!deliveries.isEmpty()) {
-                sb.append("- Project Deliveries: ");
-                sb.append(deliveries.stream().limit(4)
-                        .map(d -> (d.getDeliveryCode() != null ? d.getDeliveryCode() + ":" : "") + d.getDeliveryTitle())
-                        .collect(Collectors.joining(", "))).append("\n");
+                sb.append("- Project Deliveries Index:\n");
+                deliveries.stream().limit(10).forEach(d ->
+                    sb.append("  * ID: ").append(d.getId())
+                      .append(" | [").append(d.getDeliveryCode()).append("] ").append(d.getDeliveryTitle()).append("\n")
+                );
             }
         }
 
@@ -173,32 +171,4 @@ public class AiProjectContextHelper {
         String clean = html.replaceAll("<[^>]*>", " ").replaceAll("\\s+", " ").trim();
         return clean.length() <= maxLen ? clean : clean.substring(0, maxLen) + "...";
     }
-
-    private <T> List<T> rankAndLimit(List<T> items, String prompt, int limit, Function<T, String> textExtractor) {
-        if (items == null || items.isEmpty()) return List.of();
-        if (prompt == null || prompt.isBlank()) {
-            return items.stream().limit(limit).toList();
-        }
-        List<String> keywords = Arrays.stream(prompt.toLowerCase().split("[\\s,.;:/\\-()]+"))
-                .filter(w -> w.length() >= 2)
-                .toList();
-        if (keywords.isEmpty()) {
-            return items.stream().limit(limit).toList();
-        }
-        return items.stream()
-                .sorted(Comparator.comparingInt((T item) -> -score(textExtractor.apply(item), keywords)))
-                .limit(limit)
-                .toList();
-    }
-
-    private int score(String text, List<String> keywords) {
-        if (text == null || text.isBlank()) return 0;
-        String lower = text.toLowerCase();
-        int hits = 0;
-        for (String kw : keywords) {
-            if (lower.contains(kw)) hits++;
-        }
-        return hits;
-    }
 }
-

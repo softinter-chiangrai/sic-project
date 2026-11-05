@@ -35,13 +35,9 @@ public class TestScenarioGeneratorService {
         PmTask task = null;
         PmSpecification spec = null;
         PmRequirement req = null;
-        String searchQuery = (request.getScenarioName() != null ? request.getScenarioName() + " " : "")
-                + (request.getPrompt() != null ? request.getPrompt() : "");
 
         if (request.getTaskId() != null) {
             task = taskRepository.findById(request.getTaskId()).orElse(null);
-        } else if (request.getProjectId() != null) {
-            task = contextHelper.pickBestTask(request.getProjectId(), searchQuery);
         }
         if (task != null && task.getSpecification() != null) {
             spec = task.getSpecification();
@@ -49,22 +45,11 @@ public class TestScenarioGeneratorService {
                 req = spec.getRequirement();
             }
         }
-
-        if (spec == null && request.getProjectId() != null) {
-            var topSpecs = contextHelper.pickTopSpecifications(request.getProjectId(), searchQuery, 1);
-            if (!topSpecs.isEmpty()) {
-                spec = topSpecs.get(0);
-                if (spec.getRequirement() != null) req = spec.getRequirement();
-            }
-        }
-
         if (req == null && request.getRequirementId() != null) {
             req = requirementRepository.findById(request.getRequirementId()).orElse(null);
-        } else if (req == null && request.getProjectId() != null) {
-            req = contextHelper.pickBestRequirement(request.getProjectId(), searchQuery);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), searchQuery);
+        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId());
         String prompt = buildPrompt(task, spec, req, request.getScenarioName(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Architect and Senior Test Specialist.
