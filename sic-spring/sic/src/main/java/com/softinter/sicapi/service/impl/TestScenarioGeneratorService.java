@@ -14,6 +14,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -49,7 +50,16 @@ public class TestScenarioGeneratorService {
             req = requirementRepository.findById(request.getRequirementId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        UUID effectiveProjectId = null;
+        if (req != null && req.getProjectId() != null) {
+            effectiveProjectId = req.getProjectId();
+        } else if (spec != null && spec.getProject() != null) {
+            effectiveProjectId = spec.getProject().getId();
+        } else {
+            effectiveProjectId = request.getProjectId();
+        }
+
+        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId, request.getPrompt());
         String prompt = buildPrompt(task, spec, req, request.getScenarioName(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Architect and Senior Test Specialist.

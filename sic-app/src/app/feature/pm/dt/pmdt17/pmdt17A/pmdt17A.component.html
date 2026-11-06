@@ -76,6 +76,26 @@
 
           <div class="md:col-span-4">
             <sic-input
+              [label]="'PMDT04_PROJECT_LABEL' | translate"
+              [value]="contractProjectName() || '-'"
+              [readonly]="true"
+              [disabled]="true"
+              placeholder="-"
+            ></sic-input>
+          </div>
+
+          <div class="md:col-span-4">
+            <sic-input
+              [label]="'PMDT04_CUSTOMER_LABEL' | translate"
+              [value]="contractCustomerName() || '-'"
+              [readonly]="true"
+              [disabled]="true"
+              placeholder="-"
+            ></sic-input>
+          </div>
+
+          <div class="md:col-span-4">
+            <sic-input
               [label]="'PMDT17_TICKET_CODE_LABEL' | translate"
               [placeholder]="'PMDT17_TICKET_CODE_PLACEHOLDER' | translate"
               formControlName="ticketNo"

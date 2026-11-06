@@ -45,8 +45,9 @@ public class SpecificationGeneratorService {
             requirement = requirementRepository.findById(request.getRequirementId()).orElse(null);
         }
 
-        UUID effectiveProjectId = request.getProjectId() != null ? request.getProjectId()
-                : (requirement != null ? requirement.getProjectId() : null);
+        UUID effectiveProjectId = (requirement != null && requirement.getProjectId() != null)
+                ? requirement.getProjectId()
+                : request.getProjectId();
 
         List<PmDiagramTab> diagrams = new ArrayList<>();
         if (request.getDiagramIds() != null && !request.getDiagramIds().isEmpty()) {

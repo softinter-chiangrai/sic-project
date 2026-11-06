@@ -58,23 +58,9 @@
         <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
           <div class="md:col-span-4">
             <sic-combobox
-              formControlName="customerId"
-              [label]="'PMDT15_CUSTOMER_LABEL' | translate"
-              [apiUrl]="apiGetComboboxCustomer"
-              valueField="value"
-              textField="text"
-              [placeholder]="'PMDT15_CUSTOMER_PLACEHOLDER' | translate"
-              [clearable]="true"
-              (selectionChanged)="onCustomerSelected($event)">
-            </sic-combobox>
-          </div>
-
-          <div class="md:col-span-4">
-            <sic-combobox
               formControlName="projectId"
               [label]="isProjectDerived() ? ('PMDT15_PROJECT_DERIVED_LABEL' | translate) : ('PMDT15_PROJECT_LABEL' | translate)"
               [apiUrl]="apiGetComboboxProject"
-              [params]="projectParams"
               valueField="value"
               textField="text"
               [placeholder]="'PMDT15_PROJECT_PLACEHOLDER' | translate"
@@ -83,6 +69,16 @@
               [disabled]="isProjectDerived()"
               (selectionChanged)="onProjectSelected($event)">
             </sic-combobox>
+          </div>
+
+          <div class="md:col-span-4">
+            <sic-input
+              [label]="'PMDT15_CUSTOMER_LABEL' | translate"
+              [value]="customerNameDisplay || '-'"
+              [readonly]="true"
+              [disabled]="true"
+              [placeholder]="'PMDT15_CUSTOMER_PLACEHOLDER' | translate">
+            </sic-input>
           </div>
 
           <div class="md:col-span-4">

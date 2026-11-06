@@ -99,19 +99,26 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
   // ===== Customer <-> Project sync =====
   projectParams: Record<string, any> = {};
+  customerNameDisplay = '';
 
   private loadCustomerFromProject(projectId: string, silent = false): void {
-    if (!projectId) return;
+    if (!projectId) {
+      this.customerNameDisplay = '';
+      return;
+    }
     this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
       next: (project) => {
-        if (project?.customerId) {
-          // ตอนเปิดหน้า (silent) ไม่ให้นับเป็นการแก้ไขของผู้ใช้; ตอนผู้ใช้เลือกโครงการเองให้นับตามปกติ
-          if (silent) {
-            this.formData.patchValue({ customerId: project.customerId } as any);
-          } else {
-            this.form.patchValue({ customerId: project.customerId });
+        if (project) {
+          this.customerNameDisplay = project.customerName || '';
+          if (project.customerId) {
+            // ตอนเปิดหน้า (silent) ไม่ให้นับเป็นการแก้ไขของผู้ใช้; ตอนผู้ใช้เลือกโครงการเองให้นับตามปกติ
+            if (silent) {
+              this.formData.patchValue({ customerId: project.customerId } as any);
+            } else {
+              this.form.patchValue({ customerId: project.customerId });
+            }
+            this.projectParams = { customerId: project.customerId };
           }
-          this.projectParams = { customerId: project.customerId };
           this.cdr.markForCheck();
         }
       },
@@ -151,6 +158,8 @@ export class Pmdt09AComponent implements OnInit, OnDestroy, CanComponentDeactiva
       this.loadCustomerFromProject(projectId);
       this.specParams = { projectId };
     } else {
+      this.customerNameDisplay = '';
+      this.form.patchValue({ customerId: null });
       this.specParams = {};
     }
     this.form.patchValue({ reviewableId: null, reviewableName: null });

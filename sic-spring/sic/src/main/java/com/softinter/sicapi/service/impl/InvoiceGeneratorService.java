@@ -13,6 +13,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.time.LocalDate;
@@ -41,7 +42,15 @@ public class InvoiceGeneratorService {
             contract = contractRepository.findById(request.getContractId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        UUID effectiveProjectId = (contract != null && contract.getProjectId() != null)
+                ? contract.getProjectId()
+                : request.getProjectId();
+
+        if (project == null && effectiveProjectId != null) {
+            project = projectRepository.findById(effectiveProjectId).orElse(null);
+        }
+
+        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId, request.getPrompt());
         String prompt = buildPrompt(project, contract, request.getInvoiceType(), request.getInvoiceTitle(), request.getBillingPeriod(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Senior Project Financial Controller and Billing Specialist with 15+ years of experience in enterprise software contracting and invoicing.

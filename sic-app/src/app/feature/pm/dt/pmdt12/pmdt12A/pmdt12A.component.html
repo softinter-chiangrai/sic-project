@@ -129,8 +129,18 @@
               [items]="scenarioOptions()"
               [disabled]="isView() || isExecution()"
               [placeholder]="'PMDT12A_SELECT_SCENARIO_PLACEHOLDER' | translate"
+              [required]="true"
               (selectionChanged)="onScenarioChange($event?.value || $event?.id || $event || null)"
             ></sic-combobox>
+          </div>
+          <div>
+            <sic-input
+              [label]="'PMDT12A_RELATED_TASK_LABEL' | translate"
+              [value]="taskDisplay"
+              [readonly]="true"
+              [disabled]="true"
+              placeholder="-"
+            ></sic-input>
           </div>
           <div>
             <sic-combobox
@@ -139,15 +149,6 @@
               [items]="testTypeOptions"
               [disabled]="isView() || isExecution() || !!formData.form.get('scenarioId')?.value"
               [placeholder]="formData.form.get('scenarioId')?.value ? ('PMDT12A_BASED_ON_SCENARIO' | translate) : ('PMDT12A_SELECT_TEST_TYPE_PLACEHOLDER' | translate)"
-            ></sic-combobox>
-          </div>
-          <div>
-            <sic-combobox
-              [label]="'PMDT12A_RELATED_TASK_LABEL' | translate"
-              formControlName="taskId"
-              [items]="taskOptions()"
-              [placeholder]="'PMDT12A_SELECT_RELATED_TASK_PLACEHOLDER' | translate"
-              (selectionChanged)="onTaskChange($event?.value || $event?.id || $event || null)"
             ></sic-combobox>
           </div>
         </div>

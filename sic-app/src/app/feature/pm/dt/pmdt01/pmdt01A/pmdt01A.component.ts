@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, ChangeDetectorRef } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { finalize } from 'rxjs';
@@ -50,8 +50,10 @@ export class Pmdt01AComponent implements OnInit {
   private router = inject(Router);
   private businessService = inject(BusinessService);
   private translate = inject(TranslateService);
+  private cdr = inject(ChangeDetectorRef);
 
   projectId = '';
+  customerNameDisplay = '';
   phaseId: string | null = null;
   isEdit = false;
   isSaving = signal(false);
@@ -133,12 +135,18 @@ export class Pmdt01AComponent implements OnInit {
   }
 
   loadCustomerFromProject(projectId: string): void {
-    if (!projectId) return;
+    if (!projectId) {
+      this.customerNameDisplay = '';
+      return;
+    }
     this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
       next: (project) => {
-        if (project?.customerId) {
-          this.form.patchValue({ customerId: project.customerId }, { emitEvent: false });
-          this.projectParams = { customerId: project.customerId };
+        if (project) {
+          this.customerNameDisplay = project.customerName || '';
+          if (project.customerId) {
+            this.form.patchValue({ customerId: project.customerId }, { emitEvent: false });
+          }
+          this.cdr.detectChanges();
         }
       },
       error: () => {},
@@ -161,11 +169,15 @@ export class Pmdt01AComponent implements OnInit {
           if (project?.customerId !== customerId) {
             this.form.patchValue({ projectId: null });
             this.projectId = '';
+            this.customerNameDisplay = '';
+            this.cdr.detectChanges();
           }
         },
         error: () => {
           this.form.patchValue({ projectId: null });
           this.projectId = '';
+          this.customerNameDisplay = '';
+          this.cdr.detectChanges();
         }
       });
     }
@@ -177,6 +189,10 @@ export class Pmdt01AComponent implements OnInit {
     this.projectId = selectedProjectId;
     if (selectedProjectId) {
       this.loadCustomerFromProject(selectedProjectId);
+    } else {
+      this.customerNameDisplay = '';
+      this.form.patchValue({ customerId: null }, { emitEvent: false });
+      this.cdr.detectChanges();
     }
   }
 

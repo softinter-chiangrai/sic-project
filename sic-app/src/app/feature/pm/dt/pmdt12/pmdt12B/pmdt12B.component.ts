@@ -221,6 +221,14 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   // ===== AI Assistant In-Form =====
   openAiAssist(): void {
     const currentTaskId = this.formData.form.get('taskId')?.value;
+    const currentProjId = this.formData.form.get('projectId')?.value;
+    if (!currentTaskId && !currentProjId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกงาน (Task) อ้างอิงก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     this.aiAssistTaskId.set(currentTaskId || null);
     this.aiAssistPrompt.set('');
     this.aiAssistTab.set('generate');
@@ -238,10 +246,18 @@ export class Pmdt12BComponent implements OnInit, CanComponentDeactivate {
   }
 
   async generateWithAi(): Promise<void> {
-    const pId = this.formData.form.get('projectId')?.value || this.customerState.getProjectId();
+    const pId = this.formData.form.get('projectId')?.value;
     const selectedTaskId = this.formData.form.get('taskId')?.value;
     const currentName = this.formData.form.get('scenarioName')?.value;
     const targetId = this.scenarioId || this.formData?.form?.get('id')?.value || 'new';
+
+    if (!pId && !selectedTaskId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกงาน (Task) หรือโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
 
     this.isGeneratingAiAssist.set(true);
 

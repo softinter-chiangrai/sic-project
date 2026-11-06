@@ -127,22 +127,7 @@
         <!-- Single Unified Form Card -->
         <div class="bg-[var(--sidebar)] border border-[var(--border)] rounded-2xl p-6 shadow-sm space-y-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-            <!-- Customer -->
-            <div>
-              <sic-combobox
-                [label]="'PMRT04A_CUSTOMER_LABEL' | translate"
-                formControlName="customerId"
-                [apiUrl]="apiGetCustomersUrl"
-                valueField="value"
-                textField="text"
-                [required]="true"
-                [placeholder]="'PMRT04A_CUSTOMER_PLACEHOLDER' | translate"
-                [errorMessages]="{ required: ('PMRT04A_CUSTOMER_REQUIRED' | translate) }"
-                (selectionChanged)="onCustomerSelected($event)"
-              ></sic-combobox>
-            </div>
-
-            <!-- Project -->
+            <!-- Project (Single Selectable Combobox) -->
             <div>
               <sic-combobox
                 [label]="'PMRT04A_PROJECT_LABEL' | translate"
@@ -155,6 +140,17 @@
                 [errorMessages]="{ required: ('PMRT04A_PROJECT_REQUIRED' | translate) }"
                 (selectionChanged)="onProjectSelected($event)"
               ></sic-combobox>
+            </div>
+
+            <!-- Customer (Read-only Auto-fill Display) -->
+            <div>
+              <sic-input
+                [label]="'PMRT04A_CUSTOMER_LABEL' | translate"
+                [value]="customerName || '-'"
+                [readonly]="true"
+                [disabled]="true"
+                [placeholder]="'PMRT04A_CUSTOMER_PLACEHOLDER' | translate"
+              ></sic-input>
             </div>
 
             <!-- Contract No -->

@@ -129,6 +129,8 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
   businessId = this.businessService.getCurrentBusinessId();
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
+  contractProjectName = signal<string>('');
+  contractCustomerName = signal<string>('');
   isProjectDerived = signal(false);
 
   // AI Assistant State
@@ -190,6 +192,14 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
       );
       return;
     }
+    const projId = (this.formData?.form?.value as any)?.projectId;
+    if (!projId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     const currentType = (this.formData?.form?.value as any)?.ticketType || 'BUG_SUPPORT';
     const currentSev = (this.formData?.form?.value as any)?.severity || 'MEDIUM';
     this.aiTicketType.set(currentType);
@@ -208,7 +218,14 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
   async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
+    const projId = (this.formData?.form?.value as any)?.projectId;
+    if (!projId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     const currentTitle = (this.formData?.form?.value as any)?.title;
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
 
@@ -436,11 +453,15 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
     const contractId = item?.value ?? item?.id ?? null;
     if (!contractId) {
       this.isProjectDerived.set(false);
+      this.contractProjectName.set('');
+      this.contractCustomerName.set('');
       this.contractAlert.set(null);
       return;
     }
     this.service.getContractById(contractId).subscribe({
       next: (contract) => {
+        this.contractProjectName.set(contract?.projectName || '');
+        this.contractCustomerName.set(contract?.customerName || '');
         this.formData.patchValue({
           projectId: contract?.projectId || null,
           customerId: contract?.customerId || null,
@@ -487,6 +508,15 @@ export class Pmdt17AComponent implements OnInit, CanComponentDeactivate {
         this.formData.resetModel(this.formData.form.getRawValue() as any);
         if (data.projectId) {
           this.loadContractOptions(data.projectId);
+        }
+        if (data.contractId) {
+          this.service.getContractById(data.contractId).subscribe({
+            next: (contract) => {
+              this.contractProjectName.set(contract?.projectName || '');
+              this.contractCustomerName.set(contract?.customerName || '');
+              this.updateContractAlert(contract);
+            },
+          });
         }
         this.isProjectDerived.set(!!data.contractId);
       },

@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.time.LocalDate;
@@ -58,7 +59,18 @@ public class TestCaseGeneratorService {
             scenario = scenarioRepository.findById(request.getScenarioId()).orElse(null);
         }
 
-        String projectScope = contextHelper.buildProjectScopeBlock(request.getProjectId(), request.getPrompt());
+        UUID effectiveProjectId = null;
+        if (req != null && req.getProjectId() != null) {
+            effectiveProjectId = req.getProjectId();
+        } else if (spec != null && spec.getProject() != null) {
+            effectiveProjectId = spec.getProject().getId();
+        } else if (scenario != null && scenario.getProjectId() != null) {
+            effectiveProjectId = scenario.getProjectId();
+        } else {
+            effectiveProjectId = request.getProjectId();
+        }
+
+        String projectScope = contextHelper.buildProjectScopeBlock(effectiveProjectId, request.getPrompt());
         String prompt = buildPrompt(task, spec, req, scenario, request.getTitle(), request.getPrompt(), projectScope);
         String systemPrompt = """
                 You are a Lead QA Engineer and Software Testing Specialist with 15+ years of experience.

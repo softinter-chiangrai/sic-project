@@ -90,24 +90,12 @@
         <div class="pmdt05-panel pmdt05-panel--edit">
           <div class="mb-4"><sic-cr-history-panel targetType="REQUIREMENT" [targetId]="reqId || form.value.id"></sic-cr-history-panel></div>
           <form [formGroup]="form" (ngSubmit)="submit()" class="space-y-4">
-            <!-- Customer & Project -->
+            <!-- Project & Customer (Read-only Auto-fill) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <sic-combobox
-                [label]="'PMDT04_CUSTOMER_LABEL' | translate"
-                formControlName="customerId"
-                [apiUrl]="service.apiGetComboboxCustomer"
-                valueField="value"
-                textField="text"
-                [placeholder]="'PMDT04_SELECT_CUSTOMER_PLACEHOLDER' | translate"
-                [clearable]="true"
-                (selectionChanged)="onCustomerSelected($event)">
-              </sic-combobox>
-
               <sic-combobox
                 [label]="'PMDT04_PROJECT_LABEL' | translate"
                 formControlName="projectId"
                 [apiUrl]="service.apiGetComboboxProject"
-                [params]="projectParams"
                 valueField="value"
                 textField="text"
                 [placeholder]="'PMDT04_SELECT_PROJECT_PLACEHOLDER' | translate"
@@ -115,6 +103,13 @@
                 [required]="true"
                 (selectionChanged)="onProjectSelected($event)">
               </sic-combobox>
+              <sic-input
+                [label]="'PMDT04_CUSTOMER_LABEL' | translate"
+                [value]="customerNameDisplay || '-'"
+                [readonly]="true"
+                [disabled]="true"
+                placeholder="-"
+              ></sic-input>
             </div>
 
             <!-- Basic Info -->

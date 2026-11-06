@@ -138,6 +138,15 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
     ];
   }
 
+  get taskDisplay(): string {
+    const code = this.formData?.form?.get('taskCode')?.value;
+    const name = this.formData?.form?.get('taskName')?.value;
+    if (code && name) return `${code} - ${name}`;
+    if (name) return name;
+    if (code) return code;
+    return '-';
+  }
+
   ngOnInit(): void {
     this.formData = new SicFromData<PmTestCaseModel>(Pmdt12AForm.createForm(this.fb));
 
@@ -283,7 +292,15 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
 
   // ===== AI Assistant In-Form =====
   openAiAssist(): void {
+    const scenarioId = this.formData.form.get('scenarioId')?.value;
     const currentTaskId = this.formData.form.get('taskId')?.value;
+    if (!scenarioId && !currentTaskId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกฉากทัศน์ (Scenario) อ้างอิงก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     this.aiAssistTaskId.set(currentTaskId || null);
     this.aiAssistPrompt.set('');
     this.aiAssistTab.set('generate');
@@ -301,11 +318,19 @@ export class Pmdt12AComponent implements OnInit, CanComponentDeactivate {
   }
 
   async generateWithAi(): Promise<void> {
-    const pId = this.customerState.getProjectId() || this.formData.form.get('projectId')?.value;
+    const pId = this.formData.form.get('projectId')?.value;
     const selectedTaskId = this.aiAssistTaskId() || this.formData.form.get('taskId')?.value;
     const scenarioId = this.formData.form.get('scenarioId')?.value;
     const currentTitle = this.formData.form.get('title')?.value;
     const targetId = this.testCaseId || this.formData?.form?.get('id')?.value || 'new';
+
+    if (!pId && !selectedTaskId && !scenarioId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกงาน (Task), ฉากทัศน์ (Scenario) หรือโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
 
     this.isGeneratingAiAssist.set(true);
 

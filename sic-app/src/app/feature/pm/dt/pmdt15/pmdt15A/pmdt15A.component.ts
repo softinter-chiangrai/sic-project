@@ -247,13 +247,21 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.cdr.markForCheck();
   }
 
+  customerNameDisplay = '';
+
   private loadCustomerFromProject(projectId: string, silent = false): void {
-    if (!projectId) return;
+    if (!projectId) {
+      this.customerNameDisplay = '';
+      return;
+    }
     this.http.get<any>(`${apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
       next: (project) => {
-        if (project?.customerId) {
-          this.formData.patchValue({ customerId: project.customerId } as any);
-          this.projectParams = { customerId: project.customerId };
+        if (project) {
+          this.customerNameDisplay = project.customerName || '';
+          if (project.customerId) {
+            this.formData.patchValue({ customerId: project.customerId } as any);
+            this.projectParams = { customerId: project.customerId };
+          }
           this.cdr.markForCheck();
         }
       },
@@ -266,6 +274,9 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     const projId = item?.value ?? item?.id ?? null;
     if (projId) {
       this.loadCustomerFromProject(projId);
+    } else {
+      this.customerNameDisplay = '';
+      this.formData.patchValue({ customerId: null } as any);
     }
     this.loadDeliveryOptions(projId || undefined);
     this.loadAiComboboxOptions(projId || undefined);
@@ -385,7 +396,14 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
     this.aiAssistTab.set('generate');
     this.loadAiHistory();
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
+    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
+    if (!projId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     this.loadAiComboboxOptions(projId);
     this.showAiModal.set(true);
     this.cdr.markForCheck();
@@ -400,15 +418,23 @@ export class Pmdt15AComponent implements OnInit, CanComponentDeactivate {
   async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'] || this.customerState.getProjectId();
+    const projId = (this.formData?.form?.value as any)?.projectId || this.route.snapshot.queryParams['projectId'];
     const currentTitle = (this.formData?.form?.value as any)?.manualTitle;
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
 
-    this.isGeneratingAi.set(true);
-    this.cdr.markForCheck();
-
     const reqIds = this.aiSelectedRequirementIds();
     const specIds = this.aiSelectedSpecificationIds();
+
+    if (!projId && reqIds.length === 0 && specIds.length === 0) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการ หรือเอกสารอ้างอิง (Requirement / Spec) ก่อนสร้างด้วย AI'
+      );
+      return;
+    }
+
+    this.isGeneratingAi.set(true);
+    this.cdr.markForCheck();
 
     let attachments: AiAttachmentPayload[] = [];
     if (this.aiAttachedFiles().length) {

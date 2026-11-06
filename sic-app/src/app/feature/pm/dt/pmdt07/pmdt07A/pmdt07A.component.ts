@@ -326,6 +326,14 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     // ===== AI Assistant In-Form =====
     openAiAssist(): void {
         const formVal = this.form.value;
+        const reqId = formVal.requirementId || formVal.generatedFromRequirementId;
+        if (!reqId && !formVal.projectId) {
+            this.dialog.warn(
+                this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+                'กรุณาเลือกความต้องการ (Requirement) อ้างอิงก่อนสร้างด้วย AI'
+            );
+            return;
+        }
         this.aiAssistRequirementId = formVal.requirementId || formVal.generatedFromRequirementId || '';
         const currentDiagId = formVal.generatedFromDiagramId;
         if (currentDiagId) {
@@ -352,11 +360,19 @@ export class Pmdt07AComponent implements OnInit, OnDestroy, CanComponentDeactiva
 
     async generateWithAi(): Promise<void> {
         const formVal = this.form.value;
-        const projectId = formVal.projectId || this.customerState.getProjectId();
+        const projectId = formVal.projectId;
         const requirementId = this.aiAssistRequirementId || formVal.requirementId || formVal.generatedFromRequirementId;
         const diagramIds = Array.isArray(this.aiAssistDiagramIds) ? this.aiAssistDiagramIds : (this.aiAssistDiagramIds ? [this.aiAssistDiagramIds] : []);
         const specType = formVal.specificationType || 'UI Specification';
         const targetId = this.specId || formVal.id || 'new';
+
+        if (!requirementId && !projectId) {
+            this.dialog.warn(
+                this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+                'กรุณาเลือกความต้องการ (Requirement) หรือโครงการอ้างอิงก่อนสร้างด้วย AI'
+            );
+            return;
+        }
 
         this.isGeneratingAiAssist = true;
         this.cdr.markForCheck();

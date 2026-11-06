@@ -48,9 +48,13 @@ public class UserManualGeneratorService {
             specifications = specificationRepository.findAllById(request.getSpecificationIds());
         }
 
-        UUID projectId = request.getProjectId();
-        if (projectId == null && !specifications.isEmpty() && specifications.get(0).getProject() != null) {
+        UUID projectId = null;
+        if (!specifications.isEmpty() && specifications.get(0).getProject() != null) {
             projectId = specifications.get(0).getProject().getId();
+        } else if (!requirements.isEmpty() && requirements.get(0).getProjectId() != null) {
+            projectId = requirements.get(0).getProjectId();
+        } else {
+            projectId = request.getProjectId();
         }
 
         UUID businessId = BusinessContextHolder.getBusinessId();

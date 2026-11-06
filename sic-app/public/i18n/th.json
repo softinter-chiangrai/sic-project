@@ -3191,6 +3191,8 @@
   "PMDT16A_LBL_ATTACH_SLIP": "แนบสลิปการโอน / ใบเสร็จรับเงิน",
   "PMDT16A_LBL_BILLING_TYPE": "ประเภทบิล",
   "PMDT16A_LBL_CONTRACT": "สัญญาอ้างอิง",
+  "PMDT16A_LBL_CUSTOMER": "ลูกค้า",
+  "PMDT16A_LBL_PROJECT": "โครงการ",
   "PMDT16A_LBL_DELIVERY": "Delivery",
   "PMDT16A_LBL_DUE_DATE": "วันครบกำหนดชำระ",
   "PMDT16A_LBL_INVOICE_NO": "เลขที่ใบแจ้งหนี้",

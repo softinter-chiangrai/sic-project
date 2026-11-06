@@ -100,6 +100,8 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
 
   checklists = signal<PmDeliveryChecklistModel[]>([]);
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
+  contractProjectName = signal<string>('');
+  contractCustomerName = signal<string>('');
 
   apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
 
@@ -166,6 +168,15 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       this.dialog.warn(this.translate.instant('PMDT14_CANNOT_PROCEED_TITLE'), this.translate.instant('PMDT14_LOCKED_OR_VIEW_MSG'));
       return;
     }
+    const contractId = (this.formData?.form?.value as any)?.contractId;
+    const projId = (this.formData?.form?.value as any)?.projectId;
+    if (!contractId && !projId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกสัญญาอ้างอิงก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     this.aiPrompt.set('');
     this.aiAssistTab.set('generate');
     this.loadAiHistory();
@@ -180,7 +191,14 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
+    const projId = (this.formData?.form?.value as any)?.projectId;
+    if (!projId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     const currentTitle = (this.formData?.form?.value as any)?.deliveryTitle;
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
 
@@ -365,13 +383,19 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
   onContractSelected(item: any): void {
     const contractId = item?.value ?? item?.id ?? null;
     if (!contractId) {
+      this.contractProjectName.set('');
+      this.contractCustomerName.set('');
       return;
     }
     this.service.getContractById(contractId).subscribe({
       next: (contract) => {
-        if (contract?.projectId) {
-          this.formData.patchValue({ projectId: contract.projectId } as any);
-          this.runGateCheck(contract.projectId);
+        if (contract) {
+          this.contractProjectName.set(contract.projectName || '');
+          this.contractCustomerName.set(contract.customerName || '');
+          if (contract.projectId) {
+            this.formData.patchValue({ projectId: contract.projectId } as any);
+            this.runGateCheck(contract.projectId);
+          }
         }
       },
     });
@@ -442,6 +466,16 @@ export class Pmdt14AComponent implements OnInit, CanComponentDeactivate {
       this.initDefaultChecklist();
     } else {
       this.checklists.set(data.checklists || []);
+    }
+    if (data.contractId) {
+      this.service.getContractById(data.contractId).subscribe({
+        next: (contract) => {
+          if (contract) {
+            this.contractProjectName.set(contract.projectName || '');
+            this.contractCustomerName.set(contract.customerName || '');
+          }
+        },
+      });
     }
     this.formData.resetModel(this.formData.form.getRawValue() as any);
     if (data.projectId) {

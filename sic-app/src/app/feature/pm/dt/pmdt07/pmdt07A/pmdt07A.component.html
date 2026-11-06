@@ -105,6 +105,20 @@
                                 (selectionChanged)="onRequirementSelected($event)">
                             </sic-combobox>
                             <sic-input
+                                [label]="'PMDT04_PROJECT_LABEL' | translate"
+                                [value]="projectName() || '-'"
+                                [readonly]="true"
+                                [disabled]="true"
+                                placeholder="-">
+                            </sic-input>
+                            <sic-input
+                                [label]="'PMDT04_CUSTOMER_LABEL' | translate"
+                                [value]="customerName() || '-'"
+                                [readonly]="true"
+                                [disabled]="true"
+                                placeholder="-">
+                            </sic-input>
+                            <sic-input
                                 [label]="'PMDT07_SPEC_CODE_LABEL' | translate"
                                 formControlName="specificationCode"
                                 [required]="true"

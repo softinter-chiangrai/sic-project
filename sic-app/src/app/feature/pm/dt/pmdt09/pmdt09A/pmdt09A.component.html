@@ -59,27 +59,23 @@
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
 
             <sic-combobox
-              [label]="'PMDT09_CUSTOMER_LABEL' | translate"
-              formControlName="customerId"
-              [apiUrl]="service.apiGetComboboxCustomer"
-              valueField="value"
-              textField="text"
-              [clearable]="true"
-              [placeholder]="'PMDT09_CUSTOMER_PLACEHOLDER' | translate"
-              (selectionChanged)="onCustomerSelected($event)"
-            ></sic-combobox>
-
-            <sic-combobox
               [label]="'PMDT09_PROJECT_LABEL' | translate"
               formControlName="projectId"
               [apiUrl]="service.apiGetComboboxProject"
-              [params]="projectParams"
               valueField="value"
               textField="text"
               [required]="true"
               [placeholder]="'PMDT09_PROJECT_PLACEHOLDER' | translate"
               (selectionChanged)="onProjectSelected($event)"
             ></sic-combobox>
+
+            <sic-input
+              [label]="'PMDT09_CUSTOMER_LABEL' | translate"
+              [value]="customerNameDisplay || '-'"
+              [readonly]="true"
+              [disabled]="true"
+              [placeholder]="'PMDT09_CUSTOMER_PLACEHOLDER' | translate"
+            ></sic-input>
 
             <sic-combobox
               [label]="'PMDT09_SPECIFICATION_LABEL' | translate"

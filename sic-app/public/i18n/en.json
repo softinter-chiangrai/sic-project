@@ -3191,6 +3191,8 @@
   "PMDT16A_LBL_ATTACH_SLIP": "Attach Transfer Slip / Receipt",
   "PMDT16A_LBL_BILLING_TYPE": "Billing Type",
   "PMDT16A_LBL_CONTRACT": "Reference Contract",
+  "PMDT16A_LBL_CUSTOMER": "Customer",
+  "PMDT16A_LBL_PROJECT": "Project",
   "PMDT16A_LBL_DELIVERY": "Delivery",
   "PMDT16A_LBL_DUE_DATE": "Due Date",
   "PMDT16A_LBL_INVOICE_NO": "Invoice No.",

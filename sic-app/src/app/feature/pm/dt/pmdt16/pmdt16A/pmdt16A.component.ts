@@ -99,6 +99,8 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
 
   contractOptions = signal<Array<{ value: string; text: string }>>([]);
   deliveryOptions = signal<Array<{ value: string; text: string }>>([]);
+  contractProjectName = signal<string>('');
+  contractCustomerName = signal<string>('');
   isProjectDerived = signal(false);
   apiGetComboboxProject = `${apiBaseUrl}/api/pm/customer-projects/combobox`;
   items = signal<PmInvoiceItemModel[]>([]);
@@ -177,6 +179,15 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
       this.dialog.warn(this.translate.instant('PMDT16A_LOCKED_WARN_TITLE'), this.translate.instant('PMDT16A_LOCKED_WARN_MSG'));
       return;
     }
+    const contractId = (this.formData?.form?.value as any)?.contractId;
+    const projId = (this.formData?.form?.value as any)?.projectId;
+    if (!contractId && !projId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกสัญญาอ้างอิงก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     const currentType = (this.formData?.form?.value as any)?.billingType || 'FIXED_PRICE';
     this.aiBillingType.set(currentType);
     this.aiPrompt.set('');
@@ -193,9 +204,17 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
   async generateWithAi(): Promise<void> {
     if (this.isGeneratingAi()) return;
 
-    const projId = (this.formData?.form?.value as any)?.projectId || this.customerState.getProjectId();
+    const projId = (this.formData?.form?.value as any)?.projectId;
     const contractId = (this.formData?.form?.value as any)?.contractId;
     const targetId = this.id() || (this.formData?.form?.value as any)?.id || 'new';
+
+    if (!projId && !contractId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการ หรือสัญญาอ้างอิงก่อนสร้างด้วย AI'
+      );
+      return;
+    }
 
     this.isGeneratingAi.set(true);
 
@@ -403,6 +422,33 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     });
   }
 
+  // เลือกสัญญาแล้วผูกโครงการให้อัตโนมัติ (ตัวเลือกหลักแบบ Single Field)
+  onContractSelected(item: any): void {
+    const contractId = item?.value ?? item?.id ?? null;
+    if (!contractId) {
+      this.isProjectDerived.set(false);
+      this.contractProjectName.set('');
+      this.contractCustomerName.set('');
+      return;
+    }
+    this.http.get<any>(`${apiBaseUrl}/api/pm/contracts/${contractId}`).subscribe({
+      next: (contract) => {
+        if (contract) {
+          this.contractProjectName.set(contract.projectName || '');
+          this.contractCustomerName.set(contract.customerName || '');
+          if (contract.projectId) {
+            this.formData.patchValue({
+              projectId: contract.projectId,
+              customerId: contract.customerId
+            } as any);
+            this.isProjectDerived.set(true);
+          }
+        }
+      },
+      error: () => {},
+    });
+  }
+
   // เลือกโครงการเองจาก Combobox (ไม่ต้องเคยเข้าหน้าโครงการมาก่อน)
   onProjectSelected(item: any): void {
     const projId = item?.value ?? item?.id ?? null;
@@ -555,6 +601,17 @@ export class Pmdt16AComponent implements OnInit, CanComponentDeactivate {
     if (data.projectId) {
       this.loadContractOptions(data.projectId);
       this.loadDeliveryOptions(data.projectId);
+    }
+    if (data.contractId) {
+      this.http.get<any>(`${apiBaseUrl}/api/pm/contracts/${data.contractId}`).subscribe({
+        next: (contract) => {
+          if (contract) {
+            this.contractProjectName.set(contract.projectName || '');
+            this.contractCustomerName.set(contract.customerName || '');
+          }
+        },
+        error: () => {},
+      });
     }
     this.isProjectDerived.set(!!data.deliveryId);
   }

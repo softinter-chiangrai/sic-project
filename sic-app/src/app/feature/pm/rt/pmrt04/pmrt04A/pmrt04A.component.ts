@@ -265,8 +265,12 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
         },
       });
     } else {
+      this.customerId = null;
+      this.customerName = null;
       this.projectName = null;
       this.form.patchValue({
+        customerId: null,
+        customerName: null,
         projectName: null,
       });
       this.cdr.detectChanges();
@@ -686,6 +690,15 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
   // ===== AI Assistant Methods =====
   openAiAssist(): void {
     if (this.isLocked || this.isView) return;
+    const projId = this.projectId || this.form?.get('projectId')?.value;
+    const custId = this.customerId || this.form?.get('customerId')?.value;
+    if (!projId && !custId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกลูกค้าหรือโครงการก่อนสร้างสัญญาด้วย AI'
+      );
+      return;
+    }
     this.showAiModal.set(true);
     this.aiActiveTab.set('generate');
     this.loadAiHistory();
@@ -725,6 +738,16 @@ export class Pmrt04AComponent implements OnInit, CanComponentDeactivate {
 
   async generateAiDraft(): Promise<void> {
     if (this.isGeneratingAi()) return;
+
+    const projId = this.projectId || this.form?.get('projectId')?.value;
+    const custId = this.customerId || this.form?.get('customerId')?.value;
+    if (!projId && !custId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกลูกค้าหรือโครงการก่อนสร้างสัญญาด้วย AI'
+      );
+      return;
+    }
 
     this.isGeneratingAi.set(true);
     const targetId = this.contractId || this.form?.get('id')?.value || 'new';

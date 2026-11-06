@@ -65,19 +65,8 @@ public class AiProjectContextHelper {
     }
 
     public String buildProjectScopeBlock(UUID projectId, String prompt) {
-        UUID bizId = BusinessContextHolder.getBusinessId();
-        if (projectId == null && prompt != null && !prompt.isBlank() && bizId != null) {
-            try {
-                float[] vec = aiProviderService.getEmbedding(prompt);
-                if (vec != null && vec.length > 0) {
-                    List<PmCustomerProject> matchedProjects = projectRepository.findTopSimilar(bizId, Arrays.toString(vec), RELEVANCE_MAX_DISTANCE, 1);
-                    if (!matchedProjects.isEmpty()) {
-                        projectId = matchedProjects.get(0).getId();
-                    }
-                }
-            } catch (Exception ignored) {}
-        }
         if (projectId == null) return "";
+        UUID bizId = BusinessContextHolder.getBusinessId();
 
         StringBuilder sb = new StringBuilder();
         PmCustomerProject project = projectRepository.findById(projectId).orElse(null);

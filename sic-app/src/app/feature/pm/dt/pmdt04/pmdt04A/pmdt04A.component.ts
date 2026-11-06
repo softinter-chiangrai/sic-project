@@ -224,14 +224,21 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   copiedId: string | null = null;
   aiAttachedFiles = signal<File[]>([]);
   projectParams: Record<string, any> = {};
+  customerNameDisplay = '';
 
   loadCustomerFromProject(projectId: string): void {
-    if (!projectId) return;
+    if (!projectId) {
+      this.customerNameDisplay = '';
+      return;
+    }
     this.http.get<any>(`${environment.apiBaseUrl}/api/pm/customer-projects/${projectId}`).subscribe({
       next: (project) => {
-        if (project?.customerId) {
-          this.formData.patchValue({ customerId: project.customerId } as any);
-          this.projectParams = { customerId: project.customerId };
+        if (project) {
+          this.customerNameDisplay = project.customerName || '';
+          if (project.customerId) {
+            this.formData.patchValue({ customerId: project.customerId } as any);
+            this.projectParams = { customerId: project.customerId };
+          }
           this.cdr.markForCheck();
         }
       },
@@ -272,6 +279,13 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
   // ===== AI Assistant Modal Handlers =====
   openAiAssist(): void {
     const formVal = this.form.value;
+    if (!formVal.projectId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
     this.aiAssistTitle = formVal.title || '';
     this.aiAssistType = formVal.requirementType || 'FUNCTIONAL';
     this.aiAssistPrompt = '';
@@ -296,6 +310,14 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     const formVal = this.form.value;
     const projectId = formVal.projectId;
     const targetId = this.reqId || formVal.id || 'new';
+
+    if (!projectId) {
+      this.dialog.warn(
+        this.translate.instant('COMMON.WARNING') || 'แจ้งเตือน',
+        'กรุณาเลือกโครงการก่อนสร้างด้วย AI'
+      );
+      return;
+    }
 
     this.isGeneratingAiAssist = true;
     this.cdr.markForCheck();
@@ -583,6 +605,9 @@ export class Pmdt04AComponent implements OnInit, OnDestroy, CanComponentDeactiva
     if (selectedProjectId) {
       this.loadCustomerFromProject(selectedProjectId);
       this.fetchProjectName(selectedProjectId);
+    } else {
+      this.customerNameDisplay = '';
+      this.formData.patchValue({ customerId: null } as any);
     }
     this.cdr.markForCheck();
   }

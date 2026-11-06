@@ -130,6 +130,22 @@
           </sic-combobox>
 
           <sic-input
+            [label]="'PMDT04_PROJECT_LABEL' | translate"
+            [value]="contractProjectName() || '-'"
+            [readonly]="true"
+            [disabled]="true"
+            placeholder="-">
+          </sic-input>
+
+          <sic-input
+            [label]="'PMDT04_CUSTOMER_LABEL' | translate"
+            [value]="contractCustomerName() || '-'"
+            [readonly]="true"
+            [disabled]="true"
+            placeholder="-">
+          </sic-input>
+
+          <sic-input
             formControlName="deliveryCode"
             [label]="'PMDT14_CODE_FIELD_LABEL' | translate"
             [placeholder]="'PMDT14_CODE_PLACEHOLDER' | translate">
