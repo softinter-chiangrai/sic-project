@@ -29,4 +29,7 @@ public interface PmDiagramTabRepository extends JpaRepository<PmDiagramTab, UUID
 
     boolean existsByBusinessIdAndProjectIdAndDiagramCodeAndIsDeleteFalse(
             UUID businessId, UUID projectId, String diagramCode);
+
+    @Query(value = "SELECT * FROM pm_diagram d WHERE d.project_id = :projectId AND d.is_delete = false AND (d.embedding <=> cast(:vec as vector)) < :maxDistance ORDER BY d.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmDiagramTab> findTopSimilar(@Param("projectId") UUID projectId, @Param("vec") String vec, @Param("maxDistance") double maxDistance, @Param("lim") int lim);
 }

@@ -67,6 +67,7 @@ public interface PmTaskRepository extends JpaRepository<PmTask, UUID> {
            "JOIN pm_milestone m ON wp.milestone_id = m.id " +
            "JOIN pm_phase ph ON m.phase_id = ph.id " +
            "WHERE ph.project_id = :projectId AND t.is_delete = false " +
+           "AND (t.embedding <=> cast(:vec as vector)) < :maxDistance " +
            "ORDER BY t.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
-    List<PmTask> findTopSimilar(@Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
+    List<PmTask> findTopSimilar(@Param("projectId") UUID projectId, @Param("vec") String vec, @Param("maxDistance") double maxDistance, @Param("lim") int lim);
 }

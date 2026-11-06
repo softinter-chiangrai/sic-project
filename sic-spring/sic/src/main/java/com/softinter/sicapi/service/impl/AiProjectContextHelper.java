@@ -42,6 +42,9 @@ public class AiProjectContextHelper {
     private final PmDeliveryRepository deliveryRepository;
     private final PmAiProviderService aiProviderService;
 
+    public static final double RELEVANCE_MAX_DISTANCE = 0.35;
+    public static final int RELEVANCE_SAFETY_LIMIT = 20;
+
     public String buildCustomerIndexBlock() {
         UUID bizId = BusinessContextHolder.getBusinessId();
         if (bizId == null) return "";
@@ -63,6 +66,17 @@ public class AiProjectContextHelper {
 
     public String buildProjectScopeBlock(UUID projectId, String prompt) {
         UUID bizId = BusinessContextHolder.getBusinessId();
+        if (projectId == null && prompt != null && !prompt.isBlank() && bizId != null) {
+            try {
+                float[] vec = aiProviderService.getEmbedding(prompt);
+                if (vec != null && vec.length > 0) {
+                    List<PmCustomerProject> matchedProjects = projectRepository.findTopSimilar(bizId, Arrays.toString(vec), RELEVANCE_MAX_DISTANCE, 1);
+                    if (!matchedProjects.isEmpty()) {
+                        projectId = matchedProjects.get(0).getId();
+                    }
+                }
+            } catch (Exception ignored) {}
+        }
         if (projectId == null) return "";
 
         StringBuilder sb = new StringBuilder();
@@ -89,7 +103,10 @@ public class AiProjectContextHelper {
             List<PmCustomerContract> contracts;
             if (vecStr != null) {
                 try {
-                    contracts = contractRepository.findTopSimilar(bizId, projectId, vecStr, 3);
+                    contracts = contractRepository.findTopSimilar(bizId, projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
+                    if (contracts.isEmpty()) {
+                        contracts = contractRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId);
+                    }
                 } catch (Exception e) {
                     contracts = contractRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId);
                 }
@@ -109,7 +126,7 @@ public class AiProjectContextHelper {
             List<PmRequirement> reqs;
             if (vecStr != null) {
                 try {
-                    reqs = requirementRepository.findTopSimilar(bizId, projectId, vecStr, 15);
+                    reqs = requirementRepository.findTopSimilar(bizId, projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
                 } catch (Exception e) {
                     reqs = requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
                 }
@@ -124,7 +141,7 @@ public class AiProjectContextHelper {
             List<PmSpecification> specs;
             if (vecStr != null) {
                 try {
-                    specs = specificationRepository.findTopSimilar(bizId, projectId, vecStr, 15);
+                    specs = specificationRepository.findTopSimilar(bizId, projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
                 } catch (Exception e) {
                     specs = specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
                 }
@@ -136,22 +153,25 @@ public class AiProjectContextHelper {
                     s -> "[" + s.getSpecificationCode() + "] " + s.getTitle() + " (" + s.getSpecificationType() + ")",
                     PmSpecification::getDescription);
 
-            List<PmDiagramTab> diagrams = diagramRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
-            if (!diagrams.isEmpty()) {
-                sb.append("- Project Diagrams Index (").append(diagrams.size()).append(" items):\n");
-                diagrams.stream().limit(15).forEach(d -> {
-                    sb.append("  * ID: ").append(d.getId())
-                      .append(" | [").append(d.getDiagramType()).append("] ").append(d.getName());
-                    String ms = strip(d.getMermaidScript(), 80);
-                    if (!ms.isBlank()) sb.append(" — ").append(ms);
-                    sb.append("\n");
-                });
+            List<PmDiagramTab> diagrams;
+            if (vecStr != null) {
+                try {
+                    diagrams = diagramRepository.findTopSimilar(projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
+                } catch (Exception e) {
+                    diagrams = diagramRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
+                }
+            } else {
+                diagrams = diagramRepository.findByProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(projectId);
             }
+            appendSmartIndex(sb, "Project Diagrams", diagrams, prompt,
+                    d -> d.getId().toString(),
+                    d -> "[" + d.getDiagramType() + "] " + d.getName(),
+                    PmDiagramTab::getMermaidScript);
 
             List<PmTask> tasks;
             if (vecStr != null) {
                 try {
-                    tasks = taskRepository.findTopSimilar(projectId, vecStr, 15);
+                    tasks = taskRepository.findTopSimilar(projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
                 } catch (Exception e) {
                     tasks = taskRepository.findByWorkPackageMilestonePhaseProjectIdAndIsDeleteFalse(projectId);
                 }
@@ -163,22 +183,25 @@ public class AiProjectContextHelper {
                     t -> "[" + t.getTaskCode() + "] " + t.getTaskName(),
                     PmTask::getDescription);
 
-            List<PmTestScenario> scenarios = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
-            if (!scenarios.isEmpty()) {
-                sb.append("- Project Test Scenarios Index (").append(scenarios.size()).append(" items):\n");
-                scenarios.stream().limit(15).forEach(sc -> {
-                    sb.append("  * ID: ").append(sc.getId())
-                      .append(" | ").append(sc.getScenarioName());
-                    String scd = strip(sc.getDescription(), 80);
-                    if (!scd.isBlank()) sb.append(" — ").append(scd);
-                    sb.append("\n");
-                });
+            List<PmTestScenario> scenarios;
+            if (vecStr != null) {
+                try {
+                    scenarios = scenarioRepository.findTopSimilar(bizId, projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
+                } catch (Exception e) {
+                    scenarios = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
+                }
+            } else {
+                scenarios = scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(bizId, projectId);
             }
+            appendSmartIndex(sb, "Project Test Scenarios", scenarios, prompt,
+                    sc -> sc.getId().toString(),
+                    PmTestScenario::getScenarioName,
+                    PmTestScenario::getDescription);
 
             List<PmDelivery> deliveries;
             if (vecStr != null) {
                 try {
-                    deliveries = deliveryRepository.findTopSimilar(bizId, projectId, vecStr, 10);
+                    deliveries = deliveryRepository.findTopSimilar(bizId, projectId, vecStr, RELEVANCE_MAX_DISTANCE, RELEVANCE_SAFETY_LIMIT);
                 } catch (Exception e) {
                     deliveries = deliveryRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId);
                 }
@@ -196,10 +219,8 @@ public class AiProjectContextHelper {
     }
 
     /**
-     * สารบัญอัจฉริยะ 2 ระดับ (Hierarchical Index):
-     * 1. ไม่ตัดทิ้งเลยสักใบ (เห็นครบ 100% ป้องกันใบที่ 11+ ตกหล่น)
-     * 2. ใบที่เกี่ยวข้องสูง / 8 ใบแรก จะได้สรุปย่อ 100 ตัวอักษร
-     * 3. ใบที่เหลือตั้งแต่ใบที่ 9 เป็นต้นไป แสดงเป็นบรรทัดหัวข้อกะทัดรัด (ID + [รหัส] ชื่อเรื่อง) ประหยัด Token สูงสุด
+     * สารบัญเอกสารโครงการ:
+     * แสดงเอกสารทุกใบที่ผ่านการกรองความเกี่ยวข้อง พร้อมสรุปย่อ 100 ตัวอักษรเท่ากันหมดทุกใบ
      */
     private <T> void appendSmartIndex(StringBuilder sb, String title, List<T> items, String prompt,
                                       java.util.function.Function<T, String> idFn,
@@ -208,16 +229,12 @@ public class AiProjectContextHelper {
         if (items == null || items.isEmpty()) return;
 
         sb.append("- ").append(title).append(" Index (").append(items.size()).append(" items):\n");
-        int detailLimit = 8;
-        for (int i = 0; i < items.size(); i++) {
-            T item = items.get(i);
+        for (T item : items) {
             sb.append("  * ID: ").append(idFn.apply(item))
               .append(" | ").append(titleFn.apply(item));
 
-            if (i < detailLimit) {
-                String d = strip(descFn.apply(item), 100);
-                if (!d.isBlank()) sb.append(" — ").append(d);
-            }
+            String d = strip(descFn.apply(item), 100);
+            if (!d.isBlank()) sb.append(" — ").append(d);
             sb.append("\n");
         }
     }

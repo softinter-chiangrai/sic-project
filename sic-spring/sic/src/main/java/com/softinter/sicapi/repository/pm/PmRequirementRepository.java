@@ -76,6 +76,6 @@ public interface PmRequirementRepository extends JpaRepository<PmRequirement, UU
 
     boolean existsByBusinessIdAndProjectIdAndRequirementCodeAndIsDeleteFalse(
             UUID businessId, UUID projectId, String requirementCode);
-    @Query(value = "SELECT * FROM pm_requirement r WHERE r.business_id = :businessId AND r.project_id = :projectId AND r.is_delete = false ORDER BY r.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
-    List<PmRequirement> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
+    @Query(value = "SELECT * FROM pm_requirement r WHERE r.business_id = :businessId AND r.project_id = :projectId AND r.is_delete = false AND (r.embedding <=> cast(:vec as vector)) < :maxDistance ORDER BY r.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmRequirement> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("maxDistance") double maxDistance, @Param("lim") int lim);
 }

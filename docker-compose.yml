@@ -3,7 +3,7 @@ services:
   # 1. Database Service (PostgreSQL 17)
   # ============================================================================
   sic-database:
-    image: postgres:17-alpine
+    image: pgvector/pgvector:pg17
     container_name: sic-database
     restart: unless-stopped
     environment:

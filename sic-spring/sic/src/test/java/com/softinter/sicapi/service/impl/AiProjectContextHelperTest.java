@@ -99,4 +99,80 @@ class AiProjectContextHelperTest {
         assertTrue(block.contains("ID: " + r2.getId() + " | [REQ-002] ระบบชำระเงินผ่าน QR PromptPay"));
         assertFalse(block.contains("<table>"));
     }
+
+    @Test
+    void buildProjectScopeBlock_withPrompt_usesVectorSearchWithThreshold() {
+        PmCustomerProject project = new PmCustomerProject();
+        project.setId(projectId);
+        project.setProjectName("Smart E-Commerce");
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(project));
+
+        String prompt = "ต้องการทำระบบชำระเงิน QR PromptPay";
+        float[] mockVec = new float[]{0.12f, 0.34f};
+        when(aiProviderService.getEmbedding(prompt)).thenReturn(mockVec);
+
+        PmRequirement r2 = new PmRequirement();
+        r2.setId(UUID.randomUUID());
+        r2.setRequirementCode("REQ-002");
+        r2.setTitle("ระบบชำระเงินผ่าน QR PromptPay");
+
+        // Only r2 passed the threshold < 0.35
+        when(requirementRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of(r2));
+        when(specificationRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(taskRepository.findTopSimilar(projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(deliveryRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(contractRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(contractRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId))
+                .thenReturn(List.of());
+        when(diagramRepository.findTopSimilar(projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(scenarioRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+
+        String block = helper.buildProjectScopeBlock(projectId, prompt);
+
+        // Verify only REQ-002 is included
+        assertTrue(block.contains("REQ-002"));
+        assertFalse(block.contains("REQ-001"));
+        assertFalse(block.contains("Project Specifications Index")); // Specs are empty because none passed threshold
+    }
+
+    @Test
+    void buildProjectScopeBlock_whenProjectIdNull_resolvesByPromptVector() {
+        String prompt = "ระบบบริหารจัดการทรัพยากรค้าปลีก";
+        float[] mockVec = new float[]{0.5f, 0.6f};
+        when(aiProviderService.getEmbedding(prompt)).thenReturn(mockVec);
+
+        PmCustomerProject matchedProj = new PmCustomerProject();
+        matchedProj.setId(projectId);
+        matchedProj.setProjectName("7-Convenience Retail");
+        when(projectRepository.findTopSimilar(bizId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, 1))
+                .thenReturn(List.of(matchedProj));
+        when(projectRepository.findById(projectId)).thenReturn(Optional.of(matchedProj));
+
+        when(contractRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(contractRepository.findByBusinessIdAndProjectIdAndIsDeleteFalseOrderByCreatedDateDesc(bizId, projectId))
+                .thenReturn(List.of());
+        when(requirementRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(specificationRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(diagramRepository.findTopSimilar(projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(taskRepository.findTopSimilar(projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(scenarioRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+        when(deliveryRepository.findTopSimilar(bizId, projectId, java.util.Arrays.toString(mockVec), AiProjectContextHelper.RELEVANCE_MAX_DISTANCE, AiProjectContextHelper.RELEVANCE_SAFETY_LIMIT))
+                .thenReturn(List.of());
+
+        String block = helper.buildProjectScopeBlock(null, prompt);
+        assertTrue(block.contains("7-Convenience Retail"));
+    }
 }

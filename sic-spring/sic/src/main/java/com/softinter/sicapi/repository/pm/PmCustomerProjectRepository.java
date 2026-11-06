@@ -51,4 +51,7 @@ Page<PmCustomerProject> findByCustomerIdAndBusinessIdWithCustomer(@Param("custom
     Page<PmCustomerProject> findByBusinessIdAndIsDeleteFalseAndProjectNameContainingIgnoreCase(UUID businessId, String keyword, Pageable pageable);
 
     boolean existsByProjectCode(String projectCode);
+
+    @Query(value = "SELECT * FROM pm_customer_project p WHERE p.business_id = :businessId AND p.is_delete = false AND (p.embedding <=> cast(:vec as vector)) < :maxDistance ORDER BY p.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmCustomerProject> findTopSimilar(@Param("businessId") UUID businessId, @Param("vec") String vec, @Param("maxDistance") double maxDistance, @Param("lim") int lim);
 }

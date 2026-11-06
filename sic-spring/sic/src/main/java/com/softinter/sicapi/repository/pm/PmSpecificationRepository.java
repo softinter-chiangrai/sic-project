@@ -44,6 +44,6 @@ public interface PmSpecificationRepository extends JpaRepository<PmSpecification
             UUID businessId, UUID projectId, String code);
 
     long countByProjectIdAndIsDeleteFalse(UUID projectId);
-    @Query(value = "SELECT * FROM pm_specification s WHERE s.business_id = :businessId AND s.project_id = :projectId AND s.is_delete = false ORDER BY s.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
-    List<PmSpecification> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
+    @Query(value = "SELECT * FROM pm_specification s WHERE s.business_id = :businessId AND s.project_id = :projectId AND s.is_delete = false AND (s.embedding <=> cast(:vec as vector)) < :maxDistance ORDER BY s.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmSpecification> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("maxDistance") double maxDistance, @Param("lim") int lim);
 }

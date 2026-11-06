@@ -32,6 +32,6 @@ public interface PmDeliveryRepository extends JpaRepository<PmDelivery, UUID>, J
 
     boolean existsByBusinessIdAndProjectIdAndDeliveryCodeAndIsDeleteFalse(
             UUID businessId, UUID projectId, String deliveryCode);
-    @Query(value = "SELECT * FROM pm_delivery d WHERE d.business_id = :businessId AND d.project_id = :projectId AND d.is_delete = false ORDER BY d.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
-    List<PmDelivery> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("lim") int lim);
+    @Query(value = "SELECT * FROM pm_delivery d WHERE d.business_id = :businessId AND d.project_id = :projectId AND d.is_delete = false AND (d.embedding <=> cast(:vec as vector)) < :maxDistance ORDER BY d.embedding <=> cast(:vec as vector) LIMIT :lim", nativeQuery = true)
+    List<PmDelivery> findTopSimilar(@Param("businessId") UUID businessId, @Param("projectId") UUID projectId, @Param("vec") String vec, @Param("maxDistance") double maxDistance, @Param("lim") int lim);
 }
