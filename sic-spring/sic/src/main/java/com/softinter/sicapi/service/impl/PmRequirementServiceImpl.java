@@ -54,6 +54,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final SuProfileRepository profileRepository;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
+    private final AiDocumentVectorService vectorService;
 
     private static final Map<String, String> STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
@@ -278,6 +279,15 @@ public class PmRequirementServiceImpl implements PmRequirementService {
                 log.error("ผิดพลาด audit log UPDATE_REQUIREMENT: {}", e.getMessage(), e);
             }
         }
+
+        // Auto-vectorize for pgvector semantic search
+        String embedText = String.join(" ",
+                requirement.getRequirementCode() != null ? requirement.getRequirementCode() : "",
+                requirement.getTitle() != null ? requirement.getTitle() : "",
+                requirement.getDescription() != null ? requirement.getDescription() : "",
+                requirement.getAcceptanceCriteria() != null ? requirement.getAcceptanceCriteria() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_requirement", requirement.getId(), embedText);
 
         return toResponse(requirement);
     }

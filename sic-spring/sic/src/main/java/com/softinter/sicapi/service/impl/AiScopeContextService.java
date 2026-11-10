@@ -60,8 +60,14 @@ public class AiScopeContextService {
 
     /** คืนค่าว่างถ้าไม่มี project หรือสร้างบริบทไม่สำเร็จ (ห้ามทำให้การเจนล้ม) */
     public String build(Object request) {
+        if (request == null) {
+            return "";
+        }
         try {
             Map<String, Object> fields = objectMapper.convertValue(request, new TypeReference<>() {});
+            if (fields == null) {
+                return "";
+            }
             UUID projectId = toUuid(fields.get("projectId"));
             if (projectId == null) {
                 return "";

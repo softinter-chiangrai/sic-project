@@ -35,6 +35,7 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
     private final PmTaskRepository taskRepository;
     private final TraceLinkService traceLinkService;
     private final DocumentVersionService documentVersionService;
+    private final AiDocumentVectorService vectorService;
 
     @Override
     @Transactional(readOnly = true)
@@ -144,6 +145,15 @@ public class PmTestScenarioServiceImpl implements PmTestScenarioService {
         } catch (Exception e) {
             log.warn("Failed to create version for test scenario {}: {}", entity.getId(), e.getMessage());
         }
+
+        // Auto-vectorize for pgvector semantic search
+        String embedText = String.join(" ",
+                entity.getScenarioCode() != null ? entity.getScenarioCode() : "",
+                entity.getScenarioName() != null ? entity.getScenarioName() : "",
+                entity.getDescription() != null ? entity.getDescription() : "",
+                entity.getTestType() != null ? entity.getTestType() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_test_scenario", entity.getId(), embedText);
 
         return entity.getId();
     }

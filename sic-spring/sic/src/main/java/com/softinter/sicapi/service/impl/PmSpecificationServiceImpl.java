@@ -60,6 +60,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
     private final DocumentVersionService documentVersionService;
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
+    private final AiDocumentVectorService vectorService;
 
     private static final Map<String, String> SPEC_STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
@@ -275,6 +276,7 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 log.error("ผิดพลาด audit log CREATE_SPECIFICATION: {}", ex.getMessage(), ex);
             }
 
+            triggerAutoVectorize(saved);
             return saved.getId();
         } else {
             // ----- UPDATE EXISTING -----
@@ -369,8 +371,20 @@ public class PmSpecificationServiceImpl implements PmSpecificationService {
                 log.error("ผิดพลาด audit log UPDATE_SPECIFICATION: {}", ex.getMessage(), ex);
             }
 
+            triggerAutoVectorize(spec);
             return spec.getId();
         }
+    }
+
+    private void triggerAutoVectorize(PmSpecification s) {
+        if (s == null || s.getId() == null) return;
+        String embedText = String.join(" ",
+                s.getSpecificationCode() != null ? s.getSpecificationCode() : "",
+                s.getTitle() != null ? s.getTitle() : "",
+                s.getDescription() != null ? s.getDescription() : "",
+                s.getSpecificationType() != null ? s.getSpecificationType() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_specification", s.getId(), embedText);
     }
 
     // ===== DELETE =====

@@ -67,6 +67,7 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
     private final DocumentVersionService documentVersionService;
     private final PmInvoiceService invoiceService;
     private final AuditLogService auditLogService;
+    private final AiDocumentVectorService vectorService;
 
     private static final Map<String, String> DELIVERY_STATUS_THAI_MAP = Map.of(
             "ร่าง", "DRAFT",
@@ -308,6 +309,16 @@ public class PmDeliveryServiceImpl implements PmDeliveryService {
         } catch (Exception e) {
             log.error("ผิดพลาด audit log delivery: {}", e.getMessage(), e);
         }
+
+        // Auto-vectorize for pgvector semantic search
+        String embedText = String.join(" ",
+                entity.getDeliveryCode() != null ? entity.getDeliveryCode() : "",
+                entity.getDeliveryTitle() != null ? entity.getDeliveryTitle() : "",
+                entity.getDeliverySummary() != null ? entity.getDeliverySummary() : "",
+                entity.getReleaseNote() != null ? entity.getReleaseNote() : "",
+                entity.getDeliveryType() != null ? entity.getDeliveryType() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_delivery", entity.getId(), embedText);
 
         return entity.getId();
     }

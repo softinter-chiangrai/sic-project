@@ -56,6 +56,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
     private final DocumentVersionService documentVersionService;
     private final ApprovalService approvalService;
     private final AuditLogService auditLogService;
+    private final AiDocumentVectorService vectorService;
 
     // ===== CREATE =====
     @Override
@@ -165,6 +166,7 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             log.error("ผิดพลาด audit log CREATE_DIAGRAM: {}", e.getMessage(), e);
         }
 
+        triggerAutoVectorize(saved);
         return toResponse(saved);
     }
 
@@ -313,7 +315,19 @@ public class PmDiagramTabServiceImpl implements PmDiagramTabService {
             return toResponse(tab);
         }
 
+        triggerAutoVectorize(tab);
         return toResponse(tab);
+    }
+
+    private void triggerAutoVectorize(PmDiagramTab tab) {
+        if (tab == null || tab.getId() == null || Boolean.TRUE.equals(tab.getIsDelete())) return;
+        String embedText = String.join(" ",
+                tab.getDiagramCode() != null ? tab.getDiagramCode() : "",
+                tab.getName() != null ? tab.getName() : "",
+                tab.getDiagramType() != null ? tab.getDiagramType() : "",
+                tab.getMermaidScript() != null ? tab.getMermaidScript() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_diagram", tab.getId(), embedText);
     }
 
     // ===== DELETE =====

@@ -59,6 +59,7 @@ public class TaskServiceImpl implements TaskService {
     private final TraceLinkService traceLinkService;
     private final AuditLogService auditLogService;
     private final DocumentVersionService documentVersionService;
+    private final AiDocumentVectorService vectorService;
 
     // ===== CREATE =====
     @Override
@@ -133,6 +134,7 @@ public class TaskServiceImpl implements TaskService {
             log.error("ผิดพลาด audit log CREATE_TASK: {}", e.getMessage(), e);
         }
 
+        triggerAutoVectorize(task);
         return toResponse(task);
     }
 
@@ -221,7 +223,20 @@ public class TaskServiceImpl implements TaskService {
             log.error("ผิดพลาด audit log UPDATE_TASK: {}", e.getMessage(), e);
         }
 
+        triggerAutoVectorize(task);
         return toResponse(task);
+    }
+
+    private void triggerAutoVectorize(PmTask task) {
+        if (task == null || task.getId() == null) return;
+        String embedText = String.join(" ",
+                task.getTaskCode() != null ? task.getTaskCode() : "",
+                task.getTaskName() != null ? task.getTaskName() : "",
+                task.getDescription() != null ? task.getDescription() : "",
+                task.getStatus() != null ? task.getStatus() : "",
+                task.getPriority() != null ? task.getPriority() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_task", task.getId(), embedText);
     }
 
     /** บันทึกประวัติเวอร์ชันของ Task (ห้ามทำให้การบันทึก Task ล้มถ้าสร้างเวอร์ชันไม่สำเร็จ) */

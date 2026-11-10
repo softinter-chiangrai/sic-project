@@ -75,6 +75,7 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
     private final PmMilestoneRepository milestoneRepository;
     private final PmInvoiceRepository invoiceRepository;
     private final PmMaTicketRepository maTicketRepository;
+    private final AiDocumentVectorService vectorService;
 
     private static final Map<String, String> SIGN_STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
@@ -499,6 +500,15 @@ public class PmCustomerContractServiceImpl implements PmCustomerContractService 
         }
 
         logContractAudit(isNew, contract);
+
+        // Auto-vectorize for pgvector semantic search
+        String embedText = String.join(" ",
+                contract.getContractNo() != null ? contract.getContractNo() : "",
+                contract.getScopeSummary() != null ? contract.getScopeSummary() : "",
+                contract.getContractType() != null ? contract.getContractType() : "",
+                contract.getPaymentTerms() != null ? contract.getPaymentTerms() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_customer_contract", contract.getId(), embedText);
 
         return contract.getId();
     }

@@ -58,6 +58,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
     private final ApprovalService approvalService;
     private final AuditLogService auditLogService;
     private final DocumentVersionService documentVersionService;
+    private final AiDocumentVectorService vectorService;
 
     @Override
     @Transactional
@@ -113,6 +114,7 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             log.error("ผิดพลาด audit log CREATE_PROJECT: {}", e.getMessage(), e);
         }
 
+        triggerAutoVectorize(project);
         return response;
     }
 
@@ -184,7 +186,19 @@ public class PmCustomerProjectServiceImpl implements PmCustomerProjectService {
             log.error("ผิดพลาด audit log UPDATE_PROJECT: {}", e.getMessage(), e);
         }
 
+        triggerAutoVectorize(project);
         return toResponse(project);
+    }
+
+    private void triggerAutoVectorize(PmCustomerProject p) {
+        if (p == null || p.getId() == null) return;
+        String embedText = String.join(" ",
+                p.getProjectCode() != null ? p.getProjectCode() : "",
+                p.getProjectName() != null ? p.getProjectName() : "",
+                p.getDescription() != null ? p.getDescription() : "",
+                p.getStatus() != null ? p.getStatus() : ""
+        );
+        vectorService.updateEmbeddingAsync("pm_customer_project", p.getId(), embedText);
     }
 
     @Override
