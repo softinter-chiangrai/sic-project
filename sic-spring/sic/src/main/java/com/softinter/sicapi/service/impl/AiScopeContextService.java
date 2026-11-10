@@ -74,7 +74,6 @@ public class AiScopeContextService {
                     .forEach(id -> anchors.computeIfAbsent(type, k -> new LinkedHashSet<>()).add(id)));
             appendAnchors(sb, anchors);
             appendTrace(sb, anchors);
-            appendInventory(sb, projectId);
 
             sb.append("Rules: Keep the generated content strictly within the scope of this project and the related ")
               .append("documents above. Use their terminology. Do not invent modules, features or entities unrelated ")
@@ -125,27 +124,6 @@ public class AiScopeContextService {
         if (!lines.isEmpty()) {
             sb.append("Linked documents (trace links):\n")
               .append(lines.stream().distinct().limit(MAX_LIST * 2L).collect(Collectors.joining("\n"))).append("\n");
-        }
-    }
-
-    private void appendInventory(StringBuilder sb, UUID projectId) {
-        UUID biz = BusinessContextHolder.getBusinessId();
-        inventory(sb, "Requirements", requirementRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(biz, projectId)
-                .stream().map(r -> nz(r.getRequirementCode()) + " " + nz(r.getTitle())).toList());
-        inventory(sb, "Specifications", specificationRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(biz, projectId)
-                .stream().map(s -> nz(s.getSpecificationCode()) + " " + nz(s.getTitle())).toList());
-        inventory(sb, "Diagrams", diagramRepository
-                .findByBusinessIdAndProjectIdAndIsDeleteFalseOrderBySortOrderAscCreatedDateAsc(biz, projectId)
-                .stream().map(d -> nz(d.getDiagramCode()) + " " + nz(d.getName())).toList());
-        inventory(sb, "Test scenarios", scenarioRepository.findByBusinessIdAndProjectIdAndIsDeleteFalse(biz, projectId)
-                .stream().map(s -> nz(s.getScenarioCode()) + " " + nz(s.getScenarioName())).toList());
-    }
-
-    private void inventory(StringBuilder sb, String label, List<String> items) {
-        if (!items.isEmpty()) {
-            sb.append("Other ").append(label).append(" in this project (").append(items.size()).append("): ")
-              .append(items.stream().limit(MAX_LIST).collect(Collectors.joining("; ")))
-              .append(items.size() > MAX_LIST ? "; ..." : "").append("\n");
         }
     }
 

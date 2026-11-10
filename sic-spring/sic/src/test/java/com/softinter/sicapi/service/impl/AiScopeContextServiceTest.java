@@ -35,7 +35,7 @@ class AiScopeContextServiceTest {
             diagramRepo, scenarioRepo, taskRepo, traceService);
 
     @Test
-    void includesProjectLinkedDocsTraceAndInventory() {
+    void includesProjectLinkedDocsTraceAndRules() {
         UUID projectId = UUID.randomUUID(), reqId = UUID.randomUUID(), dfdId = UUID.randomUUID();
 
         PmCustomerProject project = new PmCustomerProject();
@@ -49,7 +49,6 @@ class AiScopeContextServiceTest {
         req.setTitle("ผู้ใช้จองห้องได้");
         req.setDescription("<b>เลือกวันและเวลา</b>");
         when(reqRepo.findById(reqId)).thenReturn(Optional.of(req));
-        when(reqRepo.findByBusinessIdAndProjectIdAndIsDeleteFalse(any(), any())).thenReturn(List.of(req));
 
         PmDiagramTab dfd = new PmDiagramTab();
         dfd.setDiagramCode("DFD-1");
@@ -74,7 +73,6 @@ class AiScopeContextServiceTest {
         assertTrue(ctx.contains("จองห้องผ่านเว็บ") && !ctx.contains("<p>"), "ต้องตัด html: " + ctx);
         assertTrue(ctx.contains("[REQUIREMENT] REQ-001 ผู้ใช้จองห้องได้: เลือกวันและเวลา"), ctx);
         assertTrue(ctx.contains("--DESIGNED_BY--> [DFD] DFD-1 Booking flow"), ctx);
-        assertTrue(ctx.contains("Other Requirements in this project (1): REQ-001"), ctx);
         assertTrue(ctx.contains("strictly within the scope"), ctx);
     }
 
