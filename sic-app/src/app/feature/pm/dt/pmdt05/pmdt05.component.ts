@@ -37,6 +37,7 @@ import { Pmrt02Service } from '../../rt/pmrt02/pmrt02.service';
 import { PmCustomerProject } from '../../rt/pmrt02/pmrt02.model';
 import { openPdfWindow } from '../../../../core/utils/pdf-window.util';
 import { SicCrHistoryPanelComponent } from '../../../../core/component/sic-cr-history-panel/sic-cr-history-panel.component';
+import { ThemeService } from '../../../../core/services/theme.service';
 
 @Component({
   selector: 'app-pmdt05',
@@ -63,6 +64,8 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
   private translate = inject(TranslateService);
   private injector = inject(Injector);
   private isCreateDialogOpened = false;
+  private readonly themeService = inject(ThemeService);
+  private readonly sanitizer = inject(DomSanitizer);
 
   /** ไม่มีสิทธิ์บันทึกของหน้า diagram = เปิด draw.io แบบดูอย่างเดียว และไม่ autosave */
   private readonly canEdit = (() => {
@@ -70,10 +73,14 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
     return !f || f.save;
   })();
 
-  /** draw.io ที่ host เอง (docker/drawio) พร้อมปลั๊กอิน sicMermaid */
-  readonly drawioSrc: SafeResourceUrl = inject(DomSanitizer).bypassSecurityTrustResourceUrl(
-    `${environment.drawioUrl}/?embed=1&proto=json&ui=dark&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1&p=sicMermaid${this.canEdit ? '' : '&chrome=0'}`,
-  );
+  /** draw.io ที่ host เอง (docker/drawio) พร้อมปลั๊กอิน sicMermaid ปรับตามธีม (light/dark) ของเว็บ */
+  readonly drawioSrc = computed<SafeResourceUrl>(() => {
+    const isDark = this.themeService.isDark();
+    const themeParam = isDark ? 'dark=1&ui=dark' : 'dark=0';
+    return this.sanitizer.bypassSecurityTrustResourceUrl(
+      `${environment.drawioUrl}/?embed=1&proto=json&${themeParam}&saveAndExit=0&noSaveBtn=1&noExitBtn=1&autosave=1&p=sicMermaid${this.canEdit ? '' : '&chrome=0'}`,
+    );
+  });
 
   // ===== Global project context (navbar sic-context-switcher) =====
   readonly selectedProjectIds = this.customerState.currentSelectedProjectIds;
@@ -354,6 +361,18 @@ export class Pmdt05Component implements AfterViewInit, OnDestroy {
       const pids = this.selectedProjectIds();
       const cid = this.customerState.currentCustomerId();
       this.handleNavbarContextChange(pids, cid);
+    }, { injector: this.injector });
+
+    // รีโหลดสถานะ Draw.io เมื่อผู้ใช้สลับธีม (Light / Dark) ระหว่างเปิดหน้านี้
+    let isInitialThemeRun = true;
+    effect(() => {
+      this.themeService.isDark();
+      if (isInitialThemeRun) {
+        isInitialThemeRun = false;
+        return;
+      }
+      this.drawioReady = false;
+      this.drawioService.notifyReload();
     }, { injector: this.injector });
 
     // รับ query params

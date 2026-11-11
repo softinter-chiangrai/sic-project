@@ -136,7 +136,7 @@
           <div>
             <sic-input
               [label]="'PMDT12A_RELATED_TASK_LABEL' | translate"
-              [value]="taskDisplay"
+              [ngModel]="taskDisplay" [ngModelOptions]="{ standalone: true }"
               [readonly]="true"
               [disabled]="true"
               placeholder="-"

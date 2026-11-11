@@ -105,7 +105,7 @@
               </sic-combobox>
               <sic-input
                 [label]="'PMDT04_CUSTOMER_LABEL' | translate"
-                [value]="customerNameDisplay || '-'"
+                [ngModel]="customerNameDisplay || '-'" [ngModelOptions]="{ standalone: true }"
                 [readonly]="true"
                 [disabled]="true"
                 placeholder="-"

@@ -24,3 +24,7 @@ assets_extracted/
 *.pdf
 *สไลด์ Present Project Main ล่าสุด*.pptx
 scratch/
+slide-capture/
+slide-capture-handoff/
+.pw-profile/
+PLAN.md

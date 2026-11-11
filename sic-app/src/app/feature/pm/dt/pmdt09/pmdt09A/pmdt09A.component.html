@@ -71,7 +71,7 @@
 
             <sic-input
               [label]="'PMDT09_CUSTOMER_LABEL' | translate"
-              [value]="customerNameDisplay || '-'"
+              [ngModel]="customerNameDisplay || '-'" [ngModelOptions]="{ standalone: true }"
               [readonly]="true"
               [disabled]="true"
               [placeholder]="'PMDT09_CUSTOMER_PLACEHOLDER' | translate"

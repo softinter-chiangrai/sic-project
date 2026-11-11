@@ -80,7 +80,7 @@
 
           <sic-input
             [label]="'PMDT16A_LBL_PROJECT' | translate"
-            [value]="contractProjectName() || '-'"
+            [ngModel]="contractProjectName() || '-'" [ngModelOptions]="{ standalone: true }"
             [readonly]="true"
             [disabled]="true"
             placeholder="-"
@@ -88,7 +88,7 @@
 
           <sic-input
             [label]="'PMDT16A_LBL_CUSTOMER' | translate"
-            [value]="contractCustomerName() || '-'"
+            [ngModel]="contractCustomerName() || '-'" [ngModelOptions]="{ standalone: true }"
             [readonly]="true"
             [disabled]="true"
             placeholder="-"

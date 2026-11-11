@@ -1,6 +1,7 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { BehaviorSubject, Subject, take } from 'rxjs';
 import { environment } from '../../../../../environments/environment';
+import { ThemeService } from '../../../../core/services/theme.service';
 
 
 /** ผลจากปลั๊กอิน sicMermaid ใน draw.io (docker/drawio/sicMermaid.js) */
@@ -13,6 +14,7 @@ export interface MermaidInsertResult {
 
 @Injectable({ providedIn: 'root' })
 export class DrawioConnectorService {
+  private readonly themeService = inject(ThemeService);
   private iframe: HTMLIFrameElement | null = null;
   private pendingMessages: any[] = [];
   private drawioReady = false;
@@ -194,11 +196,12 @@ export class DrawioConnectorService {
           defaultFonts: [],
           defaultLibraries: true,
           autosave: true,
+          darkMode: this.themeService.isDark(),
         },
       };
       try {
         (event.source as Window)?.postMessage(JSON.stringify(reply), '*');
-        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok) with autosave: true');
+        console.log('[Draw.io] SEND CONFIGURE RESPONSE (ok) with autosave: true, darkMode:', this.themeService.isDark());
       } catch (e) {
         console.error('[Draw.io] Configure response error:', e);
       }
@@ -219,6 +222,13 @@ export class DrawioConnectorService {
       return;
     }
 
+    if ((data.event === 'autosave' || data.event === 'save') && data.xml) {
+      console.log(`[Draw.io] ${data.event.toUpperCase()} received with XML`);
+      this.lastLoadedXml = data.xml;
+      this.xmlSubject.next(data.xml);
+      return;
+    }
+
     if (data.event === 'save') {
       console.log('[Draw.io] SAVE event received – requesting XML for auto‑save...');
       this.requestXml();
@@ -232,6 +242,7 @@ export class DrawioConnectorService {
 
     if (data.event === 'export' && data.xml) {
       console.log('[Draw.io] XML export received');
+      this.lastLoadedXml = data.xml;
       this.xmlSubject.next(data.xml);
       return;
     }
@@ -250,6 +261,19 @@ export class DrawioConnectorService {
       console.error('[Draw.io] Error event:', data);
       this.errorSubject.next(data.message || 'Unknown Draw.io error');
     }
+  }
+
+  getLastXml(): string | null {
+    return this.lastLoadedXml;
+  }
+
+  setLastXml(xml: string): void {
+    this.lastLoadedXml = xml;
+  }
+
+  notifyReload(): void {
+    this.drawioReady = false;
+    this.isReadySubject.next(false);
   }
 
   reset(): void {

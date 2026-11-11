@@ -106,14 +106,14 @@
                             </sic-combobox>
                             <sic-input
                                 [label]="'PMDT04_PROJECT_LABEL' | translate"
-                                [value]="projectName() || '-'"
+                                [ngModel]="projectName() || '-'" [ngModelOptions]="{ standalone: true }"
                                 [readonly]="true"
                                 [disabled]="true"
                                 placeholder="-">
                             </sic-input>
                             <sic-input
                                 [label]="'PMDT04_CUSTOMER_LABEL' | translate"
-                                [value]="customerName() || '-'"
+                                [ngModel]="customerName() || '-'" [ngModelOptions]="{ standalone: true }"
                                 [readonly]="true"
                                 [disabled]="true"
                                 placeholder="-">

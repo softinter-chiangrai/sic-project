@@ -446,7 +446,9 @@ html, body {
 .sic-field,
 .sic-input,
 .sic-combobox,
-.sic-datepicker {
+.sic-datepicker,
+.sic-timepicker,
+.sic-colorpicker {
   display: flex !important;
   flex-direction: column !important;
   gap: 0.45rem !important;
@@ -456,7 +458,9 @@ html, body {
 .sic-field__label,
 .sic-input__label,
 .sic-combobox__label,
-.sic-datepicker__label {
+.sic-datepicker__label,
+.sic-timepicker__label,
+.sic-colorpicker__label {
   color: var(--text-active) !important;
   font-size: 0.92rem !important;
   font-weight: 600 !important;
@@ -468,6 +472,8 @@ html, body {
 .sic-combobox__field:not(.sic-combobox__field--multiple),
 .sic-datepicker__field,
 .sic-datepicker__trigger,
+.sic-timepicker__field,
+.sic-colorpicker__field,
 .sic-input-number__wrap,
 .sic-input-password__wrap,
 .sic-input-phone__wrap {
@@ -494,9 +500,10 @@ html, body {
   padding: 0.8rem 1rem !important;
 }
 
-/* Combobox and Datepicker wrapper inputs */
+/* Combobox, Datepicker, and Timepicker wrapper inputs */
 .sic-combobox__field:not(.sic-combobox__field--multiple) .sic-combobox__field-input,
-.sic-datepicker__field-input {
+.sic-datepicker__field-input,
+.sic-timepicker__field-input {
   height: calc(var(--sic-control-height-md, 3.15rem) - 2px) !important;
   font-size: 0.95rem !important;
   font-family: var(--font-sans) !important;
@@ -518,6 +525,60 @@ html, body {
 .sic-control-field__reset-btn {
   font-size: 0.95rem !important;
   font-family: var(--font-sans) !important;
+}
+
+/* Standard HTML form controls inside forms / modals / components */
+form input[type='text']:not(.sic-search-input):not(.sic-combobox__field-input):not(.sic-datepicker__field-input):not(.sic-timepicker__field-input):not(.sic-colorpicker__hex-input):not(table input):not(td input),
+form input[type='number']:not(table input):not(td input),
+form input[type='email']:not(table input):not(td input),
+form input[type='password']:not(table input):not(td input),
+form input[type='tel']:not(table input):not(td input),
+form input[type='url']:not(table input):not(td input),
+form input[type='date']:not(table input):not(td input),
+form input:not([type]):not(.sic-search-input):not(table input):not(td input),
+form select:not(table select):not(td select),
+.form-input,
+.timeout-number-input,
+[formcontrolname]:is(input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not(table input):not(td input), select:not(table select):not(td select)),
+[formControlName]:is(input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not(table input):not(td input), select:not(table select):not(td select)) {
+  min-height: var(--sic-control-height-md, 3.15rem) !important;
+  height: var(--sic-control-height-md, 3.15rem) !important;
+  border-radius: var(--sic-radius-md, 0.95rem) !important;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+  box-sizing: border-box !important;
+  font-size: 0.95rem !important;
+  font-family: var(--font-sans) !important;
+  line-height: 1.4 !important;
+}
+
+/* Focus styles for standard HTML form controls */
+form input[type='text']:not(.sic-search-input):not(.sic-combobox__field-input):not(.sic-datepicker__field-input):not(.sic-timepicker__field-input):not(.sic-colorpicker__hex-input):not(table input):not(td input):focus,
+form input[type='number']:not(table input):not(td input):focus,
+form input[type='email']:not(table input):not(td input):focus,
+form input[type='password']:not(table input):not(td input):focus,
+form input[type='tel']:not(table input):not(td input):focus,
+form input[type='url']:not(table input):not(td input):focus,
+form input[type='date']:not(table input):not(td input):focus,
+form input:not([type]):not(.sic-search-input):not(table input):not(td input):focus,
+form select:not(table select):not(td select):focus,
+.form-input:focus,
+.timeout-number-input:focus,
+[formcontrolname]:is(input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not(table input):not(td input), select:not(table select):not(td select)):focus,
+[formControlName]:is(input:not([type='checkbox']):not([type='radio']):not([type='hidden']):not([type='file']):not(table input):not(td input), select:not(table select):not(td select)):focus {
+  outline: none !important;
+  border-color: color-mix(in srgb, var(--crm-primary, #10b981) 45%, var(--sic-color-border, var(--border))) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--crm-primary, #10b981) 14%, transparent) !important;
+}
+
+/* Standard HTML form labels inside forms to match unified sic-ng control labels */
+form label:not([class*='checkbox']):not([class*='radio']):not(.module-chip):not(table label):not(td label) {
+  display: block;
+  color: var(--text-active) !important;
+  font-size: 0.92rem !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  margin-bottom: 0.45rem !important;
 }
 
 /* Gridpanel: จัดตำแหน่งหัวตารางและเซลล์ข้อมูลให้ชิดซ้ายตรงกันเป็นมาตรฐานเดียวทั้งระบบ */

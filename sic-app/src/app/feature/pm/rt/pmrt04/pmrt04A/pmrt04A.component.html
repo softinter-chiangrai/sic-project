@@ -146,7 +146,7 @@
             <div>
               <sic-input
                 [label]="'PMRT04A_CUSTOMER_LABEL' | translate"
-                [value]="customerName || '-'"
+                [ngModel]="customerName || '-'" [ngModelOptions]="{ standalone: true }"
                 [readonly]="true"
                 [disabled]="true"
                 [placeholder]="'PMRT04A_CUSTOMER_PLACEHOLDER' | translate"

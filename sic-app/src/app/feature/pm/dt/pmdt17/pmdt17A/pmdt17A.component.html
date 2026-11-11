@@ -77,7 +77,7 @@
           <div class="md:col-span-4">
             <sic-input
               [label]="'PMDT04_PROJECT_LABEL' | translate"
-              [value]="contractProjectName() || '-'"
+              [ngModel]="contractProjectName() || '-'" [ngModelOptions]="{ standalone: true }"
               [readonly]="true"
               [disabled]="true"
               placeholder="-"
@@ -87,7 +87,7 @@
           <div class="md:col-span-4">
             <sic-input
               [label]="'PMDT04_CUSTOMER_LABEL' | translate"
-              [value]="contractCustomerName() || '-'"
+              [ngModel]="contractCustomerName() || '-'" [ngModelOptions]="{ standalone: true }"
               [readonly]="true"
               [disabled]="true"
               placeholder="-"
