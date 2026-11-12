@@ -163,9 +163,13 @@ public class TraceLinkServiceImpl implements TraceLinkService {
                         ? TraceRelationship.DESIGNED_BY
                         : TraceRelationship.IMPLEMENTED_BY;
 
+                String normalizedDiagramType = diagramType != null
+                        ? diagramType.trim().toUpperCase(Locale.ROOT).replace(" ", "_")
+                        : "DIAGRAM";
+
                 this.createLink(
                         projectId,
-                        diagramType.toUpperCase(), diagramTabId,
+                        normalizedDiagramType, diagramTabId,
                         targetType, targetUuid,
                         relType);
             }

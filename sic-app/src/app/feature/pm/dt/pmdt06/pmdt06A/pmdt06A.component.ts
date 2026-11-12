@@ -487,11 +487,11 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
 
         const updated: ImpactAnalysis = { ...current, analysisStatus: 'MANUAL' };
         switch (type) {
-            case 'REQ':
+            case 'REQUIREMENT':
                 updated.impactedRequirementIds = (updated.impactedRequirementIds || []).filter(x => x !== id);
                 updated.impactedRequirements = (updated.impactedRequirements || []).filter(x => x.id !== id);
                 break;
-            case 'SPEC':
+            case 'SPECIFICATION':
                 updated.impactedSpecIds = (updated.impactedSpecIds || []).filter(x => x !== id);
                 updated.impactedSpecs = (updated.impactedSpecs || []).filter(x => x.id !== id);
                 break;
@@ -503,7 +503,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 updated.impactedTaskIds = (updated.impactedTaskIds || []).filter(x => x !== id);
                 updated.impactedTasks = (updated.impactedTasks || []).filter(x => x.id !== id);
                 break;
-            case 'TC':
+            case 'TEST_CASE':
                 updated.impactedTestCaseIds = (updated.impactedTestCaseIds || []).filter(x => x !== id);
                 updated.impactedTestCases = (updated.impactedTestCases || []).filter(x => x.id !== id);
                 break;
@@ -511,7 +511,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 updated.impactedBugIds = (updated.impactedBugIds || []).filter(x => x !== id);
                 updated.impactedBugs = (updated.impactedBugs || []).filter(x => x.id !== id);
                 break;
-            case 'MANUAL':
+            case 'USER_MANUAL':
                 updated.impactedManualIds = (updated.impactedManualIds || []).filter(x => x !== id);
                 updated.impactedManuals = (updated.impactedManuals || []).filter(x => x.id !== id);
                 break;
@@ -523,7 +523,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
                 updated.impactedInvoiceIds = (updated.impactedInvoiceIds || []).filter(x => x !== id);
                 updated.impactedInvoices = (updated.impactedInvoices || []).filter(x => x.id !== id);
                 break;
-            case 'MA':
+            case 'MA_TICKET':
                 updated.impactedMaTicketIds = (updated.impactedMaTicketIds || []).filter(x => x !== id);
                 updated.impactedMaTickets = (updated.impactedMaTickets || []).filter(x => x.id !== id);
                 break;
@@ -874,7 +874,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
         return this.isEdit ? this.translate.instant('PMDT06_SAVE_BTN') : this.translate.instant('PMDT06_CREATE_BTN');
     }
 
-    openItemDetail(type: 'PROJECT' | 'CUSTOMER' | 'REQ' | 'SPEC' | 'DIAGRAM' | 'TASK' | 'TC' | 'BUG', id?: string) {
+    openItemDetail(type: 'PROJECT' | 'CUSTOMER' | 'REQUIREMENT' | 'SPECIFICATION' | 'DIAGRAM' | 'TASK' | 'TEST_CASE' | 'BUG', id?: string) {
         if (!id) return;
         let url = '';
         const base = '/feature/pm';
@@ -887,10 +887,10 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             case 'CUSTOMER':
                 url = `${base}/customer/${id}/edit`;
                 break;
-            case 'REQ':
+            case 'REQUIREMENT':
                 url = `${base}/requirement/${id}/edit`;
                 break;
-            case 'SPEC':
+            case 'SPECIFICATION':
                 url = `${base}/specification/${id}/edit`;
                 break;
             case 'DIAGRAM':
@@ -899,7 +899,7 @@ export class Pmdt06AComponent implements OnInit, CanComponentDeactivate {
             case 'TASK':
                 url = `${base}/task/${id}/edit`;
                 break;
-            case 'TC':
+            case 'TEST_CASE':
                 url = `${base}/test-case/${id}/edit`;
                 break;
             case 'BUG':

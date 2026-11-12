@@ -12,12 +12,16 @@ public final class DiagramTypes {
 
     private static final Set<String> TYPES = Set.of(
             "DIAGRAM", "DFD", "ER", "FLOWCHART", "SEQUENCE", "CLASS", "STATE", "GANTT", "MINDMAP",
-            "JOURNEY", "PIE", "C4", "USE CASE", "USE_CASE", "USECASE", "TIMELINE", "GIT GRAPH", "GIT_GRAPH", "ARCHITECTURE");
+            "JOURNEY", "PIE", "C4", "USE_CASE", "TIMELINE", "GIT_GRAPH", "ARCHITECTURE");
 
     private DiagramTypes() {
     }
 
     public static boolean isDiagram(String type) {
-        return type != null && TYPES.contains(type.trim().toUpperCase(Locale.ROOT));
+        if (type == null) {
+            return false;
+        }
+        String normalized = type.trim().toUpperCase(Locale.ROOT).replace(" ", "_");
+        return TYPES.contains(normalized);
     }
 }

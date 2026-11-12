@@ -2,13 +2,73 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, map, of } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
+/** Standard trace target / entity types in SCREAMING_SNAKE_CASE */
+export type TraceEntityType =
+  | 'DIAGRAM'
+  | 'DFD'
+  | 'ER'
+  | 'FLOWCHART'
+  | 'SEQUENCE'
+  | 'CLASS'
+  | 'STATE'
+  | 'GANTT'
+  | 'MINDMAP'
+  | 'JOURNEY'
+  | 'PIE'
+  | 'C4'
+  | 'USE_CASE'
+  | 'TIMELINE'
+  | 'GIT_GRAPH'
+  | 'ARCHITECTURE'
+  | 'REQUIREMENT'
+  | 'SPECIFICATION'
+  | 'TASK'
+  | 'CHANGE_REQUEST'
+  | 'TEST_CASE'
+  | 'BUG'
+  | 'DESIGN_REVIEW'
+  | 'CONTRACT'
+  | 'DELIVERY'
+  | 'TEST_SCENARIO'
+  | 'USER_MANUAL'
+  | 'INVOICE'
+  | 'MA_TICKET'
+  | 'PHASE'
+  | 'MILESTONE'
+  | 'WORK_PACKAGE'
+  | 'DOCUMENT_VERSION';
+
 /** Trace link target types that are diagrams (any drawing type, upper-cased), plus the generic DIAGRAM. */
-export const DIAGRAM_TRACE_TYPES = [
+export const DIAGRAM_TRACE_TYPES: string[] = [
   'DIAGRAM', 'DFD', 'ER', 'FLOWCHART', 'SEQUENCE', 'CLASS', 'STATE', 'GANTT', 'MINDMAP',
-  'JOURNEY', 'PIE', 'C4', 'USE_CASE', 'USE CASE', 'TIMELINE', 'GIT GRAPH', 'GIT_GRAPH', 'ARCHITECTURE',
+  'JOURNEY', 'PIE', 'C4', 'USE_CASE', 'TIMELINE', 'GIT_GRAPH', 'ARCHITECTURE',
 ];
 
-export const isDiagramTraceType = (type: string | null | undefined) => DIAGRAM_TRACE_TYPES.includes((type || '').toUpperCase().trim());
+/** Mapping table for legacy abbreviations / variants to canonical TraceEntityType */
+const LEGACY_TYPE_MAP: Record<string, TraceEntityType> = {
+  REQ: 'REQUIREMENT',
+  SPEC: 'SPECIFICATION',
+  TC: 'TEST_CASE',
+  TESTCASE: 'TEST_CASE',
+  CR: 'CHANGE_REQUEST',
+  DR: 'DESIGN_REVIEW',
+  DESIGNREVIEW: 'DESIGN_REVIEW',
+  SCENARIO: 'TEST_SCENARIO',
+  MANUAL: 'USER_MANUAL',
+  TICKET: 'MA_TICKET',
+  MA: 'MA_TICKET',
+  VERSION: 'DOCUMENT_VERSION',
+};
+
+/** Normalizes any raw entity type string into canonical SCREAMING_SNAKE_CASE */
+export function normalizeTraceType(type: string | null | undefined): string {
+  if (!type) return '';
+  const clean = type.trim().toUpperCase().replace(/[\s-]+/g, '_');
+  return LEGACY_TYPE_MAP[clean] || clean;
+}
+
+export const isDiagramTraceType = (type: string | null | undefined) =>
+  DIAGRAM_TRACE_TYPES.includes(normalizeTraceType(type));
 
 export interface TraceTargetDetails {
   code: string;
@@ -19,17 +79,15 @@ export interface TraceTargetDetails {
 
 /** Code + display name of a trace link target, read from its own API. */
 export function traceTargetDetails(http: HttpClient, type: string, id: string): Observable<TraceTargetDetails> {
-
   const base = environment.apiBaseUrl;
-  const t = (type || '').toUpperCase().trim();
+  const t = normalizeTraceType(type);
+
   switch (t) {
+    case 'DIAGRAM':
     case 'DFD':
     case 'ER':
-    case 'DIAGRAM':
     case 'FLOWCHART':
     case 'SEQUENCE':
-    case 'USE_CASE':
-    case 'USE CASE':
     case 'CLASS':
     case 'STATE':
     case 'GANTT':
@@ -37,8 +95,8 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
     case 'JOURNEY':
     case 'PIE':
     case 'C4':
+    case 'USE_CASE':
     case 'TIMELINE':
-    case 'GIT GRAPH':
     case 'GIT_GRAPH':
     case 'ARCHITECTURE':
       return http.get<any>(`${base}/api/diagram/tabs/${id}`).pipe(
@@ -50,7 +108,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
       );
     case 'REQUIREMENT':
-    case 'REQ':
       return http.get<any>(`${base}/api/pm/requirement/${id}`).pipe(
         map((data) => {
           const code = data?.requirementCode || 'REQ';
@@ -60,7 +117,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Requirement' }))
       );
     case 'SPECIFICATION':
-    case 'SPEC':
       return http.get<any>(`${base}/api/pm/specifications/${id}`).pipe(
         map((data) => {
           const code = data?.specificationCode || 'SPEC';
@@ -79,7 +135,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Task' }))
       );
     case 'CHANGE_REQUEST':
-    case 'CR':
       return http.get<any>(`${base}/api/pm/change-requests/${id}`).pipe(
         map((data) => {
           const code = data?.crCode || 'CR';
@@ -89,8 +144,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Change Request' }))
       );
     case 'TEST_CASE':
-    case 'TESTCASE':
-    case 'TC':
       return http.get<any>(`${base}/api/pm/test-cases/${id}`).pipe(
         map((data) => {
           const code = data?.testCaseCode || 'TC';
@@ -109,8 +162,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Bug' }))
       );
     case 'DESIGN_REVIEW':
-    case 'DESIGNREVIEW':
-    case 'DR':
       return http.get<any>(`${base}/api/pm/design-reviews/${id}`).pipe(
         map((data) => {
           const code = data?.reviewCode || 'DR';
@@ -138,7 +189,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Delivery' }))
       );
     case 'TEST_SCENARIO':
-    case 'SCENARIO':
       return http.get<any>(`${base}/api/pm/test-scenarios/${id}`).pipe(
         map((data) => {
           const code = data?.scenarioCode || 'SCENARIO';
@@ -148,7 +198,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Test Scenario' }))
       );
     case 'USER_MANUAL':
-    case 'MANUAL':
       return http.get<any>(`${base}/api/pm/manual/${id}`).pipe(
         map((data) => {
           const code = data?.manualCode || 'MANUAL';
@@ -167,7 +216,6 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         catchError(() => of({ code: id.slice(0, 8), name: 'Invoice' }))
       );
     case 'MA_TICKET':
-    case 'TICKET':
       return http.get<any>(`${base}/api/pm/ma-tickets/${id}`).pipe(
         map((data) => {
           const code = data?.ticketNo || 'TICKET';
@@ -185,6 +233,33 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
         }),
         catchError(() => of({ code: id.slice(0, 8), name: 'Phase' }))
       );
+    case 'MILESTONE':
+      return http.get<any>(`${base}/api/pm/milestones/${id}`).pipe(
+        map((data) => {
+          const code = data?.milestoneCode || 'MILESTONE';
+          const title = data?.milestoneName || data?.name || 'Milestone';
+          return { code, name: code ? `[${code}] ${title}` : title };
+        }),
+        catchError(() => of({ code: id.slice(0, 8), name: 'Milestone' }))
+      );
+    case 'WORK_PACKAGE':
+      return http.get<any>(`${base}/api/pm/work-packages/${id}`).pipe(
+        map((data) => {
+          const code = data?.workPackageCode || 'WORK_PACKAGE';
+          const title = data?.workPackageName || data?.name || 'Work Package';
+          return { code, name: code ? `[${code}] ${title}` : title };
+        }),
+        catchError(() => of({ code: id.slice(0, 8), name: 'Work Package' }))
+      );
+    case 'DOCUMENT_VERSION':
+      return http.get<any>(`${base}/api/pm/document-versions/${id}`).pipe(
+        map((data) => {
+          const code = data?.versionTag || 'VERSION';
+          const title = data?.versionTitle || data?.name || 'Document Version';
+          return { code, name: code ? `[${code}] ${title}` : title };
+        }),
+        catchError(() => of({ code: id.slice(0, 8), name: 'Document Version' }))
+      );
     default:
       return of({ code: id.slice(0, 8), name: id });
   }
@@ -192,17 +267,15 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
 
 /** Route of a trace link target's screen. */
 export function traceTargetLink(type: string, id: string): string {
-
   const base = '/feature/pm';
-  const t = (type || '').toUpperCase().trim();
+  const t = normalizeTraceType(type);
+
   switch (t) {
+    case 'DIAGRAM':
     case 'DFD':
     case 'ER':
-    case 'DIAGRAM':
     case 'FLOWCHART':
     case 'SEQUENCE':
-    case 'USE_CASE':
-    case 'USE CASE':
     case 'CLASS':
     case 'STATE':
     case 'GANTT':
@@ -210,46 +283,36 @@ export function traceTargetLink(type: string, id: string): string {
     case 'JOURNEY':
     case 'PIE':
     case 'C4':
+    case 'USE_CASE':
     case 'TIMELINE':
-    case 'GIT GRAPH':
     case 'GIT_GRAPH':
     case 'ARCHITECTURE':
       return `${base}/diagram?tabId=${id}`;
     case 'REQUIREMENT':
-    case 'REQ':
       return `${base}/requirement/${id}/view`;
     case 'SPECIFICATION':
-    case 'SPEC':
       return `${base}/specification/${id}/edit`;
     case 'TASK':
       return `${base}/task-board?taskId=${id}`;
     case 'TEST_CASE':
-    case 'TESTCASE':
-    case 'TC':
       return `${base}/test-case/${id}/edit`;
     case 'BUG':
       return `${base}/bug/${id}/edit`;
     case 'TEST_SCENARIO':
-    case 'SCENARIO':
       return `${base}/test-scenario/${id}/edit`;
     case 'CHANGE_REQUEST':
-    case 'CR':
       return `${base}/change-request/${id}/edit`;
     case 'DESIGN_REVIEW':
-    case 'DESIGNREVIEW':
-    case 'DR':
       return `${base}/design-review/${id}/edit`;
     case 'CONTRACT':
       return `${base}/contract`;
     case 'DELIVERY':
       return `${base}/delivery/${id}/edit`;
     case 'USER_MANUAL':
-    case 'MANUAL':
       return `${base}/manual/${id}/edit`;
     case 'INVOICE':
       return `${base}/invoice/${id}/edit`;
     case 'MA_TICKET':
-    case 'TICKET':
       return `${base}/ma-ticket/${id}/edit`;
     case 'PHASE':
       return `${base}/phase/${id}/edit`;
@@ -258,7 +321,6 @@ export function traceTargetLink(type: string, id: string): string {
     case 'WORK_PACKAGE':
       return `${base}/work-package/${id}/edit`;
     case 'DOCUMENT_VERSION':
-    case 'VERSION':
       return `${base}/version/${id}/edit`;
     default:
       return '#';
