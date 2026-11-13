@@ -11,6 +11,7 @@ import {
   TraceLinkService,
   TraceRelationshipType,
 } from '../../services/trace-link.service';
+import { normalizeTraceType } from '../../utils/trace-target.util';
 import { SicButtonComponent } from 'sic-ng';
 import { SicComboboxComponent } from '../sic-combobox/sic-combobox.component';
 
@@ -186,7 +187,7 @@ export class SicTraceLinkPickerComponent {
       textField: 'name',
       paging: false,
       params: {},
-      resolveLinkType: (item: any) => item?.diagramType || 'DFD',
+      resolveLinkType: (item: any) => normalizeTraceType(item?.diagramType || 'DIAGRAM'),
     },
   ];
 
@@ -230,7 +231,9 @@ export class SicTraceLinkPickerComponent {
     if (!def) return;
 
     const item = this.selectedItem();
-    const sourceType = def.resolveLinkType ? def.resolveLinkType(item) : def.type;
+    const rawSourceType = def.resolveLinkType ? def.resolveLinkType(item) : def.type;
+    const sourceType = normalizeTraceType(rawSourceType);
+    const targetType = normalizeTraceType(this.targetType);
     const sourceId = item?.[def.valueField] ?? item?.id;
     const relationshipType = this.form.controls.relationshipType.value as TraceRelationshipType;
 
@@ -242,7 +245,7 @@ export class SicTraceLinkPickerComponent {
         projectId: this.projectId,
         sourceType,
         sourceId,
-        targetType: this.targetType,
+        targetType,
         targetId: this.targetId,
         relationshipType,
       })

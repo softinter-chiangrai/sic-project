@@ -25,12 +25,22 @@ public class TraceLinkServiceImpl implements TraceLinkService {
 
     private final PmTraceLinkRepository traceLinkRepository;
 
+    private String normalizeType(String type) {
+        if (type == null) {
+            return null;
+        }
+        return type.trim().toUpperCase(Locale.ROOT).replace(" ", "_");
+    }
+
     @Override
     @Transactional
     public PmTraceLink createLink(UUID projectId, String sourceType, UUID sourceId,
             String targetType, UUID targetId, TraceRelationship relationshipType) {
+        String normSourceType = normalizeType(sourceType);
+        String normTargetType = normalizeType(targetType);
+
         // ✅ ตรวจสอบว่ามี link ที่ active อยู่แล้วหรือไม่ (isDelete = false)
-        List<PmTraceLink> existing = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        List<PmTraceLink> existing = traceLinkRepository.findExistingLink(normSourceType, sourceId, normTargetType, targetId);
         if (!existing.isEmpty()) {
             log.debug("Active link already exists: {} -> {}", sourceId, targetId);
             return existing.get(0);
@@ -42,9 +52,9 @@ public class TraceLinkServiceImpl implements TraceLinkService {
 
         PmTraceLink link = new PmTraceLink();
         link.setProjectId(projectId);
-        link.setSourceType(sourceType);
+        link.setSourceType(normSourceType);
         link.setSourceId(sourceId);
-        link.setTargetType(targetType);
+        link.setTargetType(normTargetType);
         link.setTargetId(targetId);
         link.setRelationshipType(relationshipType);
         return traceLinkRepository.save(link);
@@ -53,13 +63,15 @@ public class TraceLinkServiceImpl implements TraceLinkService {
     @Override
     @Transactional
     public void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId) {
+        String normSourceType = normalizeType(sourceType);
+        String normTargetType = normalizeType(targetType);
         // ✅ ใช้เมธอดที่กรอง isDelete = false
-        List<PmTraceLink> links = traceLinkRepository.findExistingLink(sourceType, sourceId, targetType, targetId);
+        List<PmTraceLink> links = traceLinkRepository.findExistingLink(normSourceType, sourceId, normTargetType, targetId);
         for (PmTraceLink link : links) {
             link.setIsDelete(true);
             traceLinkRepository.save(link);
         }
-        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), sourceType, sourceId, targetType,
+        log.info("Deleted {} trace link(s) from {}:{} → {}:{}", links.size(), normSourceType, sourceId, normTargetType,
                 targetId);
     }
 
@@ -75,19 +87,19 @@ public class TraceLinkServiceImpl implements TraceLinkService {
     @Override
     public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
         // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
-        return traceLinkRepository.findBySourceTypeAndSourceId(sourceType, sourceId);
+        return traceLinkRepository.findBySourceTypeAndSourceId(normalizeType(sourceType), sourceId);
     }
 
     @Override
     public List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId) {
         // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
-        return traceLinkRepository.findByTargetTypeAndTargetId(targetType, targetId);
+        return traceLinkRepository.findByTargetTypeAndTargetId(normalizeType(targetType), targetId);
     }
 
     @Override
     public List<PmTraceLink> getFullTrace(String sourceType, UUID sourceId) {
         // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
-        List<Object[]> rows = traceLinkRepository.findFullTrace(sourceType, sourceId);
+        List<Object[]> rows = traceLinkRepository.findFullTrace(normalizeType(sourceType), sourceId);
         List<PmTraceLink> result = new ArrayList<>();
         for (Object[] row : rows) {
             PmTraceLink link = new PmTraceLink();
@@ -103,7 +115,8 @@ public class TraceLinkServiceImpl implements TraceLinkService {
 
     @Override
     public ImpactTraceResult getImpactedItems(String sourceType, UUID sourceId) {
-        List<PmTraceLink> trace = getFullTrace(sourceType, sourceId);
+        String normSourceType = normalizeType(sourceType);
+        List<PmTraceLink> trace = getFullTrace(normSourceType, sourceId);
         Map<String, Set<UUID>> impactedMap = new HashMap<>();
 
         for (PmTraceLink link : trace) {
@@ -118,7 +131,7 @@ public class TraceLinkServiceImpl implements TraceLinkService {
         }
 
         ImpactTraceResult result = new ImpactTraceResult();
-        result.setSourceType(sourceType);
+        result.setSourceType(normSourceType);
         result.setSourceId(sourceId);
         result.setImpacted(impactedMap);
         return result;

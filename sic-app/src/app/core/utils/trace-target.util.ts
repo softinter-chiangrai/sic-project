@@ -82,31 +82,18 @@ export function traceTargetDetails(http: HttpClient, type: string, id: string): 
   const base = environment.apiBaseUrl;
   const t = normalizeTraceType(type);
 
+  if (isDiagramTraceType(t)) {
+    return http.get<any>(`${base}/api/diagram/tabs/${id}`).pipe(
+      map((data) => {
+        const code = data?.diagramCode || id.slice(0, 8);
+        const title = data?.name || `${type} Diagram`;
+        return { code, name: data?.diagramCode ? `[${code}] ${title}` : title, diagramType: data?.diagramType || type };
+      }),
+      catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
+    );
+  }
+
   switch (t) {
-    case 'DIAGRAM':
-    case 'DFD':
-    case 'ER':
-    case 'FLOWCHART':
-    case 'SEQUENCE':
-    case 'CLASS':
-    case 'STATE':
-    case 'GANTT':
-    case 'MINDMAP':
-    case 'JOURNEY':
-    case 'PIE':
-    case 'C4':
-    case 'USE_CASE':
-    case 'TIMELINE':
-    case 'GIT_GRAPH':
-    case 'ARCHITECTURE':
-      return http.get<any>(`${base}/api/diagram/tabs/${id}`).pipe(
-        map((data) => {
-          const code = data?.diagramCode || id.slice(0, 8);
-          const title = data?.name || `${type} Diagram`;
-          return { code, name: data?.diagramCode ? `[${code}] ${title}` : title, diagramType: data?.diagramType || type };
-        }),
-        catchError(() => of({ code: id.slice(0, 8), name: `${type} Diagram` }))
-      );
     case 'REQUIREMENT':
       return http.get<any>(`${base}/api/pm/requirement/${id}`).pipe(
         map((data) => {
@@ -270,24 +257,11 @@ export function traceTargetLink(type: string, id: string): string {
   const base = '/feature/pm';
   const t = normalizeTraceType(type);
 
+  if (isDiagramTraceType(t)) {
+    return `${base}/diagram?tabId=${id}`;
+  }
+
   switch (t) {
-    case 'DIAGRAM':
-    case 'DFD':
-    case 'ER':
-    case 'FLOWCHART':
-    case 'SEQUENCE':
-    case 'CLASS':
-    case 'STATE':
-    case 'GANTT':
-    case 'MINDMAP':
-    case 'JOURNEY':
-    case 'PIE':
-    case 'C4':
-    case 'USE_CASE':
-    case 'TIMELINE':
-    case 'GIT_GRAPH':
-    case 'ARCHITECTURE':
-      return `${base}/diagram?tabId=${id}`;
     case 'REQUIREMENT':
       return `${base}/requirement/${id}/view`;
     case 'SPECIFICATION':
