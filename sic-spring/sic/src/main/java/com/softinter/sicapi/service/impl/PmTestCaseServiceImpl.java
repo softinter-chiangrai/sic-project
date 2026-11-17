@@ -249,6 +249,7 @@ public class PmTestCaseServiceImpl implements PmTestCaseService {
         testCase.setDeleteBy(userId);
         testCase.setDeleteDate(Instant.now());
         testCaseRepository.save(testCase);
+        traceLinkService.deleteLinksByEntity("TEST_CASE", id);
 
         try {
             auditLogService.log("DELETE_TEST_CASE", "Test Management / Test Case",

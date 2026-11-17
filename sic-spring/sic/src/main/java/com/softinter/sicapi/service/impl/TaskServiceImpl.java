@@ -419,6 +419,7 @@ public class TaskServiceImpl implements TaskService {
         task.setDeleteDate(now);
         taskRepository.save(task);
         documentVersionService.deleteVersionsByDocument("TASK", taskId);
+        traceLinkService.deleteLinksByEntity("TASK", taskId);
 
         // ✅ Cascade Soft Delete: ลบ Test Cases ทั้งหมดที่ผูกกับ Task นี้
         try {

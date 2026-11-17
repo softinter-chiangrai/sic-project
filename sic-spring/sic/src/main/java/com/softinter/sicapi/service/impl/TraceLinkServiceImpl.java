@@ -85,6 +85,15 @@ public class TraceLinkServiceImpl implements TraceLinkService {
     }
 
     @Override
+    @Transactional
+    public void deleteLinksByEntity(String entityType, UUID entityId) {
+        if (entityType == null || entityId == null) return;
+        String normType = normalizeType(entityType);
+        int count = traceLinkRepository.softDeleteByEntity(normType, entityId);
+        log.info("Soft-deleted {} trace link(s) associated with {}:{}", count, normType, entityId);
+    }
+
+    @Override
     public List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId) {
         // ✅ ใช้เมธอดที่กรอง isDelete = false แล้ว
         return traceLinkRepository.findBySourceTypeAndSourceId(normalizeType(sourceType), sourceId);

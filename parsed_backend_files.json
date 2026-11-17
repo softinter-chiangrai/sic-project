@@ -1,0 +1,1031 @@
+[
+  {
+    "fileName": "SicApiApplication.java",
+    "className": "SicApiApplication",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "เมนคลาสเริ่มต้น Spring Boot (`@SpringBootApplication`), เปิด Async (`@EnableAsync`), Scheduling (`@EnableScheduling`), และรัน `loadDotEnv()` โหลดค่าคอนฟิกจาก `.env`"
+  },
+  {
+    "fileName": "SecurityConfig.java",
+    "className": "SecurityConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "คอนฟิก Spring Security 6, ตั้งค่า Session แบบ STATELESS, ถอดรหัส JWT จาก Keycloak ด้วย JWK Set (RS256), เปิดช่อง Public ให้ Swagger, Actuator, ไฟล์สาธารณะ"
+  },
+  {
+    "fileName": "WebConfig.java",
+    "className": "WebConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "ลงทะเบียน Interceptor ทั้งหมดเข้าสู่ Spring MVC Pipeline และตั้งค่า Resource Handler"
+  },
+  {
+    "fileName": "WebSocketConfig.java",
+    "className": "WebSocketConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "เปิดใช้งาน STOMP Message Broker ผ่าน Endpoint `/ws` และ Route `/app`, `/topic` สำหรับระบบแชทสดและ WebRTC Signaling"
+  },
+  {
+    "fileName": "CorsConfig.java",
+    "className": "CorsConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "กำหนดสิทธิ์ Cross-Origin Resource Sharing อนุญาตให้โดเมนหน้าเว็บ (`http://localhost:4200`) เข้าถึง API ได้"
+  },
+  {
+    "fileName": "S3Config.java",
+    "className": "S3Config",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "สร้าง Bean `S3Client` สำหรับเชื่อมต่อไปยัง SeaweedFS Object Storage ด้วย AWS S3 SDK"
+  },
+  {
+    "fileName": "FlywayConfig.java",
+    "className": "FlywayConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "ควบคุมการทำงานของ Flyway Database Migration รันไฟล์ SQL ใน `db/migration` อัตโนมัติเมื่อเริ่มแอป"
+  },
+  {
+    "fileName": "JpaConfig.java",
+    "className": "JpaConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "เปิดใช้งาน JPA Auditing (`@EnableJpaAuditing`) สำหรับเติมเวลาสร้าง/แก้ไข และผู้กระทำ"
+  },
+  {
+    "fileName": "OpenApiConfig.java",
+    "className": "OpenApiConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "ตั้งค่า Swagger UI / OpenAPI 3.0 พร้อม Security Scheme แบบ Bearer JWT Token"
+  },
+  {
+    "fileName": "CacheConfig.java",
+    "className": "CacheConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "เปิด Spring Cache Abstraction (`@EnableCaching`) แคชสิทธิ์เมนูและคำแปลภาษา"
+  },
+  {
+    "fileName": "JacksonInstantConfig.java",
+    "className": "JacksonInstantConfig",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "ตั้งค่า Jackson ให้ Serialize/Deserialize ข้อมูล `Instant` ในรูปแบบ ISO-8601 UTC"
+  },
+  {
+    "fileName": "ReportServiceProperties.java",
+    "className": "ReportServiceProperties",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "แมปค่า Configuration Properties ของ JasperReport Service (URL, Secret Key)"
+  },
+  {
+    "fileName": "AiApiKeyConverter.java",
+    "className": "AiApiKeyConverter",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "JPA AttributeConverter ทำการเข้ารหัส (AES Encrypt) และถอดรหัส (Decrypt) API Key ของ AI ก่อนเก็บลงฐานข้อมูล"
+  },
+  {
+    "fileName": "AuditLog.java",
+    "className": "AuditLog",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "Custom Annotation (`@AuditLog`) สำหรับแปะบน Controller Method เพื่อระบุประเภทการบันทึก Log"
+  },
+  {
+    "fileName": "AuditLogAspect.java",
+    "className": "AuditLogAspect",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "คลาส AOP ดักจับ Method ที่มี `@AuditLog` ดึงข้อมูลผู้ใช้งาน เวลา และผลลัพธ์ไปลงตาราง `su_audit_log`"
+  },
+  {
+    "fileName": "AuditorAwareImpl.java",
+    "className": "AuditorAwareImpl",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "ดึง Username จาก Keycloak Security Context ส่งต่อให้ JPA Auditing (`@CreatedBy`)"
+  },
+  {
+    "fileName": "BusinessContextHolder.java",
+    "className": "BusinessContextHolder",
+    "layer": "Config & Root",
+    "category": "Configuration & Infrastructure",
+    "description": "จัดเก็บ `businessId` ประจำ Thread ปัจจุบัน (ThreadLocal) รองรับ Multi-tenancy ทุกเลเยอร์"
+  },
+  {
+    "fileName": "BusinessContextInterceptor.java",
+    "className": "BusinessContextInterceptor",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "ดักจับ Request HTTP อ่าน Header `X-Business-Id` นำไปเก็บใน `BusinessContextHolder` และเคลียร์ทิ้งเมื่อจบ Request"
+  },
+  {
+    "fileName": "JwtChannelInterceptor.java",
+    "className": "JwtChannelInterceptor",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "ดักจับการเชื่อมต่อ WebSocket STOMP ตรวจสอบความถูกต้องของ JWT Token หากไม่ผ่านจะ Reject การเชื่อมต่อทันที"
+  },
+  {
+    "fileName": "LanguageInterceptor.java",
+    "className": "LanguageInterceptor",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "ดักอ่าน Header `Accept-Language` กำหนด Locale ภาษาไทยหรืออังกฤษ"
+  },
+  {
+    "fileName": "RequireProgram.java",
+    "className": "RequireProgram",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "Custom Annotation แปะบน Controller เพื่อกำหนดว่าต้องมีสิทธิ์หน้าจอโปรแกรมใด (เช่น `@RequireProgram(\"PMDT04\")`)"
+  },
+  {
+    "fileName": "ProgramPermissionInterceptor.java",
+    "className": "ProgramPermissionInterceptor",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "ดักตรวจว่า User มีสิทธิ์ในโปรแกรมที่ระบุใน `@RequireProgram` หรือไม่ หากไม่มีจะส่ง 403 Forbidden"
+  },
+  {
+    "fileName": "ProgramPermissionService.java",
+    "className": "ProgramPermissionService",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "ตรวจสอบสิทธิ์ของ User ตาม Role ในตาราง `su_business_role_program`"
+  },
+  {
+    "fileName": "ProgramPermissionBodyAdvice.java",
+    "className": "ProgramPermissionBodyAdvice",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "จัดการ Response Body เพิ่มเติมเกี่ยวกับสิทธิ์ของผู้ใช้"
+  },
+  {
+    "fileName": "ProgramPermissionDeniedException.java",
+    "className": "ProgramPermissionDeniedException",
+    "layer": "Interceptor",
+    "category": "Security & Multi-Tenancy",
+    "description": "Custom Exception เมื่อถูกปฏิเสธสิทธิ์การเข้าถึงหน้าจอ"
+  },
+  {
+    "fileName": "BaseController.java",
+    "className": "BaseController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "Base Class รวมฟังก์ชันช่วยเหลือในการสร้าง Standard Response"
+  },
+  {
+    "fileName": "HealthController.java",
+    "className": "HealthController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "เช็คสถานะความพร้อมของระบบ (Health Check)"
+  },
+  {
+    "fileName": "VerifyController.java",
+    "className": "VerifyController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "Endpoint ตรวจสอบ Token และสถานะการล็อกอิน"
+  },
+  {
+    "fileName": "GlobalSearchController.java",
+    "className": "GlobalSearchController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "ค้นหาข้อมูลแบบ Global ครอบคลุมเอกสารทุกประเภทในระบบ"
+  },
+  {
+    "fileName": "AuthController.java",
+    "className": "AuthController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "จุดรับส่งข้อมูล Authentication และ User Session"
+  },
+  {
+    "fileName": "ProfileController.java",
+    "className": "ProfileController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "จัดการข้อมูลส่วนตัวผู้ใช้ รูปโปรไฟล์ และการเปลี่ยนรหัสผ่าน"
+  },
+  {
+    "fileName": "StorageController.java",
+    "className": "StorageController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "อัปโหลด ดาวน์โหลด และดึง Avatar / ไฟล์แนบจาก SeaweedFS S3"
+  },
+  {
+    "fileName": "AuditLogController.java",
+    "className": "AuditLogController",
+    "layer": "Controller",
+    "category": "3.1: ระบบส่วนกลางและความปลอดภัย (System & Core - 8 ไฟล์)",
+    "description": "ดูประวัติการใช้งานระบบ (Audit Log Trail)"
+  },
+  {
+    "fileName": "BusinessController.java",
+    "className": "BusinessController",
+    "layer": "Controller",
+    "category": "3.2: ข้อมูลพื้นฐานและเมนู (Basic & Master Data - 5 ไฟล์)",
+    "description": "จัดการข้อมูลองค์กร/บริษัท (Business Unit)"
+  },
+  {
+    "fileName": "MenuController.java",
+    "className": "MenuController",
+    "layer": "Controller",
+    "category": "3.2: ข้อมูลพื้นฐานและเมนู (Basic & Master Data - 5 ไฟล์)",
+    "description": "ดึงโครงสร้างเมนูตามสิทธิ์ของ User ที่ล็อกอิน"
+  },
+  {
+    "fileName": "ComboboxController.java",
+    "className": "ComboboxController",
+    "layer": "Controller",
+    "category": "3.2: ข้อมูลพื้นฐานและเมนู (Basic & Master Data - 5 ไฟล์)",
+    "description": "ดึงข้อมูลตัวเลือก Dropdown ทั้งหมดในระบบแบบรวมศูนย์"
+  },
+  {
+    "fileName": "DbParameterController.java",
+    "className": "DbParameterController",
+    "layer": "Controller",
+    "category": "3.2: ข้อมูลพื้นฐานและเมนู (Basic & Master Data - 5 ไฟล์)",
+    "description": "จัดการตัวแปรระบบและพารามิเตอร์ Master Data"
+  },
+  {
+    "fileName": "ExExampleController.java",
+    "className": "ExExampleController",
+    "layer": "Controller",
+    "category": "3.2: ข้อมูลพื้นฐานและเมนู (Basic & Master Data - 5 ไฟล์)",
+    "description": "ตัวอย่าง Controller แม่แบบสำหรับการพัฒนาฟังก์ชันใหม่"
+  },
+  {
+    "fileName": "PmCustomerController.java",
+    "className": "PmCustomerController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "CRUD จัดการข้อมูลลูกค้า (Customer)"
+  },
+  {
+    "fileName": "PmCustomerProjectController.java",
+    "className": "PmCustomerProjectController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "CRUD จัดการข้อมูลโครงการ (Project)"
+  },
+  {
+    "fileName": "PmCustomerContractController.java",
+    "className": "PmCustomerContractController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "จัดการสัญญาว่าจ้าง สัญญา MA และแจ้งเตือนต่ออายุ"
+  },
+  {
+    "fileName": "PmProjectDashboardController.java",
+    "className": "PmProjectDashboardController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "แดชบอร์ดสรุปสุขภาพโครงการ ความคืบหน้า และงบประมาณ"
+  },
+  {
+    "fileName": "PmDeliveryController.java",
+    "className": "PmDeliveryController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "จัดการงวดส่งมอบงาน (Delivery) และรายการส่งมอบ"
+  },
+  {
+    "fileName": "PmInvoiceController.java",
+    "className": "PmInvoiceController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "จัดการใบแจ้งหนี้ วางบิล และสถานะการชำระเงิน"
+  },
+  {
+    "fileName": "PmPaymentController.java",
+    "className": "PmPaymentController",
+    "layer": "Controller",
+    "category": "3.3: โครงการและสัญญา (Customer, Project & Finance - 7 ไฟล์)",
+    "description": "บันทึกประวัติการรับชำระเงิน (Payment)"
+  },
+  {
+    "fileName": "PmRequirementController.java",
+    "className": "PmRequirementController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการข้อกำหนดและความต้องการของระบบ (Requirement)"
+  },
+  {
+    "fileName": "PmSpecificationController.java",
+    "className": "PmSpecificationController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการสเปกระบบเชิงเทคนิค (Specification)"
+  },
+  {
+    "fileName": "PmDiagramTabController.java",
+    "className": "PmDiagramTabController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการแท็บไดอะแกรม (DFD, ER, Class, Sequence)"
+  },
+  {
+    "fileName": "PmDiagramAiController.java",
+    "className": "PmDiagramAiController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "สร้างและปรับแต่ง Mermaid Diagram ผ่าน AI"
+  },
+  {
+    "fileName": "PmDiagramChatController.java",
+    "className": "PmDiagramChatController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "แชทสนทนากับ AI เพื่อแก้ไขไดอะแกรมแบบ Interactive"
+  },
+  {
+    "fileName": "PhaseController.java",
+    "className": "PhaseController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการ Phase โครงการใน WBS"
+  },
+  {
+    "fileName": "MilestoneController.java",
+    "className": "MilestoneController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการหมุดหมายสำคัญของโครงการ (Milestone)"
+  },
+  {
+    "fileName": "WorkPackageController.java",
+    "className": "WorkPackageController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการชุดงานย่อย (Work Package)"
+  },
+  {
+    "fileName": "TaskController.java",
+    "className": "TaskController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการ Task งานพัฒนาและ Kanban Board"
+  },
+  {
+    "fileName": "ProjectTaskController.java",
+    "className": "ProjectTaskController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการ Task ในมุมมองภาพรวมโครงการ"
+  },
+  {
+    "fileName": "PmTestScenarioController.java",
+    "className": "PmTestScenarioController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการฉากทัศน์การทดสอบ (Test Scenario)"
+  },
+  {
+    "fileName": "PmTestCaseController.java",
+    "className": "PmTestCaseController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการขั้นตอนการทดสอบ (Test Case) และบันทึกผล Pass/Fail"
+  },
+  {
+    "fileName": "PmBugController.java",
+    "className": "PmBugController",
+    "layer": "Controller",
+    "category": "3.4: วงจรพัฒนาซอฟต์แวร์ SDLC (Requirement, Spec, Task, Bug - 13 ไฟล์)",
+    "description": "จัดการบั๊กและข้อผิดพลาด (Defect Tracking)"
+  },
+  {
+    "fileName": "PmApprovalController.java",
+    "className": "PmApprovalController",
+    "layer": "Controller",
+    "category": "3.5: เวิร์กโฟลว์, การตรวจสอบ และการควบคุมคุณภาพ (6 ไฟล์)",
+    "description": "ศูนย์รวมการอนุมัติ (Submit, Approve, Reject, Revise, Delegate)"
+  },
+  {
+    "fileName": "PmApprovalFlowController.java",
+    "className": "PmApprovalFlowController",
+    "layer": "Controller",
+    "category": "3.5: เวิร์กโฟลว์, การตรวจสอบ และการควบคุมคุณภาพ (6 ไฟล์)",
+    "description": "ตั้งค่าแม่แบบกระบวนการอนุมัติ (Approval Flow Definition)"
+  },
+  {
+    "fileName": "PmChangeRequestController.java",
+    "className": "PmChangeRequestController",
+    "layer": "Controller",
+    "category": "3.5: เวิร์กโฟลว์, การตรวจสอบ และการควบคุมคุณภาพ (6 ไฟล์)",
+    "description": "จัดการคำขอเปลี่ยนแปลงข้อกำหนด (Change Request - CR)"
+  },
+  {
+    "fileName": "ImpactAnalysisController.java",
+    "className": "ImpactAnalysisController",
+    "layer": "Controller",
+    "category": "3.5: เวิร์กโฟลว์, การตรวจสอบ และการควบคุมคุณภาพ (6 ไฟล์)",
+    "description": "ประเมินผลกระทบของการเปลี่ยนแปลง (Change Impact Analysis)"
+  },
+  {
+    "fileName": "TraceLinkController.java",
+    "className": "TraceLinkController",
+    "layer": "Controller",
+    "category": "3.5: เวิร์กโฟลว์, การตรวจสอบ และการควบคุมคุณภาพ (6 ไฟล์)",
+    "description": "จัดการเส้นความสัมพันธ์และ Traceability Matrix"
+  },
+  {
+    "fileName": "PmDesignReviewController.java",
+    "className": "PmDesignReviewController",
+    "layer": "Controller",
+    "category": "3.5: เวิร์กโฟลว์, การตรวจสอบ และการควบคุมคุณภาพ (6 ไฟล์)",
+    "description": "บันทึกการตรวจทานการออกแบบ (Design Review)"
+  },
+  {
+    "fileName": "DocumentVersionController.java",
+    "className": "DocumentVersionController",
+    "layer": "Controller",
+    "category": "3.6: เอกสาร เวอร์ชัน และส่งออกรายงาน (5 ไฟล์)",
+    "description": "ดูประวัติและเปรียบเทียบความต่างของเวอร์ชันเอกสาร (Version Diff)"
+  },
+  {
+    "fileName": "DocumentLivePreviewController.java",
+    "className": "DocumentLivePreviewController",
+    "layer": "Controller",
+    "category": "3.6: เอกสาร เวอร์ชัน และส่งออกรายงาน (5 ไฟล์)",
+    "description": "พรีวิวเอกสารสดพร้อมข้อมูลผูกโยงก่อนบันทึก"
+  },
+  {
+    "fileName": "BulkDocumentExportController.java",
+    "className": "BulkDocumentExportController",
+    "layer": "Controller",
+    "category": "3.6: เอกสาร เวอร์ชัน และส่งออกรายงาน (5 ไฟล์)",
+    "description": "ส่งออกเอกสารทั้งโครงการรวมเป็นรูปเล่ม PDF/ZIP"
+  },
+  {
+    "fileName": "PmUserManualController.java",
+    "className": "PmUserManualController",
+    "layer": "Controller",
+    "category": "3.6: เอกสาร เวอร์ชัน และส่งออกรายงาน (5 ไฟล์)",
+    "description": "จัดการคู่มือการใช้งานระบบ (User Manual)"
+  },
+  {
+    "fileName": "DiscussionController.java",
+    "className": "DiscussionController",
+    "layer": "Controller",
+    "category": "3.6: เอกสาร เวอร์ชัน และส่งออกรายงาน (5 ไฟล์)",
+    "description": "กระดานสนทนาแสดงความคิดเห็นใต้เอกสาร"
+  },
+  {
+    "fileName": "AiProjectPipelineController.java",
+    "className": "AiProjectPipelineController",
+    "layer": "Controller",
+    "category": "3.7: เครื่องมือ AI และระบบสร้างอัตโนมัติ (6 ไฟล์)",
+    "description": "รัน AI Pipeline สร้างเอกสารอัตโนมัติทั้งโปรเจกต์แบบขั้นตอนเดียว"
+  },
+  {
+    "fileName": "AiBatchGeneratorController.java",
+    "className": "AiBatchGeneratorController",
+    "layer": "Controller",
+    "category": "3.7: เครื่องมือ AI และระบบสร้างอัตโนมัติ (6 ไฟล์)",
+    "description": "สั่ง AI เจนเอกสารพร้อมกันเป็นชุด (Batch Mode)"
+  },
+  {
+    "fileName": "AiModelConfigController.java",
+    "className": "AiModelConfigController",
+    "layer": "Controller",
+    "category": "3.7: เครื่องมือ AI และระบบสร้างอัตโนมัติ (6 ไฟล์)",
+    "description": "จัดการโมเดล AI (เลือก Gemini/Claude, ตั้งค่าอุณหภูมิ, Prompt)"
+  },
+  {
+    "fileName": "AiNavigatorController.java",
+    "className": "AiNavigatorController",
+    "layer": "Controller",
+    "category": "3.7: เครื่องมือ AI และระบบสร้างอัตโนมัติ (6 ไฟล์)",
+    "description": "ผู้ช่วย AI อัจฉริยะนำทางและแนะนำการใช้งานระบบ"
+  },
+  {
+    "fileName": "AiSqlGeneratorController.java",
+    "className": "AiSqlGeneratorController",
+    "layer": "Controller",
+    "category": "3.7: เครื่องมือ AI และระบบสร้างอัตโนมัติ (6 ไฟล์)",
+    "description": "AI ช่วยเขียนและปรับปรุง SQL Query จากคำอธิบายภาษาธรรมชาติ"
+  },
+  {
+    "fileName": "AiPhaseWbsController.java",
+    "className": "AiPhaseWbsController",
+    "layer": "Controller",
+    "category": "3.7: เครื่องมือ AI และระบบสร้างอัตโนมัติ (6 ไฟล์)",
+    "description": "AI ช่วยแตก WBS Phase, Milestone และ Task จากสเปก"
+  },
+  {
+    "fileName": "SuUserController.java",
+    "className": "SuUserController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "CRUD บัญชีผู้ใช้งานระบบ"
+  },
+  {
+    "fileName": "SuBusinessRoleController.java",
+    "className": "SuBusinessRoleController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "จัดการบทบาทสิทธิ์ (Roles) ภายในแต่ละบริษัท"
+  },
+  {
+    "fileName": "SuBusinessRoleProgramController.java",
+    "className": "SuBusinessRoleProgramController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "ผูกสิทธิ์หน้าจอโปรแกรมให้กับแต่ละบทบาท"
+  },
+  {
+    "fileName": "SuProgramController.java",
+    "className": "SuProgramController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "ทะเบียนหน้าจอโปรแกรมทั้งหมดในระบบ (PMDT, PMRT, SUDT)"
+  },
+  {
+    "fileName": "SuBusinessInviteController.java",
+    "className": "SuBusinessInviteController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "ระบบส่งคำเชิญเข้าร่วมองค์กรผ่านอีเมล"
+  },
+  {
+    "fileName": "SuUserBusinessController.java",
+    "className": "SuUserBusinessController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "จัดการความสัมพันธ์ระหว่างผู้ใช้กับบริษัท"
+  },
+  {
+    "fileName": "SuUserBusinessMemberController.java",
+    "className": "SuUserBusinessMemberController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "จัดการสมาชิกและตำแหน่งภายในบริษัท"
+  },
+  {
+    "fileName": "SuUserBusinessRoleController.java",
+    "className": "SuUserBusinessRoleController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "กำหนดบทบาทสิทธิ์ให้แก่สมาชิก"
+  },
+  {
+    "fileName": "SuTaskController.java",
+    "className": "SuTaskController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "จัดการงานระบบส่วนกลาง"
+  },
+  {
+    "fileName": "ChatController.java",
+    "className": "ChatController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "รับส่งข้อความแชทและสร้างห้องสนทนา"
+  },
+  {
+    "fileName": "MessageController.java",
+    "className": "MessageController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "จัดการข้อความแจ้งเตือนและระบบส่งข้อความ"
+  },
+  {
+    "fileName": "ChatHubController.java",
+    "className": "ChatHubController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "จัดการฮับศูนย์รวมการแชท"
+  },
+  {
+    "fileName": "NotificationController.java",
+    "className": "NotificationController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "ระบบแจ้งเตือนส่วนบุคคล (In-app Notification)"
+  },
+  {
+    "fileName": "PmEditSessionController.java",
+    "className": "PmEditSessionController",
+    "layer": "Controller",
+    "category": "3.8: การจัดการสิทธิ์ ผู้ใช้ และการสื่อสาร (SU Module - 15 ไฟล์)",
+    "description": "ควบคุม Session การแก้ไขเอกสาร ป้องกันการแก้ชนกัน (Collaborative Lock)"
+  },
+  {
+    "fileName": "ProjectGeneratorService.java",
+    "className": "ProjectGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างโครงร่างโครงการจากข้อมูลลูกค้า"
+  },
+  {
+    "fileName": "ContractGeneratorService.java",
+    "className": "ContractGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างร่างสัญญาจ้าง/MA จากโครงการและมูลค่า"
+  },
+  {
+    "fileName": "RequirementGeneratorService.java",
+    "className": "RequirementGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สกัดความต้องการระบบจากขอบเขตโครงการ"
+  },
+  {
+    "fileName": "SpecificationGeneratorService.java",
+    "className": "SpecificationGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "แปลง Requirement เป็นสเปกระบบเชิงเทคนิค"
+  },
+  {
+    "fileName": "TestScenarioGeneratorService.java",
+    "className": "TestScenarioGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างชุดฉากทัศน์ทดสอบจาก Requirement & Spec"
+  },
+  {
+    "fileName": "TestCaseGeneratorService.java",
+    "className": "TestCaseGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างขั้นตอนทดสอบละเอียด (Step-by-step) พร้อม Test Data"
+  },
+  {
+    "fileName": "UserManualGeneratorService.java",
+    "className": "UserManualGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างคู่มือการใช้งานระบบพร้อมวิธีใช้งานแต่ละหน้าจอ"
+  },
+  {
+    "fileName": "DeliveryGeneratorService.java",
+    "className": "DeliveryGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างเอกสารส่งมอบงานตามงวดและสัญญา"
+  },
+  {
+    "fileName": "InvoiceGeneratorService.java",
+    "className": "InvoiceGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สรุปข้อมูลวางบิลจากงวดส่งมอบ"
+  },
+  {
+    "fileName": "MaTicketGeneratorService.java",
+    "className": "MaTicketGeneratorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "สร้างเอกสารแจ้งซ่อมและปัญหาการใช้งาน"
+  },
+  {
+    "fileName": "AiPhaseWbsService.java",
+    "className": "AiPhaseWbsService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "แตก WBS และคำนวณวันทำงานของแต่ละ Task"
+  },
+  {
+    "fileName": "AiSqlGeneratorServiceImpl.java",
+    "className": "AiSqlGeneratorServiceImpl",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "แปลงคำสั่งภาษาธรรมชาติเป็น PostgreSQL DDL/DML"
+  },
+  {
+    "fileName": "AiProjectContextHelper.java",
+    "className": "AiProjectContextHelper",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "ตัวรวบรวมสารบัญย่อทั้งโปรเจกต์ (Index Menu) ป้อนให้ AI"
+  },
+  {
+    "fileName": "AiScopeContextService.java",
+    "className": "AiScopeContextService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "คัดกรอง Scope ไม่ให้ AI อ่านข้อมูลข้ามโปรเจกต์"
+  },
+  {
+    "fileName": "AiDocumentVectorService.java",
+    "className": "AiDocumentVectorService",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "จัดการ Vector Embeddings และ Semantic Search ด้วย pgvector"
+  },
+  {
+    "fileName": "AiProjectPipelineServiceImpl.java",
+    "className": "AiProjectPipelineServiceImpl",
+    "layer": "Service",
+    "category": "4.1: AI Generators (ชุดแปลงข้อมูลและคุม Scope ผ่าน Context-Injection)",
+    "description": "ควมคุม State Machine ของ Pipeline สร้างทั้งระบบอัตโนมัติ"
+  },
+  {
+    "fileName": "ApprovalServiceImpl.java",
+    "className": "ApprovalServiceImpl",
+    "layer": "Service",
+    "category": "4.2: Approval & Traceability Engine",
+    "description": "เอนจินควบคุม State Machine การอนุมัติ (Submit, Approve, Reject, Lock, Version Snapshot)"
+  },
+  {
+    "fileName": "ApprovalFlowServiceImpl.java",
+    "className": "ApprovalFlowServiceImpl",
+    "layer": "Service",
+    "category": "4.2: Approval & Traceability Engine",
+    "description": "จัดการแม่แบบ Flow และขั้นตอน"
+  },
+  {
+    "fileName": "ApprovalNotificationServiceImpl.java",
+    "className": "ApprovalNotificationServiceImpl",
+    "layer": "Service",
+    "category": "4.2: Approval & Traceability Engine",
+    "description": "ยิง Notification และอีเมลหาผู้อนุมัติ"
+  },
+  {
+    "fileName": "TraceLinkServiceImpl.java",
+    "className": "TraceLinkServiceImpl",
+    "layer": "Service",
+    "category": "4.2: Approval & Traceability Engine",
+    "description": "สร้างและค้นหากราฟความสัมพันธ์ย้อนกลับ (Bidirectional Recursive Graph)"
+  },
+  {
+    "fileName": "ImpactAnalysisServiceImpl.java",
+    "className": "ImpactAnalysisServiceImpl",
+    "layer": "Service",
+    "category": "4.2: Approval & Traceability Engine",
+    "description": "ประเมินผลกระทบของการเปลี่ยนแปลง (Change Impact Engine)"
+  },
+  {
+    "fileName": "ChangeRequestServiceImpl.java",
+    "className": "ChangeRequestServiceImpl",
+    "layer": "Service",
+    "category": "4.2: Approval & Traceability Engine",
+    "description": "จัดการคำขอแก้ไขและเชื่อมต่อไปยังการปลดล็อคเอกสาร"
+  },
+  {
+    "fileName": "BulkDocumentExportService.java",
+    "className": "BulkDocumentExportService",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "รวมเอกสารทุกชนิดในโปรเจกต์เป็นหนังสือเล่มเดียว (PdfBook)"
+  },
+  {
+    "fileName": "PmSpecificationExportServiceImpl.java",
+    "className": "PmSpecificationExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกรายงานสเปกระบบ"
+  },
+  {
+    "fileName": "PmCustomerContractExportServiceImpl.java",
+    "className": "PmCustomerContractExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกรายงานสัญญาว่าจ้าง"
+  },
+  {
+    "fileName": "PmDeliveryExportServiceImpl.java",
+    "className": "PmDeliveryExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกใบส่งมอบงาน"
+  },
+  {
+    "fileName": "PmInvoiceExportServiceImpl.java",
+    "className": "PmInvoiceExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกใบแจ้งหนี้/ใบวางบิล"
+  },
+  {
+    "fileName": "PmDiagramExportServiceImpl.java",
+    "className": "PmDiagramExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ส่งออกผังไดอะแกรมความละเอียดสูง"
+  },
+  {
+    "fileName": "PmUatExportServiceImpl.java",
+    "className": "PmUatExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกเอกสารผลการทดสอบ UAT"
+  },
+  {
+    "fileName": "PmUserManualExportServiceImpl.java",
+    "className": "PmUserManualExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกหนังสือคู่มือผู้ใช้งาน"
+  },
+  {
+    "fileName": "PmChangeRequestExportServiceImpl.java",
+    "className": "PmChangeRequestExportServiceImpl",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ออกเอกสารขอเปลี่ยนแปลง (CR Report)"
+  },
+  {
+    "fileName": "ReportServiceClient.java",
+    "className": "ReportServiceClient",
+    "layer": "Service",
+    "category": "4.3: Document Export & Report Services (ออกรายงาน PDF/Excel)",
+    "description": "ไคลเอนต์สื่อสารกับ Microservice ออกรายงาน JasperReports"
+  },
+  {
+    "fileName": "scheduler/ApprovalTimeoutScheduler.java",
+    "className": "scheduler/ApprovalTimeoutScheduler",
+    "layer": "Scheduler & Exception",
+    "category": "Background Jobs & Errors",
+    "description": "ตรวจจับคำขออนุมัติที่เกินกำหนด SLA แล้วสั่ง Auto-Skip / Auto-Approve / Auto-Reject"
+  },
+  {
+    "fileName": "scheduler/ContractLifecycleScheduler.java",
+    "className": "scheduler/ContractLifecycleScheduler",
+    "layer": "Scheduler & Exception",
+    "category": "Background Jobs & Errors",
+    "description": "กวาดตรวจสัญญาลูกค้าที่ใกล้หมดอายุ แจ้งเตือนฝ่ายขายเพื่อต่อสัญญา"
+  },
+  {
+    "fileName": "websocket/ChatWebSocketController.java",
+    "className": "websocket/ChatWebSocketController",
+    "layer": "Scheduler & Exception",
+    "category": "Background Jobs & Errors",
+    "description": "รับส่งสัญญาณแชทสดและ WebRTC Video Call Signaling ผ่าน STOMP Protocol"
+  },
+  {
+    "fileName": "exception/GlobalExceptionHandler.java",
+    "className": "exception/GlobalExceptionHandler",
+    "layer": "Scheduler & Exception",
+    "category": "Background Jobs & Errors",
+    "description": "จุดดักจับ Error ส่วนกลาง (`@RestControllerAdvice`) แปลงเป็น JSON มาตรฐาน"
+  },
+  {
+    "fileName": "exception/ResourceNotFoundException.java",
+    "className": "exception/ResourceNotFoundException",
+    "layer": "Scheduler & Exception",
+    "category": "Background Jobs & Errors",
+    "description": "HTTP 404 เมื่อค้นหาข้อมูลไม่พบ"
+  },
+  {
+    "fileName": "exception/DocumentLockedException.java",
+    "className": "exception/DocumentLockedException",
+    "layer": "Scheduler & Exception",
+    "category": "Background Jobs & Errors",
+    "description": "HTTP 409 เมื่อเอกสารถูกล็อค (Approved หรือมีผู้อื่นกำลังแก้)"
+  },
+  {
+    "fileName": "RowVersionGuard.java",
+    "className": "RowVersionGuard",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ป้องกัน Concurrency Conflict ด้วย Optimistic Locking"
+  },
+  {
+    "fileName": "CodeSequenceLock.java",
+    "className": "CodeSequenceLock",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ล็อคการออกรหัสเอกสารอัตโนมัติ (ป้องกันเลขรหัสชนกัน)"
+  },
+  {
+    "fileName": "DocumentDiffHelper.java",
+    "className": "DocumentDiffHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "เปรียบเทียบความต่างของเอกสาร 2 เวอร์ชัน (Visual Diff)"
+  },
+  {
+    "fileName": "JsonSnapshotHelper.java",
+    "className": "JsonSnapshotHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "แปลง Entity ทั้งชุดเป็น JSON บันทึกลงตารางประวัติเวอร์ชัน"
+  },
+  {
+    "fileName": "PdfBook.java",
+    "className": "PdfBook",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "รวมไฟล์ PDF หลายเล่มเป็นฉบับสมบูรณ์ฉบับเดียว"
+  },
+  {
+    "fileName": "ReportHelper.java",
+    "className": "ReportHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "จัดเตรียมข้อมูลและคำนวณสูตรสำหรับส่งให้ JasperReports"
+  },
+  {
+    "fileName": "ContractLifecycle.java",
+    "className": "ContractLifecycle",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "คลาสควบคุม State Machine วงจรชีวิตของสัญญา"
+  },
+  {
+    "fileName": "ContractNoHelper.java",
+    "className": "ContractNoHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ช่วยจัดฟอร์แมตเลขที่สัญญาอัตโนมัติ"
+  },
+  {
+    "fileName": "DateRangeValidator.java",
+    "className": "DateRangeValidator",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ตรวจสอบช่วงวันที่เริ่มต้นและสิ้นสุด"
+  },
+  {
+    "fileName": "DiagramTypes.java",
+    "className": "DiagramTypes",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "รวมค่าคงที่ประเภทไดอะแกรม (DFD, ERD, SEQUENCE)"
+  },
+  {
+    "fileName": "LocalizationHelper.java",
+    "className": "LocalizationHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "จัดการภาษาไทย/อังกฤษตาม Locale ของผู้ใช้"
+  },
+  {
+    "fileName": "PaginationUtil.java",
+    "className": "PaginationUtil",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ช่วยสร้างออบเจกต์แบ่งหน้า (Pagination Data)"
+  },
+  {
+    "fileName": "SortValidator.java",
+    "className": "SortValidator",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ตรวจสอบความปลอดภัยชื่อคอลัมน์ที่ขอเรียงลำดับ (ป้องกัน SQL Injection)"
+  },
+  {
+    "fileName": "UniquenessValidator.java",
+    "className": "UniquenessValidator",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ตรวจสอบความไม่ซ้ำกันของข้อมูล"
+  },
+  {
+    "fileName": "LanguageUtils.java",
+    "className": "LanguageUtils",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ฟังก์ชันสกัด Header ภาษา"
+  },
+  {
+    "fileName": "FileVisibilityConverter.java",
+    "className": "FileVisibilityConverter",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "แปลงค่าสิทธิ์มองเห็นไฟล์"
+  },
+  {
+    "fileName": "EnumConverter.java",
+    "className": "EnumConverter",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ช่วยแปลง Enum ระหว่าง Java และ DB"
+  },
+  {
+    "fileName": "KeywordSearchHelper.java",
+    "className": "KeywordSearchHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ตัวช่วยค้นหาคำแบบ Case-insensitive"
+  },
+  {
+    "fileName": "ApprovalKeywordSearchHelper.java",
+    "className": "ApprovalKeywordSearchHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ค้นหาประวัติการอนุมัติรองรับทั้งไทยและอังกฤษ"
+  },
+  {
+    "fileName": "VersionKeywordSearchHelper.java",
+    "className": "VersionKeywordSearchHelper",
+    "layer": "Util",
+    "category": "Central Utilities",
+    "description": "ช่วยค้นหาข้อมูลประวัติเวอร์ชันเอกสาร"
+  }
+]

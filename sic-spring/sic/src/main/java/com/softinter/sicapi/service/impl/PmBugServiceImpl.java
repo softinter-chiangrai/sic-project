@@ -131,6 +131,7 @@ public class PmBugServiceImpl implements PmBugService {
         bug.setDeleteBy(userId);
         bug.setDeleteDate(Instant.now());
         bugRepository.save(bug);
+        traceLinkService.deleteLinksByEntity("BUG", id);
 
         try {
             auditLogService.log("DELETE_BUG", "Bug Management",

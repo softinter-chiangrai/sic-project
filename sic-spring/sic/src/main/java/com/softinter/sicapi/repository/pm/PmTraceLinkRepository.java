@@ -21,17 +21,21 @@ public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> 
     @Query("SELECT t FROM PmTraceLink t WHERE t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")
     List<PmTraceLink> findByTargetTypeAndTargetId(@Param("targetType") String targetType, @Param("targetId") UUID targetId);
 
-    // ✅ แก้ไข: ปรับเป็น Bidirectional Trace Traversal (รองรับทั้งกรณี source/target สลับทิศทาง)
+    // ✅ ปรับปรุง: เพิ่ม Cycle Detection (visited_ids) และ Depth Guard ป้องกัน Infinite Loop
     @Query(value = """
         WITH RECURSIVE trace AS (
-            SELECT source_type, source_id, target_type, target_id, relationship_type
+            SELECT source_type, source_id, target_type, target_id, relationship_type,
+                   ARRAY[source_id, target_id] AS visited_ids,
+                   1 AS depth
             FROM pm_trace_link
             WHERE is_delete = false AND (
                 (source_type = :sourceType AND source_id = :sourceId)
                 OR (target_type = :sourceType AND target_id = :sourceId)
             )
             UNION
-            SELECT l.source_type, l.source_id, l.target_type, l.target_id, l.relationship_type
+            SELECT l.source_type, l.source_id, l.target_type, l.target_id, l.relationship_type,
+                   t.visited_ids || ARRAY[l.source_id, l.target_id],
+                   t.depth + 1
             FROM pm_trace_link l
             INNER JOIN trace t ON (
                 (t.target_type = l.source_type AND t.target_id = l.source_id)
@@ -40,11 +44,18 @@ public interface PmTraceLinkRepository extends JpaRepository<PmTraceLink, UUID> 
                 OR (t.source_type = l.source_type AND t.source_id = l.source_id)
             )
             WHERE l.is_delete = false
+              AND t.depth < 20
+              AND NOT (l.source_id = ANY(t.visited_ids) AND l.target_id = ANY(t.visited_ids))
         )
         SELECT DISTINCT source_type, source_id, target_type, target_id, relationship_type FROM trace
         """, nativeQuery = true)
     List<Object[]> findFullTrace(@Param("sourceType") String sourceType,
                                  @Param("sourceId") UUID sourceId);
+
+    // ✅ เพิ่ม: Soft delete ลิงก์ที่ผูกกับเอกสารที่ถูกลบ (ป้องกัน Orphan Links)
+    @org.springframework.data.jpa.repository.Modifying
+    @Query("UPDATE PmTraceLink t SET t.isDelete = true, t.deleteDate = CURRENT_TIMESTAMP WHERE t.isDelete = false AND ((t.sourceType = :entityType AND t.sourceId = :entityId) OR (t.targetType = :entityType AND t.targetId = :entityId))")
+    int softDeleteByEntity(@Param("entityType") String entityType, @Param("entityId") UUID entityId);
 
     // ✅ แก้ไข: เพิ่ม AND t.isDelete = false
     @Query("SELECT t FROM PmTraceLink t WHERE t.sourceType = :sourceType AND t.sourceId = :sourceId AND t.targetType = :targetType AND t.targetId = :targetId AND t.isDelete = false")

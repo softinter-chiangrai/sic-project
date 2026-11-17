@@ -36,6 +36,7 @@ import jakarta.persistence.criteria.Predicate;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -299,15 +300,18 @@ public ResponseEntity<UUID> save(@Valid @RequestBody SaveBusinessRoleRequest req
             @RequestParam String roleCode,
             @RequestParam(required = false) String keyword) {
         List<String> userIds = userBusinessRoleRepository.findUserIdsByBusinessIdAndRoleCode(businessId, roleCode);
-        List<LovResponse> result = userIds.stream().map(uid -> {
-            String displayName = profileRepository.findByUserId(uid)
-                    .map(p -> {
-                        String name = LocalizationHelper.getFullName(p);
-                        return (name != null && !name.isBlank()) ? name : uid;
-                    })
-                    .orElse(uid);
-            return new LovResponse(uid, displayName);
-        }).collect(Collectors.toList());
+        Map<String, String> nameMap = userIds.isEmpty() ? Map.of() :
+                profileRepository.findByUserIdIn(userIds).stream().collect(Collectors.toMap(
+                        SuProfile::getUserId,
+                        p -> {
+                            String name = LocalizationHelper.getFullName(p);
+                            return (name != null && !name.isBlank()) ? name : p.getUserId();
+                        },
+                        (a, b) -> a
+                ));
+        List<LovResponse> result = userIds.stream()
+                .map(uid -> new LovResponse(uid, nameMap.getOrDefault(uid, uid)))
+                .collect(Collectors.toList());
 
         if (keyword != null && !keyword.isBlank()) {
             String lowerKeyword = keyword.toLowerCase();

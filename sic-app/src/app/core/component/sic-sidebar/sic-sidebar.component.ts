@@ -140,11 +140,20 @@ export class SicSidebarComponent implements OnInit, OnDestroy {
 
     this.notificationSvc.newNotificationReceived$.subscribe(async (n) => {
       if (n.type === 'ROLE_CHANGED') {
-        await this.dialog.warn(
-          n.title || 'บทบาทของคุณถูกเปลี่ยนแปลง',
-          n.message || 'บทบาทของผู้ใช้งานมีการเปลี่ยนแปลง กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
-        );
-        this.authService.logout();
+        if (n.message?.includes('ถูกปิดการใช้งาน') || n.message?.includes('ถูกระงับ')) {
+          await this.dialog.warn(
+            n.title || 'สถานะการใช้งานถูกระงับ',
+            n.message || 'บัญชีผู้ใช้งานของคุณในธุรกิจนี้ถูกปิดการใช้งาน กรุณาเข้าสู่ระบบใหม่อีกครั้ง'
+          );
+          this.authService.logout();
+        } else {
+          this.reloadMenuPermissions();
+          this.notificationSvc.showToastNotification(
+            'บทบาทของคุณมีการเปลี่ยนแปลง ระบบได้ปรับปรุงสิทธิ์การใช้งานล่าสุดให้เรียบร้อยแล้ว (คุณยังสามารถดูหรือคัดลอกข้อมูลในหน้านี้ได้)',
+            'warning',
+            8000
+          );
+        }
       } else if (n.type === 'PERMISSION_CHANGED') {
         this.reloadMenuPermissions();
       }

@@ -22,6 +22,9 @@ public interface TraceLinkService {
     // ✅ เพิ่ม method สำหรับลบตาม Source + Target (ใช้ใน updateTab)
     void deleteLinksBySourceAndTarget(String sourceType, UUID sourceId, String targetType, UUID targetId);
 
+    // ✅ ลบลิงก์ทั้งหมดที่เชื่อมกับเอกสารนี้ (ป้องกัน Orphan Links)
+    void deleteLinksByEntity(String entityType, UUID entityId);
+
     List<PmTraceLink> getLinksBySource(String sourceType, UUID sourceId);
 
     List<PmTraceLink> getLinksByTarget(String targetType, UUID targetId);

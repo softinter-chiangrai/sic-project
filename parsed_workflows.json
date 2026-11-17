@@ -1,0 +1,439 @@
+[
+  {
+    "id": "W01",
+    "topic": "Multi-Tenancy & Request Context Lifecycle",
+    "title": "การคัดแยกข้อมูล Multi-Tenant และวงจรชีวิต Request Context",
+    "summary": "ทุก HTTP Request ถูกตรวจสอบ Header X-Business-Id โดย BusinessContextInterceptor นำไปเก็บไว้ใน BusinessContextHolder ผ่าน ThreadLocal เพื่อส่งต่อให้ Repository และ Entity จัดการข้อมูลเฉพาะบริษัทของตนเอง และทำการเคลียร์ทิ้งเมื่อจบ Request",
+    "steps": [
+      "1. Client ส่ง HTTP Request แนบ Header `X-Business-Id`",
+      "2. `BusinessContextInterceptor` ดักจับ Request ก่อนเข้า Controller อ่านค่า UUID",
+      "3. นำ `businessId` ไปเก็บใน `BusinessContextHolder.setBusinessId()` ซึ่งใช้ `ThreadLocal<UUID>`",
+      "4. Controller และ Service เรียกใช้ Repository ในการค้นหาหรือบันทึกข้อมูล",
+      "5. Entity ที่สืบทอด `BaseBusinessEntity` ถูกกำหนด `businessId` ตาม ThreadLocal อัตโนมัติ",
+      "6. เมื่อ Request ทำงานเสร็จสิ้น Interceptor รัน `afterCompletion()` สั่ง `BusinessContextHolder.clear()` เพื่อป้องกัน Memory Leak ใน Thread Pool"
+    ],
+    "keyFiles": [
+      "BusinessContextInterceptor.java",
+      "BusinessContextHolder.java",
+      "BaseBusinessEntity.java",
+      "WebConfig.java"
+    ],
+    "trapQuestion": "ทำไมต้องเคลียร์ ThreadLocal ตอนจบ Request?",
+    "defenseTip": "เน้นตอบเรื่อง Tomcat Thread Pooling เพราะ Web Server ใช้เธรดซ้ำ (Thread Reuse) หากไม่เรียก clear() ใน afterCompletion() เธรดนั้นอาจนำค่า businessId เดิมไปใช้กับ Request ของผู้ใช้คนอื่น ซึ่งทำให้เกิดปัญหา Data Leakage ข้าม Tenant ได้"
+  },
+  {
+    "id": "W02",
+    "topic": "Security, Keycloak Authentication & Stateless JWT",
+    "title": "การพิสูจน์ตัวตนผ่าน Keycloak และการถอดรหัส JWT RS256",
+    "summary": "ระบบใช้ Keycloak เป็น Identity Provider โดย Spring Security ตรวจสอบลายเซ็นของ Token ด้วย JWK Set (RS256 Public Key) แบบ Stateless โดยไม่ต้องโทรไปถาม Keycloak ซ้ำทุก Request",
+    "steps": [
+      "1. ผู้ใช้ล็อกอินผ่านหน้าเว็บไปยัง Keycloak และได้รับ Bearer JWT Access Token",
+      "2. Frontend ส่ง Token มาใน Authorization Header (`Bearer <JWT>` )",
+      "3. `SecurityConfig` กำหนด SessionCreationPolicy เป็น `STATELESS`",
+      "4. Spring Security ถอดรหัสและตรวจสอบลายเซ็นดิจิทัลด้วย Public Key จาก Keycloak JWK Set Endpoint (RS256)",
+      "5. ข้อมูลผู้ใช้และสิทธิ์เบื้องต้นถูกบรรจุลงใน `SecurityContextHolder`",
+      "6. `AuditorAwareImpl` ดึง Username จาก SecurityContext เพื่อใส่ค่าให้อัตโนมัติใน `@CreatedBy` และ `@LastModifiedBy`"
+    ],
+    "keyFiles": [
+      "SecurityConfig.java",
+      "AuditorAwareImpl.java",
+      "AuthController.java",
+      "VerifyController.java"
+    ],
+    "trapQuestion": "ถ้า Keycloak ล่มชั่วขณะ ระบบ Backend ยัง Verify Token ของคนที่ล็อกอินอยู่ได้ไหม?",
+    "defenseTip": "ตอบว่าได้ชั่วขณะสำหรับ Token เดิมที่ยังไม่หมดอายุ เพราะ Spring Boot มีการแคช JWK Set Public Key ไว้ในหน่วยความจำ จึงสามารถ Verify Signature ทางคณิตศาสตร์ (RS256) ได้โดยตรงโดยไม่ต้องยิงหา Keycloak ทุกครั้ง"
+  },
+  {
+    "id": "W03",
+    "topic": "Program-Level RBAC & Menu Authorization",
+    "title": "การควบคุมสิทธิ์ระดับหน้าจอโปรแกรมด้วย @RequireProgram",
+    "summary": "เหนือกว่า Role ทั่วไป ระบบ SIC ควบคุมสิทธิ์ละเอียดถึงระดับรหัสโปรแกรม (Program Code) เช่น PMDT04 โดยใช้ Custom Annotation และ Interceptor ตรวจสอบกับตารางสิทธิ์ของบริษัท",
+    "steps": [
+      "1. พัฒนาการแปะ Annotation `@RequireProgram(\"PMDTxx\")` ไว้เหนือ Controller Method",
+      "2. เมื่อมี Request เข้ามา `ProgramPermissionInterceptor` สกัดอ่านค่ารหัสโปรแกรมจาก Method Annotation",
+      "3. ดึงบทบาท (Role) ของ User ในบริษัทปัจจุบันจาก Token และ Database",
+      "4. `ProgramPermissionService` ค้นหาในตาราง `su_business_role_program` ว่า Role นี้ได้รับสิทธิ์หรือไม่",
+      "5. หากมีสิทธิ์ อนุญาตให้เข้าสู่ Business Logic ใน Controller",
+      "6. หากไม่มีสิทธิ์ โยน `ProgramPermissionDeniedException` ส่งกลับ HTTP 403 Forbidden ทันที"
+    ],
+    "keyFiles": [
+      "RequireProgram.java",
+      "ProgramPermissionInterceptor.java",
+      "ProgramPermissionService.java",
+      "SuBusinessRoleProgramRepository.java"
+    ],
+    "trapQuestion": "ถ้าคนยิง Postman แอบข้ามหน้าจอ UI ไปยิง API ตรงๆ จะถูกบล็อคไหม?",
+    "defenseTip": "ตอบอย่างมั่นใจว่าถูกบล็อค 100% เพราะกลไกความปลอดภัยฝังอยู่ที่ Interceptor เลเยอร์ Backend ก่อนถึง Controller Method ไม่ได้พึ่งพาการซ่อนปุ่มบนหน้าบ้านเพียงอย่างเดียว"
+  },
+  {
+    "id": "W04",
+    "topic": "Approval Flow State Machine: Submission to Review",
+    "title": "กลไกส่งขออนุมัติและการตั้งต้น State Machine",
+    "summary": "การส่งเอกสารเข้าสู่กระบวนการอนุมัติ จะตรวจสอบป้องกันการส่งซ้ำ โหลด Flow ตามประเภทเอกสาร สร้างแถวสถานะรายขั้นตอน และปรับสถานะเอกสารต้นทางเป็น In Review",
+    "steps": [
+      "1. ผู้ใช้กดปุ่ม 'ส่งขออนุมัติ' หน้าเว็บส่ง Request ไปที่ `POST /api/pm/approvals/submit`",
+      "2. `ApprovalServiceImpl` ตรวจสอบว่ามีคำขอของเอกสารนี้ที่อยู่ในสถานะ PENDING อยู่แล้วหรือไม่ ป้องกันส่งซ้ำ",
+      "3. ค้นหาแม่แบบจาก `pm_approval_flow` โดยจับคู่ `document_type` และ `business_id`",
+      "4. สร้างแถวหลัก `pm_approval` และแตกรายการขั้นตอนลงใน `pm_approval_step_status`",
+      "5. ตรวจสอบว่า Requester มีชื่ออยู่ใน Step ใดหรือไม่ หากมีจะทำ Auto-Approve ขั้นตอนของตนทันที",
+      "6. ปรับสถานะเอกสารต้นทาง (Requirement/Spec/Contract) เป็น 'รออนุมัติ / In Review'",
+      "7. `ApprovalNotificationServiceImpl` ส่ง In-app Notification แจ้งเตือนไปยังผู้อนุมัติขั้นตอนแรก"
+    ],
+    "keyFiles": [
+      "ApprovalServiceImpl.java",
+      "PmApprovalController.java",
+      "PmApprovalFlowRepository.java",
+      "PmApprovalStepStatusRepository.java"
+    ],
+    "trapQuestion": "ถ้าผู้ส่งเอกสารเป็นผู้อนุมัติขั้นที่ 1 เอง ระบบจะให้เขากดอนุมัติตัวเองซ้ำไหม?",
+    "defenseTip": "ตอบว่าระบบมีกลไก Requester Auto-Approve ตรวจสอบ Username ของผู้ส่ง หากตรงกับผู้อนุมัติในขั้นตอน ระบบจะปรับสถานะขั้นนั้นเป็น APPROVED ให้อัตโนมัติและส่งงานต่อให้ขั้นถัดไปทันที เพื่อลด Redundant Work"
+  },
+  {
+    "id": "W05",
+    "topic": "Approval Flow Execution: Modes & Transitions",
+    "title": "โหมดการอนุมัติ (CHAIN, PARALLEL, ANY) และการประมวลผลผลลัพธ์",
+    "summary": "ระบบรองรับ 3 โหมดการอนุมัติ และควบคุมทิศทางการเปลี่ยนสถานะ (State Transition) ตามผลการตัดสินใจของผู้อนุมัติอย่างเคร่งครัด",
+    "steps": [
+      "1. โหมด CHAIN: เรียงลำดับตามขั้นตอน 1 -> 2 -> 3 ต้องผ่านทีละขั้น",
+      "2. โหมด PARALLEL: แจ้งเตือนผู้อนุมัติทุกคนพร้อมกัน ทุกคนต้องกด Approve ครบคำขอจึงจะสมบูรณ์",
+      "3. โหมด ANY: ใครคนใดคนหนึ่งในกลุ่มกด Approve ถือว่าผ่านคำขอนั้นทันที",
+      "4. กรณีผู้อนุมัติกด APPROVE: ตรวจสอบว่าครบเงื่อนไขของ Flow หรือยัง หากครบจะเข้าสู่กระบวนการ Finalize",
+      "5. กรณีผู้อนุมัติกด REJECT: คำขอถูกปิดสถานะเป็น REJECTED ทันที และสถานะเอกสารต้นทางกลับเป็น Draft",
+      "6. กรณีผู้อนุมัติกด NEED_REVISION: บันทึกเหตุผลที่ต้องแก้ สถานะเอกสารกลับเป็น Draft เพื่อให้ผู้สร้างแก้ไขและส่งใหม่"
+    ],
+    "keyFiles": [
+      "ApprovalServiceImpl.java",
+      "ApprovalMode.java",
+      "ApprovalStatus.java",
+      "PmApprovalLogRepository.java"
+    ],
+    "trapQuestion": "ถ้าในโหมด CHAIN มีคนกด REJECT ที่ขั้นที่ 2 ผู้อนุมัติขั้นที่ 3 จะยังเห็นงานไหม?",
+    "defenseTip": "ตอบว่าไม่เห็น เพราะการ REJECT จะ Termination คำขอทันที สถานะภาพรวมจะกลายเป็น REJECTED และเอกสารจะถูกส่งกลับไปให้ Requester แก้ไขทันที ไม่มีการส่งต่องานไปข้างหน้า"
+  },
+  {
+    "id": "W06",
+    "topic": "Approval Finalization, Document Lock & Snapshotting",
+    "title": "การสิ้นสุดการอนุมัติ การล็อคเอกสาร และการทำ Snapshot เวอร์ชัน",
+    "summary": "เมื่อคำขออนุมัติผ่านครบทุกเงื่อนไข ระบบจะทำการ Finalize ปรับสถานะเอกสาร ล็อคป้องกันการแก้ไขโดยตรง และบันทึก JSON Snapshot ลงในประวัติเวอร์ชันอย่างปลอดภัย",
+    "steps": [
+      "1. `ApprovalServiceImpl.isApprovalComplete()` คืนค่า true",
+      "2. อัปเดตสถานะใน `pm_approval` เป็น APPROVED พร้อมบันทึก Final Approver และเวลาเสร็จสิ้น",
+      "3. ปรับสถานะของเอกสารต้นเรื่องเป็น 'อนุมัติแล้ว / Approved'",
+      "4. ทำการ Document Lock: เอกสารถูกล็อค ห้ามแก้ไขผ่านหน้าจอปกติ (หากส่ง PUT จะโดน `DocumentLockedException`)",
+      "5. เรียก `JsonSnapshotHelper` แปลงข้อมูล Entity ทั้งหมดของเอกสารเป็น JSON String",
+      "6. บันทึก JSON ลงตาราง `pm_document_version` พร้อมเพิ่มเลขเวอร์ชัน (เช่น 1.0, 2.0)",
+      "7. หากเอกสารนี้มี Change Request (CR) ที่ผูกอยู่ ระบบจะรัน Auto-Implement ปิดงาน CR อัตโนมัติ"
+    ],
+    "keyFiles": [
+      "ApprovalServiceImpl.java",
+      "JsonSnapshotHelper.java",
+      "PmDocumentVersionRepository.java",
+      "DocumentLockedException.java"
+    ],
+    "trapQuestion": "ถ้าเอกสารถูก Approve แล้ว แต่อยากแก้คำผิด ทำไมถึงแก้ตรงๆ ไม่ได้?",
+    "defenseTip": "ตอบตามหลัก Audit & Compliance ว่าเพื่อรักษาความถูกต้องตามกฎหมายและสัญญา เอกสารที่เซ็นอนุมัติแล้วต้องไม่ถูกเปลี่ยนแปลงอย่างเงียบๆ หากต้องการแก้ไข ต้องเปิด Change Request (CR) เพื่อให้มี Audit Trail ชัดเจนเสมอ"
+  },
+  {
+    "id": "W07",
+    "topic": "Approval SLA Timeout & Background Scheduler",
+    "title": "การจัดการ SLA หมดอายุด้วย ApprovalTimeoutScheduler",
+    "summary": "Cron Job ทำงานเบื้องหลังตรวจสอบคำขออนุมัติที่ค้างเกินกำหนดเวลาตามแม่แบบ เพื่อป้องกันกระบวนการทำงานสะดุด",
+    "steps": [
+      "1. `@Scheduled(cron = \"0 0 * * * *\")` สั่งให้ `ApprovalTimeoutScheduler` ตรวจสอบทุกชั่วโมง",
+      "2. ดึงคำขออนุมัติทั้งหมดที่มีสถานะ PENDING",
+      "3. คำนวณระยะเวลาตั้งแต่วันส่งคำขอ เทียบกับ SLA Timeout ใน `PmApprovalFlowStep`",
+      "4. หากเกินกำหนดและคอนฟิกเป็น AUTO_SKIP: ระบบจะข้ามขั้นตอนนี้และส่งต่องานให้ขั้นถัดไป",
+      "5. หากคอนฟิกเป็น AUTO_APPROVE: ระบบจะอนุมัติขั้นตอนนี้แทนเสมือนมีผู้อนุมัติและบันทึก System Log",
+      "6. หากคอนฟิกเป็น AUTO_REJECT / EXPIRE: ระบบจะปรับสถานะคำขอเป็น EXPIRED และส่งกลับร่างเอกสาร"
+    ],
+    "keyFiles": [
+      "ApprovalTimeoutScheduler.java",
+      "ApprovalServiceImpl.java",
+      "PmApprovalStepStatus.java"
+    ],
+    "trapQuestion": "ถ้าเซิร์ฟเวอร์มีหลายเครื่อง (Clustered Backend) Scheduler จะทำงานซ้ำซ้อนไหม?",
+    "defenseTip": "ตอบว่าสามารถใช้ ShedLock หรือฐานข้อมูลล็อกเพื่อควบคุมให้ทำงานเพียงโหนดเดียว หรือใช้ Transaction Level Pessimistic Lock ตอนอัปเดตสถานะของแต่ละแถว"
+  },
+  {
+    "id": "W08",
+    "topic": "AI Integration: Context-Injection & Architecture Rationale",
+    "title": "สถาปัตยกรรม Context-Injection ปะทะ Direct DB Connection ของ AI",
+    "summary": "AI ใน SIC ทำงานผ่าน Context-Injection โดย Backend ทำหน้าที่เป็น Middleware คัดกรองและประกอบบริบท ป้องกัน Hallucination และ Token บวมอย่างสิ้นเชิง",
+    "steps": [
+      "1. ทำไมไม่ให้ AI เชื่อมต่อ Database เองตรงๆ? -> เพราะ AI อาจรันคำสั่งผิดพลาด, รั่วไหลข้าม Tenant, และเดาข้อมูล (Hallucination)",
+      "2. Backend ทำหน้าที่เป็น Context Broker: ดึงข้อมูลจริงที่ผ่าน Validation และ Tenant Filter แล้วจาก Database",
+      "3. คัดกรองข้อมูลให้อยู่ในรูปแบบที่กระชับและตรงประเด็น (Structured Context)",
+      "4. ประกอบบริบทเข้ากับ System Prompt และ User Intent",
+      "5. ส่ง Prompt ไปยังโมเดลภายนอก (Gemini/Claude) ผ่าน HTTPS REST API",
+      "6. รับผลลัพธ์ที่เป็น Structured JSON นำมา Validate และ Map ลง Entity เพื่อบันทึกลง Database"
+    ],
+    "keyFiles": [
+      "SpecificationGeneratorService.java",
+      "TestCaseGeneratorService.java",
+      "AiProjectContextHelper.java",
+      "AiApiKeyConverter.java"
+    ],
+    "trapQuestion": "ทำไมถึงบอกว่าวิธีนี้ปลอดภัยกว่าการใช้ LangChain หรือ SQL Agent ทั่วไป?",
+    "defenseTip": "ตอบว่าเพราะ Context-Injection ควบคุม Data Boundaries ในเลเยอร์โค้ด Java ได้ 100% ข้อมูลที่ส่งให้ AI มาจากคำสั่ง SQL ที่ผ่าน Security Context ของเราเอง AI ไม่มีสิทธิ์ยิงคำสั่ง DDL/DML ใส่ฐานข้อมูลโดยตรงเด็ดขาด"
+  },
+  {
+    "id": "W09",
+    "topic": "AI Scope Isolation & One-Shot Index Menu",
+    "title": "การคุม Scope ด้วยสารบัญย่อ One-Shot Project Index Menu",
+    "summary": "AiProjectContextHelper สกัดสารบัญย่อทั้งโปรเจกต์ป้อนให้ AI ช่วยให้ AI ผูกความสัมพันธ์กับเอกสารอื่นได้ในรอบเดียวโดยไม่กิน Token มหาศาล",
+    "steps": [
+      "1. เมื่อเรียกสร้างเอกสาร (เช่น Spec) Service จะเรียก `AiProjectContextHelper.buildProjectIndexBlock(projectId)`",
+      "2. ฟังก์ชันจะดึงรายชื่อ Requirements, Diagrams, Tasks ที่มีอยู่เดิมในโปรเจกต์มาทำเป็นสารบัญย่อ (ID + Code + Title)",
+      "3. นำสารบัญย่อแนบเข้าไปใน Prompt ให้ AI เห็นภาพรวมทั้งโปรเจกต์",
+      "4. AI สามารถอ่านและเลือกได้ว่า Spec นี้ควรเชื่อมโยงกับ `requirementId` ข้อใด และ `diagramId` รูปใด",
+      "5. AI ส่ง ID ที่เลือกกลับมาใน JSON Response",
+      "6. Backend นำ ID นั้นมาสร้าง TraceLink เชื่อมโยงในระบบให้อัตโนมัติ"
+    ],
+    "keyFiles": [
+      "AiProjectContextHelper.java",
+      "SpecificationGeneratorService.java",
+      "RequirementGeneratorService.java",
+      "PmTraceLinkRepository.java"
+    ],
+    "trapQuestion": "ถ้าโปรเจกต์มีเอกสาร 500 ใบ การดึงสารบัญย่อจะทำให้ Token เกินหรือไม่?",
+    "defenseTip": "ตอบว่าสารบัญย่อดึงเฉพาะ (ID, Code, Name) ใช้เพียง 1-2 บรรทัดต่อเอกสาร เอกสาร 500 ใบใช้ Token ไม่ถึง 10,000 tokens ซึ่งอยู่ในขอบเขต Context Window ของ Gemini (1M-2M tokens) ได้อย่างสบายและประหยัดกว่าการส่งเนื้อหาเต็มถึง 95%"
+  },
+  {
+    "id": "W10",
+    "topic": "AI Scope Protection & Chain Resolution",
+    "title": "การสาวโซ่เอกสาร (Chain Resolution) และการป้องกันข้อมูลรั่วไหล",
+    "summary": "หากผู้ใช้ระบุ ID เอกสารปลาย เช่น taskId ระบบจะสาวโซ่ความสัมพันธ์ใน DB เพื่อดึง Requirement และ Project ที่ถูกต้อง และตัดการพึ่งพาค่าที่อาจเพี้ยนจาก Header",
+    "steps": [
+      "1. ผู้ใช้ส่งคำขอพร้อม `taskId` มาที่ Backend",
+      "2. โค้ดสาวโซ่ความสัมพันธ์: `task = taskRepository.findById(taskId)`",
+      "3. `spec = task.getSpecification()`",
+      "4. `requirement = spec.getRequirement()`",
+      "5. `project = requirement.getProject()`",
+      "6. นำเนื้อหาฉบับเต็มของ Task, Spec, Requirement นี้มาใส่เป็นบริบทหลัก",
+      "7. หาก `projectId == null` ระบบจะ Return ทันที ไม่มีการเดาข้ามโปรเจกต์เพื่อความปลอดภัยสูงสุด"
+    ],
+    "keyFiles": [
+      "TestCaseGeneratorService.java",
+      "SpecificationGeneratorService.java",
+      "TaskRepository.java",
+      "PmSpecificationRepository.java"
+    ],
+    "trapQuestion": "ทำไมถึงตัดการอ่าน projectId จากแถบบนหน้าเว็บ (Header Bar)?",
+    "defenseTip": "ตอบว่าเพราะผู้ใช้อาจเปิดหลายแท็บ หรือสลับโปรเจกต์ในหน้าจออื่นทำให้ค่าใน Client Header ค้างและไม่ตรงกับเอกสารที่กำลังเปิดอยู่ การสาวโซ่จาก ID ของเอกสารโดยตรง (Chain Resolution) จึงการันตีความถูกต้องของ Scope 100%"
+  },
+  {
+    "id": "W11",
+    "topic": "TraceLink Architecture & Graph Storage",
+    "title": "สถาปัตยกรรมกราฟความสัมพันธ์ในตาราง pm_trace_link",
+    "summary": "ระบบจัดเก็บโครงข่ายความสัมพันธ์ระหว่างเอกสารทุกประเภทในตารางเดียวในลักษณะ Directed Graph (Node-Edge) พร้อม Enum ความสัมพันธ์เชิงวิศวกรรม",
+    "steps": [
+      "1. ตาราง `pm_trace_link` มีฟิลด์ `source_type`, `source_id`, `target_type`, `target_id`",
+      "2. ฟิลด์ `relationship_type` เก็บค่า Enum เช่น DESIGNED_BY, IMPLEMENTED_BY, VERIFIED_BY, FAILED_BY",
+      "3. รองรับการเชื่อมโยงข้ามประเภทเอกสารทั้งหมด (Requirement -> Spec -> Task -> TestCase -> Bug)",
+      "4. มีฟิลด์ `project_id` เพื่อแยกขอบเขตข้อมูลรายโครงการ",
+      "5. มีฟิลด์ `is_delete` สำหรับทำ Soft Delete เมื่อยกเลิกการเชื่อมโยง",
+      "6. มี Index บน `(source_type, source_id)` และ `(target_type, target_id)` เพื่อให้ค้นหาความสัมพันธ์ได้รวดเร็วระดับมิลลิวินาที"
+    ],
+    "keyFiles": [
+      "PmTraceLink.java",
+      "PmTraceLinkRepository.java",
+      "TraceRelationship.java",
+      "TraceLinkServiceImpl.java"
+    ],
+    "trapQuestion": "ทำไมไม่สร้าง Foreign Key แยกตารางละคู่ เช่น requirement_specification_link?",
+    "defenseTip": "ตอบว่าเพราะเอกสารในระบบมีมากกว่า 10 ชนิด หากสร้างคู่ตารางจะเกิดตารางความสัมพันธ์นับสิบตาราง การใช้ Generic Directed Graph ในตารางเดียว (pm_trace_link) ทำให้เขียนอัลกอริทึมค้นหากราฟและทำ Impact Analysis ได้แบบรวมศูนย์และยืดหยุ่นกว่ามาก"
+  },
+  {
+    "id": "W12",
+    "topic": "TraceLink Traversal & PostgreSQL Recursive CTE",
+    "title": "การค้นหากราฟหลายระดับด้วย PostgreSQL Recursive CTE (WITH RECURSIVE)",
+    "summary": "การค้นหาความสัมพันธ์ย้อนรอยทั้งสายน้ำ (End-to-End Traceability) ทำงานผ่านคำสั่ง SQL เดียวด้วยความสามารถ Recursive CTE ของ PostgreSQL 17",
+    "steps": [
+      "1. เมื่อผู้ใช้ต้องการดู Trace Matrix หรือทำ Impact Analysis ระบบเรียก `TraceLinkRepository`",
+      "2. Backend รัน Native SQL: `WITH RECURSIVE trace_graph AS (...)`",
+      "3. ส่วน Base Query: เลือก Node เริ่มต้นจาก `source_id` หรือ `target_id` ที่ระบุ",
+      "4. ส่วน Recursive Query: ทำการ `UNION ALL` เพื่อดึง Node ที่เชื่อมต่อไปเรื่อยๆ ทั้งทิศทาง Upstream และ Downstream",
+      "5. กำหนดเงื่อนไข `depth <= MAX_DEPTH` และป้องกัน Circular Loop ด้วยการเช็ค Path Array",
+      "6. ได้ผลลัพธ์โครงข่ายความสัมพันธ์ครบทุกระดับออกมาใน Query เดียว แล้วส่งต่อให้ Frontend วาด Diagram หรือ Matrix Table"
+    ],
+    "keyFiles": [
+      "PmTraceLinkRepository.java",
+      "TraceLinkServiceImpl.java",
+      "ImpactAnalysisServiceImpl.java"
+    ],
+    "trapQuestion": "ถ้ามีความสัมพันธ์วนซ้ำเป็นลูป (Circular Dependency) Recursive Query จะเกิด Infinite Loop ไหม?",
+    "defenseTip": "ตอบว่าไม่เกิด เพราะใน SQL มีการเก็บ Array ของ ID ที่เคยแวะผ่านมาแล้ว (`ARRAY[source_id]`) และใส่เงื่อนไข `WHERE NOT (target_id = ANY(visited_path))` ดักไว้เสมอ"
+  },
+  {
+    "id": "W13",
+    "topic": "Change Impact Analysis & Change Request Workflow",
+    "title": "การวิเคราะห์ผลกระทบเมื่อเกิดการเปลี่ยนแปลง (Change Impact Analysis)",
+    "summary": "เมื่อ Requirement เปลี่ยนแปลง หรือมีการเปิด Change Request ระบบจะคำนวณว่ากระทบต่อ Spec, Task, Test Case หรือ Bug ใดบ้าง และแจ้งเตือนให้ทีมงานดำเนินการ",
+    "steps": [
+      "1. เมื่อมีการเปิด Change Request (CR) บนเอกสารต้นทาง",
+      "2. `ImpactAnalysisServiceImpl` ดึงกราฟความสัมพันธ์ของเอกสารนั้นผ่าน `TraceLinkService`",
+      "3. คำนวณรายการ Artifacts ทั้งหมดที่อยู่ปลายน้ำ (Downstream Artifacts)",
+      "4. ตรวจสอบสถานะของ Artifacts เหล่านั้น เช่น Task พัฒนาไปแล้วหรือยัง, Test Case เขียนไว้แล้วหรือไม่",
+      "5. ประเมินระดับผลกระทบ (High, Medium, Low) และบันทึกลงตาราง `pm_change_impact_analysis`",
+      "6. แจ้งเตือนผู้รับผิดชอบเอกสารปลายน้ำให้ตรวจสอบและทำการ Re-test หรือ Re-design"
+    ],
+    "keyFiles": [
+      "ImpactAnalysisServiceImpl.java",
+      "PmChangeRequestServiceImpl.java",
+      "ChangeImpactAnalysisRepository.java",
+      "PmChangeRequest.java"
+    ],
+    "trapQuestion": "ฟังก์ชันนี้ช่วยอะไรทีมพัฒนาในชีวิตจริง?",
+    "defenseTip": "ตอบว่าช่วยแก้ปัญหาคลาสสิกของ Software Engineering คือ 'แก้ความต้องการนิดเดียว แต่ระบบพังทั้งระบบโดยไม่มีใครรู้' ระบบนี้ชี้เป้าทันทีว่าต้องไปแก้โค้ดและรันเทสเคสใดซ้ำบ้าง ทำให้ประเมิน Manday และราคาของ CR ได้แม่นยำ"
+  },
+  {
+    "id": "W14",
+    "topic": "Concurrency & Optimistic Locking",
+    "title": "การป้องกันการแก้ไขชนกันด้วย Optimistic Locking และ @Version",
+    "summary": "ระบบใช้กลไก Optimistic Locking ผ่านฟิลด์ @Version ใน BaseEntity ร่วมกับ RowVersionGuard เพื่อป้องกันปัญหา Lost Updates เมื่อมีผู้ใช้ทำงานพร้อมกัน",
+    "steps": [
+      "1. `BaseEntity` มีฟิลด์ `@Version private Long rowVersion;`",
+      "2. เมื่อผู้ใช้คนที่ 1 และคนที่ 2 ดึงข้อมูลเอกสารใบเดียวกันไปพร้อมกัน ทั้งสองจะได้ `rowVersion = 1`",
+      "3. ผู้ใช้คนที่ 1 กดบันทึกก่อน -> JPA ตรวจสอบ `WHERE id = ? AND row_version = 1` สำเร็จ และอัปเดตเป็น `row_version = 2`",
+      "4. ผู้ใช้คนที่ 2 กดบันทึกตามมา -> JPA ส่ง `WHERE id = ? AND row_version = 1` แต่ไม่พบแถวที่ตรงเงื่อนไข",
+      "5. JPA โยน `OptimisticLockException` ทันที",
+      "6. `RowVersionGuard` ดักจับและส่ง Error ชัดเจนให้หน้าบ้านว่า 'ข้อมูลถูกแก้ไขโดยผู้อื่นไปแล้ว กรุณารีเฟรชก่อนแก้ไข'"
+    ],
+    "keyFiles": [
+      "BaseEntity.java",
+      "RowVersionGuard.java",
+      "GlobalExceptionHandler.java"
+    ],
+    "trapQuestion": "ทำไมเลือกใช้ Optimistic Lock แทนที่จะเป็น Pessimistic Lock (SELECT FOR UPDATE)?",
+    "defenseTip": "ตอบว่าเพราะระบบจัดการเอกสารผู้ใช้ใช้เวลาอ่านและกรอกฟอร์มนาน (Think Time สูง) หากใช้ Pessimistic Lock จะเป็นการล็อค Connection ของฐานข้อมูลค้างไว้ ทำให้ระบบรองรับผู้ใช้ได้น้อยลง Optimistic Lock จึงมี Performance สูงกว่าและเหมาะกับ Web Application มากกว่า"
+  },
+  {
+    "id": "W15",
+    "topic": "Collaborative Editing Sessions & CodeSequenceLock",
+    "title": "ระบบ Collaborative Lock และการป้องกันเลขเอกสารชนกัน",
+    "summary": "ระบบมี PmEditSessionController ควบคุมการเปิดเอกสารแบบ Real-time และ CodeSequenceLock ป้องกันการออกรหัสเอกสารซ้ำกันในระดับมิลลิวินาที",
+    "steps": [
+      "1. เมื่อผู้ใช้เปิดหน้าเอกสารเพื่อแก้ไข จะส่งสัญญาณขอ Session ไปที่ `PmEditSessionController`",
+      "2. ระบบบันทึก Session ในตาราง พร้อมเวลา Heartbeat ล่าสุด",
+      "3. หากมีผู้ใช้คนที่ 2 เปิดหน้าเดียวกัน ระบบจะแจ้งเตือนว่า 'มีคุณ... กำลังแก้ไขอยู่' และเปิดให้อ่านแบบ Read-Only",
+      "4. เมื่อบันทึกเอกสารใหม่ ระบบต้องสร้างรหัสเอกสาร เช่น REQ-2026-0001",
+      "5. `CodeSequenceLock` ทำการล็อคแบบ synchronized / distributed lock ในช่วงคำนวณและเพิ่มเลขที่",
+      "6. การันตีว่าเลขที่เอกสารจะไม่ชนกันแม้จะมีการกดยืนยันพร้อมกันในเสี้ยววินาที"
+    ],
+    "keyFiles": [
+      "PmEditSessionController.java",
+      "CodeSequenceLock.java",
+      "ContractNoHelper.java"
+    ],
+    "trapQuestion": "ถ้าคนเปิดหน้าทิ้งไว้แล้วปิดเบราว์เซอร์ไปเลย เอกสารจะถูกล็อคค้างไหม?",
+    "defenseTip": "ตอบว่าไม่ค้าง เพราะมีกลไก Session Timeout และ Heartbeat หากหน้าเว็บไม่ส่งสัญญาณ Ping ภายใน 3-5 นาที ระบบจะตัด Session ของผู้ใช้นั้นออกและปลดล็อคให้คนอื่นเข้าแก้ต่อได้อัตโนมัติ"
+  },
+  {
+    "id": "W16",
+    "topic": "Object Storage Integration with SeaweedFS S3",
+    "title": "การจัดเก็บไฟล์แนบและรูปภาพด้วย SeaweedFS S3 API",
+    "summary": "ระบบเชื่อมต่อไปยัง SeaweedFS Object Storage โดยใช้ AWS S3 SDK มาตรฐาน พร้อมระบบคัดแยกความปลอดภัยของไฟล์ (Public, Private, Business)",
+    "steps": [
+      "1. `S3Config` สร้าง Bean `S3Client` โดยอ่าน Endpoint, Access Key, Secret Key จาก `.env`",
+      "2. เมื่อผู้ใช้อัปโหลดไฟล์ `StorageController` รับไฟล์และส่งต่อให้ `FileStorageServiceImpl`",
+      "3. ทำการตรวจสอบขนาดไฟล์และประเภท Mime Type เพื่อความปลอดภัย",
+      "4. ตั้งชื่อไฟล์ใหม่ด้วย UUID ป้องกันชื่อไฟล์ชนกันหรือมีอักขระอันตราย",
+      "5. ส่งไฟล์ขึ้น Bucket ใน SeaweedFS ผ่าน `s3Client.putObject()` แบบ Streaming เพื่อไม่ให้กิน RAM",
+      "6. บันทึก Metadata ของไฟล์ (ขนาด, ประเภท, ผู้สร้าง, สิทธิ์การมองเห็น FileVisibility) ลงฐานข้อมูล"
+    ],
+    "keyFiles": [
+      "S3Config.java",
+      "StorageController.java",
+      "FileStorageServiceImpl.java",
+      "FileVisibility.java"
+    ],
+    "trapQuestion": "ทำไมเลือกใช้ SeaweedFS แทนที่จะเก็บไฟล์ลงใน Local Disk ของเซิร์ฟเวอร์?",
+    "defenseTip": "ตอบว่าเพื่อให้ระบบรองรับ Horizontal Scaling หากมี Backend หลาย Instance การเก็บใน Local Disk จะทำให้เซิร์ฟเวอร์อีกเครื่องมองไม่เห็นไฟล์ การใช้ SeaweedFS ซึ่งเป็น Distributed Object Storage และรองรับ S3 API ทำให้ขยายพื้นที่ได้ง่าย และสามารถสลับไปใช้ Cloud เช่น AWS S3 หรือ MinIO ได้ทันทีโดยไม่ต้องแก้โค้ด"
+  },
+  {
+    "id": "W17",
+    "topic": "JasperReports Microservice & Bulk Document Export",
+    "title": "สถาปัตยกรรมออกรายงานและรวมเล่ม PDF ด้วย PdfBook",
+    "summary": "การออกเอกสาร PDF ใช้ Microservice แยกต่างหาก (sic-report-service) สื่อสารผ่าน REST พร้อม Secret Key และมี PdfBook ทำหน้าที่รวมรายงานทุกประเภทเป็นเล่มสมบูรณ์เล่มเดียว",
+    "steps": [
+      "1. Client ขอส่งออกเอกสารรวมทั้งโปรเจกต์ผ่าน `BulkDocumentExportController`",
+      "2. `BulkDocumentExportService` รวบรวมข้อมูลเอกสารทั้งหมด (Requirement, Spec, Diagram, Test Case)",
+      "3. เรียก `ReportServiceClient` ส่งข้อมูล Payload ไปยัง `sic-report-service`",
+      "4. แนบ Header ลับเพื่อตรวจสอบสิทธิ์การเรียกข้าม Service (Microservice Secret Header)",
+      "5. `sic-report-service` คอมไพล์เทมเพลต Jasper (.jrxml) และคืนไฟล์ PDF กลับมา",
+      "6. `PdfBook` นำ PDF แต่ละส่วนมารวมกัน (Merge), ใส่สารบัญ, และรันเลขหน้าอัตโนมัติ ส่งกลับให้ผู้ใช้ดาวน์โหลด"
+    ],
+    "keyFiles": [
+      "BulkDocumentExportService.java",
+      "ReportServiceClient.java",
+      "PdfBook.java",
+      "ReportHelper.java"
+    ],
+    "trapQuestion": "ทำไมต้องแยก Report Service ออกเป็นอีก Container/Microservice?",
+    "defenseTip": "ตอบว่าเพราะการประมวลผล JasperReports และการแปลง PDF กิน CPU และ Memory มหาศาล หากรันใน Spring Boot ตัวหลักอาจทำให้ API อื่นๆ ช้าลงหรือเกิด Out-Of-Memory (OOM) การแยก Service ทำให้สเกลและจัดการทรัพยากรได้อย่างอิสระ"
+  },
+  {
+    "id": "W18",
+    "topic": "Realtime STOMP WebSockets & WebRTC Signaling",
+    "title": "การสื่อสารแบบ Real-time ด้วย STOMP WebSocket และ WebRTC Signaling",
+    "summary": "ระบบแชทสดและการโทรแบบเห็นหน้าทำงานผ่าน STOMP Message Broker โดยมี JwtChannelInterceptor ตรวจสอบ Token ตั้งแต่ช่วง Handshake",
+    "steps": [
+      "1. `WebSocketConfig` เปิดใช้งาน STOMP ผ่าน Endpoint `/ws` และตั้ง Destination Prefix `/app`, `/topic`",
+      "2. ในช่วง STOMP CONNECT: `JwtChannelInterceptor` สกัด JWT Token จาก Native Header และตรวจสอบความถูกต้อง",
+      "3. หาก Token ไม่ผ่าน ระบบจะ Reject การเชื่อมต่อทันที",
+      "4. เมื่อผู้ใช้ส่งข้อความแชท: เข้าสู่ `ChatWebSocketController` และบันทึกลงตาราง `su_chat_message`",
+      "5. ยิงกระจายข้อความไปยังผู้รับผ่าน STOMP Topic `/topic/chat/{roomId}`",
+      "6. การโทร WebRTC: ใช้ WebSocket ช่องทางเดียวกันนี้ในการแลกเปลี่ยนสัญญาณ Signaling (SDP Offer/Answer และ ICE Candidates)"
+    ],
+    "keyFiles": [
+      "WebSocketConfig.java",
+      "JwtChannelInterceptor.java",
+      "ChatWebSocketController.java",
+      "SuChatMessageRepository.java"
+    ],
+    "trapQuestion": "ทำไมถึงใช้ STOMP Protocol บน WebSocket แทนที่จะใช้ Pure WebSocket ดิบๆ?",
+    "defenseTip": "ตอบว่าเพราะ STOMP ให้โครงสร้างแบบ Publish-Subscribe (Pub/Sub) และ Message Broker มาในตัว มีคำสั่งมาตรฐาน (CONNECT, SUBSCRIBE, SEND) ทำให้จัดการ Routing ไปยัง Room หรือผู้ใช้แต่ละคนได้ง่าย และผูกกับ Spring Security Channel Interceptor ได้อย่างเป็นทางการ"
+  },
+  {
+    "id": "W19",
+    "topic": "Flyway Database Migration Pipeline",
+    "title": "วงจรชีวิตการจัดการโครงสร้างฐานข้อมูลด้วย Flyway",
+    "summary": "ทุกการเปลี่ยนแปลงของฐานข้อมูลถูกควบคุมผ่านไฟล์ Versioned SQL Scripts ใน src/main/resources/db/migration โดย Flyway จะรันอัตโนมัติเมื่อระบบ Boot",
+    "steps": [
+      "1. นักพัฒนาเขียนไฟล์สคริปต์ SQL ตั้งชื่อตามมาตรฐาน เช่น `V1__init.sql`, `V2__add_trace_link.sql`",
+      "2. เมื่อเปิด Spring Boot: `FlywayConfig` จะเริ่มการตรวจสอบก่อนที่ Hibernate/JPA จะเชื่อมต่อ",
+      "3. Flyway ตรวจสอบตารางประวัติ `flyway_schema_history` ในฐานข้อมูล",
+      "4. คำนวณ Checksum ของไฟล์สคริปต์เดิม หากมีการแอบแก้ไขสคริปต์เก่า Flyway จะโยน Error ป้องกัน Database Inconsistency",
+      "5. รันไฟล์ Migration ใหม่ที่ยังไม่เคยรันตามลำดับเวอร์ชันอย่างเป็นระเบียบ",
+      "6. หากมี Script ใด Error ระบบจะ Rollback และหยุดการ Boot เพื่อไม่ให้ Schema พัง"
+    ],
+    "keyFiles": [
+      "FlywayConfig.java",
+      "SicApiApplication.java"
+    ],
+    "trapQuestion": "ทำไมถึงไม่ใช้ hibernate.ddl-auto=update ของ Spring Boot เพื่อสร้างตารางอัตโนมัติ?",
+    "defenseTip": "ตอบตามหลัก Production Best Practice ว่า ddl-auto=update อันตรายมากในระดับ Enterprise เพราะควบคุมการเปลี่ยนชื่อคอลัมน์ การลบ หรือ Index ไม่ได้ และอาจทำให้ข้อมูลสูญหาย การใช้ Flyway ทำให้เราควบคุม DDL ด้วย SQL จริง 100% มี Version Control และตรวจสอบย้อนหลังได้"
+  },
+  {
+    "id": "W20",
+    "topic": "Centralized Exception Handling & Standard Error Response",
+    "title": "การจัดการ Error ส่วนกลางด้วย @RestControllerAdvice",
+    "summary": "ข้อผิดพลาดทุกประเภทในระบบถูกดักจับและแปลงเป็นโครงสร้าง JSON ErrorResponse มาตรฐานที่ GlobalExceptionHandler เพื่อให้หน้าบ้านแสดงผลได้ถูกต้องและไม่เปิดเผย StackTrace",
+    "steps": [
+      "1. ข้อผิดพลาดเกิดขึ้นใน Service เช่น ค้นหาไม่เจอ, เอกสารถูกล็อค, หรือสิทธิ์ไม่ผ่าน",
+      "2. โค้ดโยน Custom Exception เช่น `ResourceNotFoundException`, `DocumentLockedException`, `ProgramPermissionDeniedException`",
+      "3. `GlobalExceptionHandler` ที่มี `@RestControllerAdvice` จะดักจับ Exception ตามประเภทที่ระบุใน `@ExceptionHandler`",
+      "4. แมป Exception เข้ากับ HTTP Status Code ที่เหมาะสม (404, 409, 403, 400)",
+      "5. สร้างออบเจกต์ `ErrorResponse` ที่มีฟิลด์ `timestamp`, `status`, `error`, `message`, `path`",
+      "6. ซ่อน Internal StackTrace ไม่ให้ส่งออกไปภายนอกเพื่อความปลอดภัยตามหลัก Secure Coding"
+    ],
+    "keyFiles": [
+      "GlobalExceptionHandler.java",
+      "ResourceNotFoundException.java",
+      "DocumentLockedException.java",
+      "ProgramPermissionDeniedException.java"
+    ],
+    "trapQuestion": "ทำไมไม่ใส่ try-catch ครอบใน Controller ทุกตัว?",
+    "defenseTip": "ตอบตามหลัก Clean Architecture ว่าเพื่อขจัดโค้ดซ้ำซ้อน (Boilerplate) และแยกความรับผิดชอบ (Separation of Concerns) ให้ Controller มีหน้าที่เพียงรับ-ส่งข้อมูล ส่วนการจัดการ Error ให้เลเยอร์ส่วนกลาง (@RestControllerAdvice) ดูแลทั้งหมด"
+  }
+]

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { Component, inject, OnInit, ChangeDetectionStrategy, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
@@ -37,6 +37,7 @@ import { SicDocSplitComponent } from '../../../../../core/component/sic-jasper-l
   standalone: true,
   imports: [SicDocSplitComponent, SicDocViewToggleComponent, 
     CommonModule,
+    FormsModule,
     ReactiveFormsModule,
     RouterModule,
     TranslateModule,

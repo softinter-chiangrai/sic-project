@@ -55,6 +55,7 @@ public class PmRequirementServiceImpl implements PmRequirementService {
     private final AuditLogService auditLogService;
     private final ApprovalService approvalService;
     private final AiDocumentVectorService vectorService;
+    private final com.softinter.sicapi.service.TraceLinkService traceLinkService;
 
     private static final Map<String, String> STATUS_THAI_MAP = Map.of(
             "ร่าง", "Draft",
@@ -306,6 +307,9 @@ public class PmRequirementServiceImpl implements PmRequirementService {
 
         // ✅ Soft delete all versions
         documentVersionService.deleteVersionsByDocument("REQUIREMENT", requirement.getId());
+
+        // ✅ Soft delete all trace links (cleanup orphan links)
+        traceLinkService.deleteLinksByEntity("REQUIREMENT", requirement.getId());
 
         // Audit Log
         try {
